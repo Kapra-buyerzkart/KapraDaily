@@ -8,7 +8,7 @@ const Stack = createNativeStackNavigator();
 export default function RootNavigator() {
     return (
         <Stack.Navigator screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="LocationFetching" component={LocationFetchingScreen} />
+            {/* <Stack.Screen name="LocationFetching" component={LocationFetchingScreen} /> */}
             <Stack.Screen name="MainTabs" component={MainTabNavigator} />
         </Stack.Navigator>
     );

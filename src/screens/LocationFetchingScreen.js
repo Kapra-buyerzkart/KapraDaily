@@ -7,7 +7,7 @@ export default function LocationFetchingScreen({ navigation }) {
         // Simulate location fetch
         setTimeout(() => {
             navigation.replace("MainTabs");
-        }, 2000);
+        }, 10);
     }, []);
 
     return (
