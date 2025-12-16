@@ -4,7 +4,7 @@ import HomeScreen from '../screens/HomeScreen';
 import CategoriesScreen from '../screens/CategoriesScreen';
 import WishlistScreen from '../screens/WishlistScreen';
 import KshopeScreen from '../screens/KshopeScreen';
-import { Image, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { Image, Platform, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -34,7 +34,8 @@ export default function MainTabNavigator() {
                 tabBarInactiveTintColor: null,
 
                 tabBarStyle: {
-                    height: hp("8%") + insets.bottom,
+                    // height: hp("8%") + insets.bottom,
+                    height: Platform.OS === "android" ? hp("7%") + insets.bottom : hp("8%"),
                     backgroundColor: "#FFFFFF",
                     paddingTop: hp("0.2%"),
                     // paddingBottom: hp("1%"),
