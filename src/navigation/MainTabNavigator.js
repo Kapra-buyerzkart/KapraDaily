@@ -7,6 +7,7 @@ import KshopeScreen from '../screens/KshopeScreen';
 import { Image, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const Tab = createBottomTabNavigator();
 
@@ -18,7 +19,7 @@ export default function MainTabNavigator() {
                 <Text style={styles.KshopeButtonText}>K-shope</Text>
             </TouchableOpacity>)
     }
-
+    const insets = useSafeAreaInsets();
     return (
         <Tab.Navigator
             initialRouteName='Home'
@@ -32,7 +33,18 @@ export default function MainTabNavigator() {
                 // 🔶 icon inactive color = null (keeps original PNG color)
                 tabBarInactiveTintColor: null,
 
-                tabBarStyle: styles.tabBarStyle,
+                tabBarStyle: {
+                    height: hp("8%") + insets.bottom,
+                    backgroundColor: "#FFFFFF",
+                    paddingTop: hp("0.2%"),
+                    // paddingBottom: hp("1%"),
+                    shadowColor: "#000000",
+                    shadowOffset: { width: 0, height: 0 },
+                    shadowOpacity: 0.25,
+                    shadowRadius: 4,
+                    elevation: 6,
+                    paddingRight: wp("11%"),
+                },
                 // tabBarLabelStyle: {
                 //     fontSize: wp("2.8%"),
                 //     color: "#8E8E8E" // 🔶 Keeps label same for active & inactive

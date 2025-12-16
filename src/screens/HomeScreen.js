@@ -1,10 +1,10 @@
 import { View, Text, StyleSheet, ImageBackground, TouchableOpacity, Image, TextInput, FlatList, ScrollView, Dimensions } from 'react-native'
-import React, { useRef, useState } from 'react'
+import React, { startTransition, useRef, useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Icon from 'react-native-vector-icons/Ionicons';
-import Svg, { Defs, RadialGradient, Stop, Path } from 'react-native-svg';
+import Svg, { Defs, RadialGradient, LinearGradient as SvgLinearGradient, Stop, Path } from 'react-native-svg';
 import LinearGradient from 'react-native-linear-gradient';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Entypo from 'react-native-vector-icons/Entypo';
@@ -12,9 +12,9 @@ import Feather from 'react-native-vector-icons/Feather';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import EvilIcons from 'react-native-vector-icons/EvilIcons';
 
+
 const { width } = Dimensions.get("window");
 const BANNER_HEIGHT = (283 / 390) * width;
-
 const banners = [
     require("../assets/images/image.png"),
     require("../assets/images/image.png"),
@@ -65,6 +65,39 @@ const HomeScreen = () => {
         { id: "4", name: "Green Chilli", img: require('../assets/images/products/chilli.png'), price: "₹324" },
         { id: "5", name: "Tomato", img: require('../assets/images/products/tomato.png'), price: "₹324" },
     ];
+
+    const selectedProducts = [
+        { id: "1", image: require('../assets/images/product1.png') },
+        { id: "2", image: require('../assets/images/product2.png') },
+        { id: "3", image: require('../assets/images/product3.png') },
+        { id: "4", image: require('../assets/images/product1.png') },
+        { id: "5", image: require('../assets/images/product2.png') },
+        { id: "6", image: require('../assets/images/product3.png') },
+    ];
+
+    const fruits = [
+        {
+            id: "1",
+            name: "Alfonso Mango",
+            offer: 17,
+            price: 324,
+            image: require("../assets/images/mango.png")
+        },
+        {
+            id: "2",
+            name: "Alfonso Mango",
+            offer: 17,
+            price: 324,
+            image: require("../assets/images/mango.png")
+        },
+        {
+            id: "3",
+            name: "Alfonso Mango",
+            offer: 17,
+            price: 324,
+            image: require("../assets/images/mango.png")
+        },
+    ]
 
     const scrollRef = useRef();
     const [activeIndex, setActiveIndex] = useState(0);
@@ -163,6 +196,88 @@ const HomeScreen = () => {
                 </View>
             </TouchableOpacity>
         )
+    }
+
+    const FruitCard = ({ item }) => {
+        const nameParts = item.name?.split(" ") || [];
+        const firstLine = nameParts[0] || "";
+        const secondLine = nameParts.slice(1).join(" ");
+        return (
+            <ImageBackground source={require("../assets/images/mango.png")} style={styles.fruitsImageBackground}
+                imageStyle={{
+                    borderRadius: wp("4.65%"),
+                }}>
+                <View style={styles.fruitsImageView}>
+                    <View>
+                        <Text style={styles.fruitsNameText}>{firstLine}{"\n"}{secondLine}</Text>
+                    </View>
+                    <View style={{
+                        // backgroundColor: "green",
+                        // alignItems: "flex-start"
+                    }}>
+                        <View>
+                            <Text style={styles.fruitsOfferText}>{item.offer}% OFF</Text>
+                        </View>
+                        <View style={styles.fruitsInnerview}>
+                            <View style={styles.fruitsInnerviewTwo}>
+                                <MaterialIcons name={'currency-rupee'} color={'#FFFFFF'} size={wp("5.12%")} style={styles.fruitsRupeeIcon} />
+                                <Text style={styles.fruitsPriceText}>{item.price}</Text>
+                            </View>
+                            <View style={styles.fruitsInnerviewThree}>
+                                <MaterialIcons name={'currency-rupee'} color={'#FFFFFF'} size={wp("2.79%")} style={styles.fruitsRupeeIcon} />
+                                <Text style={styles.fruitsPriceTextTwo}>{item.price}</Text>
+                            </View>
+                        </View>
+                    </View>
+                </View>
+                <View style={styles.addButtonContainer}>
+                    <TouchableOpacity
+                        style={styles.addButtonView}
+                    >
+                        <Text style={styles.addText}>ADD</Text>
+                    </TouchableOpacity>
+                </View>
+            </ImageBackground>
+        )
+    }
+
+    const CurvedSection = ({ children }) => {
+        const height = hp("29%");     // total height of section
+        const curveDepth = 50; // downward curve depth
+
+        const d = `
+    M 0 0
+    C ${width * 0.25} ${curveDepth},
+      ${width * 0.75} ${curveDepth},
+      ${width} 0
+    L ${width} ${height}
+    L 0 ${height}
+    Z
+  `;
+
+        return (
+            <View style={{
+                width,
+                height,
+                position: "relative"
+            }}>
+                {/* Background curved SVG */}
+                <Svg width={width} height={height} style={styles.curvedSectionSvg}>
+                    <Defs>
+                        <SvgLinearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
+                            <Stop offset="0" stopColor="#FFC7AC" />
+                            <Stop offset="1" stopColor="#FFFFFF" />
+                        </SvgLinearGradient>
+                    </Defs>
+                    <Path d={d} fill="url(#grad)" />
+                </Svg>
+
+                {/* Content over the curved shape */}
+                <View style={styles.curvedSectionView}>
+                    {children}
+                </View>
+            </View>
+        );
     }
 
     return (
@@ -343,6 +458,7 @@ const HomeScreen = () => {
                         ))}
                     </View>
                 </View>
+
                 <LinearGradient
                     colors={['#B700FF', '#FFFFFF']}
                     start={{ x: 0, y: 0 }}
@@ -367,6 +483,225 @@ const HomeScreen = () => {
                         showsHorizontalScrollIndicator={false}
                     />
                 </LinearGradient>
+                {/* <LinearGradient
+                    colors={['#FFC7AC', '#FFFFFF']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 0, y: 1 }}
+                    style={{
+                        height: hp("55%"),
+                        width: "100%"
+                    }}
+                >
+
+                </LinearGradient> */}
+                {/* <View style={{ width: "100%", height: 300 }}>
+/                    <Svg
+                        width="100%"
+                        height="120"
+                        style={{ position: "absolute", top: 0 }}
+                        viewBox="0 0 1440 320"
+                    >
+                        <Path
+                            fill="#FFFFFF"
+                            d="M0,160 C400,10 1040,10 1440,160 L1440,0 L0,0 Z"
+                        />
+                    </Svg>
+
+/                    <LinearGradient
+                        colors={['#FFC7AC', '#FFFFFF']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 0, y: 1 }}
+                        style={{
+                            flex: 1,
+                            marginTop: 60,  // pushes gradient below the curve
+                        }}
+                    />
+                </View> */}
+                <View style={styles.fruitsContainer}>
+                    <View style={styles.fruitsHeaderView}>
+                        <Text style={styles.fruitsHeaderText}>Seasonal fruits</Text>
+                        <TouchableOpacity style={styles.viewAllContainer}>
+                            <Text style={styles.viewAllText}>View All</Text>
+                            <MaterialIcons name={"arrow-forward-ios"} color={"#FF7B3A"} size={wp("3.3%")} style={styles.viewAllRightArrowIcon} />
+                        </TouchableOpacity>
+                    </View>
+                    <FlatList
+                        style={styles.fruitsFlatlist}
+                        data={fruits}
+                        keyExtractor={(item, index) => item.id}
+                        horizontal={true}
+                        renderItem={({ item }) => <FruitCard item={item} />}
+                        showsHorizontalScrollIndicator={false}
+                    />
+                </View>
+
+                <View style={styles.searchingForSomethingView}>
+
+                    <CurvedSection>
+
+                        {/* ADD ANYTHING YOU WANT INSIDE! */}
+                        {/* <View style={{ alignItems: "center" }}> */}
+                        <View style={styles.searchingForSomethingViewTwo}>
+                            <View>
+                                <Image
+                                    source={require("../assets/images/boy.png")}
+                                    style={styles.searchingForSomethingImageOne}
+                                />
+                                <Image
+                                    source={require("../assets/images/shadow.png")}
+                                    style={styles.searchingForSomethingImageTwo}
+                                />
+                            </View>
+                            <View style={styles.searchingForSomethingViewThree}>
+                                <Text style={[styles.searchingForSomethingText, {
+                                    color: "#000000"
+                                }]}>Searching for something</Text>
+                                <Text style={[styles.searchingForSomethingText, {
+                                    color: "#FF0000"
+                                }]}>but couldn't find it?</Text>
+                            </View>
+
+                        </View>
+                    </CurvedSection>
+
+                </View>
+                <View style={styles.tellusContainer}>
+                    <Text style={styles.tellUsText}>Don't worry. Tel us what you require</Text>
+                    <View style={styles.searchContainerTwo}>
+                        {/* <Feather name="search" color={"#8F8F8F"} size={wp("6%")} /> */}
+                        <TextInput
+                            style={styles.searchInput}
+                            placeholder="example: apple"
+                            placeholderTextColor="#767676"
+                        />
+                        <TouchableOpacity style={styles.enterContainer}>
+                            <Text style={styles.enterText}>enter</Text>
+                        </TouchableOpacity>
+                    </View>
+                    <Image style={styles.kapraLogo} source={require("../assets/images/logo.png")} />
+                    <Text style={[styles.tellUsText, { marginTop: hp("2.5%") }]}>Is here to help you</Text>
+                </View>
+
+                <TouchableOpacity style={{
+                    alignSelf: "center",
+                    marginTop: hp("2%"),
+                    marginBottom: hp("0.7%")
+                }}>
+                    <LinearGradient colors={["#F25000", "#FF7B3A", "#F25000"]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={{
+                            width: wp("90.69%"),
+                            height: hp("6.86%"),
+                            borderRadius: wp("2.8%"),
+                            alignItems: "center",
+                            flexDirection: "row",
+                            justifyContent:'space-between'
+                            // paddingLeft: wp("2.5%"),
+                            // paddingRight: wp("4%")
+                        }}
+                    >
+                        {/* <View style={styles.selectedProductsImageStack}> */}
+                        {/* {selectedProducts.slice(0, 3).map((item, index, arr) => {
+                                const isTopImage = index === arr.length - 1;
+
+                                return (
+                                    <View
+                                        key={item.id || index}
+                                        style={[
+                                            styles.selectedProductsImageWrapper,
+                                            {
+                                                right: (arr.length - 1 - index) * 14, // 👈 reverse position
+                                                zIndex: index + 1,                    // 👈 top image highest
+                                                opacity: isTopImage ? 1 : 0.35,       // 👈 dim below images
+                                            },
+                                        ]}
+                                    >
+                                        <Image
+                                            source={item.image}
+                                            style={styles.selectedProductsImage}
+                                        />
+                                    </View>
+                                );
+                            })} */}
+                        {/* </View> */}
+                        {/* <Image source={require("../assets/images/product1.png")} style={{
+                            height: 40,
+                            width: 40,
+                            borderRadius: 10,
+                            borderWidth: 1,
+                            borderColor: "#F25000"
+                        }}/> */}
+                        <View style={styles.stackContainer}>
+                            {selectedProducts.slice(0, 3).map((item, index) => (
+                                <Image
+                                    key={index}
+                                    source={item.image}
+                                    style={[
+                                        styles.productImage,
+                                        {
+                                            marginLeft: index === 0 ? 0 : wp("-5.4%"), // overlap to left
+                                            // zIndex: index + 1,                 // last image on top
+                                        },
+                                    ]}
+                                />
+                            ))}
+                        </View>
+                        <View style={{
+                            flex: 0.5,
+                            paddingLeft: wp("2%")
+                        }}>
+                            <Text style={{
+                                fontSize: wp("3.25%"),
+                                color: "#FFFFFF",
+                                fontFamily: "Poppins-Medium"
+                            }}>{selectedProducts.length} ITEMS</Text>
+                            <View style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                                bottom: hp("0.2%")
+                            }}>
+                                <Text style={{
+                                    fontFamily: "Poppins-Regular",
+                                    fontSize: wp("2.8%"),
+                                    color: "#FFFFFF"
+                                }}>You save</Text>
+                                <MaterialIcons name={'currency-rupee'} color={'#FFFFFF'} size={wp("2.8%")} style={{
+                                    bottom: hp("0.1%"),
+                                    marginLeft: wp('0.5%')
+                                }} />
+                                <Text style={{
+                                    fontFamily: "Poppins-Regular",
+                                    fontSize: wp("2.8%"),
+                                    color: "#FFFFFF"
+                                }}>94</Text>
+                            </View>
+                        </View>
+                        <View style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            flex: 0.2
+                        }}>
+                            <MaterialIcons name={'currency-rupee'} color={'#FFFFFF'} size={wp("5.6%")} style={{
+                                bottom: hp("0.2%"),
+                                // marginLeft: wp('0.5%')
+                            }} />
+                            <Text style={{
+                                fontFamily: "Poppins-Medium",
+                                fontSize: wp("5.6%"),
+                                color: "#FFFFFF",
+                                left: wp("-0.5%")
+                            }}>394</Text>
+                        </View>
+                        <Image source={require("../assets/images/right-arrows.png")} style={{
+                            width: wp("8.14%"),
+                            height: hp("1.93%"),
+                            // bottom: hp("0.2%"),
+                            marginRight: wp("6%"),
+                        }} />
+
+                    </LinearGradient>
+                </TouchableOpacity>
             </ScrollView>
         </SafeAreaView>
     )
@@ -749,7 +1084,7 @@ const styles = StyleSheet.create({
     },
     wrapper: {
         width: wp("92%"),
-        height: hp("5.5%"),
+        height: hp("5.2%"),
         alignSelf: "center",
         marginTop: hp("2%"),
         justifyContent: "center",
@@ -783,5 +1118,202 @@ const styles = StyleSheet.create({
         width: wp("20%"),
         height: "70%",
         resizeMode: "contain",
-    }
+    },
+    tellusContainer: {
+        height: hp("36.05%"),
+        width: wp("90.69%"),
+        backgroundColor: "#481300",
+        alignSelf: "center",
+        borderRadius: 20,
+        alignItems: "center"
+    },
+    tellUsText: {
+        fontFamily: "Poppins-Regular",
+        color: "#FFFFFF",
+        fontSize: wp("3.95%"),
+        marginTop: hp("3.1%")
+    },
+    searchContainerTwo: {
+        marginTop: hp('1.7%'),
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#D9D9D9',
+        borderRadius: 20,
+        paddingLeft: wp('6%'),
+        height: hp('5.4%'),
+        marginHorizontal: wp('5%'),
+    },
+    searchInput: {
+        flex: 1,
+        fontSize: wp('3.8%'),
+        // marginHorizontal: wp('1.5%'),
+        color: '#000000',
+        fontFamily: 'Poppins-Light',
+    },
+    enterContainer: {
+        width: wp("16%"),
+        height: hp('3.5%'),
+        // backgroundColor: 'red',
+        // marginLeft: wp('2%'),
+        justifyContent: "center",
+        alignItems: "center",
+        borderLeftWidth: 2,
+        borderLeftColor: "#000000",
+        marginLeft: wp("1%"),
+        paddingRight: wp("1%")
+    },
+    enterText: {
+        color: "#000000",
+        fontSize: wp("3.8%"),
+        fontFamily: "Poppins-SemiBold"
+    },
+    kapraLogo: {
+        width: wp("64.65%"),
+        height: hp("10.73%"),
+        marginTop: hp("2.5%")
+    },
+    curvedSectionSvg: {
+        position: "absolute"
+    },
+    curvedSectionView: {
+        flex: 1,
+        paddingTop: 40,
+        justifyContent: "flex-end",
+        paddingBottom: hp("0.4%"),
+    },
+    searchingForSomethingView: {
+        flex: 1
+    },
+    searchingForSomethingViewTwo: {
+        flexDirection: "row",
+    },
+    searchingForSomethingImageOne: {
+        width: wp("42.51%"),
+        height: hp("19.03%"),
+        resizeMode: "contain",
+        marginLeft: wp("2%")
+    },
+    searchingForSomethingImageTwo: {
+        width: wp("31.62%"),
+        height: hp("1.18%"),
+        resizeMode: "contain",
+        top: -4
+    },
+    searchingForSomethingViewThree: {
+        // backgroundColor: "red",
+        justifyContent: "flex-end",
+        paddingBottom: hp("2%")
+    },
+    searchingForSomethingText: {
+        fontFamily: "Poppins-SemiBold",
+        fontSize: wp("3.95%"),
+    },
+    fruitsHeaderView: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        marginTop: hp("3%"),
+        marginBottom: hp("1.5%")
+    },
+    fruitsHeaderText: {
+        fontFamily: "Outfit-Medium",
+        color: "#000000",
+        fontSize: wp("4.2%"),
+        marginLeft: wp("5%")
+    },
+    fruitsFlatlist: {
+        marginLeft: wp("5%")
+    },
+    fruitsImageBackground: {
+        width: wp("74.88%"),
+        height: hp("19.35%"),
+        flexDirection: "row",
+        marginRight: wp("5%")
+    },
+    fruitsImageView: {
+        justifyContent: "space-between",
+        flex: 1,
+        paddingLeft: wp("5.11%"),
+        paddingTop: hp("3.8%"),
+        paddingBottom: hp("1.3%"),
+    },
+    fruitsNameText: {
+        color: "#FFFFFF",
+        fontFamily: "Outfit-Regular",
+        fontSize: wp("4.7%"),
+        lineHeight: wp("5.7%")
+    },
+    fruitsOfferText: {
+        fontFamily: "Poppins-SemiBold",
+        fontSize: wp("2.79%"),
+        color: "#FFFFFF"
+    },
+    fruitsInnerview: {
+        flexDirection: "row",
+        left: wp("-1%")
+    },
+    fruitsInnerviewTwo: {
+        flexDirection: "row",
+        alignItems: "center",
+    },
+    fruitsRupeeIcon: {
+        bottom: hp("0.2%")
+    },
+    fruitsPriceText: {
+        fontSize: wp("5.12%"),
+        color: "#FFFFFF",
+        fontFamily: "Poppins-SemiBold",
+        left: wp("-0.7%")
+    },
+    fruitsInnerviewThree: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginLeft: wp("2%")
+    },
+    fruitsPriceTextTwo: {
+        fontSize: wp("2.79%"),
+        color: "#FFFFFF",
+        fontFamily: "Poppins-Light",
+        left: wp("-0.4%"),
+        textDecorationLine: "line-through",
+        textDecorationColor: "#FFFFFF"
+    },
+    addButtonContainer: {
+        flex: 1,
+        justifyContent: "flex-end",
+        alignItems: "flex-end",
+        paddingBottom: hp("2.2%"),
+        paddingRight: wp("5.5%")
+    },
+    addButtonView: {
+        // paddingHorizontal: wp("5%"),
+        backgroundColor: "#FFFFFF",
+        width: wp("19.76%"),
+        height: hp("3.86%"),
+        borderRadius: wp("2.6%"),
+        justifyContent: "center",
+        alignItems: "center",
+        // alignSelf:"flex-end"
+    },
+    addText: {
+        fontFamily: "Poppins-SemiBold",
+        color: "#F1BF2D",
+        fontSize: wp("3.95%")
+    },
+    fruitsContainer: {
+        marginBottom: hp("4.5%")
+    },
+    stackContainer: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginLeft: wp("3%")
+    },
+
+    productImage: {
+        height: wp("9.3%"),
+        width: wp("9.3%"),
+        borderRadius: wp("2.4%"),
+        borderWidth: 1,
+        borderColor: "#F25000",
+        // backgroundColor: "#fff",
+    },
 })
