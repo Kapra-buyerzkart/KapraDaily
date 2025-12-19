@@ -25,6 +25,8 @@
 		6DAF9A4ED38D466E9D0C1A83 /* Italiana-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1D7AEC9BA9CE45D4A761925D /* Italiana-Regular.ttf */; };
 		7BCF0D575B71414A9FD6F789 /* Poppins-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 77AA01BA64F24794AA00DEF0 /* Poppins-Regular.ttf */; };
 		93CDA4ED00E047E0905C73A6 /* Poppins-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 7A3F6C0B182D484697B12358 /* Poppins-SemiBold.ttf */; };
+		F30393CF99C2447DA11AD64B /* Lexend-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = FA6CFB54EC9249C4A3D8D841 /* Lexend-Medium.ttf */; };
+		7FA9A7F1FD9343E483251FDA /* Lexend-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2DF8F276FDE545D2964CB92C /* Lexend-SemiBold.ttf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -51,6 +53,8 @@
 		1D7AEC9BA9CE45D4A761925D /* Italiana-Regular.ttf */ = {isa = PBXFileReference; name = "Italiana-Regular.ttf"; path = "../src/assets/fonts/Italiana-Regular.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
 		77AA01BA64F24794AA00DEF0 /* Poppins-Regular.ttf */ = {isa = PBXFileReference; name = "Poppins-Regular.ttf"; path = "../src/assets/fonts/Poppins-Regular.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
 		7A3F6C0B182D484697B12358 /* Poppins-SemiBold.ttf */ = {isa = PBXFileReference; name = "Poppins-SemiBold.ttf"; path = "../src/assets/fonts/Poppins-SemiBold.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		FA6CFB54EC9249C4A3D8D841 /* Lexend-Medium.ttf */ = {isa = PBXFileReference; name = "Lexend-Medium.ttf"; path = "../src/assets/fonts/Lexend-Medium.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		2DF8F276FDE545D2964CB92C /* Lexend-SemiBold.ttf */ = {isa = PBXFileReference; name = "Lexend-SemiBold.ttf"; path = "../src/assets/fonts/Lexend-SemiBold.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -141,6 +145,8 @@
 				1D7AEC9BA9CE45D4A761925D /* Italiana-Regular.ttf */,
 				77AA01BA64F24794AA00DEF0 /* Poppins-Regular.ttf */,
 				7A3F6C0B182D484697B12358 /* Poppins-SemiBold.ttf */,
+				FA6CFB54EC9249C4A3D8D841 /* Lexend-Medium.ttf */,
+				2DF8F276FDE545D2964CB92C /* Lexend-SemiBold.ttf */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -221,6 +227,8 @@
 				6DAF9A4ED38D466E9D0C1A83 /* Italiana-Regular.ttf in Resources */,
 				7BCF0D575B71414A9FD6F789 /* Poppins-Regular.ttf in Resources */,
 				93CDA4ED00E047E0905C73A6 /* Poppins-SemiBold.ttf in Resources */,
+				F30393CF99C2447DA11AD64B /* Lexend-Medium.ttf in Resources */,
+				7FA9A7F1FD9343E483251FDA /* Lexend-SemiBold.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

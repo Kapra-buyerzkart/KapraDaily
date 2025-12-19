@@ -16,7 +16,12 @@ export default function MainTabNavigator() {
     const KshopeButton = ({ onPress }) => {
         return (
             <TouchableOpacity style={styles.KshopeButton} onPress={onPress}>
-                <Text style={styles.KshopeButtonText}>K-shope</Text>
+                {/* <Text style={styles.KshopeButtonText}>K-shope</Text> */}
+                <Image source={require("../assets/images/kshope.png")} style={{
+                    width: wp("19.53%"),
+                    height: hp("3%"),
+                    resizeMode: "contain"
+                }}/>
             </TouchableOpacity>)
     }
     const insets = useSafeAreaInsets();
@@ -159,7 +164,7 @@ const styles = StyleSheet.create({
     KshopeButton: {
         width: wp("28.84%"),
         height: hp("5.26"),
-        backgroundColor: "#7EF1FF",
+        backgroundColor: "#005CFF",
         borderRadius: 16,
         justifyContent: "center",
         alignItems: "center",

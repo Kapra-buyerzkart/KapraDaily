@@ -11,6 +11,9 @@ import Entypo from 'react-native-vector-icons/Entypo';
 import Feather from 'react-native-vector-icons/Feather';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import EvilIcons from 'react-native-vector-icons/EvilIcons';
+import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
+import ProductCard from '../components/ProductCard';
+import SelectedProducts from '../components/SelectedProducts';
 
 
 const { width } = Dimensions.get("window");
@@ -152,51 +155,6 @@ const HomeScreen = () => {
         );
     };
 
-    const ProductCard = ({ item }) => {
-        return (
-            <TouchableOpacity style={styles.productCard}>
-                <View style={styles.productCardViewOne}>
-                    <EvilIcons name={"heart"} size={wp("7%")} />
-                    <Text style={styles.btokenText}>Upto 1B Token</Text>
-                    <View style={styles.plusIconView}>
-                        <Entypo name={"plus"} color={"#FFFFFF"} size={wp("3.8%")} />
-                    </View>
-                </View>
-                <View style={styles.productCardViewTwo}>
-                    <Image source={item.img} style={styles.productCardImage} />
-                </View>
-
-                <View style={styles.productCardViewThree}>
-                    <View>
-                        <Text style={styles.offerText}>17% OFF</Text>
-                    </View>
-
-                    <View>
-                        <View style={styles.productCardViewFour}>
-                            <Text style={styles.mrpText}>MRP </Text>
-                            <MaterialIcons name={'currency-rupee'} color={'#777777'} size={wp("2.5%")} style={{
-                                bottom: hp("0.1%")
-                            }} />
-                            <Text style={[styles.mrpText, {
-                                textDecorationLine: "line-through",
-                                textDecorationColor: "#777777"
-                            }]}>394</Text>
-
-                        </View>
-                        <View style={styles.priceView}>
-                            <MaterialIcons name={'currency-rupee'} color={'#0CA201'} size={wp("3.7%")} />
-                            <Text style={styles.priceText}>324</Text>
-                        </View>
-                    </View>
-                </View>
-                <View style={{
-                    // alignSelf: "center"
-                }}>
-                    <Text style={styles.productNameText}>Lorem lpsum is simply dummy text</Text>
-                </View>
-            </TouchableOpacity>
-        )
-    }
 
     const FruitCard = ({ item }) => {
         const nameParts = item.name?.split(" ") || [];
@@ -285,7 +243,7 @@ const HomeScreen = () => {
             edges={['top']}
             style={styles.mainContainer}>
             <ScrollView
-                contentContainerStyle={{ paddingBottom: 0 }}
+                contentContainerStyle={{ paddingBottom: hp("0.7%") }}
                 showsVerticalScrollIndicator={false}
             >
                 <View
@@ -305,7 +263,7 @@ const HomeScreen = () => {
                                 <Entypo name={"chevron-right"} size={wp('3.6%')} color={"#FFFFFF"} />
                             </TouchableOpacity>
                         </View>
-                        <View style={styles.bcoinContainer}>
+                        {/* <View style={styles.bcoinContainer}>
 
                             <LinearGradient
                                 colors={['#FFEF94', '#FFF6C5', '#FFBA33', '#FFBA3300']}
@@ -317,7 +275,6 @@ const HomeScreen = () => {
                                 <MaterialIcons name={'currency-rupee'} size={wp('4%')} color={'#DB8000'} />
                             </LinearGradient>
 
-                            {/* Badge */}
                             <LinearGradient
                                 colors={['#FDED94', '#DEC32B']}
                                 start={{ x: 0, y: 0 }}
@@ -327,12 +284,41 @@ const HomeScreen = () => {
                                 <Text style={styles.bcoinText}>10.0 B</Text>
                             </LinearGradient>
 
+                        </View> */}
+                        <View style={styles.bcoinContainer}>
+
+                            <LinearGradient
+                                colors={['#3A2400', '#3A2400', '#FFBA33', '#FFBA3300']}
+                                locations={[0, 0.3, 0.7, 1]}
+                                start={{ x: 0.5, y: 0 }}
+                                end={{ x: 0.5, y: 1 }}
+                                style={styles.bcoinRupeeTwo}
+                            >
+                                <MaterialIcons name={'currency-rupee'} size={wp('4%')} color={'#DB8000'} />
+                            </LinearGradient>
+
+                            <LinearGradient
+                                colors={['#311C00', '#000000']}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 1 }}
+                                style={styles.badge}
+                            >
+                                <Text style={styles.bcoinTextTwo}>10.0 B</Text>
+                            </LinearGradient>
+
                         </View>
-                        <TouchableOpacity style={styles.profileIconMainView}>
+
+                        {/* <TouchableOpacity style={styles.profileIconMainView}>
                             <Image source={require('../assets/images/crown.png')} width={wp('6.3%')} height={hp('2.6%')} />
                             <View style={styles.profileIconView}>
                                 <GradientUserIcon size={wp('6%')} />
                             </View>
+                        </TouchableOpacity> */}
+                        <TouchableOpacity>
+                            <Image source={require('../assets/images/user.png')} style={{
+                                height: wp('9%'),
+                                width: wp('9%')
+                            }} />
                         </TouchableOpacity>
 
                     </View>
@@ -581,128 +567,11 @@ const HomeScreen = () => {
                     <Image style={styles.kapraLogo} source={require("../assets/images/logo.png")} />
                     <Text style={[styles.tellUsText, { marginTop: hp("2.5%") }]}>Is here to help you</Text>
                 </View>
-
-                <TouchableOpacity style={{
-                    alignSelf: "center",
-                    marginTop: hp("2%"),
-                    marginBottom: hp("0.7%")
-                }}>
-                    <LinearGradient colors={["#F25000", "#FF7B3A", "#F25000"]}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 0 }}
-                        style={{
-                            width: wp("90.69%"),
-                            height: hp("6.86%"),
-                            borderRadius: wp("2.8%"),
-                            alignItems: "center",
-                            flexDirection: "row",
-                            justifyContent:'space-between'
-                            // paddingLeft: wp("2.5%"),
-                            // paddingRight: wp("4%")
-                        }}
-                    >
-                        {/* <View style={styles.selectedProductsImageStack}> */}
-                        {/* {selectedProducts.slice(0, 3).map((item, index, arr) => {
-                                const isTopImage = index === arr.length - 1;
-
-                                return (
-                                    <View
-                                        key={item.id || index}
-                                        style={[
-                                            styles.selectedProductsImageWrapper,
-                                            {
-                                                right: (arr.length - 1 - index) * 14, // 👈 reverse position
-                                                zIndex: index + 1,                    // 👈 top image highest
-                                                opacity: isTopImage ? 1 : 0.35,       // 👈 dim below images
-                                            },
-                                        ]}
-                                    >
-                                        <Image
-                                            source={item.image}
-                                            style={styles.selectedProductsImage}
-                                        />
-                                    </View>
-                                );
-                            })} */}
-                        {/* </View> */}
-                        {/* <Image source={require("../assets/images/product1.png")} style={{
-                            height: 40,
-                            width: 40,
-                            borderRadius: 10,
-                            borderWidth: 1,
-                            borderColor: "#F25000"
-                        }}/> */}
-                        <View style={styles.stackContainer}>
-                            {selectedProducts.slice(0, 3).map((item, index) => (
-                                <Image
-                                    key={index}
-                                    source={item.image}
-                                    style={[
-                                        styles.productImage,
-                                        {
-                                            marginLeft: index === 0 ? 0 : wp("-5.4%"), // overlap to left
-                                            // zIndex: index + 1,                 // last image on top
-                                        },
-                                    ]}
-                                />
-                            ))}
-                        </View>
-                        <View style={{
-                            flex: 0.5,
-                            paddingLeft: wp("2%")
-                        }}>
-                            <Text style={{
-                                fontSize: wp("3.25%"),
-                                color: "#FFFFFF",
-                                fontFamily: "Poppins-Medium"
-                            }}>{selectedProducts.length} ITEMS</Text>
-                            <View style={{
-                                flexDirection: "row",
-                                alignItems: "center",
-                                bottom: hp("0.2%")
-                            }}>
-                                <Text style={{
-                                    fontFamily: "Poppins-Regular",
-                                    fontSize: wp("2.8%"),
-                                    color: "#FFFFFF"
-                                }}>You save</Text>
-                                <MaterialIcons name={'currency-rupee'} color={'#FFFFFF'} size={wp("2.8%")} style={{
-                                    bottom: hp("0.1%"),
-                                    marginLeft: wp('0.5%')
-                                }} />
-                                <Text style={{
-                                    fontFamily: "Poppins-Regular",
-                                    fontSize: wp("2.8%"),
-                                    color: "#FFFFFF"
-                                }}>94</Text>
-                            </View>
-                        </View>
-                        <View style={{
-                            flexDirection: "row",
-                            alignItems: "center",
-                            flex: 0.2
-                        }}>
-                            <MaterialIcons name={'currency-rupee'} color={'#FFFFFF'} size={wp("5.6%")} style={{
-                                bottom: hp("0.2%"),
-                                // marginLeft: wp('0.5%')
-                            }} />
-                            <Text style={{
-                                fontFamily: "Poppins-Medium",
-                                fontSize: wp("5.6%"),
-                                color: "#FFFFFF",
-                                left: wp("-0.5%")
-                            }}>394</Text>
-                        </View>
-                        <Image source={require("../assets/images/right-arrows.png")} style={{
-                            width: wp("8.14%"),
-                            height: hp("1.93%"),
-                            // bottom: hp("0.2%"),
-                            marginRight: wp("6%"),
-                        }} />
-
-                    </LinearGradient>
-                </TouchableOpacity>
+                {/* <SelectedProducts selectedProducts={selectedProducts} /> */}
             </ScrollView>
+            <View style={styles.floatingContainer}>
+                <SelectedProducts selectedProducts={selectedProducts} />
+            </View>
         </SafeAreaView>
     )
 }
@@ -711,7 +580,7 @@ export default HomeScreen
 
 const styles = StyleSheet.create({
     mainContainer: {
-        flex: 1
+        flex: 1,
     },
     headerMainView: {
         backgroundColor: "#CD827F",
@@ -767,6 +636,13 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
+    bcoinRupeeTwo: {
+        width: wp('6.5%'),
+        height: wp('6.5%'),
+        borderRadius: wp('4%'),
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
     coinSymbol: {
         color: '#FFD98F',
         fontSize: wp('4%'),
@@ -788,6 +664,11 @@ const styles = StyleSheet.create({
     },
     bcoinText: {
         color: '#000000',
+        fontSize: wp('3%'),
+        fontFamily: 'Poppins-Bold',
+    },
+    bcoinTextTwo: {
+        color: '#FFBA33',
         fontSize: wp('3%'),
         fontFamily: 'Poppins-Bold',
     },
@@ -896,32 +777,32 @@ const styles = StyleSheet.create({
     headerBannerView: {
         marginTop: hp("-2%")
     },
-    productCard: {
-        width: wp('34.7%'),
-        height: hp('24.2%'),
-        backgroundColor: '#FFFFFF',
-        borderRadius: 20,
-        padding: wp('1.9%'),
-        marginRight: wp('3.8%'),
-        shadowColor: '#000000',
-        shadowOpacity: 0.10,
-        shadowOffset: { width: 0, height: 0 },
-        shadowRadius: 4,
-        elevation: 3,
-        marginTop: hp("1.5%"),
-        // alignItems:'center'
-        // width: wp('34%'),
-        // height: hp('23%'),
-        // backgroundColor: '#FFFFFF',
-        // borderRadius: 20,
-        // padding: wp('3%'),
-        // marginRight: wp('4%'),
-        // shadowColor: '#000',
-        // shadowOpacity: 0.10,
-        // shadowOffset: { width: 0, height: 2 },
-        // shadowRadius: 4,
-        // elevation: 3,
-    },
+    // productCard: {
+    //     width: wp('34.7%'),
+    //     height: hp('24.2%'),
+    //     backgroundColor: '#FFFFFF',
+    //     borderRadius: 20,
+    //     padding: wp('1.9%'),
+    //     marginRight: wp('3.8%'),
+    //     shadowColor: '#000000',
+    //     shadowOpacity: 0.10,
+    //     shadowOffset: { width: 0, height: 0 },
+    //     shadowRadius: 4,
+    //     elevation: 3,
+    //     marginTop: hp("1.5%"),
+    //     // alignItems:'center'
+    //     // width: wp('34%'),
+    //     // height: hp('23%'),
+    //     // backgroundColor: '#FFFFFF',
+    //     // borderRadius: 20,
+    //     // padding: wp('3%'),
+    //     // marginRight: wp('4%'),
+    //     // shadowColor: '#000',
+    //     // shadowOpacity: 0.10,
+    //     // shadowOffset: { width: 0, height: 2 },
+    //     // shadowRadius: 4,
+    //     // elevation: 3,
+    // },
     productsContainerViewOne: {
         flexDirection: "row",
         justifyContent: "space-between"
@@ -942,70 +823,6 @@ const styles = StyleSheet.create({
     },
     viewAllRightArrowIcon: {
         marginLeft: 5
-    },
-    productCardViewOne: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        // backgroundColor: "yellow",
-    },
-    btokenText: {
-        fontFamily: "Outfit-Regular",
-        fontSize: wp("2.3%"),
-        color: "#5E3568"
-    },
-    plusIconView: {
-        backgroundColor: "#F04B1B",
-        padding: wp("1%"),
-        borderRadius: 100
-    },
-    productCardViewTwo: {
-        // backgroundColor:"blue",
-        alignItems: "center"
-    },
-    productCardImage: {
-        width: wp("24.65%"),
-        height: wp("23.25%")
-    },
-    productCardViewThree: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        // backgroundColor: "yellow",
-        alignItems: "center"
-    },
-    offerText: {
-        color: "#F04B1B",
-        fontSize: wp("2.5%"),
-        fontFamily: "Outfit-SemiBold"
-    },
-    productCardViewFour: {
-        flexDirection: "row",
-        alignItems: "center"
-    },
-    mrpText: {
-        fontFamily: "Poppins-Light",
-        fontSize: wp("2.5%"),
-        color: "#777777"
-    },
-    priceView: {
-        flexDirection: "row",
-        alignItems: "center",
-        borderColor: "#0CA201",
-        borderWidth: 1,
-        borderRadius: 8,
-        padding: wp("0.5%")
-    },
-    priceText: {
-        fontFamily: "Poppins-SemiBold",
-        fontSize: wp("3.7%"),
-        color: "#0CA201"
-    },
-    productNameText: {
-        fontFamily: "Outfit-Light",
-        fontSize: wp("3.25%"),
-        color: "#000000",
-        textAlign: "center",
-        marginTop: hp("0.5%")
     },
     productsMainContainerTwo: {
         marginTop: hp("2.7%"),
@@ -1125,7 +942,8 @@ const styles = StyleSheet.create({
         backgroundColor: "#481300",
         alignSelf: "center",
         borderRadius: 20,
-        alignItems: "center"
+        alignItems: "center",
+        marginBottom: hp("7.5%"),
     },
     tellUsText: {
         fontFamily: "Poppins-Regular",
@@ -1170,7 +988,8 @@ const styles = StyleSheet.create({
     kapraLogo: {
         width: wp("64.65%"),
         height: hp("10.73%"),
-        marginTop: hp("2.5%")
+        marginTop: hp("2.5%"),
+        resizeMode: "contain"
     },
     curvedSectionSvg: {
         position: "absolute"
@@ -1302,18 +1121,11 @@ const styles = StyleSheet.create({
     fruitsContainer: {
         marginBottom: hp("4.5%")
     },
-    stackContainer: {
-        flexDirection: "row",
+    floatingContainer: {
+        position: "absolute",
+        bottom: hp("0.7%"),
+        left: 0,
+        right: 0,
         alignItems: "center",
-        marginLeft: wp("3%")
-    },
-
-    productImage: {
-        height: wp("9.3%"),
-        width: wp("9.3%"),
-        borderRadius: wp("2.4%"),
-        borderWidth: 1,
-        borderColor: "#F25000",
-        // backgroundColor: "#fff",
     },
 })

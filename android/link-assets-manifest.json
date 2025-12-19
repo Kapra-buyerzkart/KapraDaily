@@ -10,6 +10,14 @@
       "sha1": "e10f8b2b90e4e72c4f4fc2e7ddff58198756100d"
     },
     {
+      "path": "src/assets/fonts/Lexend-Medium.ttf",
+      "sha1": "ecb541adfb5e827e3de237308772e103a553544d"
+    },
+    {
+      "path": "src/assets/fonts/Lexend-SemiBold.ttf",
+      "sha1": "6a67f0e2d1549f7a69c8caa2bbc04abe61e15bc9"
+    },
+    {
       "path": "src/assets/fonts/Outfit-Light.ttf",
       "sha1": "22de7012df58897c09b4d31b963d317293237c1e"
     },
