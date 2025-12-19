@@ -100,7 +100,9 @@ export default function WishlistScreen() {
                         <Text style={styles.mrpText}>MRP</Text>
                         <MaterialIcons name={'currency-rupee'} color={'#777777'} size={wp("2.4%")} style={styles.rupeeIconSmall} />
                         <Text style={[styles.mrpText, {
-                            left: wp("-0.4%")
+                            left: wp("-0.4%"),
+                            textDecorationLine: "line-through",
+                            textDecorationColor: "#777777"
                         }]}>{item.item.mrpPrice}</Text>
                     </View>
                 </View>
@@ -248,10 +250,11 @@ const styles = StyleSheet.create({
     },
     mrpText: {
         fontFamily: "Poppins-Light",
-        fontSize: wp("2.4%")
+        fontSize: wp("2.4%"),
+        color: "#777777",
     },
     rupeeIconSmall: {
-        bottom: hp("0.1%"),
+        bottom: hp("0.05%"),
         marginLeft: wp("0.2%")
     },
     productCardViewFour: {
