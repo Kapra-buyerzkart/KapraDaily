@@ -3,10 +3,15 @@ import React from 'react'
 import LinearGradient from 'react-native-linear-gradient'
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
+import { useNavigation } from '@react-navigation/native';
 
 export default function SelectedProducts(props) {
+    const navigation = useNavigation();
     return (
-        <TouchableOpacity style={styles.mainContainer}>
+        <TouchableOpacity
+            onPress={() => navigation.navigate("CartScreen")}
+            style={styles.mainContainer}>
+            {console.log("props", props)}
             <LinearGradient colors={["#F25000", "#FF7B3A", "#F25000"]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}

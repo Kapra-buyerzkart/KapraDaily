@@ -14,6 +14,7 @@ import EvilIcons from 'react-native-vector-icons/EvilIcons';
 import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
 import ProductCard from '../components/ProductCard';
 import SelectedProducts from '../components/SelectedProducts';
+import { useNavigation } from '@react-navigation/native';
 
 
 const { width } = Dimensions.get("window");
@@ -84,21 +85,21 @@ const HomeScreen = () => {
             name: "Alfonso Mango",
             offer: 17,
             price: 324,
-            image: require("../assets/images/mango.png")
+            image: require("../assets/images/mango_banner.png")
         },
         {
             id: "2",
             name: "Alfonso Mango",
             offer: 17,
             price: 324,
-            image: require("../assets/images/mango.png")
+            image: require("../assets/images/mango_banner.png")
         },
         {
             id: "3",
             name: "Alfonso Mango",
             offer: 17,
             price: 324,
-            image: require("../assets/images/mango.png")
+            image: require("../assets/images/mango_banner.png")
         },
     ]
 
@@ -114,6 +115,8 @@ const HomeScreen = () => {
             setActiveIndex(slideIndex);
         }
     };
+
+    const navigation = useNavigation()
 
     const GradientUserIcon = ({ size }) => {
         return (
@@ -161,7 +164,7 @@ const HomeScreen = () => {
         const firstLine = nameParts[0] || "";
         const secondLine = nameParts.slice(1).join(" ");
         return (
-            <ImageBackground source={require("../assets/images/mango.png")} style={styles.fruitsImageBackground}
+            <ImageBackground source={require("../assets/images/mango_banner.png")} style={styles.fruitsImageBackground}
                 imageStyle={{
                     borderRadius: wp("4.65%"),
                 }}>
@@ -263,18 +266,9 @@ const HomeScreen = () => {
                                 <Entypo name={"chevron-right"} size={wp('3.6%')} color={"#FFFFFF"} />
                             </TouchableOpacity>
                         </View>
-                        {/* <View style={styles.bcoinContainer}>
+                        <View style={styles.bcoinContainer}>
 
-                            <LinearGradient
-                                colors={['#FFEF94', '#FFF6C5', '#FFBA33', '#FFBA3300']}
-                                locations={[0, 0.3, 0.7, 1]}
-                                start={{ x: 0.5, y: 0 }}
-                                end={{ x: 0.5, y: 1 }}
-                                style={styles.bcoinRupee}
-                            >
-                                <MaterialIcons name={'currency-rupee'} size={wp('4%')} color={'#DB8000'} />
-                            </LinearGradient>
-
+                            <Image style={styles.rupeeImageTwo} source={require('../assets/images/premium_rupee.png')} />
                             <LinearGradient
                                 colors={['#FDED94', '#DEC32B']}
                                 start={{ x: 0, y: 0 }}
@@ -284,19 +278,9 @@ const HomeScreen = () => {
                                 <Text style={styles.bcoinText}>10.0 B</Text>
                             </LinearGradient>
 
-                        </View> */}
-                        <View style={styles.bcoinContainer}>
-
-                            <LinearGradient
-                                colors={['#3A2400', '#3A2400', '#FFBA33', '#FFBA3300']}
-                                locations={[0, 0.3, 0.7, 1]}
-                                start={{ x: 0.5, y: 0 }}
-                                end={{ x: 0.5, y: 1 }}
-                                style={styles.bcoinRupeeTwo}
-                            >
-                                <MaterialIcons name={'currency-rupee'} size={wp('4%')} color={'#DB8000'} />
-                            </LinearGradient>
-
+                        </View>
+                        {/* <View style={styles.bcoinContainer}>
+                            <Image style={styles.rupeeImageOne} source={require('../assets/images/normal_rupee.png')} />
                             <LinearGradient
                                 colors={['#311C00', '#000000']}
                                 start={{ x: 0, y: 0 }}
@@ -306,20 +290,20 @@ const HomeScreen = () => {
                                 <Text style={styles.bcoinTextTwo}>10.0 B</Text>
                             </LinearGradient>
 
-                        </View>
+                        </View> */}
 
-                        {/* <TouchableOpacity style={styles.profileIconMainView}>
+                        <TouchableOpacity onPress={() => navigation.navigate('ProfileScreen')} style={styles.profileIconMainView}>
                             <Image source={require('../assets/images/crown.png')} width={wp('6.3%')} height={hp('2.6%')} />
                             <View style={styles.profileIconView}>
                                 <GradientUserIcon size={wp('6%')} />
                             </View>
-                        </TouchableOpacity> */}
-                        <TouchableOpacity>
+                        </TouchableOpacity>
+                        {/* <TouchableOpacity>
                             <Image source={require('../assets/images/user.png')} style={{
                                 height: wp('9%'),
                                 width: wp('9%')
                             }} />
-                        </TouchableOpacity>
+                        </TouchableOpacity> */}
 
                     </View>
                     <View style={styles.searchContainer}>
@@ -1127,5 +1111,15 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
         alignItems: "center",
+    },
+    rupeeImageOne: {
+        width: hp('3%'),
+        height: hp('3%'),
+        bottom: hp('-0.5%')
+    },
+    rupeeImageTwo: {
+        width: hp('3%'),
+        height: hp('3%'),
+        bottom: hp('-0.4%')
     },
 })

@@ -8,6 +8,7 @@ import { Image, Platform, StyleSheet, Text, TouchableOpacity } from 'react-nativ
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import HomeStack from './HomeStack';
 
 const Tab = createBottomTabNavigator();
 
@@ -61,7 +62,7 @@ export default function MainTabNavigator() {
             {/* ---------------- HOME ---------------- */}
             <Tab.Screen
                 name="Home"
-                component={HomeScreen}
+                component={HomeStack}
                 options={{
                     headerShown: false,
 

@@ -1,16 +1,24 @@
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native'
-import React from 'react'
+import React, { useState } from 'react'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import EvilIcons from 'react-native-vector-icons/EvilIcons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Entypo from 'react-native-vector-icons/Entypo';
-
+import FontAwesome from 'react-native-vector-icons/FontAwesome'
 
 export default function ProductCard(props) {
+    const [liked, setLiked] = useState(false);
     return (
         <TouchableOpacity style={styles.productCard}>
             <View style={styles.productCardViewOne}>
-                <EvilIcons name={"heart"} size={wp("7%")} />
+                {/* <EvilIcons name={"heart"} size={wp("7%")} /> */}
+                <TouchableOpacity onPress={() => setLiked(!liked)}>
+                    <FontAwesome
+                        name={liked ? 'heart' : 'heart-o'}
+                        size={wp('5%')}
+                        color={liked ? 'red' : '#979797'}
+                    />
+                </TouchableOpacity>
                 <Text style={styles.btokenText}>Upto 1B Token</Text>
                 <View style={styles.plusIconView}>
                     <Entypo name={"plus"} color={"#FFFFFF"} size={wp("3.8%")} />
@@ -28,20 +36,20 @@ export default function ProductCard(props) {
                 <View>
                     <View style={styles.productCardViewFour}>
                         <Text style={styles.mrpText}>MRP </Text>
-                        <MaterialIcons name={'currency-rupee'} color={'#777777'} size={wp("2.5%")} style={{
+                        {/* <MaterialIcons name={'currency-rupee'} color={'#777777'} size={wp("2.5%")} style={{
                             bottom: hp("0.1%")
-                        }} />
+                        }} /> */}
                         <Text style={[styles.mrpText, {
                             textDecorationLine: "line-through",
                             textDecorationColor: "#777777"
-                        }]}>394</Text>
+                        }]}>₹394</Text>
 
                     </View>
                     <View style={styles.priceView}>
-                        <MaterialIcons name={'currency-rupee'} color={'#0CA201'} size={wp("3.7%")} style={{
+                        {/* <MaterialIcons name={'currency-rupee'} color={'#0CA201'} size={wp("3.7%")} style={{
                             bottom: hp("0.15%")
-                        }} />
-                        <Text style={styles.priceText}>324</Text>
+                        }} /> */}
+                        <Text style={styles.priceText}>₹324</Text>
                     </View>
                 </View>
             </View>
@@ -126,7 +134,7 @@ const styles = StyleSheet.create({
         color: "#777777"
     },
     priceView: {
-        flexDirection: "row",
+        // flexDirection: "row",
         alignItems: "center",
         borderColor: "#0CA201",
         borderWidth: 1,
