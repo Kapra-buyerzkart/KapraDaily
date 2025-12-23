@@ -15,7 +15,7 @@ import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
 import ProductCard from '../components/ProductCard';
 import SelectedProducts from '../components/SelectedProducts';
 import { useNavigation } from '@react-navigation/native';
-
+import { FONTS } from '../styles/typography'
 
 const { width } = Dimensions.get("window");
 const BANNER_HEIGHT = (283 / 390) * width;
@@ -595,7 +595,7 @@ const styles = StyleSheet.create({
         justifyContent: "space-between",
     },
     timeText: {
-        fontFamily: "Poppins-ExtraBold",
+        fontFamily: FONTS.poppins.extraBold,
         color: "#FFFFFF",
         fontSize: wp('6%'),
     },
@@ -606,7 +606,7 @@ const styles = StyleSheet.create({
     addressText: {
         color: "#FFFFFF",
         fontSize: wp('3.3%'),
-        fontFamily: "Poppins-Medium",
+        fontFamily: FONTS.poppins.medium,
         maxWidth: wp('53%'),
     },
     bcoinContainer: {
@@ -630,7 +630,7 @@ const styles = StyleSheet.create({
     coinSymbol: {
         color: '#FFD98F',
         fontSize: wp('4%'),
-        fontFamily: 'Poppins-Bold',
+        fontFamily: FONTS.poppins.bold,
     },
     badge: {
         width: wp('14%'),
@@ -649,12 +649,12 @@ const styles = StyleSheet.create({
     bcoinText: {
         color: '#000000',
         fontSize: wp('3%'),
-        fontFamily: 'Poppins-Bold',
+        fontFamily: FONTS.poppins.bold,
     },
     bcoinTextTwo: {
         color: '#FFBA33',
         fontSize: wp('3%'),
-        fontFamily: 'Poppins-Bold',
+        fontFamily: FONTS.poppins.bold,
     },
     profileIconView: {
         width: wp('8.8%'),
@@ -690,7 +690,7 @@ const styles = StyleSheet.create({
         fontSize: wp('3.8%'),
         marginHorizontal: wp('1.5%'),
         color: '#000000',
-        fontFamily: 'Poppins-Light',
+        fontFamily: FONTS.poppins.light,
     },
     divider: {
         width: 1,
@@ -722,7 +722,7 @@ const styles = StyleSheet.create({
         fontSize: wp('2.8%'),
         textAlign: 'center',
         color: '#190A07',
-        fontFamily: "Poppins-Medium",
+        fontFamily: FONTS.poppins.medium,
     },
     profileIconMainView: {
         alignItems: "center",
@@ -737,7 +737,7 @@ const styles = StyleSheet.create({
         marginTop: hp("2%")
     },
     categoryHeaderText: {
-        fontFamily: "Outfit-Medium",
+        fontFamily: FONTS.outfit.medium,
         fontSize: wp("4.2%"),
         marginBottom: hp("2%")
     },
@@ -792,7 +792,7 @@ const styles = StyleSheet.create({
         justifyContent: "space-between"
     },
     productsContainerHeader: {
-        fontFamily: "Outfit-Medium",
+        fontFamily: FONTS.outfit.medium,
         fontSize: wp("4.2%"),
     },
     viewAllContainer: {
@@ -801,7 +801,7 @@ const styles = StyleSheet.create({
         marginRight: wp("4.6%")
     },
     viewAllText: {
-        fontFamily: "Outfit-Regular",
+        fontFamily: FONTS.outfit.regular,
         fontSize: wp("3.5%"),
         color: "#FF7B3A"
     },
@@ -930,7 +930,7 @@ const styles = StyleSheet.create({
         marginBottom: hp("7.5%"),
     },
     tellUsText: {
-        fontFamily: "Poppins-Regular",
+        fontFamily: FONTS.poppins.regular,
         color: "#FFFFFF",
         fontSize: wp("3.95%"),
         marginTop: hp("3.1%")
@@ -950,7 +950,7 @@ const styles = StyleSheet.create({
         fontSize: wp('3.8%'),
         // marginHorizontal: wp('1.5%'),
         color: '#000000',
-        fontFamily: 'Poppins-Light',
+        fontFamily: FONTS.poppins.light,
     },
     enterContainer: {
         width: wp("16%"),
@@ -967,7 +967,7 @@ const styles = StyleSheet.create({
     enterText: {
         color: "#000000",
         fontSize: wp("3.8%"),
-        fontFamily: "Poppins-SemiBold"
+        fontFamily: FONTS.poppins.semiBold,
     },
     kapraLogo: {
         width: wp("64.65%"),
@@ -1008,7 +1008,7 @@ const styles = StyleSheet.create({
         paddingBottom: hp("2%")
     },
     searchingForSomethingText: {
-        fontFamily: "Poppins-SemiBold",
+        fontFamily: FONTS.poppins.semiBold,
         fontSize: wp("3.95%"),
     },
     fruitsHeaderView: {
@@ -1018,7 +1018,7 @@ const styles = StyleSheet.create({
         marginBottom: hp("1.5%")
     },
     fruitsHeaderText: {
-        fontFamily: "Outfit-Medium",
+        fontFamily: FONTS.outfit.medium,
         color: "#000000",
         fontSize: wp("4.2%"),
         marginLeft: wp("5%")
@@ -1041,12 +1041,12 @@ const styles = StyleSheet.create({
     },
     fruitsNameText: {
         color: "#FFFFFF",
-        fontFamily: "Outfit-Regular",
+        fontFamily: FONTS.outfit.regular,
         fontSize: wp("4.7%"),
         lineHeight: wp("5.7%")
     },
     fruitsOfferText: {
-        fontFamily: "Poppins-SemiBold",
+        fontFamily: FONTS.poppins.semiBold,
         fontSize: wp("2.79%"),
         color: "#FFFFFF"
     },
@@ -1064,7 +1064,7 @@ const styles = StyleSheet.create({
     fruitsPriceText: {
         fontSize: wp("5.12%"),
         color: "#FFFFFF",
-        fontFamily: "Poppins-SemiBold",
+        fontFamily: FONTS.poppins.semiBold,
         left: wp("-0.7%")
     },
     fruitsInnerviewThree: {
@@ -1075,7 +1075,7 @@ const styles = StyleSheet.create({
     fruitsPriceTextTwo: {
         fontSize: wp("2.79%"),
         color: "#FFFFFF",
-        fontFamily: "Poppins-Light",
+        fontFamily: FONTS.poppins.light,
         left: wp("-0.4%"),
         textDecorationLine: "line-through",
         textDecorationColor: "#FFFFFF"
@@ -1098,7 +1098,7 @@ const styles = StyleSheet.create({
         // alignSelf:"flex-end"
     },
     addText: {
-        fontFamily: "Poppins-SemiBold",
+        fontFamily: FONTS.poppins.semiBold,
         color: "#F1BF2D",
         fontSize: wp("3.95%")
     },

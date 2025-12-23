@@ -4,6 +4,7 @@ import LinearGradient from 'react-native-linear-gradient'
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { useNavigation } from '@react-navigation/native';
+import { FONTS } from '../styles/typography';
 
 export default function SelectedProducts(props) {
     const navigation = useNavigation();
@@ -82,7 +83,7 @@ const styles = StyleSheet.create({
     viewCartText: {
         fontSize: wp("3.95%"),
         color: "#FFFFFF",
-        fontFamily: "Poppins-SemiBold",
+        fontFamily: FONTS.poppins.semiBold,
         top: hp("0.2%")
     },
     viewTwo: {
@@ -98,7 +99,7 @@ const styles = StyleSheet.create({
     },
     itemsText: {
         color: "#FFFFFF",
-        fontFamily: "Poppins-Regular",
+        fontFamily: FONTS.poppins.regular,
         fontSize: wp("2.79%"),
         bottom: hp("0.2%")
     }

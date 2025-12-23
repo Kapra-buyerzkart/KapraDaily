@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Entypo from 'react-native-vector-icons/Entypo';
-
+import { FONTS } from '../styles/typography'
 
 export default function WishlistScreen() {
 
@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
         backgroundColor: "#FFFFFF"
     },
     header: {
-        fontFamily: "Poppins-SemiBold",
+        fontFamily: FONTS.poppins.semiBold,
         fontSize: wp("5%"),
         alignSelf: "center"
     },
@@ -206,7 +206,7 @@ const styles = StyleSheet.create({
         alignSelf: "flex-end"
     },
     priceText: {
-        fontFamily: "Poppins-SemiBold",
+        fontFamily: FONTS.poppins.semiBold,
         fontSize: wp("3.7%"),
         color: "#0CA201"
     },
@@ -231,14 +231,14 @@ const styles = StyleSheet.create({
         justifyContent: "space-between"
     },
     productNameText: {
-        fontFamily: "Outfit-Light",
+        fontFamily: FONTS.outfit.light,
         fontSize: wp("3.3%"),
         color: "#000000"
     },
     offerText: {
         color: "#F04B1B",
         fontSize: wp("3%"),
-        fontFamily: "Outfit-SemiBold"
+        fontFamily: FONTS.outfit.semiBold,
     },
     productCardViewThree: {
         justifyContent: "flex-end",
@@ -249,7 +249,7 @@ const styles = StyleSheet.create({
         alignItems: "center"
     },
     mrpText: {
-        fontFamily: "Poppins-Light",
+        fontFamily: FONTS.poppins.light,
         fontSize: wp("2.4%"),
         color: "#777777",
     },
@@ -285,7 +285,7 @@ const styles = StyleSheet.create({
     },
     newWishesText: {
         color: "#000000",
-        fontFamily: "Outfit-Regular",
+        fontFamily: FONTS.outfit.regular,
         fontSize: wp("3.25%")
     }
 })

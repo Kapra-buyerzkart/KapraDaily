@@ -5,6 +5,7 @@ import AntDesign from 'react-native-vector-icons/AntDesign'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import LinearGradient from 'react-native-linear-gradient'
 import { useNavigation } from '@react-navigation/native'
+import { FONTS } from '../styles/typography'
 
 export default function ProfileScreen() {
     const navigation = useNavigation()
@@ -132,7 +133,7 @@ const styles = StyleSheet.create({
     },
     profileHeaderText: {
         color: '#000000',
-        fontFamily: 'Poppins-SemiBold',
+        fontFamily: FONTS.poppins.semiBold,
         fontSize: wp('5.1%'),
         flex: 1,
         marginLeft: wp('4%')
@@ -161,12 +162,12 @@ const styles = StyleSheet.create({
     },
     userNameText: {
         color: '#000000',
-        fontFamily: 'Poppins-Medium',
+        fontFamily: FONTS.poppins.medium,
         fontSize: wp('4.18%')
     },
     phoneNumberStyle: {
         fontSize: wp('2.79%'),
-        fontFamily: 'Poppins-Medium',
+        fontFamily: FONTS.poppins.semiBold,
         color: '#5C5C5C',
         // marginTop: hp('0.1%')
     },
@@ -186,7 +187,7 @@ const styles = StyleSheet.create({
         height: wp('4.65%'),
     },
     bcoinText: {
-        fontFamily: 'Poppins-Regular',
+        fontFamily: FONTS.poppins.regular,
         fontSize: wp('3.25%'),
         color: '#000000'
     },
@@ -218,7 +219,7 @@ const styles = StyleSheet.create({
         width: wp('6.9%'),
     },
     saveAddressText: {
-        fontFamily: 'Poppins-Regular',
+        fontFamily: FONTS.poppins.regular,
         fontSize: wp('3.25%'),
         marginLeft: wp('2%')
     },
@@ -227,7 +228,7 @@ const styles = StyleSheet.create({
         marginTop: hp('2.5%')
     },
     offersText: {
-        fontFamily: 'Poppins-Medium',
+        fontFamily: FONTS.poppins.medium,
         fontSize: wp('4.18%'),
         color: '#000000',
         marginBottom: hp('0.5%')
@@ -265,13 +266,13 @@ const styles = StyleSheet.create({
         paddingHorizontal: wp('2%')
     },
     sendContainerTextOne: {
-        fontFamily: 'Poppins-Regular',
+        fontFamily: FONTS.poppins.regular,
         color: '#000000',
         fontSize: wp('3.72%'),
     },
     sendContainerTextTwo: {
         color: '#7D7D7D',
-        fontFamily: 'Poppins-Light',
+        fontFamily: FONTS.poppins.light,
         fontSize: wp('3.25%')
     },
     sendContainerInnerView: {
@@ -286,7 +287,7 @@ const styles = StyleSheet.create({
     },
     sendTextInput: {
         flex: 1,
-        fontFamily: 'Poppins-Light',
+        fontFamily: FONTS.poppins.light,
         fontSize: wp('3.72%'),
         color: '#000000'
     },
@@ -309,7 +310,7 @@ const styles = StyleSheet.create({
     },
     logoutText: {
         color: '#FF0000',
-        fontFamily: 'Poppins-Regular',
+        fontFamily: FONTS.poppins.regular,
         fontSize: wp('3.25%')
     }
 })

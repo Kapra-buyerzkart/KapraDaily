@@ -5,6 +5,7 @@ import EvilIcons from 'react-native-vector-icons/EvilIcons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Entypo from 'react-native-vector-icons/Entypo';
 import FontAwesome from 'react-native-vector-icons/FontAwesome'
+import { FONTS } from '../styles/typography'
 
 export default function ProductCard(props) {
     const [liked, setLiked] = useState(false);
@@ -96,7 +97,7 @@ const styles = StyleSheet.create({
         // backgroundColor: "yellow",
     },
     btokenText: {
-        fontFamily: "Outfit-Regular",
+        fontFamily: FONTS.outfit.regular,
         fontSize: wp("2.3%"),
         color: "#5E3568"
     },
@@ -122,14 +123,14 @@ const styles = StyleSheet.create({
     offerText: {
         color: "#F04B1B",
         fontSize: wp("2.5%"),
-        fontFamily: "Outfit-SemiBold"
+        fontFamily: FONTS.outfit.semiBold
     },
     productCardViewFour: {
         flexDirection: "row",
         alignItems: "center"
     },
     mrpText: {
-        fontFamily: "Poppins-Light",
+        fontFamily: FONTS.poppins.light,
         fontSize: wp("2.5%"),
         color: "#777777"
     },
@@ -142,12 +143,13 @@ const styles = StyleSheet.create({
         padding: wp("0.5%")
     },
     priceText: {
-        fontFamily: "Poppins-SemiBold",
+        fontFamily: FONTS.poppins.semiBold,
         fontSize: wp("3.7%"),
         color: "#0CA201"
     },
     productNameText: {
-        fontFamily: "Outfit-Light",
+        // fontFamily: "Outfit-Light",
+        fontFamily: FONTS.outfit.light,
         fontSize: wp("3.25%"),
         color: "#000000",
         textAlign: "center",

@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native'
 import React, { useState } from 'react'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
+import { FONTS } from '../styles/typography'
 
 const OfferCard = (props) => {
 
@@ -57,7 +58,7 @@ const styles = StyleSheet.create({
         flex: 1
     },
     offerText: {
-        fontFamily: 'Poppins-Regular',
+        fontFamily: FONTS.poppins.regular,
         fontSize: wp('3.25%'),
         color: '#000000'
     },
@@ -71,7 +72,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     addButtonText: {
-        fontFamily: 'Poppins-SemiBold',
+        fontFamily: FONTS.poppins.semiBold,
         fontSize: wp('3%'),
         color: '#F25000',
     }

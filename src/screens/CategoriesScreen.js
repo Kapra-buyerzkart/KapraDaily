@@ -7,6 +7,7 @@ import Feather from 'react-native-vector-icons/Feather';
 import ProductCard from '../components/ProductCard';
 import SelectedProducts from '../components/SelectedProducts';
 import LinearGradient from 'react-native-linear-gradient';
+import { FONTS } from '../styles/typography'
 
 
 const categories = [
@@ -364,7 +365,7 @@ const styles = StyleSheet.create({
         color: "#000000",
         // lineHeight: 18,
         // zIndex: 1,
-        fontFamily: "Poppins-Medium",
+        fontFamily: FONTS.poppins.medium,
         marginTop: hp("0.5%")
     },
     searchContainer: {
@@ -385,7 +386,7 @@ const styles = StyleSheet.create({
         fontSize: wp('3.25%'),
         marginHorizontal: wp('1.5%'),
         color: '#000000',
-        fontFamily: 'Outfit-Light',
+        fontFamily: FONTS.outfit.light,
     },
     floatingContainer: {
         position: "absolute",
@@ -395,12 +396,12 @@ const styles = StyleSheet.create({
         alignItems: "center",
     },
     categoryHeaderText: {
-        fontFamily: "Lexend-SemiBold",
+        fontFamily: FONTS.lexend.semiBold,
         fontSize: wp("5.1%"),
         marginLeft: wp("10%")
     },
     filterText: {
-        fontFamily: "Lexend-Medium",
+        fontFamily: FONTS.lexend.medium,
         fontSize: wp("3.48%")
     },
     categoryBanner: {
@@ -469,7 +470,7 @@ const styles = StyleSheet.create({
     },
     selectedSubCatText: {
         color: "#000000",
-        fontFamily: "Lexend-Medium",
+        fontFamily: FONTS.lexend.medium,
         fontSize: wp("2.79%"),
         marginTop: hp("0.1%")
     },
@@ -489,7 +490,7 @@ const styles = StyleSheet.create({
     },
     unselectedSubCatText: {
         color: "#666666",
-        fontFamily: "Lexend-Medium",
+        fontFamily: FONTS.lexend.medium,
         fontSize: wp("2.79%"),
     }
 });

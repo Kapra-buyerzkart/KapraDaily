@@ -9,6 +9,7 @@ import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-nat
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import HomeStack from './HomeStack';
+import { FONTS } from '../styles/typography'
 
 const Tab = createBottomTabNavigator();
 
@@ -22,7 +23,7 @@ export default function MainTabNavigator() {
                     width: wp("19.53%"),
                     height: hp("3%"),
                     resizeMode: "contain"
-                }}/>
+                }} />
             </TouchableOpacity>)
     }
     const insets = useSafeAreaInsets();
@@ -160,7 +161,7 @@ const styles = StyleSheet.create({
         fontSize: wp("2.8%"),
         color: "#8E8E8E",
         marginTop: hp("0.2%"),
-        fontFamily: "Inter_18pt-Regular"
+        fontFamily: FONTS.inter.regular
     },
     KshopeButton: {
         width: wp("28.84%"),
@@ -173,7 +174,7 @@ const styles = StyleSheet.create({
     },
     KshopeButtonText: {
         fontSize: wp("5.3%"),
-        fontFamily: "Italiana-Regular",
+        fontFamily: FONTS.italiana.regular,
         color: "#000000"
     }
 })
