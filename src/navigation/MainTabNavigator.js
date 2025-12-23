@@ -64,6 +64,14 @@ export default function MainTabNavigator() {
             <Tab.Screen
                 name="Home"
                 component={HomeStack}
+                listeners={({ navigation }) => ({
+                    tabPress: e => {
+                        e.preventDefault();
+                        navigation.navigate('Home', {
+                            screen: 'HomeScreen',
+                        });
+                    },
+                })}
                 options={{
                     headerShown: false,
 
