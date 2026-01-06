@@ -87,6 +87,10 @@
 		<string>Poppins-SemiBold.ttf</string>
 		<string>Lexend-Medium.ttf</string>
 		<string>Lexend-SemiBold.ttf</string>
+		<string>Outfit-Bold.ttf</string>
+		<string>Inter_18pt-ExtraBold.ttf</string>
+		<string>Inter_18pt-BoldItalic.ttf</string>
+		<string>Inter_28pt-ExtraBold.ttf</string>
 	</array>
 </dict>
 </plist>

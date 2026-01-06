@@ -5,6 +5,7 @@ import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-nat
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Entypo from 'react-native-vector-icons/Entypo';
 import { FONTS } from '../styles/typography'
+import LinearGradient from 'react-native-linear-gradient';
 
 export default function WishlistScreen() {
 
@@ -123,10 +124,25 @@ export default function WishlistScreen() {
     return (
         <SafeAreaView edges={['top']}
             style={styles.mainContainer}>
-            <Text style={styles.header}>Wishlist</Text>
-            <View style={styles.giftImageView}>
-                <Image source={require("../assets/images/gift.png")} style={styles.giftImage} />
-            </View>
+            <LinearGradient
+                colors={['#FFE7DB', '#FFFFFF']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 0, y: 1 }}
+            >
+                {/* <Text style={styles.header}>Wishlist</Text>
+                <View style={styles.giftImageView}>
+                    <Image source={require("../assets/images/gift_two.png")} style={styles.giftImage} />
+                </View> */}
+                <View style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    // alignItems: "flex-start",
+                    // bottom: hp()
+                }}>
+                    <Text style={styles.header}>Wishlist</Text>
+                    <Image style={styles.giftImage} source={require('../assets/images/gift_two.png')} />
+                </View>
+            </LinearGradient>
             <View style={styles.productListView}>
                 <FlatList
                     data={products}
@@ -152,8 +168,9 @@ const styles = StyleSheet.create({
     },
     header: {
         fontFamily: FONTS.poppins.semiBold,
-        fontSize: wp("5%"),
-        alignSelf: "center"
+        fontSize: wp('4.65%'),
+        alignSelf: 'center',
+        marginLeft: wp('10%')
     },
     giftImageView: {
         // backgroundColor: "yellow",
@@ -163,10 +180,11 @@ const styles = StyleSheet.create({
         top: hp("0.8%"),
     },
     giftImage: {
-        height: hp("5.6%"),
-        width: wp("40%"),
-        resizeMode: "contain",
-        // backgroundColor: "red"
+        width: wp('37.9%'),
+        height: hp('14%'),
+        resizeMode: 'contain',
+        bottom: hp('-3.8%'),
+        marginRight: wp('6%')
     },
     productListView: {
         flex: 1,
@@ -177,8 +195,9 @@ const styles = StyleSheet.create({
         backgroundColor: "#FFFFFF",
         // paddingTop: hp("1.7%"),
         alignItems: "center",
-        bottom: hp('0.5%'),
-        borderBottomColor: "#FFFFFF"
+        // bottom: hp('0.5%'),
+        borderBottomColor: "#FFFFFF",
+        paddingTop: hp('1.5%')
     },
     productCard: {
         width: wp("90%"),
@@ -277,7 +296,8 @@ const styles = StyleSheet.create({
         paddingHorizontal: wp("1.8%"),
         alignSelf: "flex-end",
         marginRight: wp("5%"),
-        marginTop: hp("0.5%")
+        marginTop: hp("0.5%"),
+        marginBottom: hp('0.5%')
     },
     newWishesHeart: {
         height: wp("4.6%"),

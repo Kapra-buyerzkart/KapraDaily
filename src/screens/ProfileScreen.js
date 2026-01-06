@@ -14,8 +14,8 @@ export default function ProfileScreen() {
             <ScrollView>
                 <LinearGradient
                     colors={['#FFE7DB', '#FFFFFF']}
-                    start={{ x: 0.5, y: 0 }}
-                    end={{ x: 0.5, y: 1 }}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 0, y: 1 }}
                 >
                     <View style={styles.topView}>
                         <View style={styles.headerView}>
@@ -50,9 +50,9 @@ export default function ProfileScreen() {
                         <Image style={styles.saveAddressImage} source={require('../assets/images/location_two.png')} />
                         <Text style={styles.saveAddressText}>Save Address</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.saveAddressContainer}>
+                    <TouchableOpacity onPress={() => navigation.navigate("MyOrdersScreen")} style={styles.saveAddressContainer}>
                         <Image style={styles.saveAddressImage} source={require('../assets/images/order.png')} />
-                        <Text style={styles.saveAddressText}>My Order</Text>
+                        <Text style={styles.saveAddressText}>My Orders</Text>
                     </TouchableOpacity>
                 </View>
                 <View style={styles.containerThree}>

@@ -102,6 +102,9 @@ const HomeScreen = () => {
             image: require("../assets/images/mango_banner.png")
         },
     ]
+    const BANNER_WIDTH = wp("84.88%");
+    const BANNER_SPACING = wp("4.6%");
+    const SNAP_INTERVAL = BANNER_WIDTH + BANNER_SPACING;
 
     const scrollRef = useRef();
     const [activeIndex, setActiveIndex] = useState(0);
@@ -317,8 +320,15 @@ const HomeScreen = () => {
                         <Ionicons name="clipboard-outline" color={"#8F8F8F"} size={wp("6%")} style={styles.clipboardIcon} />
                     </View>
                 </View>
-                <View style={styles.headerBannerView}>
+                {/* <View style={styles.headerBannerView}>
                     <Image source={require("../assets/images/banner.png")} style={styles.headerBannerImage} />
+                </View> */}
+                <View style={styles.headerBannerView}>
+                    <ImageBackground
+                        source={require("../assets/images/banner.png")}
+                        style={styles.headerBannerImage}
+                        resizeMode="contain"
+                    />
                 </View>
                 <View style={styles.categoryMainView}>
                     <Text style={styles.categoryHeaderText}>Category</Text>
@@ -351,6 +361,9 @@ const HomeScreen = () => {
                             keyExtractor={(item, index) => item.id.toString()}
                             renderItem={({ item }) => <ProductCard item={item} />}
                             showsHorizontalScrollIndicator={false}
+                            contentContainerStyle={{
+                                paddingLeft: wp('4.6%')
+                            }}
                         />
                     </ImageBackground>
                 </View>
@@ -369,6 +382,9 @@ const HomeScreen = () => {
                         keyExtractor={(item, index) => item.id.toString()}
                         renderItem={({ item }) => <ProductCard item={item} />}
                         showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={{
+                            paddingLeft: wp('4.6%'), // 👈 first card left spacing
+                        }}
                     />
                 </View>
 
@@ -399,7 +415,7 @@ const HomeScreen = () => {
 
                 <View style={styles.bannerContainer}>
                     {/* Scrollable Banner */}
-                    <ScrollView
+                    {/* <ScrollView
                         horizontal
                         pagingEnabled
                         showsHorizontalScrollIndicator={false}
@@ -412,7 +428,23 @@ const HomeScreen = () => {
                         {banners.map((img, index) => (
                             <Image key={index} source={img} style={styles.bannerImage} />
                         ))}
-                    </ScrollView>
+                    </ScrollView> */}
+
+                    <FlatList
+                        data={banners}
+                        horizontal
+                        pagingEnabled={false}
+                        showsHorizontalScrollIndicator={false}
+                        snapToInterval={SNAP_INTERVAL}
+                        decelerationRate="fast"
+                        snapToAlignment="start"
+                        contentContainerStyle={{ paddingRight: wp("4.6%") }}
+                        onScroll={onScroll}
+                        scrollEventThrottle={16}
+                        renderItem={({ item }) => (
+                            <Image source={item} style={styles.bannerImage} />
+                        )}
+                    />
 
                     {/* Pagination Dots */}
                     <View style={styles.pagination}>
@@ -443,7 +475,7 @@ const HomeScreen = () => {
                     </View>
                     <FlatList
                         style={{
-                            marginLeft: wp("3%"),
+                            // marginLeft: wp("3%"),
                             marginTop: hp("3%")
                         }}
                         horizontal={true}
@@ -451,6 +483,9 @@ const HomeScreen = () => {
                         keyExtractor={(item, index) => item.id.toString()}
                         renderItem={({ item }) => <ProductCard item={item} />}
                         showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={{
+                            marginLeft: wp('3%')
+                        }}
                     />
                 </LinearGradient>
                 {/* <LinearGradient
@@ -496,12 +531,15 @@ const HomeScreen = () => {
                         </TouchableOpacity>
                     </View>
                     <FlatList
-                        style={styles.fruitsFlatlist}
+                        // style={styles.fruitsFlatlist}
                         data={fruits}
                         keyExtractor={(item, index) => item.id}
                         horizontal={true}
                         renderItem={({ item }) => <FruitCard item={item} />}
                         showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={{
+                            marginLeft: wp("5%")
+                        }}
                     />
                 </View>
 
@@ -728,9 +766,13 @@ const styles = StyleSheet.create({
         alignItems: "center",
         top: hp("-1.1%")
     },
+    // headerBannerImage: {
+    //     width: "100%",
+    //     resizeMode: "contain",
+    // },
     headerBannerImage: {
         width: "100%",
-        resizeMode: "contain",
+        height: hp("22%"),   // adjust based on design
     },
     categoryMainView: {
         marginHorizontal: wp("4.6%"),
@@ -751,15 +793,20 @@ const styles = StyleSheet.create({
         height: hp("35%"),
         // justifyContent: "flex-end",
         // paddingBottom: hp("3%"),
-        paddingLeft: wp("4.6%"),
+        // paddingLeft: wp("4.6%"),
         paddingTop: hp("6%"),
         // backgroundColor: "yellow"
     },
     clipboardIcon: {
         marginLeft: wp('4%')
     },
+    // headerBannerView: {
+    //     marginTop: hp("-2%"),
+    //     backgroundColor: 'yellow'
+    // },
     headerBannerView: {
-        marginTop: hp("-2%")
+        width: "100%",
+        marginTop: hp("-2%"),
     },
     // productCard: {
     //     width: wp('34.7%'),
@@ -794,6 +841,7 @@ const styles = StyleSheet.create({
     productsContainerHeader: {
         fontFamily: FONTS.outfit.medium,
         fontSize: wp("4.2%"),
+        marginLeft: wp('4.6%')
     },
     viewAllContainer: {
         flexDirection: "row",
@@ -810,7 +858,7 @@ const styles = StyleSheet.create({
     },
     productsMainContainerTwo: {
         marginTop: hp("2.7%"),
-        paddingLeft: wp("4.6%"),
+        // paddingLeft: wp("4.6%"),
         height: hp("29.5%"),
         // width: wp("100%"),
     },
@@ -822,12 +870,19 @@ const styles = StyleSheet.create({
         height: hp("20.38%"),
         // paddingLeft: wp("4.6%"),
     },
+    // bannerImage: {
+    //     width: wp("84.88%"),
+    //     height: hp("20.38%"),
+    //     resizeMode: "cover",
+    //     borderRadius: 8,
+    //     marginLeft: wp("4.6%")
+    // },
     bannerImage: {
         width: wp("84.88%"),
         height: hp("20.38%"),
         resizeMode: "cover",
         borderRadius: 8,
-        marginLeft: wp("4.6%")
+        marginLeft: wp("4.6%"),
     },
     pagination: {
         flexDirection: "row",
@@ -850,15 +905,16 @@ const styles = StyleSheet.create({
         marginTop: hp('2%'),
     },
     offerGradient: {
-        width: wp("92%"),
+        width: wp("96%"),
         height: hp("50%"),
         marginTop: hp('3.5%'),
         // marginHorizontal: wp("1.86%")
-        marginHorizontal: wp("4%"),
+        // marginHorizontal: wp("4%"),
         borderRadius: wp("9.3%"),
         borderWidth: 1,
         borderColor: "#D4D4D4",
-        marginBottom: hp("1%")
+        marginBottom: hp("1%"),
+        alignSelf: 'center'
     },
     offerView: {
         flexDirection: "row",
@@ -1024,7 +1080,7 @@ const styles = StyleSheet.create({
         marginLeft: wp("5%")
     },
     fruitsFlatlist: {
-        marginLeft: wp("5%")
+        // marginLeft: wp("5%")
     },
     fruitsImageBackground: {
         width: wp("74.88%"),

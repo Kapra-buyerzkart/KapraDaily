@@ -6,18 +6,20 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Entypo from 'react-native-vector-icons/Entypo';
 import FontAwesome from 'react-native-vector-icons/FontAwesome'
 import { FONTS } from '../styles/typography'
+import { useNavigation } from '@react-navigation/native';
 
 export default function ProductCard(props) {
     const [liked, setLiked] = useState(false);
+    const navigation = useNavigation()
     return (
-        <TouchableOpacity style={styles.productCard}>
+        <TouchableOpacity onPress={() => navigation.navigate('ProductDetailsScreen')} style={styles.productCard}>
             <View style={styles.productCardViewOne}>
                 {/* <EvilIcons name={"heart"} size={wp("7%")} /> */}
                 <TouchableOpacity onPress={() => setLiked(!liked)}>
                     <FontAwesome
                         name={liked ? 'heart' : 'heart-o'}
                         size={wp('5%')}
-                        color={liked ? 'red' : '#979797'}
+                        color={liked ? '#FF0048' : '#979797'}
                     />
                 </TouchableOpacity>
                 <Text style={styles.btokenText}>Upto 1B Token</Text>

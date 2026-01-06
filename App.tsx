@@ -6,15 +6,20 @@
  */
 
 import { NewAppScreen } from '@react-native/new-app-screen';
-import { StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
+import { LogBox, StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
 import {
   SafeAreaProvider,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 import Navigation from './src/navigation';
+import { useEffect } from 'react';
 
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
+
+  useEffect(() => {
+    LogBox.ignoreLogs(['Warning: ...'])
+  },[])
 
   return (
     <Navigation />

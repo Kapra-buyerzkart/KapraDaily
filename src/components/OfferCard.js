@@ -3,77 +3,134 @@ import React, { useState } from 'react'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import { FONTS } from '../styles/typography'
 
-const OfferCard = (props) => {
+const OfferCard = ({ item, onApply, onReject }) => {
 
     const [addClicked, setAddClicked] = useState(true)
-
+    console.log('item.applyClicked', item)
     return (
-        <View style={styles.offerView}>
-            <Image style={styles.offerImage} source={props.image} />
-            <View style={styles.offerInnerView}>
-                <Text style={styles.offerText}>{props.name}</Text>
-                <Text style={[styles.offerText, {
-                    color: '#424242',
-                    marginTop: hp('0.1%')
-                }]}>{props.content}</Text>
+        <>{
+            item.applyCliked ? (
+                <View style={[styles.offerContainer, {
+                    borderColor: '#0CA201',
+                    height: hp('9.54%'),
+                    backgroundColor: '#0CA2010F',
+                    alignItems: "flex-start",
+                    paddingVertical: hp('0.8%')
+                }]}>
+                    <Image style={[styles.offerImage, {
+                        top: hp('0.7%')
+                    }]} source={item.image} />
+                    <View style={styles.offerInnerView}>
+                        <Text style={styles.offerText}>{item.name}</Text>
+                        <Text style={styles.offerTextTwo}>{item.content}</Text>
+                    </View>
+                    <View style={{
+                        height: hp('7.3%'),
+                        justifyContent: 'space-between'
+                    }}>
+                        <TouchableOpacity onPress={onReject} style={[styles.applyButton, {
+                            flexDirection: 'row',
+                            justifyContent: "space-between",
+                            paddingHorizontal: wp('4%')
+                        }]}>
+                            <Image style={styles.closeIcon} source={require('../assets/images/close.png')} />
+                            <Text style={[styles.applyButtonText, {
+                                color: '#FF0000'
+                            }]}>Rejected</Text>
+                        </TouchableOpacity>
+                        <View style={styles.appliedStyle}>
+                            <Image style={styles.tickIcon} source={require('../assets/images/tick.png')} />
+                            <Text style={[styles.applyButtonText, {
+                                color: '#0CA201'
+                            }]}>Applied</Text>
+                        </View>
+                    </View>
+                </View>
+            ) : (<View style={styles.offerContainer}>
+                <Image style={styles.offerImage} source={item.image} />
+                <View style={styles.offerInnerView}>
+                    <Text style={styles.offerText}>{item.name}</Text>
+                    <Text style={styles.offerTextTwo}>{item.content}</Text>
+                </View>
+                <TouchableOpacity onPress={onApply} style={styles.applyButton}>
+                    <Text style={styles.applyButtonText}>Apply</Text>
+                </TouchableOpacity>
             </View>
-            {addClicked ? (
-                <TouchableOpacity onPress={() => setAddClicked(!addClicked)}
-                    style={styles.addButtonContainer}>
-                    <Text style={styles.addButtonText}>ADD</Text>
-                </TouchableOpacity>
-            ) : (
-                <TouchableOpacity
-                    onPress={() => setAddClicked(!addClicked)}
-                    style={styles.addButtonContainer}>
-                    <Text style={[styles.addButtonText, {
-                        textDecorationLine: "underline"
-                    }]}>Remove</Text>
-                </TouchableOpacity>
-            )}
-        </View>
+            )
+        }
+
+        </>
     )
 }
 
 export default OfferCard
 
 const styles = StyleSheet.create({
-    offerView: {
+    offerContainer: {
         flexDirection: 'row',
         borderWidth: 1,
-        borderColor: '#DADADA',
-        alignItems: 'center',
-        marginHorizontal: wp('4.5%'),
-        borderRadius: wp('2.3%'),
-        padding: wp('2%'),
+        borderColor: '#E9E9E9',
+        width: wp('90.7%'),
+        height: hp('6%'),
+        backgroundColor: '#F2F2F2',
+        borderRadius: wp('2.32%'),
+        shadowColor: '#0000001A',
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.1,
+        shadowRadius: 9,
         justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: wp('2.5%'),
         marginBottom: hp('1%')
     },
     offerImage: {
-        height: wp('9.3%'),
-        width: wp('9.3%')
+        height: wp('6.97%'),
+        width: wp('6.97%'),
     },
     offerInnerView: {
-        marginLeft: wp('2%'),
-        flex: 1
+        flex: 1,
+        marginLeft: wp('2.5%')
     },
     offerText: {
-        fontFamily: FONTS.poppins.regular,
-        fontSize: wp('3.25%'),
-        color: '#000000'
-    },
-    addButtonContainer: {
-        borderWidth: 1,
-        borderColor: '#F250004D',
-        borderRadius: wp('1.4%'),
-        width: wp('25.1%'),
-        height: hp('3.1%'),
-        justifyContent: "center",
-        alignItems: 'center',
-    },
-    addButtonText: {
+        color: '#000000',
         fontFamily: FONTS.poppins.semiBold,
-        fontSize: wp('3%'),
-        color: '#F25000',
+        fontSize: wp('3.25%')
+    },
+    offerTextTwo: {
+        color: '#424242',
+        fontFamily: FONTS.poppins.regular,
+        fontSize: wp('3.25%')
+    },
+    applyButton: {
+        width: wp('25.1%'),
+        height: hp('3.86%'),
+        backgroundColor: '#FFFFFF',
+        borderRadius: wp('2.3%'),
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    applyButtonText: {
+        color: '#000000',
+        fontFamily: FONTS.poppins.medium,
+        fontSize: wp('3%')
+    },
+    appliedStyle: {
+        // width: wp('25.1%'),
+        // height: hp('3.86%'),
+        // backgroundColor: '#FFFFFF',
+        // borderRadius: wp('2.3%'),
+        // justifyContent: "center",
+        alignItems: "center",
+        flexDirection: 'row',
+        justifyContent: "space-between",
+        paddingHorizontal: wp('4%')
+    },
+    closeIcon: {
+        width: wp('1.86%'),
+        height: wp('1.86%')
+    },
+    tickIcon: {
+        width: wp('3.48%'),
+        height: hp('1.28%')
     }
 })

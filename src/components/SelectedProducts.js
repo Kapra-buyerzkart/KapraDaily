@@ -12,7 +12,6 @@ export default function SelectedProducts(props) {
         <TouchableOpacity
             onPress={() => navigation.navigate("CartScreen")}
             style={styles.mainContainer}>
-            {console.log("props", props)}
             <LinearGradient colors={["#F25000", "#FF7B3A", "#F25000"]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
