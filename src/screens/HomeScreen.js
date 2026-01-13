@@ -269,7 +269,7 @@ const HomeScreen = () => {
                                 <Entypo name={"chevron-right"} size={wp('3.6%')} color={"#FFFFFF"} />
                             </TouchableOpacity>
                         </View>
-                        <View style={styles.bcoinContainer}>
+                        <TouchableOpacity onPress={() => navigation.navigate("BCoinScreen")} style={styles.bcoinContainer}>
 
                             <Image style={styles.rupeeImageTwo} source={require('../assets/images/premium_rupee.png')} />
                             <LinearGradient
@@ -281,7 +281,7 @@ const HomeScreen = () => {
                                 <Text style={styles.bcoinText}>10.0 B</Text>
                             </LinearGradient>
 
-                        </View>
+                        </TouchableOpacity>
                         {/* <View style={styles.bcoinContainer}>
                             <Image style={styles.rupeeImageOne} source={require('../assets/images/normal_rupee.png')} />
                             <LinearGradient
@@ -295,7 +295,12 @@ const HomeScreen = () => {
 
                         </View> */}
 
-                        <TouchableOpacity onPress={() => navigation.navigate('ProfileScreen')} style={styles.profileIconMainView}>
+                        <TouchableOpacity onPress={() => {
+                            // navigation.navigate('LoginScreen')
+                            // navigation.navigate('RegistraionScreen')
+                            // navigation.navigate('OtpScreen')
+                            navigation.navigate('ProfileScreen')
+                        }} style={styles.profileIconMainView}>
                             <Image source={require('../assets/images/crown.png')} width={wp('6.3%')} height={hp('2.6%')} />
                             <View style={styles.profileIconView}>
                                 <GradientUserIcon size={wp('6%')} />
@@ -309,16 +314,20 @@ const HomeScreen = () => {
                         </TouchableOpacity> */}
 
                     </View>
-                    <View style={styles.searchContainer}>
+                    <TouchableOpacity onPress={() => navigation.navigate('SearchScreen')} style={styles.searchContainer}>
                         <Feather name="search" color={"#8F8F8F"} size={wp("6%")} />
-                        <TextInput
+                        {/* <TextInput
                             style={styles.searchInput}
                             placeholder="Search product"
                             placeholderTextColor="#3A3A3A"
-                        />
-                        <View style={styles.divider} />
-                        <Ionicons name="clipboard-outline" color={"#8F8F8F"} size={wp("6%")} style={styles.clipboardIcon} />
-                    </View>
+                        /> */}
+                        {/* <View style={styles.divider} /> */}
+                        <View style={styles.searchProductContainer}>
+                            <Text style={styles.searchProductText}>Search product</Text>
+                        </View>
+                        {/* <Ionicons name="clipboard-outline" color={"#8F8F8F"} size={wp("6%")} style={styles.clipboardIcon} /> */}
+                        <Image style={styles.clipboardIcon} source={require('../assets/images/clip_board.png')} />
+                    </TouchableOpacity>
                 </View>
                 {/* <View style={styles.headerBannerView}>
                     <Image source={require("../assets/images/banner.png")} style={styles.headerBannerImage} />
@@ -798,6 +807,9 @@ const styles = StyleSheet.create({
         // backgroundColor: "yellow"
     },
     clipboardIcon: {
+        width: wp('5%'),
+        height: hp('3%'),
+        resizeMode: 'contain',
         marginLeft: wp('4%')
     },
     // headerBannerView: {
@@ -1178,4 +1190,17 @@ const styles = StyleSheet.create({
         height: hp('3%'),
         bottom: hp('-0.4%')
     },
+    searchProductContainer: {
+        borderRightWidth: 1,
+        borderRightColor: '#8F8F8F',
+        height: hp('3.65%'),
+        justifyContent: 'center',
+        marginLeft: wp('2%'),
+        width: wp('65%')
+    },
+    searchProductText: {
+        fontFamily: FONTS.poppins.light,
+        fontSize: wp('3.72%'),
+        color: '#3A3A3A',
+    }
 })

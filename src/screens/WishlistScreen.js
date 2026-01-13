@@ -6,82 +6,83 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Entypo from 'react-native-vector-icons/Entypo';
 import { FONTS } from '../styles/typography'
 import LinearGradient from 'react-native-linear-gradient';
+import WishListEmptyComponent from '../components/WishListEmptyComponent'
 
 export default function WishlistScreen() {
 
     const products = [
-        {
-            id: "1",
-            image: require("../assets/images/wl1.png"),
-            name: "Lorem lpsum is simply dummy text",
-            offer: 17,
-            mrpPrice: 394,
-            sellingPrice: 324
-        },
-        {
-            id: "2",
-            image: require("../assets/images/wl2.png"),
-            name: "Lorem lpsum is simply dummy text",
-            offer: 17,
-            mrpPrice: 394,
-            sellingPrice: 324
-        },
-        {
-            id: "3",
-            image: require("../assets/images/wl1.png"),
-            name: "Lorem lpsum is simply dummy text",
-            offer: 17,
-            mrpPrice: 394,
-            sellingPrice: 324
-        },
-        {
-            id: "4",
-            image: require("../assets/images/wl2.png"),
-            name: "Lorem lpsum is simply dummy text",
-            offer: 17,
-            mrpPrice: 394,
-            sellingPrice: 324
-        },
-        {
-            id: "5",
-            image: require("../assets/images/wl1.png"),
-            name: "Lorem lpsum is simply dummy text",
-            offer: 17,
-            mrpPrice: 394,
-            sellingPrice: 324
-        },
-        {
-            id: "6",
-            image: require("../assets/images/wl2.png"),
-            name: "Lorem lpsum is simply dummy text",
-            offer: 17,
-            mrpPrice: 394,
-            sellingPrice: 324
-        },
-        {
-            id: "7",
-            image: require("../assets/images/wl2.png"),
-            name: "Lorem lpsum is simply dummy text",
-            offer: 17,
-            mrpPrice: 394,
-            sellingPrice: 324
-        },
-        {
-            id: "8",
-            image: require("../assets/images/wl1.png"),
-            name: "Lorem lpsum is simply dummy text",
-            offer: 17,
-            mrpPrice: 394,
-            sellingPrice: 324
-        },
-        {
-            id: "9",
-            image: require("../assets/images/wl2.png"),
-            name: "Lorem lpsum is simply dummy text",
-            offer: 17,
-            mrpPrice: 394,
-            sellingPrice: 324
-        },
+        // {
+        //     id: "1",
+        //     image: require("../assets/images/wl1.png"),
+        //     name: "Lorem lpsum is simply dummy text",
+        //     offer: 17,
+        //     mrpPrice: 394,
+        //     sellingPrice: 324
+        // },
+        // {
+        //     id: "2",
+        //     image: require("../assets/images/wl2.png"),
+        //     name: "Lorem lpsum is simply dummy text",
+        //     offer: 17,
+        //     mrpPrice: 394,
+        //     sellingPrice: 324
+        // },
+        // {
+        //     id: "3",
+        //     image: require("../assets/images/wl1.png"),
+        //     name: "Lorem lpsum is simply dummy text",
+        //     offer: 17,
+        //     mrpPrice: 394,
+        //     sellingPrice: 324
+        // },
+        // {
+        //     id: "4",
+        //     image: require("../assets/images/wl2.png"),
+        //     name: "Lorem lpsum is simply dummy text",
+        //     offer: 17,
+        //     mrpPrice: 394,
+        //     sellingPrice: 324
+        // },
+        // {
+        //     id: "5",
+        //     image: require("../assets/images/wl1.png"),
+        //     name: "Lorem lpsum is simply dummy text",
+        //     offer: 17,
+        //     mrpPrice: 394,
+        //     sellingPrice: 324
+        // },
+        // {
+        //     id: "6",
+        //     image: require("../assets/images/wl2.png"),
+        //     name: "Lorem lpsum is simply dummy text",
+        //     offer: 17,
+        //     mrpPrice: 394,
+        //     sellingPrice: 324
+        // },
+        // {
+        //     id: "7",
+        //     image: require("../assets/images/wl2.png"),
+        //     name: "Lorem lpsum is simply dummy text",
+        //     offer: 17,
+        //     mrpPrice: 394,
+        //     sellingPrice: 324
+        // },
+        // {
+        //     id: "8",
+        //     image: require("../assets/images/wl1.png"),
+        //     name: "Lorem lpsum is simply dummy text",
+        //     offer: 17,
+        //     mrpPrice: 394,
+        //     sellingPrice: 324
+        // },
+        // {
+        //     id: "9",
+        //     image: require("../assets/images/wl2.png"),
+        //     name: "Lorem lpsum is simply dummy text",
+        //     offer: 17,
+        //     mrpPrice: 394,
+        //     sellingPrice: 324
+        // },
     ]
 
     const ProductCard = (item) => {
@@ -149,6 +150,7 @@ export default function WishlistScreen() {
                     keyExtractor={(item) => item.id}
                     renderItem={({ item }) => <ProductCard item={item} />}
                     showsVerticalScrollIndicator={false}
+                    ListEmptyComponent={<WishListEmptyComponent/>}
                 />
                 <TouchableOpacity style={styles.newWishesContainer}>
                     <Image source={require("../assets/images/heart_two.png")} style={styles.newWishesHeart} />

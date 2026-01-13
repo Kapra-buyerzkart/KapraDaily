@@ -7,6 +7,12 @@ import ProfileScreen from '../screens/ProfileScreen'
 import AddLocationScreen from '../screens/AddLocationScreen'
 import ProductDetailsScreen from '../screens/ProductDetailsScreen';
 import OrderTrackingScreen from '../screens/OrderTrackingScreen'
+import LoginScreen from '../screens/LoginScreen'
+import RegistraionScreen from '../screens/RegistrationScreen'
+import OtpScreen from '../screens/OtpScreen'
+import ChangePwdScreen from '../screens/ChangePwdScreen'
+import BCoinScreen from '../screens/BCoinScreen'
+import SearchScreen from '../screens/SearchScreen'
 
 const Stack = createNativeStackNavigator();
 
@@ -19,6 +25,12 @@ export default function RootNavigator() {
             <Stack.Screen name="AddLocationScreen" component={AddLocationScreen} />
             <Stack.Screen name="ProductDetailsScreen" component={ProductDetailsScreen} />
             <Stack.Screen name="OrderTrackingScreen" component={OrderTrackingScreen} />
+            <Stack.Screen name="LoginScreen" component={LoginScreen} />
+            <Stack.Screen name="RegistraionScreen" component={RegistraionScreen} />
+            <Stack.Screen name="OtpScreen" component={OtpScreen} />
+            <Stack.Screen name="ChangePwdScreen" component={ChangePwdScreen} />
+            <Stack.Screen name="BCoinScreen" component={BCoinScreen} />
+            <Stack.Screen name="SearchScreen" component={SearchScreen} />
             {/* <Stack.Screen name="ProfileScreen" component={ProfileScreen} /> */}
         </Stack.Navigator>
     );
