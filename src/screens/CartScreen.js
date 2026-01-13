@@ -439,7 +439,7 @@ const CartScreen = () => {
                     <LinearGradient style={styles.selectAddressButtonGradient} colors={['#F25000', '#FF7B3A']}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 0 }}>
-                        <TouchableOpacity onPress={() => { }} style={styles.selectAddressButtonContainer}>
+                        <TouchableOpacity onPress={() => navigation.navigate("OrderSuccessScreen")} style={styles.selectAddressButtonContainer}>
                             {/* <Image style={styles.selectAddressButtonLocationIcon} source={require('../assets/images/location_white_icon.png')} /> */}
                             <Text style={styles.proceedToPayText}>Proceed to Pay</Text>
                         </TouchableOpacity>

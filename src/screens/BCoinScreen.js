@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen'
 import { FONTS } from '../styles/typography'
 import { useNavigation } from '@react-navigation/native'
+import FastImage from 'react-native-fast-image'
 
 const BCoinScreen = () => {
     const [selected, setSelected] = useState('bcoin')
@@ -21,14 +22,7 @@ const BCoinScreen = () => {
                     <Text style={styles.headerText}>B-Coin and B-token</Text>
                 </View>
                 {/* <Image style={styles.imageStyle} source={require('../assets/images/bcoin_header_image_two.png')} /> */}
-                <Image style={{
-                    width: wp('47.44%'),
-                    height: hp('21.88%'),
-                    resizeMode: 'contain',
-                    alignSelf: 'center',
-                    // marginTop: hp('4.1%')
-                    bottom: hp('1.1%')
-                }} source={require('../assets/gif/bcoin.gif')} />
+                <FastImage style={styles.bcoinGif} resizeMode={FastImage.resizeMode.contain} source={require('../assets/gifs/bcoin.gif')} />
             </ImageBackground>
             <View style={styles.innerContainer}>
                 <View>
@@ -470,5 +464,13 @@ const styles = StyleSheet.create({
         height: hp('0.86%'),
         resizeMode: 'contain',
         marginLeft: wp('1%')
+    },
+    bcoinGif: {
+        width: wp('47.44%'),
+        height: hp('21.88%'),
+        // resizeMode: 'contain',
+        alignSelf: 'center',
+        // marginTop: hp('4.1%')
+        bottom: hp('1.1%')
     }
 })

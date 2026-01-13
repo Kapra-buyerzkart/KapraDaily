@@ -13,6 +13,8 @@ import OtpScreen from '../screens/OtpScreen'
 import ChangePwdScreen from '../screens/ChangePwdScreen'
 import BCoinScreen from '../screens/BCoinScreen'
 import SearchScreen from '../screens/SearchScreen'
+import OrderSuccessScreen from '../screens/OrderSuccessScreen'
+import SplashScreen from '../screens/SplashScreen'
 
 const Stack = createNativeStackNavigator();
 
@@ -20,6 +22,8 @@ export default function RootNavigator() {
     return (
         <Stack.Navigator screenOptions={{ headerShown: false }}>
             {/* <Stack.Screen name="LocationFetching" component={LocationFetchingScreen} /> */}
+            <Stack.Screen name="SplashScreen" component={SplashScreen} />
+            <Stack.Screen name="LocationFetching" component={LocationFetchingScreen} />
             <Stack.Screen name="MainTabs" component={MainTabNavigator} />
             <Stack.Screen name="CartScreen" component={CartScreen} />
             <Stack.Screen name="AddLocationScreen" component={AddLocationScreen} />
@@ -32,6 +36,7 @@ export default function RootNavigator() {
             <Stack.Screen name="BCoinScreen" component={BCoinScreen} />
             <Stack.Screen name="SearchScreen" component={SearchScreen} />
             {/* <Stack.Screen name="ProfileScreen" component={ProfileScreen} /> */}
+            <Stack.Screen name="OrderSuccessScreen" component={OrderSuccessScreen} />
         </Stack.Navigator>
     );
 }
