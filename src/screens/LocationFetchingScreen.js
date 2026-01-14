@@ -1,17 +1,106 @@
-import React, { useEffect } from 'react';
-import { View, Text, ActivityIndicator, StyleSheet, ImageBackground, Image } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, ActivityIndicator, StyleSheet, ImageBackground, Image, Platform, PermissionsAndroid } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FONTS } from '../styles/typography';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
+import Geocoder from 'react-native-geocoding';
+import Geolocation from '@react-native-community/geolocation';
+import FastImage from 'react-native-fast-image';
+import { useNavigation } from '@react-navigation/native';
 
-export default function LocationFetchingScreen({ navigation }) {
+Geocoder.init('AIzaSyDhItv0zoWdQbDh-5jjKLAEjwRDDrFNc1Y');
+
+export default function LocationFetchingScreen() {
+
+    const [address, setAddress] = useState(null)
+    const [loading, setLoading] = useState(true)
+
+    const navigation = useNavigation()
 
     useEffect(() => {
-        // Simulate location fetch
-        setTimeout(() => {
-            navigation.replace("MainTabs");
-        }, 3000);
-    }, []);
+        getLocation()
+    }, [])
+
+    // useEffect(() => {
+    //     // Simulate location fetch
+    //     setTimeout(() => {
+    //         navigation.replace("MainTabs");
+    //     }, 3000);
+    // }, []);
+
+    const requestPermission = async () => {
+        if (Platform.OS === 'android') {
+            return await PermissionsAndroid.request(
+                PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+            ) === PermissionsAndroid.RESULTS.GRANTED
+        }
+        return true
+    }
+
+
+    const getLocation = async () => {
+        const granted = await requestPermission()
+
+        if (!granted) {
+            setLoading(false)
+            return
+        }
+
+        Geolocation.getCurrentPosition(
+            async position => {
+                try {
+                    const { latitude, longitude } = position.coords
+
+                    const geo = await Geocoder.from(latitude, longitude)
+                    const data = geo.results[0]
+
+                    const area =
+                        data.address_components.find(c =>
+                            c.types.includes('sublocality')
+                        )?.long_name
+
+                    const locality =
+                        data.address_components.find(c =>
+                            c.types.includes('locality')
+                        )?.long_name
+
+                    const state =
+                        data.address_components.find(c =>
+                            c.types.includes('administrative_area_level_1')
+                        )?.long_name
+
+                    const pincode =
+                        data.address_components.find(c =>
+                            c.types.includes('postal_code')
+                        )?.long_name
+
+                    setAddress({ area, locality, state, pincode })
+                    setTimeout(() => {
+                        navigation.replace('MainTabs')
+                    }, 3000)
+                } catch (e) {
+                    console.log('Geocoding error:', e)
+                } finally {
+                    setLoading(false)
+                }
+            },
+            error => console.log(error),
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+        )
+    }
+
+
+    if (loading) {
+        return (
+            <SafeAreaView style={styles.loaderContainer}>
+                <FastImage
+                    source={require('../assets/gifs/location-fetching.gif')}
+                    style={styles.loaderGif}
+                    resizeMode={FastImage.resizeMode.contain}
+                />
+            </SafeAreaView>
+        );
+    }
 
     return (
         <SafeAreaView style={styles.maninContainer}>
@@ -19,10 +108,10 @@ export default function LocationFetchingScreen({ navigation }) {
                 <Image resizeMode="contain" source={require('../assets/images/location-fetching-icon.png')} />
                 <View style={styles.innerContainer}>
                     <Text style={styles.yourlocationText}>Your location</Text>
-                    <Text style={styles.addressText}>Vennala : Chakkaparambu</Text>
+                    <Text style={styles.addressText}>{address?.area} : {address?.locality}</Text>
                     <Text style={[styles.addressText, {
                         marginTop: hp('0.5%')
-                    }]}>Kerala pin : 654339</Text>
+                    }]}>{address?.state} pin : {address?.pincode}</Text>
                 </View>
             </ImageBackground>
         </SafeAreaView>
@@ -52,5 +141,15 @@ const styles = StyleSheet.create({
         color: '#4D4D4D',
         fontFamily: FONTS.poppins.light,
         fontSize: wp('3.72%')
-    }
+    },
+    loaderContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#fff',
+    },
+    loaderGif: {
+        width: wp('100%'),
+        height: hp('100%'),
+    },
 })

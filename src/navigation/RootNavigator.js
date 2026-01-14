@@ -22,7 +22,7 @@ export default function RootNavigator() {
     return (
         <Stack.Navigator screenOptions={{ headerShown: false }}>
             {/* <Stack.Screen name="LocationFetching" component={LocationFetchingScreen} /> */}
-            <Stack.Screen name="SplashScreen" component={SplashScreen} />
+            {/* <Stack.Screen name="SplashScreen" component={SplashScreen} /> */}
             <Stack.Screen name="LocationFetching" component={LocationFetchingScreen} />
             <Stack.Screen name="MainTabs" component={MainTabNavigator} />
             <Stack.Screen name="CartScreen" component={CartScreen} />

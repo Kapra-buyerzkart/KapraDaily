@@ -13,13 +13,17 @@ import {
 } from 'react-native-safe-area-context';
 import Navigation from './src/navigation';
 import { useEffect } from 'react';
+import { OneSignal } from 'react-native-onesignal';
 
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
 
   useEffect(() => {
     LogBox.ignoreLogs(['Warning: ...'])
-  },[])
+    OneSignal.Debug.setLogLevel(6);
+    OneSignal.initialize('d6148736-6459-4778-abec-95105ff68939');
+    OneSignal.Notifications.requestPermission(true);
+  }, [])
 
   return (
     <Navigation />
