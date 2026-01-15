@@ -1,6 +1,6 @@
 const CONFIG = {
   siteUrl: `https://kapradaily.com/`,
-  base_url: `https://grocery.kapradaily.com/api/api/v2/`,
+  base_url: `https://core.kapradaily.com/api/v1/`,
   image_base_url: `https://grocery.kapradaily.com/webadmin/`,
 };
 

@@ -1,124 +1,151 @@
 import axios from 'axios';
 import CONFIG from '../globals/config';
+import {
+  getAccessToken,
+  getRefreshToken,
+  setTokens,
+  clearTokens,
+} from './tokenService';
+
+/* -------------------- ERROR HANDLER -------------------- */
+const errorHandler = error => {
+  if (error.message === 'Network Error') {
+    throw 'Network Error. Ensure you are connected to internet.';
+  }
+
+  if (error.code === 'ECONNABORTED') {
+    throw 'Server is not responding';
+  }
+
+  const status = error?.response?.status;
+  const message = error?.response?.data?.Message;
+
+  if (status === 401) {
+    throw { Message: message || 'Unauthorized', status };
+  }
+
+  if (typeof message === 'string') {
+    throw message;
+  }
+
+  throw 'Something went wrong.';
+};
+
+/* -------------------- AXIOS INSTANCE -------------------- */
 const axiosInstance = axios.create({
   baseURL: CONFIG.base_url,
-  headers: { 'lang': '2' }
+  headers: {
+    lang: '2',
+    'Content-Type': 'application/json',
+  },
+  timeout: 20000,
 });
-const axiosInstanceNew = axios.create({
-  baseURL: `http://dev.buyerzkart.com/api/api/v2/`,
-  headers: { 'lang': '2' }
-});
 
-const errrHandler = (e, URL, CONFIG, PAYLOAD = {}) => {
-  // console.log(
-  //   `REQUEST TO: ${URL} with PAYLOAD: ${JSON.stringify(PAYLOAD)} failed!`,
-  // );
-  // console.log(JSON.stringify(e?.response?.data));
-  if (e.message === 'Network Error') {
-    throw 'Network Error. Ensure you are connected to internet.';
-  } else if (e.message === 'Server is not responding') {
-    throw 'Server is not responding';
-  } else {
-    const { status, data } = e.response;
-    // console.warn(`API ERROR STATUS: ${status}\n`);
-    // console.log({ data });
-    const { Message } = data;
-    if (status == 401) {
-      throw {
-        Message,
-        status,
-      };
+/* -------------------- REQUEST INTERCEPTOR -------------------- */
+axiosInstance.interceptors.request.use(
+  async config => {
+    const isAuthApi =
+      config.url?.includes('loginpassword') ||
+      config.url?.includes('sendotp') ||
+      config.url?.includes('verifyotp');
+
+    console.log('API URL 👉', config.url, 'isAuthApi 👉', isAuthApi);
+
+    if (!isAuthApi) {
+      const token = await getAccessToken();
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
-    if (typeof Message === 'string') {
-      throw Message;
-    } else {
-      throw 'Something went wrong.';
+
+    return config;
+  },
+  error => Promise.reject(error)
+);
+
+/* -------------------- REFRESH TOKEN LOGIC -------------------- */
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error, token = null) => {
+  failedQueue.forEach(p => (error ? p.reject(error) : p.resolve(token)));
+  failedQueue = [];
+};
+
+/* -------------------- RESPONSE INTERCEPTOR -------------------- */
+axiosInstance.interceptors.response.use(
+  response => response,
+  async error => {
+    const originalRequest = error.config;
+
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry &&
+      !originalRequest.url.includes('refreshtoken')
+    ) {
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        }).then(token => {
+          originalRequest.headers.Authorization = `Bearer ${token}`;
+          return axiosInstance(originalRequest);
+        });
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      try {
+        const refreshToken = await getRefreshToken();
+
+        const res = await axios.post(
+          `${CONFIG.base_url}/auth/refreshtoken`,
+          { refresh_token: refreshToken }
+        );
+
+        const { access_token, refresh_token } = res.data.Data;
+
+        await setTokens(access_token, refresh_token);
+        processQueue(null, access_token);
+
+        originalRequest.headers.Authorization = `Bearer ${access_token}`;
+        return axiosInstance(originalRequest);
+      } catch (err) {
+        processQueue(err);
+        await clearTokens();
+        throw err;
+      } finally {
+        isRefreshing = false;
+      }
     }
+
+    errorHandler(error);
   }
+);
+
+/* -------------------- API METHODS -------------------- */
+export const get = async (url, config) => {
+  const res = await axiosInstance.get(url, config);
+  return res.data.Data;
 };
 
-const get = async (URL, config) => {
-  // console.log('//', CONFIG.base_url+URL );
-  try {
-    let result = await axiosInstance.get(URL, config ? config : null, {
-      timeout: 20000,
-      timeoutErrorMessage: 'Server is not responding',
-    });
-    return result.data.Data;
-  } catch (error) {
-    // console.log(URL, error.message);
-    errrHandler(error, URL);
-  }
+export const post = async (url, payload, config) => {
+  console.log('4444')
+  const res = await axiosInstance.post(url, payload, config);
+  console.log('resss', res)
+  return res.data;
 };
 
-const getNew = async (URL, config) => {
-  // console.log('//', CONFIG.base_url+URL );
-  try {
-    let result = await axiosInstance.get(URL, config ? config : null, {
-      timeout: 20000,
-      timeoutErrorMessage: 'Server is not responding',
-    });
-    // console.log("result.status", result.status)
-    // console.log("result.data", result.data)
-    // return result.data.Data;
-    return result;
-  } catch (error) {
-    // console.log(URL, error.message);
-    // console.log("Errr", error.response.status)
-    // errrHandler(error, URL);
-    throw error.response;
-  }
+export const put = async (url, payload) => {
+  const res = await axiosInstance.put(url, payload);
+  return res.data.Data;
 };
 
-const post = async (URL, payload) => {
-  // console.log( CONFIG.base_url+URL, payload );
-  // console.log({ URL, payload });
-  try {
-    // console.log('Payload from Utility :', payload);
-    let result = await axiosInstance.post(URL, payload, {
-      timeout: 20000,
-      timeoutErrorMessage: 'Server is not responding',
-    });
-    let Message = result.data.Message;
-    // console.log({ Message });
-    return result.data.Data;
-  } catch (error) {
-    // console.log(URL, error, { payload });
-    errrHandler(error, URL, payload);
-  }
+export const postRegister = async (url, payload) => {
+  const res = await axiosInstance.post(url, payload);
+  return res.data.Data;
 };
 
-const postRegister = async (URL, payload) => {
-  // console.log({ URL, payload });
-  try {
-    let result = await axiosInstance.post(URL, payload, {
-      timeout: 20000,
-      timeoutErrorMessage: 'Server is not responding',
-    });
-    return result.data.Data;
-  } catch (error) {
-    let response = error.response.data;
-    if (response.Message === 'Error Founded') {
-      throw response.Data;
-      // throw JSON.stringify(response.Data);
-    }
-    // errrHandler(error, URL, payload);
-    // console.log('Errorrrrr :', error.response.data);
-    // console.log(URL, error, {payload});
-  }
+export const getNew = async (url, config) => {
+  return axiosInstance.get(url, config); // full response
 };
-
-const put = async (URL, payload) => {
-  // console.log({ URL, payload });
-  try {
-    let result = await axiosInstance.put(URL, payload, {
-      timeout: 20000,
-      timeoutErrorMessage: 'Server is not responding',
-    });
-    return result.data;
-  } catch (error) {
-    // console.log(URL, error, { payload });
-  }
-};
-
-export { get, post, put, postRegister, getNew };

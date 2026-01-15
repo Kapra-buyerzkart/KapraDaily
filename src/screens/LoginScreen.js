@@ -1,13 +1,55 @@
-import { View, Text, StyleSheet, ImageBackground, Image, TextInput, TouchableOpacity, KeyboardAvoidingView, ScrollView } from 'react-native'
+import { View, Text, StyleSheet, ImageBackground, Image, TextInput, TouchableOpacity, KeyboardAvoidingView, ScrollView, Alert } from 'react-native'
 import React, { useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import { FONTS } from '../styles/typography'
 import { useNavigation } from '@react-navigation/native'
+import { sendLoginOtp } from '../api'
 
 const LoginScreen = () => {
-    const [showPassword, setShowPassword] = useState(false)
     const navigation = useNavigation()
+    const [phone, setPhone] = useState('');
+    const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(true);
+    const [loading, setLoading] = useState(false);
+
+    const phoneNumber = '8137956574';
+
+    const handleContinue = async () => {
+        console.log(phone)
+        if (phone.length !== 10) {
+            Alert.alert('Error', 'Please enter a valid mobile number');
+            return;
+        }
+
+        // if (!password.trim()) {
+        //     Alert.alert('Error', 'Please enter password');
+        //     return;
+        // }
+
+        try {
+            setLoading(true);
+            console.log("2222")
+            await sendLoginOtp(phone).then(x => console.log('xxx', x));
+
+            // ✅ Navigate to OTP Screen
+            // navigation.navigate('OtpScreen', {
+            //     phone,
+            //     otpType: 'login',
+            //     password, // optional: if backend needs later
+            // });
+
+        } catch (error) {
+            console.log('OTP Error:', error);
+            Alert.alert(
+                'Error',
+                error?.Message || error || 'Failed to send OTP'
+            );
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <SafeAreaView style={styles.mainContainer}>
             <KeyboardAvoidingView
@@ -23,7 +65,7 @@ const LoginScreen = () => {
                         <Image style={styles.kapraLogo} source={require('../assets/images/kapra_logo.png')} />
                         <Image style={styles.tagLine} source={require('../assets/images/login_content.png')} />
                     </ImageBackground>
-                    {/* <View style={styles.bottomContainer}>
+                    <View style={styles.bottomContainer}>
                         <Text style={styles.headerText}>Login or Sign up</Text>
                         <Text style={styles.enterNumberText}>Enter your mobile number</Text>
 
@@ -33,17 +75,18 @@ const LoginScreen = () => {
                             <View style={styles.divider} />
 
                             <TextInput
-                                placeholder="000 000 0000"
-                                placeholderTextColor="#616161"
+                                placeholder="9999999999"
+                                placeholderTextColor="#c1c1c1"
                                 keyboardType="number-pad"
                                 style={styles.input}
+                                onChangeText={setPhone}
                             />
                         </View>
-                        <TouchableOpacity style={styles.continueButton}>
+                        <TouchableOpacity onPress={handleContinue} style={styles.continueButton}>
                             <Text style={styles.continueButtonText}>Continue</Text>
                         </TouchableOpacity>
-                    </View> */}
-                    <View style={styles.bottomContainer}>
+                    </View>
+                    {/* <View style={styles.bottomContainer}>
                         <Text style={styles.headerText}>Login or Sign up</Text>
                         <Text style={styles.enterNumberText}>Enter your password</Text>
 
@@ -68,7 +111,7 @@ const LoginScreen = () => {
                         <TouchableOpacity style={styles.continueButton}>
                             <Text style={styles.continueButtonText}>Continue</Text>
                         </TouchableOpacity>
-                    </View>
+                    </View> */}
                 </ScrollView>
             </KeyboardAvoidingView>
         </SafeAreaView>

@@ -299,7 +299,7 @@ const HomeScreen = () => {
                             // navigation.navigate('LoginScreen')
                             // navigation.navigate('RegistraionScreen')
                             // navigation.navigate('OtpScreen')
-                            navigation.navigate('ProfileScreen')
+                            navigation.navigate('LoginScreen')
                         }} style={styles.profileIconMainView}>
                             <Image source={require('../assets/images/crown.png')} width={wp('6.3%')} height={hp('2.6%')} />
                             <View style={styles.profileIconView}>
