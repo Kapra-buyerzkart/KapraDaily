@@ -1,16 +1,51 @@
 import { View, Text, StyleSheet, Touchable, TouchableOpacity, Image, ScrollView, TextInput } from 'react-native'
-import React from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import LinearGradient from 'react-native-linear-gradient'
 import { useNavigation } from '@react-navigation/native'
 import { FONTS } from '../styles/typography'
+import { getAccessToken } from '../api/tokenService'
+import LoginScreen from './LoginScreen'
+import { AppContext } from '../context/appContext'
+import { LoaderContext } from '../context/loaderContext'
 
 export default function ProfileScreen() {
+    const [accessToken, setAccessToken] = useState(null);
     const navigation = useNavigation()
+    const { profile, loadProfile, logout } = useContext(AppContext);
+    const { showLoader } = useContext(LoaderContext);
+
+    useEffect(() => {
+        const fetchProfile = async () => {
+            showLoader(true)
+            await loadProfile()
+            showLoader(false)
+        }
+        fetchProfile()
+    }, [])
+
+    if (!profile) {
+        return <LoginScreen />
+    }
+
+    const handleLogout = async () => {
+        await logout()
+        navigation.reset({
+            index: 0,
+            routes: [{
+                name: 'LoginScreen',
+                params: {
+                    type: 'login'
+                }
+            }],
+        })
+    }
+
     return (
         <SafeAreaView edges={['top']} style={styles.mainConatiner}>
+            {console.log('profile', profile)}
             <ScrollView>
                 <LinearGradient
                     colors={['#FFE7DB', '#FFFFFF']}
@@ -34,25 +69,29 @@ export default function ProfileScreen() {
                         <View style={styles.userView}>
                             <Image style={styles.userIcon} source={require('../assets/images/user.png')} />
                             <View style={styles.userNamePhoneView}>
-                                <Text style={styles.userNameText}>Unknown Person</Text>
-                                <Text style={styles.phoneNumberStyle}>9999999999</Text>
+                                <Text style={styles.userNameText}>{profile.custName}</Text>
+                                <Text style={styles.phoneNumberStyle}>{profile.phoneNo}</Text>
                             </View>
                             <View style={styles.bcoinContainer}>
                                 <Image style={styles.bcoinImage} source={require('../assets/images/rupee.png')} />
-                                <Text style={styles.bcoinText}>0.00</Text>
+                                <Text style={styles.bcoinText}>{profile.totalBCoins}</Text>
                             </View>
                         </View>
                     </View>
                 </LinearGradient>
 
                 <View style={styles.containerTwo}>
-                    <TouchableOpacity style={styles.saveAddressContainer}>
+                    <TouchableOpacity onPress={() => navigation.navigate('SavedAddressScreen')} style={styles.saveAddressContainer}>
                         <Image style={styles.saveAddressImage} source={require('../assets/images/location_two.png')} />
-                        <Text style={styles.saveAddressText}>Save Address</Text>
+                        <Text style={styles.saveAddressText}>Saved Address</Text>
                     </TouchableOpacity>
                     <TouchableOpacity onPress={() => navigation.navigate("MyOrdersScreen")} style={styles.saveAddressContainer}>
                         <Image style={styles.saveAddressImage} source={require('../assets/images/order.png')} />
                         <Text style={styles.saveAddressText}>My Orders</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => navigation.navigate("ReferralScreen")} style={styles.saveAddressContainer}>
+                        <Image style={styles.saveAddressImage} source={require('../assets/images/refer.png')} />
+                        <Text style={styles.saveAddressText}>Refer</Text>
                     </TouchableOpacity>
                 </View>
                 <View style={styles.containerThree}>
@@ -110,7 +149,7 @@ export default function ProfileScreen() {
                     </View>
                 </View>
 
-                <TouchableOpacity style={styles.logoutContainer}>
+                <TouchableOpacity onPress={handleLogout} style={styles.logoutContainer}>
                     <Text style={styles.logoutText}>Log Out</Text>
                 </TouchableOpacity>
             </ScrollView>
@@ -177,7 +216,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#DADADA',
         borderRadius: 10,
-        width: wp('16.5%'),
+        // width: wp('12%'),
         height: hp('3%'),
         justifyContent: "space-between",
         paddingHorizontal: wp('1.5%')
@@ -189,11 +228,12 @@ const styles = StyleSheet.create({
     bcoinText: {
         fontFamily: FONTS.poppins.regular,
         fontSize: wp('3.25%'),
-        color: '#000000'
+        color: '#000000',
+        marginLeft: wp('2%')
     },
     containerTwo: {
         flexDirection: 'row',
-        justifyContent: "space-evenly",
+        justifyContent: 'space-between',
         // backgroundColor: 'red',
         paddingTop: wp('5%'),
         borderTopLeftRadius: wp('7%'),
@@ -201,27 +241,30 @@ const styles = StyleSheet.create({
         marginTop: hp('2%'),
         borderWidth: 1,
         borderColor: '#00000040',
-        borderBottomWidth: 0
+        borderBottomWidth: 0,
+        paddingHorizontal: wp('5%'),
     },
     saveAddressContainer: {
-        flexDirection: 'row',
+        // flexDirection: 'row',
         alignItems: 'center',
-        width: wp('43.02%'),
-        height: hp('6.43%'),
+        width: wp('27.21%'),
+        height: hp('8.92%'),
         borderRadius: 10,
         borderWidth: 1,
         borderColor: '#DADADA',
-        // justifyContent: "space-between"
-        paddingLeft: wp('3%')
+        justifyContent: "space-between",
+        // paddingLeft: wp('3%'),
+        paddingVertical: hp('0.8%')
     },
     saveAddressImage: {
-        height: wp('6.9%'),
-        width: wp('6.9%'),
+        height: wp('9.3%'),
+        width: wp('9.3%'),
+        resizeMode: 'contain'
     },
     saveAddressText: {
         fontFamily: FONTS.poppins.regular,
         fontSize: wp('3.25%'),
-        marginLeft: wp('2%')
+        // marginLeft: wp('2%')
     },
     containerThree: {
         paddingHorizontal: wp('5%'),

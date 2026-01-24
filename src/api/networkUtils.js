@@ -53,6 +53,7 @@ axiosInstance.interceptors.request.use(
 
     if (!isAuthApi) {
       const token = await getAccessToken();
+      console.log('tokentoken', token)
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
@@ -104,6 +105,7 @@ axiosInstance.interceptors.response.use(
         );
 
         const { access_token, refresh_token } = res.data.Data;
+        console.log('access_token', access_token)
 
         await setTokens(access_token, refresh_token);
         processQueue(null, access_token);
@@ -126,13 +128,12 @@ axiosInstance.interceptors.response.use(
 /* -------------------- API METHODS -------------------- */
 export const get = async (url, config) => {
   const res = await axiosInstance.get(url, config);
-  return res.data.Data;
+  console.log('res.data', res.data)
+  return res.data;
 };
 
 export const post = async (url, payload, config) => {
-  console.log('4444')
   const res = await axiosInstance.post(url, payload, config);
-  console.log('resss', res)
   return res.data;
 };
 

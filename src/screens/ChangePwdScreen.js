@@ -1,11 +1,61 @@
-import { View, Text, StyleSheet, ImageBackground, Image, TextInput, TouchableOpacity, KeyboardAvoidingView, ScrollView } from 'react-native'
+import { View, Text, StyleSheet, ImageBackground, Image, TextInput, TouchableOpacity, KeyboardAvoidingView, ScrollView, ActivityIndicator } from 'react-native'
 import React, { useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import { FONTS } from '../styles/typography'
+import { resetPassword } from '../api'; // adjust path as needed
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Alert } from 'react-native';
+import { getResetToken } from '../api/tokenService'
+import { useNavigation, useRoute } from '@react-navigation/native'
 
 const ChangePwdScreen = () => {
-    const [showPassword, setShowPassword] = useState(false)
+    const navigation = useNavigation()
+    const route = useRoute()
+    const { resetToken } = route.params || {}
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [loading, setLoading] = useState(false);
+
+    const handleChangePassword = async () => {
+        if (!newPassword || !confirmPassword) {
+            Alert.alert('Error', 'Please fill in both fields');
+            return;
+        }
+
+        if (newPassword !== confirmPassword) {
+            Alert.alert('Error', 'Passwords do not match');
+            return;
+        }
+
+        try {
+            setLoading(true);
+            // const resetToken = await getResetToken();
+            if (!resetToken) {
+                Alert.alert('Error', 'Reset token not found. Please restart the process.');
+                return;
+            }
+
+            const response = await resetPassword(resetToken, newPassword);
+            if (response?.success) {
+                Alert.alert(
+                    'Success',
+                    'Password changed successfully',
+                    [{ text: 'OK', onPress: () => navigation.navigate('LoginPwdScreen'), },]
+                );
+                // Optionally navigate to login screen
+            } else {
+                Alert.alert('Error', response?.message || 'Something went wrong');
+            }
+        } catch (error) {
+            Alert.alert('Error', 'Failed to reset password');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <SafeAreaView style={styles.mainContainer}>
             <KeyboardAvoidingView
@@ -51,10 +101,17 @@ const ChangePwdScreen = () => {
                                     placeholder="Enter password"
                                     placeholderTextColor="#DADADA"
                                     style={styles.input}
-                                    secureTextEntry={showPassword}
+                                    secureTextEntry={!showNewPassword}
+                                    value={newPassword}
+                                    onChangeText={setNewPassword}
                                 />
-                                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                                    <Image style={styles.eyeIcon} source={require('../assets/images/eye_icon.png')} />
+                                <TouchableOpacity hitSlop={{
+                                    top: 10,
+                                    bottom: 10,
+                                    left: 10,
+                                    right: 10
+                                }} onPress={() => setShowNewPassword(!showNewPassword)}>
+                                    <Image tintColor={showNewPassword ? '#F25000' : undefined} style={styles.eyeIcon} source={require('../assets/images/eye_icon.png')} />
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -66,15 +123,26 @@ const ChangePwdScreen = () => {
                                     placeholder="Enter password"
                                     placeholderTextColor="#DADADA"
                                     style={styles.input}
-                                    secureTextEntry={showPassword}
+                                    secureTextEntry={!showConfirmPassword}
+                                    value={confirmPassword}
+                                    onChangeText={setConfirmPassword}
                                 />
-                                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                                    <Image style={styles.eyeIcon} source={require('../assets/images/eye_icon.png')} />
+                                <TouchableOpacity hitSlop={{
+                                    top: 10,
+                                    bottom: 10,
+                                    left: 10,
+                                    right: 10
+                                }} onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+                                    <Image tintColor={showConfirmPassword ? '#F25000' : undefined} style={styles.eyeIcon} source={require('../assets/images/eye_icon.png')} />
                                 </TouchableOpacity>
                             </View>
                         </View>
-                        <TouchableOpacity style={styles.continueButton}>
-                            <Text style={styles.continueButtonText}>Continue</Text>
+                        <TouchableOpacity style={styles.continueButton} onPress={handleChangePassword} disabled={loading}>
+                            {loading ? (
+                                <ActivityIndicator size={'large'} color={'#FFFFFF'} />
+                            ) : (
+                                <Text style={styles.continueButtonText}>Continue</Text>
+                            )}
                         </TouchableOpacity>
                     </View>
                 </ScrollView>

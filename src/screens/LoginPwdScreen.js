@@ -1,128 +1,49 @@
-import { View, Text, StyleSheet, ImageBackground, Image, TextInput, TouchableOpacity, KeyboardAvoidingView, ScrollView, Alert, ActivityIndicator } from 'react-native'
+import { View, Text, StyleSheet, ImageBackground, Image, TextInput, TouchableOpacity, KeyboardAvoidingView, ScrollView, Alert } from 'react-native'
 import React, { useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import { FONTS } from '../styles/typography'
 import { useNavigation, useRoute } from '@react-navigation/native'
-import { sendForgotPwdOtp, sendLoginOtp } from '../api'
+import { loginWithPassword, sendLoginOtp } from '../api'
 import { setTokens } from '../api/tokenService'
-import LoaderComponent from '../components/LoaderComponent'
 
-const LoginScreen = () => {
+const LoginPwdScreen = () => {
     const navigation = useNavigation()
-    const route = useRoute()
-    const [phone, setPhone] = useState('');
     const [password, setPassword] = useState('');
-    const [showPassword, setShowPassword] = useState(true);
+    const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
-    const { type } = route.params || {}
 
     const phoneNumber = '8137956574';
+    const route = useRoute();
+    const { phone } = route.params || {};
 
-    // const handleContinue = async () => {
-    //     console.log(phone);
-    //     console.log('type', type);
+    const handleContinue = async () => {
+        console.log(phone, password);
 
-    //     if (phone.length !== 10) {
-    //         Alert.alert('Error', 'Please enter a valid mobile number');
-    //         return;
-    //     }
-
-    //     try {
-    //         setLoading(true);
-    //         let response
-    //         if (type === 'login') {
-    //             response = await sendLoginOtp(phone);
-    //         }
-    //         if (type === 'reset') {
-    //             response = await sendForgotPwdOtp(phone);
-    //         }
-    //         console.log('response', response)
-    //         console.log('OTP Response:', response);
-
-    //         if (response?.success && response?.data) {
-    //             navigation.navigate('OtpScreen', {
-    //                 phone
-    //             });
-    //         } else {
-    //             Alert.alert('Error', response?.message || 'Failed to send OTP');
-    //         }
-    //     } catch (error) {
-    //         console.log('OTP Error:', error);
-    //         Alert.alert('Error', error?.Message || error?.message || 'Failed to send OTP');
-    //     } finally {
-    //         setLoading(false);
-    //     }
-    // };
-
-    const handleContinueLogin = async () => {
-        console.log('Login')
-        console.log(phone);
-        console.log('type', type);
-
-        if (phone.length !== 10) {
-            Alert.alert('Error', 'Please enter a valid mobile number');
+        if (!password) {
+            Alert.alert('Error', 'Please enter a valid password');
             return;
         }
 
         try {
             setLoading(true);
-            const response = await sendLoginOtp(phone);
-            console.log('response', response)
-            console.log('OTP Response:', response);
+            const response = await loginWithPassword(phone, password);
+            console.log('Login Response:', response);
 
             if (response?.success && response?.data) {
-                navigation.navigate('OtpScreen', {
-                    phone,
-                    type: 'login'
-                });
-            }
-            else if (response?.status === 'NOT_REGISTERED') {
-                navigation.navigate('RegistraionScreen');
-            }
-            else {
-                Alert.alert('Error', response?.message || 'Failed to send OTP');
-            }
-        } catch (error) {
-            console.log('OTP Error:', error);
-            Alert.alert('Error', error?.Message || error?.message || 'Failed to send OTP');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleContinueRest = async () => {
-        console.log(phone);
-        console.log('type', type);
-
-        if (phone.length !== 10) {
-            Alert.alert('Error', 'Please enter a valid mobile number');
-            return;
-        }
-
-        try {
-            setLoading(true);
-            let response
-            if (type === 'login') {
-                response = await sendForgotPwdOtp(phone);
-            }
-            if (type === 'reset') {
-                response = await sendForgotPwdOtp(phone);
-            }
-            console.log('response', response)
-            console.log('OTP Response:', response);
-
-            if (response?.success && response?.data) {
-                navigation.navigate('OtpScreen', {
-                    phone,
-                    type: 'reset'
+                const { accessToken, refreshToken } = response.data;
+                setTokens(accessToken, refreshToken)
+                // ✅ Navigate to MainTabs
+                navigation.reset({
+                    index: 0,
+                    routes: [{ name: 'MainTabs' }],
                 });
             } else {
-                Alert.alert('Error', response?.message || 'Failed to send OTP');
+                Alert.alert('Error', response?.message || 'Login failed');
             }
         } catch (error) {
-            console.log('OTP Error:', error);
-            Alert.alert('Error', error?.Message || error?.message || 'Failed to send OTP');
+            console.log('Login Error:', error);
+            Alert.alert('Error', error?.message || 'Failed to login');
         } finally {
             setLoading(false);
         }
@@ -143,7 +64,7 @@ const LoginScreen = () => {
                         <Image style={styles.kapraLogo} source={require('../assets/images/kapra_logo.png')} />
                         <Image style={styles.tagLine} source={require('../assets/images/login_content.png')} />
                     </ImageBackground>
-                    <View style={styles.bottomContainer}>
+                    {/* <View style={styles.bottomContainer}>
                         <Text style={styles.headerText}>Login or Sign up</Text>
                         <Text style={styles.enterNumberText}>Enter your mobile number</Text>
 
@@ -160,15 +81,11 @@ const LoginScreen = () => {
                                 onChangeText={setPhone}
                             />
                         </View>
-                        <TouchableOpacity onPress={type === 'login' ? handleContinueLogin : handleContinueRest} style={styles.continueButton}>
-                            {loading ? (
-                                <ActivityIndicator size="large" color="#FFFFFF" />
-                            ) : (
-                                <Text style={styles.continueButtonText}>Continue</Text>
-                            )}
+                        <TouchableOpacity onPress={handleContinue} style={styles.continueButton}>
+                            <Text style={styles.continueButtonText}>Continue</Text>
                         </TouchableOpacity>
-                    </View>
-                    {/* <View style={styles.bottomContainer}>
+                    </View> */}
+                    <View style={styles.bottomContainer}>
                         <Text style={styles.headerText}>Login or Sign up</Text>
                         <Text style={styles.enterNumberText}>Enter your password</Text>
 
@@ -178,29 +95,38 @@ const LoginScreen = () => {
                                     placeholder="Enter password"
                                     placeholderTextColor="#DADADA"
                                     style={styles.input}
-                                    secureTextEntry={showPassword}
+                                    secureTextEntry={!showPassword}
+                                    onChangeText={setPassword}
                                 />
-                                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                                    <Image style={styles.eyeIcon} source={require('../assets/images/eye_icon.png')} />
+                                <TouchableOpacity
+                                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                                    onPress={() => setShowPassword(!showPassword)}>
+                                    <Image tintColor={showPassword ? 'red' : undefined} style={styles.eyeIcon} source={require('../assets/images/eye_icon.png')} />
                                 </TouchableOpacity>
                             </View>
                         </View>
 
-                        <TouchableOpacity onPress={() => navigation.navigate('ChangePwdScreen')}>
+                        <TouchableOpacity onPress={() => navigation.navigate('LoginScreen', {
+                            type: 'reset'
+                        })}>
                             <Text style={styles.forgotPwdText}>Forgot password</Text>
                         </TouchableOpacity>
 
-                        <TouchableOpacity style={styles.continueButton}>
-                            <Text style={styles.continueButtonText}>Continue</Text>
+                        <TouchableOpacity onPress={handleContinue} style={styles.continueButton}>
+                            {loading ? (
+                                <ActivityIndicator size="large" color="#FFFFFF" />
+                            ) : (
+                                <Text style={styles.continueButtonText}>Continue</Text>
+                            )}
                         </TouchableOpacity>
-                    </View> */}
+                    </View>
                 </ScrollView>
             </KeyboardAvoidingView>
         </SafeAreaView>
     )
 }
 
-export default LoginScreen
+export default LoginPwdScreen
 
 const styles = StyleSheet.create({
     mainContainer: {

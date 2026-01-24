@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, ImageBackground, TouchableOpacity, Image, TextInput, FlatList, ScrollView, Dimensions } from 'react-native'
-import React, { startTransition, useRef, useState } from 'react'
+import React, { startTransition, useEffect, useRef, useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
@@ -16,6 +16,7 @@ import ProductCard from '../components/ProductCard';
 import SelectedProducts from '../components/SelectedProducts';
 import { useNavigation } from '@react-navigation/native';
 import { FONTS } from '../styles/typography'
+import { getAccessToken } from '../api/tokenService';
 
 const { width } = Dimensions.get("window");
 const BANNER_HEIGHT = (283 / 390) * width;
@@ -108,6 +109,7 @@ const HomeScreen = () => {
 
     const scrollRef = useRef();
     const [activeIndex, setActiveIndex] = useState(0);
+    const [accessToken, setAccessToken] = useState(null);
 
     const onScroll = (e) => {
         const offsetX = e.nativeEvent.contentOffset.x;
@@ -118,6 +120,14 @@ const HomeScreen = () => {
             setActiveIndex(slideIndex);
         }
     };
+
+    useEffect(() => {
+        const loadToken = async () => {
+            const token = await getAccessToken()
+            setAccessToken(token)
+        };
+        loadToken()
+    }, [])
 
     const navigation = useNavigation()
 
@@ -248,6 +258,7 @@ const HomeScreen = () => {
         <SafeAreaView
             edges={['top']}
             style={styles.mainContainer}>
+            {console.log('tokennnnn', accessToken)}
             <ScrollView
                 contentContainerStyle={{ paddingBottom: hp("0.7%") }}
                 showsVerticalScrollIndicator={false}
@@ -299,7 +310,10 @@ const HomeScreen = () => {
                             // navigation.navigate('LoginScreen')
                             // navigation.navigate('RegistraionScreen')
                             // navigation.navigate('OtpScreen')
-                            navigation.navigate('LoginScreen')
+                            navigation.navigate('ProfileScreen', {
+                                type: "login"
+                            })
+                            // navigation.navigate('ProfileScreen')
                         }} style={styles.profileIconMainView}>
                             <Image source={require('../assets/images/crown.png')} width={wp('6.3%')} height={hp('2.6%')} />
                             <View style={styles.profileIconView}>

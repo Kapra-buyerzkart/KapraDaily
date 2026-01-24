@@ -78,11 +78,11 @@ function App() {
     <SafeAreaProvider>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor={isDarkMode ? '#000' : '#fff'} />
       <AppContextProvider>
-        {/* <LoaderContextProvider> */}
-        <NavigationContainer>
+        <LoaderContextProvider>
+          <NavigationContainer>
             <RootNavigator />
-        </NavigationContainer>
-        {/* </LoaderContextProvider> */}
+          </NavigationContainer>
+        </LoaderContextProvider>
       </AppContextProvider>
     </SafeAreaProvider>
   );

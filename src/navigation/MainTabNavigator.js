@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
     KshopeButton: {
         width: wp("28.84%"),
         height: hp("5.26"),
-        backgroundColor: "#005CFF",
+        backgroundColor: "#990EE2",
         borderRadius: 16,
         justifyContent: "center",
         alignItems: "center",
