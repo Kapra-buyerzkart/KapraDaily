@@ -1,13 +1,39 @@
 import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native'
-import React from 'react'
+import React, { useMemo } from 'react'
 import LinearGradient from 'react-native-linear-gradient'
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { useNavigation } from '@react-navigation/native';
 import { FONTS } from '../styles/typography';
+import { useCart } from '../context/CartContext';
+import CONFIG from '../globals/config';
 
-export default function SelectedProducts(props) {
+const SelectedProducts = () => {
     const navigation = useNavigation();
+    const { cartItems } = useCart();
+
+    // Don't show if cart is empty
+    if (!cartItems || cartItems.length === 0) {
+        return null;
+    }
+
+    // Get first 3 items for preview
+    const previewItems = cartItems.slice(0, 3);
+
+    // Helper to get image source
+    const getImageSource = (item) => {
+        if (item.featuredImage) {
+            return { uri: `${CONFIG.image_base_url}${item.featuredImage}` };
+        }
+        if (item.productImage) {
+            return { uri: `${CONFIG.image_base_url}${item.productImage}` };
+        }
+        if (item.image) {
+            return item.image; // Local require() image
+        }
+        return require('../assets/images/categories/dfn.png'); // Fallback
+    };
+
     return (
         <TouchableOpacity
             onPress={() => navigation.navigate("CartScreen")}
@@ -18,15 +44,14 @@ export default function SelectedProducts(props) {
                 style={styles.gradientStyle}
             >
                 <View style={styles.stackContainer}>
-                    {props.selectedProducts.slice(0, 3).map((item, index) => (
+                    {previewItems.map((item, index) => (
                         <Image
-                            key={index}
-                            source={item.image}
+                            key={item.productId || item.id || index}
+                            source={getImageSource(item)}
                             style={[
                                 styles.productImage,
                                 {
                                     marginLeft: index === 0 ? 0 : wp("-7%"), // overlap to left
-                                    // zIndex: index + 1,                 // last image on top
                                 },
                             ]}
                         />
@@ -34,7 +59,7 @@ export default function SelectedProducts(props) {
                 </View>
                 <View style={styles.viewOne}>
                     <Text style={styles.viewCartText}>View cart</Text>
-                    <Text style={styles.itemsText}>{props.selectedProducts.length} items</Text>
+                    <Text style={styles.itemsText}>{cartItems.length} items</Text>
                 </View>
                 <Image source={require("../assets/images/right-arrow.png")} style={styles.rightArrowImageStyle} />
 
@@ -103,3 +128,6 @@ const styles = StyleSheet.create({
         bottom: hp("0.2%")
     }
 })
+
+// Wrap in React.memo to prevent unnecessary re-renders
+export default React.memo(SelectedProducts);
