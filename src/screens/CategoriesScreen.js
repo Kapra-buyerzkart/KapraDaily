@@ -1,5 +1,5 @@
 import { View, Text, TouchableOpacity, FlatList, Image, TextInput, ScrollView } from 'react-native'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
@@ -8,6 +8,9 @@ import ProductCard from '../components/ProductCard';
 import SelectedProducts from '../components/SelectedProducts';
 import LinearGradient from 'react-native-linear-gradient';
 import { FONTS } from '../styles/typography'
+import { getCategoriesApi } from '../api/categoryService';
+import { searchProductsApi } from '../api/productService';
+import CONFIG from '../globals/config';
 
 
 const categories = [
@@ -65,17 +68,108 @@ const dummyProducts = [
 export default function CategoriesScreen() {
     const [selectedId, setSelectedId] = useState("1");
     const [selectedSubCatId, setSelectedSubCatId] = useState("1");
+    const [categoriesList, setCategoriesList] = useState([]);
+    const [subCategoriesList, setSubCategoriesList] = useState([]);
+    const [productsList, setProductsList] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    // const [categoryName, setCategoryName] = useState(categories[selectedId].name);
-    const categoryName =
-        categories.find(cat => cat.id === selectedId)?.name || "";
+    useEffect(() => {
+        fetchCategories();
+    }, []);
+
+    useEffect(() => {
+        if (selectedId) {
+            fetchSubCategories(selectedId);
+        }
+    }, [selectedId]);
+
+    useEffect(() => {
+        const catIdToFetch = selectedSubCatId || selectedId;
+        if (catIdToFetch) {
+            console.log('bvsdnmzkue', catIdToFetch, selectedId, selectedSubCatId);
+
+            fetchProducts(catIdToFetch);
+        }
+    }, [selectedSubCatId]);
+
+    const fetchProducts = async (catId) => {
+        try {
+            const payload = {
+                pincodeAreaId: 105,
+                prName: "a",
+                catId: parseInt(catId),
+                priceMin: 0,
+                priceMax: 10000,
+                filterValues: null,
+                sortBy: "relevance",
+                pageNumber: 1,
+                pageSize: 20
+            };
+            console.log('Fetching Products Payload:', JSON.stringify(payload, null, 2));
+            const response = await searchProductsApi(payload);
+            console.log('Products Response:', JSON.stringify(response, null, 2));
+            if (response && response.success && response.data && response.data.items) {
+                setProductsList(response.data.items);
+            } else {
+                setProductsList([]);
+            }
+        } catch (error) {
+            console.error('Error fetching products:', error);
+            setProductsList([]);
+        }
+    };
+
+    const fetchCategories = async () => {
+        try {
+            const response = await getCategoriesApi(1); // Fetch main categories
+            console.log('Categories Response:', JSON.stringify(response, null, 2));
+            if (response && response.success && response.data && response.data.items) {
+                setCategoriesList(response.data.items);
+                if (response.data.items.length > 0) {
+                    setSelectedId(response.data.items[0]?.catId?.toString());
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching categories:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchSubCategories = async (parentId) => {
+        try {
+            const response = await getCategoriesApi(parentId);
+            console.log('SubCategories Response:', JSON.stringify(response, null, 2));
+            if (response && response.success && response.data && response.data.items) {
+                setSubCategoriesList(response.data.items);
+                if (response.data.items.length > 0) {
+                    setSelectedSubCatId(response.data.items[0]?.catId?.toString());
+                } else {
+                    setSelectedSubCatId(null);
+                }
+            } else {
+                setSubCategoriesList([]);
+            }
+        } catch (error) {
+            console.error('Error fetching subcategories:', error);
+            setSubCategoriesList([]);
+        }
+    };
+
+    const getImageUrl = (imagePath) => {
+        if (!imagePath) return require("../assets/images/fv.png");
+        if (imagePath.startsWith('http')) return { uri: imagePath };
+        return { uri: `${CONFIG.image_base_url}/${imagePath}`.replace(/([^:]\/)\/+/g, "$1") }; // Simple clean of double slashes
+    };
+
+    const categoryName = categoriesList.find(cat => cat.catId.toString() === selectedId)?.catName || "";
 
     const renderItem = ({ item }) => {
-        const isSelected = item.id === selectedId;
+        const isSelected = item?.catId?.toString() === selectedId;
 
         return (
             <TouchableOpacity
-                onPress={() => setSelectedId(item.id)}
+                onPress={() => setSelectedId(item?.catId?.toString())}
                 activeOpacity={0.8}
                 style={{
                     marginBottom: hp("1.7%"),
@@ -90,7 +184,7 @@ export default function CategoriesScreen() {
                     style={styles.activeCard}
                 >
                     <Image
-                        source={item.image}
+                        source={getImageUrl(item.imageUrl)}
                         style={styles.image}
                         resizeMode="contain"
                     />
@@ -101,7 +195,7 @@ export default function CategoriesScreen() {
                     style={styles.card}
                 >
                     <Image
-                        source={item.image}
+                        source={getImageUrl(item.imageUrl)}
                         style={styles.image}
                         resizeMode="contain"
                     />
@@ -119,23 +213,23 @@ export default function CategoriesScreen() {
     };
 
     const renderSubCategory = ({ item }) => {
-        const isSelected = item.id === selectedSubCatId;
+        const isSelected = item.catId.toString() === selectedSubCatId;
 
         return (
             <>
-                {isSelected ? (<TouchableOpacity onPress={() => setSelectedSubCatId(item.id)} style={styles.selectedSubCategory}>
+                {isSelected ? (<TouchableOpacity onPress={() => setSelectedSubCatId(item.catId.toString())} style={styles.selectedSubCategory}>
                     <View style={styles.selectedSubCategoryImageView}>
-                        <Image style={styles.selectedSubCategoryImage} source={item.image} />
+                        <Image style={styles.selectedSubCategoryImage} source={getImageUrl(item.imageUrl)} />
                     </View>
-                    <Text style={styles.selectedSubCatText}>{item.name}</Text>
+                    <Text style={styles.selectedSubCatText}>{item.catName}</Text>
                 </TouchableOpacity>) : (
-                    <TouchableOpacity onPress={() => setSelectedSubCatId(item.id)} style={[styles.selectedSubCategory, {
+                    <TouchableOpacity onPress={() => setSelectedSubCatId(item.catId.toString())} style={[styles.selectedSubCategory, {
                         justifyContent: "center"
                     }]}>
                         <View style={styles.unselectedSubCatImageView}>
-                            <Image style={styles.unselectedSubCatImage} source={item.image} />
+                            <Image style={styles.unselectedSubCatImage} source={getImageUrl(item.imageUrl)} />
                         </View>
-                        <Text style={styles.unselectedSubCatText}>{item.name}</Text>
+                        <Text style={styles.unselectedSubCatText}>{item.catName}</Text>
                     </TouchableOpacity>)}
             </>
         );
@@ -173,8 +267,8 @@ export default function CategoriesScreen() {
                 {/* LEFT MENU */}
                 <View style={styles.leftMenu}>
                     <FlatList
-                        data={categories}
-                        keyExtractor={(item) => item.id}
+                        data={categoriesList}
+                        keyExtractor={(item) => item.catId.toString()}
                         renderItem={renderItem}
                         showsVerticalScrollIndicator={false}
                         contentContainerStyle={{
@@ -194,8 +288,8 @@ export default function CategoriesScreen() {
                         />
                     </View> */}
                     <FlatList
-                        data={dummyProducts}
-                        keyExtractor={(item) => item.id}
+                        data={subCategoriesList}
+                        keyExtractor={(item) => item.catId.toString()}
                         renderItem={renderSubCategory}
                         horizontal={true}
                         showsHorizontalScrollIndicator={false}
@@ -254,8 +348,8 @@ export default function CategoriesScreen() {
                     </TouchableOpacity> */}
 
                     <FlatList
-                        data={categoryContent[selectedId] || []}
-                        keyExtractor={(item) => item.id}
+                        data={productsList}
+                        keyExtractor={(item) => (item.productId || item.id).toString()}
                         renderItem={({ item }) => <ProductCard item={item} />}
                         numColumns={2}
                         showsVerticalScrollIndicator={false}
@@ -264,6 +358,11 @@ export default function CategoriesScreen() {
                             paddingBottom: hp("8.5%"),
                             paddingTop: hp("0.5%")
                         }}
+                        ListEmptyComponent={() => (
+                            <View style={{ flex: 1, alignItems: 'center', marginTop: hp('5%') }}>
+                                <Text style={{ fontFamily: FONTS.lexend.regular, color: '#999' }}>No products found</Text>
+                            </View>
+                        )}
                     />
                 </ScrollView>
             </View>
