@@ -11,6 +11,7 @@ import { FONTS } from '../styles/typography'
 import { getCategoriesApi } from '../api/categoryService';
 import { searchProductsApi } from '../api/productService';
 import CONFIG from '../globals/config';
+import FilterSortModal from '../components/FilterSortModal';
 
 
 const categories = [
@@ -73,6 +74,19 @@ export default function CategoriesScreen() {
     const [productsList, setProductsList] = useState([]);
     const [loading, setLoading] = useState(true);
 
+    // Filter & Sort State
+    const [filterVisible, setFilterVisible] = useState(false);
+    const [sortBy, setSortBy] = useState('relevance');
+    const [minPrice, setMinPrice] = useState(0);
+    const [maxPrice, setMaxPrice] = useState(10000);
+
+
+    // useEffect(() => {
+    //     if (route.params?.categoryId) {
+    //         setSelectedId(route.params.categoryId.toString());
+    //     }
+    // }, [route.params?.categoryId]);
+
     useEffect(() => {
         fetchCategories();
     }, []);
@@ -90,7 +104,7 @@ export default function CategoriesScreen() {
 
             fetchProducts(catIdToFetch);
         }
-    }, [selectedSubCatId]);
+    }, [selectedSubCatId, sortBy, minPrice, maxPrice]); // Refetch on filter change
 
     const fetchProducts = async (catId) => {
         try {
@@ -98,10 +112,10 @@ export default function CategoriesScreen() {
                 pincodeAreaId: 105,
                 prName: "a",
                 catId: parseInt(catId),
-                priceMin: 0,
-                priceMax: 10000,
+                priceMin: minPrice,
+                priceMax: maxPrice,
                 filterValues: null,
-                sortBy: "relevance",
+                sortBy: sortBy,
                 pageNumber: 1,
                 pageSize: 20
             };
@@ -255,10 +269,10 @@ export default function CategoriesScreen() {
                             {/* <View style={styles.divider} />
                         <Ionicons name="clipboard-outline" color={"#8F8F8F"} size={wp("6%")} style={styles.clipboardIcon} /> */}
                         </View>
-                        <View style={styles.filterView}>
+                        <TouchableOpacity style={styles.filterView} onPress={() => setFilterVisible(true)}>
                             <Image source={require("../assets/images/filter.png")} style={styles.filterIconStyle} />
                             <Text style={styles.filterText}>Filter</Text>
-                        </View>
+                        </TouchableOpacity>
                     </View>
                 </View>
             </View>
@@ -369,6 +383,19 @@ export default function CategoriesScreen() {
             <View style={styles.floatingContainer}>
                 <SelectedProducts selectedProducts={selectedProducts} />
             </View>
+
+            <FilterSortModal
+                visible={filterVisible}
+                onClose={() => setFilterVisible(false)}
+                onApply={(filters) => {
+                    setSortBy(filters.sort);
+                    setMinPrice(filters.min);
+                    setMaxPrice(filters.max);
+                }}
+                initialSort={sortBy}
+                initialMin={minPrice}
+                initialMax={maxPrice}
+            />
         </SafeAreaView>
     );
 }
