@@ -16,6 +16,8 @@ import Navigation from './src/navigation';
 import { OneSignal } from 'react-native-onesignal';
 import { LoaderContextProvider } from './src/context/loaderContext';
 import { AppContextProvider } from './src/context/appContext';
+import { CartProvider } from './src/context/CartContext';
+import { WishlistProvider } from './src/context/WishlistContext';
 import { NavigationContainer } from '@react-navigation/native';
 import RootNavigator from './src/navigation/RootNavigator';
 
@@ -78,11 +80,15 @@ function App() {
     <SafeAreaProvider>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor={isDarkMode ? '#000' : '#fff'} />
       <AppContextProvider>
-        <LoaderContextProvider>
-          <NavigationContainer>
-            <RootNavigator />
-          </NavigationContainer>
-        </LoaderContextProvider>
+        <CartProvider>
+          <WishlistProvider>
+            <LoaderContextProvider>
+              <NavigationContainer>
+                <RootNavigator />
+              </NavigationContainer>
+            </LoaderContextProvider>
+          </WishlistProvider>
+        </CartProvider>
       </AppContextProvider>
     </SafeAreaProvider>
   );
