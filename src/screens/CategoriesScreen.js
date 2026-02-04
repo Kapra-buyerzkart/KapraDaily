@@ -11,7 +11,6 @@ import { FONTS } from '../styles/typography'
 import { getCategoriesApi } from '../api/categoryService';
 import { searchProductsApi } from '../api/productService';
 import CONFIG from '../globals/config';
-import FilterSortModal from '../components/FilterSortModal';
 
 
 const categories = [
@@ -74,19 +73,6 @@ export default function CategoriesScreen() {
     const [productsList, setProductsList] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    // Filter & Sort State
-    const [filterVisible, setFilterVisible] = useState(false);
-    const [sortBy, setSortBy] = useState('relevance');
-    const [minPrice, setMinPrice] = useState(0);
-    const [maxPrice, setMaxPrice] = useState(10000);
-
-
-    // useEffect(() => {
-    //     if (route.params?.categoryId) {
-    //         setSelectedId(route.params.categoryId.toString());
-    //     }
-    // }, [route.params?.categoryId]);
-
     useEffect(() => {
         fetchCategories();
     }, []);
@@ -104,7 +90,7 @@ export default function CategoriesScreen() {
 
             fetchProducts(catIdToFetch);
         }
-    }, [selectedSubCatId, sortBy, minPrice, maxPrice]); // Refetch on filter change
+    }, [selectedSubCatId]);
 
     const fetchProducts = async (catId) => {
         try {
@@ -112,10 +98,10 @@ export default function CategoriesScreen() {
                 pincodeAreaId: 105,
                 prName: "a",
                 catId: parseInt(catId),
-                priceMin: minPrice,
-                priceMax: maxPrice,
+                priceMin: 0,
+                priceMax: 10000,
                 filterValues: null,
-                sortBy: sortBy,
+                sortBy: "relevance",
                 pageNumber: 1,
                 pageSize: 20
             };
