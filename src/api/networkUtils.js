@@ -49,7 +49,8 @@ axiosInstance.interceptors.request.use(
       config.url?.includes('sendotp') ||
       config.url?.includes('verifyotp');
 
-    console.log('API URL 👉', config.url, 'isAuthApi 👉', isAuthApi);
+    const fullUrl = config.baseURL ? `${config.baseURL}${config.url}` : config.url;
+    console.log('API URL 👉', fullUrl, 'isAuthApi 👉', isAuthApi);
 
     if (!isAuthApi) {
       const token = await getAccessToken();
@@ -149,4 +150,9 @@ export const postRegister = async (url, payload) => {
 
 export const getNew = async (url, config) => {
   return axiosInstance.get(url, config); // full response
+};
+
+export const deleteRequest = async (url, payload) => {
+  const res = await axiosInstance.delete(url, { data: payload });
+  return res.data;
 };

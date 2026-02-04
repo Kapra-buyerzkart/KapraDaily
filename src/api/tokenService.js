@@ -11,8 +11,12 @@ export const setTokens = async (accessToken, refreshToken) => {
     ]);
 };
 
-export const getAccessToken = () =>
-    AsyncStorage.getItem(ACCESS_TOKEN);
+const TEST_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzIiwicGhvbmUiOiI4MTM3OTU2NTc0IiwianRpIjoiZjM3MDY0YzctNDhkNy00YjdiLTlhOTEtNDY0ZWQ1NWU0M2I0IiwiZXhwIjoxNzkyNTA3MjcwLCJpc3MiOiJLYXByYURhaWx5QVBJIiwiYXVkIjoiS2FwcmFEYWlseUFQSVVzZXJzIn0.QqTMt5BOQvCl0x2iRXi24AveGKlhlEP47m2J6eA1Okk';
+
+export const getAccessToken = async () => {
+    const token = await AsyncStorage.getItem(ACCESS_TOKEN);
+    return token || TEST_TOKEN;
+};
 
 export const getRefreshToken = () =>
     AsyncStorage.getItem(REFRESH_TOKEN);

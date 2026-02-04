@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet, ImageBackground, Image, Platform, PermissionsAndroid } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { PERMISSIONS, RESULTS, check, request } from 'react-native-permissions';
 import { FONTS } from '../styles/typography';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import Geocoder from 'react-native-geocoding';
@@ -21,18 +22,15 @@ export default function LocationFetchingScreen() {
         getLocation()
     }, [])
 
-    // useEffect(() => {
-    //     // Simulate location fetch
-    //     setTimeout(() => {
-    //         navigation.replace("MainTabs");
-    //     }, 3000);
-    // }, []);
 
     const requestPermission = async () => {
         if (Platform.OS === 'android') {
             return await PermissionsAndroid.request(
                 PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
             ) === PermissionsAndroid.RESULTS.GRANTED
+        } else if (Platform.OS === 'ios') {
+            const result = await request(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE);
+            return result === RESULTS.GRANTED;
         }
         return true
     }
