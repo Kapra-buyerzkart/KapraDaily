@@ -24,27 +24,17 @@ const OfferCard = ({ item, onApply, onReject }) => {
                         <Text style={styles.offerText}>{item.name}</Text>
                         <Text style={styles.offerTextTwo}>{item.content}</Text>
                     </View>
-                    <View style={{
-                        height: hp('7.3%'),
-                        justifyContent: 'space-between'
-                    }}>
-                        <TouchableOpacity onPress={onReject} style={[styles.applyButton, {
-                            flexDirection: 'row',
-                            justifyContent: "space-between",
-                            paddingHorizontal: wp('4%')
-                        }]}>
-                            <Image style={styles.closeIcon} source={require('../assets/images/close.png')} />
-                            <Text style={[styles.applyButtonText, {
-                                color: '#FF0000'
-                            }]}>Rejected</Text>
-                        </TouchableOpacity>
-                        <View style={styles.appliedStyle}>
-                            <Image style={styles.tickIcon} source={require('../assets/images/tick.png')} />
-                            <Text style={[styles.applyButtonText, {
-                                color: '#0CA201'
-                            }]}>Applied</Text>
-                        </View>
-                    </View>
+
+                    <TouchableOpacity onPress={onReject} style={[styles.applyButton, {
+                        borderColor: '#FF0000',
+                        borderWidth: 1,
+                        alignSelf: 'center',
+                        marginRight: wp('2.5%')
+                    }]}>
+                        <Text style={[styles.applyButtonText, {
+                            color: '#FF0000'
+                        }]}>Remove</Text>
+                    </TouchableOpacity>
                 </View>
             ) : (<View style={styles.offerContainer}>
                 <Image style={styles.offerImage} source={item.image} />
