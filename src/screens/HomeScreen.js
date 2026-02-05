@@ -258,7 +258,7 @@ const HomeScreen = () => {
         <SafeAreaView
             edges={['top']}
             style={styles.mainContainer}>
-            {console.log('tokennnnn', accessToken)}
+            {/* {console.log('tokennnnn', accessToken)} */}
             <ScrollView
                 contentContainerStyle={{ paddingBottom: hp("0.7%") }}
                 showsVerticalScrollIndicator={false}

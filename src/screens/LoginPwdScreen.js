@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ImageBackground, Image, TextInput, TouchableOpacity, KeyboardAvoidingView, ScrollView, Alert } from 'react-native'
+import { View, Text, StyleSheet, ImageBackground, Image, TextInput, TouchableOpacity, KeyboardAvoidingView, ScrollView, Alert, ActivityIndicator } from 'react-native'
 import React, { useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
@@ -18,7 +18,7 @@ const LoginPwdScreen = () => {
     const { phone } = route.params || {};
 
     const handleContinue = async () => {
-        console.log(phone, password);
+        // console.log(phone, password);
 
         if (!password) {
             Alert.alert('Error', 'Please enter a valid password');
@@ -28,7 +28,7 @@ const LoginPwdScreen = () => {
         try {
             setLoading(true);
             const response = await loginWithPassword(phone, password);
-            console.log('Login Response:', response);
+            // console.log('Login Response:', response);
 
             if (response?.success && response?.data) {
                 const { accessToken, refreshToken } = response.data;
@@ -43,7 +43,7 @@ const LoginPwdScreen = () => {
             }
         } catch (error) {
             console.log('Login Error:', error);
-            Alert.alert('Error', error?.message || 'Failed to login');
+            Alert.alert('Error', error || 'Failed to login');
         } finally {
             setLoading(false);
         }
@@ -51,6 +51,7 @@ const LoginPwdScreen = () => {
 
     return (
         <SafeAreaView style={styles.mainContainer}>
+            {/* {console.log('kkkkkk', phone)} */}
             <KeyboardAvoidingView
                 style={{ flex: 1 }}
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -107,7 +108,8 @@ const LoginPwdScreen = () => {
                         </View>
 
                         <TouchableOpacity onPress={() => navigation.navigate('LoginScreen', {
-                            type: 'reset'
+                            type: 'reset',
+                            phone
                         })}>
                             <Text style={styles.forgotPwdText}>Forgot password</Text>
                         </TouchableOpacity>

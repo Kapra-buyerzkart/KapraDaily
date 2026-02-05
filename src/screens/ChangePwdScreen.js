@@ -12,7 +12,7 @@ import { useNavigation, useRoute } from '@react-navigation/native'
 const ChangePwdScreen = () => {
     const navigation = useNavigation()
     const route = useRoute()
-    const { resetToken } = route.params || {}
+    const { resetToken, phone } = route.params || {}
     const [showNewPassword, setShowNewPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [newPassword, setNewPassword] = useState('');
@@ -43,7 +43,11 @@ const ChangePwdScreen = () => {
                 Alert.alert(
                     'Success',
                     'Password changed successfully',
-                    [{ text: 'OK', onPress: () => navigation.navigate('LoginPwdScreen'), },]
+                    [{
+                        text: 'OK', onPress: () => navigation.navigate('LoginPwdScreen', {
+                            phone
+                        }),
+                    },]
                 );
                 // Optionally navigate to login screen
             } else {
@@ -58,6 +62,7 @@ const ChangePwdScreen = () => {
 
     return (
         <SafeAreaView style={styles.mainContainer}>
+            {/* {console.log('PHHHHH', phone)} */}
             <KeyboardAvoidingView
                 style={{ flex: 1 }}
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}

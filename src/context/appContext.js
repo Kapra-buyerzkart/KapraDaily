@@ -10,11 +10,11 @@ export const AppContextProvider = ({ children }) => {
   const loadProfile = async () => {
     try {
       const response = await getProfile();
-      console.log('responsennn', response)
+      // console.log('responsennn', response)
       if (response?.success && response?.data) {
         setProfile(response.data);
       } else {
-        console.log('Failed to load profilennn:', response.message);
+        // console.log('Failed to load profilennn:', response.message);
       }
     } catch (error) {
       console.log('Profile fetch error:', error);

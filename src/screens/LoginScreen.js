@@ -56,9 +56,9 @@ const LoginScreen = () => {
     // };
 
     const handleContinueLogin = async () => {
-        console.log('Login')
-        console.log(phone);
-        console.log('type', type);
+        // console.log('Login')
+        // console.log(phone);
+        // console.log('type', type);
 
         if (phone.length !== 10) {
             Alert.alert('Error', 'Please enter a valid mobile number');
@@ -68,8 +68,8 @@ const LoginScreen = () => {
         try {
             setLoading(true);
             const response = await sendLoginOtp(phone);
-            console.log('response', response)
-            console.log('OTP Response:', response);
+            // console.log('response', response)
+            // console.log('OTP Response:', response);
 
             if (response?.success && response?.data) {
                 navigation.navigate('OtpScreen', {
@@ -92,8 +92,8 @@ const LoginScreen = () => {
     };
 
     const handleContinueRest = async () => {
-        console.log(phone);
-        console.log('type', type);
+        // console.log(phone);
+        // console.log('type', type);
 
         if (phone.length !== 10) {
             Alert.alert('Error', 'Please enter a valid mobile number');
@@ -109,8 +109,8 @@ const LoginScreen = () => {
             if (type === 'reset') {
                 response = await sendForgotPwdOtp(phone);
             }
-            console.log('response', response)
-            console.log('OTP Response:', response);
+            // console.log('response', response)
+            // console.log('OTP Response:', response);
 
             if (response?.success && response?.data) {
                 navigation.navigate('OtpScreen', {
@@ -130,6 +130,7 @@ const LoginScreen = () => {
 
     return (
         <SafeAreaView style={styles.mainContainer}>
+            {/* {console.log('type', type)} */}
             <KeyboardAvoidingView
                 style={{ flex: 1 }}
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}

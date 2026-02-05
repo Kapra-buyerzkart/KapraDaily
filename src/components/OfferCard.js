@@ -6,7 +6,7 @@ import { FONTS } from '../styles/typography'
 const OfferCard = ({ item, onApply, onReject }) => {
 
     const [addClicked, setAddClicked] = useState(true)
-    console.log('item.applyClicked', item)
+    // console.log('item.applyClicked', item)
     return (
         <>{
             item.applyCliked ? (

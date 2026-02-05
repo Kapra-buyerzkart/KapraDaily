@@ -12,7 +12,7 @@ export const LoaderContextProvider = ({ children }) => {
     const [loading, setLoading] = useState(false);
 
     const showLoader = (show) => {
-        console.log('show', show)
+        // console.log('show', show)
         setLoading(show);
     };
     const value = {

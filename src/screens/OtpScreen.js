@@ -78,7 +78,7 @@ const OtpScreen = () => {
     };
 
     const handleContinueLogin = async () => {
-        console.log('enteredOtp', enteredOtp)
+        // console.log('enteredOtp', enteredOtp)
         const enteredOtp = otp.join('');
         if (enteredOtp.length < 5) {
             Alert.alert('Error', 'Please enter complete OTP');
@@ -88,7 +88,7 @@ const OtpScreen = () => {
         try {
             setLoading(true)
             const response = await verifyLoginOtp(phone, enteredOtp);
-            console.log('Verify OTP Response:', response);
+            // console.log('Verify OTP Response:', response);
 
             if (response?.success && response?.data) {
                 const { accessToken, refreshToken } = response.data;
@@ -103,7 +103,7 @@ const OtpScreen = () => {
             }
         } catch (error) {
             console.log('Verify OTP Error:', error);
-            Alert.alert('Error', error?.message || 'Failed to verify OTP');
+            Alert.alert('Error', error || 'Failed to verify OTP');
         } finally {
             setLoading(false)
         }
@@ -119,7 +119,7 @@ const OtpScreen = () => {
         try {
             setLoading(true)
             const response = await verifyForgotPwdOtp(phone, enteredOtp);
-            console.log('Verify OTP Response:', response);
+            // console.log('Verify OTP Response:', response);
 
             if (response?.success && response?.data) {
                 // const { accessToken, refreshToken } = response.data;
@@ -129,7 +129,7 @@ const OtpScreen = () => {
                     index: 0,
                     routes: [{
                         name: 'ChangePwdScreen',
-                        params: { resetToken: response?.data?.resetToken }
+                        params: { resetToken: response?.data?.resetToken, phone }
                     }],
                 });
             } else {
@@ -137,7 +137,7 @@ const OtpScreen = () => {
             }
         } catch (error) {
             console.log('Verify OTP Error:', error);
-            Alert.alert('Error', error?.message || 'Failed to verify OTP');
+            Alert.alert('Error', error || 'Failed to verify OTP');
         } finally {
             setLoading(false)
         }

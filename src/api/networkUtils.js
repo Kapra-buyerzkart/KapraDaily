@@ -49,11 +49,11 @@ axiosInstance.interceptors.request.use(
       config.url?.includes('sendotp') ||
       config.url?.includes('verifyotp');
 
-    console.log('API URL 👉', config.url, 'isAuthApi 👉', isAuthApi);
+    // console.log('API URL 👉', config.url, 'isAuthApi 👉', isAuthApi);
 
     if (!isAuthApi) {
       const token = await getAccessToken();
-      console.log('tokentoken', token)
+      // console.log('tokentoken', token)
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
@@ -105,7 +105,7 @@ axiosInstance.interceptors.response.use(
         );
 
         const { access_token, refresh_token } = res.data.Data;
-        console.log('access_token', access_token)
+        // console.log('access_token', access_token)
 
         await setTokens(access_token, refresh_token);
         processQueue(null, access_token);
@@ -128,7 +128,7 @@ axiosInstance.interceptors.response.use(
 /* -------------------- API METHODS -------------------- */
 export const get = async (url, config) => {
   const res = await axiosInstance.get(url, config);
-  console.log('res.data', res.data)
+  // console.log('res.data', res.data)
   return res.data;
 };
 
