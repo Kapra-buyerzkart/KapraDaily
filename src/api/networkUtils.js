@@ -148,6 +148,11 @@ export const postRegister = async (url, payload) => {
   return res.data.Data;
 };
 
+export const patch = async (url, payload) => {
+  const res = await axiosInstance.patch(url, payload);
+  return res.data;
+};
+
 export const getNew = async (url, config) => {
   return axiosInstance.get(url, config); // full response
 };

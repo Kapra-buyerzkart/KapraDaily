@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, Touchable, TouchableOpacity, Image, ScrollView,
 import React, { useContext, useEffect, useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import AntDesign from 'react-native-vector-icons/AntDesign'
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import LinearGradient from 'react-native-linear-gradient'
 import { useNavigation } from '@react-navigation/native'
@@ -69,7 +70,12 @@ export default function ProfileScreen() {
                         <View style={styles.userView}>
                             <Image style={styles.userIcon} source={require('../assets/images/user.png')} />
                             <View style={styles.userNamePhoneView}>
-                                <Text style={styles.userNameText}>{profile.custName}</Text>
+                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                    <Text style={styles.userNameText}>{profile.custName}</Text>
+                                    <TouchableOpacity onPress={() => navigation.navigate('EditProfileScreen')} style={{ marginLeft: wp('2%') }}>
+                                        <MaterialIcons name="edit" size={wp('4%')} color="#F25000" />
+                                    </TouchableOpacity>
+                                </View>
                                 <Text style={styles.phoneNumberStyle}>{profile.phoneNo}</Text>
                             </View>
                             <View style={styles.bcoinContainer}>
@@ -108,6 +114,46 @@ export default function ProfileScreen() {
                         <Text style={styles.offerText}>Coupon</Text>
                         <AntDesign name={"right"} color={'#DADADA'} size={wp('4.4%')} />
                     </View>
+                </View>
+
+                <View style={styles.containerThree}>
+                    <Text style={styles.offersText}>My Account</Text>
+                    <TouchableOpacity onPress={() => navigation.navigate('Wishlist')} style={[styles.offerView, { paddingVertical: wp('3%') }]}>
+                        <Image style={styles.offerImage} source={require('../assets/images/heart.png')} />
+                        <Text style={styles.offerText}>My Wishlist</Text>
+                        <AntDesign name={"right"} color={'#DADADA'} size={wp('4.4%')} />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => navigation.navigate('MyOrdersScreen')} style={[styles.offerView, { paddingVertical: wp('3%') }]}>
+                        <Image style={styles.offerImage} source={require('../assets/images/order.png')} />
+                        <Text style={styles.offerText}>My Orders</Text>
+                        <AntDesign name={"right"} color={'#DADADA'} size={wp('4.4%')} />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => navigation.navigate('CartScreen')} style={[styles.offerView, { paddingVertical: wp('3%') }]}>
+                        <Image style={styles.offerImage} source={require('../assets/images/cart-banner.png')} />
+                        <Text style={styles.offerText}>My Cart</Text>
+                        <AntDesign name={"right"} color={'#DADADA'} size={wp('4.4%')} />
+                    </TouchableOpacity>
+                </View>
+
+                <View style={styles.containerThree}>
+                    <Text style={styles.offersText}>Account Security</Text>
+                    <TouchableOpacity onPress={() => navigation.navigate('UpdateContactScreen', { type: 'phone' })} style={[styles.offerView, { paddingVertical: wp('3%') }]}>
+                        <MaterialIcons name="phone-android" color={'#F25000'} size={wp('6%')} />
+                        <Text style={styles.offerText}>Update Phone Number</Text>
+                        <AntDesign name={"right"} color={'#DADADA'} size={wp('4.4%')} />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => navigation.navigate('UpdateContactScreen', { type: 'email' })} style={[styles.offerView, { paddingVertical: wp('3%') }]}>
+                        <MaterialIcons name="email" color={'#F25000'} size={wp('6%')} />
+                        <Text style={styles.offerText}>Update Email ID</Text>
+                        <AntDesign name={"right"} color={'#DADADA'} size={wp('4.4%')} />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => navigation.navigate('ChangePasswordScreen')} style={[styles.offerView, {
+                        paddingVertical: wp('3%')
+                    }]}>
+                        <MaterialIcons name="lock" color={'#F25000'} size={wp('6%')} />
+                        <Text style={styles.offerText}>Change Password</Text>
+                        <AntDesign name={"right"} color={'#DADADA'} size={wp('4.4%')} />
+                    </TouchableOpacity>
                 </View>
 
                 <View style={[styles.containerThree, { marginTop: hp('1.5%') }]}>
@@ -152,8 +198,8 @@ export default function ProfileScreen() {
                 <TouchableOpacity onPress={handleLogout} style={styles.logoutContainer}>
                     <Text style={styles.logoutText}>Log Out</Text>
                 </TouchableOpacity>
-            </ScrollView>
-        </SafeAreaView>
+            </ScrollView >
+        </SafeAreaView >
     )
 }
 

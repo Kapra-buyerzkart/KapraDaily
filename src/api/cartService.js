@@ -107,9 +107,10 @@ export const getCartApi = async (pincodeAreaId) => {
     });
 };
 
-export const getCartSummaryApi = async (deliveryMode = 'express', deliverySlotId = null, cartVersion = null) => {
+export const getCartSummaryApi = async (deliveryMode = 'express', deliverySlotId = null, cartVersion = null, cartId = null) => {
     const userId = await getUserId();
     const pincodeAreaId = await getPincodeAreaId();
+    const idToUse = cartId || userId;
 
     const payload = {
         pincodeAreaId,
@@ -118,7 +119,7 @@ export const getCartSummaryApi = async (deliveryMode = 'express', deliverySlotId
         ...(cartVersion && { ifMatchCartVersion: cartVersion })
     };
 
-    return post(`cart/${userId}/summary`, payload);
+    return post(`cart/${idToUse}/summary`, payload);
 };
 
 
@@ -169,6 +170,13 @@ export const removeCouponApi = async (cartVersion, cartId) => {
         ifMatchCartVersion: cartVersion
     };
     return post(`cart/${idToUse}/removecoupon`, payload);
+};
+
+export const getAvailableCouponsApi = async (pincodeAreaId) => {
+    const areaId = pincodeAreaId || await getPincodeAreaId();
+    return get(`cart/availablecoupons`, {
+        params: { pincodeAreaId: areaId }
+    });
 };
 
 

@@ -18,6 +18,9 @@ import SplashScreen from '../screens/SplashScreen'
 import LoginPwdScreen from '../screens/LoginPwdScreen'
 import SavedAddressScreen from '../screens/SavedAddressScreen'
 import ReferralScreen from '../screens/ReferralScreen'
+import EditProfileScreen from '../screens/EditProfileScreen'
+import ChangePasswordScreen from '../screens/ChangePasswordScreen'
+import UpdateContactScreen from '../screens/UpdateContactScreen'
 
 const Stack = createNativeStackNavigator();
 
@@ -43,6 +46,9 @@ export default function RootNavigator() {
             <Stack.Screen name="OrderSuccessScreen" component={OrderSuccessScreen} />
             <Stack.Screen name='SavedAddressScreen' component={SavedAddressScreen} />
             <Stack.Screen name='ReferralScreen' component={ReferralScreen} />
+            <Stack.Screen name='EditProfileScreen' component={EditProfileScreen} />
+            <Stack.Screen name='ChangePasswordScreen' component={ChangePasswordScreen} />
+            <Stack.Screen name='UpdateContactScreen' component={UpdateContactScreen} />
         </Stack.Navigator>
     );
 }
