@@ -8,50 +8,22 @@ import { getProductSuggestionsApi } from '../api/productService'
 import { getPincodeAreaId } from '../api/pincodeService'
 import CONFIG from '../globals/config'
 import { LoaderContext } from '../context/loaderContext'
+import useProductSearch from '../hooks/useProductSearch'
 
 const RECENT_SEARCH = ['Tomato', 'Potato', 'Onion', 'Mango']
 
 const SearchScreen = () => {
     const navigation = useNavigation()
-    const [searchTerm, setSearchTerm] = useState('')
-    const [suggestions, setSuggestions] = useState([])
-    const [loading, setLoading] = useState(false)
-    const [resultCount, setResultCount] = useState(0)
-    const { showLoader } = useContext(LoaderContext)
+    const {
+        searchTerm,
+        setSearchTerm,
+        suggestions,
+        loading,
+        resultCount
+    } = useProductSearch(105); // Default pincode for now
 
-    const [pincodeAreaId, setPincodeAreaId] = useState(105);
+    // const { showLoader } = useContext(LoaderContext) // Loader handling moved to hook or local loading state used
 
-    useEffect(() => {
-        const delayDebounceFn = setTimeout(async () => {
-            if (searchTerm.trim().length > 0) {
-                try {
-                    showLoader(true)
-                    // const pincodeAreaId = await getPincodeAreaId()
-                    const response = await getProductSuggestionsApi(searchTerm, pincodeAreaId)
-                    console.log('Search Suggestions Response:', response)
-                    if (response?.data && Array.isArray(response.data)) {
-                        setSuggestions(response.data)
-                        setResultCount(response.data.length)
-                    } else {
-                        setSuggestions([])
-                        setResultCount(0)
-                    }
-                } catch (error) {
-                    console.error('Error fetching suggestions:', error)
-                    setSuggestions([])
-                    setResultCount(0)
-                } finally {
-                    setLoading(false)
-                    showLoader(false)
-                }
-            } else {
-                setSuggestions([])
-                setResultCount(0)
-            }
-        }, 500)
-
-        return () => clearTimeout(delayDebounceFn)
-    }, [searchTerm])
 
     const renderItem = ({ item }) => {
         const imageUri = item.featuredImage

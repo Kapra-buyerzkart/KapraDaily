@@ -18,7 +18,7 @@ const errorHandler = error => {
   }
 
   const status = error?.response?.status;
-  const message = error?.response?.data?.Message;
+  const message = error?.response?.data?.Message || error?.response?.data?.message;
 
   if (status === 401) {
     throw { Message: message || 'Unauthorized', status };

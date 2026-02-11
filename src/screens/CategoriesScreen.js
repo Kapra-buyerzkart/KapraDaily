@@ -423,7 +423,7 @@ export default function CategoriesScreen() {
                 }}
             />
 
-            <FilterSortModal
+            {/* <FilterSortModal
                 visible={filterVisible}
                 onClose={() => setFilterVisible(false)}
                 onApply={(filters) => {
@@ -434,7 +434,7 @@ export default function CategoriesScreen() {
                 initialSort={sortBy}
                 initialMin={minPrice}
                 initialMax={maxPrice}
-            />
+            /> */}
         </SafeAreaView >
     );
 }

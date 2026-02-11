@@ -1,46 +1,85 @@
-import { View, Text, StyleSheet, TouchableOpacity, Image, Platform, ImageBackground, ScrollView } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Platform, FlatList, ImageBackground } from 'react-native'
+import LinearGradient from 'react-native-linear-gradient';
+import React, { useState } from 'react'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import Entypo from 'react-native-vector-icons/Entypo'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import { FONTS } from '../styles/typography'
-import { useNavigation } from '@react-navigation/native'
-import LinearGradient from 'react-native-linear-gradient'
+import { useNavigation, useRoute } from '@react-navigation/native'
+import OrderProductCard from '../components/OrderProductCard'
+import ConfirmationModal from '../components/ConfirmationModal'
+import ReturnItemModal from '../components/ReturnItemModal'
+import { useOrderDetails } from '../hooks/useOrderDetails'
+import AppButton from '../components/AppButton'
+import CustomLoader from '../components/CustomLoader'
 
 const OrderTrackingScreen = () => {
-    const statuses = ['placed', 'accepted', 'packed', 'assigned', 'dispatched', 'delivered']
+    const navigation = useNavigation();
+    const route = useRoute();
+    const { orderId } = route.params || {};
 
-    // const [orderStatus, setOrderStatus] = useState(statuses[0])
+    const {
+        loading,
+        orderStatus,
+        showCancelModal,
+        setShowCancelModal,
+        showReturnModal,
+        setShowReturnModal,
+        selectedReturnItem,
+        setSelectedReturnItem,
 
-    // useEffect(() => {
-    //     let index = 0
+        // Data
+        effectiveOrderStatus,
+        storeName,
+        shippingAddress,
+        fullAddress,
+        cityStateZip,
+        paymentMethod,
+        grandTotal,
+        displayOrderId,
+        orderDate,
+        orderItems,
+        itemCount,
 
-    //     const interval = setInterval(() => {
-    //         index++
-    //         if (index < statuses.length) {
-    //             setOrderStatus(statuses[index])
-    //         } else {
-    //             clearInterval(interval)
-    //         }
-    //     }, 5000) // 10 seconds
+        // Actions
+        handleCancelOrder,
+        handleReturnItem
+    } = useOrderDetails(orderId);
 
-    //     return () => clearInterval(interval)
-    // }, [])
-    const orderStatus = 'delivered'
-    const navigation = useNavigation()
     const insets = useSafeAreaInsets();
+    const [returnReason, setReturnReason] = useState('');
+
+    const renderOrderItem = ({ item }) => (
+        <OrderProductCard
+            item={item}
+            orderStatus={effectiveOrderStatus}
+            onReturn={(selectedItem) => {
+                setSelectedReturnItem(selectedItem || item);
+                setShowReturnModal(true);
+            }}
+        />
+    );
+
+    const getStatusColor = (status) => {
+        switch (status) {
+            case 'placed': return '#F2994A'; // Orange
+            case 'confirmed': return '#2D9CDB'; // Blue
+            case 'shipped': return '#9B51E0'; // Purple
+            case 'delivered': return '#27AE60'; // Green
+            case 'cancelled': return '#EB5757'; // Red
+            case 'returned': return '#6F727A'; // Gray
+            default: return '#000000';
+        }
+    };
+
     return (
-        <SafeAreaView edges={['top']} style={Platform.OS === 'android' ? [styles.mainContainer, {
-            paddingBottom: insets.bottom
-        }] : styles.mainContainer}>
+        <SafeAreaView edges={['top']} style={[styles.mainContainer, { paddingBottom: insets.bottom }]}>
+            <CustomLoader visible={loading} text="Updating Order..." />
+
             <View style={styles.headerContainer}>
                 <TouchableOpacity onPress={() => navigation.goBack()}>
-                    <AntDesign
-                        name={'left'}
-                        size={wp('6%')}
-                        color={'#000000'}
-                    />
+                    <AntDesign name={'left'} size={wp('5%')} color={'#000000'} />
                 </TouchableOpacity>
                 <Text style={styles.headerText}>Order Tracking</Text>
                 <View style={styles.headerInnerView}>

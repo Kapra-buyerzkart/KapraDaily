@@ -115,7 +115,7 @@ const HomeScreen = () => {
 
     const fetchDashboardData = async () => {
         try {
-            showLoader(true);
+            // showLoader(true);
             const response = await getDashboardDataApi();
             if (response && response.success) {
                 setDashboardData(response.data);
@@ -123,7 +123,7 @@ const HomeScreen = () => {
         } catch (error) {
             console.error('Error fetching dashboard data:', error);
         } finally {
-            showLoader(false);
+            // showLoader(false);
         }
     };
 

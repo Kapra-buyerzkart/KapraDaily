@@ -15,6 +15,21 @@ export const useOrderDetails = (orderId) => {
         }
     }, [orderId]);
 
+    const mapOrderStatus = (status) => {
+        if (!status) return 'placed';
+        const s = String(status).toLowerCase();
+        if (s === 'placed' || s === 'pending' || s === 'new' || s === 'created') return 'placed';
+        if (s === 'confirmed' || s === 'accepted' || s === 'processing') return 'accepted';
+        if (s === 'packed') return 'packed';
+        if (s === 'shipped' || s === 'dispatched') return 'dispatched';
+        // assigned or out_for_delivery
+        if (s === 'assigned' || s === 'out_for_delivery') return 'assigned';
+        if (s === 'delivered' || s === 'completed') return 'delivered';
+        if (s === 'cancelled') return 'cancelled';
+        if (s === 'returned') return 'returned';
+        return s; // Default to returning original status if no match, maybe it works directly
+    };
+
     const fetchOrderDetails = async (id) => {
         try {
             const response = await getOrderDetailsApi(id);
@@ -24,8 +39,8 @@ export const useOrderDetails = (orderId) => {
 
                 // Update status from response
                 const responseHeader = response.data.header || {};
-                const newStatus = (responseHeader.orderStatusKey || response.data.orderStatus || 'placed').toLowerCase();
-                setOrderStatus(newStatus);
+                const rawStatus = responseHeader.orderStatusKey || response.data.orderStatus || 'placed';
+                setOrderStatus(mapOrderStatus(rawStatus));
             }
         } catch (error) {
             console.error('Error fetching order details:', error);
@@ -93,19 +108,19 @@ export const useOrderDetails = (orderId) => {
     // Derived Data using useMemo for performance
     const derivedData = useMemo(() => {
         const header = orderData?.header || {};
-        const shipping = orderData?.shippingAddress || {};
-        const items = orderData?.items || [];
-        const payment = orderData?.payments?.[0] || {};
+        const shipping = orderData?.shippingAddress || orderData?.shipping_address || {};
+        const items = orderData?.items || orderData?.order_items || [];
+        const payment = orderData?.payments?.[0] || orderData?.payment || {};
 
         return {
             orderDetails: header,
-            effectiveOrderStatus: (header.orderStatusKey || orderData?.orderStatus || orderStatus).toLowerCase(),
-            storeName: header.storeName || 'Store Name',
+            effectiveOrderStatus: mapOrderStatus(header.orderStatusKey || orderData?.orderStatus || orderStatus),
+            storeName: header.storeName || header.store_name || 'Kapra Daily',
             shippingAddress: shipping,
-            addressType: shipping.addressType || 'Home',
-            fullAddress: [shipping.addLine1, shipping.addLine2].filter(Boolean).join(', '),
+            addressType: shipping.addressType || shipping.address_type || 'Home',
+            fullAddress: [shipping.addLine1 || shipping.add_line1 || shipping.addressLine1 || shipping.address_line1, shipping.addLine2 || shipping.add_line2 || shipping.addressLine2 || shipping.address_line2].filter(Boolean).join(', '),
             cityStateZip: [shipping.district, shipping.state, shipping.pincode].filter(Boolean).join(', ') || '',
-            paymentMethod: payment.paymentMethod || orderData?.paymentMethod || 'Cash on delivery',
+            paymentMethod: payment.paymentMethod || payment.payment_method || orderData?.paymentMethod || orderData?.payment_method || 'Cash on delivery',
             grandTotal: header.grandTotal || orderData?.grandTotal || '0',
             displayOrderId: header.orderNumber || orderData?.orderNumber || orderData?.orderId || `ORD ${orderId}`,
             orderDate: header.orderDate || orderData?.orderDate || '',
