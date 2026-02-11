@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, Image, FlatList, TouchableOpacity, ScrollView } from 'react-native'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -7,115 +7,93 @@ import Entypo from 'react-native-vector-icons/Entypo';
 import { FONTS } from '../styles/typography'
 import LinearGradient from 'react-native-linear-gradient';
 import WishListEmptyComponent from '../components/WishListEmptyComponent'
+import { useWishlist } from '../context/WishlistContext';
+import { useCart } from '../context/CartContext';
+import CONFIG from '../globals/config';
+import ConfirmationModal from '../components/ConfirmationModal';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function WishlistScreen() {
+    const { wishlistItems, removeFromWishlist, loadWishlist } = useWishlist();
+    const { addToCart } = useCart();
 
-    const products = [
-        // {
-        //     id: "1",
-        //     image: require("../assets/images/wl1.png"),
-        //     name: "Lorem lpsum is simply dummy text",
-        //     offer: 17,
-        //     mrpPrice: 394,
-        //     sellingPrice: 324
-        // },
-        // {
-        //     id: "2",
-        //     image: require("../assets/images/wl2.png"),
-        //     name: "Lorem lpsum is simply dummy text",
-        //     offer: 17,
-        //     mrpPrice: 394,
-        //     sellingPrice: 324
-        // },
-        // {
-        //     id: "3",
-        //     image: require("../assets/images/wl1.png"),
-        //     name: "Lorem lpsum is simply dummy text",
-        //     offer: 17,
-        //     mrpPrice: 394,
-        //     sellingPrice: 324
-        // },
-        // {
-        //     id: "4",
-        //     image: require("../assets/images/wl2.png"),
-        //     name: "Lorem lpsum is simply dummy text",
-        //     offer: 17,
-        //     mrpPrice: 394,
-        //     sellingPrice: 324
-        // },
-        // {
-        //     id: "5",
-        //     image: require("../assets/images/wl1.png"),
-        //     name: "Lorem lpsum is simply dummy text",
-        //     offer: 17,
-        //     mrpPrice: 394,
-        //     sellingPrice: 324
-        // },
-        // {
-        //     id: "6",
-        //     image: require("../assets/images/wl2.png"),
-        //     name: "Lorem lpsum is simply dummy text",
-        //     offer: 17,
-        //     mrpPrice: 394,
-        //     sellingPrice: 324
-        // },
-        // {
-        //     id: "7",
-        //     image: require("../assets/images/wl2.png"),
-        //     name: "Lorem lpsum is simply dummy text",
-        //     offer: 17,
-        //     mrpPrice: 394,
-        //     sellingPrice: 324
-        // },
-        // {
-        //     id: "8",
-        //     image: require("../assets/images/wl1.png"),
-        //     name: "Lorem lpsum is simply dummy text",
-        //     offer: 17,
-        //     mrpPrice: 394,
-        //     sellingPrice: 324
-        // },
-        // {
-        //     id: "9",
-        //     image: require("../assets/images/wl2.png"),
-        //     name: "Lorem lpsum is simply dummy text",
-        //     offer: 17,
-        //     mrpPrice: 394,
-        //     sellingPrice: 324
-        // },
-    ]
+    const [confirmationVisible, setConfirmationVisible] = useState(false);
+    const [itemToRemove, setItemToRemove] = useState(null);
 
-    const ProductCard = (item) => {
+    // Load wishlist on mount
+    useEffect(() => {
+        loadWishlist();
+    }, []);
+
+    // Refresh wishlist when screen is focused
+    useFocusEffect(
+        React.useCallback(() => {
+            loadWishlist();
+        }, [loadWishlist])
+    );
+
+    const handleRemoveFromWishlist = (productId, productName) => {
+        setItemToRemove({ productId, productName });
+        setConfirmationVisible(true);
+    };
+
+    const confirmRemove = () => {
+        if (itemToRemove) {
+            removeFromWishlist(itemToRemove.productId);
+            setItemToRemove(null);
+        }
+    };
+
+
+    const ProductCard = ({ item }) => {
+        const [imageError, setImageError] = useState(false);
+
+        const imageSource = imageError || !item.productImage
+            ? require('../assets/images/categories/dfn.png')
+            : { uri: `${CONFIG.image_base_url}${item.productImage}` };
+
+        const discountPercentage = item.unitPrice && item.specialPrice
+            ? Math.round(((item.unitPrice - item.specialPrice) / item.unitPrice) * 100)
+            : 0;
+
         return (
             <TouchableOpacity style={styles.productCard}>
                 <View style={styles.productCardViewOne}>
-                    <Image style={styles.productHeart} source={require("../assets/images/heart_red.png")} />
-                    <Image style={styles.productImage} source={item.item.image} />
+                    <TouchableOpacity onPress={() => handleRemoveFromWishlist(item.productId, item.productName)}>
+                        <Image style={styles.productHeart} source={require("../assets/images/heart_red.png")} />
+                    </TouchableOpacity>
+                    <Image
+                        style={styles.productImage}
+                        source={imageSource}
+                        onError={() => setImageError(true)}
+                    />
                 </View>
                 <View style={styles.productCardViewTwo}>
-                    <Text style={styles.productNameText}>{item.item.name}</Text>
-                    <Text style={styles.offerText}>{item.item.offer} OFF</Text>
+                    <Text style={styles.productNameText} numberOfLines={2}>{item.productName}</Text>
+                    {discountPercentage > 0 && <Text style={styles.offerText}>{discountPercentage}% OFF</Text>}
                 </View>
 
                 <View style={styles.productCardViewThree}>
-                    <View style={styles.mrpView}>
-                        <Text style={styles.mrpText}>MRP</Text>
-                        <MaterialIcons name={'currency-rupee'} color={'#777777'} size={wp("2.4%")} style={styles.rupeeIconSmall} />
-                        <Text style={[styles.mrpText, {
-                            left: wp("-0.4%"),
-                            textDecorationLine: "line-through",
-                            textDecorationColor: "#777777"
-                        }]}>{item.item.mrpPrice}</Text>
-                    </View>
+                    {item.unitPrice && item.unitPrice !== item.specialPrice && (
+                        <View style={styles.mrpView}>
+                            <Text style={styles.mrpText}>MRP</Text>
+                            <MaterialIcons name={'currency-rupee'} color={'#777777'} size={wp("2.4%")} style={styles.rupeeIconSmall} />
+                            <Text style={[styles.mrpText, {
+                                left: wp("-0.4%"),
+                                textDecorationLine: "line-through",
+                                textDecorationColor: "#777777"
+                            }]}>{item.unitPrice}</Text>
+                        </View>
+                    )}
                 </View>
                 <View style={styles.productCardViewFour}>
-                    <View style={styles.plusIconView}>
+                    <TouchableOpacity style={styles.plusIconView} onPress={() => addToCart(item)}>
                         <Entypo name={"plus"} color={"#FFFFFF"} size={wp("4.1%")} />
-                    </View>
+                    </TouchableOpacity>
                     <View style={styles.priceView}>
                         <MaterialIcons name={'currency-rupee'} color={'#0CA201'} size={wp("3.7%")} style={styles.rupeeIconBig}
                         />
-                        <Text style={styles.priceText}>{item.item.sellingPrice}</Text>
+                        <Text style={styles.priceText}>{item.specialPrice || item.unitPrice}</Text>
                     </View>
                 </View>
             </TouchableOpacity>
@@ -146,11 +124,11 @@ export default function WishlistScreen() {
             </LinearGradient>
             <View style={styles.productListView}>
                 <FlatList
-                    data={products}
-                    keyExtractor={(item) => item.id}
+                    data={wishlistItems}
+                    keyExtractor={(item) => item.wishlistItemId?.toString() || item.productId?.toString()}
                     renderItem={({ item }) => <ProductCard item={item} />}
                     showsVerticalScrollIndicator={false}
-                    ListEmptyComponent={<WishListEmptyComponent/>}
+                    ListEmptyComponent={<WishListEmptyComponent />}
                 />
                 <TouchableOpacity style={styles.newWishesContainer}>
                     <Image source={require("../assets/images/heart_two.png")} style={styles.newWishesHeart} />
@@ -158,6 +136,14 @@ export default function WishlistScreen() {
                     <Text style={styles.newWishesText}>New wishes</Text>
                 </TouchableOpacity>
             </View>
+
+            <ConfirmationModal
+                visible={confirmationVisible}
+                onClose={() => setConfirmationVisible(false)}
+                onConfirm={confirmRemove}
+                title="Remove from Wishlist"
+                message={itemToRemove ? `Are you sure you want to remove "${itemToRemove.productName}" from your wishlist?` : ''}
+            />
         </SafeAreaView>
     )
 }

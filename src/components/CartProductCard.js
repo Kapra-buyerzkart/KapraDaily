@@ -1,21 +1,103 @@
-import { View, Text, StyleSheet, TouchableOpacity, Image, Platform } from 'react-native'
-import React, { useState } from 'react'
+import { View, Text, StyleSheet, TouchableOpacity, Image, Platform, Alert } from 'react-native'
+import React, { useState, useMemo, useEffect } from 'react'
 import { BlurView } from '@react-native-community/blur'
 import LinearGradient from 'react-native-linear-gradient'
 import FontAwesome from 'react-native-vector-icons/FontAwesome'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import { FONTS } from '../styles/typography'
+import { useCart } from '../context/CartContext'
+import CONFIG from '../globals/config'
+import { useWishlist } from '../context/WishlistContext'
 
-export default function CartProductCard(props) {
+const CartProductCard = (props) => {
+    const { updateCartItemQuantity, removeFromCart } = useCart();
+    const { isInWishlist, toggleWishlist } = useWishlist();
 
-    const [count, setCount] = useState(0)
-    const [liked, setLiked] = useState(false)
+    const { item } = props;
+    const [imageError, setImageError] = useState(false);
+    const [quantity, setQuantity] = useState(item.addedQty || item.quantity || 1);
+
+    // Update local quantity state when item changes
+    React.useEffect(() => {
+        setQuantity(item.addedQty || item.quantity || 1);
+    }, [item.quantity, item.addedQty]);
+
+    // Map API fields
+    const cartItemId = item.cartItemId || item.id;
+    const productId = item.productId || item.id;
+    const productName = item.prName || item.productName || item.name || '';
+    const unitPrice = item.unitPrice || 0;
+    const specialPrice = item.specialPrice || item.unitPrice || 0;
+    const featuredImage = item.featuredImage || item.productImage || '';
+    const isAvailable = item.isAvailable !== false;
+
+    // Determine if product is sold out
+    // API logic: notAvailableInStore=1 OR unavailable=1 OR insufficientStock=1
+    const isSoldOut = !isAvailable || item.unavailable === 1 || item.insufficientStock === 1;
+
+    const isLiked = isInWishlist(productId);
+
+    // Get image source
+    const imageSource = useMemo(() => {
+        if (imageError || !featuredImage) {
+            return require('../assets/images/categories/dfn.png');
+        }
+        return { uri: `${CONFIG.image_base_url}${featuredImage}` };
+    }, [featuredImage, imageError]);
+
+    // Handle quantity change
+    const handleDecrease = () => {
+        if (quantity > 1) {
+            setQuantity(quantity - 1);
+            updateCartItemQuantity(cartItemId, quantity - 1);
+        } else {
+            Alert.alert(
+                "Remove Item",
+                "Are you sure you want to remove this item from the cart?",
+                [
+                    {
+                        text: "Cancel",
+                        onPress: () => console.log("Cancel Pressed"),
+                        style: "cancel"
+                    },
+                    {
+                        text: "Remove",
+                        onPress: () => removeFromCart(cartItemId),
+                        style: 'destructive'
+                    }
+                ]
+            );
+        }
+    };
+
+    const handleIncrease = () => {
+        setQuantity(quantity + 1);
+        updateCartItemQuantity(cartItemId, quantity + 1);
+    };
+
+    const handleDelete = () => {
+        Alert.alert(
+            "Remove Item",
+            "Are you sure you want to remove this item from the cart?",
+            [
+                {
+                    text: "Cancel",
+                    onPress: () => console.log("Cancel Pressed"),
+                    style: "cancel"
+                },
+                {
+                    text: "Remove",
+                    onPress: () => removeFromCart(cartItemId),
+                    style: 'destructive'
+                }
+            ]
+        );
+    };
 
     return (
         <View style={styles.productCardView}>
-            {props.item.soldOut && (
+            {isSoldOut && (
                 <View style={styles.overlayContainer} pointerEvents="auto">
-
                     {Platform.OS === 'ios' && (
                         <BlurView
                             style={StyleSheet.absoluteFill}
@@ -41,41 +123,57 @@ export default function CartProductCard(props) {
                         </LinearGradient>
                         <Text style={styles.removeToPlaceorderText}>Remove to place order</Text>
                     </View>
-
                 </View>
             )}
+
             <View style={styles.productCardInnerView}>
                 <View style={styles.productImageView}>
-                    <TouchableOpacity style={[styles.heartContainer, { zIndex: 0 }]} onPress={() => setLiked(!liked)}>
+                    <TouchableOpacity
+                        style={[styles.heartContainer, { zIndex: 10 }]}
+                        onPress={() => toggleWishlist(item)}
+                    >
                         <FontAwesome
-                            name={liked ? 'heart' : 'heart-o'}
+                            name={isLiked ? 'heart' : 'heart-o'}
                             size={wp('4%')}
-                            color={liked ? '#FF0048' : '#979797'}
+                            color={isLiked ? '#FF0048' : '#979797'}
                         />
                     </TouchableOpacity>
-                    <Image style={styles.productImageStyle} source={props.item.image} />
+
+                    <Image
+                        style={styles.productImageStyle}
+                        source={imageSource}
+                        onError={() => setImageError(true)}
+                    />
+
                     <View style={styles.btokenContainer}>
                         <Image style={styles.btokenImageStyle} source={require('../assets/images/btoken_icon_two.png')} />
                         <Text style={styles.btokenText}>1B</Text>
                     </View>
                 </View>
+
                 <View style={styles.productCardInnerViewTwo}>
-                    <Text style={styles.productNameText}>{props.item.name}</Text>
-                    <Text style={styles.productCount}>1 pcs</Text>
+                    <Text style={styles.productNameText} numberOfLines={2}>{productName}</Text>
+                    <Text style={styles.productCount}>{quantity} pcs</Text>
+
                     <View style={styles.productCardInnerViewThree}>
                         <View style={styles.productPrizeView}>
-                            <Text style={styles.mrpText}>₹324</Text>
-                            <Text style={styles.sellingPriceText}>₹324</Text>
+                            {unitPrice !== specialPrice && (
+                                <Text style={styles.mrpText}>₹{unitPrice}</Text>
+                            )}
+                            <Text style={styles.sellingPriceText}>₹{specialPrice}</Text>
                         </View>
+
                         <View style={styles.countContainer}>
                             <TouchableOpacity
-                                onPress={() => setCount(count - 1)}
+                                onPress={handleDecrease}
+                                disabled={isSoldOut}
                             >
                                 <Image style={styles.countButtonStyle} source={require('../assets/images/minus-button.png')} />
                             </TouchableOpacity>
-                            <Text style={styles.countText}>{count}</Text>
+                            <Text style={styles.countText}>{quantity}</Text>
                             <TouchableOpacity
-                                onPress={() => setCount(count + 1)}
+                                onPress={handleIncrease}
+                                disabled={isSoldOut}
                             >
                                 <Image style={styles.countButtonStyle} source={require('../assets/images/plus-button.png')} />
                             </TouchableOpacity>
@@ -83,7 +181,11 @@ export default function CartProductCard(props) {
                     </View>
                 </View>
             </View>
-            <TouchableOpacity style={styles.deleteButtonContainer}>
+
+            <TouchableOpacity
+                style={styles.deleteButtonContainer}
+                onPress={handleDelete}
+            >
                 <Image style={styles.deleteButtonStyle} source={require('../assets/images/delete_icon.png')} />
             </TouchableOpacity>
         </View>
@@ -115,7 +217,9 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(0,0,0,0.4)', // #000000 40%
     },
     soldOutContainer: {
-        alignItems: 'center'
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100%'
     },
     soldOutGradient: {
         width: wp('27.9%'),
@@ -147,16 +251,19 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         width: wp('82%'),
+        height: '100%'
     },
     productImageView: {
         width: wp('21.4%'),
         height: hp('9.2%'),
         backgroundColor: '#F3F3F3',
-        borderRadius: wp('3.7%')
+        borderRadius: wp('3.7%'),
+        justifyContent: 'center',
+        alignItems: 'center'
     },
     productImageStyle: {
-        width: wp('21.4%'),
-        height: hp('9.2%'),
+        width: wp('18%'),
+        height: hp('8%'),
         resizeMode: 'contain',
     },
     productCardInnerViewTwo: {
@@ -164,11 +271,13 @@ const styles = StyleSheet.create({
         // backgroundColor: 'yellow',
         height: '100%',
         paddingVertical: wp('1.5%'),
-        justifyContent: 'space-between'
+        justifyContent: 'space-between',
+        flex: 1
     },
     productNameText: {
         fontFamily: FONTS.poppins.regular,
-        fontSize: wp('3%')
+        fontSize: wp('3%'),
+        color: '#000000'
     },
     productCount: {
         color: '#777777',
@@ -178,7 +287,9 @@ const styles = StyleSheet.create({
     },
     productCardInnerViewThree: {
         flexDirection: 'row',
-        justifyContent: 'space-between'
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingRight: wp('2%')
     },
     productPrizeView: {
         flexDirection: 'row',
@@ -211,13 +322,13 @@ const styles = StyleSheet.create({
         fontFamily: FONTS.poppins.light,
         fontSize: wp('2.8%'),
         color: '#777777',
-        textDecorationLine: 'line-through'
+        textDecorationLine: 'line-through',
+        marginRight: wp('1%')
     },
     sellingPriceText: {
         fontFamily: FONTS.poppins.semiBold,
         fontSize: wp('4.1%'),
         color: '#000000',
-        marginLeft: wp('2%')
     },
     countContainer: {
         flexDirection: 'row',
@@ -234,14 +345,21 @@ const styles = StyleSheet.create({
         marginHorizontal: wp('3%')
     },
     deleteButtonContainer: {
-        paddingHorizontal: wp('2%')
+        paddingHorizontal: wp('2%'),
+        height: '100%',
+        justifyContent: 'center',
+        alignItems: 'center'
     },
     deleteButtonStyle: {
         width: wp('3.25%'),
-        height: hp('1.7%')
+        height: hp('1.7%'),
+        resizeMode: 'contain',
+        tintColor: '#FFFFFF'
     },
     androidBlurFallback: {
         ...StyleSheet.absoluteFillObject,
         backgroundColor: 'rgba(0,0,0,0.4)',
     },
 })
+
+export default React.memo(CartProductCard);

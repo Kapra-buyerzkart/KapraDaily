@@ -17,18 +17,28 @@ export default function ProfileScreen() {
     const { profile, loadProfile, logout } = useContext(AppContext);
     const { showLoader } = useContext(LoaderContext);
 
+    // useEffect(() => {
+    //     const fetchProfile = async () => {
+    //         showLoader(true)
+    //         await loadProfile()
+    //         showLoader(false)
+    //     }
+    //     fetchProfile()
+    // }, [])
+
+    // if (!profile) {
+    //     return <LoginScreen />
+    // }
+
     useEffect(() => {
         const fetchProfile = async () => {
-            showLoader(true)
-            await loadProfile()
-            showLoader(false)
-        }
-        fetchProfile()
-    }, [])
-
-    if (!profile) {
-        return <LoginScreen />
-    }
+            showLoader(true);
+            await loadProfile();
+            showLoader(false);
+            // setIsProfileLoaded(true);   // ✅ IMPORTANT
+        };
+        fetchProfile();
+    }, []);
 
     const handleLogout = async () => {
         await logout()
@@ -45,7 +55,7 @@ export default function ProfileScreen() {
 
     return (
         <SafeAreaView edges={['top']} style={styles.mainConatiner}>
-            {console.log('profile', profile)}
+            {console.log('profilescreen', profile)}
             <ScrollView>
                 <LinearGradient
                     colors={['#FFE7DB', '#FFFFFF']}

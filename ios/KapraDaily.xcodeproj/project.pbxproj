@@ -7,62 +7,24 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0C80B921A6F3F58F76C31292 /* libPods-KapraDaily.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5DCACB8F33CDC322A6C60F78 /* libPods-KapraDaily.a */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
-		169CFED4BDA749758986AAC4 /* Poppins-Light.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 9F5D404E0C8245D794798DF4 /* Poppins-Light.ttf */; };
-		259C3B51A63D4B819D45D939 /* Outfit-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 6390D1FDB2BF4E01B51CFCC4 /* Outfit-Medium.ttf */; };
 		26CF7B3EA7006334AE66808C /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
-		2C5CAD6B117B4302970C6973 /* Poppins-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1F8E041C320C40AE80844E79 /* Poppins-Medium.ttf */; };
-		2FC595884DAD42EEB63205DA /* Outfit-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 575B0E5D18BB4ED3AD6C83E0 /* Outfit-SemiBold.ttf */; };
-		33336EA732E6414DBD886203 /* Inter_28pt-ExtraBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A55BD88867A944DA9EB5C50B /* Inter_28pt-ExtraBold.ttf */; };
-		5F00017E5B1D45929BAB605D /* Outfit-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 346C00FEB1714F3EB844F473 /* Outfit-Regular.ttf */; };
-		6DAF9A4ED38D466E9D0C1A83 /* Italiana-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1D7AEC9BA9CE45D4A761925D /* Italiana-Regular.ttf */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
-		7B4A502674F749A08AA0AEC8 /* Poppins-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A7FDCACA8AB84C87A600A0B1 /* Poppins-Bold.ttf */; };
-		7BCF0D575B71414A9FD6F789 /* Poppins-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 77AA01BA64F24794AA00DEF0 /* Poppins-Regular.ttf */; };
-		7FA9A7F1FD9343E483251FDA /* Lexend-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2DF8F276FDE545D2964CB92C /* Lexend-SemiBold.ttf */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
-		849592B232444F07ADB06A38 /* Inter_18pt-ExtraBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 7F36BE2C6E75471E8E87C703 /* Inter_18pt-ExtraBold.ttf */; };
-		93CDA4ED00E047E0905C73A6 /* Poppins-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 7A3F6C0B182D484697B12358 /* Poppins-SemiBold.ttf */; };
-		AF84DA38F9DF414A99D7B484 /* Outfit-Light.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 3EAAA2DD13B94F92B3540CE5 /* Outfit-Light.ttf */; };
-		B59D88C91F734E97882035B4 /* Poppins-Italic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B281BB4C419A492D96CC1D2E /* Poppins-Italic.ttf */; };
-		B708413761744CABBC767528 /* Outfit-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 075ACD896E64490493CC739E /* Outfit-Bold.ttf */; };
-		D6073717B568477DA24B4235 /* Inter_18pt-BoldItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 04486B2BDDF14599830A24EE /* Inter_18pt-BoldItalic.ttf */; };
-		DB1D8A2DE02245F7915133F4 /* Poppins-ExtraBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 652D7BAC252E4892BD5BF766 /* Poppins-ExtraBold.ttf */; };
-		E43D2B070069DB99B83A9FEB /* libPods-KapraDaily.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1BA26274C5988A1E60E27077 /* libPods-KapraDaily.a */; };
-		F30393CF99C2447DA11AD64B /* Lexend-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = FA6CFB54EC9249C4A3D8D841 /* Lexend-Medium.ttf */; };
-		FD16D35F0070425C8DA717E7 /* Inter_18pt-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = BE97F92FCEF94CD1B2324C5D /* Inter_18pt-Regular.ttf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		04486B2BDDF14599830A24EE /* Inter_18pt-BoldItalic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Inter_18pt-BoldItalic.ttf"; path = "../src/assets/fonts/Inter_18pt-BoldItalic.ttf"; sourceTree = "<group>"; };
-		075ACD896E64490493CC739E /* Outfit-Bold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Outfit-Bold.ttf"; path = "../src/assets/fonts/Outfit-Bold.ttf"; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* KapraDaily.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KapraDaily.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = KapraDaily/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = KapraDaily/Info.plist; sourceTree = "<group>"; };
 		13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = PrivacyInfo.xcprivacy; path = KapraDaily/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		1BA26274C5988A1E60E27077 /* libPods-KapraDaily.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-KapraDaily.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		1D7AEC9BA9CE45D4A761925D /* Italiana-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Italiana-Regular.ttf"; path = "../src/assets/fonts/Italiana-Regular.ttf"; sourceTree = "<group>"; };
-		1F8E041C320C40AE80844E79 /* Poppins-Medium.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-Medium.ttf"; path = "../src/assets/fonts/Poppins-Medium.ttf"; sourceTree = "<group>"; };
-		2DF8F276FDE545D2964CB92C /* Lexend-SemiBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Lexend-SemiBold.ttf"; path = "../src/assets/fonts/Lexend-SemiBold.ttf"; sourceTree = "<group>"; };
-		346C00FEB1714F3EB844F473 /* Outfit-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Outfit-Regular.ttf"; path = "../src/assets/fonts/Outfit-Regular.ttf"; sourceTree = "<group>"; };
-		3EAAA2DD13B94F92B3540CE5 /* Outfit-Light.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Outfit-Light.ttf"; path = "../src/assets/fonts/Outfit-Light.ttf"; sourceTree = "<group>"; };
-		4E3B6D439205F47421710540 /* Pods-KapraDaily.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-KapraDaily.debug.xcconfig"; path = "Target Support Files/Pods-KapraDaily/Pods-KapraDaily.debug.xcconfig"; sourceTree = "<group>"; };
-		575B0E5D18BB4ED3AD6C83E0 /* Outfit-SemiBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Outfit-SemiBold.ttf"; path = "../src/assets/fonts/Outfit-SemiBold.ttf"; sourceTree = "<group>"; };
-		6390D1FDB2BF4E01B51CFCC4 /* Outfit-Medium.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Outfit-Medium.ttf"; path = "../src/assets/fonts/Outfit-Medium.ttf"; sourceTree = "<group>"; };
-		652D7BAC252E4892BD5BF766 /* Poppins-ExtraBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-ExtraBold.ttf"; path = "../src/assets/fonts/Poppins-ExtraBold.ttf"; sourceTree = "<group>"; };
+		3B4392A12AC88292D35C810B /* Pods-KapraDaily.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-KapraDaily.debug.xcconfig"; path = "Target Support Files/Pods-KapraDaily/Pods-KapraDaily.debug.xcconfig"; sourceTree = "<group>"; };
+		5709B34CF0A7D63546082F79 /* Pods-KapraDaily.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-KapraDaily.release.xcconfig"; path = "Target Support Files/Pods-KapraDaily/Pods-KapraDaily.release.xcconfig"; sourceTree = "<group>"; };
+		5DCACB8F33CDC322A6C60F78 /* libPods-KapraDaily.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-KapraDaily.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = KapraDaily/AppDelegate.swift; sourceTree = "<group>"; };
-		77AA01BA64F24794AA00DEF0 /* Poppins-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-Regular.ttf"; path = "../src/assets/fonts/Poppins-Regular.ttf"; sourceTree = "<group>"; };
-		7A3F6C0B182D484697B12358 /* Poppins-SemiBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-SemiBold.ttf"; path = "../src/assets/fonts/Poppins-SemiBold.ttf"; sourceTree = "<group>"; };
-		7F36BE2C6E75471E8E87C703 /* Inter_18pt-ExtraBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Inter_18pt-ExtraBold.ttf"; path = "../src/assets/fonts/Inter_18pt-ExtraBold.ttf"; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = KapraDaily/LaunchScreen.storyboard; sourceTree = "<group>"; };
-		9F5D404E0C8245D794798DF4 /* Poppins-Light.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-Light.ttf"; path = "../src/assets/fonts/Poppins-Light.ttf"; sourceTree = "<group>"; };
-		A55BD88867A944DA9EB5C50B /* Inter_28pt-ExtraBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Inter_28pt-ExtraBold.ttf"; path = "../src/assets/fonts/Inter_28pt-ExtraBold.ttf"; sourceTree = "<group>"; };
-		A7FDCACA8AB84C87A600A0B1 /* Poppins-Bold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-Bold.ttf"; path = "../src/assets/fonts/Poppins-Bold.ttf"; sourceTree = "<group>"; };
-		B281BB4C419A492D96CC1D2E /* Poppins-Italic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-Italic.ttf"; path = "../src/assets/fonts/Poppins-Italic.ttf"; sourceTree = "<group>"; };
-		B45288A7B18887B87BBB948F /* Pods-KapraDaily.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-KapraDaily.release.xcconfig"; path = "Target Support Files/Pods-KapraDaily/Pods-KapraDaily.release.xcconfig"; sourceTree = "<group>"; };
-		BE97F92FCEF94CD1B2324C5D /* Inter_18pt-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Inter_18pt-Regular.ttf"; path = "../src/assets/fonts/Inter_18pt-Regular.ttf"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
-		FA6CFB54EC9249C4A3D8D841 /* Lexend-Medium.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Lexend-Medium.ttf"; path = "../src/assets/fonts/Lexend-Medium.ttf"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -70,7 +32,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E43D2B070069DB99B83A9FEB /* libPods-KapraDaily.a in Frameworks */,
+				0C80B921A6F3F58F76C31292 /* libPods-KapraDaily.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -93,7 +55,7 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				1BA26274C5988A1E60E27077 /* libPods-KapraDaily.a */,
+				5DCACB8F33CDC322A6C60F78 /* libPods-KapraDaily.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -113,7 +75,6 @@
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
 				BBD78D7AC51CEA395F1C20DB /* Pods */,
-				DF620B4D5A62464581DA97BE /* Resources */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -131,36 +92,10 @@
 		BBD78D7AC51CEA395F1C20DB /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				4E3B6D439205F47421710540 /* Pods-KapraDaily.debug.xcconfig */,
-				B45288A7B18887B87BBB948F /* Pods-KapraDaily.release.xcconfig */,
+				3B4392A12AC88292D35C810B /* Pods-KapraDaily.debug.xcconfig */,
+				5709B34CF0A7D63546082F79 /* Pods-KapraDaily.release.xcconfig */,
 			);
 			path = Pods;
-			sourceTree = "<group>";
-		};
-		DF620B4D5A62464581DA97BE /* Resources */ = {
-			isa = PBXGroup;
-			children = (
-				652D7BAC252E4892BD5BF766 /* Poppins-ExtraBold.ttf */,
-				B281BB4C419A492D96CC1D2E /* Poppins-Italic.ttf */,
-				1F8E041C320C40AE80844E79 /* Poppins-Medium.ttf */,
-				A7FDCACA8AB84C87A600A0B1 /* Poppins-Bold.ttf */,
-				9F5D404E0C8245D794798DF4 /* Poppins-Light.ttf */,
-				6390D1FDB2BF4E01B51CFCC4 /* Outfit-Medium.ttf */,
-				346C00FEB1714F3EB844F473 /* Outfit-Regular.ttf */,
-				575B0E5D18BB4ED3AD6C83E0 /* Outfit-SemiBold.ttf */,
-				3EAAA2DD13B94F92B3540CE5 /* Outfit-Light.ttf */,
-				BE97F92FCEF94CD1B2324C5D /* Inter_18pt-Regular.ttf */,
-				1D7AEC9BA9CE45D4A761925D /* Italiana-Regular.ttf */,
-				77AA01BA64F24794AA00DEF0 /* Poppins-Regular.ttf */,
-				7A3F6C0B182D484697B12358 /* Poppins-SemiBold.ttf */,
-				FA6CFB54EC9249C4A3D8D841 /* Lexend-Medium.ttf */,
-				2DF8F276FDE545D2964CB92C /* Lexend-SemiBold.ttf */,
-				075ACD896E64490493CC739E /* Outfit-Bold.ttf */,
-				7F36BE2C6E75471E8E87C703 /* Inter_18pt-ExtraBold.ttf */,
-				04486B2BDDF14599830A24EE /* Inter_18pt-BoldItalic.ttf */,
-				A55BD88867A944DA9EB5C50B /* Inter_28pt-ExtraBold.ttf */,
-			);
-			name = Resources;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -170,13 +105,13 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "KapraDaily" */;
 			buildPhases = (
-				D1C1454314FBCEC1F87E1125 /* [CP] Check Pods Manifest.lock */,
+				C38B50BA6285516D6DCD4F65 /* [CP] Check Pods Manifest.lock */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
-				D4DE0942BC40DE820094B0BF /* [CP] Embed Pods Frameworks */,
-				91AC63B4B8C1E6EBE297FB3C /* [CP] Copy Pods Resources */,
+				00EEFC60759A1932668264C0 /* [CP] Embed Pods Frameworks */,
+				E235C05ADACE081382539298 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -226,25 +161,6 @@
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				26CF7B3EA7006334AE66808C /* PrivacyInfo.xcprivacy in Resources */,
-				DB1D8A2DE02245F7915133F4 /* Poppins-ExtraBold.ttf in Resources */,
-				B59D88C91F734E97882035B4 /* Poppins-Italic.ttf in Resources */,
-				2C5CAD6B117B4302970C6973 /* Poppins-Medium.ttf in Resources */,
-				7B4A502674F749A08AA0AEC8 /* Poppins-Bold.ttf in Resources */,
-				169CFED4BDA749758986AAC4 /* Poppins-Light.ttf in Resources */,
-				259C3B51A63D4B819D45D939 /* Outfit-Medium.ttf in Resources */,
-				5F00017E5B1D45929BAB605D /* Outfit-Regular.ttf in Resources */,
-				2FC595884DAD42EEB63205DA /* Outfit-SemiBold.ttf in Resources */,
-				AF84DA38F9DF414A99D7B484 /* Outfit-Light.ttf in Resources */,
-				FD16D35F0070425C8DA717E7 /* Inter_18pt-Regular.ttf in Resources */,
-				6DAF9A4ED38D466E9D0C1A83 /* Italiana-Regular.ttf in Resources */,
-				7BCF0D575B71414A9FD6F789 /* Poppins-Regular.ttf in Resources */,
-				93CDA4ED00E047E0905C73A6 /* Poppins-SemiBold.ttf in Resources */,
-				F30393CF99C2447DA11AD64B /* Lexend-Medium.ttf in Resources */,
-				7FA9A7F1FD9343E483251FDA /* Lexend-SemiBold.ttf in Resources */,
-				B708413761744CABBC767528 /* Outfit-Bold.ttf in Resources */,
-				849592B232444F07ADB06A38 /* Inter_18pt-ExtraBold.ttf in Resources */,
-				D6073717B568477DA24B4235 /* Inter_18pt-BoldItalic.ttf in Resources */,
-				33336EA732E6414DBD886203 /* Inter_28pt-ExtraBold.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -267,24 +183,24 @@
 			shellPath = /bin/sh;
 			shellScript = "set -e\n\nWITH_ENVIRONMENT=\"$REACT_NATIVE_PATH/scripts/xcode/with-environment.sh\"\nREACT_NATIVE_XCODE=\"$REACT_NATIVE_PATH/scripts/react-native-xcode.sh\"\n\n/bin/sh -c \"$WITH_ENVIRONMENT $REACT_NATIVE_XCODE\"\n";
 		};
-		91AC63B4B8C1E6EBE297FB3C /* [CP] Copy Pods Resources */ = {
+		00EEFC60759A1932668264C0 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-KapraDaily/Pods-KapraDaily-resources-${CONFIGURATION}-input-files.xcfilelist",
+				"${PODS_ROOT}/Target Support Files/Pods-KapraDaily/Pods-KapraDaily-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			name = "[CP] Copy Pods Resources";
+			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-KapraDaily/Pods-KapraDaily-resources-${CONFIGURATION}-output-files.xcfilelist",
+				"${PODS_ROOT}/Target Support Files/Pods-KapraDaily/Pods-KapraDaily-frameworks-${CONFIGURATION}-output-files.xcfilelist",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-KapraDaily/Pods-KapraDaily-resources.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-KapraDaily/Pods-KapraDaily-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		D1C1454314FBCEC1F87E1125 /* [CP] Check Pods Manifest.lock */ = {
+		C38B50BA6285516D6DCD4F65 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -306,21 +222,21 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		D4DE0942BC40DE820094B0BF /* [CP] Embed Pods Frameworks */ = {
+		E235C05ADACE081382539298 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-KapraDaily/Pods-KapraDaily-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+				"${PODS_ROOT}/Target Support Files/Pods-KapraDaily/Pods-KapraDaily-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			name = "[CP] Embed Pods Frameworks";
+			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-KapraDaily/Pods-KapraDaily-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+				"${PODS_ROOT}/Target Support Files/Pods-KapraDaily/Pods-KapraDaily-resources-${CONFIGURATION}-output-files.xcfilelist",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-KapraDaily/Pods-KapraDaily-frameworks.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-KapraDaily/Pods-KapraDaily-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -339,7 +255,7 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 4E3B6D439205F47421710540 /* Pods-KapraDaily.debug.xcconfig */;
+			baseConfigurationReference = 3B4392A12AC88292D35C810B /* Pods-KapraDaily.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -367,7 +283,7 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = B45288A7B18887B87BBB948F /* Pods-KapraDaily.release.xcconfig */;
+			baseConfigurationReference = 5709B34CF0A7D63546082F79 /* Pods-KapraDaily.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;

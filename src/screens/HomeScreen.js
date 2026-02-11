@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, ImageBackground, TouchableOpacity, Image, TextInput, FlatList, ScrollView, Dimensions } from 'react-native'
-import React, { startTransition, useEffect, useRef, useState } from 'react'
+import React, { startTransition, useContext, useEffect, useRef, useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
@@ -16,7 +16,15 @@ import ProductCard from '../components/ProductCard';
 import SelectedProducts from '../components/SelectedProducts';
 import { useNavigation } from '@react-navigation/native';
 import { FONTS } from '../styles/typography'
-import { getAccessToken } from '../api/tokenService';
+import { getAccessToken, setTokens } from '../api/tokenService';
+import useHomeData from '../hooks/useHomeData';
+import CONFIG from '../globals/config';
+import ShimmerPlaceholder from '../components/ShimmerPlaceholder';
+
+import EmptySection from '../components/EmptySection';
+import { AppContext } from '../context/appContext';
+import LoginScreen from './LoginScreen';
+import { LoaderContext } from '../context/loaderContext';
 
 const { width } = Dimensions.get("window");
 const BANNER_HEIGHT = (283 / 390) * width;
@@ -27,42 +35,6 @@ const banners = [
 ];
 
 const HomeScreen = () => {
-
-    const categories = [
-        {
-            name: "Fruits & Vegetables",
-            image: require('../assets/images/categories/fnv.png'),
-        },
-        {
-            name: "Dairy, Egg & Bread",
-            image: require('../assets/images/categories/cnb.png'),
-        },
-        {
-            name: "Tea, Coffee More",
-            image: require('../assets/images/categories/deb.png'),
-        },
-        {
-            name: "Dry Fruits & Nuts",
-            image: require('../assets/images/categories/dfn.png'),
-        },
-        {
-            name: "Fish & Meat",
-            image: require('../assets/images/categories/fnm.png'),
-        },
-        {
-            name: "Snacks & Crips",
-            image: require('../assets/images/categories/sdj.png'),
-        },
-        {
-            name: "Soft Drinks & Juices",
-            image: require('../assets/images/categories/snc.png'),
-        },
-        {
-            name: "Cereals & Breakfast",
-            image: require('../assets/images/categories/tcm.png'),
-        },
-    ];
-
     const products = [
         { id: "1", name: "Tomato", img: require('../assets/images/products/tomato.png'), price: "₹324" },
         { id: "2", name: "Green Chilli", img: require('../assets/images/products/chilli.png'), price: "₹324" },
@@ -110,6 +82,52 @@ const HomeScreen = () => {
     const scrollRef = useRef();
     const [activeIndex, setActiveIndex] = useState(0);
     const [accessToken, setAccessToken] = useState(null);
+    const [isProfileLoaded, setIsProfileLoaded] = useState(false);
+
+    const { profile, loadProfile, loadProfileTwo, logout } = useContext(AppContext);
+    const { showLoader } = useContext(LoaderContext);
+
+    // useEffect(() => {
+    //     const fetchProfile = async () => {
+    //         showLoader(true);
+    //         await loadProfile();
+    //         showLoader(false);
+    //         setIsProfileLoaded(true);   // ✅ IMPORTANT
+    //     };
+    //     fetchProfile();
+    // }, []);
+
+    useEffect(() => {
+        const fetchProfile = async () => {
+            showLoader(true);
+            await loadProfileTwo();   // or loadProfileTwo() if guest-first
+            showLoader(false);
+            setIsProfileLoaded(true);
+        };
+
+        fetchProfile();
+    }, []);
+
+    useEffect(() => {
+        if (!isProfileLoaded) return; // ⛔ wait till profile loads
+        if (!profile) return;         // ⛔ safety
+
+        console.log("PROFILE CHECK:", profile);
+
+        if (!profile.custId) {
+            navigation.reset({
+                index: 0,
+                routes: [
+                    {
+                        name: 'LoginScreen',
+                        params: { type: 'login' }
+                    }
+                ],
+            });
+        }
+    }, [profile, isProfileLoaded]);
+
+    console.log("OOOOPPPPP", profile)
 
     const onScroll = (e) => {
         const offsetX = e.nativeEvent.contentOffset.x;
@@ -121,13 +139,17 @@ const HomeScreen = () => {
         }
     };
 
-    useEffect(() => {
-        const loadToken = async () => {
-            const token = await getAccessToken()
-            setAccessToken(token)
-        };
-        loadToken()
-    }, [])
+    const {
+        bestOffers,
+        featuredProducts,
+        halfPriceStore,
+        pincodeAreas,
+        homepageData,
+        banners,
+        categories,
+        userLocation,
+        featuredProductsTitle
+    } = useHomeData();
 
     const navigation = useNavigation()
 
@@ -154,7 +176,35 @@ const HomeScreen = () => {
         );
     };
 
+
+    // Helper for category images
+    const getCategoryPlaceholder = (name) => {
+        const lowerName = name?.toLowerCase() || '';
+        if (lowerName.includes('fruit') || lowerName.includes('vegetable')) return require('../assets/images/categories/fnv.png');
+        if (lowerName.includes('dairy') || lowerName.includes('bread') || lowerName.includes('egg')) return require('../assets/images/categories/cnb.png');
+        if (lowerName.includes('tea') || lowerName.includes('coffee')) return require('../assets/images/categories/deb.png');
+        if (lowerName.includes('dry') || lowerName.includes('nut')) return require('../assets/images/categories/dfn.png');
+        if (lowerName.includes('fish') || lowerName.includes('meat')) return require('../assets/images/categories/fnm.png');
+        if (lowerName.includes('snack')) return require('../assets/images/categories/sdj.png');
+        if (lowerName.includes('drink') || lowerName.includes('juice')) return require('../assets/images/categories/snc.png');
+        if (lowerName.includes('break') || lowerName.includes('cereal')) return require('../assets/images/categories/tcm.png');
+        return require('../assets/images/categories/dfn.png'); // Default fallback
+    };
+
+
     const CategoryItem = ({ item }) => {
+        const [imageLoading, setImageLoading] = useState(false);
+        const [imageError, setImageError] = useState(false);
+
+        let imageSource;
+        if (imageError || (!item.image && !item.imageUrl)) {
+            imageSource = getCategoryPlaceholder(item.catName || item.name);
+        } else if (item.image) {
+            imageSource = item.image;
+        } else {
+            imageSource = { uri: `${CONFIG.image_base_url}${item.imageUrl}` };
+        }
+
         return (
             <TouchableOpacity style={styles.item}>
                 <LinearGradient
@@ -163,10 +213,21 @@ const HomeScreen = () => {
                     end={{ x: 1, y: 1 }}
                     style={styles.gradientBox}
                 >
-                    <Image source={item.image} style={styles.image} resizeMode="contain" />
+                    {imageLoading && <ShimmerPlaceholder style={[styles.image, { position: 'absolute', borderRadius: wp('3%') }]} />}
+                    <Image
+                        source={imageSource}
+                        style={styles.image}
+                        resizeMode="contain"
+                        onLoadStart={() => setImageLoading(true)}
+                        onLoadEnd={() => setImageLoading(false)}
+                        onError={() => {
+                            setImageError(true);
+                            setImageLoading(false);
+                        }}
+                    />
                 </LinearGradient>
 
-                <Text style={styles.label}>{item.name}</Text>
+                <Text style={styles.label} numberOfLines={2}>{item.catName || item.name}</Text>
             </TouchableOpacity>
         );
     };
@@ -254,6 +315,17 @@ const HomeScreen = () => {
         );
     }
 
+
+    const handleBannerPress = (banner) => {
+        console.log('Banner Pressed:', banner);
+        if (banner.linkType === 'Product') {
+            navigation.navigate('ProductDetailsScreen', { productId: banner.linkValue });
+        } else if (banner.linkType === 'Category') {
+            // Check if it's 'fruits' or general category
+            navigation.navigate('SearchScreen', { searchTerm: banner.linkValue }); // Or specific CategoryScreen if exists
+        }
+    };
+
     return (
         <SafeAreaView
             edges={['top']}
@@ -265,6 +337,7 @@ const HomeScreen = () => {
             >
                 <View
                     style={styles.headerMainView}>
+                    {/* ... (Header content preserved) ... */}
                     <Image
                         source={require('../assets/images/curves.png')}
                         style={styles.topLeftCurve}
@@ -276,7 +349,9 @@ const HomeScreen = () => {
                                 <Text style={styles.addressText}
                                     numberOfLines={1}
                                     ellipsizeMode="tail"
-                                >Vennala: Chakkarapparambuabcdefg</Text>
+                                >
+                                    {userLocation ? `${userLocation.locality || ''}: ${userLocation.area || ''}` : 'Select Location'}
+                                </Text>
                                 <Entypo name={"chevron-right"} size={wp('3.6%')} color={"#FFFFFF"} />
                             </TouchableOpacity>
                         </View>
@@ -293,66 +368,39 @@ const HomeScreen = () => {
                             </LinearGradient>
 
                         </TouchableOpacity>
-                        {/* <View style={styles.bcoinContainer}>
-                            <Image style={styles.rupeeImageOne} source={require('../assets/images/normal_rupee.png')} />
-                            <LinearGradient
-                                colors={['#311C00', '#000000']}
-                                start={{ x: 0, y: 0 }}
-                                end={{ x: 1, y: 1 }}
-                                style={styles.badge}
-                            >
-                                <Text style={styles.bcoinTextTwo}>10.0 B</Text>
-                            </LinearGradient>
-
-                        </View> */}
 
                         <TouchableOpacity onPress={() => {
-                            // navigation.navigate('LoginScreen')
-                            // navigation.navigate('RegistraionScreen')
-                            // navigation.navigate('OtpScreen')
                             navigation.navigate('ProfileScreen', {
                                 type: "login"
                             })
-                            // navigation.navigate('ProfileScreen')
                         }} style={styles.profileIconMainView}>
                             <Image source={require('../assets/images/crown.png')} width={wp('6.3%')} height={hp('2.6%')} />
                             <View style={styles.profileIconView}>
                                 <GradientUserIcon size={wp('6%')} />
                             </View>
                         </TouchableOpacity>
-                        {/* <TouchableOpacity>
-                            <Image source={require('../assets/images/user.png')} style={{
-                                height: wp('9%'),
-                                width: wp('9%')
-                            }} />
-                        </TouchableOpacity> */}
 
                     </View>
                     <TouchableOpacity onPress={() => navigation.navigate('SearchScreen')} style={styles.searchContainer}>
                         <Feather name="search" color={"#8F8F8F"} size={wp("6%")} />
-                        {/* <TextInput
-                            style={styles.searchInput}
-                            placeholder="Search product"
-                            placeholderTextColor="#3A3A3A"
-                        /> */}
-                        {/* <View style={styles.divider} /> */}
                         <View style={styles.searchProductContainer}>
                             <Text style={styles.searchProductText}>Search product</Text>
                         </View>
-                        {/* <Ionicons name="clipboard-outline" color={"#8F8F8F"} size={wp("6%")} style={styles.clipboardIcon} /> */}
                         <Image style={styles.clipboardIcon} source={require('../assets/images/clip_board.png')} />
                     </TouchableOpacity>
                 </View>
-                {/* <View style={styles.headerBannerView}>
-                    <Image source={require("../assets/images/banner.png")} style={styles.headerBannerImage} />
-                </View> */}
-                <View style={styles.headerBannerView}>
+                <TouchableOpacity
+                    activeOpacity={0.9}
+                    onPress={() => banners.length > 0 && handleBannerPress(banners[0])}
+                    style={styles.headerBannerView}
+                >
                     <ImageBackground
-                        source={require("../assets/images/banner.png")}
+                        source={banners.length > 0 ? banners[0].uri : require("../assets/images/banner.png")}
                         style={styles.headerBannerImage}
                         resizeMode="contain"
                     />
-                </View>
+                </TouchableOpacity>
+
                 <View style={styles.categoryMainView}>
                     <Text style={styles.categoryHeaderText}>Category</Text>
                     <FlatList
@@ -380,8 +428,8 @@ const HomeScreen = () => {
                         </View>
                         <FlatList
                             horizontal={true}
-                            data={products}
-                            keyExtractor={(item, index) => item.id.toString()}
+                            data={bestOffers}
+                            keyExtractor={(item, index) => item.productId ? item.productId.toString() : index.toString()}
                             renderItem={({ item }) => <ProductCard item={item} />}
                             showsHorizontalScrollIndicator={false}
                             contentContainerStyle={{
@@ -393,7 +441,7 @@ const HomeScreen = () => {
 
                 <View style={styles.productsMainContainerTwo}>
                     <View style={styles.productsContainerViewOne}>
-                        <Text style={styles.productsContainerHeader}>Weekend offers</Text>
+                        <Text style={styles.productsContainerHeader}>{featuredProductsTitle}</Text>
                         <TouchableOpacity style={styles.viewAllContainer}>
                             <Text style={styles.viewAllText}>View All</Text>
                             <MaterialIcons name={"arrow-forward-ios"} color={"#FF7B3A"} size={wp("3.3%")} style={styles.viewAllRightArrowIcon} />
@@ -401,8 +449,8 @@ const HomeScreen = () => {
                     </View>
                     <FlatList
                         horizontal={true}
-                        data={products}
-                        keyExtractor={(item, index) => item.id.toString()}
+                        data={featuredProducts}
+                        keyExtractor={(item, index) => item.productId ? item.productId.toString() : index.toString()}
                         renderItem={({ item }) => <ProductCard item={item} />}
                         showsHorizontalScrollIndicator={false}
                         contentContainerStyle={{
@@ -437,22 +485,6 @@ const HomeScreen = () => {
                 </TouchableOpacity>
 
                 <View style={styles.bannerContainer}>
-                    {/* Scrollable Banner */}
-                    {/* <ScrollView
-                        horizontal
-                        pagingEnabled
-                        showsHorizontalScrollIndicator={false}
-                        onScroll={onScroll}
-                        ref={scrollRef}
-                        scrollEventThrottle={16}
-                        style={styles.scroll}
-                        onMomentumScrollEnd={onScroll}
-                    >
-                        {banners.map((img, index) => (
-                            <Image key={index} source={img} style={styles.bannerImage} />
-                        ))}
-                    </ScrollView> */}
-
                     <FlatList
                         data={banners}
                         horizontal
@@ -465,7 +497,9 @@ const HomeScreen = () => {
                         onScroll={onScroll}
                         scrollEventThrottle={16}
                         renderItem={({ item }) => (
-                            <Image source={item} style={styles.bannerImage} />
+                            <TouchableOpacity activeOpacity={0.9} onPress={() => handleBannerPress(item)}>
+                                <Image source={item.uri} style={styles.bannerImage} />
+                            </TouchableOpacity>
                         )}
                     />
 
@@ -502,8 +536,8 @@ const HomeScreen = () => {
                             marginTop: hp("3%")
                         }}
                         horizontal={true}
-                        data={products}
-                        keyExtractor={(item, index) => item.id.toString()}
+                        data={bestOffers}
+                        keyExtractor={(item, index) => item.productId ? item.productId.toString() : index.toString()}
                         renderItem={({ item }) => <ProductCard item={item} />}
                         showsHorizontalScrollIndicator={false}
                         contentContainerStyle={{
@@ -545,7 +579,7 @@ const HomeScreen = () => {
                         }}
                     />
                 </View> */}
-                <View style={styles.fruitsContainer}>
+                {/* <View style={styles.fruitsContainer}>
                     <View style={styles.fruitsHeaderView}>
                         <Text style={styles.fruitsHeaderText}>Seasonal fruits</Text>
                         <TouchableOpacity style={styles.viewAllContainer}>
@@ -564,7 +598,7 @@ const HomeScreen = () => {
                             marginLeft: wp("5%")
                         }}
                     />
-                </View>
+                </View> */}
 
                 <View style={styles.searchingForSomethingView}>
 
@@ -596,6 +630,10 @@ const HomeScreen = () => {
                     </CurvedSection>
 
                 </View>
+                {/* Pincode Area List Display */}
+                <View style={{ padding: 20 }}>
+                    <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10 }}>Pincode Areas (Nearby)</Text>
+                </View>
                 <View style={styles.tellusContainer}>
                     <Text style={styles.tellUsText}>Don't worry. Tel us what you require</Text>
                     <View style={styles.searchContainerTwo}>
@@ -612,10 +650,9 @@ const HomeScreen = () => {
                     <Image style={styles.kapraLogo} source={require("../assets/images/logo.png")} />
                     <Text style={[styles.tellUsText, { marginTop: hp("2.5%") }]}>Is here to help you</Text>
                 </View>
-                {/* <SelectedProducts selectedProducts={selectedProducts} /> */}
             </ScrollView>
             <View style={styles.floatingContainer}>
-                <SelectedProducts selectedProducts={selectedProducts} />
+                <SelectedProducts />
             </View>
         </SafeAreaView>
     )
@@ -831,8 +868,9 @@ const styles = StyleSheet.create({
     //     backgroundColor: 'yellow'
     // },
     headerBannerView: {
-        width: "100%",
-        marginTop: hp("-2%"),
+        width: wp('100%'),
+        alignSelf: 'center'
+        // marginTop: hp("-2%"),
     },
     // productCard: {
     //     width: wp('34.7%'),

@@ -1,0 +1,13 @@
+// Suppress the restricted method warning for CMake on macOS
+gradle.projectsEvaluated {
+    rootProject.allprojects { project ->
+        project.tasks.configureEach { task ->
+            if (task.name.contains('configureCMakeDebug')) {
+                task.doFirst {
+                    // Suppress warnings
+                    System.setSecurityManager(null)
+                }
+            }
+        }
+    }
+}

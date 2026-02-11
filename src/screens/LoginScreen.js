@@ -68,7 +68,7 @@ const LoginScreen = () => {
         try {
             setLoading(true);
             const response = await sendLoginOtp(phone);
-            // console.log('response', response)
+            console.log('handleContinueLoginresponse', response)
             // console.log('OTP Response:', response);
 
             if (response?.success && response?.data) {
@@ -78,7 +78,9 @@ const LoginScreen = () => {
                 });
             }
             else if (response?.status === 'NOT_REGISTERED') {
-                navigation.navigate('RegistraionScreen');
+                navigation.navigate('RegistraionScreen', {
+                    phone
+                });
             }
             else {
                 Alert.alert('Error', response?.message || 'Failed to send OTP');
@@ -109,7 +111,7 @@ const LoginScreen = () => {
             if (type === 'reset') {
                 response = await sendForgotPwdOtp(phone);
             }
-            // console.log('response', response)
+            console.log('handleContinueRestresponse', response)
             // console.log('OTP Response:', response);
 
             if (response?.success && response?.data) {

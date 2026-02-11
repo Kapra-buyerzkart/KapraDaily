@@ -1,22 +1,100 @@
-import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, FlatList, ImageBackground, Modal, Platform } from 'react-native'
-import React, { useState } from 'react'
+import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, FlatList, ImageBackground, Modal, Platform, TextInput, KeyboardAvoidingView } from 'react-native'
+import React, { useState, useEffect, useMemo } from 'react'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import { FONTS } from '../styles/typography'
-import { useNavigation } from '@react-navigation/native'
+import { useNavigation, useFocusEffect } from '@react-navigation/native'
 import CartProductCard from '../components/CartProductCard'
 import OfferCard from '../components/OfferCard'
 import LinearGradient from 'react-native-linear-gradient'
 import Entypo from 'react-native-vector-icons/Entypo';
+import { useCart } from '../context/CartContext';
 
 const CartScreen = () => {
     const navigation = useNavigation()
+    const { cartItems, loadCart, cartTotal, cartCount, cartSummary, getCartSummary, clearCart, applyCoupon, removeCoupon, applyGiftCard, removeGiftCard } = useCart();
+
     const [showAddressModal, setShowAddressModal] = useState(false)
     const [showSlotModal, setShowSlotModal] = useState(false)
+    const [showCouponModal, setShowCouponModal] = useState(false);
+    const [couponCode, setCouponCode] = useState('');
+    const [isGiftCard, setIsGiftCard] = useState(false);
+    const [availableCoupons, setAvailableCoupons] = useState([
+        { id: '1', code: 'WELCOME50', description: 'Get 50% off on your first order' },
+        { id: '2', code: 'FREEDEL', description: 'Free delivery on orders above ₹199' },
+        { id: '3', code: 'SAVE20', description: 'Flat 20% off on fruits and vegetables' },
+    ]);
+    const [availableGiftCards, setAvailableGiftCards] = useState([
+        { id: '1', code: 'GIFT500', description: 'Gift Card worth ₹500' },
+        { id: '2', code: 'BDAY1000', description: 'Birthday Gift Card worth ₹1000' },
+    ]);
     const [selectedDeliveryType, setSelectedDeliveryType] = useState('quick');
     const [selectedDateIndex, setSelectedDateIndex] = useState(0);
     const [selectedSlot, setSelectedSlot] = useState(null);
+
+    const frontendBillCalculations = useMemo(() => {
+        let mrpTotal = 0;
+        let itemTotal = 0;
+
+        cartItems.forEach(item => {
+            const quantity = item.quantity || 1;
+            const specialPrice = item.specialPrice || item.unitPrice || item.price || 0;
+            const mrpPrice = item.mrp || item.mrpPrice || specialPrice;
+
+            itemTotal += specialPrice * quantity;
+            mrpTotal += mrpPrice * quantity;
+        });
+
+        const savings = mrpTotal - itemTotal;
+        const deliveryCharge = itemTotal >= 500 ? 0 : 40; // Free delivery above ₹500
+        const couponDiscount = 0;
+        const totalSavings = savings + (deliveryCharge === 0 ? 40 : 0);
+        const toPay = itemTotal + deliveryCharge - couponDiscount;
+
+        return {
+            mrpTotal,
+            itemTotal,
+            savings,
+            deliveryCharge,
+            couponDiscount,
+            totalSavings,
+            toPay
+        };
+    }, [cartItems]);
+
+    const billCalculations = useMemo(() => {
+        if (cartSummary) {
+            return {
+                mrpTotal: cartSummary.mrpTotal || frontendBillCalculations.mrpTotal,
+                itemTotal: cartSummary.itemTotal || cartSummary.subTotal || frontendBillCalculations.itemTotal,
+                savings: cartSummary.savings || frontendBillCalculations.savings,
+                deliveryCharge: cartSummary.deliveryCharge || frontendBillCalculations.deliveryCharge,
+                couponDiscount: cartSummary.couponDiscount || 0,
+                totalSavings: cartSummary.totalSavings || frontendBillCalculations.totalSavings,
+                toPay: cartSummary.toPay || cartSummary.grandTotal || frontendBillCalculations.toPay
+            };
+        }
+        return frontendBillCalculations;
+    }, [cartSummary, frontendBillCalculations]);
+
+    useEffect(() => {
+        loadCart();
+    }, []);
+
+    useFocusEffect(
+        React.useCallback(() => {
+            loadCart();
+            getCartSummary(selectedDeliveryType === 'quick' ? 'express' : 'slot', selectedSlot);
+        }, [loadCart, getCartSummary, selectedDeliveryType, selectedSlot])
+    );
+
+    useEffect(() => {
+        if (cartItems.length > 0) {
+            getCartSummary(selectedDeliveryType === 'quick' ? 'express' : 'slot', selectedSlot);
+        }
+    }, [selectedDeliveryType, selectedSlot, cartItems.length]);
+
     const [offers, setOffers] = useState([
         {
             id: '1',
@@ -39,33 +117,15 @@ const CartScreen = () => {
             applyCliked: false,
             image: require('../assets/images/bcoin_two.png')
         },
+        {
+            id: '4',
+            name: "Gift Card",
+            content: "Add Gift Card",
+            applyCliked: false,
+            image: require('../assets/images/gift_two.png')
+        },
     ])
-    const products = [
-        {
-            id: "1",
-            name: 'Lorem lpsum is simply dummy text',
-            image: require('../assets/images/wl1.png'),
-            soldOut: false
-        },
-        {
-            id: "2",
-            name: 'Lorem lpsum is simply dummy text',
-            image: require('../assets/images/wl1.png'),
-            soldOut: false
-        },
-        {
-            id: "3",
-            name: 'Lorem lpsum is simply dummy text',
-            image: require('../assets/images/wl1.png'),
-            soldOut: false
-        },
-        {
-            id: "4",
-            name: 'Lorem lpsum is simply dummy text',
-            image: require('../assets/images/wl1.png'),
-            soldOut: true
-        },
-    ]
+
 
     const [addresses, setAddresses] = useState([
         {
@@ -113,6 +173,20 @@ const CartScreen = () => {
     const insets = useSafeAreaInsets();
 
     const onApplyOffer = (offerId) => {
+        if (offerId === '2') { // Coupon
+            setIsGiftCard(false);
+            setCouponCode('');
+            setShowCouponModal(true);
+            return;
+        }
+
+        if (offerId === '4') { // Gift Card
+            setIsGiftCard(true);
+            setCouponCode('');
+            setShowCouponModal(true);
+            return;
+        }
+
         setOffers(prev =>
             prev.map(item =>
                 item.id === offerId
@@ -123,6 +197,24 @@ const CartScreen = () => {
     }
 
     const onRejectOffer = (offerId) => {
+        if (offerId === '2') {
+            removeCoupon().then(res => {
+                if (res.success) {
+                    setOffers(prev => prev.map(item => item.id === offerId ? { ...item, applyCliked: false } : item));
+                }
+            });
+            return;
+        }
+
+        if (offerId === '4') { // Gift Card
+            removeGiftCard().then(res => {
+                if (res.success) {
+                    setOffers(prev => prev.map(item => item.id === offerId ? { ...item, applyCliked: false } : item));
+                }
+            });
+            return;
+        }
+
         setOffers(prev =>
             prev.map(item =>
                 item.id === offerId
@@ -131,6 +223,32 @@ const CartScreen = () => {
             )
         )
     }
+
+    const handleApplyCoupon = async (codeOverride) => {
+        const codeToApply = typeof codeOverride === 'string' ? codeOverride : couponCode;
+        if (!codeToApply || !codeToApply.trim()) return;
+
+        let result;
+        if (isGiftCard) {
+            result = await applyGiftCard(codeToApply);
+        } else {
+            result = await applyCoupon(codeToApply);
+        }
+
+        if (result.success) {
+            setShowCouponModal(false);
+            setOffers(prev => prev.map(item => item.id === (isGiftCard ? '4' : '2') ? { ...item, applyCliked: true } : item));
+        } else {
+            // Show error toast or alert using simple alert for now
+            alert(result.message || "Failed to apply");
+        }
+    };
+
+    const handleCouponClick = (code) => {
+        setCouponCode(code);
+        // Direct apply on tap
+        handleApplyCoupon(code);
+    };
 
 
     const onSelectAddress = (addressId) => {
@@ -356,13 +474,13 @@ const CartScreen = () => {
                 </View>
                 <View style={styles.productListingContainer}>
                     <FlatList
-                        data={products}
-                        keyExtractor={(item, index) => item.id}
+                        data={cartItems}
+                        keyExtractor={(item, index) => item.cartItemId?.toString() || item.productId?.toString() || index.toString()}
                         renderItem={({ item }) => <CartProductCard item={item} />}
                     />
                 </View>
                 <View style={styles.itemsCountContainer}>
-                    <Text style={styles.itemsCountText}>{products.length} Items</Text>
+                    <Text style={styles.itemsCountText}>{cartItems.length} Items</Text>
                     <View style={styles.btokenContainer}>
                         <Image style={styles.btokenImage} source={require('../assets/images/btoken-icon.png')} />
                         <Text style={styles.btokenText}>4B Token</Text>
@@ -398,32 +516,38 @@ const CartScreen = () => {
                         <View style={styles.billContentContainer}>
                             <Text style={styles.billContentText}>Item total</Text>
                             <View style={styles.priceContainer}>
-                                <Text style={styles.mrpText}>₹394</Text>
-                                <Text style={styles.priceText}>₹324</Text>
+                                {billCalculations.savings > 0 && (
+                                    <Text style={styles.mrpText}>₹{billCalculations.mrpTotal.toFixed(2)}</Text>
+                                )}
+                                <Text style={styles.priceText}>₹{billCalculations.itemTotal.toFixed(2)}</Text>
                             </View>
                         </View>
 
                         <View style={styles.billContentContainer}>
                             <Text style={styles.billContentText}>Delivery charge</Text>
-                            <Text style={styles.priceText}>FREE</Text>
+                            <Text style={styles.priceText}>{billCalculations.deliveryCharge === 0 ? 'FREE' : `₹${billCalculations.deliveryCharge.toFixed(2)}`}</Text>
                         </View>
 
-                        <View style={styles.billContentContainer}>
-                            <Text style={styles.billContentText}>Coupon Discount</Text>
-                            <Text style={styles.priceText}>- ₹324</Text>
-                        </View>
+                        {billCalculations.couponDiscount > 0 && (
+                            <View style={styles.billContentContainer}>
+                                <Text style={styles.billContentText}>Coupon Discount</Text>
+                                <Text style={styles.priceText}>- ₹{billCalculations.couponDiscount.toFixed(2)}</Text>
+                            </View>
+                        )}
 
-                        <View style={styles.billContentContainer}>
-                            <Text style={styles.billContentText}>You have saved</Text>
-                            <Text style={[styles.priceText, {
-                                color: '#0CA201',
-                            }]}>- ₹324</Text>
-                        </View>
+                        {billCalculations.totalSavings > 0 && (
+                            <View style={styles.billContentContainer}>
+                                <Text style={styles.billContentText}>You have saved</Text>
+                                <Text style={[styles.priceText, {
+                                    color: '#0CA201',
+                                }]}>₹{billCalculations.totalSavings.toFixed(2)}</Text>
+                            </View>
+                        )}
 
                         <View style={styles.billDivider} />
                         <View style={styles.billSumView}>
                             <Text style={styles.billSumText}>To Pay</Text>
-                            <Text style={styles.billSumText}>₹324</Text>
+                            <Text style={styles.billSumText}>₹{billCalculations.toPay.toFixed(2)}</Text>
                         </View>
                     </View>
                 </ImageBackground>
@@ -431,10 +555,12 @@ const CartScreen = () => {
                     <View>
                         <TouchableOpacity style={styles.bottomContainerInnerView}>
                             <Image style={styles.bottomContainerBillIcon} source={require('../assets/images/bill_icon.png')} />
-                            <Text style={styles.bottomContainerPriceText}>₹324.00</Text>
+                            <Text style={styles.bottomContainerPriceText}>₹{billCalculations.toPay.toFixed(2)}</Text>
                             <Image style={styles.bottomContainerDownArrowIcon} source={require('../assets/images/down_arrow.png')} />
                         </TouchableOpacity>
-                        <Text style={styles.savedPriceText}>You saved ₹324.00</Text>
+                        {billCalculations.totalSavings > 0 && (
+                            <Text style={styles.savedPriceText}>You saved ₹{billCalculations.totalSavings.toFixed(2)}</Text>
+                        )}
                     </View>
                     <LinearGradient style={styles.selectAddressButtonGradient} colors={['#F25000', '#FF7B3A']}
                         start={{ x: 0, y: 0 }}
@@ -591,6 +717,75 @@ const CartScreen = () => {
                         </View>
                     </View>
                 </Modal>
+                <Modal
+                    visible={showCouponModal}
+                    animationType="slide"
+                    transparent
+                >
+                    <KeyboardAvoidingView
+                        behavior={Platform.OS === "ios" ? "padding" : "height"}
+                        style={styles.modalOverlay}
+                    >
+                        <View style={styles.modalContainer}>
+                            <View style={styles.modalHeaderView}>
+                                <Text style={styles.modalHeaderText}>{isGiftCard ? "Apply Gift Card" : "Apply Coupon"}</Text>
+                                <TouchableOpacity onPress={() => setShowCouponModal(false)}>
+                                    <Image style={styles.closeIcon} source={require('../assets/images/close_two.png')} />
+                                </TouchableOpacity>
+                            </View>
+                            <View style={styles.couponInputContainer}>
+                                <TextInput
+                                    style={styles.couponInput}
+                                    placeholder={isGiftCard ? "Enter Gift Card Code" : "Enter Coupon Code"}
+                                    value={couponCode}
+                                    onChangeText={setCouponCode}
+                                    autoCapitalize="characters"
+                                />
+                                <TouchableOpacity style={styles.applyCouponButton} onPress={handleApplyCoupon}>
+                                    <Text style={styles.applyCouponButtonText}>APPLY</Text>
+                                </TouchableOpacity>
+                            </View>
+
+                            {!isGiftCard ? (
+                                <>
+                                    <Text style={styles.sectionTitle}>Available Coupons</Text>
+                                    <FlatList
+                                        data={availableCoupons}
+                                        keyExtractor={item => item.id}
+                                        renderItem={({ item }) => (
+                                            <TouchableOpacity style={styles.couponCard} onPress={() => handleCouponClick(item.code)}>
+                                                <View style={styles.couponCodeContainer}>
+                                                    <Text style={styles.couponCodeText}>{item.code}</Text>
+                                                </View>
+                                                <Text style={styles.couponDescription}>{item.description}</Text>
+                                                <Text style={styles.applyText}>TAP TO APPLY</Text>
+                                            </TouchableOpacity>
+                                        )}
+                                        contentContainerStyle={{ paddingBottom: hp('2%') }}
+                                    />
+                                </>
+                            ) : (
+                                <>
+                                    <Text style={styles.sectionTitle}>Available Gift Cards</Text>
+                                    <FlatList
+                                        data={availableGiftCards}
+                                        keyExtractor={item => item.id}
+                                        renderItem={({ item }) => (
+                                            <TouchableOpacity style={styles.couponCard} onPress={() => handleCouponClick(item.code)}>
+                                                <View style={styles.couponCodeContainer}>
+                                                    <Text style={styles.couponCodeText}>{item.code}</Text>
+                                                </View>
+                                                <Text style={styles.couponDescription}>{item.description}</Text>
+                                                <Text style={styles.applyText}>TAP TO APPLY</Text>
+                                            </TouchableOpacity>
+                                        )}
+                                        contentContainerStyle={{ paddingBottom: hp('2%') }}
+                                    />
+                                </>
+                            )}
+                        </View>
+                    </KeyboardAvoidingView>
+                </Modal>
             </ScrollView>
         </SafeAreaView>
     )
@@ -602,6 +797,76 @@ const styles = StyleSheet.create({
     mainContainer: {
         flex: 1,
         backgroundColor: '#FFFFFF',
+    },
+    couponInputContainer: {
+        flexDirection: 'row',
+        marginTop: hp('2%'),
+        marginBottom: hp('2.5%'),
+        marginHorizontal: wp('4.65%'),
+        height: hp('6%'),
+        borderWidth: 1,
+        borderColor: '#E9E9E9',
+        borderRadius: wp('2.3%'),
+        alignItems: 'center',
+        paddingLeft: wp('4%'),
+        overflow: 'hidden'
+    },
+    couponInput: {
+        flex: 1,
+        fontFamily: FONTS.poppins.regular,
+        fontSize: wp('3.5%'),
+        color: '#000000',
+        height: '100%'
+    },
+    applyCouponButton: {
+        backgroundColor: '#F25000',
+        height: '100%',
+        paddingHorizontal: wp('6%'),
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+    applyCouponButtonText: {
+        color: '#FFFFFF',
+        fontFamily: FONTS.poppins.semiBold,
+        fontSize: wp('3.5%')
+    },
+    couponCard: {
+        borderWidth: 1,
+        borderColor: '#E9E9E9',
+        borderRadius: wp('2.3%'),
+        padding: wp('4%'),
+        marginBottom: hp('1.5%'),
+        marginHorizontal: wp('4.65%'),
+        backgroundColor: '#FAFAFA'
+    },
+    couponCodeContainer: {
+        borderStyle: 'dashed',
+        borderWidth: 1,
+        borderColor: '#F25000',
+        borderRadius: wp('1%'),
+        paddingHorizontal: wp('2%'),
+        paddingVertical: hp('0.5%'),
+        alignSelf: 'flex-start',
+        marginBottom: hp('1%'),
+        backgroundColor: '#F2500010'
+    },
+    couponCodeText: {
+        color: '#F25000',
+        fontFamily: FONTS.poppins.semiBold,
+        fontSize: wp('3.5%')
+    },
+    couponDescription: {
+        color: '#4F4F4F',
+        fontFamily: FONTS.poppins.regular,
+        fontSize: wp('3.2%'),
+        marginBottom: hp('0.5%')
+    },
+    applyText: {
+        color: '#F25000',
+        fontFamily: FONTS.poppins.medium,
+        fontSize: wp('3%'),
+        alignSelf: 'flex-end',
+        marginTop: hp('0.5%')
     },
     // headerContainer: {
     //     flexDirection: 'row',

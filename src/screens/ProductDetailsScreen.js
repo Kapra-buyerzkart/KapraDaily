@@ -1,14 +1,18 @@
-import { View, Text, Image, StyleSheet, TouchableOpacity, FlatList, Platform, ScrollView, Animated } from 'react-native'
-import React, { useRef, useState } from 'react'
+import { View, Text, Image, StyleSheet, TouchableOpacity, FlatList, Platform, ScrollView, Animated, ActivityIndicator } from 'react-native'
+import React, { useRef, useState, useEffect } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen'
 import { FONTS } from '../styles/typography'
-import { useNavigation } from '@react-navigation/native'
+import { useNavigation, useRoute } from '@react-navigation/native'
+import CONFIG from '../globals/config'
 import FontAwesome from 'react-native-vector-icons/FontAwesome'
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons'
 import ProductCard from '../components/ProductCard'
 import SelectedProducts from '../components/SelectedProducts'
+import { useWishlist } from '../context/WishlistContext'
+import { useCart } from '../context/CartContext'
+import { useProductDetails } from '../hooks/useProductDetails'
 
 const images = [
     require('../assets/images/lays.png'),
@@ -27,10 +31,34 @@ const selectedProducts = [
 ];
 
 const ProductDetailsScreen = () => {
-    const [selectedImage, setSelectedImage] = useState(images[0])
-    const [liked, setLiked] = useState(false)
+    const [selectedImage, setSelectedImage] = useState(null)
     const [showDetails, setShowDetails] = useState(false)
     const animation = useRef(new Animated.Value(0)).current
+
+    const navigation = useNavigation()
+    const route = useRoute()
+    const { product: initialProduct, productId } = route.params || {}
+    const { isInWishlist, toggleWishlist } = useWishlist()
+    const { addToCart, cartItems, updateCartItemQuantity } = useCart()
+
+    const {
+        loading,
+        product,
+        images: apiImages,
+        attributes,
+        productImage,
+        productName,
+        productDescription,
+        shortDescription,
+        unitPrice,
+        specialPrice,
+        discountPercentage,
+        stockQty,
+        isAvailable,
+        productId: finalProductId,
+    } = useProductDetails(productId, initialProduct)
+
+    const isLiked = isInWishlist(finalProductId)
 
     const toggleDetails = () => {
         Animated.timing(animation, {
@@ -45,7 +73,14 @@ const ProductDetailsScreen = () => {
         inputRange: [0, 1],
         outputRange: [0, hp('25%')],
     })
-    const navigation = useNavigation()
+    // Set selected image from productImage
+    useEffect(() => {
+        if (productImage) {
+            setSelectedImage(productImage)
+        } else if (apiImages && apiImages.length > 0) {
+            setSelectedImage(apiImages[0])
+        }
+    }, [productImage, apiImages])
 
     const products = [
         { id: "1", name: "Tomato", img: require('../assets/images/products/tomato.png'), price: "₹324" },
@@ -54,6 +89,23 @@ const ProductDetailsScreen = () => {
         { id: "4", name: "Green Chilli", img: require('../assets/images/products/chilli.png'), price: "₹324" },
         { id: "5", name: "Tomato", img: require('../assets/images/products/tomato.png'), price: "₹324" },
     ];
+
+    if (loading) {
+        return (
+            <SafeAreaView edges={['top']} style={styles.mainContainer}>
+                <View style={styles.headerView}>
+                    <TouchableOpacity onPress={() => navigation.goBack()}>
+                        <Image style={styles.leftArrowIcon} source={require('../assets/images/left_arrow.png')} />
+                    </TouchableOpacity>
+                    <Text style={styles.headerText}>Product Details</Text>
+                </View>
+                <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color="#F25000" />
+                    <Text style={styles.loadingText}>Loading product...</Text>
+                </View>
+            </SafeAreaView>
+        )
+    }
 
     return (
         <SafeAreaView edges={['top']} style={styles.mainContainer}>
@@ -67,16 +119,16 @@ const ProductDetailsScreen = () => {
                 contentContainerStyle={{ paddingBottom: hp("9%") }}
                 showsVerticalScrollIndicator={false}
             >
-                <Image style={styles.imageStyle} source={selectedImage} />
+                <Image style={styles.imageStyle} source={selectedImage || (apiImages && apiImages[0])} />
                 <View style={styles.thumbnailContainer}>
                     <FlatList
-                        data={images}
+                        data={apiImages && apiImages.length > 0 ? apiImages : []}
                         horizontal
                         keyExtractor={(_, index) => index.toString()}
                         showsHorizontalScrollIndicator={false}
                         contentContainerStyle={styles.thumbnailList}
                         renderItem={({ item }) => {
-                            const isSelected = selectedImage === item
+                            const isSelected = selectedImage?.uri === item?.uri
                             return (
                                 <TouchableOpacity
                                     style={[
@@ -106,39 +158,72 @@ const ProductDetailsScreen = () => {
                         <View style={styles.heartShareButtonContainer}>
                             <TouchableOpacity style={{
                                 marginRight: wp('4%')
-                            }} onPress={() => setLiked(!liked)}>
+                            }} onPress={() => product && toggleWishlist(product)}>
                                 <FontAwesome
-                                    name={liked ? 'heart' : 'heart-o'}
+                                    name={isLiked ? 'heart' : 'heart-o'}
                                     size={wp('5%')}
-                                    color={'#000000'}
+                                    color={isLiked ? '#FF0048' : '#000000'}
                                 />
-
                             </TouchableOpacity>
                             <TouchableOpacity>
                                 <Image style={styles.shareIcon} source={require('../assets/images/share.png')} />
                             </TouchableOpacity>
                         </View>
                     </View>
-                    <Text style={styles.productName}>BBQ Flavored Potato Chips.</Text>
-                    <Text style={styles.productDescription}>Made with BBQ flavour chilly power and chips</Text>
+                    <Text style={styles.productName}>{productName}</Text>
+                    <Text style={styles.productDescription}>{shortDescription}</Text>
                     <View style={styles.quantityCategoryContainer}>
                         <View>
-                            <Text style={styles.quantity}>210 g</Text>
-                            <Text style={styles.quantityTwo}>13.9/100g</Text>
+                            <Text style={styles.quantity}>{product?.sku || 'SKU'}</Text>
+                            <Text style={styles.quantityTwo}>{stockQty > 0 ? `${stockQty} in stock` : 'Out of stock'}</Text>
                         </View>
-                        <Text style={styles.category}>Hot and Spicy</Text>
+                        <Text style={styles.category}>{isAvailable ? 'Available' : 'Unavailable'}</Text>
                     </View>
                     <View style={styles.offerPriceAddButtonContainer}>
                         <View>
-                            <Text style={styles.offerText}>20% OFF</Text>
+                            {discountPercentage > 0 && <Text style={styles.offerText}>{discountPercentage}% OFF</Text>}
                             <View style={styles.priceContainer}>
-                                <Text style={styles.sellingPrice}>₹300</Text>
-                                <Text style={styles.mrpText}>₹324</Text>
+                                <Text style={styles.sellingPrice}>₹{specialPrice}</Text>
+                                {unitPrice && unitPrice !== specialPrice && (
+                                    <Text style={styles.mrpText}>₹{unitPrice}</Text>
+                                )}
                             </View>
                         </View>
-                        <TouchableOpacity style={styles.addButton}>
-                            <Text style={styles.addButtonText}>ADD</Text>
-                        </TouchableOpacity>
+
+                        {(() => {
+                            const cartItem = cartItems.find(i => (i.productId || i.id) === finalProductId);
+                            const quantity = cartItem ? cartItem.quantity : 0;
+
+                            if (quantity > 0) {
+                                return (
+                                    <View style={styles.quantitySelector}>
+                                        <TouchableOpacity
+                                            style={styles.qtyButton}
+                                            onPress={() => updateCartItemQuantity(finalProductId, quantity - 1)}
+                                        >
+                                            <AntDesign name="minus" size={wp('4%')} color="#FFF" />
+                                        </TouchableOpacity>
+                                        <Text style={styles.qtyText}>{quantity}</Text>
+                                        <TouchableOpacity
+                                            style={styles.qtyButton}
+                                            onPress={() => updateCartItemQuantity(finalProductId, quantity + 1)}
+                                        >
+                                            <AntDesign name="plus" size={wp('4%')} color="#FFF" />
+                                        </TouchableOpacity>
+                                    </View>
+                                );
+                            }
+
+                            return (
+                                <TouchableOpacity
+                                    style={[styles.addButton, !isAvailable && { backgroundColor: '#999' }]}
+                                    onPress={() => product && addToCart(product)}
+                                    disabled={!isAvailable}
+                                >
+                                    <Text style={styles.addButtonText}>{isAvailable ? 'ADD' : 'UNAVAILABLE'}</Text>
+                                </TouchableOpacity>
+                            );
+                        })()}
                     </View>
                     <View style={styles.divider} />
                     <TouchableOpacity onPress={toggleDetails} style={styles.viewProductDetailsButton}>
@@ -151,8 +236,22 @@ const ProductDetailsScreen = () => {
                     </TouchableOpacity>
                     <Animated.View style={[styles.productDetailsView, {
                         height: heightInterpolate,
+                        overflow: 'hidden'
                     }]}>
-                        <Text style={styles.productDetailsText}>Lay's is a globally recognized brand of potato chips, owned by PepsiCo through its Frito-Lay subsidiary, known for its wide variety of flavors made from real potatoes, offering a classic salty snack that's a staple worldwide, evolving from its 1930s origins into a huge international snack empire with distinct regional tastes like Walkers in the UK.</Text>
+                        <ScrollView showsVerticalScrollIndicator={false}>
+                            <Text style={styles.productDetailsText}>{productDescription?.replace(/<[^>]*>?/gm, '')}</Text>
+                            {attributes && attributes.length > 0 && (
+                                <View style={{ marginTop: hp('2%') }}>
+                                    <Text style={[styles.productsContainerHeader, { marginLeft: 0, marginBottom: hp('1%') }]}>Attributes</Text>
+                                    {attributes.map((attr, idx) => (
+                                        <View key={idx} style={{ flexDirection: 'row', marginBottom: hp('0.5%') }}>
+                                            <Text style={{ fontFamily: FONTS.poppins.semiBold, fontSize: wp('3.3%'), color: '#000', width: wp('35%') }}>{attr.attrName}:</Text>
+                                            <Text style={{ fontFamily: FONTS.poppins.regular, fontSize: wp('3.3%'), color: '#616161', flex: 1 }}>{attr.attrValue}</Text>
+                                        </View>
+                                    ))}
+                                </View>
+                            )}
+                        </ScrollView>
                     </Animated.View>
                 </View>
                 <View style={styles.productsMainContainerTwo}>
@@ -174,11 +273,11 @@ const ProductDetailsScreen = () => {
                         }}
                     />
                 </View>
-            </ScrollView>
+            </ScrollView >
             <View style={styles.floatingContainer}>
                 <SelectedProducts selectedProducts={selectedProducts} />
             </View>
-        </SafeAreaView>
+        </SafeAreaView >
     )
 }
 
@@ -433,5 +532,39 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
         // alignItems: "center",
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingTop: hp('30%'),
+    },
+    quantitySelector: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        width: wp('33.72%'),
+        height: hp('5.36%'),
+        backgroundColor: '#F25000',
+        borderRadius: wp('2.33%'),
+        paddingHorizontal: wp('2%'),
+        marginTop: hp('2%')
+    },
+    qtyButton: {
+        width: wp('8%'),
+        height: wp('8%'),
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    qtyText: {
+        fontFamily: FONTS.poppins.semiBold,
+        fontSize: wp('4%'),
+        color: '#FFFFFF',
+    },
+    loadingText: {
+        fontFamily: FONTS.poppins.regular,
+        fontSize: wp('4%'),
+        color: '#666666',
+        marginTop: hp('2%'),
     },
 })

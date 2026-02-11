@@ -1,8 +1,10 @@
 import { View, Text, StyleSheet, ImageBackground, Image, TextInput, TouchableOpacity, KeyboardAvoidingView, ScrollView } from 'react-native'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import { FONTS } from '../styles/typography'
+import { useNavigation, useRoute } from '@react-navigation/native'
+import { getAreasByPincode, sendRegisterOtp } from '../api'
 
 const PINCODE_AREA_MAP = {
     '676519': ['Chungathara', 'Pukkottumanna', 'Manjeri'],
@@ -16,21 +18,85 @@ const RegistrationScreen = () => {
     const [pincode, setPincode] = useState('')
     const [areas, setAreas] = useState([])
     const [termsAndConditionsClicked, setTermsAndConditionsClicked] = useState(false)
+    const [name, setName] = useState('')
+    const [email, setEmail] = useState('')
+    const [password, setPassword] = useState('')
+    const [loading, setLoading] = useState(false)
 
-    const handlePincodeChange = (value) => {
+    const route = useRoute()
+
+    const { phone } = route.params || {}
+
+    const navigation = useNavigation()
+
+    const handlePincodeChange = async (value) => {
         setPincode(value)
 
         if (value.length === 6) {
-            setAreas(PINCODE_AREA_MAP[value] || [])
-            setSelectedArea(null)
+            try {
+                const response = await getAreasByPincode(value)
+                console.log('resss', response)
+
+                // adjust based on your API response structure
+                setAreas(response?.data || [])
+                setSelectedArea(null)
+            } catch (error) {
+                console.log('Error fetching areas:', error)
+                setAreas([])
+            }
         } else {
             setAreas([])
             setSelectedArea(null)
         }
     }
 
+    const handleContinue = async () => {
+        if (!name || !email || !password) {
+            alert('Please fill all details')
+            return
+        }
+
+        if (pincode.length !== 6 || !selectedArea) {
+            alert('Please select a valid area')
+            return
+        }
+
+        if (!termsAndConditionsClicked) {
+            alert('Please accept terms and conditions')
+            return
+        }
+
+        try {
+            setLoading(true)
+
+            const response = await sendRegisterOtp(phone)
+            console.log('OTP response:', response)
+
+            if (response?.success === true) {
+                navigation.navigate('OtpScreen', {
+                    phone: phone,
+                    otpType: 'register',
+                    name: name,
+                    email: email,
+                    password: password,
+                    pincodeAreaId: selectedArea.pincodeAreaId
+
+                })
+            } else {
+                alert(response?.message || 'Failed to send OTP')
+            }
+
+        } catch (error) {
+            console.log('OTP error:', error)
+            alert('Something went wrong. Please try again.')
+        } finally {
+            setLoading(false)
+        }
+    }
+
     return (
         <SafeAreaView style={styles.mainContainer}>
+            {console.log("KKKK", phone)}
             <KeyboardAvoidingView
                 style={{ flex: 1 }}
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -49,7 +115,7 @@ const RegistrationScreen = () => {
                             marginBottom: hp('1%')
                         }]}>Registration</Text>
                         <View style={styles.mobilenoContainer}>
-                            <Text style={styles.mobilenoText}>+91 999 999 99999</Text>
+                            <Text style={styles.mobilenoText}>+91 {phone}</Text>
                             <TouchableOpacity>
                                 <Image style={styles.editIcon} source={require('../assets/images/edit_icon.png')} />
                             </TouchableOpacity>
@@ -61,6 +127,8 @@ const RegistrationScreen = () => {
                                     placeholder="Enter name"
                                     placeholderTextColor="#DADADA"
                                     style={styles.input}
+                                    value={name}
+                                    onChangeText={setName}
                                 />
                             </View>
                         </View>
@@ -71,6 +139,9 @@ const RegistrationScreen = () => {
                                     placeholder="Enter email ID"
                                     placeholderTextColor="#DADADA"
                                     style={styles.input}
+                                    value={email}
+                                    onChangeText={setEmail}
+                                    keyboardType="email-address"
                                 />
                             </View>
                         </View>
@@ -81,10 +152,14 @@ const RegistrationScreen = () => {
                                     placeholder="Enter password"
                                     placeholderTextColor="#DADADA"
                                     style={styles.input}
-                                    secureTextEntry={showPassword}
+                                    secureTextEntry={!showPassword}
+                                    value={password}
+                                    onChangeText={setPassword}
                                 />
-                                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                                    <Image style={styles.eyeIcon} source={require('../assets/images/eye_icon.png')} />
+                                <TouchableOpacity
+                                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                                    onPress={() => setShowPassword(!showPassword)}>
+                                    <Image tintColor={showPassword ? 'red' : undefined} style={styles.eyeIcon} source={require('../assets/images/eye_icon.png')} />
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -102,6 +177,7 @@ const RegistrationScreen = () => {
                                 />
                             </View>
                         </View>
+                        {console.log('areas', areas)}
                         {areas.length > 0 && (
                             <View style={styles.areaCard}>
                                 <Text style={styles.title}>Select your area</Text>
@@ -115,12 +191,9 @@ const RegistrationScreen = () => {
                                             setAreas([area])
                                         }}
                                     >
-                                        <Text style={styles.areaText}>{area}</Text>
-
-                                        {/* <View style={styles.radioOuter}>
-                                            {selectedArea === area && <View style={styles.radioInner} />}
-                                        </View> */}
-                                        {selectedArea !== area ? (<View style={styles.radioOuter} />) : (
+                                        <Text style={styles.areaText}>{area.areaName}</Text>
+                                        {console.log('selectedArea', selectedArea)}
+                                        {selectedArea?.areaName !== area?.areaName ? (<View style={styles.radioOuter} />) : (
                                             <Image style={styles.successIcon} source={require('../assets/images/success.png')} />
                                         )}
                                     </TouchableOpacity>
@@ -139,7 +212,8 @@ const RegistrationScreen = () => {
                             </TouchableOpacity>
                         </View>
 
-                        <TouchableOpacity style={styles.continueButton}>
+                        <TouchableOpacity onPress={handleContinue} style={[styles.continueButton, {
+                        }]}>
                             <Text style={styles.continueButtonText}>Continue</Text>
                         </TouchableOpacity>
 
@@ -272,14 +346,23 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center'
     },
+    // registrationContainer: {
+    //     height: hp('70%'),
+    //     paddingHorizontal: wp('5.8%'),
+    //     paddingTop: hp('3.5%'),
+    //     borderTopLeftRadius: wp('9.3%'),
+    //     borderTopRightRadius: wp('9.3%'),
+    //     backgroundColor: '#FFFFFF',
+    //     bottom: hp('4%'),
+    // },
     registrationContainer: {
-        height: hp('70%'),
         paddingHorizontal: wp('5.8%'),
         paddingTop: hp('3.5%'),
+        paddingBottom: hp('4%'), // important
         borderTopLeftRadius: wp('9.3%'),
         borderTopRightRadius: wp('9.3%'),
         backgroundColor: '#FFFFFF',
-        bottom: hp('4%')
+        bottom: hp('4%'),
     },
     mobilenoContainer: {
         flexDirection: 'row',

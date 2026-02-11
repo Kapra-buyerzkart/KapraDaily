@@ -18,7 +18,7 @@ import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-nat
 import { FONTS } from '../styles/typography';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { verifyLoginOtp, sendLoginOtp, sendForgotPwdOtp, verifyForgotPwdOtp, resendOtp, resendLoginOtp, resendForgotPwdOtp } from '../api'; // ✅ add sendLoginOtp
+import { verifyLoginOtp, sendLoginOtp, sendForgotPwdOtp, verifyForgotPwdOtp, resendOtp, resendLoginOtp, resendForgotPwdOtp, verifyRegisterOtp, registerUser } from '../api'; // ✅ add sendLoginOtp
 import { setResetToken } from '../api/tokenService';
 
 const ACCESS_TOKEN = 'ACCESS_TOKEN';
@@ -31,10 +31,25 @@ const setTokens = async (accessToken, refreshToken) => {
     ]);
 };
 
+const mergeCustomerIdIntoProfile = async (custId) => {
+    console.log('????????', custId)
+    const storedProfile = await AsyncStorage.getItem('profile');
+    const existingProfile = storedProfile ? JSON.parse(storedProfile) : {};
+
+    const updatedProfile = {
+        ...existingProfile,
+        custId,
+    };
+
+    console.log('updatedProfile', updatedProfile)
+
+    await AsyncStorage.setItem('profile', JSON.stringify(updatedProfile));
+};
+
 const OtpScreen = () => {
     const navigation = useNavigation();
     const route = useRoute();
-    const { phone, type } = route.params || {};
+    const { phone, type, name, email, password, whatsAppNo, referCode, pincodeAreaId } = route.params || {};
 
     const [otp, setOtp] = useState(['', '', '', '', '']);
     const inputRefs = Array.from({ length: 5 }, () => useRef(null));
@@ -88,16 +103,67 @@ const OtpScreen = () => {
         try {
             setLoading(true)
             const response = await verifyLoginOtp(phone, enteredOtp);
-            // console.log('Verify OTP Response:', response);
+            console.log('Verify OTP Response:', response);
 
             if (response?.success && response?.data) {
-                const { accessToken, refreshToken } = response.data;
+                console.log("mmmmmmm")
+                const { accessToken, refreshToken, custId } = response.data;
                 await setTokens(accessToken, refreshToken);
+
+                if (custId) {
+                    await mergeCustomerIdIntoProfile(custId);
+                }
 
                 navigation.reset({
                     index: 0,
                     routes: [{ name: 'MainTabs' }],
                 });
+            } else {
+                Alert.alert('Error', response?.message || 'OTP verification failed');
+            }
+        } catch (error) {
+            console.log('Verify OTP Error:', error);
+            Alert.alert('Error', error || 'Failed to verify OTP');
+        } finally {
+            setLoading(false)
+        }
+    };
+
+    const handleContinueRegister = async () => {
+        // console.log('enteredOtp', enteredOtp)
+        const enteredOtp = otp.join('');
+        if (enteredOtp.length < 5) {
+            Alert.alert('Error', 'Please enter complete OTP');
+            return;
+        }
+
+        try {
+            setLoading(true)
+            const response = await verifyRegisterOtp(phone, enteredOtp);
+            console.log('Verify OTP Response:', response);
+
+            if (response?.success && response?.data) {
+                const registerToken = response.data.registerToken;
+                console.log('registerToken', registerToken)
+                console.log('name', name)
+                console.log('email', email)
+                console.log('password', password)
+                console.log('whatsAppNo', whatsAppNo)
+                console.log('referCode', referCode)
+                console.log('pincodeAreaId', pincodeAreaId)
+                const registerResponse = await registerUser({ registerToken, name, email, password, whatsAppNo, referCode, pincodeAreaId, });
+                console.log('Register User Response:', registerResponse);
+                // navigation.reset({
+                //     index: 0,
+                //     routes: [{ name: 'MainTabs' }],
+                // });
+                if (registerResponse?.success) {
+                    Alert.alert('Success', 'Registration completed successfully',
+                        [{ text: 'OK', onPress: () => navigation.navigate('LoginScreen'), },]
+                    ); // Navigate to next screen or perform post-registration logic 
+                } else {
+                    Alert.alert('Error', registerResponse?.message || 'Registration failed');
+                }
             } else {
                 Alert.alert('Error', response?.message || 'OTP verification failed');
             }
@@ -168,6 +234,7 @@ const OtpScreen = () => {
 
     return (
         <SafeAreaView style={styles.mainContainer}>
+            {console.log('type', type)}
             <KeyboardAvoidingView
                 style={{ flex: 1 }}
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -239,9 +306,12 @@ const OtpScreen = () => {
                             </View>
                         </View>
 
-                        <TouchableOpacity style={styles.continueButton} onPress={type === 'login' ?
-                            handleContinueLogin :
-                            handleContinueReset
+                        <TouchableOpacity style={styles.continueButton} onPress={
+                            type === 'login'
+                                ? handleContinueLogin
+                                : type === 'reset'
+                                    ? handleContinueReset
+                                    : handleContinueRegister
                         }>
                             {loading ? (
                                 <ActivityIndicator size={'large'} color={"#FFFFFF"} />

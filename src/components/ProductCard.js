@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import EvilIcons from 'react-native-vector-icons/EvilIcons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -8,58 +8,127 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome'
 import { FONTS } from '../styles/typography'
 import { useNavigation } from '@react-navigation/native';
 
-export default function ProductCard(props) {
-    const [liked, setLiked] = useState(false);
-    const navigation = useNavigation()
+import CONFIG from '../globals/config';
+import ShimmerPlaceholder from './ShimmerPlaceholder';
+import { useCart } from '../context/CartContext';
+import { useWishlist } from '../context/WishlistContext';
+
+const ProductCard = (props) => {
+    const [imageLoading, setImageLoading] = useState(false);
+    const [imageError, setImageError] = useState(false);
+
+    // Hooks
+    const navigation = useNavigation();
+    const { addToCart } = useCart();
+    const { isInWishlist, toggleWishlist } = useWishlist();
+
+    const { item } = props;
+    // API products use productId, local products might use id
+    const itemId = item.productId || item.id;
+    const isLiked = isInWishlist(itemId);
+
+    // Helper to resolve image source
+    const getImageSource = (img) => {
+        if (!img || imageError) return require('../assets/images/categories/dfn.png'); // Fallback to clock.png on error or empty
+        if (typeof img === 'string') {
+            // Check if it's already a full URL or needs base URL
+            if (img.startsWith('http')) return { uri: img };
+            // Use CONFIG.image_base_url if available, assume it might need specific path handling
+            // Based on config: image_base_url: `https://grocery.kapradaily.com/webadmin/`
+            return { uri: `${CONFIG.image_base_url}${img}` };
+        }
+        return img; // For require(...) local images
+    };
+
+    // const { item } = props;
+    // Map API fields to UI expected fields or use them directly
+    const name = item.prName || item.name || '';
+    const price = item.specialPrice || item.price || '';
+    const mrp = item.unitPrice || item.mrp || '';
+    let offer = item.discountPercentage ? Math.round(item.discountPercentage) : item.offer || 0;
+    if (!offer && mrp && price && mrp > price) {
+        offer = Math.round(((mrp - price) / mrp) * 100);
+    }
+    const imageSource = getImageSource(item.featuredImage || item.img || item.imageUrl);
+
+    useEffect(() => {
+        // Reset state when item changes
+        setImageError(false);
+        setImageLoading(true);
+    }, [item.featuredImage, item.img]);
+
     return (
-        <TouchableOpacity onPress={() => navigation.navigate('ProductDetailsScreen')} style={styles.productCard}>
+        <TouchableOpacity
+            onPress={() => navigation.navigate('ProductDetailsScreen', {
+                productId: itemId,
+                product: item
+            })}
+            style={styles.productCard}
+        >
             <View style={styles.productCardViewOne}>
                 {/* <EvilIcons name={"heart"} size={wp("7%")} /> */}
-                <TouchableOpacity onPress={() => setLiked(!liked)}>
+                <TouchableOpacity onPress={() => toggleWishlist(item)}>
                     <FontAwesome
-                        name={liked ? 'heart' : 'heart-o'}
+                        name={isLiked ? 'heart' : 'heart-o'}
                         size={wp('5%')}
-                        color={liked ? '#FF0048' : '#979797'}
+                        color={isLiked ? '#FF0048' : '#979797'}
                     />
                 </TouchableOpacity>
                 <Text style={styles.btokenText}>Upto 1B Token</Text>
-                <View style={styles.plusIconView}>
-                    <Entypo name={"plus"} color={"#FFFFFF"} size={wp("3.8%")} />
-                </View>
+                <TouchableOpacity
+                    style={styles.plusIconView}
+                    onPress={() => addToCart(item)}
+                    hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+                    activeOpacity={0.7}
+                >
+                    <Entypo name={"plus"} color={"#FFFFFF"} size={wp("4.5%")} />
+                </TouchableOpacity>
             </View>
             <View style={styles.productCardViewTwo}>
-                <Image source={props.item.img} style={styles.productCardImage} />
+                {imageLoading && <ShimmerPlaceholder style={[styles.productCardImage, { position: 'absolute' }]} />}
+                <Image
+                    source={imageSource}
+                    style={styles.productCardImage}
+                    resizeMode="contain"
+                    onLoadStart={() => setImageLoading(true)}
+                    onLoadEnd={() => setImageLoading(false)}
+                    onError={() => {
+                        setImageError(true);
+                        setImageLoading(false);
+                    }}
+                />
             </View>
 
             <View style={styles.productCardViewThree}>
                 <View>
-                    <Text style={styles.offerText}>17% OFF</Text>
+                    {offer > 0 && <Text style={styles.offerText}>{offer}% OFF</Text>}
                 </View>
 
                 <View>
                     <View style={styles.productCardViewFour}>
-                        <Text style={styles.mrpText}>MRP </Text>
-                        {/* <MaterialIcons name={'currency-rupee'} color={'#777777'} size={wp("2.5%")} style={{
-                            bottom: hp("0.1%")
-                        }} /> */}
-                        <Text style={[styles.mrpText, {
-                            textDecorationLine: "line-through",
-                            textDecorationColor: "#777777"
-                        }]}>₹394</Text>
+                        {mrp && mrp != price ? (
+                            <>
+                                <Text style={styles.mrpText}>MRP </Text>
+                                <Text style={[styles.mrpText, {
+                                    textDecorationLine: "line-through",
+                                    textDecorationColor: "#777777"
+                                }]}>₹{mrp}</Text>
+                            </>
+                        ) : null}
 
                     </View>
                     <View style={styles.priceView}>
                         {/* <MaterialIcons name={'currency-rupee'} color={'#0CA201'} size={wp("3.7%")} style={{
                             bottom: hp("0.15%")
                         }} /> */}
-                        <Text style={styles.priceText}>₹324</Text>
+                        <Text style={styles.priceText}>₹{price}</Text>
                     </View>
                 </View>
             </View>
             <View style={{
                 // alignSelf: "center"
             }}>
-                <Text style={styles.productNameText}>Lorem lpsum is simply dummy text</Text>
+                <Text style={styles.productNameText} numberOfLines={2}>{name}</Text>
             </View>
         </TouchableOpacity>
     )
@@ -158,3 +227,6 @@ const styles = StyleSheet.create({
         marginTop: hp("0.5%")
     },
 })
+
+// Wrap in React.memo to prevent unnecessary re-renders
+export default React.memo(ProductCard);

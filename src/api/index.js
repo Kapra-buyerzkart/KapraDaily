@@ -53,6 +53,7 @@ export const verifyForgotPwdOtp = async (phone, otp) => {
 };
 
 export const verifyRegisterOtp = async (phone, otp) => {
+  console.log('PPPPPPPPPPPPP', phone)
   const payload = {
     phone,
     otp,
@@ -110,6 +111,12 @@ export const resendForgotPwdOtp = async phone => {
 export const getProfile = async () => {
   return get('me');
 };
+
+export const getAreasByPincode = async (pincode) => {
+  console.log('pincode', pincode)
+  return get(`pincodearea/getbypincode?search=${pincode}`);
+};
+
 
 
 

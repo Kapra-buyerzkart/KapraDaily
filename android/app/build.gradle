@@ -78,12 +78,25 @@ android {
     compileSdk rootProject.ext.compileSdkVersion
 
     namespace "com.kapradaily"
+    
+    androidResources {
+        noCompress 'tflite'
+    }
     defaultConfig {
         applicationId "com.kapradaily"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
+        
+        ndk {
+            abiFilters "arm64-v8a", "armeabi-v7a"
+        }
+    }
+    externalNativeBuild {
+        cmake {
+            path = null
+        }
     }
     signingConfigs {
         debug {
@@ -119,3 +132,11 @@ dependencies {
 }
 
 apply from: file("../../node_modules/react-native-vector-icons/fonts.gradle")
+// Workaround for CMake restricted method warning
+tasks.whenTaskAdded { task ->
+    if (task.name.startsWith('configureCMakeDebug')) {
+        task.doFirst {
+            System.setProperty('java.lang.System.launchMechanism', 'ProcessBuilder')
+        }
+    }
+}
