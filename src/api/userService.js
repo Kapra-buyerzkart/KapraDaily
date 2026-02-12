@@ -86,3 +86,13 @@ export const requestPhoneOtpApi = async (payload) => {
 export const verifyPhoneOtpApi = async (payload) => {
     return post('me/updatephone/verifyotp', payload);
 };
+
+/**
+ * Fetches the referral history for the current user.
+ * @param {number} page The page number.
+ * @param {number} pageSize The number of items per page.
+ * @returns {Promise<Object>} The API response.
+ */
+export const getReferralHistoryApi = async (page = 1, pageSize = 20) => {
+    return get(`me/referrals`, { params: { page, pageSize } });
+};

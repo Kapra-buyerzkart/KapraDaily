@@ -57,6 +57,8 @@ const ProductCard = (props) => {
         setImageLoading(true);
     }, [item.featuredImage, item.img]);
 
+    // console.log('ProductCard Render', item.id || item.productId);
+
     return (
         <TouchableOpacity
             onPress={() => navigation.navigate('ProductDetailsScreen', {
@@ -76,14 +78,14 @@ const ProductCard = (props) => {
                 </TouchableOpacity>
                 <Text style={styles.btokenText}>Upto 1B Token</Text>
                 <TouchableOpacity
-                    style={[styles.plusIconView, (item.stockQty === 0 || item.stockQty === '0') && { backgroundColor: '#CCCCCC' }]}
+                    style={[styles.plusIconView, ((item.stockQty === 0 || item.stockQty === '0') || item.isAvailable === false) && { backgroundColor: '#CCCCCC' }]}
                     onPress={() => {
-                        if (item.stockQty === 0 || item.stockQty === '0') return;
+                        if ((item.stockQty === 0 || item.stockQty === '0') || item.isAvailable === false) return;
                         addToCart(item);
                     }}
                     hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
                     activeOpacity={0.7}
-                    disabled={item.stockQty === 0 || item.stockQty === '0'}
+                    disabled={(item.stockQty === 0 || item.stockQty === '0') || item.isAvailable === false}
                 >
                     <Entypo name={"plus"} color={"#FFFFFF"} size={wp("4.5%")} />
                 </TouchableOpacity>
@@ -92,7 +94,7 @@ const ProductCard = (props) => {
                 {imageLoading && <ShimmerPlaceholder style={[styles.productCardImage, { position: 'absolute' }]} />}
                 <Image
                     source={imageSource}
-                    style={[styles.productCardImage, { opacity: (item.stockQty === 0 || item.stockQty === '0') ? 0.5 : 1 }]}
+                    style={[styles.productCardImage, { opacity: ((item.stockQty === 0 || item.stockQty === '0') || item.isAvailable === false) ? 0.5 : 1 }]}
                     resizeMode="contain"
                     onLoadStart={() => setImageLoading(true)}
                     onLoadEnd={() => setImageLoading(false)}
@@ -101,7 +103,7 @@ const ProductCard = (props) => {
                         setImageLoading(false);
                     }}
                 />
-                {(item.stockQty === 0 || item.stockQty === '0') && (
+                {((item.stockQty === 0 || item.stockQty === '0') || item.isAvailable === false) && (
                     <View style={styles.outOfStockOverlay}>
                         <Text style={styles.outOfStockText}>Out of Stock</Text>
                     </View>

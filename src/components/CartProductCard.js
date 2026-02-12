@@ -35,7 +35,7 @@ const CartProductCard = (props) => {
 
     // Determine if product is sold out
     // API logic: notAvailableInStore=1 OR unavailable=1 OR insufficientStock=1
-    const isSoldOut = !isAvailable || item.unavailable === 1 || item.insufficientStock === 1;
+    const isSoldOut = !isAvailable || item.unavailable === 1 || item.insufficientStock === 1 || item.notAvailableInStore === 1;
 
     const isLiked = isInWishlist(productId);
 

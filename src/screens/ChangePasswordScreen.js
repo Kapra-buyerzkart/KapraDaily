@@ -7,6 +7,7 @@ import { useNavigation } from '@react-navigation/native'
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import { LoaderContext } from '../context/loaderContext'
 import { changePasswordApi } from '../api/userService'
+import StatusModal from '../components/StatusModal'
 
 const ChangePasswordScreen = () => {
     const navigation = useNavigation()
@@ -19,14 +20,27 @@ const ChangePasswordScreen = () => {
     const [showNew, setShowNew] = useState(false)
     const [showConfirm, setShowConfirm] = useState(false)
 
+    // Modal state
+    const [statusModalVisible, setStatusModalVisible] = useState(false)
+    const [statusType, setStatusType] = useState('success')
+    const [statusTitle, setStatusTitle] = useState('')
+    const [statusMessage, setStatusMessage] = useState('')
+    const [onModalClose, setOnModalClose] = useState(null)
+
     const handleUpdate = async () => {
         if (!oldPassword || !newPassword || !confirmPassword) {
-            Alert.alert('Error', 'Please fill in all fields')
+            setStatusType('error')
+            setStatusTitle('Error')
+            setStatusMessage('Please fill in all fields')
+            setStatusModalVisible(true)
             return
         }
 
         if (newPassword !== confirmPassword) {
-            Alert.alert('Error', 'New passwords do not match')
+            setStatusType('error')
+            setStatusTitle('Error')
+            setStatusMessage('New passwords do not match')
+            setStatusModalVisible(true)
             return
         }
 
@@ -39,17 +53,32 @@ const ChangePasswordScreen = () => {
             }
             const response = await changePasswordApi(payload)
             if (response?.success) {
-                Alert.alert('Success', 'Password updated successfully', [
-                    { text: 'OK', onPress: () => navigation.goBack() }
-                ])
+                setStatusType('success')
+                setStatusTitle('Success')
+                setStatusMessage('Password updated successfully')
+                setOnModalClose(() => () => navigation.goBack())
+                setStatusModalVisible(true)
             } else {
-                Alert.alert('Error', response?.message || 'Failed to update password')
+                setStatusType('error')
+                setStatusTitle('Error')
+                setStatusMessage(response?.message || 'Failed to update password')
+                setStatusModalVisible(true)
             }
         } catch (error) {
             console.error('Change Password Error:', error)
-            Alert.alert('Error', 'An unexpected error occurred')
+            setStatusType('error')
+            setStatusTitle('Error')
+            setStatusMessage('An unexpected error occurred')
+            setStatusModalVisible(true)
         } finally {
             showLoader(false)
+        }
+    }
+
+    const handleModalClose = () => {
+        setStatusModalVisible(false)
+        if (onModalClose) {
+            onModalClose()
         }
     }
 
@@ -129,6 +158,13 @@ const ChangePasswordScreen = () => {
                     </View>
                 </ScrollView>
             </KeyboardAvoidingView>
+            <StatusModal
+                visible={statusModalVisible}
+                onClose={handleModalClose}
+                type={statusType}
+                title={statusTitle}
+                message={statusMessage}
+            />
         </SafeAreaView>
     )
 }

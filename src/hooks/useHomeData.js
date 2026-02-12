@@ -96,8 +96,6 @@ const useHomeData = () => {
                 // showLoader(false);
             }
         };
-
-        // Run both fetches concurrently
         fetchHomepageData().catch(e => console.error('fetchHomepageData failed', e));
         // Removed redundant loadWishlist here as it's better handled where needed or once at root if desired
     }, []);

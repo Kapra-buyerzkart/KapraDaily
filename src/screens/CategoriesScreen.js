@@ -266,6 +266,28 @@ export default function CategoriesScreen() {
         );
     };
 
+    const renderHeader = React.useCallback(() => (
+        <>
+            <FlatList
+                data={subCategoriesList}
+                keyExtractor={(item) => item.catId.toString()}
+                renderItem={renderSubCategory}
+                horizontal={true}
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{
+                    paddingLeft: wp("2.3%"),
+                    marginTop: hp("0.8%"),
+                    paddingBottom: hp("1%")
+                }}
+            />
+            {loadingProducts && (
+                <View style={{ alignItems: 'center', marginTop: hp('10%') }}>
+                    <ActivityIndicator size="large" color="#F25000" />
+                </View>
+            )}
+        </>
+    ), [subCategoriesList, selectedSubCatId, loadingProducts]);
+
 
     return (
         <SafeAreaView style={styles.mainContainer} edges={['top', 'left', 'right']}>
@@ -316,98 +338,28 @@ export default function CategoriesScreen() {
                 </View>
 
                 {/* RIGHT CONTENT */}
-                <ScrollView style={styles.rightContent}>
-                    {/* <View style={{
-                        alignItems: 'center'
-                    }}>
-                        <Image source={require("../assets/images/cat-banner.jpeg")}
-                            style={styles.categoryBanner}
-                        />
-                    </View> */}
+                <View style={styles.rightContent}>
                     <FlatList
-                        data={subCategoriesList}
-                        keyExtractor={(item) => item.catId.toString()}
-                        renderItem={renderSubCategory}
-                        horizontal={true}
-                        showsHorizontalScrollIndicator={false}
+                        data={loadingProducts ? [] : productsList}
+                        keyExtractor={(item) => (item.productId || item.id).toString()}
+                        renderItem={({ item }) => <ProductCard item={item} />}
+                        numColumns={2}
+                        showsVerticalScrollIndicator={false}
                         contentContainerStyle={{
                             paddingLeft: wp("2.3%"),
-                            marginTop: hp("0.8%")
-                            // alignItems: "flex-end"
+                            paddingBottom: hp("8.5%"),
+                            paddingTop: hp("0.5%")
                         }}
-                    />
-                    {/* <TouchableOpacity style={{
-                        // alignItems: "center"
-                        // backgroundColor: "green",
-                        width: wp("18.6%"),
-                        alignItems: "center"
-                    }}>
-                        <View style={{
-                            width: wp("18.6%"),
-                            height: hp("8.04%"),
-                            borderRadius: 10,
-                            backgroundColor: "#FFDB99",
-                            justifyContent: "center",
-                            alignItems: "center"
-                        }}>
-                            <Image style={{
-                                width: wp("13.95%"),
-                                height: wp("13.95%"),
-                                borderRadius: 60,
-                                resizeMode: "cover"
-                            }} source={require("../assets/images/mango.jpg")} />
-                        </View>
-                        <Text style={{
-                            color: "#000000",
-                            fontFamily: "Lexend-Medium",
-                            fontSize: wp("2.79%"),
-                            marginTop: hp("0.1%")
-                        }}>Orange</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity style={{
-                        // backgroundColor: "red",
-                        width: wp("16.28%"),
-                        alignItems: "center"
-                    }}>
-                        <Image style={{
-                            width: wp("11.63%"),
-                            height: wp("11.63%%"),
-                            borderRadius: 60,
-                            resizeMode: "cover"
-                        }} source={require("../assets/images/mango.jpg")} />
-                        <Text style={{
-                            color: "#666666",
-                            fontFamily: "Lexend-Medium",
-                            fontSize: wp("2.79%"),
-                            marginTop: hp("0.1%")
-                        }}>Orange</Text>
-                    </TouchableOpacity> */}
-
-                    {loadingProducts ? (
-                        <View style={{ flex: 1, alignItems: 'center', marginTop: hp('10%') }}>
-                            <ActivityIndicator size="large" color="#F25000" />
-                        </View>
-                    ) : (
-                        <FlatList
-                            data={productsList}
-                            keyExtractor={(item) => (item.productId || item.id).toString()}
-                            renderItem={({ item }) => <ProductCard item={item} />}
-                            numColumns={2}
-                            showsVerticalScrollIndicator={false}
-                            contentContainerStyle={{
-                                paddingLeft: wp("2.3%"),
-                                paddingBottom: hp("8.5%"),
-                                paddingTop: hp("0.5%")
-                            }}
-                            ListEmptyComponent={() => (
+                        ListHeaderComponent={renderHeader}
+                        ListEmptyComponent={
+                            !loadingProducts ? (
                                 <View style={{ flex: 1, alignItems: 'center', marginTop: hp('5%') }}>
                                     <Text style={{ fontFamily: FONTS.lexend.regular, color: '#999' }}>No products found</Text>
                                 </View>
-                            )}
-                        />
-                    )}
-                </ScrollView>
+                            ) : null
+                        }
+                    />
+                </View>
             </View>
             <View style={styles.floatingContainer}>
                 <SelectedProducts selectedProducts={selectedProducts} />

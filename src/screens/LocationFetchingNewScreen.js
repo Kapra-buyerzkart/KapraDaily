@@ -20,6 +20,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Image } from 'react-native';
 import AuthButton from '../components/AuthButton';
 import FastImage from 'react-native-fast-image';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // import RNAndroidLocationEnabler from 'react-native-android-location-enabler';
 

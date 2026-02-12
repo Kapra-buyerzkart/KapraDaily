@@ -1,42 +1,44 @@
+import React, { useState, useEffect, useContext } from 'react'
 import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList } from 'react-native'
-import React from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
+import { useNavigation } from '@react-navigation/native'
 import { FONTS } from '../styles/typography'
+import { getReferralHistoryApi } from '../api/userService'
+import { LoaderContext } from '../context/loaderContext'
+import { AppContext } from '../context/appContext'
+// import moment from 'moment'
 
 const ReferralScreen = () => {
+    const navigation = useNavigation()
+    const { showLoader } = useContext(LoaderContext)
+    const { profile } = useContext(AppContext)
+    const [referrals, setReferrals] = useState([])
 
+    useEffect(() => {
+        fetchReferralHistory()
+    }, [])
 
-
-    const referrals = [
-        {
-            name: "Jithin",
-            phone: "9605913522",
-            date: "22-01-2026"
-        },
-        {
-            name: "Jithin",
-            phone: "9605913522",
-            date: "22-01-2026"
-        },
-        {
-            name: "Jithin",
-            phone: "9605913522",
-            date: "22-01-2026"
-        },
-        {
-            name: "Jithin",
-            phone: "9605913522",
-            date: "22-01-2026"
-        },
-    ]
+    const fetchReferralHistory = async () => {
+        try {
+            showLoader(true)
+            const response = await getReferralHistoryApi()
+            if (response?.success) {
+                setReferrals(response?.data || [])
+            }
+        } catch (error) {
+            console.error('Fetch Referral History Error:', error)
+        } finally {
+            showLoader(false)
+        }
+    }
 
     const renderItem = ({ item }) => {
         return (
             <View style={styles.referralHistoryContainer}>
                 <View style={styles.namePhoneView}>
-                    <Text style={styles.nameText}>{item.name}</Text>
-                    <MaskedText value={item.phone} />
+                    <Text style={styles.nameText}>{item.fullName || 'User'}</Text>
+                    <MaskedText value={item.phoneNo || ''} />
                 </View>
                 <Text style={styles.dateText}>{item.date}</Text>
             </View>
@@ -59,7 +61,9 @@ const ReferralScreen = () => {
     return (
         <SafeAreaView style={styles.mainContainer}>
             <View style={styles.headerContainer}>
-                <Image style={styles.leftArrowIcon} source={require('../assets/images/left_arrow.png')} />
+                <TouchableOpacity onPress={() => navigation.goBack()}>
+                    <Image style={styles.leftArrowIcon} source={require('../assets/images/left_arrow.png')} />
+                </TouchableOpacity>
                 <Text style={styles.referralText}>Referral</Text>
                 <View style={styles.bcoinContainer}>
                     <Image style={styles.bcoinImage} source={require('../assets/images/rupee.png')} />
@@ -72,7 +76,7 @@ const ReferralScreen = () => {
                 <Text style={styles.referralRewardText}>Referral reward you Earned</Text>
                 <View style={styles.bcoinContainerTwo}>
                     <Image style={styles.bcoinImageTwo} source={require('../assets/images/rupee.png')} />
-                    <Text style={styles.bcoinTextTwo}>0.00</Text>
+                    <Text style={styles.bcoinTextTwo}>{profile?.referalBonus || '0.00'}</Text>
                 </View>
                 <TouchableOpacity style={styles.sendInviteButton}>
                     <Image style={styles.sendIcon} source={require('../assets/images/share-icon.png')} />

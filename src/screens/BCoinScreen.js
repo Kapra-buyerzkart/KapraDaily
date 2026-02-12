@@ -6,6 +6,7 @@ import { FONTS } from '../styles/typography'
 import { useNavigation } from '@react-navigation/native'
 import FastImage from 'react-native-fast-image'
 import { getWalletDataApi, redeemBCoinsApi } from '../api/userService'
+import StatusModal from '../components/StatusModal'
 
 const BCoinScreen = () => {
     const [selected, setSelected] = useState('bcoin')
@@ -19,23 +20,37 @@ const BCoinScreen = () => {
     const [preferredMethod, setPreferredMethod] = useState('bank')
     const [isRedeeming, setIsRedeeming] = useState(false)
 
+    // Status Modal State
+    const [statusModalVisible, setStatusModalVisible] = useState(false)
+    const [statusType, setStatusType] = useState('success')
+    const [statusTitle, setStatusTitle] = useState('')
+    const [statusMessage, setStatusMessage] = useState('')
+
     const navigation = useNavigation()
+    const isMounted = React.useRef(true)
+
+    useEffect(() => {
+        return () => {
+            isMounted.current = false
+        }
+    }, [])
 
     useEffect(() => {
         fetchWalletData()
     }, [])
 
     const fetchWalletData = async () => {
+        if (!isMounted.current) return
         setIsLoading(true)
         try {
             const response = await getWalletDataApi()
-            if (response && response.success) {
+            if (isMounted.current && response && response.success) {
                 setWalletData(response.data)
             }
         } catch (error) {
             console.error('Error fetching wallet data:', error)
         } finally {
-            setIsLoading(false)
+            if (isMounted.current) setIsLoading(false)
         }
     }
 
@@ -57,19 +72,48 @@ const BCoinScreen = () => {
                 preferredMethod: preferredMethod
             }
             const response = await redeemBCoinsApi(payload)
-            if (response && response.success) {
-                Alert.alert('Success', response.message || 'Redemption request submitted successfully.')
-                setShowRedeemModal(false)
-                setRequestedCoins('')
-                fetchWalletData() // Refresh data
-            } else {
-                Alert.alert('Error', response.message || 'Failed to submit redemption request.')
-            }
+
+            if (!isMounted.current) return
+
+            setShowRedeemModal(false)
+
+            setTimeout(() => {
+                if (!isMounted.current) return
+
+                if (response && response.success) {
+                    setRequestedCoins('')
+                    fetchWalletData() // Refresh data
+
+                    setStatusType('success')
+                    setStatusTitle('Success')
+                    setStatusMessage(response.message || 'Redemption request submitted successfully.')
+                } else {
+                    if (response?.status === 'PENDING_REQUEST') {
+                        setStatusType('error')
+                        setStatusTitle('Request Pending')
+                        setStatusMessage(response.message || 'You already have a pending redemption request.')
+                    } else {
+                        setStatusType('error')
+                        setStatusTitle('Error')
+                        setStatusMessage(response?.message || 'Failed to submit redemption request.')
+                    }
+                }
+                setStatusModalVisible(true)
+            }, 500)
         } catch (error) {
             console.error('Redemption error:', error)
-            Alert.alert('Error', 'An error occurred while processing your request.')
+            if (isMounted.current) {
+                setShowRedeemModal(false)
+                setTimeout(() => {
+                    if (!isMounted.current) return
+                    setStatusType('error')
+                    setStatusTitle('Error')
+                    setStatusMessage('An error occurred while processing your request.')
+                    setStatusModalVisible(true)
+                }, 500)
+            }
         } finally {
-            setIsRedeeming(false)
+            if (isMounted.current) setIsRedeeming(false)
         }
     }
 
@@ -275,6 +319,13 @@ const BCoinScreen = () => {
                     </View>
                 </View>
             </Modal>
+            <StatusModal
+                visible={statusModalVisible}
+                onClose={() => setStatusModalVisible(false)}
+                type={statusType}
+                title={statusTitle}
+                message={statusMessage}
+            />
         </SafeAreaView>
     )
 }
@@ -532,5 +583,43 @@ const styles = StyleSheet.create({
         alignSelf: 'center',
         // marginTop: hp('4.1%')
         bottom: hp('1.1%')
+    },
+    redeemInput: {
+        borderWidth: 1,
+        borderColor: '#DADADA',
+        borderRadius: wp('2%'),
+        paddingHorizontal: wp('4%'),
+        paddingVertical: hp('1.5%'),
+        marginTop: hp('1%'),
+        fontFamily: FONTS.poppins.regular,
+        fontSize: wp('4%'),
+        color: '#000',
+        backgroundColor: '#F9F9F9'
+    },
+    methodContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: hp('1.5%'),
+    },
+    methodButton: {
+        flex: 0.48,
+        borderWidth: 1,
+        borderColor: '#DADADA',
+        borderRadius: wp('2%'),
+        paddingVertical: hp('1.5%'),
+        alignItems: 'center',
+        backgroundColor: '#FFFFFF'
+    },
+    methodButtonActive: {
+        borderColor: '#F25000',
+        backgroundColor: '#FFF5F0'
+    },
+    methodText: {
+        fontFamily: FONTS.poppins.medium,
+        fontSize: wp('3.72%'),
+        color: '#616161'
+    },
+    methodTextActive: {
+        color: '#F25000'
     }
 })

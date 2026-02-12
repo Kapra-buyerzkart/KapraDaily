@@ -45,9 +45,9 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.request.use(
   async config => {
     const isAuthApi =
-      config.url?.includes('loginpassword') ||
-      config.url?.includes('sendotp') ||
-      config.url?.includes('verifyotp');
+      config.url?.includes('auth/loginpassword') ||
+      config.url?.includes('auth/sendotp') ||
+      config.url?.includes('auth/verifyotp');
 
     const fullUrl = config.baseURL ? `${config.baseURL}${config.url}` : config.url;
     console.log('API URL 👉', fullUrl, 'isAuthApi 👉', isAuthApi);

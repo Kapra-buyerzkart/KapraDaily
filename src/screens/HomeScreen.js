@@ -38,6 +38,7 @@ const banners = [
 ];
 
 const HomeScreen = () => {
+    console.log('HomeScreen Rendered');
     const products = [
         { id: "1", name: "Tomato", img: require('../assets/images/products/tomato.png'), price: "₹324" },
         { id: "2", name: "Green Chilli", img: require('../assets/images/products/chilli.png'), price: "₹324" },
@@ -102,10 +103,15 @@ const HomeScreen = () => {
 
     useEffect(() => {
         const fetchProfile = async () => {
-            showLoader(true);
-            await loadProfileTwo();   // or loadProfileTwo() if guest-first
-            showLoader(false);
-            setIsProfileLoaded(true);
+            try {
+                showLoader(true);
+                await loadProfileTwo();   // or loadProfileTwo() if guest-first
+            } catch (error) {
+                console.error('Profile load error:', error);
+            } finally {
+                showLoader(false);
+                setIsProfileLoaded(true);
+            }
         };
 
         fetchProfile();

@@ -8,6 +8,7 @@ import AntDesign from 'react-native-vector-icons/AntDesign'
 import { AppContext } from '../context/appContext'
 import { LoaderContext } from '../context/loaderContext'
 import { updateProfilePatchApi } from '../api/userService'
+import StatusModal from '../components/StatusModal'
 
 const EditProfileScreen = () => {
     const navigation = useNavigation()
@@ -18,13 +19,35 @@ const EditProfileScreen = () => {
     const [dob, setDob] = useState(profile?.dob || '')
     const [gender, setGender] = useState(profile?.gender || '')
 
+    // State for dirty check and modal
+    const [hasChanges, setHasChanges] = useState(false)
+    const [statusModalVisible, setStatusModalVisible] = useState(false)
+    const [statusType, setStatusType] = useState('success')
+    const [statusTitle, setStatusTitle] = useState('')
+    const [statusMessage, setStatusMessage] = useState('')
+
+    useEffect(() => {
+        const isNameChanged = fullName.trim() !== (profile?.custName || '')
+        const isDobChanged = dob.trim() !== (profile?.dob || '')
+        const isGenderChanged = gender !== (profile?.gender || '')
+        setHasChanges(isNameChanged || isDobChanged || isGenderChanged)
+    }, [fullName, dob, gender, profile])
+
+    const handleModalClose = () => {
+        setStatusModalVisible(false)
+        // Removed auto-navigation back on success as per user request
+    }
+
     // Phone and Email are handled separately via OTP flow now
     const email = profile?.emailId || ''
     const phone = profile?.phoneNo || ''
 
     const handleSave = async () => {
         if (!fullName.trim()) {
-            Alert.alert('Error', 'Full Name is required')
+            setStatusType('error')
+            setStatusTitle('Error')
+            setStatusMessage('Full Name is required')
+            setStatusModalVisible(true)
             return
         }
 
@@ -38,15 +61,25 @@ const EditProfileScreen = () => {
             const response = await updateProfilePatchApi(payload)
             if (response?.success) {
                 await loadProfile() // Refresh global profile state
-                Alert.alert('Success', 'Profile updated successfully', [
-                    { text: 'OK', onPress: () => navigation.goBack() }
-                ])
+                setStatusType('success')
+                setStatusTitle('Success')
+                setStatusMessage('Profile updated successfully')
+                setStatusModalVisible(true)
             } else {
-                Alert.alert('Error', response?.message || 'Failed to update profile')
+                setStatusType('error')
+                setStatusTitle('Error')
+                setStatusMessage(response?.message || 'Failed to update profile')
+                setStatusModalVisible(true)
             }
         } catch (error) {
             console.error('Update Profile Error:', error)
-            Alert.alert('Error', 'An unexpected error occurred')
+            setStatusType('error')
+            setStatusTitle('Error')
+            const errorMessage = typeof error === 'string'
+                ? error
+                : (error?.message || error?.Message || 'An unexpected error occurred')
+            setStatusMessage(errorMessage)
+            setStatusModalVisible(true)
         } finally {
             showLoader(false)
         }
@@ -140,12 +173,23 @@ const EditProfileScreen = () => {
                             </View>
                         </View>
 
-                        <TouchableOpacity onPress={handleSave} style={styles.saveButton}>
+                        <TouchableOpacity
+                            onPress={handleSave}
+                            style={[styles.saveButton, !hasChanges && styles.saveButtonDisabled]}
+                            disabled={!hasChanges}
+                        >
                             <Text style={styles.saveButtonText}>Save Changes</Text>
                         </TouchableOpacity>
                     </View>
                 </ScrollView>
             </KeyboardAvoidingView>
+            <StatusModal
+                visible={statusModalVisible}
+                onClose={handleModalClose}
+                type={statusType}
+                title={statusTitle}
+                message={statusMessage}
+            />
         </SafeAreaView>
     )
 }
@@ -227,6 +271,11 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.3,
         shadowRadius: 5,
         elevation: 6
+    },
+    saveButtonDisabled: {
+        backgroundColor: '#FFCCBC', // Lighter orange/disabled state
+        elevation: 0,
+        shadowOpacity: 0
     },
     saveButtonText: {
         fontFamily: FONTS.poppins.bold,

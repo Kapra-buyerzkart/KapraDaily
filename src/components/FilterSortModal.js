@@ -7,10 +7,10 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 const SORT_OPTIONS = [
     { label: 'Relevance', value: 'relevance' },
     { label: 'Latest', value: 'latest' },
-    { label: 'A to Z', value: 'name_asc' },
-    { label: 'Z to A', value: 'name_desc' },
-    { label: 'Price: Low to High', value: 'price_asc' },
-    { label: 'Price: High to Low', value: 'price_desc' },
+    { label: 'A to Z', value: 'a-z' },
+    { label: 'Z to A', value: 'z-a' },
+    { label: 'Price: Low to High', value: 'lowToHigh' },
+    { label: 'Price: High to Low', value: 'highToLow' },
 ];
 
 const FilterSortModal = ({ visible, onClose, onApply, initialSort, initialMin, initialMax }) => {

@@ -18,6 +18,8 @@ const WishlistProductCard = ({ item, onRemove, onAddToCart }) => {
         ? Math.round(((item.unitPrice - item.specialPrice) / item.unitPrice) * 100)
         : 0;
 
+    const isOutOfStock = item.isAvailable === false || (item.stockQty !== undefined && Number(item.stockQty) === 0);
+
     return (
         <TouchableOpacity style={styles.productCard}>
             <View style={styles.productCardViewOne}>
@@ -32,6 +34,9 @@ const WishlistProductCard = ({ item, onRemove, onAddToCart }) => {
             </View>
             <View style={styles.productCardViewTwo}>
                 <Text style={styles.productNameText} numberOfLines={2}>{item.productName}</Text>
+                <Text style={[styles.stockStatusText, { color: isOutOfStock ? '#FF0000' : '#0CA201' }]}>
+                    {isOutOfStock ? 'OUT OF STOCK' : 'In Stock'}
+                </Text>
                 {discountPercentage > 0 && <Text style={styles.offerText}>{discountPercentage}% OFF</Text>}
             </View>
 
@@ -50,7 +55,11 @@ const WishlistProductCard = ({ item, onRemove, onAddToCart }) => {
             </View>
             <View style={styles.productCardViewFour}>
                 {/* Replaced standard touchable with just an icon button for now, or keep as is if too small for AppButton */}
-                <TouchableOpacity style={styles.plusIconView} onPress={() => onAddToCart(item)}>
+                <TouchableOpacity
+                    style={[styles.plusIconView, isOutOfStock && { backgroundColor: '#CCCCCC' }]}
+                    onPress={() => !isOutOfStock && onAddToCart(item)}
+                    disabled={isOutOfStock}
+                >
                     <Entypo name={"plus"} color={"#FFFFFF"} size={wp("4.1%")} />
                 </TouchableOpacity>
                 <View style={styles.priceView}>
@@ -74,7 +83,8 @@ const styles = StyleSheet.create({
         borderRadius: wp("4.65%"),
         padding: wp("2%"),
         flexDirection: "row",
-        marginTop: hp("0.8%")
+        marginTop: hp("0.8%"),
+        alignSelf: 'center'
     },
     plusIconView: {
         backgroundColor: "#F04B1B",
@@ -151,4 +161,9 @@ const styles = StyleSheet.create({
     rupeeIconBig: {
         bottom: hp("0.15%")
     },
+    stockStatusText: {
+        fontFamily: FONTS.poppins.medium,
+        fontSize: wp("2.8%"),
+        marginTop: hp("0.5%")
+    }
 });

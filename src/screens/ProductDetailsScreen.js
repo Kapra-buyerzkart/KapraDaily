@@ -218,14 +218,14 @@ const ProductDetailsScreen = () => {
 
                                 return (
                                     <TouchableOpacity
-                                        style={[styles.addButton, (!isAvailable || stockQty === 0) && { backgroundColor: '#CCCCCC' }]}
+                                        style={[styles.addButton, ((isAvailable === false) || stockQty === 0) && { backgroundColor: '#CCCCCC' }]}
                                         onPress={() => {
-                                            if (!isAvailable || stockQty === 0) return;
+                                            if ((isAvailable === false) || stockQty === 0) return;
                                             product && addToCart(product);
                                         }}
-                                        disabled={!isAvailable || stockQty === 0}
+                                        disabled={(isAvailable === false) || stockQty === 0}
                                     >
-                                        <Text style={styles.addButtonText}>{(isAvailable && stockQty > 0) ? 'ADD' : 'OUT OF STOCK'}</Text>
+                                        <Text style={styles.addButtonText}>{((isAvailable !== false) && stockQty > 0) ? 'ADD' : 'OUT OF STOCK'}</Text>
                                     </TouchableOpacity>
                                 );
                             })()}

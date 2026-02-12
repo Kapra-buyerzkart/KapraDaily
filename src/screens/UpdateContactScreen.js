@@ -17,6 +17,7 @@ import {
     requestPhoneOtpApi,
     verifyPhoneOtpApi
 } from '../api/userService';
+import StatusModal from '../components/StatusModal';
 
 const UpdateContactScreen = () => {
     const navigation = useNavigation();
@@ -26,12 +27,28 @@ const UpdateContactScreen = () => {
     const { profile, loadProfile } = useContext(AppContext);
 
     const [value, setValue] = useState('');
+    const [originalValue, setOriginalValue] = useState('');
     const [otp, setOtp] = useState(['', '', '', '', '']);
     const [step, setStep] = useState(1); // 1: Input, 2: OTP
     const [timer, setTimer] = useState(30);
     const [canResend, setCanResend] = useState(false);
 
+    // Modal state
+    const [statusModalVisible, setStatusModalVisible] = useState(false);
+    const [statusType, setStatusType] = useState('success');
+    const [statusTitle, setStatusTitle] = useState('');
+    const [statusMessage, setStatusMessage] = useState('');
+    const [onModalClose, setOnModalClose] = useState(null);
+
     const otpRefs = useRef([]);
+
+    useEffect(() => {
+        if (profile) {
+            const currentVal = type === 'phone' ? profile.phoneNo : profile.emailId;
+            setValue(currentVal || '');
+            setOriginalValue(currentVal || '');
+        }
+    }, [profile, type]);
 
     useEffect(() => {
         let interval;
@@ -47,12 +64,18 @@ const UpdateContactScreen = () => {
 
     const handleRequestOtp = async () => {
         if (!value.trim()) {
-            Alert.alert('Error', `Please enter a valid ${type === 'phone' ? 'phone number' : 'email ID'}`);
+            setStatusType('error');
+            setStatusTitle('Error');
+            setStatusMessage(`Please enter a valid ${type === 'phone' ? 'phone number' : 'email ID'}`);
+            setStatusModalVisible(true);
             return;
         }
 
         if (type === 'phone' && (value.length !== 10 || isNaN(value))) {
-            Alert.alert('Error', 'Please enter a valid 10-digit mobile number');
+            setStatusType('error');
+            setStatusTitle('Error');
+            setStatusMessage('Please enter a valid 10-digit mobile number');
+            setStatusModalVisible(true);
             return;
         }
 
@@ -68,11 +91,17 @@ const UpdateContactScreen = () => {
                 setTimer(30);
                 setCanResend(false);
             } else {
-                Alert.alert('Error', response?.message || 'Failed to request OTP');
+                setStatusType('error');
+                setStatusTitle('Error');
+                setStatusMessage(response?.message || 'Failed to request OTP');
+                setStatusModalVisible(true);
             }
         } catch (error) {
             console.error('Request OTP Error:', error);
-            Alert.alert('Error', 'Failed to request OTP. Please try again.');
+            setStatusType('error');
+            setStatusTitle('Error');
+            setStatusMessage('Failed to request OTP. Please try again.');
+            setStatusModalVisible(true);
         } finally {
             showLoader(false);
         }
@@ -81,7 +110,10 @@ const UpdateContactScreen = () => {
     const handleVerifyOtp = async () => {
         const otpValue = otp.join('');
         if (otpValue.length !== 5) {
-            Alert.alert('Error', 'Please enter the 5-digit OTP');
+            setStatusType('error');
+            setStatusTitle('Error');
+            setStatusMessage('Please enter the 5-digit OTP');
+            setStatusModalVisible(true);
             return;
         }
 
@@ -97,15 +129,23 @@ const UpdateContactScreen = () => {
 
             if (response?.success) {
                 await loadProfile();
-                Alert.alert('Success', `${type === 'phone' ? 'Phone Number' : 'Email ID'} updated successfully`, [
-                    { text: 'OK', onPress: () => navigation.goBack() }
-                ]);
+                setStatusType('success');
+                setStatusTitle('Success');
+                setStatusMessage(`${type === 'phone' ? 'Phone Number' : 'Email ID'} updated successfully`);
+                setOnModalClose(() => () => navigation.goBack());
+                setStatusModalVisible(true);
             } else {
-                Alert.alert('Error', response?.message || 'Verification failed');
+                setStatusType('error');
+                setStatusTitle('Error');
+                setStatusMessage(response?.message || 'Verification failed');
+                setStatusModalVisible(true);
             }
         } catch (error) {
             console.error('Verify OTP Error:', error);
-            Alert.alert('Error', 'Invalid OTP or verification failed.');
+            setStatusType('error');
+            setStatusTitle('Error');
+            setStatusMessage('Invalid OTP or verification failed.');
+            setStatusModalVisible(true);
         } finally {
             showLoader(false);
         }
@@ -126,6 +166,17 @@ const UpdateContactScreen = () => {
             otpRefs.current[index - 1].focus();
         }
     };
+
+    const handleModalClose = () => {
+        setStatusModalVisible(false);
+        if (onModalClose) {
+            onModalClose();
+        }
+    };
+
+    const isDifferent = value.trim() !== originalValue.trim();
+    const isInputValid = type === 'phone' ? (value.length === 10 && !isNaN(value)) : value.includes('@');
+    const canRequestOtp = isDifferent && isInputValid;
 
     return (
         <SafeAreaView style={styles.mainContainer}>
@@ -164,7 +215,11 @@ const UpdateContactScreen = () => {
                                     </View>
                                 </View>
 
-                                <TouchableOpacity onPress={handleRequestOtp} style={styles.actionButton}>
+                                <TouchableOpacity
+                                    onPress={handleRequestOtp}
+                                    style={[styles.actionButton, !canRequestOtp && styles.actionButtonDisabled]}
+                                    disabled={!canRequestOtp}
+                                >
                                     <Text style={styles.actionButtonText}>Get OTP</Text>
                                 </TouchableOpacity>
                             </View>
@@ -211,6 +266,13 @@ const UpdateContactScreen = () => {
                     </View>
                 </ScrollView>
             </KeyboardAvoidingView>
+            <StatusModal
+                visible={statusModalVisible}
+                onClose={handleModalClose}
+                type={statusType}
+                title={statusTitle}
+                message={statusMessage}
+            />
         </SafeAreaView>
     );
 };
@@ -298,6 +360,11 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.3,
         shadowRadius: 5,
         elevation: 6
+    },
+    actionButtonDisabled: {
+        backgroundColor: '#FFCCBC',
+        elevation: 0,
+        shadowOpacity: 0
     },
     actionButtonText: {
         fontFamily: FONTS.poppins.bold,

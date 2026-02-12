@@ -147,6 +147,8 @@ export const removeBCoinApi = async (cartVersion) => {
     const payload = {
         ifMatchCartVersion: cartVersion
     };
+    console.log('wek32krlk4', payload);
+
     return post(`cart/${userId}/removebcoin`, payload);
 };
 
