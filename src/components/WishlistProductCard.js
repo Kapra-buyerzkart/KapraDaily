@@ -1,0 +1,154 @@
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import Entypo from 'react-native-vector-icons/Entypo';
+import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
+import { FONTS } from '../styles/typography';
+import CONFIG from '../globals/config';
+import AppButton from './AppButton';
+
+const WishlistProductCard = ({ item, onRemove, onAddToCart }) => {
+    const [imageError, setImageError] = useState(false);
+
+    const imageSource = imageError || !item.productImage
+        ? require('../assets/images/categories/dfn.png')
+        : { uri: `${CONFIG.image_base_url}${item.productImage}` };
+
+    const discountPercentage = item.unitPrice && item.specialPrice
+        ? Math.round(((item.unitPrice - item.specialPrice) / item.unitPrice) * 100)
+        : 0;
+
+    return (
+        <TouchableOpacity style={styles.productCard}>
+            <View style={styles.productCardViewOne}>
+                <TouchableOpacity onPress={() => onRemove(item.productId, item.productName)}>
+                    <Image style={styles.productHeart} source={require("../assets/images/heart_red.png")} />
+                </TouchableOpacity>
+                <Image
+                    style={styles.productImage}
+                    source={imageSource}
+                    onError={() => setImageError(true)}
+                />
+            </View>
+            <View style={styles.productCardViewTwo}>
+                <Text style={styles.productNameText} numberOfLines={2}>{item.productName}</Text>
+                {discountPercentage > 0 && <Text style={styles.offerText}>{discountPercentage}% OFF</Text>}
+            </View>
+
+            <View style={styles.productCardViewThree}>
+                {item.unitPrice && item.unitPrice !== item.specialPrice && (
+                    <View style={styles.mrpView}>
+                        <Text style={styles.mrpText}>MRP</Text>
+                        <MaterialIcons name={'currency-rupee'} color={'#777777'} size={wp("2.4%")} style={styles.rupeeIconSmall} />
+                        <Text style={[styles.mrpText, {
+                            left: wp("-0.4%"),
+                            textDecorationLine: "line-through",
+                            textDecorationColor: "#777777"
+                        }]}>{item.unitPrice}</Text>
+                    </View>
+                )}
+            </View>
+            <View style={styles.productCardViewFour}>
+                {/* Replaced standard touchable with just an icon button for now, or keep as is if too small for AppButton */}
+                <TouchableOpacity style={styles.plusIconView} onPress={() => onAddToCart(item)}>
+                    <Entypo name={"plus"} color={"#FFFFFF"} size={wp("4.1%")} />
+                </TouchableOpacity>
+                <View style={styles.priceView}>
+                    <MaterialIcons name={'currency-rupee'} color={'#0CA201'} size={wp("3.7%")} style={styles.rupeeIconBig}
+                    />
+                    <Text style={styles.priceText}>{item.specialPrice || item.unitPrice}</Text>
+                </View>
+            </View>
+        </TouchableOpacity>
+    );
+};
+
+export default React.memo(WishlistProductCard);
+
+const styles = StyleSheet.create({
+    productCard: {
+        width: wp("90%"),
+        height: hp("10.5%"),
+        borderWidth: 1,
+        borderColor: "#DADADA",
+        borderRadius: wp("4.65%"),
+        padding: wp("2%"),
+        flexDirection: "row",
+        marginTop: hp("0.8%")
+    },
+    plusIconView: {
+        backgroundColor: "#F04B1B",
+        padding: wp("1.2%"),
+        borderRadius: 100,
+        alignSelf: "flex-end"
+    },
+    priceView: {
+        flexDirection: "row",
+        alignItems: "center",
+        borderColor: "#0CA201",
+        borderWidth: 1,
+        borderRadius: 8,
+        padding: wp("0.7%"),
+        alignSelf: "flex-end"
+    },
+    priceText: {
+        fontFamily: FONTS.poppins.semiBold,
+        fontSize: wp("3.7%"),
+        color: "#0CA201"
+    },
+    productCardViewOne: {
+        flexDirection: "row",
+        // backgroundColor: "green"
+    },
+    productHeart: {
+        width: wp("4.6%"),
+        height: wp("4.3%")
+    },
+    productImage: {
+        width: wp("20%"),
+        height: wp("18.6%"),
+        resizeMode: "contain",
+        // alignSelf: "center"
+        marginTop: hp("0.2%")
+    },
+    productCardViewTwo: {
+        width: wp('33%'),
+        // backgroundColor: "green"
+        justifyContent: "space-between"
+    },
+    productNameText: {
+        fontFamily: FONTS.outfit.light,
+        fontSize: wp("3.3%"),
+        color: "#000000"
+    },
+    offerText: {
+        color: "#F04B1B",
+        fontSize: wp("3%"),
+        fontFamily: FONTS.outfit.semiBold,
+    },
+    productCardViewThree: {
+        justifyContent: "flex-end",
+        // backgroundColor: "blue"
+    },
+    mrpView: {
+        flexDirection: "row",
+        alignItems: "center"
+    },
+    mrpText: {
+        fontFamily: FONTS.poppins.light,
+        fontSize: wp("2.4%"),
+        color: "#777777",
+    },
+    rupeeIconSmall: {
+        bottom: hp("0.05%"),
+        marginLeft: wp("0.2%")
+    },
+    productCardViewFour: {
+        justifyContent: "space-between",
+        // backgroundColor: "yellow",
+        flex: 1
+    },
+    rupeeIconBig: {
+        bottom: hp("0.15%")
+    },
+});

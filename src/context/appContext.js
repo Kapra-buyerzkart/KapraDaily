@@ -69,7 +69,7 @@ export const AppContextProvider = ({ children }) => {
     // setProfile(null);
   };
 
-  const value = {
+  const value = React.useMemo(() => ({
     logout,
     loadProfile,
     loadProfileTwo,
@@ -77,7 +77,7 @@ export const AppContextProvider = ({ children }) => {
     editPincode,
     locationNotFetched,
     setLocationNotFetched,
-  };
+  }));
 
   return (
     <AppContext.Provider value={value}>

@@ -18,7 +18,7 @@ const errorHandler = error => {
   }
 
   const status = error?.response?.status;
-  const message = error?.response?.data?.Message;
+  const message = error?.response?.data?.Message || error?.response?.data?.message;
 
   if (status === 401) {
     throw { Message: message || 'Unauthorized', status };
@@ -146,6 +146,11 @@ export const put = async (url, payload) => {
 export const postRegister = async (url, payload) => {
   const res = await axiosInstance.post(url, payload);
   return res.data.Data;
+};
+
+export const patch = async (url, payload) => {
+  const res = await axiosInstance.patch(url, payload);
+  return res.data;
 };
 
 export const getNew = async (url, config) => {

@@ -1,287 +1,67 @@
-import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, FlatList, ImageBackground, Modal, Platform, TextInput, KeyboardAvoidingView } from 'react-native'
-import React, { useState, useEffect, useMemo } from 'react'
+import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, FlatList, ImageBackground, Modal, Platform, TextInput, KeyboardAvoidingView, Alert } from 'react-native'
+import React from 'react'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import { FONTS } from '../styles/typography'
-import { useNavigation, useFocusEffect } from '@react-navigation/native'
+import { useNavigation } from '@react-navigation/native'
 import CartProductCard from '../components/CartProductCard'
 import OfferCard from '../components/OfferCard'
 import LinearGradient from 'react-native-linear-gradient'
 import Entypo from 'react-native-vector-icons/Entypo';
-import { useCart } from '../context/CartContext';
+import { useCartScreen } from '../hooks/useCartScreen';
+import AppButton from '../components/AppButton';
+import { LoaderContext } from '../context/loaderContext';
+import { useContext, useState } from 'react';
+import ConfirmationModal from '../components/ConfirmationModal';
 
 const CartScreen = () => {
     const navigation = useNavigation()
-    const { cartItems, loadCart, cartTotal, cartCount, cartSummary, getCartSummary, clearCart, applyCoupon, removeCoupon, applyGiftCard, removeGiftCard } = useCart();
+    const {
+        // State
+        cartItems,
+        billCalculations,
+        showAddressModal,
+        setShowAddressModal,
+        showSlotModal,
+        setShowSlotModal,
+        showCouponModal,
+        setShowCouponModal,
+        couponCode,
+        setCouponCode,
+        isGiftCard,
+        availableCoupons,
+        availableGiftCards,
+        selectedDeliveryType,
+        setSelectedDeliveryType,
+        selectedDateIndex,
+        setSelectedDateIndex,
+        selectedSlot,
+        setSelectedSlot,
+        offers,
+        addresses,
+        datesList,
+        slotsByDate,
 
-    const [showAddressModal, setShowAddressModal] = useState(false)
-    const [showSlotModal, setShowSlotModal] = useState(false)
-    const [showCouponModal, setShowCouponModal] = useState(false);
-    const [couponCode, setCouponCode] = useState('');
-    const [isGiftCard, setIsGiftCard] = useState(false);
-    const [availableCoupons, setAvailableCoupons] = useState([
-        { id: '1', code: 'WELCOME50', description: 'Get 50% off on your first order' },
-        { id: '2', code: 'FREEDEL', description: 'Free delivery on orders above ₹199' },
-        { id: '3', code: 'SAVE20', description: 'Flat 20% off on fruits and vegetables' },
-    ]);
-    const [availableGiftCards, setAvailableGiftCards] = useState([
-        { id: '1', code: 'GIFT500', description: 'Gift Card worth ₹500' },
-        { id: '2', code: 'BDAY1000', description: 'Birthday Gift Card worth ₹1000' },
-    ]);
-    const [selectedDeliveryType, setSelectedDeliveryType] = useState('quick');
-    const [selectedDateIndex, setSelectedDateIndex] = useState(0);
-    const [selectedSlot, setSelectedSlot] = useState(null);
-
-    const frontendBillCalculations = useMemo(() => {
-        let mrpTotal = 0;
-        let itemTotal = 0;
-
-        cartItems.forEach(item => {
-            const quantity = item.quantity || 1;
-            const specialPrice = item.specialPrice || item.unitPrice || item.price || 0;
-            const mrpPrice = item.mrp || item.mrpPrice || specialPrice;
-
-            itemTotal += specialPrice * quantity;
-            mrpTotal += mrpPrice * quantity;
-        });
-
-        const savings = mrpTotal - itemTotal;
-        const deliveryCharge = itemTotal >= 500 ? 0 : 40; // Free delivery above ₹500
-        const couponDiscount = 0;
-        const totalSavings = savings + (deliveryCharge === 0 ? 40 : 0);
-        const toPay = itemTotal + deliveryCharge - couponDiscount;
-
-        return {
-            mrpTotal,
-            itemTotal,
-            savings,
-            deliveryCharge,
-            couponDiscount,
-            totalSavings,
-            toPay
-        };
-    }, [cartItems]);
-
-    const billCalculations = useMemo(() => {
-        if (cartSummary) {
-            return {
-                mrpTotal: cartSummary.mrpTotal || frontendBillCalculations.mrpTotal,
-                itemTotal: cartSummary.itemTotal || cartSummary.subTotal || frontendBillCalculations.itemTotal,
-                savings: cartSummary.savings || frontendBillCalculations.savings,
-                deliveryCharge: cartSummary.deliveryCharge || frontendBillCalculations.deliveryCharge,
-                couponDiscount: cartSummary.couponDiscount || 0,
-                totalSavings: cartSummary.totalSavings || frontendBillCalculations.totalSavings,
-                toPay: cartSummary.toPay || cartSummary.grandTotal || frontendBillCalculations.toPay
-            };
-        }
-        return frontendBillCalculations;
-    }, [cartSummary, frontendBillCalculations]);
-
-    useEffect(() => {
-        loadCart();
-    }, []);
-
-    useFocusEffect(
-        React.useCallback(() => {
-            loadCart();
-            getCartSummary(selectedDeliveryType === 'quick' ? 'express' : 'slot', selectedSlot);
-        }, [loadCart, getCartSummary, selectedDeliveryType, selectedSlot])
-    );
-
-    useEffect(() => {
-        if (cartItems.length > 0) {
-            getCartSummary(selectedDeliveryType === 'quick' ? 'express' : 'slot', selectedSlot);
-        }
-    }, [selectedDeliveryType, selectedSlot, cartItems.length]);
-
-    const [offers, setOffers] = useState([
-        {
-            id: '1',
-            name: "Smart point",
-            content: "get flat 50%",
-            applyCliked: false,
-            image: require('../assets/images/smart_point_two.png')
-        },
-        {
-            id: '2',
-            name: "Coupon",
-            content: "get flat 50%",
-            applyCliked: false,
-            image: require('../assets/images/coupon-two.png')
-        },
-        {
-            id: '3',
-            name: "B-Coin",
-            content: "1000.00",
-            applyCliked: false,
-            image: require('../assets/images/bcoin_two.png')
-        },
-        {
-            id: '4',
-            name: "Gift Card",
-            content: "Add Gift Card",
-            applyCliked: false,
-            image: require('../assets/images/gift_two.png')
-        },
-    ])
-
-
-    const [addresses, setAddresses] = useState([
-        {
-            id: '1',
-            type: 'Home',
-            address: 'american city main street road 1234',
-            phone: '9999999999',
-            pin: '676501',
-            icon: require('../assets/images/home_icon.png'),
-            selected: true,
-            threeDotsClicked: false,
-        },
-        {
-            id: '2',
-            type: 'Office',
-            address: 'indian city main street road 1234',
-            phone: '8888888888',
-            pin: '676502',
-            icon: require('../assets/images/office_icon.png'),
-            selected: false,
-            threeDotsClicked: false,
-        },
-        // {
-        //     id: '3',
-        //     type: 'Office',
-        //     address: 'indian city main street road 1234',
-        //     phone: '8888888888',
-        //     pin: '676502',
-        //     icon: require('../assets/images/office_icon.png'),
-        //     selected: false,
-        //     threeDotsClicked: false
-        // },
-        // {
-        //     id: '4',
-        //     type: 'Home',
-        //     address: 'indian city main street road 1234',
-        //     phone: '8888888888',
-        //     pin: '676502',
-        //     icon: require('../assets/images/office_icon.png'),
-        //     selected: false,
-        //     threeDotsClicked: false
-        // },
-    ]);
+        // Actions
+        loadCart,
+        clearCart,
+        onApplyOffer,
+        onRejectOffer,
+        handleApplyCoupon,
+        handleCouponClick,
+        onSelectAddress,
+        onThreeDotsClicked,
+        onDeleteClicked,
+        onCloseThreeDots,
+    } = useCartScreen();
+    const { showLoader } = useContext(LoaderContext);
+    const [isClearCartModalVisible, setIsClearCartModalVisible] = useState(false);
 
     const insets = useSafeAreaInsets();
 
-    const onApplyOffer = (offerId) => {
-        if (offerId === '2') { // Coupon
-            setIsGiftCard(false);
-            setCouponCode('');
-            setShowCouponModal(true);
-            return;
-        }
-
-        if (offerId === '4') { // Gift Card
-            setIsGiftCard(true);
-            setCouponCode('');
-            setShowCouponModal(true);
-            return;
-        }
-
-        setOffers(prev =>
-            prev.map(item =>
-                item.id === offerId
-                    ? { ...item, applyCliked: true }
-                    : item
-            )
-        )
-    }
-
-    const onRejectOffer = (offerId) => {
-        if (offerId === '2') {
-            removeCoupon().then(res => {
-                if (res.success) {
-                    setOffers(prev => prev.map(item => item.id === offerId ? { ...item, applyCliked: false } : item));
-                }
-            });
-            return;
-        }
-
-        if (offerId === '4') { // Gift Card
-            removeGiftCard().then(res => {
-                if (res.success) {
-                    setOffers(prev => prev.map(item => item.id === offerId ? { ...item, applyCliked: false } : item));
-                }
-            });
-            return;
-        }
-
-        setOffers(prev =>
-            prev.map(item =>
-                item.id === offerId
-                    ? { ...item, applyCliked: false }
-                    : item
-            )
-        )
-    }
-
-    const handleApplyCoupon = async (codeOverride) => {
-        const codeToApply = typeof codeOverride === 'string' ? codeOverride : couponCode;
-        if (!codeToApply || !codeToApply.trim()) return;
-
-        let result;
-        if (isGiftCard) {
-            result = await applyGiftCard(codeToApply);
-        } else {
-            result = await applyCoupon(codeToApply);
-        }
-
-        if (result.success) {
-            setShowCouponModal(false);
-            setOffers(prev => prev.map(item => item.id === (isGiftCard ? '4' : '2') ? { ...item, applyCliked: true } : item));
-        } else {
-            // Show error toast or alert using simple alert for now
-            alert(result.message || "Failed to apply");
-        }
-    };
-
-    const handleCouponClick = (code) => {
-        setCouponCode(code);
-        // Direct apply on tap
-        handleApplyCoupon(code);
-    };
-
-
-    const onSelectAddress = (addressId) => {
-        setAddresses(prev =>
-            prev.map(item => ({
-                ...item,
-                selected: item.id === addressId
-            }))
-        );
-    };
-
-    const onThreeDotsClicked = (addressId) => {
-        setAddresses(prev =>
-            prev.map(item => ({
-                ...item,
-                threeDotsClicked: item.id === addressId
-            }))
-        );
-    };
-
-    const onDeleteClicked = (addressId) => {
-        setAddresses(prev =>
-            prev.filter(item => item.id !== addressId)
-        )
-    }
-
-    const onCloseThreeDots = () => {
-        setAddresses(prev =>
-            prev.map(item => ({
-                ...item,
-                threeDotsClicked: false
-            }))
-        );
+    const handleClearCart = () => {
+        setIsClearCartModalVisible(true);
     };
 
     const AddressCard = (item) => {
@@ -397,48 +177,6 @@ const CartScreen = () => {
         )
     }
 
-    const formatDDMMYYYY = (date) => {
-        const dd = String(date.getDate()).padStart(2, '0');
-        const mm = String(date.getMonth() + 1).padStart(2, '0');
-        const yyyy = date.getFullYear();
-        return `${dd}-${mm}-${yyyy}`;
-    };
-
-    const getNextDates = () => {
-        const dates = [];
-        for (let i = 0; i < 3; i++) {
-            const d = new Date();
-            d.setDate(d.getDate() + i);
-
-            dates.push({
-                id: i,
-                label: i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : d.toLocaleDateString('en-US', { weekday: 'long' }),
-                date: d,
-                formatted: formatDDMMYYYY(d)
-            });
-        }
-        return dates;
-    };
-
-    const datesList = getNextDates();
-
-    const slotsByDate = {
-        0: [
-            '6:00pm - 7:00pm',
-            '7:00pm - 8:00pm',
-            '8:00pm - 9:00pm',
-        ],
-        1: [
-            '10:00am - 11:00am',
-            '11:00am - 12:00pm',
-            '6:00pm - 7:00pm',
-        ],
-        2: [
-            '9:00am - 10:00am',
-            '5:00pm - 6:00pm',
-        ],
-    };
-
     return (
         <SafeAreaView
             edges={['top']}
@@ -472,6 +210,11 @@ const CartScreen = () => {
                 <View style={styles.bannerView}>
                     <Image style={styles.bannerStyle} source={require('../assets/images/cart-banner.png')} />
                 </View>
+                <View style={styles.clearCartContainer}>
+                    <TouchableOpacity onPress={handleClearCart} style={styles.clearCartButton}>
+                        <Text style={styles.clearCartText}>Clear Cart</Text>
+                    </TouchableOpacity>
+                </View>
                 <View style={styles.productListingContainer}>
                     <FlatList
                         data={cartItems}
@@ -481,9 +224,11 @@ const CartScreen = () => {
                 </View>
                 <View style={styles.itemsCountContainer}>
                     <Text style={styles.itemsCountText}>{cartItems.length} Items</Text>
-                    <View style={styles.btokenContainer}>
-                        <Image style={styles.btokenImage} source={require('../assets/images/btoken-icon.png')} />
-                        <Text style={styles.btokenText}>4B Token</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <View style={styles.btokenContainer}>
+                            <Image style={styles.btokenImage} source={require('../assets/images/btoken-icon.png')} />
+                            <Text style={styles.btokenText}>{billCalculations.totalBtokens}B Token</Text>
+                        </View>
                     </View>
                 </View>
                 <View style={styles.offersContainer}>
@@ -495,7 +240,6 @@ const CartScreen = () => {
                         data={offers}
                         keyExtractor={(item) => item.id}
                         renderItem={({ item }) => {
-                            console.log('itttt', item)
                             return (
                                 <OfferCard
                                     item={item}
@@ -528,10 +272,31 @@ const CartScreen = () => {
                             <Text style={styles.priceText}>{billCalculations.deliveryCharge === 0 ? 'FREE' : `₹${billCalculations.deliveryCharge.toFixed(2)}`}</Text>
                         </View>
 
+                        {billCalculations.totalTax > 0 && (
+                            <View style={styles.billContentContainer}>
+                                <Text style={styles.billContentText}>Total Tax</Text>
+                                <Text style={styles.priceText}>₹{billCalculations.totalTax.toFixed(2)}</Text>
+                            </View>
+                        )}
+
                         {billCalculations.couponDiscount > 0 && (
                             <View style={styles.billContentContainer}>
                                 <Text style={styles.billContentText}>Coupon Discount</Text>
                                 <Text style={styles.priceText}>- ₹{billCalculations.couponDiscount.toFixed(2)}</Text>
+                            </View>
+                        )}
+
+                        {billCalculations.giftCardAmount > 0 && (
+                            <View style={styles.billContentContainer}>
+                                <Text style={styles.billContentText}>Gift Card</Text>
+                                <Text style={styles.priceText}>- ₹{billCalculations.giftCardAmount.toFixed(2)}</Text>
+                            </View>
+                        )}
+
+                        {billCalculations.bcoinsAppliedValue > 0 && (
+                            <View style={styles.billContentContainer}>
+                                <Text style={styles.billContentText}>B-Coins Applied</Text>
+                                <Text style={styles.priceText}>- ₹{billCalculations.bcoinsAppliedValue.toFixed(2)}</Text>
                             </View>
                         )}
 
@@ -562,13 +327,16 @@ const CartScreen = () => {
                             <Text style={styles.savedPriceText}>You saved ₹{billCalculations.totalSavings.toFixed(2)}</Text>
                         )}
                     </View>
+
                     <LinearGradient style={styles.selectAddressButtonGradient} colors={['#F25000', '#FF7B3A']}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 0 }}>
-                        <TouchableOpacity onPress={() => navigation.navigate("OrderSuccessScreen")} style={styles.selectAddressButtonContainer}>
-                            {/* <Image style={styles.selectAddressButtonLocationIcon} source={require('../assets/images/location_white_icon.png')} /> */}
-                            <Text style={styles.proceedToPayText}>Proceed to Pay</Text>
-                        </TouchableOpacity>
+                        <AppButton
+                            title="Proceed to Pay"
+                            onPress={() => navigation.navigate("OrderSuccessScreen")}
+                            style={{ backgroundColor: 'transparent', width: '100%', alignItems: 'center' }}
+                            textStyle={styles.proceedToPayText}
+                        />
                     </LinearGradient>
                 </View>
                 <Modal
@@ -577,21 +345,6 @@ const CartScreen = () => {
                     transparent
                 >
                     <View style={styles.modalOverlay}>
-                        {/* <TouchableOpacity onPress={() => setShowAddressModal(false)} style={{
-                            backgroundColor: "#FFFFFF",
-                            borderRadius: 50,
-                            alignSelf: 'center',
-                            width: wp('11.63%'),
-                            height: hp('5.36%'),
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            marginBottom: hp('0.8%')
-                        }}>
-                            <Image style={{
-                                height: wp('4.2%'),
-                                width: wp('4.2%')
-                            }} source={require('../assets/images/close_two.png')} />
-                        </TouchableOpacity> */}
                         <View style={styles.modalContainer}>
                             <View style={styles.modalHeaderView}>
                                 <Text style={styles.modalHeaderText}>Select Your Address</Text>
@@ -751,7 +504,7 @@ const CartScreen = () => {
                                     <Text style={styles.sectionTitle}>Available Coupons</Text>
                                     <FlatList
                                         data={availableCoupons}
-                                        keyExtractor={item => item.id}
+                                        keyExtractor={(item, index) => item.id?.toString() || item.code || index.toString()}
                                         renderItem={({ item }) => (
                                             <TouchableOpacity style={styles.couponCard} onPress={() => handleCouponClick(item.code)}>
                                                 <View style={styles.couponCodeContainer}>
@@ -787,6 +540,14 @@ const CartScreen = () => {
                     </KeyboardAvoidingView>
                 </Modal>
             </ScrollView>
+            <ConfirmationModal
+                visible={isClearCartModalVisible}
+                onClose={() => setIsClearCartModalVisible(false)}
+                onConfirm={clearCart}
+                title="Clear Cart"
+                message="Are you sure you want to remove all items from your cart?"
+                confirmText="Clear"
+            />
         </SafeAreaView>
     )
 }
@@ -798,671 +559,615 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#FFFFFF',
     },
-    couponInputContainer: {
+    headerContainer: {
         flexDirection: 'row',
-        marginTop: hp('2%'),
-        marginBottom: hp('2.5%'),
-        marginHorizontal: wp('4.65%'),
-        height: hp('6%'),
-        borderWidth: 1,
-        borderColor: '#E9E9E9',
-        borderRadius: wp('2.3%'),
         alignItems: 'center',
-        paddingLeft: wp('4%'),
-        overflow: 'hidden'
+        paddingHorizontal: wp('4.65%'),
+        paddingVertical: hp('1.5%'),
+        justifyContent: 'space-between',
+        // backgroundColor: 'red'
     },
-    couponInput: {
-        flex: 1,
-        fontFamily: FONTS.poppins.regular,
-        fontSize: wp('3.5%'),
-        color: '#000000',
-        height: '100%'
-    },
-    applyCouponButton: {
-        backgroundColor: '#F25000',
-        height: '100%',
-        paddingHorizontal: wp('6%'),
-        justifyContent: 'center',
-        alignItems: 'center'
-    },
-    applyCouponButtonText: {
-        color: '#FFFFFF',
-        fontFamily: FONTS.poppins.semiBold,
-        fontSize: wp('3.5%')
-    },
-    couponCard: {
-        borderWidth: 1,
-        borderColor: '#E9E9E9',
-        borderRadius: wp('2.3%'),
-        padding: wp('4%'),
-        marginBottom: hp('1.5%'),
-        marginHorizontal: wp('4.65%'),
-        backgroundColor: '#FAFAFA'
-    },
-    couponCodeContainer: {
-        borderStyle: 'dashed',
-        borderWidth: 1,
-        borderColor: '#F25000',
-        borderRadius: wp('1%'),
-        paddingHorizontal: wp('2%'),
-        paddingVertical: hp('0.5%'),
-        alignSelf: 'flex-start',
-        marginBottom: hp('1%'),
-        backgroundColor: '#F2500010'
-    },
-    couponCodeText: {
-        color: '#F25000',
-        fontFamily: FONTS.poppins.semiBold,
-        fontSize: wp('3.5%')
-    },
-    couponDescription: {
-        color: '#4F4F4F',
-        fontFamily: FONTS.poppins.regular,
-        fontSize: wp('3.2%'),
-        marginBottom: hp('0.5%')
-    },
-    applyText: {
-        color: '#F25000',
-        fontFamily: FONTS.poppins.medium,
-        fontSize: wp('3%'),
-        alignSelf: 'flex-end',
-        marginTop: hp('0.5%')
-    },
-    // headerContainer: {
-    //     flexDirection: 'row',
-    //     alignItems: 'center',
-    //     justifyContent: 'space-between',
-    //     // paddingLeft: wp('4.6%'),
-    //     // paddingRight: wp('12%'),
-    // },
     headerText: {
+        fontFamily: FONTS.poppins.semiBold,
         fontSize: wp('4.65%'),
         color: '#000000',
-        fontFamily: FONTS.poppins.semiBold,
-        flex: 1,
         marginLeft: wp('4%')
     },
+    headerInnerView: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#F9F9F9',
+        paddingHorizontal: wp('2%'),
+        paddingVertical: hp('0.5%'),
+        borderRadius: 50
+    },
+    timeImage: {
+        width: wp('3.5%'),
+        height: wp('3.5%'),
+        resizeMode: 'contain'
+    },
     timeText: {
+        fontFamily: FONTS.outfit.medium,
+        fontSize: wp('3%'),
         color: '#000000',
-        fontFamily: FONTS.poppins.semiBold,
-        fontSize: wp('4.65%')
+        marginLeft: wp('1%')
+    },
+    dashedDivider: {
+        borderWidth: 1,
+        borderStyle: 'dashed',
+        borderColor: '#E8E8E8',
+        marginHorizontal: wp('4.65%')
+    },
+    addressView: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: wp('4.65%'),
+        paddingVertical: hp('1.5%'),
+        justifyContent: 'space-between'
+    },
+    addressText: {
+        fontFamily: FONTS.outfit.regular,
+        fontSize: wp('3.5%'),
+        color: '#000000',
+        maxWidth: wp('85%')
     },
     bannerView: {
-        // borderWidth: 1,
-        // borderColor: '#DADADA',
-        // borderTopLeftRadius: wp('9.3%'),
-        // borderTopRightRadius: wp('9.3%'),
-        // borderBottomWidth: 0,
-        alignItems: 'center',
-        // paddingTop: wp('1%'),
-        marginTop: hp('2.5%')
+        paddingHorizontal: wp('4.65%'),
+        // marginTop: hp('1%')
     },
     bannerStyle: {
-        width: wp('95%'),
-        height: hp('9.2%'),
-        resizeMode: "stretch"
+        width: wp('90.7%'),
+        height: hp('18%'),
+        resizeMode: 'contain',
+        alignSelf: 'center'
     },
     productListingContainer: {
-        alignItems: "center"
+        paddingHorizontal: wp('4.65%'),
+        marginTop: hp('2%')
     },
     itemsCountContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        flex: 1,
-        // backgroundColor: 'yellow',
-        marginHorizontal: wp('6%'),
-        marginTop: hp('0.7%')
+        paddingHorizontal: wp('4.65%'),
+        marginTop: hp('1%'),
+        alignItems: 'center'
+    },
+    clearCartContainer: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        paddingHorizontal: wp('4.65%'),
+        marginTop: hp('1%'),
     },
     itemsCountText: {
-        color: '#4F4F4F',
-        fontFamily: FONTS.poppins.medium,
-        fontSize: wp('3.48%')
+        fontFamily: FONTS.poppins.semiBold,
+        fontSize: wp('4%'),
+        color: '#000000'
     },
     btokenContainer: {
         flexDirection: 'row',
-        alignItems: 'center'
+        alignItems: 'center',
+        backgroundColor: '#FFF5F0',
+        paddingHorizontal: wp('2%'),
+        paddingVertical: hp('0.5%'),
+        borderRadius: 50
     },
     btokenImage: {
-        width: wp('4.65%'),
-        height: hp('1.28%')
+        width: wp('4%'),
+        height: wp('4%'),
+        resizeMode: 'contain'
     },
     btokenText: {
-        color: '#5E3568',
-        fontFamily: FONTS.outfit.regular,
-        fontSize: wp('3.48%'),
-        marginLeft: wp('2%')
+        fontFamily: FONTS.outfit.medium,
+        fontSize: wp('3%'),
+        color: '#F25000',
+        marginLeft: wp('1%')
     },
     offersContainer: {
-        marginTop: hp('3%'),
-        alignItems: 'center'
+        marginTop: hp('2%'),
+        paddingHorizontal: wp('4.65%')
     },
     offersHeaderView: {
         flexDirection: 'row',
-        // alignSelf: "center",
-        alignItems: "center",
-        marginBottom: hp('1%')
+        alignItems: 'center',
+        marginBottom: hp('1.5%')
     },
     offersHeaderImage: {
-        height: wp('4.65%'),
-        width: wp('4.65%')
+        width: wp('5%'),
+        height: wp('5%'),
+        resizeMode: 'contain'
     },
     offersHeaderText: {
-        color: '#000000',
-        fontFamily: FONTS.poppins.medium,
-        fontSize: wp('4.18%'),
-        marginLeft: wp('2%'),
-    },
-    offerContainer: {
-        flexDirection: 'row',
-        borderWidth: 1,
-        borderColor: '#E9E9E9',
-        width: wp('90.7%'),
-        height: hp('6%'),
-        backgroundColor: '#F2F2F2',
-        borderRadius: wp('2.32%'),
-        shadowColor: '#0000001A',
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.1,
-        shadowRadius: 9,
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingHorizontal: wp('2.5%'),
-        marginBottom: hp('1%')
-    },
-    offerImage: {
-        height: wp('6.97%'),
-        width: wp('6.97%'),
-    },
-    offerInnerView: {
-        flex: 1,
-        marginLeft: wp('2.5%')
-    },
-    offerText: {
-        color: '#000000',
         fontFamily: FONTS.poppins.semiBold,
-        fontSize: wp('3.25%')
-    },
-    offerTextTwo: {
-        color: '#424242',
-        fontFamily: FONTS.poppins.regular,
-        fontSize: wp('3.25%')
-    },
-    applyButton: {
-        width: wp('25.1%'),
-        height: hp('3.86%'),
-        backgroundColor: '#FFFFFF',
-        borderRadius: wp('2.3%'),
-        justifyContent: "center",
-        alignItems: "center",
-    },
-    applyButtonText: {
+        fontSize: wp('4%'),
         color: '#000000',
-        fontFamily: FONTS.poppins.medium,
-        fontSize: wp('3%')
+        marginLeft: wp('2%')
     },
     billImageBackground: {
-        width: wp('97%'),
-        height: hp('32.6%'),
-        marginTop: hp('0.5%'),
+        width: wp('90.7%'),
+        // height: hp('35%'),
         alignSelf: 'center',
-        marginTop: hp('1%'),
-        alignItems: 'center',
-        paddingVertical: hp('4.5%'),
+        marginTop: hp('2%'),
+        paddingVertical: hp('2%'),
+        paddingHorizontal: wp('4%'),
+        marginBottom: hp('12%')
     },
     billHeaderContainer: {
-        flexDirection: "row",
+        flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: hp('1.8%')
+        marginBottom: hp('1%')
     },
     billIcon: {
-        width: wp('3%'),
-        height: hp('1.7%'),
+        width: wp('5%'),
+        height: wp('5%'),
+        resizeMode: 'contain'
     },
     billHeaderText: {
-        color: '#616161',
-        fontFamily: FONTS.poppins.medium,
-        fontSize: wp('4.18%'),
-        marginLeft: wp('3%')
+        fontFamily: FONTS.poppins.semiBold,
+        fontSize: wp('4%'),
+        color: '#000000',
+        marginLeft: wp('2%')
     },
     billContentContainer: {
         flexDirection: 'row',
-        width: wp('86%'),
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingHorizontal: wp('3%'),
-        marginBottom: hp('0.9%')
+        marginTop: hp('1%')
     },
     billContentText: {
-        color: '#616161',
-        fontFamily: FONTS.poppins.regular,
-        fontSize: wp('3.25%'),
+        fontFamily: FONTS.outfit.regular,
+        fontSize: wp('3.5%'),
+        color: '#777777'
     },
     priceContainer: {
-        flexDirection: "row",
+        flexDirection: 'row',
         alignItems: 'center'
     },
     mrpText: {
-        color: '#616161',
-        fontFamily: FONTS.poppins.regular,
-        fontSize: wp('3.48%'),
+        fontFamily: FONTS.outfit.regular,
+        fontSize: wp('3%'),
+        color: '#777777',
         textDecorationLine: 'line-through',
-        marginRight: wp('3%')
+        marginRight: wp('2%')
     },
     priceText: {
-        color: '#616161',
-        fontFamily: FONTS.poppins.semiBold,
-        fontSize: wp('3.25%'),
+        fontFamily: FONTS.outfit.medium,
+        fontSize: wp('3.5%'),
+        color: '#000000'
     },
     billDivider: {
-        height: '1',
-        width: wp('81%'),
-        backgroundColor: '#707070',
-        alignSelf: "center",
-        marginTop: hp('1%'),
-        marginBottom: hp('1.5%')
+        borderWidth: 1,
+        borderStyle: 'dashed',
+        borderColor: '#E8E8E8',
+        marginTop: hp('2%')
     },
     billSumView: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        paddingHorizontal: wp('3%'),
+        marginTop: hp('2%')
     },
     billSumText: {
-        color: '#616161',
         fontFamily: FONTS.poppins.semiBold,
-        fontSize: wp('5.1%')
+        fontSize: wp('4%'),
+        color: '#000000'
     },
     bottomContainer: {
-        paddingLeft: wp('7%'),
-        paddingRight: wp('6%'),
-        paddingBottom: hp('3%'),
+        position: 'absolute',
+        bottom: 0,
+        backgroundColor: '#FFFFFF',
+        width: wp('100%'),
+        paddingHorizontal: wp('4.65%'),
+        paddingVertical: hp('2%'),
         flexDirection: 'row',
         justifyContent: 'space-between',
-        paddingTop: wp('2.5%'),
-        borderTopLeftRadius: wp('2.32%'),
-        borderTopRightRadius: wp('2.32%'),
-        borderWidth: 1,
-        borderColor: '#c4c4c4',
-        marginTop: hp('2%'),
-        borderBottomWidth: 0
-    },
-    selectAddressButtonGradient: {
-        borderRadius: wp('2%'),
-    },
-    selectAddressButtonContainer: {
-        width: wp('44.18%'),
-        height: hp('5.36%'),
-        justifyContent: 'center',
         alignItems: 'center',
-        // flexDirection: 'row',
-        // paddingHorizontal: wp('5.2%')
-    },
-    selectAddressButtonLocationIcon: {
-        width: wp('3.72%'),
-        height: hp('2.14%'),
-    },
-    proceedToPayText: {
-        color: '#FFFFFF',
-        fontFamily: FONTS.poppins.bold,
-        fontSize: wp('3.72%'),
-        // top: hp('0.2%')
-    },
-    savedPriceText: {
-        color: '#0CA201',
-        fontFamily: FONTS.poppins.semiBold
-    },
-    bottomContainerDownArrowIcon: {
-        width: wp('2%'),
-        height: hp('1.3%'),
-        resizeMode: 'center',
-        marginLeft: wp('2%'),
-        bottom: hp('0.2%')
-    },
-    bottomContainerPriceText: {
-        fontFamily: FONTS.poppins.semiBold,
-        fontSize: wp('4.65%'),
-        marginLeft: wp('1%')
-    },
-    bottomContainerBillIcon: {
-        width: wp('1.86%'),
-        height: hp('1.07%'),
-        bottom: hp('0.1%')
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
     },
     bottomContainerInnerView: {
         flexDirection: 'row',
         alignItems: 'center'
     },
+    bottomContainerBillIcon: {
+        width: wp('5%'),
+        height: wp('5%'),
+        resizeMode: 'contain'
+    },
+    bottomContainerPriceText: {
+        fontFamily: FONTS.poppins.semiBold,
+        fontSize: wp('4.5%'),
+        color: '#000000',
+        marginLeft: wp('2%')
+    },
+    bottomContainerDownArrowIcon: {
+        width: wp('3%'),
+        height: wp('3%'),
+        resizeMode: 'contain',
+        marginLeft: wp('2%'),
+        transform: [{ rotate: '180deg' }]
+    },
+    savedPriceText: {
+        fontFamily: FONTS.outfit.regular,
+        fontSize: wp('3%'),
+        color: '#0CA201',
+        marginLeft: wp('7%'),
+        marginTop: hp('0.5%')
+    },
+    selectAddressButtonGradient: {
+        // width: wp('45%'),
+        flex: 1,
+        marginLeft: wp('5%'),
+        // height: hp('6%'),
+        borderRadius: 12,
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+    selectAddressButtonContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        width: '100%',
+        height: '100%',
+        justifyContent: 'center'
+    },
+    proceedToPayText: {
+        fontFamily: FONTS.poppins.semiBold,
+        fontSize: wp('4%'),
+        color: '#FFFFFF'
+    },
     modalOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.4)',
-        justifyContent: 'flex-end',
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'flex-end'
     },
     modalContainer: {
         backgroundColor: '#FFFFFF',
-        borderTopLeftRadius: wp('9.3%'),
-        borderTopRightRadius: wp('9.3%'),
-        paddingVertical: hp('3.4%'),
-        // paddingHorizontal: wp('4.65%'),
-        maxHeight: hp('70%'),
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        paddingHorizontal: wp('4.65%'),
+        paddingVertical: hp('2%'),
+        maxHeight: hp('80%')
+    },
+    modalHeaderView: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: hp('2%')
+    },
+    modalHeaderText: {
+        fontFamily: FONTS.poppins.semiBold,
+        fontSize: wp('4.5%'),
+        color: '#000000'
+    },
+    closeIcon: {
+        width: wp('6%'),
+        height: wp('6%'),
+        resizeMode: 'contain'
+    },
+    modalInnerView: {
+        marginTop: hp('1%')
     },
     chooseLocationContainer: {
         flexDirection: 'row',
-        paddingHorizontal: wp('4%'),
-        paddingVertical: wp('2.5%'),
-        borderWidth: 1,
-        borderColor: '#DADADA',
-        borderRadius: wp('2.3%'),
-        alignItems: "center",
-        marginBottom: hp('1%')
+        alignItems: 'center',
+        marginBottom: hp('2%')
     },
     locationIcon: {
-        width: wp('4.65%'),
-        height: wp('4.65%'),
+        width: wp('5%'),
+        height: wp('5%'),
+        resizeMode: 'contain'
     },
     locationText: {
-        color: '#3A3A3A',
-        fontFamily: FONTS.poppins.regular,
-        fontSize: wp('4.1%'),
+        fontFamily: FONTS.poppins.medium,
+        fontSize: wp('4%'),
+        color: '#F25000',
         marginLeft: wp('3%')
     },
     savedLocationText: {
+        fontFamily: FONTS.poppins.semiBold,
+        fontSize: wp('4%'),
         color: '#000000',
-        fontFamily: FONTS.poppins.medium,
-        fontSize: wp('4.19%'),
-        textAlign: "center",
-        marginTop: hp('2%'),
-        marginBottom: hp('1.3%')
+        marginVertical: hp('1.5%')
     },
     addressContainer: {
-        borderColor: '#0CA201',
         borderWidth: 1,
-        borderRadius: wp('2.3%'),
-        // paddingHorizontal: wp('4%'),
-        paddingVertical: hp('1.1%'),
-        marginBottom: hp('2.5%'),
-        height: hp('16.1%')
+        borderColor: '#F25000',
+        borderRadius: 12,
+        padding: wp('3%'),
+        marginBottom: hp('1.5%')
     },
     addressContainerTopView: {
-        flexDirection: "row",
+        flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: hp('1.7%'),
-        paddingHorizontal: wp('4%')
+        alignItems: 'center'
     },
     addressContainerInnerView: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    addressTypeText: {
-        color: '#000000',
-        fontFamily: FONTS.poppins.medium,
-        fontSize: wp('3.72%'),
-        marginLeft: wp('1%'),
-    },
-    addressLine: {
-        color: '#3A3A3A',
-        fontFamily: FONTS.poppins.regular,
-        fontSize: wp('3.72%'),
-    },
-    addressContainerBottomView: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginTop: hp('3.4%'),
-        paddingHorizontal: wp('4%')
-    },
-    phoneIcon: {
-        width: wp('3.25%'),
-        height: hp('1.5%'),
-        marginRight: wp('2%')
-    },
-    addressBottomInnerView: {
         flexDirection: 'row',
         alignItems: 'center'
     },
     homeIcon: {
         width: wp('4%'),
         height: wp('4%'),
-        // bottom: wp('0.2%')
-        resizeMode: 'contain',
-        top: Platform.OS === 'android' ? hp('-0.3%') : hp('-0.1%')
+        resizeMode: 'contain'
+    },
+    addressTypeText: {
+        fontFamily: FONTS.poppins.medium,
+        fontSize: wp('3.5%'),
+        color: '#000000',
+        marginLeft: wp('2%')
     },
     selectedView: {
         flexDirection: 'row',
         alignItems: 'center',
-        borderWidth: 1,
-        borderColor: '#A5F99F',
-        borderRadius: wp('4.65%'),
-        padding: wp('0.5%')
+        backgroundColor: '#F25000',
+        paddingHorizontal: wp('2%'),
+        paddingVertical: hp('0.3%'),
+        borderRadius: 4,
+        marginRight: wp('3%')
     },
     tickImage: {
-        width: wp('3.48%'),
-        height: hp('1.28%')
+        width: wp('3%'),
+        height: wp('3%'),
+        resizeMode: 'contain',
+        tintColor: '#FFFFFF'
     },
     selectedText: {
-        fontFamily: FONTS.poppins.medium,
-        color: '#0CA201',
-        fontSize: wp('2.32%'),
-        marginLeft: wp('0.5%')
+        fontFamily: FONTS.outfit.medium,
+        fontSize: wp('3%'),
+        color: '#FFFFFF',
+        marginLeft: wp('1%')
     },
     threeDotsIcon: {
-        width: wp('0.93%'),
-        height: hp('2.14%'),
-        marginLeft: wp('4%')
+        width: wp('1%'),
+        height: wp('4%'),
+        resizeMode: 'contain',
+        tintColor: '#777777'
     },
     unSelectedAddressInnerContainer: {
-        borderTopWidth: 1,
-        borderTopColor: "#DADADA",
-        paddingTop: hp('0.6%')
+        opacity: 0.5
+    },
+    addressLine: {
+        fontFamily: FONTS.outfit.regular,
+        fontSize: wp('3.5%'),
+        color: '#777777',
+        marginTop: hp('0.5%')
+    },
+    addressContainerBottomView: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginTop: hp('1%')
+    },
+    addressBottomInnerView: {
+        flexDirection: 'row',
+        alignItems: 'center'
+    },
+    phoneIcon: {
+        width: wp('3.5%'),
+        height: wp('3.5%'),
+        resizeMode: 'contain',
+        tintColor: '#777777',
+        marginRight: wp('2%')
     },
     threeDotActionContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        borderColor: '#DADADA',
-        borderWidth: 1,
-        borderRadius: wp('2.32%'),
-        width: wp('26.5%'),
-        height: hp('3.64%'),
-        justifyContent: 'space-between',
-        paddingLeft: wp('1.5%'),
-        paddingRight: wp('2.5%')
-    },
-    editIcon: {
-        width: wp('3.72%'),
-        height: wp('3.72%'),
-        resizeMode: 'contain'
-    },
-    headerInnerView: {
-        flexDirection: 'row',
-        alignItems: 'center'
-    },
-    timeImage: {
-        width: wp('1.86%'),
-        height: hp('1.8%'),
-        marginRight: wp('0.7%')
-    },
-    addressView: {
-        flexDirection: "row",
-        alignItems: 'center',
-        // borderBottomLeftRadius: 20,
-        // borderBottomRightRadius: 30,
-        borderColor: '#00000040',
-        // borderWidth: 1
-        backgroundColor: '#FFFFFF',
-        paddingLeft: wp('4.6%'),
-        paddingVertical: hp('1%'),
-        borderBottomRightRadius: wp('6.97%'),
-        borderBottomLeftRadius: wp('4.65%'),
-        borderWidth: 1,
-        borderTopWidth: 0,
-        // borderColor: 'red',
-        elevation: 3,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 2,
-    },
-    addressText: {
-        color: "#000000CC",
-        fontSize: wp('3.2%'),
-        fontFamily: FONTS.poppins.medium,
-        maxWidth: wp('52%'),
-    },
-    headerContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        // paddingLeft: wp('4.6%'),
-        // paddingRight: wp('12%'),
-        paddingLeft: wp('3.5%'),
-        paddingBottom: hp('1.1%'),
-        paddingRight: wp('4.5%')
-    },
-    dashedDivider: {
-        borderWidth: 1,
-        borderColor: '#D7D7D7',
-        borderStyle: "dashed"
-    },
-    modalHeaderView: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingLeft: wp('4.65%'),
-        paddingBottom: hp('0.8%'),
-        paddingRight: wp('7%')
-    },
-    modalHeaderText: {
-        fontFamily: FONTS.poppins.semiBold,
-        fontSize: wp('4.5%'),
-    },
-    closeIcon: {
-        height: wp('4.18%'),
-        width: wp('4.18%')
-    },
-    modalInnerView: {
-        borderColor: '#8F8F8F40',
-        borderTopWidth: 1,
-        paddingHorizontal: wp('4.65%'),
-        paddingTop: hp('1.5%'),
-    },
-    quickDeliveryContainer: {
-        flexDirection: 'row',
-        borderWidth: 1,
-        borderColor: '#DADADA',
-        marginHorizontal: wp('4.65%'),
-        paddingHorizontal: wp('3%'),
-        paddingVertical: hp('0.9%'),
-        borderRadius: wp('2.33%'),
-        alignItems: 'center',
+        width: wp('26%'),
         justifyContent: 'space-between'
     },
+    editIcon: {
+        width: wp('6%'),
+        height: wp('6%'),
+        resizeMode: 'contain'
+    },
+    quickDeliveryContainer: {
+        borderWidth: 1,
+        borderColor: '#DADADA',
+        borderRadius: 12,
+        padding: wp('3%'),
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: hp('2%')
+    },
     radioSelected: {
-        height: wp('4.65%'),
-        width: wp('4.65%'),
-        backgroundColor: '#F25000',
-        borderRadius: 20,
+        width: wp('5%'),
+        height: wp('5%'),
+        borderRadius: wp('2.5%'),
+        borderWidth: 5,
+        borderColor: '#F25000'
     },
     radioUnselected: {
-        height: wp('4.65%'),
-        width: wp('4.65%'),
-        borderColor: '#F25000',
-        borderRadius: 20,
-        borderWidth: 2
+        width: wp('5%'),
+        height: wp('5%'),
+        borderRadius: wp('2.5%'),
+        borderWidth: 1,
+        borderColor: '#DADADA'
     },
     quickDeliveryInnerView: {
         flexDirection: 'row',
         alignItems: 'center',
-        flex: 1,
-        marginLeft: wp('5%')
+        backgroundColor: '#FFF5F0',
+        paddingHorizontal: wp('3%'),
+        paddingVertical: hp('0.5%'),
+        borderRadius: 50,
+        marginLeft: wp('3%'),
+        marginRight: wp('3%')
     },
     lightingImage: {
-        width: wp('1.86%'),
-        height: hp('1.8%'),
+        width: wp('4%'),
+        height: wp('4%'),
+        resizeMode: 'contain'
     },
     timeTextTwo: {
-        fontFamily: FONTS.poppins.semiBold,
-        fontSize: wp('3.72%'),
-        marginLeft: wp('1.5%'),
+        fontFamily: FONTS.outfit.medium,
+        fontSize: wp('3.5%'),
+        color: '#F25000',
+        marginLeft: wp('1%')
     },
     quickDeliveryText: {
-        color: '#0CA201',
         fontFamily: FONTS.poppins.medium,
-        fontSize: wp('3%')
-    },
-    clockImage: {
-        width: wp('3.5%'),
-        height: hp('1.5%'),
-        marginLeft: wp('5%')
-    },
-    sectionTitle: {
-        fontFamily: FONTS.poppins.medium,
-        fontSize: wp('4.18%'),
+        fontSize: wp('4%'),
         color: '#000000'
-    },
-    dateCard: {
-        backgroundColor: '#FFFFFF',
-        width: wp('23.72%'),
-        height: hp('9.76%'),
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderRadius: wp('4.65%'),
-        marginRight: wp('2.32%')
-    },
-    dateSelected: {
-        backgroundColor: '#FFDB99',
     },
     slotDeliveryContainer: {
         borderWidth: 1,
         borderColor: '#DADADA',
-        borderRadius: wp('2.33%'),
-        marginHorizontal: wp('4.65%'),
-        marginTop: hp('1.5%'),
-        paddingHorizontal: wp('3%'),
-        paddingTop: hp('0.9%')
+        borderRadius: 12,
+        padding: wp('3%')
     },
     slotDeliveryInnerView: {
         flexDirection: 'row',
-        alignItems: 'center'
+        alignItems: 'center',
+        marginBottom: hp('1%')
+    },
+    clockImage: {
+        width: wp('5%'),
+        height: wp('5%'),
+        resizeMode: 'contain',
+        marginLeft: wp('3%'),
+        marginRight: wp('3%')
     },
     datesContainer: {
         flexDirection: 'row',
-        marginTop: hp('0.6%')
+        justifyContent: 'space-between',
+        marginTop: hp('1.5%')
+    },
+    dateCard: {
+        borderWidth: 1,
+        borderColor: '#DADADA',
+        borderRadius: 8,
+        paddingVertical: hp('1.5%'),
+        paddingHorizontal: wp('3%'),
+        alignItems: 'center',
+        width: wp('28%')
+    },
+    dateSelected: {
+        borderColor: '#F25000',
+        backgroundColor: '#FFF5F0'
     },
     dateLabelText: {
-        fontFamily: FONTS.poppins.medium,
-        fontSize: wp('3.72%'),
-        color: '#000000'
+        fontFamily: FONTS.outfit.regular,
+        fontSize: wp('3%'),
+        color: '#777777'
     },
     dateText: {
-        fontFamily: FONTS.poppins.regular,
-        fontSize: wp('2.79%'),
-        color: '#000000'
+        fontFamily: FONTS.poppins.medium,
+        fontSize: wp('3.5%'),
+        color: '#000000',
+        marginTop: hp('0.5%')
     },
     slotsContainer: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        justifyContent: 'space-between',
-        marginTop: hp('0.6%')
+        marginTop: hp('1.5%'),
+        gap: wp('3%')
     },
     slotCard: {
-        width: wp('40.9%'),
         borderWidth: 1,
         borderColor: '#DADADA',
-        borderRadius: wp('2.32%'),
-        // paddingVertical: hp('1.8%'),
-        alignItems: 'center',
-        marginBottom: hp('1.7%'),
-        height: hp('4.84%'),
-        justifyContent: 'center'
+        borderRadius: 8,
+        paddingVertical: hp('1%'),
+        paddingHorizontal: wp('4%')
     },
     slotSelected: {
-        backgroundColor: '#F25000',
-        // borderColor: '#F25000',
+        borderColor: '#F25000',
+        backgroundColor: '#FFF5F0'
     },
     slotText: {
-        fontFamily: FONTS.poppins.medium,
+        fontFamily: FONTS.outfit.medium,
         fontSize: wp('3.5%'),
-        color: '#555',
+        color: '#777777'
     },
     slotTextSelected: {
-        color: '#ffffff',
+        color: '#F25000'
     },
-})
+    sectionTitle: {
+        fontFamily: FONTS.poppins.medium,
+        fontSize: wp('3.5%'),
+        color: '#000000'
+    },
+    couponInputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: wp('3%'),
+        marginBottom: hp('2%')
+    },
+    couponInput: {
+        flex: 1,
+        borderWidth: 1,
+        borderColor: '#E8E8E8',
+        borderRadius: 8,
+        paddingHorizontal: wp('4%'),
+        paddingVertical: hp('1.5%'),
+        fontFamily: FONTS.outfit.regular,
+        color: '#000000'
+    },
+    clearCartButton: {
+        backgroundColor: '#FFF5F0',
+        paddingHorizontal: wp('3%'),
+        paddingVertical: hp('0.8%'),
+        borderRadius: wp('1.5%'),
+        borderWidth: 1,
+        borderColor: '#F25000',
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+    clearCartText: {
+        fontFamily: FONTS.outfit.medium,
+        fontSize: wp('3.2%'),
+        color: '#F25000',
+    },
+    applyCouponButton: {
+        backgroundColor: '#F25000',
+        paddingHorizontal: wp('6%'),
+        paddingVertical: hp('1.5%'),
+        borderRadius: 8,
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+    applyCouponButtonText: {
+        fontFamily: FONTS.poppins.semiBold,
+        fontSize: wp('3.5%'),
+        color: '#FFFFFF'
+    },
+    couponCard: {
+        borderWidth: 1,
+        borderColor: '#E8E8E8',
+        borderRadius: 12,
+        padding: wp('4%'),
+        marginBottom: hp('1.5%'),
+        backgroundColor: '#F9F9F9'
+    },
+    couponCodeContainer: {
+        backgroundColor: '#FFF5F0',
+        alignSelf: 'flex-start',
+        borderWidth: 1,
+        borderColor: '#F25000',
+        borderRadius: 4,
+        paddingHorizontal: wp('2%'),
+        paddingVertical: hp('0.5%'),
+        marginBottom: hp('1%'),
+        borderStyle: 'dashed'
+    },
+    couponCodeText: {
+        fontFamily: FONTS.poppins.medium,
+        fontSize: wp('3.5%'),
+        color: '#F25000'
+    },
+    couponDescription: {
+        fontFamily: FONTS.outfit.regular,
+        fontSize: wp('3.5%'),
+        color: '#777777',
+        marginBottom: hp('1%')
+    },
+    applyText: {
+        fontFamily: FONTS.poppins.medium,
+        fontSize: wp('3.5%'),
+        color: '#F25000',
+        alignSelf: 'flex-end'
+    }
+});

@@ -23,8 +23,13 @@ export const getCurrentLocation = () => {
             return;
         }
 
+        const timeoutId = setTimeout(() => {
+            reject('Location request timed out');
+        }, 20000); // 20 second safety timeout
+
         Geolocation.getCurrentPosition(
             async position => {
+                clearTimeout(timeoutId);
                 try {
                     const { latitude, longitude } = position.coords;
                     const geo = await Geocoder.from(latitude, longitude);
@@ -58,6 +63,7 @@ export const getCurrentLocation = () => {
                 }
             },
             error => {
+                clearTimeout(timeoutId);
                 reject(error);
             },
             { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }

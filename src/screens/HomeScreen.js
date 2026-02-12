@@ -1,10 +1,11 @@
 import { View, Text, StyleSheet, ImageBackground, TouchableOpacity, Image, TextInput, FlatList, ScrollView, Dimensions } from 'react-native'
-import React, { startTransition, useContext, useEffect, useRef, useState } from 'react'
+import React, { startTransition, useEffect, useRef, useState, useContext } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Icon from 'react-native-vector-icons/Ionicons';
 import Svg, { Defs, RadialGradient, LinearGradient as SvgLinearGradient, Stop, Path } from 'react-native-svg';
+const SvgAvailable = false; // Forced false for debugging
 import LinearGradient from 'react-native-linear-gradient';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Entypo from 'react-native-vector-icons/Entypo';
@@ -20,11 +21,13 @@ import { getAccessToken, setTokens } from '../api/tokenService';
 import useHomeData from '../hooks/useHomeData';
 import CONFIG from '../globals/config';
 import ShimmerPlaceholder from '../components/ShimmerPlaceholder';
+import { getDashboardDataApi } from '../api/userService';
+import { LoaderContext } from '../context/loaderContext';
 
 import EmptySection from '../components/EmptySection';
 import { AppContext } from '../context/appContext';
 import LoginScreen from './LoginScreen';
-import { LoaderContext } from '../context/loaderContext';
+
 
 const { width } = Dimensions.get("window");
 const BANNER_HEIGHT = (283 / 390) * width;
@@ -85,7 +88,7 @@ const HomeScreen = () => {
     const [isProfileLoaded, setIsProfileLoaded] = useState(false);
 
     const { profile, loadProfile, loadProfileTwo, logout } = useContext(AppContext);
-    const { showLoader } = useContext(LoaderContext);
+
 
     // useEffect(() => {
     //     const fetchProfile = async () => {
@@ -139,6 +142,7 @@ const HomeScreen = () => {
         }
     };
 
+    const [dashboardData, setDashboardData] = useState(null);
     const {
         bestOffers,
         featuredProducts,
@@ -151,29 +155,29 @@ const HomeScreen = () => {
         featuredProductsTitle
     } = useHomeData();
 
-    const navigation = useNavigation()
+    const navigation = useNavigation();
+    const { showLoader } = useContext(LoaderContext);
+
+    useEffect(() => {
+        fetchDashboardData();
+    }, []);
+
+    const fetchDashboardData = async () => {
+        try {
+            // showLoader(true);
+            const response = await getDashboardDataApi();
+            if (response && response.success) {
+                setDashboardData(response.data);
+            }
+        } catch (error) {
+            console.error('Error fetching dashboard data:', error);
+        } finally {
+            // showLoader(false);
+        }
+    };
 
     const GradientUserIcon = ({ size }) => {
-        return (
-            <Svg width={size} height={size} viewBox="0 0 24 24">
-
-                <Defs>
-                    <RadialGradient
-                        id="grad"
-                        cx="50%" cy="50%"
-                        r="60%"
-                    >
-                        <Stop offset="0%" stopColor="#FFF09C" />
-                        <Stop offset="100%" stopColor="#D2B200" />
-                    </RadialGradient>
-                </Defs>
-
-                <Path
-                    fill="url(#grad)"
-                    d="M12 12c2.76 0 5-2.46 5-5.5S14.76 1 12 1 7 3.46 7 6.5 9.24 12 12 12zm0 2c-3.33 0-10 1.67-10 5v4h20v-4c0-3.33-6.67-5-10-5z"
-                />
-            </Svg>
-        );
+        return <View style={{ width: size, height: size, backgroundColor: '#D2B200', borderRadius: size / 2 }} />;
     };
 
 
@@ -277,6 +281,8 @@ const HomeScreen = () => {
     }
 
     const CurvedSection = ({ children }) => {
+        if (!SvgAvailable) return <View style={[styles.curvedSectionView, { backgroundColor: '#FFC7AC' }]}>{children}</View>;
+
         const height = hp("29%");     // total height of section
         const curveDepth = 50; // downward curve depth
 
@@ -330,8 +336,8 @@ const HomeScreen = () => {
         <SafeAreaView
             edges={['top']}
             style={styles.mainContainer}>
-            {/* {console.log('tokennnnn', accessToken)} */}
             <ScrollView
+                style={{ flex: 1 }}
                 contentContainerStyle={{ paddingBottom: hp("0.7%") }}
                 showsVerticalScrollIndicator={false}
             >
@@ -364,7 +370,7 @@ const HomeScreen = () => {
                                 end={{ x: 1, y: 1 }}
                                 style={styles.badge}
                             >
-                                <Text style={styles.bcoinText}>10.0 B</Text>
+                                <Text style={styles.bcoinText}>{dashboardData?.wallet?.bCoins || '0.0'} B</Text>
                             </LinearGradient>
 
                         </TouchableOpacity>
@@ -403,14 +409,11 @@ const HomeScreen = () => {
 
                 <View style={styles.categoryMainView}>
                     <Text style={styles.categoryHeaderText}>Category</Text>
-                    <FlatList
-                        data={categories}
-                        numColumns={4}
-                        keyExtractor={(item, index) => index.toString()}
-                        columnWrapperStyle={styles.row}
-                        renderItem={({ item }) => <CategoryItem item={item} />}
-                        showsVerticalScrollIndicator={false}
-                    />
+                    <View style={styles.categoriesContainer}>
+                        {categories.map((item, index) => (
+                            <CategoryItem key={index.toString()} item={item} />
+                        ))}
+                    </View>
                 </View>
 
                 <View style={styles.productsMainContainer}>
@@ -799,6 +802,11 @@ const styles = StyleSheet.create({
     row: {
         justifyContent: 'space-between',
         marginBottom: hp('2%'),
+    },
+    categoriesContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'space-between',
     },
     item: {
         width: wp('18%'),

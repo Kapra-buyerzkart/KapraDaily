@@ -1,9 +1,10 @@
-import { View, Text, TouchableOpacity, FlatList, Image, TextInput, ScrollView } from 'react-native'
-import React, { useState, useEffect } from 'react'
+import { View, Text, TouchableOpacity, FlatList, Image, TextInput, ScrollView, ActivityIndicator } from 'react-native'
+import React, { useState, useEffect, useContext } from 'react'
 import { StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import Feather from 'react-native-vector-icons/Feather';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import ProductCard from '../components/ProductCard';
 import SelectedProducts from '../components/SelectedProducts';
 import LinearGradient from 'react-native-linear-gradient';
@@ -11,6 +12,10 @@ import { FONTS } from '../styles/typography'
 import { getCategoriesApi } from '../api/categoryService';
 import { searchProductsApi } from '../api/productService';
 import CONFIG from '../globals/config';
+import FilterSortModal from '../components/FilterSortModal';
+import { useCart } from '../context/CartContext';
+import { LoaderContext } from '../context/loaderContext';
+import { useDebounce } from '../hooks/useDebounce';
 
 
 const categories = [
@@ -67,11 +72,26 @@ const dummyProducts = [
 
 export default function CategoriesScreen() {
     const [selectedId, setSelectedId] = useState("1");
-    const [selectedSubCatId, setSelectedSubCatId] = useState("1");
+    const [selectedSubCatId, setSelectedSubCatId] = useState(null);
     const [categoriesList, setCategoriesList] = useState([]);
     const [subCategoriesList, setSubCategoriesList] = useState([]);
     const [productsList, setProductsList] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [searchText, setSearchText] = useState("");
+    const [pincodeAreaId, setPincodeAreaId] = useState(105);
+    const [pageNumber, setPageNumber] = useState(1);
+    const [pageSize, setPageSize] = useState(20);
+    const [isFilterSortModalVisible, setIsFilterSortModalVisible] = useState(false);
+    const [loadingProducts, setLoadingProducts] = useState(false);
+    const { showLoader } = useContext(LoaderContext);
+
+    const [filters, setFilters] = useState({
+        sortBy: 'relevance',
+        priceMin: 0,
+        priceMax: 5000
+    });
+
+    const debouncedSearchText = useDebounce(searchText, 500);
 
     useEffect(() => {
         fetchCategories();
@@ -86,41 +106,48 @@ export default function CategoriesScreen() {
     useEffect(() => {
         const catIdToFetch = selectedSubCatId || selectedId;
         if (catIdToFetch) {
-            console.log('bvsdnmzkue', catIdToFetch, selectedId, selectedSubCatId);
-
+            console.log('Fetching products for:', catIdToFetch, 'with search:', debouncedSearchText);
             fetchProducts(catIdToFetch);
         }
-    }, [selectedSubCatId]);
+    }, [selectedSubCatId, debouncedSearchText, selectedId, filters]);
 
     const fetchProducts = async (catId) => {
         try {
+            setLoadingProducts(true);
+            showLoader(true);
             const payload = {
-                pincodeAreaId: 105,
-                prName: "a",
+                pincodeAreaId: pincodeAreaId,
+                prName: debouncedSearchText,
                 catId: parseInt(catId),
-                priceMin: 0,
-                priceMax: 10000,
+                priceMin: filters.priceMin,
+                priceMax: filters.priceMax,
                 filterValues: null,
-                sortBy: "relevance",
-                pageNumber: 1,
-                pageSize: 20
+                sortBy: filters.sortBy,
+                pageNumber: 1, // Reset to page 1 on new sort/filter
+                pageSize: pageSize
             };
             console.log('Fetching Products Payload:', JSON.stringify(payload, null, 2));
             const response = await searchProductsApi(payload);
             console.log('Products Response:', JSON.stringify(response, null, 2));
             if (response && response.success && response.data && response.data.items) {
                 setProductsList(response.data.items);
+                setPageNumber(1);
             } else {
                 setProductsList([]);
             }
         } catch (error) {
             console.error('Error fetching products:', error);
             setProductsList([]);
+        } finally {
+            setLoadingProducts(false);
+            showLoader(false);
         }
     };
 
     const fetchCategories = async () => {
         try {
+            setLoading(true);
+            showLoader(true);
             const response = await getCategoriesApi(1); // Fetch main categories
             console.log('Categories Response:', JSON.stringify(response, null, 2));
             if (response && response.success && response.data && response.data.items) {
@@ -133,11 +160,13 @@ export default function CategoriesScreen() {
             console.error('Error fetching categories:', error);
         } finally {
             setLoading(false);
+            showLoader(false);
         }
     };
 
     const fetchSubCategories = async (parentId) => {
         try {
+            showLoader(true);
             const response = await getCategoriesApi(parentId);
             console.log('SubCategories Response:', JSON.stringify(response, null, 2));
             if (response && response.success && response.data && response.data.items) {
@@ -153,6 +182,8 @@ export default function CategoriesScreen() {
         } catch (error) {
             console.error('Error fetching subcategories:', error);
             setSubCategoriesList([]);
+        } finally {
+            showLoader(false);
         }
     };
 
@@ -251,13 +282,19 @@ export default function CategoriesScreen() {
                                 style={styles.searchInput}
                                 placeholder="Search product"
                                 placeholderTextColor="#000000"
+                                value={searchText}
+                                onChangeText={setSearchText}
                             />
                             {/* <View style={styles.divider} />
-                        <Ionicons name="clipboard-outline" color={"#8F8F8F"} size={wp("6%")} style={styles.clipboardIcon} /> */}
+                    <Ionicons name="clipboard-outline" color={"#8F8F8F"} size={wp("6%")} style={styles.clipboardIcon} /> */}
                         </View>
-                        <View style={styles.filterView}>
-                            <Image source={require("../assets/images/filter.png")} style={styles.filterIconStyle} />
-                            <Text style={styles.filterText}>Filter</Text>
+                        <View style={{ flexDirection: 'row', gap: wp('2%') }}>
+                            <TouchableOpacity
+                                style={[styles.filterView, { width: wp('10%'), paddingHorizontal: 0 }]}
+                                onPress={() => setIsFilterSortModalVisible(true)}
+                            >
+                                <Ionicons name="options-outline" color={"#2D0F0D"} size={wp("5%")} />
+                            </TouchableOpacity>
                         </View>
                     </View>
                 </View>
@@ -347,29 +384,58 @@ export default function CategoriesScreen() {
                         }}>Orange</Text>
                     </TouchableOpacity> */}
 
-                    <FlatList
-                        data={productsList}
-                        keyExtractor={(item) => (item.productId || item.id).toString()}
-                        renderItem={({ item }) => <ProductCard item={item} />}
-                        numColumns={2}
-                        showsVerticalScrollIndicator={false}
-                        contentContainerStyle={{
-                            paddingLeft: wp("2.3%"),
-                            paddingBottom: hp("8.5%"),
-                            paddingTop: hp("0.5%")
-                        }}
-                        ListEmptyComponent={() => (
-                            <View style={{ flex: 1, alignItems: 'center', marginTop: hp('5%') }}>
-                                <Text style={{ fontFamily: FONTS.lexend.regular, color: '#999' }}>No products found</Text>
-                            </View>
-                        )}
-                    />
+                    {loadingProducts ? (
+                        <View style={{ flex: 1, alignItems: 'center', marginTop: hp('10%') }}>
+                            <ActivityIndicator size="large" color="#F25000" />
+                        </View>
+                    ) : (
+                        <FlatList
+                            data={productsList}
+                            keyExtractor={(item) => (item.productId || item.id).toString()}
+                            renderItem={({ item }) => <ProductCard item={item} />}
+                            numColumns={2}
+                            showsVerticalScrollIndicator={false}
+                            contentContainerStyle={{
+                                paddingLeft: wp("2.3%"),
+                                paddingBottom: hp("8.5%"),
+                                paddingTop: hp("0.5%")
+                            }}
+                            ListEmptyComponent={() => (
+                                <View style={{ flex: 1, alignItems: 'center', marginTop: hp('5%') }}>
+                                    <Text style={{ fontFamily: FONTS.lexend.regular, color: '#999' }}>No products found</Text>
+                                </View>
+                            )}
+                        />
+                    )}
                 </ScrollView>
             </View>
             <View style={styles.floatingContainer}>
                 <SelectedProducts selectedProducts={selectedProducts} />
             </View>
-        </SafeAreaView>
+            <FilterSortModal
+                visible={isFilterSortModalVisible}
+                onClose={() => setIsFilterSortModalVisible(false)}
+                initialSort={filters.sortBy}
+                initialMin={filters.priceMin}
+                initialMax={filters.priceMax}
+                onApply={({ sort, min, max }) => {
+                    setFilters({ sortBy: sort, priceMin: min, priceMax: max });
+                }}
+            />
+
+            {/* <FilterSortModal
+                visible={filterVisible}
+                onClose={() => setFilterVisible(false)}
+                onApply={(filters) => {
+                    setSortBy(filters.sort);
+                    setMinPrice(filters.min);
+                    setMaxPrice(filters.max);
+                }}
+                initialSort={sortBy}
+                initialMin={minPrice}
+                initialMax={maxPrice}
+            /> */}
+        </SafeAreaView >
     );
 }
 

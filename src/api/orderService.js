@@ -19,3 +19,8 @@ export const cancelOrderApi = async (payload) => {
 export const reorderApi = async (payload) => {
     return post(`order/reorder`, payload);
 };
+
+
+export const returnOrderItemApi = async (payload) => {
+    return post(`order/itemreturn`, payload);
+};

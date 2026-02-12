@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, Image, Platform, Alert } from 'react-native'
+import { View, Text, StyleSheet, TouchableOpacity, Image, Platform } from 'react-native'
 import React, { useState, useMemo, useEffect } from 'react'
 import { BlurView } from '@react-native-community/blur'
 import LinearGradient from 'react-native-linear-gradient'
@@ -8,6 +8,7 @@ import { FONTS } from '../styles/typography'
 import { useCart } from '../context/CartContext'
 import CONFIG from '../globals/config'
 import { useWishlist } from '../context/WishlistContext'
+import ConfirmationModal from './ConfirmationModal'
 
 const CartProductCard = (props) => {
     const { updateCartItemQuantity, removeFromCart } = useCart();
@@ -16,6 +17,7 @@ const CartProductCard = (props) => {
     const { item } = props;
     const [imageError, setImageError] = useState(false);
     const [quantity, setQuantity] = useState(item.addedQty || item.quantity || 1);
+    const [isRemovalModalVisible, setIsRemovalModalVisible] = useState(false);
 
     // Update local quantity state when item changes
     React.useEffect(() => {
@@ -51,22 +53,7 @@ const CartProductCard = (props) => {
             setQuantity(quantity - 1);
             updateCartItemQuantity(cartItemId, quantity - 1);
         } else {
-            Alert.alert(
-                "Remove Item",
-                "Are you sure you want to remove this item from the cart?",
-                [
-                    {
-                        text: "Cancel",
-                        onPress: () => console.log("Cancel Pressed"),
-                        style: "cancel"
-                    },
-                    {
-                        text: "Remove",
-                        onPress: () => removeFromCart(cartItemId),
-                        style: 'destructive'
-                    }
-                ]
-            );
+            setIsRemovalModalVisible(true);
         }
     };
 
@@ -76,22 +63,7 @@ const CartProductCard = (props) => {
     };
 
     const handleDelete = () => {
-        Alert.alert(
-            "Remove Item",
-            "Are you sure you want to remove this item from the cart?",
-            [
-                {
-                    text: "Cancel",
-                    onPress: () => console.log("Cancel Pressed"),
-                    style: "cancel"
-                },
-                {
-                    text: "Remove",
-                    onPress: () => removeFromCart(cartItemId),
-                    style: 'destructive'
-                }
-            ]
-        );
+        setIsRemovalModalVisible(true);
     };
 
     return (
@@ -188,6 +160,14 @@ const CartProductCard = (props) => {
             >
                 <Image style={styles.deleteButtonStyle} source={require('../assets/images/delete_icon.png')} />
             </TouchableOpacity>
+
+            <ConfirmationModal
+                visible={isRemovalModalVisible}
+                onClose={() => setIsRemovalModalVisible(false)}
+                onConfirm={() => removeFromCart(cartItemId)}
+                title="Remove Item"
+                message={`Are you sure you want to remove "${productName}" from the cart?`}
+            />
         </View>
     )
 }

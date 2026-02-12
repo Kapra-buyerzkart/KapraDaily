@@ -76,10 +76,14 @@ const ProductCard = (props) => {
                 </TouchableOpacity>
                 <Text style={styles.btokenText}>Upto 1B Token</Text>
                 <TouchableOpacity
-                    style={styles.plusIconView}
-                    onPress={() => addToCart(item)}
+                    style={[styles.plusIconView, (item.stockQty === 0 || item.stockQty === '0') && { backgroundColor: '#CCCCCC' }]}
+                    onPress={() => {
+                        if (item.stockQty === 0 || item.stockQty === '0') return;
+                        addToCart(item);
+                    }}
                     hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
                     activeOpacity={0.7}
+                    disabled={item.stockQty === 0 || item.stockQty === '0'}
                 >
                     <Entypo name={"plus"} color={"#FFFFFF"} size={wp("4.5%")} />
                 </TouchableOpacity>
@@ -88,7 +92,7 @@ const ProductCard = (props) => {
                 {imageLoading && <ShimmerPlaceholder style={[styles.productCardImage, { position: 'absolute' }]} />}
                 <Image
                     source={imageSource}
-                    style={styles.productCardImage}
+                    style={[styles.productCardImage, { opacity: (item.stockQty === 0 || item.stockQty === '0') ? 0.5 : 1 }]}
                     resizeMode="contain"
                     onLoadStart={() => setImageLoading(true)}
                     onLoadEnd={() => setImageLoading(false)}
@@ -97,6 +101,11 @@ const ProductCard = (props) => {
                         setImageLoading(false);
                     }}
                 />
+                {(item.stockQty === 0 || item.stockQty === '0') && (
+                    <View style={styles.outOfStockOverlay}>
+                        <Text style={styles.outOfStockText}>Out of Stock</Text>
+                    </View>
+                )}
             </View>
 
             <View style={styles.productCardViewThree}>
@@ -226,6 +235,28 @@ const styles = StyleSheet.create({
         textAlign: "center",
         marginTop: hp("0.5%")
     },
+    outOfStockOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(255,255,255,0.6)',
+        borderRadius: 20
+    },
+    outOfStockText: {
+        color: '#FF0000',
+        fontFamily: FONTS.poppins.semiBold,
+        fontSize: wp('2.8%'),
+        transform: [{ rotate: '-15deg' }],
+        borderWidth: 1,
+        borderColor: '#FF0000',
+        paddingHorizontal: 4,
+        paddingVertical: 2,
+        borderRadius: 4
+    }
 })
 
 // Wrap in React.memo to prevent unnecessary re-renders

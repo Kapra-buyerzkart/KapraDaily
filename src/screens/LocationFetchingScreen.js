@@ -41,11 +41,23 @@ export default function LocationFetchingScreen() {
 
         if (!granted) {
             setLoading(false)
+            // Fallback to MainTabs if permission is denied
+            setTimeout(() => {
+                navigation.replace('MainTabs')
+            }, 1000)
             return
         }
 
+        // Safety timeout in case Geolocation hangs without calling success/error
+        const safetyTimeout = setTimeout(() => {
+            console.log('Geolocation safety timeout reached in screen');
+            setLoading(false);
+            navigation.replace('MainTabs');
+        }, 10000); // 10s absolute safety
+
         Geolocation.getCurrentPosition(
             async position => {
+                clearTimeout(safetyTimeout);
                 try {
                     const { latitude, longitude } = position.coords
 
@@ -78,12 +90,20 @@ export default function LocationFetchingScreen() {
                     }, 3000)
                 } catch (e) {
                     console.log('Geocoding error:', e)
+                    // Fallback to MainTabs on error
+                    navigation.replace('MainTabs')
                 } finally {
                     setLoading(false)
                 }
             },
-            error => console.log(error),
-            { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+            error => {
+                clearTimeout(safetyTimeout);
+                console.log('Geolocation error:', error)
+                setLoading(false)
+                // Fallback to MainTabs on error
+                navigation.replace('MainTabs')
+            },
+            { enableHighAccuracy: true, timeout: 8000, maximumAge: 10000 }
         )
     }
 

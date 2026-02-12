@@ -1,55 +1,72 @@
-import { View, Text, StyleSheet, Image, TouchableOpacity, TextInput, Platform, FlatList } from 'react-native'
-import React from 'react'
+import { View, Text, StyleSheet, Image, TouchableOpacity, TextInput, Platform, FlatList, ActivityIndicator } from 'react-native'
+import React, { useState, useEffect, useCallback, useContext } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import { FONTS } from '../styles/typography'
 import { useNavigation } from '@react-navigation/native'
+import { getProductSuggestionsApi } from '../api/productService'
+import { getPincodeAreaId } from '../api/pincodeService'
+import CONFIG from '../globals/config'
+import { LoaderContext } from '../context/loaderContext'
+import useProductSearch from '../hooks/useProductSearch'
 
-const DUMMY_RESULTS = Array(4).fill({
-    name: 'BBQ Flavored Potato Chips.',
-    brand: "Lay’s",
-    image: require('../assets/images/lays.png'),
-})
-
-const RECENT_SEARCH = ['Tomato', 'Tomato', 'Tomato', 'Tomato']
-
-const renderItem = ({ item }) => {
-    return (
-        <View style={styles.productContainer}>
-            <Image style={styles.productImage} source={require('../assets/images/lays.png')} />
-            <View style={styles.productInnerView}>
-                <Text style={styles.productName}>{item.name}</Text>
-                <Text style={[styles.productName, {
-                    color: '#616161'
-                }]}>{item.brand}</Text>
-            </View>
-            <TouchableOpacity>
-                <Image style={styles.rightArrowIcon} source={require('../assets/images/right-arrow-two.png')} />
-            </TouchableOpacity>
-        </View>
-    )
-}
-
-const ListFooter = () => {
-    return (
-        <View>
-            <TouchableOpacity style={styles.viewallButton}>
-                <Text style={styles.viewallText}>View All</Text>
-            </TouchableOpacity>
-            <Text style={styles.recentTitle}>Recent search</Text>
-            <View style={styles.recentContainer}>
-                {RECENT_SEARCH.map((item, index) => (
-                    <TouchableOpacity key={index} style={styles.recentProduct}>
-                        <Text style={styles.recentProductText}>Tomato</Text>
-                    </TouchableOpacity>
-                ))}
-            </View>
-        </View>
-    )
-}
+const RECENT_SEARCH = ['Tomato', 'Potato', 'Onion', 'Mango']
 
 const SearchScreen = () => {
     const navigation = useNavigation()
+    const {
+        searchTerm,
+        setSearchTerm,
+        suggestions,
+        loading,
+        resultCount
+    } = useProductSearch(105); // Default pincode for now
+
+    // const { showLoader } = useContext(LoaderContext) // Loader handling moved to hook or local loading state used
+
+
+    const renderItem = ({ item }) => {
+        const imageUri = item.featuredImage
+            ? { uri: `${CONFIG.image_base_url}${item.featuredImage}` }
+            : require('../assets/images/lays.png');
+
+        return (
+            <TouchableOpacity
+                style={styles.productContainer}
+                onPress={() => navigation.navigate('ProductDetailsScreen', { productId: item.productId })}
+            >
+                <Image style={styles.productImage} source={imageUri} />
+                <View style={styles.productInnerView}>
+                    <Text style={styles.productName}>{item.prName || item.name}</Text>
+                    <Text style={[styles.productName, { color: '#616161' }]}>
+                        {item.brandName || item.brand || 'Kapra Daily'}
+                    </Text>
+                </View>
+                <Image style={styles.rightArrowIcon} source={require('../assets/images/right-arrow-two.png')} />
+            </TouchableOpacity>
+        )
+    }
+
+    const ListFooter = () => {
+        if (searchTerm.length > 0) return null;
+        return (
+            <View>
+                <Text style={styles.recentTitle}>Recent search</Text>
+                <View style={styles.recentContainer}>
+                    {RECENT_SEARCH.map((item, index) => (
+                        <TouchableOpacity
+                            key={index}
+                            style={styles.recentProduct}
+                            onPress={() => setSearchTerm(item)}
+                        >
+                            <Text style={styles.recentProductText}>{item}</Text>
+                        </TouchableOpacity>
+                    ))}
+                </View>
+            </View>
+        )
+    }
+
     return (
         <SafeAreaView style={styles.mainContainer}>
             <View style={styles.headerContainer}>
@@ -59,26 +76,37 @@ const SearchScreen = () => {
                 <Text style={styles.searchText}>Search</Text>
             </View>
             <View style={styles.searchContainer}>
-                <Image style={Platform.OS === 'ios' ? (styles.searchIcon) : (
-                    [styles.searchIcon, {
-                        bottom: hp('0.1%')
-                    }]
-                )} tintColor={'#F25000'} source={require('../assets/images/search_icon.png')} />
+                <Image
+                    style={Platform.OS === 'ios' ? (styles.searchIcon) : ([styles.searchIcon, { bottom: hp('0.1%') }])}
+                    tintColor={'#F25000'}
+                    source={require('../assets/images/search_icon.png')}
+                />
                 <TextInput
                     placeholder='What are you looking for ?'
                     style={styles.searchInput}
+                    value={searchTerm}
+                    onChangeText={setSearchTerm}
+                    autoFocus={true}
                 />
-                <View
-                    style={styles.divider}
-                />
+                <View style={styles.divider} />
                 <Image style={styles.clipboardIcon} source={require('../assets/images/clipboard-two.png')} />
             </View>
-            <Text style={styles.resultText}>Results found : 12</Text>
+
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingRight: wp('5%') }}>
+                <Text style={styles.resultText}>Results found : {resultCount}</Text>
+            </View>
+
             <FlatList
-                data={DUMMY_RESULTS}
-                keyExtractor={(item, index) => index.toString()}
+                data={suggestions}
+                keyExtractor={(item, index) => (item.productId || index).toString()}
                 renderItem={renderItem}
                 ListFooterComponent={ListFooter}
+                contentContainerStyle={{ paddingBottom: hp('5%') }}
+                ListEmptyComponent={!loading && searchTerm.length > 0 && (
+                    <Text style={[styles.resultText, { textAlign: 'center', marginTop: hp('5%'), fontSize: wp('3.5%') }]}>
+                        No products found for "{searchTerm}"
+                    </Text>
+                )}
             />
         </SafeAreaView>
     )

@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, TouchableOpacity, Image, Platform, FlatList } from 'react-native'
-import React from 'react'
+import React, { useContext } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import { useNavigation } from '@react-navigation/native'
@@ -7,72 +7,40 @@ import LinearGradient from 'react-native-linear-gradient'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import { FONTS } from '../styles/typography'
 import MyOrdersProductCard from '../components/MyOrdersProductCard'
+import { getMyOrdersApi } from '../api/orderService';
+import { LoaderContext } from '../context/loaderContext'
 
 const MyOrdersScreen = () => {
-    const orders = [
-        {
-            id: '1',
-            addressType: "Home",
-            status: 'Delivered',
-            selectedProducts: [
-                { id: "1", image: require('../assets/images/product1.png') },
-                { id: "2", image: require('../assets/images/product2.png') },
-                { id: "3", image: require('../assets/images/product3.png') },
-                { id: "4", image: require('../assets/images/product1.png') },
-                { id: "5", image: require('../assets/images/product2.png') },
-                { id: "6", image: require('../assets/images/product3.png') },
-            ],
-            price: 324,
-            date: '05/01/2026',
-            time: '6:08pm',
-            orderNumber: 'ORD43446456547'
-        },
-        {
-            id: '2',
-            addressType: "Work",
-            status: 'Delivered',
-            selectedProducts: [
-                { id: "3", image: require('../assets/images/product3.png') },
-                { id: "4", image: require('../assets/images/product1.png') },
-                { id: "5", image: require('../assets/images/product2.png') },
-                { id: "6", image: require('../assets/images/product3.png') },
-            ],
-            price: 324,
-            date: '04/01/2026',
-            time: '6:08pm',
-            orderNumber: 'ORD43446456548'
-        },
-        {
-            id: '3',
-            addressType: "Work",
-            status: 'Delivered',
-            selectedProducts: [
-                { id: "3", image: require('../assets/images/product3.png') },
-                { id: "4", image: require('../assets/images/product1.png') },
-                { id: "5", image: require('../assets/images/product2.png') },
-                { id: "6", image: require('../assets/images/product3.png') },
-            ],
-            price: 324,
-            date: '04/01/2026',
-            time: '6:08pm',
-            orderNumber: 'ORD43446456548'
-        },
-        {
-            id: '4',
-            addressType: "Work",
-            status: 'Delivered',
-            selectedProducts: [
-                { id: "3", image: require('../assets/images/product3.png') },
-                { id: "4", image: require('../assets/images/product1.png') },
-                { id: "5", image: require('../assets/images/product2.png') },
-                { id: "6", image: require('../assets/images/product3.png') },
-            ],
-            price: 324,
-            date: '04/01/2026',
-            time: '6:08pm',
-            orderNumber: 'ORD43446456548'
-        },
-    ]
+    const [orders, setOrders] = React.useState([]);
+    const [loading, setLoading] = React.useState(true);
+    const { showLoader } = useContext(LoaderContext);
+
+    const fetchOrders = async () => {
+        try {
+            showLoader(true);
+            const response = await getMyOrdersApi();
+            console.log('My Orders Response:', JSON.stringify(response, null, 2));
+            // Assuming response structure: { success: true, data: { items: [...] } } or similar
+            // User did not provide response example for list, but usually consistent.
+            if (response && response.success && response.data && response.data.items) {
+                setOrders(response.data.items);
+            } else if (response && response.data && Array.isArray(response.data)) {
+                setOrders(response.data);
+            }
+        } catch (error) {
+            console.error('Error fetching orders:', error);
+        } finally {
+            setLoading(false);
+            showLoader(false);
+        }
+    };
+
+    React.useEffect(() => {
+        const unsubscribe = navigation.addListener('focus', () => {
+            fetchOrders();
+        });
+        return unsubscribe;
+    }, [navigation]);
     const navigation = useNavigation()
     return (
         <SafeAreaView style={styles.mainContainer}>
@@ -105,7 +73,7 @@ const MyOrdersScreen = () => {
                 {/* <MyOrdersProductCard /> */}
                 <FlatList
                     data={orders}
-                    keyExtractor={(item, index) => item.id}
+                    keyExtractor={(item, index) => (item.id || item.orderId || index).toString()}
                     renderItem={(item, index) => <MyOrdersProductCard item={item} />}
                     contentContainerStyle={{
                         marginTop: hp('2%'),
