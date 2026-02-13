@@ -184,7 +184,27 @@ const CartScreen = () => {
                     <LinearGradient style={styles.selectAddressButtonGradient} colors={['#F25000', '#FF7B3A']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
                         <AppButton
                             title="Proceed to Pay"
-                            onPress={() => navigation.navigate("OrderSuccessScreen")}
+                            onPress={() => {
+                                const selectedAddress = addresses.find(a => a.selected);
+                                const selectedDate = datesList[selectedDateIndex]?.formatted;
+
+                                if (!selectedAddress) {
+                                    setShowAddressModal(true);
+                                    return;
+                                }
+
+                                if (selectedDeliveryType === 'slot' && !selectedSlot) {
+                                    setShowSlotModal(true);
+                                    return;
+                                }
+
+                                navigation.navigate("CheckoutScreen", {
+                                    selectedAddress,
+                                    selectedDeliveryType,
+                                    selectedSlot,
+                                    selectedDate,
+                                });
+                            }}
                             style={{ backgroundColor: 'transparent', width: '100%', alignItems: 'center' }}
                             textStyle={styles.proceedToPayText}
                         />

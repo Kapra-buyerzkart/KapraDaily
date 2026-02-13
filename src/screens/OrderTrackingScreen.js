@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Platform, FlatList, ImageBackground } from 'react-native'
+import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Platform, FlatList, ImageBackground, Linking } from 'react-native'
 import LinearGradient from 'react-native-linear-gradient';
 import React, { useState } from 'react'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -11,6 +11,7 @@ import OrderProductCard from '../components/OrderProductCard'
 import ConfirmationModal from '../components/ConfirmationModal'
 import ReturnItemModal from '../components/ReturnItemModal'
 import { useOrderDetails } from '../hooks/useOrderDetails'
+import { useOrderTracking } from '../hooks/useOrderTracking'
 import AppButton from '../components/AppButton'
 import CustomLoader from '../components/CustomLoader'
 
@@ -41,14 +42,30 @@ const OrderTrackingScreen = () => {
         orderDate,
         orderItems,
         itemCount,
+        deliveryAgentName,
+        deliveryAgentPhone,
 
         // Actions
         handleCancelOrder,
-        handleReturnItem
+        handleReturnItem,
+        refreshOrder
     } = useOrderDetails(orderId);
 
     const insets = useSafeAreaInsets();
     const [returnReason, setReturnReason] = useState('');
+
+    // SignalR Real-time Tracking
+    useOrderTracking(
+        orderId,
+        (statusUpdate) => {
+            console.log('🔄 [UI] Refreshing order details due to SignalR update');
+            refreshOrder?.();
+        },
+        (locationUpdate) => {
+            console.log('📍 [UI] Driver location updated:', locationUpdate);
+            // Future step: update map markers if applicable
+        }
+    );
 
     const renderOrderItem = ({ item }) => (
         <OrderProductCard
@@ -386,13 +403,20 @@ const OrderTrackingScreen = () => {
                             <Text style={styles.deliveryAgentNameText}>
                                 {['placed', 'accepted', 'packed'].includes(orderStatus)
                                     ? 'Not assigned'
-                                    : 'Marvin Alex'}
+                                    : (deliveryAgentName || 'Marvin Alex')}
                             </Text>
                             <Text style={styles.deliveryAgentTextTwo}>Delivery Agent</Text>
                         </View>
                         {['placed', 'accepted', 'packed'].includes(orderStatus)
                             ? <View style={styles.callContainer} />
-                            : <TouchableOpacity style={styles.callContainer}>
+                            : <TouchableOpacity
+                                style={styles.callContainer}
+                                onPress={() => {
+                                    if (deliveryAgentPhone) {
+                                        Linking.openURL(`tel:${deliveryAgentPhone}`);
+                                    }
+                                }}
+                            >
                                 <Image style={styles.phoneIcon} source={require('../assets/images/phone_green.png')} />
                             </TouchableOpacity>}
 
@@ -405,25 +429,10 @@ const OrderTrackingScreen = () => {
                                     <Image style={styles.addressIconStyle} source={require('../assets/images/home_primary_two.png')} />
                                     <Text style={styles.addressHeaderText}>Store</Text>
                                 </View>
-                                <Text
-                                    style={styles.addressLineText}
-                                >
-                                    Lorem Ipsum is simply
-                                </Text>
-                                <Text
-                                    style={styles.addressLineText}
-                                >
-                                    dummy text, 464748,
-                                </Text>
-                                <Text
-                                    style={styles.addressLineText}
-                                >
-                                    India
-                                </Text>
-
-                                <Text style={[styles.addressLineText, {
-                                    marginTop: hp('1%')
-                                }]}>986767867834</Text>
+                                <Text style={styles.addressLineText}>{storeName}</Text>
+                                <Text style={styles.addressLineText}>Main Branch</Text>
+                                <Text style={styles.addressLineText}>India</Text>
+                                <Text style={[styles.addressLineText, { marginTop: hp('1%') }]}>7000000000</Text>
                             </View>
                             <Image style={styles.rightArrowIcon} source={require('../assets/images/right_arrow_two.png')} />
                             <View style={[styles.addressInnerView, {
@@ -433,25 +442,12 @@ const OrderTrackingScreen = () => {
                                     <Image style={styles.addressIconStyle} source={require('../assets/images/home_primary_three.png')} />
                                     <Text style={styles.addressHeaderText}>Home</Text>
                                 </View>
-                                <Text
-                                    style={styles.addressLineText}
-                                >
-                                    Lorem Ipsum is simply
+                                <Text style={styles.addressLineText}>{fullAddress}</Text>
+                                <Text style={styles.addressLineText}>{cityStateZip}</Text>
+                                <Text style={styles.addressLineText}>India</Text>
+                                <Text style={[styles.addressLineText, { marginTop: hp('1%') }]}>
+                                    {shippingAddress?.mobileNo || shippingAddress?.phoneNo || ''}
                                 </Text>
-                                <Text
-                                    style={styles.addressLineText}
-                                >
-                                    dummy text, 464748,
-                                </Text>
-                                <Text
-                                    style={styles.addressLineText}
-                                >
-                                    India
-                                </Text>
-
-                                <Text style={[styles.addressLineText, {
-                                    marginTop: hp('1%')
-                                }]}>986767867834</Text>
                             </View>
                         </View>
                     </ImageBackground>
@@ -459,8 +455,8 @@ const OrderTrackingScreen = () => {
 
                     <View style={styles.deliveryAgentContainer}>
                         <Image style={styles.paymentImage} source={require('../assets/images/payment_image.png')} />
-                        <Text style={styles.paymentText}>Cash on delivery</Text>
-                        <Text style={styles.paymnetPrice}>₹324</Text>
+                        <Text style={styles.paymentText}>{paymentMethod}</Text>
+                        <Text style={styles.paymnetPrice}>₹{grandTotal}</Text>
                     </View>
                     {orderStatus === 'delivered' && (
                         <View style={styles.paidSuccessfullyContainer}>
@@ -473,85 +469,52 @@ const OrderTrackingScreen = () => {
                     <View style={styles.productsMainContainer}>
                         <View style={styles.productsHeaderView}>
                             <Text style={styles.productsHeaderText}>Your Orders</Text>
-                            <Text style={styles.productsHeaderCount}>3 items</Text>
+                            <Text style={styles.productsHeaderCount}>{itemCount} items</Text>
                         </View>
 
                         {orderStatus === 'delivered' ? (
-
                             <View style={styles.productsContainerTwo}>
-
-                                <View style={styles.productViewTwo}>
-                                    <Image style={styles.productImageTwo} source={require('../assets/images/wl1.png')} />
-                                    <View>
-                                        <Text style={styles.productNameTwo}>Lorem Ipsum is simply dummy text</Text>
-                                        <Text style={styles.productQuantityTwo}>Quantity: 3</Text>
+                                {orderItems.map((item, index) => (
+                                    <View key={index} style={styles.productViewTwo}>
+                                        <Image
+                                            style={styles.productImageTwo}
+                                            source={item.prImage ? { uri: item.prImage } : require('../assets/images/wl1.png')}
+                                        />
+                                        <View style={{ flex: 1, marginLeft: wp('2%') }}>
+                                            <Text style={styles.productNameTwo}>{item.prName || item.productName}</Text>
+                                            <Text style={styles.productQuantityTwo}>Quantity: {item.quantity}</Text>
+                                        </View>
+                                        <div style={styles.productContainerThirdView}>
+                                            <Text style={styles.productPriceTwo}>₹{item.specialPrice || item.unitPrice || item.price}</Text>
+                                            <TouchableOpacity
+                                                style={styles.returnContainer}
+                                                onPress={() => {
+                                                    setSelectedReturnItem(item);
+                                                    setShowReturnModal(true);
+                                                }}
+                                            >
+                                                <Image style={styles.returnIcon} source={require('../assets/images/return.png')} />
+                                                <Text style={styles.returnText}>Return</Text>
+                                            </TouchableOpacity>
+                                        </div>
                                     </View>
-                                    <View style={styles.productContainerThirdView}>
-                                        <Text style={styles.productPriceTwo}>₹324.00</Text>
-                                        <TouchableOpacity style={styles.returnContainer}>
-                                            <Image style={styles.returnIcon} source={require('../assets/images/return.png')} />
-                                            <Text style={styles.returnText}>Return</Text>
-                                        </TouchableOpacity>
-                                    </View>
-                                </View>
-
-                                <View style={styles.productViewTwo}>
-                                    <Image style={styles.productImageTwo} source={require('../assets/images/wl1.png')} />
-                                    <View>
-                                        <Text style={styles.productNameTwo}>Lorem Ipsum is simply dummy text</Text>
-                                        <Text style={styles.productQuantityTwo}>Quantity: 3</Text>
-                                    </View>
-                                    <View style={styles.productContainerThirdView}>
-                                        <Text style={styles.productPriceTwo}>₹324.00</Text>
-                                        <TouchableOpacity style={styles.returnContainer}>
-                                            <Image style={styles.returnIcon} source={require('../assets/images/return.png')} />
-                                            <Text style={styles.returnText}>Return</Text>
-                                        </TouchableOpacity>
-                                    </View>
-                                </View>
-
-                                <View style={styles.productViewTwo}>
-                                    <Image style={styles.productImageTwo} source={require('../assets/images/wl1.png')} />
-                                    <View>
-                                        <Text style={styles.productNameTwo}>Lorem Ipsum is simply dummy text</Text>
-                                        <Text style={styles.productQuantityTwo}>Quantity: 3</Text>
-                                    </View>
-                                    <View style={styles.productContainerThirdView}>
-                                        <Text style={styles.productPriceTwo}>₹324.00</Text>
-                                        <TouchableOpacity style={styles.returnContainer}>
-                                            <Image style={styles.returnIcon} source={require('../assets/images/return.png')} />
-                                            <Text style={styles.returnText}>Return</Text>
-                                        </TouchableOpacity>
-                                    </View>
-                                </View>
-
+                                ))}
                             </View>
                         ) : (
                             <View style={styles.productsContainer}>
-                                <View style={styles.productView}>
-                                    <Image style={styles.productImage} source={require('../assets/images/wl1.png')} />
-                                    <View>
-                                        <Text style={styles.productName}>Lorem Ipsum is simply dummy text</Text>
-                                        <Text style={styles.productQuantity}>Quantity: 3</Text>
+                                {orderItems.map((item, index) => (
+                                    <View key={index} style={styles.productView}>
+                                        <Image
+                                            style={styles.productImage}
+                                            source={item.prImage ? { uri: item.prImage } : require('../assets/images/wl1.png')}
+                                        />
+                                        <View style={{ flex: 1, marginLeft: wp('2%') }}>
+                                            <Text style={styles.productName}>{item.prName || item.productName}</Text>
+                                            <Text style={styles.productQuantity}>Quantity: {item.quantity}</Text>
+                                        </View>
+                                        <Text style={styles.productPrice}>₹{item.specialPrice || item.unitPrice || item.price}</Text>
                                     </View>
-                                    <Text style={styles.productPrice}>₹324.00</Text>
-                                </View>
-                                <View style={styles.productView}>
-                                    <Image style={styles.productImage} source={require('../assets/images/wl1.png')} />
-                                    <View>
-                                        <Text style={styles.productName}>Lorem Ipsum is simply dummy text</Text>
-                                        <Text style={styles.productQuantity}>Quantity: 3</Text>
-                                    </View>
-                                    <Text style={styles.productPrice}>₹324.00</Text>
-                                </View>
-                                <View style={styles.productView}>
-                                    <Image style={styles.productImage} source={require('../assets/images/wl1.png')} />
-                                    <View>
-                                        <Text style={styles.productName}>Lorem Ipsum is simply dummy text</Text>
-                                        <Text style={styles.productQuantity}>Quantity: 3</Text>
-                                    </View>
-                                    <Text style={styles.productPrice}>₹324.00</Text>
-                                </View>
+                                ))}
                             </View>
                         )}
 
@@ -563,7 +526,7 @@ const OrderTrackingScreen = () => {
                                 <Text style={styles.viewBillText}>View Your Bill</Text>
                                 <Entypo style={styles.viewBillIcon} name={'chevron-thin-down'} size={wp('3%')} />
                             </TouchableOpacity>
-                            <Text style={styles.totalPriceText}>₹324</Text>
+                            <Text style={styles.totalPriceText}>₹{grandTotal}</Text>
                         </View>
                     </View>
                     <TouchableOpacity style={styles.downloadBillContainer}>
@@ -574,19 +537,19 @@ const OrderTrackingScreen = () => {
                     <View style={styles.orderDetailsContainer}>
                         <View>
                             <Text style={styles.orderDetailsKeyText}>Order ID</Text>
-                            <Text style={styles.orderDetailsValueText}>ORD 74848993304</Text>
+                            <Text style={styles.orderDetailsValueText}>{displayOrderId}</Text>
                         </View>
                         <View>
                             <Text style={styles.orderDetailsKeyText}>Payment</Text>
-                            <Text style={styles.orderDetailsValueText}>Cash on delivery</Text>
+                            <Text style={styles.orderDetailsValueText}>{paymentMethod}</Text>
                         </View>
                         <View>
                             <Text style={styles.orderDetailsKeyText}>Deliver to</Text>
-                            <Text style={styles.orderDetailsValueText}>Lorem Ipsum is simply dummy text of the printing</Text>
+                            <Text style={styles.orderDetailsValueText}>{fullAddress}</Text>
                         </View>
                         <View>
                             <Text style={styles.orderDetailsKeyText}>Order placed</Text>
-                            <Text style={styles.orderDetailsValueText}>Placed on Thu, 20 Feb 2022, 11:20 PM</Text>
+                            <Text style={styles.orderDetailsValueText}>Placed on {orderDate}</Text>
                         </View>
                     </View>
                     <View style={styles.dliveryAgentRatingMainContainer}>
@@ -604,7 +567,7 @@ const OrderTrackingScreen = () => {
                             </View>
                         </View>
                         <View style={styles.deliveryAgentInnerContainerTwo}>
-                            <Text style={styles.deliveryAgentRatingName}>Delivery boy : Marvin Alex</Text>
+                            <Text style={styles.deliveryAgentRatingName}>Delivery boy : {deliveryAgentName || 'Marvin Alex'}</Text>
                         </View>
                     </View>
                     <TouchableOpacity>

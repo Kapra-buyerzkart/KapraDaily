@@ -125,7 +125,9 @@ export const useOrderDetails = (orderId) => {
             displayOrderId: header.orderNumber || orderData?.orderNumber || orderData?.orderId || `ORD ${orderId}`,
             orderDate: header.orderDate || orderData?.orderDate || '',
             orderItems: items,
-            itemCount: items.length
+            itemCount: items.length,
+            deliveryAgentName: orderData?.deliveryAgent?.name || orderData?.deliveryAgentName || orderData?.driverName || null,
+            deliveryAgentPhone: orderData?.deliveryAgent?.phone || orderData?.deliveryAgentPhone || orderData?.driverPhone || null,
         };
     }, [orderData, orderStatus, orderId]);
 

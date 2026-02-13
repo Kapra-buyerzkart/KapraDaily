@@ -24,3 +24,22 @@ export const reorderApi = async (payload) => {
 export const returnOrderItemApi = async (payload) => {
     return post(`order/itemreturn`, payload);
 };
+
+
+/**
+ * Creates a new order.
+ * @param {Object} payload Order creation details.
+ * @returns {Promise<Object>} API response.
+ */
+export const createOrderApi = async (payload) => {
+    return post(`order/create`, payload);
+};
+
+/**
+ * Confirms a Cash on Delivery (COD) order.
+ * @param {number|string} orderId The ID of the order to confirm.
+ * @returns {Promise<Object>} API response.
+ */
+export const confirmCodApi = async (orderId) => {
+    return post(`order/${orderId}/confirmcod`);
+};

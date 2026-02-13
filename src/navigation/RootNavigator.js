@@ -23,6 +23,7 @@ import { AppContext } from '../context/appContext';
 import EditProfileScreen from '../screens/EditProfileScreen'
 import ChangePasswordScreen from '../screens/ChangePasswordScreen'
 import UpdateContactScreen from '../screens/UpdateContactScreen'
+import CheckoutScreen from '../screens/CheckoutScreen'
 
 const Stack = createNativeStackNavigator();
 
@@ -64,6 +65,7 @@ export default function RootNavigator() {
             <Stack.Screen name='EditProfileScreen' component={EditProfileScreen} />
             <Stack.Screen name='ChangePasswordScreen' component={ChangePasswordScreen} />
             <Stack.Screen name='UpdateContactScreen' component={UpdateContactScreen} />
+            <Stack.Screen name='CheckoutScreen' component={CheckoutScreen} />
         </Stack.Navigator>
     );
 }
