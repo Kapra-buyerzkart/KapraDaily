@@ -11,6 +11,7 @@ import {
     Platform,
     Alert,
     ActivityIndicator,
+    Keyboard,
 } from 'react-native';
 import React, { useRef, useState, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -20,6 +21,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { verifyLoginOtp, sendLoginOtp, sendForgotPwdOtp, verifyForgotPwdOtp, resendOtp, resendLoginOtp, resendForgotPwdOtp, verifyRegisterOtp, registerUser } from '../api'; // ✅ add sendLoginOtp
 import { setResetToken } from '../api/tokenService';
+import RNOtpVerify from 'react-native-otp-verify';
 
 const ACCESS_TOKEN = 'ACCESS_TOKEN';
 const REFRESH_TOKEN = 'REFRESH_TOKEN';
@@ -57,6 +59,42 @@ const OtpScreen = () => {
     const [timer, setTimer] = useState(60); // 1 minute
     const [isResendDisabled, setIsResendDisabled] = useState(true);
     const [loading, setLoading] = useState(false)
+
+    const otpHandler = (message) => {
+        try {
+            const otpMatch = /(\d{5})/g.exec(message);
+            if (otpMatch && otpMatch[1]) {
+                const autoOtp = otpMatch[1];
+                const otpArray = autoOtp.split('');
+                setOtp(otpArray);
+                Keyboard.dismiss();
+                RNOtpVerify.removeListener();
+            }
+        } catch (error) {
+            console.log('OTP Parse Error:', error);
+        }
+    };
+
+    useEffect(() => {
+        if (Platform.OS !== 'android') return;
+
+        const startOtpListener = async () => {
+            try {
+                await RNOtpVerify.getHash();
+                await RNOtpVerify.getOtp();
+                RNOtpVerify.addListener(otpHandler);
+            } catch (error) {
+                console.log('OTP Auto Fetch Error:', error);
+            }
+        };
+
+        startOtpListener();
+
+        return () => {
+            RNOtpVerify.removeListener();
+        };
+    }, []);
+
 
     // Countdown effect
     useEffect(() => {
@@ -275,6 +313,8 @@ const OtpScreen = () => {
                                         keyboardType="numeric"
                                         maxLength={1}
                                         value={digit}
+                                        textContentType="oneTimeCode"
+                                        autoComplete="sms-otp"
                                         onChangeText={(text) => handleChange(text, index)}
                                         onKeyPress={(e) => handleKeyPress(e, index)}
                                     />
