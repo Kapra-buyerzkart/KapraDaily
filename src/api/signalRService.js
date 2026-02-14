@@ -39,7 +39,12 @@ class SignalRService {
 
             // Listen for Order Updates
             this.connection.on('ReceiveOrderUpdate', (data) => {
-                console.log('📡 [SignalR] Order Update Received:', data);
+                console.log('📡 [SignalR] Order Update Received (ReceiveOrderUpdate):', data);
+                this.callbacks.forEach(callback => callback('orderUpdate', data));
+            });
+
+            this.connection.on('OrderStatusUpdated', (data) => {
+                console.log('📡 [SignalR] Order Status Updated (OrderStatusUpdated):', data);
                 this.callbacks.forEach(callback => callback('orderUpdate', data));
             });
 

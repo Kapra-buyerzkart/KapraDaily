@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { getOrderDetailsApi, cancelOrderApi, returnOrderItemApi } from '../api/orderService';
+import Toast from 'react-native-simple-toast';
 
 export const useOrderDetails = (orderId) => {
     const [orderData, setOrderData] = useState(null);
@@ -23,7 +24,8 @@ export const useOrderDetails = (orderId) => {
         if (s === 'packed') return 'packed';
         if (s === 'shipped' || s === 'dispatched') return 'dispatched';
         // assigned or out_for_delivery
-        if (s === 'assigned' || s === 'out_for_delivery') return 'assigned';
+        if (s === 'assigned' || s === 'out_for_delivery' || s === 'deliveryagentaccepted') return 'assigned';
+        if (s === 'outfordelivery') return 'dispatched';
         if (s === 'delivered' || s === 'completed') return 'delivered';
         if (s === 'cancelled') return 'cancelled';
         if (s === 'returned') return 'returned';
@@ -53,7 +55,7 @@ export const useOrderDetails = (orderId) => {
         try {
             setLoading(true);
             const payload = {
-                orderId: orderData?.header?.orderId || orderData?.id || orderData?.orderId || orderId,
+                orderId: Number(orderData?.header?.orderId || orderData?.id || orderData?.orderId || orderId),
                 reason: "Cancelled by Customer",
                 requestedFromDevice: "app"
             };
@@ -63,14 +65,14 @@ export const useOrderDetails = (orderId) => {
 
             if (response && response.success) {
                 fetchOrderDetails(orderId);
-                alert("Order cancelled successfully");
+                Toast.show("Order cancelled successfully", Toast.LONG);
                 setShowCancelModal(false);
             } else {
-                alert(response?.message || "Failed to cancel order");
+                Toast.show(response?.message || "Failed to cancel order", Toast.SHORT);
             }
         } catch (error) {
             console.error('Error cancelling order:', error);
-            alert("An error occurred while cancelling");
+            Toast.show("An error occurred while cancelling", Toast.SHORT);
         } finally {
             setLoading(false);
         }
@@ -79,10 +81,12 @@ export const useOrderDetails = (orderId) => {
     const handleReturnItem = async (reason) => {
         try {
             setLoading(true);
+            const currentOrderId = Number(orderData?.header?.orderId || orderData?.id || orderId);
             const payload = {
-                orderId: orderData?.header?.orderId || orderData?.id || orderId,
-                orderItemId: selectedReturnItem?.orderItemId || selectedReturnItem?.id,
-                quantity: selectedReturnItem?.quantity || 1,
+                orderId: currentOrderId,
+                // Fallback to orderId if orderItemId/id is missing, as requested by user
+                orderItemId: Number(selectedReturnItem?.orderItemId || selectedReturnItem?.id || currentOrderId),
+                quantity: Number(selectedReturnItem?.quantity || 1),
                 requestReason: reason
             };
             console.log('Returning Item:', payload);
@@ -91,14 +95,14 @@ export const useOrderDetails = (orderId) => {
 
             if (response && response.success) {
                 fetchOrderDetails(orderId);
-                alert("Return request submitted successfully");
+                Toast.show("Return request submitted successfully", Toast.LONG);
                 setShowReturnModal(false);
             } else {
-                alert(response?.message || "Failed to submit return request");
+                Toast.show(response?.message || "Failed to submit return request", Toast.SHORT);
             }
         } catch (error) {
             console.error('Error returning item:', error);
-            alert("An error occurred while returning item");
+            Toast.show("An error occurred while returning item", Toast.SHORT);
         } finally {
             setLoading(false);
             setSelectedReturnItem(null);

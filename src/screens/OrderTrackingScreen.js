@@ -484,7 +484,7 @@ const OrderTrackingScreen = () => {
                                             <Text style={styles.productNameTwo}>{item.prName || item.productName}</Text>
                                             <Text style={styles.productQuantityTwo}>Quantity: {item.quantity}</Text>
                                         </View>
-                                        <div style={styles.productContainerThirdView}>
+                                        <View style={styles.productContainerThirdView}>
                                             <Text style={styles.productPriceTwo}>₹{item.specialPrice || item.unitPrice || item.price}</Text>
                                             <TouchableOpacity
                                                 style={styles.returnContainer}
@@ -496,7 +496,7 @@ const OrderTrackingScreen = () => {
                                                 <Image style={styles.returnIcon} source={require('../assets/images/return.png')} />
                                                 <Text style={styles.returnText}>Return</Text>
                                             </TouchableOpacity>
-                                        </div>
+                                        </View>
                                     </View>
                                 ))}
                             </View>
@@ -570,17 +570,39 @@ const OrderTrackingScreen = () => {
                             <Text style={styles.deliveryAgentRatingName}>Delivery boy : {deliveryAgentName || 'Marvin Alex'}</Text>
                         </View>
                     </View>
-                    <TouchableOpacity>
-                        <LinearGradient colors={['#F25000', '#FF7B3A']}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 0 }}
-                            style={styles.cancelButtonGradient}
-                        >
-                            <Text style={styles.cancelButtonText}>Cancel</Text>
-                        </LinearGradient>
-                    </TouchableOpacity>
+                    {['placed', 'accepted', 'packed'].includes(orderStatus) && (
+                        <TouchableOpacity onPress={() => setShowCancelModal(true)}>
+                            <LinearGradient colors={['#F25000', '#FF7B3A']}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 0 }}
+                                style={styles.cancelButtonGradient}
+                            >
+                                <Text style={styles.cancelButtonText}>Cancel</Text>
+                            </LinearGradient>
+                        </TouchableOpacity>
+                    )}
                 </View>
             </ScrollView>
+
+            <ConfirmationModal
+                visible={showCancelModal}
+                title="Cancel Order"
+                message="Are you sure you want to cancel this order?"
+                confirmText="Yes, Cancel"
+                cancelText="No, Keep It"
+                onClose={() => setShowCancelModal(false)}
+                onConfirm={handleCancelOrder}
+            />
+
+            <ReturnItemModal
+                visible={showReturnModal}
+                item={selectedReturnItem}
+                onClose={() => {
+                    setShowReturnModal(false);
+                    setSelectedReturnItem(null);
+                }}
+                onSubmit={handleReturnItem}
+            />
         </SafeAreaView>
     )
 }

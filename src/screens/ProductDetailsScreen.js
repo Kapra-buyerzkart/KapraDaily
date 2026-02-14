@@ -14,6 +14,7 @@ import { useWishlist } from '../context/WishlistContext'
 import { useCart } from '../context/CartContext'
 import { useProductDetails } from '../hooks/useProductDetails'
 import { LoaderContext } from '../context/loaderContext'
+import Entypo from 'react-native-vector-icons/Entypo'
 
 const images = [
     require('../assets/images/lays.png'),
@@ -40,7 +41,7 @@ const ProductDetailsScreen = () => {
     const route = useRoute()
     const { product: initialProduct, productId } = route.params || {}
     const { isInWishlist, toggleWishlist } = useWishlist()
-    const { addToCart, cartItems, updateCartItemQuantity } = useCart()
+    const { addToCart, cartItems, updateCartItemQuantity, removeFromCart } = useCart()
 
     const {
         loading,
@@ -195,22 +196,29 @@ const ProductDetailsScreen = () => {
                             {(() => {
                                 const cartItem = cartItems.find(i => String(i.productId || i.id) === String(finalProductId));
                                 const quantity = cartItem ? cartItem.quantity : 0;
+                                const cartItemId = cartItem?.cartItemId || finalProductId;
 
                                 if (quantity > 0) {
                                     return (
-                                        <View style={styles.quantitySelector}>
+                                        <View style={[styles.quantitySelector, { marginTop: 0 }]}>
                                             <TouchableOpacity
                                                 style={styles.qtyButton}
-                                                onPress={() => updateCartItemQuantity(finalProductId, quantity - 1)}
+                                                onPress={() => {
+                                                    if (quantity === 1) {
+                                                        removeFromCart(cartItemId);
+                                                    } else {
+                                                        updateCartItemQuantity(cartItemId, quantity - 1);
+                                                    }
+                                                }}
                                             >
-                                                <AntDesign name="minus" size={wp('4%')} color="#FFF" />
+                                                <Entypo name="minus" size={wp('4%')} color="#FFF" />
                                             </TouchableOpacity>
                                             <Text style={styles.qtyText}>{quantity}</Text>
                                             <TouchableOpacity
                                                 style={styles.qtyButton}
-                                                onPress={() => updateCartItemQuantity(finalProductId, quantity + 1)}
+                                                onPress={() => updateCartItemQuantity(cartItemId, quantity + 1)}
                                             >
-                                                <AntDesign name="plus" size={wp('4%')} color="#FFF" />
+                                                <Entypo name="plus" size={wp('4%')} color="#FFF" />
                                             </TouchableOpacity>
                                         </View>
                                     );

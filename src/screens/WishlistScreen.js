@@ -84,10 +84,10 @@ export default function WishlistScreen() {
                     ListEmptyComponent={!isLoading && <WishListEmptyComponent />}
                     contentContainerStyle={{ width: wp('100%'), paddingBottom: hp('2%') }}
                 />
-                <TouchableOpacity style={styles.newWishesContainer}>
+                {/* <TouchableOpacity style={styles.newWishesContainer}>
                     <Image source={require("../assets/images/heart_two.png")} style={styles.newWishesHeart} />
                     <Text style={styles.newWishesText}>New wishes</Text>
-                </TouchableOpacity>
+                </TouchableOpacity> */}
             </View>
 
             <ConfirmationModal

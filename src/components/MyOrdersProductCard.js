@@ -127,7 +127,7 @@ const MyOrdersProductCard = (props) => {
                         const idToUse = itemData.orderId || itemData.id || itemData.orderNumber;
                         if (idToUse) {
                             await reorderApi({ orderId: idToUse });
-                            navigation.navigate('Cart');
+                            navigation.navigate('CartScreen');
                         }
                     } catch (e) {
                         console.error(e);

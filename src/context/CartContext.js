@@ -46,7 +46,12 @@ export const CartProvider = ({ children }) => {
                     }
                     if (response.data.items) {
                         const items = Array.isArray(response.data.items) ? response.data.items : [];
-                        setCartItems(items);
+                        // Normalize addedQty → quantity so all components can use item.quantity
+                        const normalizedItems = items.map(item => ({
+                            ...item,
+                            quantity: item.quantity || item.addedQty || 1,
+                        }));
+                        setCartItems(normalizedItems);
                     } else {
                         setCartItems([]);
                     }
@@ -115,16 +120,16 @@ export const CartProvider = ({ children }) => {
         });
 
         setCartItems(prevItems => {
-            const itemId = productId;
+            const itemId = String(productId);
             const existingItem = prevItems.find(i => {
-                const cartItemId = i.productId || i.id;
-                return cartItemId === itemId;
+                const cartProdId = String(i.productId || i.id);
+                return cartProdId === itemId;
             });
 
             if (existingItem) {
                 return prevItems.map(i => {
-                    const cartItemId = i.productId || i.id;
-                    return cartItemId === itemId ? { ...i, quantity: (i.quantity || 1) + 1 } : i;
+                    const cartProdId = String(i.productId || i.id);
+                    return cartProdId === itemId ? { ...i, quantity: (i.quantity || 1) + 1 } : i;
                 });
             }
             return [...prevItems, { ...item, productId, quantity: 1 }];
@@ -132,13 +137,13 @@ export const CartProvider = ({ children }) => {
 
         const rollback = () => {
             setCartItems(prevItems => {
-                const existingItem = prevItems.find(i => (i.productId || i.id) === productId);
+                const existingItem = prevItems.find(i => String(i.productId || i.id) === String(productId));
                 if (existingItem && existingItem.quantity > 1) {
                     return prevItems.map(i =>
-                        (i.productId || i.id) === productId ? { ...i, quantity: i.quantity - 1 } : i
+                        String(i.productId || i.id) === String(productId) ? { ...i, quantity: i.quantity - 1 } : i
                     );
                 }
-                return prevItems.filter(i => (i.productId || i.id) !== productId);
+                return prevItems.filter(i => String(i.productId || i.id) !== String(productId));
             });
         };
 
@@ -147,8 +152,8 @@ export const CartProvider = ({ children }) => {
             console.log('➕ [ADD TO CART] API Response:', JSON.stringify(response, null, 2));
 
             if (response && response.success === false) {
-                if (response.status === 'INSUFFICIENT_STOCK') {
-                    Toast.show(response.message || 'Insufficient stock', Toast.LONG);
+                if (response.status === 'INSUFFICIENT_STOCK' || response.message?.includes('stock')) {
+                    Toast.show('Requested qty is not available', Toast.LONG);
                 } else {
                     Toast.show(response.message || 'Failed to add to cart', Toast.SHORT);
                 }
@@ -157,7 +162,7 @@ export const CartProvider = ({ children }) => {
                 return;
             }
 
-            Toast.show('Item added to cart', Toast.SHORT);
+            // Toast.show('Item added to cart', Toast.SHORT);
             await refreshCart();
         } catch (error) {
             console.error('➕ [ADD TO CART] API Error:', error);
@@ -170,9 +175,10 @@ export const CartProvider = ({ children }) => {
     const removeFromCart = useCallback(async (identifier) => {
         let removedItem = null;
         let cartItemId = identifier;
+        const identifierStr = String(identifier);
         const itemToRemove = cartItems.find(item =>
-            (item.cartItemId === identifier) ||
-            (item.productId || item.id) === identifier
+            String(item.cartItemId) === identifierStr ||
+            String(item.productId || item.id) === identifierStr
         );
 
         if (itemToRemove) {
@@ -212,8 +218,9 @@ export const CartProvider = ({ children }) => {
         let oldQuantity = 1;
 
         setCartItems(prevItems => {
+            const cartItemIdStr = String(cartItemId);
             const updated = prevItems.map(item => {
-                if ((item.cartItemId || item.productId || item.id) === cartItemId) {
+                if (String(item.cartItemId || item.productId || item.id) === cartItemIdStr) {
                     oldQuantity = item.quantity || 1;
                     console.log('🔄 [UPDATE QTY] Found item, updating from', oldQuantity, 'to', quantity);
                     return { ...item, quantity };
@@ -230,9 +237,16 @@ export const CartProvider = ({ children }) => {
             await refreshCart();
         } catch (error) {
             console.error('🔄 [UPDATE QTY] API Error:', error);
+
+            // Handle insufficient stock message from networkUtils throw or direct error object
+            const errorMsg = typeof error === 'string' ? error : (error?.Message || error?.message || '');
+            if (errorMsg.toLowerCase().includes('stock') || errorMsg.toLowerCase().includes('available')) {
+                Toast.show('Requested qty is not available', Toast.LONG);
+            }
+
             setCartItems(prevItems =>
                 prevItems.map(item =>
-                    (item.cartItemId || item.productId || item.id) === cartItemId ? { ...item, quantity: oldQuantity } : item
+                    String(item.cartItemId || item.productId || item.id) === String(cartItemId) ? { ...item, quantity: oldQuantity } : item
                 )
             );
             await refreshCart();

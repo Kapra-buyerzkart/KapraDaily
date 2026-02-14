@@ -1,5 +1,6 @@
 import { View, Text, TouchableOpacity, FlatList, Image, TextInput, ScrollView, ActivityIndicator } from 'react-native'
 import React, { useState, useEffect, useContext } from 'react'
+import { useRoute } from '@react-navigation/native';
 import { StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
@@ -71,7 +72,9 @@ const dummyProducts = [
 
 
 export default function CategoriesScreen() {
-    const [selectedId, setSelectedId] = useState("1");
+    const route = useRoute();
+    const { catId } = route.params || {};
+    const [selectedId, setSelectedId] = useState(catId?.toString() || "1");
     const [selectedSubCatId, setSelectedSubCatId] = useState(null);
     const [categoriesList, setCategoriesList] = useState([]);
     const [subCategoriesList, setSubCategoriesList] = useState([]);
@@ -96,6 +99,12 @@ export default function CategoriesScreen() {
     useEffect(() => {
         fetchCategories();
     }, []);
+
+    useEffect(() => {
+        if (catId) {
+            setSelectedId(catId.toString());
+        }
+    }, [catId]);
 
     useEffect(() => {
         if (selectedId) {
@@ -235,8 +244,8 @@ export default function CategoriesScreen() {
                 )}
                 <Text style={isSelected ? styles.title : [styles.title, {
                     color: "#666666", marginTop: 0
-                }]}>
-                    {item.name}
+                }]} numberOfLines={2}>
+                    {item.catName || item.name}
                 </Text>
 
             </TouchableOpacity>
@@ -262,6 +271,7 @@ export default function CategoriesScreen() {
                         </View>
                         <Text style={styles.unselectedSubCatText}>{item.catName}</Text>
                     </TouchableOpacity>)}
+                <View style={{ width: wp('1%') }} />
             </>
         );
     };
@@ -275,9 +285,11 @@ export default function CategoriesScreen() {
                 horizontal={true}
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={{
-                    paddingLeft: wp("2.3%"),
+                    paddingLeft: wp("3%"),
+                    paddingRight: wp("3%"),
                     marginTop: hp("0.8%"),
-                    paddingBottom: hp("1%")
+                    paddingBottom: hp("1.5%"),
+                    gap: wp('2.5%'),
                 }}
             />
             {loadingProducts && (

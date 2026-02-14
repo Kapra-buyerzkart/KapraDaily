@@ -3,47 +3,98 @@ import React, { useState, useEffect, useCallback, useContext } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import { FONTS } from '../styles/typography'
-import { useNavigation } from '@react-navigation/native'
+import { useNavigation, useRoute } from '@react-navigation/native'
 import { getProductSuggestionsApi } from '../api/productService'
 import { getPincodeAreaId } from '../api/pincodeService'
 import CONFIG from '../globals/config'
 import { LoaderContext } from '../context/loaderContext'
 import useProductSearch from '../hooks/useProductSearch'
+import { useCart } from '../context/CartContext'
+import Entypo from 'react-native-vector-icons/Entypo'
 
 const RECENT_SEARCH = ['Tomato', 'Potato', 'Onion', 'Mango']
 
 const SearchScreen = () => {
     const navigation = useNavigation()
+    const route = useRoute()
+    const { catId, catName } = route.params || {}
+    const { addToCart, cartItems, updateCartItemQuantity, removeFromCart } = useCart();
+
     const {
         searchTerm,
         setSearchTerm,
         suggestions,
         loading,
-        resultCount
-    } = useProductSearch(105); // Default pincode for now
+        resultCount,
+        setCatId
+    } = useProductSearch(105, catId);
+
+    useEffect(() => {
+        if (catId) {
+            setCatId(catId);
+        }
+    }, [catId]);
 
     // const { showLoader } = useContext(LoaderContext) // Loader handling moved to hook or local loading state used
 
-
     const renderItem = ({ item }) => {
+        const itemId = item.productId || item.id;
+        const cartItem = cartItems.find(i => String(i.productId || i.id) === String(itemId));
+        const quantity = cartItem?.quantity || cartItem?.addedQty || 0;
+        const cartItemId = cartItem?.cartItemId || itemId;
+
         const imageUri = item.featuredImage
             ? { uri: `${CONFIG.image_base_url}${item.featuredImage}` }
             : require('../assets/images/lays.png');
 
         return (
-            <TouchableOpacity
-                style={styles.productContainer}
-                onPress={() => navigation.navigate('ProductDetailsScreen', { productId: item.productId })}
-            >
-                <Image style={styles.productImage} source={imageUri} />
-                <View style={styles.productInnerView}>
-                    <Text style={styles.productName}>{item.prName || item.name}</Text>
-                    <Text style={[styles.productName, { color: '#616161' }]}>
-                        {item.brandName || item.brand || 'Kapra Daily'}
-                    </Text>
+            <View style={styles.productContainer}>
+                <TouchableOpacity
+                    style={styles.productTouchable}
+                    onPress={() => navigation.navigate('ProductDetailsScreen', { productId: itemId })}
+                >
+                    <Image style={styles.productImage} source={imageUri} />
+                    <View style={styles.productInnerView}>
+                        <Text style={styles.productName}>{item.prName || item.name}</Text>
+                        <Text style={[styles.productName, { color: '#616161', fontSize: wp('2.8%') }]}>
+                            {item.brandName || item.brand || 'Kapra Daily'}
+                        </Text>
+                    </View>
+                </TouchableOpacity>
+
+                <View style={styles.actionContainer}>
+                    {quantity > 0 ? (
+                        <View style={styles.counterContainer}>
+                            <TouchableOpacity
+                                onPress={() => {
+                                    if (quantity === 1) {
+                                        removeFromCart(cartItemId);
+                                    } else {
+                                        updateCartItemQuantity(cartItemId, quantity - 1);
+                                    }
+                                }}
+                                style={styles.counterButton}
+                            >
+                                <Entypo name="minus" size={wp('4%')} color="#FFFFFF" />
+                            </TouchableOpacity>
+                            <Text style={styles.quantityText}>{quantity}</Text>
+                            <TouchableOpacity
+                                onPress={() => updateCartItemQuantity(cartItemId, quantity + 1)}
+                                style={styles.counterButton}
+                            >
+                                <Entypo name="plus" size={wp('4%')} color="#FFFFFF" />
+                            </TouchableOpacity>
+                        </View>
+                    ) : (
+                        <TouchableOpacity
+                            style={styles.addButtonCircle}
+                            onPress={() => addToCart(item)}
+                        >
+                            <Entypo name="plus" size={wp('4.5%')} color="#FFFFFF" />
+                        </TouchableOpacity>
+                    )}
                 </View>
-                <Image style={styles.rightArrowIcon} source={require('../assets/images/right-arrow-two.png')} />
-            </TouchableOpacity>
+            </View>
         )
     }
 
@@ -73,7 +124,7 @@ const SearchScreen = () => {
                 <TouchableOpacity onPress={() => navigation.goBack()}>
                     <Image style={styles.leftArrowIcon} source={require('../assets/images/left_arrow.png')} />
                 </TouchableOpacity>
-                <Text style={styles.searchText}>Search</Text>
+                <Text style={styles.searchText}>{catName ? catName : 'Search'}</Text>
             </View>
             <View style={styles.searchContainer}>
                 <Image
@@ -98,7 +149,7 @@ const SearchScreen = () => {
 
             <FlatList
                 data={suggestions}
-                keyExtractor={(item, index) => (item.productId || index).toString()}
+                keyExtractor={(item, index) => (item.productId || item.id || index).toString()}
                 renderItem={renderItem}
                 ListFooterComponent={ListFooter}
                 contentContainerStyle={{ paddingBottom: hp('5%') }}
@@ -181,7 +232,44 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         marginHorizontal: wp('5%'),
         borderBottomWidth: 1,
-        borderBottomColor: '#DADADA'
+        borderBottomColor: '#DADADA',
+        paddingVertical: hp('0.5%')
+    },
+    productTouchable: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flex: 1,
+    },
+    actionContainer: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginLeft: wp('2%'),
+        minWidth: wp('20%')
+    },
+    counterContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#F04B1B',
+        borderRadius: 15,
+        paddingHorizontal: wp('2%'),
+        paddingVertical: hp('0.5%'),
+    },
+    counterButton: {
+        padding: wp('1%'),
+    },
+    quantityText: {
+        color: '#FFFFFF',
+        fontFamily: FONTS.poppins.semiBold,
+        fontSize: wp('3.8%'),
+        marginHorizontal: wp('2.5%'),
+    },
+    addButtonCircle: {
+        backgroundColor: '#F04B1B',
+        width: wp('7%'),
+        height: wp('7%'),
+        borderRadius: 100,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     productImage: {
         width: wp('9.3%'),

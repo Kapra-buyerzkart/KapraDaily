@@ -20,6 +20,7 @@ import AddressModal from '../components/AddressModal'
 import SlotModal from '../components/SlotModal'
 import CouponModal from '../components/CouponModal'
 import BillSection from '../components/BillSection'
+import CartEmptyComponent from '../components/CartEmptyComponent'
 
 const CartScreen = () => {
     const navigation = useNavigation()
@@ -67,7 +68,7 @@ const CartScreen = () => {
 
     const { showLoader } = useContext(LoaderContext);
     const [isClearCartModalVisible, setIsClearCartModalVisible] = useState(false);
-    const [bCoins, setBCoins] = useState(0);
+    const [bTokens, setBTokens] = useState(0);
     const insets = useSafeAreaInsets();
 
     useEffect(() => {
@@ -75,7 +76,7 @@ const CartScreen = () => {
             try {
                 const response = await getDashboardDataApi();
                 if (response?.success && response?.data?.wallet) {
-                    setBCoins(response.data.wallet.bCoins || 0);
+                    setBTokens(response.data.wallet.bTokens || 0);
                 }
             } catch (error) {
                 console.error('Error fetching wallet data in Cart:', error);
@@ -114,138 +115,146 @@ const CartScreen = () => {
                 <Entypo style={Platform.OS === 'android' && { top: hp('-0.2%') }} name={"chevron-down"} size={wp('3.6%')} color={"#000000"} />
             </TouchableOpacity>
 
-            <ScrollView>
-                {/* ─── Banner ─── */}
-                <View style={styles.bannerView}>
-                    <Image style={styles.bannerStyle} source={require('../assets/images/cart-banner.png')} />
-                </View>
-
-                {/* ─── Clear Cart ─── */}
-                <View style={styles.clearCartContainer}>
-                    <TouchableOpacity onPress={() => setIsClearCartModalVisible(true)} style={styles.clearCartButton}>
-                        <Text style={styles.clearCartText}>Clear Cart</Text>
-                    </TouchableOpacity>
-                </View>
-
-                {/* ─── Products ─── */}
-                <View style={styles.productListingContainer}>
-                    <FlatList
-                        data={cartItems}
-                        keyExtractor={(item, index) => item.cartItemId?.toString() || item.productId?.toString() || index.toString()}
-                        renderItem={({ item }) => <CartProductCard item={item} />}
-                    />
-                </View>
-
-                {/* ─── Item Count + B-Tokens ─── */}
-                <View style={styles.itemsCountContainer}>
-                    <Text style={styles.itemsCountText}>{cartItems.length} Items</Text>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <View style={styles.btokenContainer}>
-                            <Image style={styles.btokenImage} source={require('../assets/images/btoken-icon.png')} />
-                            <Text style={styles.btokenText}>{bCoins} B Token</Text>
+            {cartItems.length === 0 ? (
+                <CartEmptyComponent />
+            ) : (
+                <>
+                    <ScrollView>
+                        {/* ─── Banner ─── */}
+                        <View style={styles.bannerView}>
+                            <Image style={styles.bannerStyle} source={require('../assets/images/cart-banner.png')} />
                         </View>
-                    </View>
-                </View>
 
-                {/* ─── Offers ─── */}
-                <View style={styles.offersContainer}>
-                    <View style={styles.offersHeaderView}>
-                        <Image style={styles.offersHeaderImage} source={require('../assets/images/add_offer.png')} />
-                        <Text style={styles.offersHeaderText}>Add Offers</Text>
-                    </View>
-                    <FlatList
-                        data={offers}
-                        keyExtractor={(item) => item.id}
-                        renderItem={({ item }) => (
-                            <OfferCard
-                                item={item}
-                                onApply={() => onApplyOffer(item.id)}
-                                onReject={() => onRejectOffer(item.id)}
+                        {/* ─── Clear Cart ─── */}
+                        <View style={styles.clearCartContainer}>
+                            <TouchableOpacity onPress={() => setIsClearCartModalVisible(true)} style={styles.clearCartButton}>
+                                <Text style={styles.clearCartText}>Clear Cart</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        {/* ─── Products ─── */}
+                        <View style={styles.productListingContainer}>
+                            <FlatList
+                                data={cartItems}
+                                keyExtractor={(item, index) => item.cartItemId?.toString() || item.productId?.toString() || index.toString()}
+                                renderItem={({ item }) => <CartProductCard item={item} />}
                             />
-                        )}
-                    />
-                </View>
+                        </View>
 
-                {/* ─── Bill ─── */}
-                <BillSection billCalculations={billCalculations} />
+                        {/* ─── Item Count + B-Tokens ─── */}
+                        <View style={styles.itemsCountContainer}>
+                            <Text style={styles.itemsCountText}>{cartItems.length} Items</Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <View style={styles.btokenContainer}>
+                                    <Image style={styles.btokenImage} source={require('../assets/images/btoken-icon.png')} />
+                                    <Text style={styles.btokenText}>{bTokens} B Tokens</Text>
+                                </View>
+                            </View>
+                        </View>
 
-                {/* ─── Bottom Bar ─── */}
-                <View style={styles.bottomContainer}>
-                    <View>
-                        <TouchableOpacity style={styles.bottomContainerInnerView}>
-                            <Image style={styles.bottomContainerBillIcon} source={require('../assets/images/bill_icon.png')} />
-                            <Text style={styles.bottomContainerPriceText}>₹{billCalculations.toPay.toFixed(2)}</Text>
-                            <Image style={styles.bottomContainerDownArrowIcon} source={require('../assets/images/down_arrow.png')} />
-                        </TouchableOpacity>
-                        {billCalculations.totalSavings > 0 && (
-                            <Text style={styles.savedPriceText}>You saved ₹{billCalculations.totalSavings.toFixed(2)}</Text>
-                        )}
+                        {/* ─── Offers ─── */}
+                        <View style={styles.offersContainer}>
+                            <View style={styles.offersHeaderView}>
+                                <Image style={styles.offersHeaderImage} source={require('../assets/images/add_offer.png')} />
+                                <Text style={styles.offersHeaderText}>Add Offers</Text>
+                            </View>
+                            <FlatList
+                                data={offers}
+                                keyExtractor={(item) => item.id}
+                                renderItem={({ item }) => (
+                                    <OfferCard
+                                        item={item}
+                                        onApply={() => onApplyOffer(item.id)}
+                                        onReject={() => onRejectOffer(item.id)}
+                                    />
+                                )}
+                            />
+                        </View>
+
+                        {/* ─── Bill ─── */}
+                        <BillSection billCalculations={billCalculations} />
+
+                        <View style={{ height: hp('15%') }} />
+                    </ScrollView>
+
+                    {/* ─── Bottom Bar ─── */}
+                    <View style={styles.bottomContainer}>
+                        <View>
+                            <TouchableOpacity style={styles.bottomContainerInnerView}>
+                                <Image style={styles.bottomContainerBillIcon} source={require('../assets/images/bill_icon.png')} />
+                                <Text style={styles.bottomContainerPriceText}>₹{billCalculations.toPay.toFixed(2)}</Text>
+                                <Image style={styles.bottomContainerDownArrowIcon} source={require('../assets/images/down_arrow.png')} />
+                            </TouchableOpacity>
+                            {billCalculations.totalSavings > 0 && (
+                                <Text style={styles.savedPriceText}>You saved ₹{billCalculations.totalSavings.toFixed(2)}</Text>
+                            )}
+                        </View>
+                        <LinearGradient style={styles.selectAddressButtonGradient} colors={['#F25000', '#FF7B3A']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+                            <AppButton
+                                title="Proceed to Pay"
+                                onPress={() => {
+                                    const selectedAddress = addresses.find(a => a.selected);
+                                    const selectedDate = datesList[selectedDateIndex]?.formatted;
+
+                                    if (!selectedAddress) {
+                                        setShowAddressModal(true);
+                                        return;
+                                    }
+
+                                    if (selectedDeliveryType === 'slot' && !selectedSlot) {
+                                        setShowSlotModal(true);
+                                        return;
+                                    }
+
+                                    navigation.navigate("CheckoutScreen", {
+                                        selectedAddress,
+                                        selectedDeliveryType,
+                                        selectedSlot,
+                                        selectedDate,
+                                    });
+                                }}
+                                style={{ backgroundColor: 'transparent', width: '100%', alignItems: 'center' }}
+                                textStyle={styles.proceedToPayText}
+                            />
+                        </LinearGradient>
                     </View>
-                    <LinearGradient style={styles.selectAddressButtonGradient} colors={['#F25000', '#FF7B3A']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
-                        <AppButton
-                            title="Proceed to Pay"
-                            onPress={() => {
-                                const selectedAddress = addresses.find(a => a.selected);
-                                const selectedDate = datesList[selectedDateIndex]?.formatted;
+                </>
+            )}
 
-                                if (!selectedAddress) {
-                                    setShowAddressModal(true);
-                                    return;
-                                }
-
-                                if (selectedDeliveryType === 'slot' && !selectedSlot) {
-                                    setShowSlotModal(true);
-                                    return;
-                                }
-
-                                navigation.navigate("CheckoutScreen", {
-                                    selectedAddress,
-                                    selectedDeliveryType,
-                                    selectedSlot,
-                                    selectedDate,
-                                });
-                            }}
-                            style={{ backgroundColor: 'transparent', width: '100%', alignItems: 'center' }}
-                            textStyle={styles.proceedToPayText}
-                        />
-                    </LinearGradient>
-                </View>
-
-                {/* ─── Modals (extracted) ─── */}
-                <AddressModal
-                    visible={showAddressModal}
-                    onClose={() => setShowAddressModal(false)}
-                    addresses={addresses}
-                    onSelectAddress={onSelectAddress}
-                    onThreeDotsClicked={onThreeDotsClicked}
-                    onDeleteClicked={onDeleteClicked}
-                    onCloseThreeDots={onCloseThreeDots}
-                    navigation={navigation}
-                />
-                <SlotModal
-                    visible={showSlotModal}
-                    onClose={() => setShowSlotModal(false)}
-                    selectedDeliveryType={selectedDeliveryType}
-                    setSelectedDeliveryType={setSelectedDeliveryType}
-                    selectedDateIndex={selectedDateIndex}
-                    onSelectDate={onSelectDate}
-                    selectedSlot={selectedSlot}
-                    setSelectedSlot={setSelectedSlot}
-                    datesList={datesList}
-                    slotsByDate={slotsByDate}
-                />
-                <CouponModal
-                    visible={showCouponModal}
-                    onClose={() => setShowCouponModal(false)}
-                    isGiftCard={isGiftCard}
-                    couponCode={couponCode}
-                    setCouponCode={setCouponCode}
-                    onApply={handleApplyCoupon}
-                    availableCoupons={availableCoupons}
-                    availableGiftCards={availableGiftCards}
-                    onCouponClick={handleCouponClick}
-                />
-            </ScrollView>
+            {/* ─── Modals (extracted) ─── */}
+            <AddressModal
+                visible={showAddressModal}
+                onClose={() => setShowAddressModal(false)}
+                addresses={addresses}
+                onSelectAddress={onSelectAddress}
+                onThreeDotsClicked={onThreeDotsClicked}
+                onDeleteClicked={onDeleteClicked}
+                onCloseThreeDots={onCloseThreeDots}
+                navigation={navigation}
+            />
+            <SlotModal
+                visible={showSlotModal}
+                onClose={() => setShowSlotModal(false)}
+                selectedDeliveryType={selectedDeliveryType}
+                setSelectedDeliveryType={setSelectedDeliveryType}
+                selectedDateIndex={selectedDateIndex}
+                onSelectDate={onSelectDate}
+                selectedSlot={selectedSlot}
+                setSelectedSlot={setSelectedSlot}
+                datesList={datesList}
+                slotsByDate={slotsByDate}
+            />
+            <CouponModal
+                visible={showCouponModal}
+                onClose={() => setShowCouponModal(false)}
+                isGiftCard={isGiftCard}
+                couponCode={couponCode}
+                setCouponCode={setCouponCode}
+                onApply={handleApplyCoupon}
+                availableCoupons={availableCoupons}
+                availableGiftCards={availableGiftCards}
+                onCouponClick={handleCouponClick}
+            />
 
             <ConfirmationModal
                 visible={isClearCartModalVisible}
@@ -256,8 +265,8 @@ const CartScreen = () => {
                 confirmText="Clear"
             />
         </SafeAreaView>
-    )
-}
+    );
+};
 
 export default CartScreen
 
@@ -445,18 +454,12 @@ const styles = StyleSheet.create({
         color: '#FFFFFF'
     },
     clearCartButton: {
-        backgroundColor: '#FFF5F0',
-        paddingHorizontal: wp('3%'),
-        paddingVertical: hp('0.8%'),
-        borderRadius: wp('1.5%'),
-        borderWidth: 1,
-        borderColor: '#F25000',
-        justifyContent: 'center',
-        alignItems: 'center'
+        paddingVertical: hp('0.5%'),
     },
     clearCartText: {
         fontFamily: FONTS.outfit.medium,
         fontSize: wp('3.2%'),
         color: '#F25000',
+        textDecorationLine: 'underline',
     },
 });

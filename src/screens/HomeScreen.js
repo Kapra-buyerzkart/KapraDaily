@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ImageBackground, TouchableOpacity, Image, TextInput, FlatList, ScrollView, Dimensions } from 'react-native'
+import { View, Text, StyleSheet, ImageBackground, TouchableOpacity, Image, TextInput, FlatList, ScrollView, Dimensions, RefreshControl } from 'react-native'
 import React, { startTransition, useEffect, useRef, useState, useContext } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
@@ -149,6 +149,7 @@ const HomeScreen = () => {
     };
 
     const [dashboardData, setDashboardData] = useState(null);
+    const [refreshing, setRefreshing] = useState(false);
     const {
         bestOffers,
         featuredProducts,
@@ -160,6 +161,20 @@ const HomeScreen = () => {
         userLocation,
         featuredProductsTitle
     } = useHomeData();
+
+    const onRefresh = React.useCallback(async () => {
+        setRefreshing(true);
+        try {
+            await Promise.all([
+                fetchDashboardData(),
+                loadProfileTwo(),
+            ]);
+        } catch (error) {
+            console.error('Refresh error:', error);
+        } finally {
+            setRefreshing(false);
+        }
+    }, [loadProfileTwo]);
 
     const navigation = useNavigation();
     const { showLoader } = useContext(LoaderContext);
@@ -183,7 +198,9 @@ const HomeScreen = () => {
     };
 
     const GradientUserIcon = ({ size }) => {
-        return <View style={{ width: size, height: size, backgroundColor: '#D2B200', borderRadius: size / 2 }} />;
+        return (
+            <FontAwesome6 name="user" size={size * 0.7} color="#D2B200" />
+        );
     };
 
 
@@ -216,7 +233,13 @@ const HomeScreen = () => {
         }
 
         return (
-            <TouchableOpacity style={styles.item}>
+            <TouchableOpacity
+                style={styles.item}
+                onPress={() => navigation.navigate('SearchScreen', {
+                    catId: item.catId || item.id,
+                    catName: item.catName || item.name
+                })}
+            >
                 <LinearGradient
                     colors={['#FF9D61', '#FFFFFF']}
                     start={{ x: 0, y: 0 }}
@@ -346,6 +369,9 @@ const HomeScreen = () => {
                 style={{ flex: 1 }}
                 contentContainerStyle={{ paddingBottom: hp("0.7%") }}
                 showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                }
             >
                 <View
                     style={styles.headerMainView}>
@@ -386,7 +412,9 @@ const HomeScreen = () => {
                                 type: "login"
                             })
                         }} style={styles.profileIconMainView}>
-                            <Image source={require('../assets/images/crown.png')} width={wp('6.3%')} height={hp('2.6%')} />
+                            {profile?.isPrevilaged === 1 && (
+                                <Image source={require('../assets/images/crown.png')} width={wp('6.3%')} height={hp('2.3%')} />
+                            )}
                             <View style={styles.profileIconView}>
                                 <GradientUserIcon size={wp('6%')} />
                             </View>
@@ -719,6 +747,8 @@ const styles = StyleSheet.create({
     bcoinContainer: {
         alignItems: 'center',
         width: wp('20%'),
+        // backgroundColor: 'red',
+        left: wp('15.9%')
     },
     bcoinRupee: {
         width: wp('6.5%'),
@@ -838,7 +868,7 @@ const styles = StyleSheet.create({
     },
     profileIconMainView: {
         alignItems: "center",
-        top: hp("-1.1%")
+        top: hp("1.3%")
     },
     // headerBannerImage: {
     //     width: "100%",

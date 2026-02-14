@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Platform, 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { FONTS } from '../styles/typography';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -34,6 +35,10 @@ const CheckoutScreen = () => {
     const [statusMessage, setStatusMessage] = useState('');
     const [onModalClose, setOnModalClose] = useState(null);
 
+    // Delivery & Payment selection
+    const [deliveryType, setDeliveryType] = useState(selectedDeliveryType || 'express');
+    const [paymentMethod, setPaymentMethod] = useState('cod');
+
     const handleConfirmOrder = async () => {
         if (!selectedAddress) {
             setStatusType('error');
@@ -52,9 +57,9 @@ const CheckoutScreen = () => {
                 billingAddressId: selectedAddress.id,
                 paymentMethod: "cod",
                 ifMatchCartVersion: cartSummary?.cartVersion,
-                deliverySlotDate: selectedDeliveryType === 'slot' ? selectedDate : new Date().toISOString().split('T')[0],
-                deliverySlotTime: selectedDeliveryType === 'slot' ? selectedSlot : "Express",
-                deliveryMode: selectedDeliveryType === 'slot' ? "slotted" : "express",
+                deliverySlotDate: deliveryType === 'slot' ? selectedDate : new Date().toISOString().split('T')[0],
+                deliverySlotTime: deliveryType === 'slot' ? selectedSlot : "Express",
+                deliveryMode: deliveryType === 'slot' ? "slotted" : "express",
                 orderPlacedFromDevice: "app",
                 pincodeAreaId: pincodeAreaId || 105
             };
@@ -120,6 +125,12 @@ const CheckoutScreen = () => {
                     <View style={styles.sectionHeader}>
                         <MaterialCommunityIcons name="map-marker-outline" size={wp('6%')} color="#F25000" />
                         <Text style={styles.sectionTitle}>Delivery Address</Text>
+                        <TouchableOpacity
+                            onPress={() => navigation.navigate('SavedAddressScreen')}
+                            style={styles.changeButton}
+                        >
+                            <Text style={styles.changeButtonText}>Change</Text>
+                        </TouchableOpacity>
                     </View>
                     <View style={styles.card}>
                         <Text style={styles.addressType}>{selectedAddress?.type || 'Home'}</Text>
@@ -128,21 +139,50 @@ const CheckoutScreen = () => {
                     </View>
                 </View>
 
-                {/* Delivery Slot Section */}
+                {/* Delivery Schedule Section */}
                 <View style={styles.sectionContainer}>
                     <View style={styles.sectionHeader}>
                         <MaterialCommunityIcons name="clock-outline" size={wp('6%')} color="#F25000" />
                         <Text style={styles.sectionTitle}>Delivery Schedule</Text>
                     </View>
                     <View style={styles.card}>
-                        <Text style={styles.slotTitle}>
-                            {selectedDeliveryType === 'slot' ? 'Slotted Delivery' : 'Express Delivery'}
-                        </Text>
-                        <Text style={styles.slotDetails}>
-                            {selectedDeliveryType === 'slot'
-                                ? `${selectedDate} | ${selectedSlot}`
-                                : 'Delivery in 20-30 mins'}
-                        </Text>
+                        {/* Express Option */}
+                        <TouchableOpacity
+                            style={styles.radioRow}
+                            onPress={() => setDeliveryType('express')}
+                            activeOpacity={0.7}
+                        >
+                            <Ionicons
+                                name={deliveryType === 'express' ? 'radio-button-on' : 'radio-button-off'}
+                                size={wp('5.5%')}
+                                color={deliveryType === 'express' ? '#F25000' : '#CCCCCC'}
+                            />
+                            <View style={styles.radioContent}>
+                                <Text style={[styles.radioTitle, deliveryType === 'express' && { color: '#F25000' }]}>Express Delivery</Text>
+                                <Text style={styles.radioSubtitle}>Delivery in 20-30 mins</Text>
+                            </View>
+                        </TouchableOpacity>
+
+                        <View style={styles.radioDivider} />
+
+                        {/* Slotted Option */}
+                        <TouchableOpacity
+                            style={styles.radioRow}
+                            onPress={() => setDeliveryType('slot')}
+                            activeOpacity={0.7}
+                        >
+                            <Ionicons
+                                name={deliveryType === 'slot' ? 'radio-button-on' : 'radio-button-off'}
+                                size={wp('5.5%')}
+                                color={deliveryType === 'slot' ? '#F25000' : '#CCCCCC'}
+                            />
+                            <View style={styles.radioContent}>
+                                <Text style={[styles.radioTitle, deliveryType === 'slot' && { color: '#F25000' }]}>Slotted Delivery</Text>
+                                <Text style={styles.radioSubtitle}>
+                                    {selectedDate && selectedSlot ? `${selectedDate} | ${selectedSlot}` : 'Choose a delivery slot'}
+                                </Text>
+                            </View>
+                        </TouchableOpacity>
                     </View>
                 </View>
 
@@ -153,11 +193,47 @@ const CheckoutScreen = () => {
                         <Text style={styles.sectionTitle}>Payment Method</Text>
                     </View>
                     <View style={styles.card}>
-                        <View style={styles.paymentRow}>
-                            <MaterialCommunityIcons name="cash" size={wp('6%')} color="#0CA201" />
-                            <Text style={styles.paymentText}>Cash on Delivery (COD)</Text>
-                            <AntDesign name="checkcircle" size={wp('5%')} color="#F25000" style={{ marginLeft: 'auto' }} />
-                        </View>
+                        {/* COD Option */}
+                        <TouchableOpacity
+                            style={styles.radioRow}
+                            onPress={() => setPaymentMethod('cod')}
+                            activeOpacity={0.7}
+                        >
+                            <Ionicons
+                                name={paymentMethod === 'cod' ? 'radio-button-on' : 'radio-button-off'}
+                                size={wp('5.5%')}
+                                color={paymentMethod === 'cod' ? '#F25000' : '#CCCCCC'}
+                            />
+                            <View style={styles.radioContent}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                    <MaterialCommunityIcons name="cash" size={wp('5.5%')} color="#0CA201" />
+                                    <Text style={[styles.radioTitle, { marginLeft: wp('2%') }, paymentMethod === 'cod' && { color: '#F25000' }]}>Cash on Delivery</Text>
+                                </View>
+                                <Text style={styles.radioSubtitle}>Pay when you receive</Text>
+                            </View>
+                        </TouchableOpacity>
+
+                        <View style={styles.radioDivider} />
+
+                        {/* Online Payment Option */}
+                        <TouchableOpacity
+                            style={styles.radioRow}
+                            onPress={() => setPaymentMethod('online')}
+                            activeOpacity={0.7}
+                        >
+                            <Ionicons
+                                name={paymentMethod === 'online' ? 'radio-button-on' : 'radio-button-off'}
+                                size={wp('5.5%')}
+                                color={paymentMethod === 'online' ? '#F25000' : '#CCCCCC'}
+                            />
+                            <View style={styles.radioContent}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                    <MaterialCommunityIcons name="cellphone" size={wp('5.5%')} color="#1A73E8" />
+                                    <Text style={[styles.radioTitle, { marginLeft: wp('2%') }, paymentMethod === 'online' && { color: '#F25000' }]}>Pay Online</Text>
+                                </View>
+                                <Text style={styles.radioSubtitle}>UPI, Cards, Net Banking</Text>
+                            </View>
+                        </TouchableOpacity>
                     </View>
                 </View>
 
@@ -241,7 +317,20 @@ const styles = StyleSheet.create({
         fontFamily: FONTS.poppins.semiBold,
         fontSize: wp('4%'),
         color: '#000000',
-        marginLeft: wp('2%')
+        marginLeft: wp('2%'),
+        flex: 1
+    },
+    changeButton: {
+        paddingHorizontal: wp('3%'),
+        paddingVertical: hp('0.5%'),
+        borderRadius: 6,
+        borderWidth: 1,
+        borderColor: '#F25000',
+    },
+    changeButtonText: {
+        fontFamily: FONTS.poppins.medium,
+        fontSize: wp('3%'),
+        color: '#F25000',
     },
     card: {
         backgroundColor: '#FFFFFF',
@@ -271,26 +360,30 @@ const styles = StyleSheet.create({
         color: '#000000',
         marginTop: hp('1%')
     },
-    slotTitle: {
-        fontFamily: FONTS.poppins.medium,
-        fontSize: wp('3.8%'),
-        color: '#000000'
-    },
-    slotDetails: {
-        fontFamily: FONTS.outfit.regular,
-        fontSize: wp('3.5%'),
-        color: '#F25000',
-        marginTop: hp('0.5%')
-    },
-    paymentRow: {
+    radioRow: {
         flexDirection: 'row',
-        alignItems: 'center'
+        alignItems: 'center',
+        paddingVertical: hp('1.2%'),
     },
-    paymentText: {
+    radioContent: {
+        marginLeft: wp('3%'),
+        flex: 1,
+    },
+    radioTitle: {
         fontFamily: FONTS.poppins.medium,
         fontSize: wp('3.8%'),
         color: '#000000',
-        marginLeft: wp('3%')
+    },
+    radioSubtitle: {
+        fontFamily: FONTS.outfit.regular,
+        fontSize: wp('3.2%'),
+        color: '#999999',
+        marginTop: hp('0.2%'),
+    },
+    radioDivider: {
+        height: 1,
+        backgroundColor: '#F0F0F0',
+        marginVertical: hp('0.5%'),
     },
     billContainer: {
         marginTop: hp('3%'),

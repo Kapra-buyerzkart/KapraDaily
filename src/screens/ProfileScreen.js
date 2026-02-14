@@ -3,6 +3,7 @@ import React, { useContext, useEffect, useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons'
+import FontAwesome6 from 'react-native-vector-icons/FontAwesome6'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import LinearGradient from 'react-native-linear-gradient'
 import { useNavigation } from '@react-navigation/native'
@@ -11,12 +12,17 @@ import { getAccessToken } from '../api/tokenService'
 import LoginScreen from './LoginScreen'
 import { AppContext } from '../context/appContext'
 import { LoaderContext } from '../context/loaderContext'
+import ProfileOffersModal from '../components/ProfileOffersModal'
+import { getAvailableCouponsApi } from '../api/cartService'
 
 export default function ProfileScreen() {
     const [accessToken, setAccessToken] = useState(null);
     const navigation = useNavigation()
     const { profile, loadProfile, logout } = useContext(AppContext);
     const { showLoader } = useContext(LoaderContext);
+    const [offersModalVisible, setOffersModalVisible] = useState(false);
+    const [offersModalTitle, setOffersModalTitle] = useState('');
+    const [availableCoupons, setAvailableCoupons] = useState([]);
 
     // useEffect(() => {
     //     const fetchProfile = async () => {
@@ -54,6 +60,26 @@ export default function ProfileScreen() {
         })
     }
 
+    useEffect(() => {
+        fetchCoupons();
+    }, []);
+
+    const fetchCoupons = async () => {
+        try {
+            const response = await getAvailableCouponsApi();
+            if (response && response.data) {
+                setAvailableCoupons(Array.isArray(response.data) ? response.data : []);
+            }
+        } catch (error) {
+            console.log('Error fetching coupons:', error);
+        }
+    };
+
+    const openOffersModal = (title) => {
+        setOffersModalTitle(title);
+        setOffersModalVisible(true);
+    };
+
     return (
         <SafeAreaView edges={['top']} style={styles.mainConatiner}>
             {console.log('profilescreen', profile)}
@@ -78,7 +104,14 @@ export default function ProfileScreen() {
                             </TouchableOpacity>
                         </View>
                         <View style={styles.userView}>
-                            <Image style={styles.userIcon} source={require('../assets/images/user.png')} />
+                            <View style={styles.userAvatarContainer}>
+                                {profile?.isPrevilaged === 1 && (
+                                    <Image source={require('../assets/images/crown.png')} style={styles.profileCrown} />
+                                )}
+                                <View style={styles.userIconBorder}>
+                                    <FontAwesome6 name="user" size={wp('5%')} color="#D2B200" />
+                                </View>
+                            </View>
                             <View style={styles.userNamePhoneView}>
                                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                     <Text style={styles.userNameText}>{profile.custName}</Text>
@@ -113,17 +146,17 @@ export default function ProfileScreen() {
                 <View style={styles.containerThree}>
                     <Text style={styles.offersText}>Offers</Text>
 
-                    <View style={styles.offerView}>
+                    <TouchableOpacity onPress={() => openOffersModal('Smart Points')} style={styles.offerView}>
                         <Image style={styles.offerImage} source={require('../assets/images/smart_point.png')} />
                         <Text style={styles.offerText}>Smart Point</Text>
                         <AntDesign name={"right"} color={'#DADADA'} size={wp('4.4%')} />
-                    </View>
+                    </TouchableOpacity>
 
-                    <View style={styles.offerView}>
+                    <TouchableOpacity onPress={() => openOffersModal('Coupons')} style={styles.offerView}>
                         <Image style={styles.offerImage} source={require('../assets/images/coupon.png')} />
                         <Text style={styles.offerText}>Coupon</Text>
                         <AntDesign name={"right"} color={'#DADADA'} size={wp('4.4%')} />
-                    </View>
+                    </TouchableOpacity>
                 </View>
 
                 <View style={styles.containerThree}>
@@ -209,6 +242,13 @@ export default function ProfileScreen() {
                     <Text style={styles.logoutText}>Log Out</Text>
                 </TouchableOpacity>
             </ScrollView >
+
+            <ProfileOffersModal
+                visible={offersModalVisible}
+                onClose={() => setOffersModalVisible(false)}
+                title={offersModalTitle}
+                data={availableCoupons}
+            />
         </SafeAreaView >
     )
 }
@@ -247,9 +287,24 @@ const styles = StyleSheet.create({
         marginTop: hp('3%'),
         alignItems: 'center'
     },
-    userIcon: {
-        height: wp('9.3%'),
-        width: wp('9.3%')
+    userAvatarContainer: {
+        alignItems: 'center',
+    },
+    userIconBorder: {
+        height: wp('10%'),
+        width: wp('10%'),
+        borderRadius: wp('5%'),
+        borderWidth: 1,
+        borderColor: '#D2B200',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#FFFFFF',
+    },
+    profileCrown: {
+        width: wp('5%'),
+        height: wp('4%'),
+        resizeMode: 'contain',
+        marginBottom: hp('-0.5%'),
     },
     userNamePhoneView: {
         flex: 1,

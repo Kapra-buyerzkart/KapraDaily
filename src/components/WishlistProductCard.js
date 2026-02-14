@@ -6,9 +6,16 @@ import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-nat
 import { FONTS } from '../styles/typography';
 import CONFIG from '../globals/config';
 import AppButton from './AppButton';
+import { useCart } from '../context/CartContext';
 
 const WishlistProductCard = ({ item, onRemove, onAddToCart }) => {
     const [imageError, setImageError] = useState(false);
+    const { cartItems, updateCartItemQuantity, removeFromCart } = useCart();
+
+    const itemId = item.productId;
+    const cartItem = cartItems.find(i => String(i.productId || i.id) === String(itemId));
+    const quantity = cartItem?.quantity || cartItem?.addedQty || 0;
+    const cartItemId = cartItem?.cartItemId || itemId;
 
     const imageSource = imageError || !item.productImage
         ? require('../assets/images/categories/dfn.png')
@@ -54,14 +61,37 @@ const WishlistProductCard = ({ item, onRemove, onAddToCart }) => {
                 )}
             </View>
             <View style={styles.productCardViewFour}>
-                {/* Replaced standard touchable with just an icon button for now, or keep as is if too small for AppButton */}
-                <TouchableOpacity
-                    style={[styles.plusIconView, isOutOfStock && { backgroundColor: '#CCCCCC' }]}
-                    onPress={() => !isOutOfStock && onAddToCart(item)}
-                    disabled={isOutOfStock}
-                >
-                    <Entypo name={"plus"} color={"#FFFFFF"} size={wp("4.1%")} />
-                </TouchableOpacity>
+                {quantity > 0 ? (
+                    <View style={styles.counterContainer}>
+                        <TouchableOpacity
+                            onPress={() => {
+                                if (quantity === 1) {
+                                    removeFromCart(cartItemId);
+                                } else {
+                                    updateCartItemQuantity(cartItemId, quantity - 1);
+                                }
+                            }}
+                            style={styles.counterButton}
+                        >
+                            <Entypo name="minus" size={wp('3.5%')} color="#FFFFFF" />
+                        </TouchableOpacity>
+                        <Text style={styles.quantityText}>{quantity}</Text>
+                        <TouchableOpacity
+                            onPress={() => updateCartItemQuantity(cartItemId, quantity + 1)}
+                            style={styles.counterButton}
+                        >
+                            <Entypo name="plus" size={wp('3.5%')} color="#FFFFFF" />
+                        </TouchableOpacity>
+                    </View>
+                ) : (
+                    <TouchableOpacity
+                        style={[styles.plusIconView, isOutOfStock && { backgroundColor: '#CCCCCC' }]}
+                        onPress={() => !isOutOfStock && onAddToCart(item)}
+                        disabled={isOutOfStock}
+                    >
+                        <Entypo name={"plus"} color={"#FFFFFF"} size={wp("4.1%")} />
+                    </TouchableOpacity>
+                )}
                 <View style={styles.priceView}>
                     <MaterialIcons name={'currency-rupee'} color={'#0CA201'} size={wp("3.7%")} style={styles.rupeeIconBig}
                     />
@@ -91,6 +121,24 @@ const styles = StyleSheet.create({
         padding: wp("1.2%"),
         borderRadius: 100,
         alignSelf: "flex-end"
+    },
+    counterContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#F04B1B',
+        borderRadius: 15,
+        paddingHorizontal: wp('1.5%'),
+        paddingVertical: hp('0.3%'),
+        alignSelf: 'flex-end',
+    },
+    counterButton: {
+        padding: wp('0.5%'),
+    },
+    quantityText: {
+        color: '#FFFFFF',
+        fontFamily: FONTS.poppins.semiBold,
+        fontSize: wp('3%'),
+        marginHorizontal: wp('1.5%'),
     },
     priceView: {
         flexDirection: "row",

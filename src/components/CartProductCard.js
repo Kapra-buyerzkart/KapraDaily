@@ -117,10 +117,7 @@ const CartProductCard = (props) => {
                         onError={() => setImageError(true)}
                     />
 
-                    <View style={styles.btokenContainer}>
-                        <Image style={styles.btokenImageStyle} source={require('../assets/images/btoken_icon_two.png')} />
-                        <Text style={styles.btokenText}>1B</Text>
-                    </View>
+
                 </View>
 
                 <View style={styles.productCardInnerViewTwo}>

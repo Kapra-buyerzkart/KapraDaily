@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getProductSuggestionsApi } from '../api/productService';
+import { getProductSuggestionsApi, searchProductsApi } from '../api/productService';
 import { useDebounce } from './useDebounce';
 
-const useProductSearch = (initialPincodeId = 105) => {
+const useProductSearch = (initialPincodeId = 105, initialCatId = null) => {
     const [searchTerm, setSearchTerm] = useState('');
+    const [catId, setCatId] = useState(initialCatId);
     const [suggestions, setSuggestions] = useState([]);
     const [loading, setLoading] = useState(false);
     const [resultCount, setResultCount] = useState(0);
@@ -13,10 +14,11 @@ const useProductSearch = (initialPincodeId = 105) => {
     const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
     useEffect(() => {
-        const fetchSuggestions = async () => {
-            // Trim and check length
+        const fetchProducts = async () => {
             const trimmedTerm = debouncedSearchTerm.trim();
-            if (trimmedTerm.length === 0) {
+
+            // If neither search term nor catId is present, clear results
+            if (trimmedTerm.length === 0 && !catId) {
                 setSuggestions([]);
                 setResultCount(0);
                 return;
@@ -26,16 +28,37 @@ const useProductSearch = (initialPincodeId = 105) => {
             setError(null);
 
             try {
-                // Determine limit based on term length or other logic if needed
-                const response = await getProductSuggestionsApi(trimmedTerm, initialPincodeId);
+                let response;
+                if (catId) {
+                    // Use searchProductsApi for category-based search
+                    const payload = {
+                        pincodeAreaId: initialPincodeId,
+                        prName: trimmedTerm,
+                        catId: parseInt(catId),
+                        pageNumber: 1,
+                        pageSize: 50
+                    };
+                    console.log('useProductSearch: Fetching with payload:', payload);
+                    response = await searchProductsApi(payload);
 
-                if (response && response.success && Array.isArray(response.data)) {
-                    setSuggestions(response.data);
-                    setResultCount(response.data.length);
+                    if (response && response.success && response.data && Array.isArray(response.data.items)) {
+                        setSuggestions(response.data.items);
+                        setResultCount(response.data.items.length);
+                    } else {
+                        setSuggestions([]);
+                        setResultCount(0);
+                    }
                 } else {
-                    // Handle case where success is false or data is invalid
-                    setSuggestions([]);
-                    setResultCount(0);
+                    // Use getProductSuggestionsApi for general search suggestions
+                    response = await getProductSuggestionsApi(trimmedTerm, initialPincodeId);
+
+                    if (response && response.success && Array.isArray(response.data)) {
+                        setSuggestions(response.data);
+                        setResultCount(response.data.length);
+                    } else {
+                        setSuggestions([]);
+                        setResultCount(0);
+                    }
                 }
             } catch (err) {
                 console.error('Error in useProductSearch:', err);
@@ -47,12 +70,13 @@ const useProductSearch = (initialPincodeId = 105) => {
             }
         };
 
-        fetchSuggestions();
-    }, [debouncedSearchTerm, initialPincodeId]);
+        fetchProducts();
+    }, [debouncedSearchTerm, initialPincodeId, catId]);
 
     // Function to clear search manually if needed
     const clearSearch = useCallback(() => {
         setSearchTerm('');
+        setCatId(null);
         setSuggestions([]);
         setResultCount(0);
     }, []);
@@ -60,6 +84,8 @@ const useProductSearch = (initialPincodeId = 105) => {
     return {
         searchTerm,
         setSearchTerm,
+        catId,
+        setCatId,
         suggestions,
         loading,
         resultCount,
