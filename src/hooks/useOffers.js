@@ -6,13 +6,13 @@ import { getDashboardDataApi } from '../api/userService';
 import { LoaderContext } from '../context/loaderContext';
 
 const DEFAULT_OFFERS = [
-    {
-        id: '1',
-        name: "Smart point",
-        content: "get flat 50%",
-        applyCliked: false,
-        image: require('../assets/images/smart_point_two.png')
-    },
+    // {
+    //     id: '1',
+    //     name: "Smart point",
+    //     content: "get flat 50%",
+    //     applyCliked: false,
+    //     image: require('../assets/images/smart_point_two.png')
+    // },
     {
         id: '2',
         name: "Coupon",

@@ -1,94 +1,27 @@
-import { View, Text, Image, TouchableOpacity, StyleSheet, FlatList } from 'react-native'
+import { View, Text, Image, TouchableOpacity, StyleSheet, FlatList, RefreshControl } from 'react-native'
 import React, { useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import { useNavigation } from '@react-navigation/native'
 import { FONTS } from '../styles/typography'
+import { useAddresses } from '../hooks/useAddresses'
 
 const SavedAddressScreen = () => {
     const navigation = useNavigation()
-    const [showAddressModal, setShowAddressModal] = useState(false)
-    const [addresses, setAddresses] = useState([
-        {
-            id: '1',
-            type: 'Home',
-            address: 'american city main street road 1234',
-            phone: '9999999999',
-            pin: '676501',
-            icon: require('../assets/images/home_icon.png'),
-            selected: true,
-            threeDotsClicked: false,
-        },
-        {
-            id: '2',
-            type: 'Office',
-            address: 'indian city main street road 1234',
-            phone: '8888888888',
-            pin: '676502',
-            icon: require('../assets/images/office_icon.png'),
-            selected: false,
-            threeDotsClicked: false,
-        },
-        // {
-        //     id: '3',
-        //     type: 'Office',
-        //     address: 'indian city main street road 1234',
-        //     phone: '8888888888',
-        //     pin: '676502',
-        //     icon: require('../assets/images/office_icon.png'),
-        //     selected: false,
-        //     threeDotsClicked: false
-        // },
-        // {
-        //     id: '4',
-        //     type: 'Home',
-        //     address: 'indian city main street road 1234',
-        //     phone: '8888888888',
-        //     pin: '676502',
-        //     icon: require('../assets/images/office_icon.png'),
-        //     selected: false,
-        //     threeDotsClicked: false
-        // },
-    ]);
-
-    const onSelectAddress = (addressId) => {
-        setAddresses(prev =>
-            prev.map(item => ({
-                ...item,
-                selected: item.id === addressId
-            }))
-        );
-    };
-
-    const onThreeDotsClicked = (addressId) => {
-        setAddresses(prev =>
-            prev.map(item => ({
-                ...item,
-                threeDotsClicked: item.id === addressId
-            }))
-        );
-    };
-
-    const onDeleteClicked = (addressId) => {
-        setAddresses(prev =>
-            prev.filter(item => item.id !== addressId)
-        )
-    }
-
-    const onCloseThreeDots = () => {
-        setAddresses(prev =>
-            prev.map(item => ({
-                ...item,
-                threeDotsClicked: false
-            }))
-        );
-    };
+    const {
+        addresses,
+        onSelectAddress,
+        onThreeDotsClicked,
+        onDeleteClicked,
+        onCloseThreeDots,
+        isLoading,
+        refreshAddresses
+    } = useAddresses();
 
     const AddressCard = (item) => {
         return (
             <TouchableOpacity onPress={item.item.selected === true ? () => {
-                setShowAddressModal(false)
-                navigation.navigate("AddAddressScreen")
+                navigation.navigate("AddLocationScreen", { address: item.item.raw })
             } : () => {
                 onSelectAddress(item.item.id)
             }}
@@ -132,7 +65,7 @@ const SavedAddressScreen = () => {
                                 </View>
 
                             ) : (< View style={styles.threeDotActionContainer}>
-                                <TouchableOpacity>
+                                <TouchableOpacity onPress={() => navigation.navigate("AddLocationScreen", { address: item.item.raw })}>
                                     <Image style={styles.editIcon} source={require('../assets/images/edit_icon.png')} />
                                 </TouchableOpacity>
                                 <TouchableOpacity hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} onPress={() => onDeleteClicked(item.item.id)}>
@@ -149,7 +82,7 @@ const SavedAddressScreen = () => {
                                 <Image style={styles.threeDotsIcon} source={require('../assets/images/three_dots.png')} />
                             </TouchableOpacity>
                             ) : (< View style={styles.threeDotActionContainer}>
-                                <TouchableOpacity>
+                                <TouchableOpacity onPress={() => navigation.navigate("AddLocationScreen", { address: item.item.raw })}>
                                     <Image style={styles.editIcon} source={require('../assets/images/edit_icon.png')} />
                                 </TouchableOpacity>
                                 <TouchableOpacity hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} onPress={() => onDeleteClicked(item.item.id)}>
@@ -210,6 +143,9 @@ const SavedAddressScreen = () => {
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => <AddressCard item={item} />}
                 showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl refreshing={isLoading} onRefresh={refreshAddresses} />
+                }
                 contentContainerStyle={{
                     paddingHorizontal: wp('4.65%'),
                     marginTop: hp('3%')
@@ -224,7 +160,6 @@ const SavedAddressScreen = () => {
                             <Text style={styles.locationText}>Choose current location</Text>
                         </TouchableOpacity>
                         <TouchableOpacity onPress={() => {
-                            setShowAddressModal(false)
                             navigation.navigate('AddLocationScreen')
                         }} style={styles.chooseLocationContainer}>
                             <Image style={Platform.OS === 'ios' ? styles.locationIcon : [styles.locationIcon, {

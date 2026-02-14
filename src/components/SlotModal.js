@@ -14,6 +14,7 @@ const SlotModal = ({
     setSelectedSlot,
     datesList,
     slotsByDate,
+    deliveryModes = [],
 }) => (
     <Modal visible={visible} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
@@ -25,65 +26,86 @@ const SlotModal = ({
                     </TouchableOpacity>
                 </View>
                 <ScrollView>
-                    {/* Quick Delivery */}
-                    <View style={styles.quickDeliveryContainer}>
-                        <TouchableOpacity
-                            onPress={() => setSelectedDeliveryType('quick')}
-                            style={selectedDeliveryType === 'quick' ? styles.radioSelected : styles.radioUnselected}
-                        />
-                        <View style={styles.quickDeliveryInnerView}>
-                            <Image style={styles.lightingImage} source={require('../assets/images/lighting.png')} />
-                            <Text style={styles.timeTextTwo}>20 min</Text>
-                        </View>
-                        <Text style={styles.quickDeliveryText}>Quick delivery</Text>
-                    </View>
+                    {deliveryModes.map((mode) => {
+                        const isSelected = selectedDeliveryType === mode.type;
 
-                    {/* Slot Delivery */}
-                    <View style={styles.slotDeliveryContainer}>
-                        <View style={styles.slotDeliveryInnerView}>
-                            <TouchableOpacity
-                                onPress={() => setSelectedDeliveryType('slot')}
-                                style={selectedDeliveryType === 'slot' ? styles.radioSelected : styles.radioUnselected}
-                            />
-                            <Image style={styles.clockImage} source={require('../assets/images/clock.png')} />
-                            <Text style={styles.timeTextTwo}>Slot Delivery</Text>
-                        </View>
-
-                        {/* Date Selection */}
-                        <View style={{ marginTop: hp('2.5%') }}>
-                            <Text style={styles.sectionTitle}>Select Date</Text>
-                            <View style={styles.datesContainer}>
-                                {datesList.map((item, index) => (
+                        // Handle "quick" or "express" type
+                        if (mode.type === 'quick' || mode.type === 'express') {
+                            return (
+                                <View key={mode.type} style={styles.quickDeliveryContainer}>
                                     <TouchableOpacity
-                                        key={item.id}
-                                        onPress={() => onSelectDate(index)}
-                                        style={[styles.dateCard, selectedDateIndex === index && styles.dateSelected]}
-                                    >
-                                        <Text style={styles.dateLabelText}>{item.label}</Text>
-                                        <Text style={styles.dateText}>{item.formatted}</Text>
-                                    </TouchableOpacity>
-                                ))}
-                            </View>
-                        </View>
+                                        onPress={() => setSelectedDeliveryType(mode.type)}
+                                        style={isSelected ? styles.radioSelected : styles.radioUnselected}
+                                    />
+                                    <View style={styles.quickDeliveryInnerView}>
+                                        <Image style={styles.lightingImage} source={require('../assets/images/lighting.png')} />
+                                        <Text style={styles.timeTextTwo}>{mode.name || '20 min'}</Text>
+                                    </View>
+                                    <Text style={styles.quickDeliveryText}>{mode.description || 'Quick delivery'}</Text>
+                                </View>
+                            );
+                        }
 
-                        {/* Time Selection */}
-                        <View style={{ marginTop: hp('2.5%') }}>
-                            <Text style={styles.sectionTitle}>Select Time</Text>
-                            <View style={styles.slotsContainer}>
-                                {slotsByDate[selectedDateIndex]?.map((slot, index) => (
-                                    <TouchableOpacity
-                                        key={index}
-                                        onPress={() => setSelectedSlot(slot)}
-                                        style={[styles.slotCard, selectedSlot === slot && styles.slotSelected]}
-                                    >
-                                        <Text style={[styles.slotText, selectedSlot === slot && styles.slotTextSelected]}>
-                                            {slot}
-                                        </Text>
-                                    </TouchableOpacity>
-                                ))}
-                            </View>
-                        </View>
-                    </View>
+                        // Handle "slotted" or "slot" type
+                        if (mode.type === 'slot' || mode.type === 'slotted') {
+                            return (
+                                <View key={mode.type} style={styles.slotDeliveryContainer}>
+                                    <View style={styles.slotDeliveryInnerView}>
+                                        <TouchableOpacity
+                                            onPress={() => setSelectedDeliveryType(mode.type)}
+                                            style={isSelected ? styles.radioSelected : styles.radioUnselected}
+                                        />
+                                        <Image style={styles.clockImage} source={require('../assets/images/clock.png')} />
+                                        <Text style={styles.timeTextTwo}>{mode.name || 'Slot Delivery'}</Text>
+                                    </View>
+
+                                    {/* Date Selection */}
+                                    <View style={{ marginTop: hp('2.5%') }}>
+                                        <Text style={styles.sectionTitle}>Select Date</Text>
+                                        <View style={styles.datesContainer}>
+                                            {datesList.map((item, index) => (
+                                                <TouchableOpacity
+                                                    key={item.id}
+                                                    onPress={() => onSelectDate(index)}
+                                                    style={[styles.dateCard, selectedDateIndex === index && styles.dateSelected]}
+                                                >
+                                                    <Text style={styles.dateLabelText}>{item.label}</Text>
+                                                    <Text style={styles.dateText}>{item.formatted}</Text>
+                                                </TouchableOpacity>
+                                            ))}
+                                        </View>
+                                    </View>
+
+                                    {/* Time Selection */}
+                                    <View style={{ marginTop: hp('2.5%') }}>
+                                        <Text style={styles.sectionTitle}>Select Time</Text>
+                                        <View style={styles.slotsContainer}>
+                                            {slotsByDate[selectedDateIndex]?.map((slot, index) => (
+                                                <TouchableOpacity
+                                                    key={index}
+                                                    onPress={() => setSelectedSlot(slot)}
+                                                    style={[styles.slotCard, selectedSlot === slot && styles.slotSelected]}
+                                                >
+                                                    <Text style={[styles.slotText, selectedSlot === slot && styles.slotTextSelected]}>
+                                                        {slot}
+                                                    </Text>
+                                                </TouchableOpacity>
+                                            ))}
+                                            {(!slotsByDate[selectedDateIndex] || slotsByDate[selectedDateIndex].length === 0) && (
+                                                <Text style={styles.dateLabelText}>No slots available for this date</Text>
+                                            )}
+                                        </View>
+                                    </View>
+                                </View>
+                            );
+                        }
+
+                        return null;
+                    })}
+
+                    {deliveryModes.length === 0 && (
+                        <Text style={styles.quickDeliveryText}>Loading delivery options...</Text>
+                    )}
                 </ScrollView>
             </View>
         </View>

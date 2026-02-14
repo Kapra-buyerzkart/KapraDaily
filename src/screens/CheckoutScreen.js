@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Platform, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AntDesign from 'react-native-vector-icons/AntDesign';
@@ -10,6 +10,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { LoaderContext } from '../context/loaderContext';
 import { CartContext } from '../context/CartContext';
 import { createOrderApi, confirmCodApi } from '../api/orderService';
+import { getPaymentModesApi } from '../api/configService';
 import BillSection from '../components/BillSection';
 import StatusModal from '../components/StatusModal';
 import LinearGradient from 'react-native-linear-gradient';
@@ -25,7 +26,7 @@ const CheckoutScreen = () => {
         pincodeAreaId
     } = route.params || {};
 
-    const { cartSummary, cartItems, clearCart } = useContext(CartContext);
+    const { cartSummary, cartItems, clearCart, getCartSummary } = useContext(CartContext);
     const { showLoader } = useContext(LoaderContext);
 
     // Modal state
@@ -38,6 +39,33 @@ const CheckoutScreen = () => {
     // Delivery & Payment selection
     const [deliveryType, setDeliveryType] = useState(selectedDeliveryType || 'express');
     const [paymentMethod, setPaymentMethod] = useState('cod');
+    const [paymentModes, setPaymentModes] = useState([]);
+
+    // Sync cart summary when address changes (different area)
+    useEffect(() => {
+        if (selectedAddress?.pincodeAreaId) {
+            console.log('🔄 [CHECKOUT] Address changed, refreshing summary for area:', selectedAddress.pincodeAreaId);
+            getCartSummary(deliveryType, selectedSlot, null, selectedAddress.pincodeAreaId);
+        }
+    }, [selectedAddress?.id]);
+
+    useEffect(() => {
+        const fetchPaymentModes = async () => {
+            try {
+                const response = await getPaymentModesApi();
+                if (response?.success && response?.data) {
+                    setPaymentModes(response.data);
+                    // Default to first available if cod not found
+                    if (!response.data.find(m => m.code === 'cod')) {
+                        setPaymentMethod(response.data[0]?.code);
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching payment modes:', error);
+            }
+        };
+        fetchPaymentModes();
+    }, []);
 
     const handleConfirmOrder = async () => {
         if (!selectedAddress) {
@@ -55,7 +83,7 @@ const CheckoutScreen = () => {
                 cartId: cartSummary?.cartId || cartItems?.[0]?.cartId,
                 shippingAddressId: selectedAddress.id,
                 billingAddressId: selectedAddress.id,
-                paymentMethod: "cod",
+                paymentMethod: paymentMethod, // Dynamically selected
                 ifMatchCartVersion: cartSummary?.cartVersion,
                 deliverySlotDate: deliveryType === 'slot' ? selectedDate : new Date().toISOString().split('T')[0],
                 deliverySlotTime: deliveryType === 'slot' ? selectedSlot : "Express",
@@ -193,47 +221,40 @@ const CheckoutScreen = () => {
                         <Text style={styles.sectionTitle}>Payment Method</Text>
                     </View>
                     <View style={styles.card}>
-                        {/* COD Option */}
-                        <TouchableOpacity
-                            style={styles.radioRow}
-                            onPress={() => setPaymentMethod('cod')}
-                            activeOpacity={0.7}
-                        >
-                            <Ionicons
-                                name={paymentMethod === 'cod' ? 'radio-button-on' : 'radio-button-off'}
-                                size={wp('5.5%')}
-                                color={paymentMethod === 'cod' ? '#F25000' : '#CCCCCC'}
-                            />
-                            <View style={styles.radioContent}>
-                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                    <MaterialCommunityIcons name="cash" size={wp('5.5%')} color="#0CA201" />
-                                    <Text style={[styles.radioTitle, { marginLeft: wp('2%') }, paymentMethod === 'cod' && { color: '#F25000' }]}>Cash on Delivery</Text>
-                                </View>
-                                <Text style={styles.radioSubtitle}>Pay when you receive</Text>
-                            </View>
-                        </TouchableOpacity>
-
-                        <View style={styles.radioDivider} />
-
-                        {/* Online Payment Option */}
-                        <TouchableOpacity
-                            style={styles.radioRow}
-                            onPress={() => setPaymentMethod('online')}
-                            activeOpacity={0.7}
-                        >
-                            <Ionicons
-                                name={paymentMethod === 'online' ? 'radio-button-on' : 'radio-button-off'}
-                                size={wp('5.5%')}
-                                color={paymentMethod === 'online' ? '#F25000' : '#CCCCCC'}
-                            />
-                            <View style={styles.radioContent}>
-                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                    <MaterialCommunityIcons name="cellphone" size={wp('5.5%')} color="#1A73E8" />
-                                    <Text style={[styles.radioTitle, { marginLeft: wp('2%') }, paymentMethod === 'online' && { color: '#F25000' }]}>Pay Online</Text>
-                                </View>
-                                <Text style={styles.radioSubtitle}>UPI, Cards, Net Banking</Text>
-                            </View>
-                        </TouchableOpacity>
+                        {paymentModes.map((mode, index) => (
+                            <React.Fragment key={mode.code}>
+                                <TouchableOpacity
+                                    style={styles.radioRow}
+                                    onPress={() => setPaymentMethod(mode.code)}
+                                    activeOpacity={0.7}
+                                >
+                                    <Ionicons
+                                        name={paymentMethod === mode.code ? 'radio-button-on' : 'radio-button-off'}
+                                        size={wp('5.5%')}
+                                        color={paymentMethod === mode.code ? '#F25000' : '#CCCCCC'}
+                                    />
+                                    <View style={styles.radioContent}>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                            <MaterialCommunityIcons
+                                                name={mode.code === 'cod' ? "cash" : mode.code === 'online' ? "cellphone" : "credit-card"}
+                                                size={wp('5.5%')}
+                                                color={mode.code === 'cod' ? "#0CA201" : mode.code === 'online' ? "#1A73E8" : "#777777"}
+                                            />
+                                            <Text style={[styles.radioTitle, { marginLeft: wp('2%') }, paymentMethod === mode.code && { color: '#F25000' }]}>
+                                                {mode.name}
+                                            </Text>
+                                        </View>
+                                        <Text style={styles.radioSubtitle}>
+                                            {mode.code === 'cod' ? "Pay when you receive" : mode.code === 'online' ? "UPI, Cards, Net Banking" : mode.description || ""}
+                                        </Text>
+                                    </View>
+                                </TouchableOpacity>
+                                {index < paymentModes.length - 1 && <View style={styles.radioDivider} />}
+                            </React.Fragment>
+                        ))}
+                        {paymentModes.length === 0 && (
+                            <Text style={styles.radioSubtitle}>Loading payment methods...</Text>
+                        )}
                     </View>
                 </View>
 

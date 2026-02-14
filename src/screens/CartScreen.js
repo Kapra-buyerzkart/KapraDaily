@@ -55,6 +55,7 @@ const CartScreen = () => {
         datesList,
         slotsByDate,
         onSelectDate,
+        deliveryModes,
 
         // Addresses
         addresses,
@@ -68,6 +69,7 @@ const CartScreen = () => {
 
     const { showLoader } = useContext(LoaderContext);
     const [isClearCartModalVisible, setIsClearCartModalVisible] = useState(false);
+    const [showBill, setShowBill] = useState(false);
     const [bTokens, setBTokens] = useState(0);
     const insets = useSafeAreaInsets();
 
@@ -110,7 +112,7 @@ const CartScreen = () => {
             {/* ─── Address Bar ─── */}
             <TouchableOpacity onPress={() => setShowAddressModal(true)} style={styles.addressView}>
                 <Text style={styles.addressText} numberOfLines={1} ellipsizeMode="tail">
-                    Vennala: Chakkarapparambuabcdefg
+                    {addresses.find(a => a.selected)?.address || 'Select Address'}
                 </Text>
                 <Entypo style={Platform.OS === 'android' && { top: hp('-0.2%') }} name={"chevron-down"} size={wp('3.6%')} color={"#000000"} />
             </TouchableOpacity>
@@ -120,16 +122,18 @@ const CartScreen = () => {
             ) : (
                 <>
                     <ScrollView>
-                        {/* ─── Banner ─── */}
-                        <View style={styles.bannerView}>
-                            <Image style={styles.bannerStyle} source={require('../assets/images/cart-banner.png')} />
-                        </View>
+                        {/* ─── Banner Section ─── */}
+                        <View style={styles.bannerContainer}>
+                            <View style={styles.bannerView}>
+                                <Image style={styles.bannerStyle} source={require('../assets/images/cart-banner.png')} />
+                            </View>
 
-                        {/* ─── Clear Cart ─── */}
-                        <View style={styles.clearCartContainer}>
-                            <TouchableOpacity onPress={() => setIsClearCartModalVisible(true)} style={styles.clearCartButton}>
-                                <Text style={styles.clearCartText}>Clear Cart</Text>
-                            </TouchableOpacity>
+                            {/* ─── Clear Cart Label ─── */}
+                            <View style={styles.clearCartWrapper}>
+                                <TouchableOpacity onPress={() => setIsClearCartModalVisible(true)} style={styles.clearCartButton}>
+                                    <Text style={styles.clearCartText}>Clear Cart</Text>
+                                </TouchableOpacity>
+                            </View>
                         </View>
 
                         {/* ─── Products ─── */}
@@ -171,8 +175,8 @@ const CartScreen = () => {
                             />
                         </View>
 
-                        {/* ─── Bill ─── */}
-                        <BillSection billCalculations={billCalculations} />
+                        {/* ─── Bill Section ─── */}
+                        {showBill && <BillSection billCalculations={billCalculations} />}
 
                         <View style={{ height: hp('15%') }} />
                     </ScrollView>
@@ -180,10 +184,13 @@ const CartScreen = () => {
                     {/* ─── Bottom Bar ─── */}
                     <View style={styles.bottomContainer}>
                         <View>
-                            <TouchableOpacity style={styles.bottomContainerInnerView}>
+                            <TouchableOpacity activeOpacity={0.7} onPress={() => setShowBill(!showBill)} style={styles.bottomContainerInnerView}>
                                 <Image style={styles.bottomContainerBillIcon} source={require('../assets/images/bill_icon.png')} />
                                 <Text style={styles.bottomContainerPriceText}>₹{billCalculations.toPay.toFixed(2)}</Text>
-                                <Image style={styles.bottomContainerDownArrowIcon} source={require('../assets/images/down_arrow.png')} />
+                                <Image
+                                    style={[styles.bottomContainerDownArrowIcon, showBill && { transform: [{ rotate: '0deg' }] }]}
+                                    source={require('../assets/images/down_arrow.png')}
+                                />
                             </TouchableOpacity>
                             {billCalculations.totalSavings > 0 && (
                                 <Text style={styles.savedPriceText}>You saved ₹{billCalculations.totalSavings.toFixed(2)}</Text>
@@ -243,6 +250,7 @@ const CartScreen = () => {
                 setSelectedSlot={setSelectedSlot}
                 datesList={datesList}
                 slotsByDate={slotsByDate}
+                deliveryModes={deliveryModes}
             />
             <CouponModal
                 visible={showCouponModal}
@@ -326,14 +334,29 @@ const styles = StyleSheet.create({
         color: '#000000',
         maxWidth: wp('85%')
     },
-    bannerView: {
+    bannerContainer: {
         paddingHorizontal: wp('4.65%'),
+        marginTop: hp('2%'),
+    },
+    bannerView: {
+        width: wp('90.7%'),
+        height: hp('20%'),
+        borderRadius: 16,
+        overflow: 'hidden',
+        backgroundColor: '#FFFFFF', // Changed to white to blend better with contain
+        alignSelf: 'center',
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3
     },
     bannerStyle: {
-        width: wp('90.7%'),
-        height: hp('18%'),
+        width: '100%',
+        height: '100%',
         resizeMode: 'contain',
-        alignSelf: 'center'
     },
     productListingContainer: {
         paddingHorizontal: wp('4.65%'),
@@ -346,11 +369,10 @@ const styles = StyleSheet.create({
         marginTop: hp('1%'),
         alignItems: 'center'
     },
-    clearCartContainer: {
-        flexDirection: 'row',
-        justifyContent: 'flex-end',
-        paddingHorizontal: wp('4.65%'),
+    clearCartButton: {
+        alignSelf: 'flex-end',
         marginTop: hp('1%'),
+        paddingVertical: hp('0.5%'),
     },
     itemsCountText: {
         fontFamily: FONTS.poppins.semiBold,
@@ -452,6 +474,11 @@ const styles = StyleSheet.create({
         fontFamily: FONTS.poppins.semiBold,
         fontSize: wp('4%'),
         color: '#FFFFFF'
+    },
+    clearCartWrapper: {
+        width: '100%',
+        alignItems: 'flex-end',
+        marginTop: hp('1%'),
     },
     clearCartButton: {
         paddingVertical: hp('0.5%'),

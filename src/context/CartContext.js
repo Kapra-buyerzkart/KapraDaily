@@ -75,12 +75,12 @@ export const CartProvider = ({ children }) => {
 
     // ─── getCartSummary: THE SINGLE SOURCE OF TRUTH for cartVersion ───
     // After this call, cartVersionRef.current is always up-to-date.
-    const getCartSummary = useCallback(async (deliveryMode = 'express', deliverySlotId = null, cartVersionOverride = null) => {
+    const getCartSummary = useCallback(async (deliveryMode = 'express', deliverySlotId = null, cartVersionOverride = null, pincodeAreaId = null) => {
         try {
             // Use override if provided (bootstrap from loadCart), otherwise use ref
             const versionToUse = cartVersionOverride || cartVersionRef.current;
-            console.log('📊 [SUMMARY] Calling with version:', versionToUse);
-            const response = await getCartSummaryApi(deliveryMode, deliverySlotId, versionToUse, cartId);
+            console.log('📊 [SUMMARY] Calling with version:', versionToUse, 'pincodeAreaId:', pincodeAreaId);
+            const response = await getCartSummaryApi(deliveryMode, deliverySlotId, versionToUse, cartId, pincodeAreaId);
             console.log('📊 [SUMMARY] Response:', JSON.stringify(response, null, 2));
             if (response && response.data) {
                 setCartSummary(response.data);

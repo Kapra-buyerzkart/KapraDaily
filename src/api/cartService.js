@@ -107,9 +107,9 @@ export const getCartApi = async (pincodeAreaId) => {
     });
 };
 
-export const getCartSummaryApi = async (deliveryMode = 'express', deliverySlotId = null, cartVersion = null, cartId = null) => {
+export const getCartSummaryApi = async (deliveryMode = 'express', deliverySlotId = null, cartVersion = null, cartId = null, pincodeAreaIdOverride = null) => {
     const userId = await getUserId();
-    const pincodeAreaId = await getPincodeAreaId();
+    const pincodeAreaId = pincodeAreaIdOverride || await getPincodeAreaId();
     const idToUse = cartId || userId;
 
     const payload = {

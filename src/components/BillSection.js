@@ -27,7 +27,7 @@ const BillSection = ({ billCalculations }) => {
     } = billCalculations;
 
     return (
-        <ImageBackground style={styles.billImageBackground} source={require('../assets/images/bill_background.png')}>
+        <ImageBackground style={styles.billImageBackground} imageStyle={styles.billImageStyle} source={require('../assets/images/bill_background.png')}>
             <View style={styles.billHeaderContainer}>
                 <Image style={styles.billIcon} source={require('../assets/images/bill_icon.png')} />
                 <Text style={styles.billHeaderText}>View Your Bill</Text>
@@ -92,14 +92,17 @@ const styles = StyleSheet.create({
         width: wp('90.7%'),
         alignSelf: 'center',
         marginTop: hp('2%'),
-        paddingVertical: hp('2%'),
-        paddingHorizontal: wp('4%'),
-        marginBottom: hp('12%')
+        paddingVertical: hp('3%'), // Increased vertical padding for receipt look
+        paddingHorizontal: wp('6%'), // Consistent horizontal padding
+    },
+    billImageStyle: {
+        resizeMode: 'stretch', // Ensure the background stretches to fit content height
     },
     billHeaderContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: hp('1%')
+        marginBottom: hp('1.5%'),
+        marginHorizontal: wp('0.5%')
     },
     billIcon: {
         width: wp('5%'),
