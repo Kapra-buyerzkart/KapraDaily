@@ -41,7 +41,15 @@ const AddressCard = ({ item, onSelect, onEdit, onThreeDots, onDelete, onCloseThr
                             </TouchableOpacity>
                         </View>
                     ) : (
-                        <ThreeDotsActions onDelete={() => onDelete(item.id)} onCloseThreeDots={onCloseThreeDots} />
+                        <ThreeDotsActions
+                            onEdit={() => {
+                                onCloseThreeDots();
+                                onClose?.();
+                                navigation.navigate("AddLocationScreen", { address: item.raw });
+                            }}
+                            onDelete={() => onDelete(item.id)}
+                            onCloseThreeDots={onCloseThreeDots}
+                        />
                     )
                 ) : (
                     !item.threeDotsClicked ? (
@@ -49,7 +57,15 @@ const AddressCard = ({ item, onSelect, onEdit, onThreeDots, onDelete, onCloseThr
                             <Image style={styles.threeDotsIcon} source={require('../assets/images/three_dots.png')} />
                         </TouchableOpacity>
                     ) : (
-                        <ThreeDotsActions onDelete={() => onDelete(item.id)} onCloseThreeDots={onCloseThreeDots} />
+                        <ThreeDotsActions
+                            onEdit={() => {
+                                onCloseThreeDots();
+                                onClose?.();
+                                navigation.navigate("AddLocationScreen", { address: item.raw });
+                            }}
+                            onDelete={() => onDelete(item.id)}
+                            onCloseThreeDots={onCloseThreeDots}
+                        />
                     )
                 )}
             </View>
@@ -68,9 +84,9 @@ const AddressCard = ({ item, onSelect, onEdit, onThreeDots, onDelete, onCloseThr
     );
 };
 
-const ThreeDotsActions = ({ onDelete, onCloseThreeDots }) => (
+const ThreeDotsActions = ({ onEdit, onDelete, onCloseThreeDots }) => (
     <View style={styles.threeDotActionContainer}>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={onEdit}>
             <Image style={styles.editIcon} source={require('../assets/images/edit_icon.png')} />
         </TouchableOpacity>
         <TouchableOpacity hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} onPress={onDelete}>

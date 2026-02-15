@@ -46,8 +46,14 @@ export const CartProvider = ({ children }) => {
                     const isSelected = addr.isDefaultShippingAddress && !selectionFound;
                     if (isSelected) selectionFound = true;
 
+                    const validId = addr.addressId || addr.id;
+                    if (!validId) console.warn('⚠️ [ADDRESS] Found address with no ID:', addr);
+
+                    // If mapping "raw", ensure it has the ID we expect for updates
+                    const rawWithId = { ...addr, addressId: validId };
+
                     return {
-                        id: addr.addressId,
+                        id: validId,
                         type: addr.addressType || 'Home',
                         address: `${addr.addLine1}, ${addr.addLine2}${addr.landmark ? `, ${addr.landmark}` : ''}`,
                         phone: addr.phone,
@@ -58,8 +64,14 @@ export const CartProvider = ({ children }) => {
                             : require('../assets/images/office_icon.png'),
                         selected: isSelected,
                         threeDotsClicked: false,
-                        raw: addr
+                        raw: rawWithId
                     };
+                }).filter(addr => {
+                    if (!addr.id) {
+                        console.warn('⚠️ [ADDRESS] Skipping address due to missing ID:', addr);
+                        return false;
+                    }
+                    return true;
                 });
 
                 if (mappedAddresses.length > 0 && !selectionFound) {
@@ -75,6 +87,11 @@ export const CartProvider = ({ children }) => {
     }, []);
 
     const onSelectAddress = useCallback((addressId) => {
+        console.log('👆 [ADDRESS] Selecting addressId:', addressId);
+        if (!addressId) {
+            console.warn('⚠️ [ADDRESS] Attempted to select invalid addressId:', addressId);
+            return;
+        }
         setAddresses(prev =>
             prev.map(item => ({
                 ...item,

@@ -18,117 +18,91 @@ const SavedAddressScreen = () => {
         refreshAddresses
     } = useAddresses();
 
-    const AddressCard = (item) => {
+    const AddressCard = React.memo(({ item, onSelectAddress, onThreeDotsClicked, onDeleteClicked, navigation, onCloseThreeDots }) => {
+        const handlePress = () => {
+            if (item.selected) {
+                navigation.navigate("AddLocationScreen", { address: item.raw });
+            } else {
+                onSelectAddress(item.id);
+            }
+        };
+
         return (
-            <TouchableOpacity onPress={item.item.selected === true ? () => {
-                navigation.navigate("AddLocationScreen", { address: item.item.raw })
-            } : () => {
-                onSelectAddress(item.item.id)
-            }}
-
-                style={item.item.selected === false ? (
-                    [styles.addressContainer, {
-                        borderColor: '#DADADA'
-                    }]) : (
-                    styles.addressContainer
-                )}>
-                <View style={item.item.selected === true ?
-                    (styles.addressContainerTopView) :
-                    ([styles.addressContainerTopView, { marginBottom: hp('1%') }])}>
+            <TouchableOpacity
+                onPress={handlePress}
+                style={[styles.addressContainer, !item.selected && { borderColor: '#DADADA' }]}
+            >
+                <View style={[styles.addressContainerTopView, !item.selected && { marginBottom: hp('1%') }]}>
                     <View style={styles.addressContainerInnerView}>
-                        <Image style={item.item.type === 'home' ? (
-                            styles.homeIcon
-                        ) : ([
-                            styles.homeIcon, {
-                                height: wp('3%')
-                            }
-                        ])} source={item.item.type === 'Home' ? (
-                            require('../assets/images/home_icon.png')) : (
-                            require('../assets/images/office_icon.png'))} />
-                        <Text style={styles.addressTypeText}>{item.item.type}</Text>
+                        <Image
+                            style={[styles.homeIcon, item.type !== 'Home' && { height: wp('3%') }]}
+                            source={item.type === 'Home'
+                                ? require('../assets/images/home_icon.png')
+                                : require('../assets/images/office_icon.png')}
+                        />
+                        <Text style={styles.addressTypeText}>{item.type}</Text>
                     </View>
-                    {
-                        item.item.selected === true ? (
-                            item.item.threeDotsClicked === false ? (
-                                <View style={{
-                                    flexDirection: 'row'
-                                }}>
-                                    <View style={styles.selectedView}>
-                                        <Image style={styles.tickImage} source={require('../assets/images/tick.png')} />
-                                        <Text style={styles.selectedText}>Selected</Text>
-                                    </View>
-                                    <TouchableOpacity
-                                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                                        onPress={() => onThreeDotsClicked(item.item.id)}>
-                                        <Image style={styles.threeDotsIcon} source={require('../assets/images/three_dots.png')} />
-                                    </TouchableOpacity>
-                                </View>
 
-                            ) : (< View style={styles.threeDotActionContainer}>
-                                <TouchableOpacity onPress={() => navigation.navigate("AddLocationScreen", { address: item.item.raw })}>
-                                    <Image style={styles.editIcon} source={require('../assets/images/edit_icon.png')} />
+                    {item.selected ? (
+                        !item.threeDotsClicked ? (
+                            <View style={{ flexDirection: 'row' }}>
+                                <View style={styles.selectedView}>
+                                    <Image style={styles.tickImage} source={require('../assets/images/tick.png')} />
+                                    <Text style={styles.selectedText}>Selected</Text>
+                                </View>
+                                <TouchableOpacity hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} onPress={() => onThreeDotsClicked(item.id)}>
+                                    <Image style={styles.threeDotsIcon} source={require('../assets/images/three_dots.png')} />
                                 </TouchableOpacity>
-                                <TouchableOpacity hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} onPress={() => onDeleteClicked(item.item.id)}>
-                                    <Image style={styles.editIcon} source={require('../assets/images/delete_icon_two.png')} />
-                                </TouchableOpacity>
-                                <TouchableOpacity onPress={onCloseThreeDots}>
-                                    <Image style={styles.editIcon} source={require('../assets/images/right_arrow.png')} />
-                                </TouchableOpacity>
-                            </View>)
+                            </View>
                         ) : (
-                            item.item.threeDotsClicked === false ? (<TouchableOpacity
-                                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                                onPress={() => onThreeDotsClicked(item.item.id)}>
+                            <ThreeDotsActions
+                                onEdit={() => navigation.navigate("AddLocationScreen", { address: item.raw })}
+                                onDelete={() => onDeleteClicked(item.id)}
+                                onCloseThreeDots={onCloseThreeDots}
+                            />
+                        )
+                    ) : (
+                        !item.threeDotsClicked ? (
+                            <TouchableOpacity hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} onPress={() => onThreeDotsClicked(item.id)}>
                                 <Image style={styles.threeDotsIcon} source={require('../assets/images/three_dots.png')} />
                             </TouchableOpacity>
-                            ) : (< View style={styles.threeDotActionContainer}>
-                                <TouchableOpacity onPress={() => navigation.navigate("AddLocationScreen", { address: item.item.raw })}>
-                                    <Image style={styles.editIcon} source={require('../assets/images/edit_icon.png')} />
-                                </TouchableOpacity>
-                                <TouchableOpacity hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} onPress={() => onDeleteClicked(item.item.id)}>
-                                    <Image style={styles.editIcon} source={require('../assets/images/delete_icon_two.png')} />
-                                </TouchableOpacity>
-                                <TouchableOpacity hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} onPress={onCloseThreeDots}>
-                                    <Image style={styles.editIcon} source={require('../assets/images/right_arrow.png')} />
-                                </TouchableOpacity>
-                            </View>
-                            )
+                        ) : (
+                            <ThreeDotsActions
+                                onEdit={() => navigation.navigate("AddLocationScreen", { address: item.raw })}
+                                onDelete={() => onDeleteClicked(item.id)}
+                                onCloseThreeDots={onCloseThreeDots}
+                            />
                         )
-                    }
+                    )}
                 </View>
-                {
-                    item.item.selected === false ? (
-                        <View style={styles.unSelectedAddressInnerContainer}>
-                            <Text style={[styles.addressLine, {
-                                marginHorizontal: wp('4%')
-                            }]}>{item.item.address}</Text>
-                            <View style={styles.addressContainerBottomView}>
-                                <View style={styles.addressBottomInnerView}>
-                                    <Image style={styles.phoneIcon} source={require('../assets/images/phone_icon.png')} />
-                                    <Text style={styles.addressLine}>{item.item.phone}</Text>
-                                </View>
-                                <Text style={styles.addressLine}>PIN: {item.item.pin}</Text>
-                            </View>
-                        </View>
-                    ) : (
-                        <>
-                            <Text style={[styles.addressLine, {
-                                marginHorizontal: wp('4%')
-                            }]}>{item.item.address}</Text>
-                            <View style={styles.addressContainerBottomView}>
-                                <View style={styles.addressBottomInnerView}>
-                                    <Image style={styles.phoneIcon} source={require('../assets/images/phone_icon.png')} />
-                                    <Text style={styles.addressLine}>{item.item.phone}</Text>
-                                </View>
-                                <Text style={styles.addressLine}>PIN: {item.item.pin}</Text>
-                            </View>
 
-                        </>
-                    )
-                }
-            </TouchableOpacity >
-        )
-    }
+                <View style={!item.selected ? styles.unSelectedAddressInnerContainer : undefined}>
+                    <Text style={[styles.addressLine, { marginHorizontal: wp('4%') }]}>{item.address}</Text>
+                    <View style={styles.addressContainerBottomView}>
+                        <View style={styles.addressBottomInnerView}>
+                            <Image style={styles.phoneIcon} source={require('../assets/images/phone_icon.png')} />
+                            <Text style={styles.addressLine}>{item.phone}</Text>
+                        </View>
+                        <Text style={styles.addressLine}>PIN: {item.pin}</Text>
+                    </View>
+                </View>
+            </TouchableOpacity>
+        );
+    });
+
+    const ThreeDotsActions = ({ onEdit, onDelete, onCloseThreeDots }) => (
+        <View style={styles.threeDotActionContainer}>
+            <TouchableOpacity onPress={onEdit}>
+                <Image style={styles.editIcon} source={require('../assets/images/edit_icon.png')} />
+            </TouchableOpacity>
+            <TouchableOpacity hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} onPress={onDelete}>
+                <Image style={styles.editIcon} source={require('../assets/images/delete_icon_two.png')} />
+            </TouchableOpacity>
+            <TouchableOpacity hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} onPress={onCloseThreeDots}>
+                <Image style={styles.editIcon} source={require('../assets/images/right_arrow.png')} />
+            </TouchableOpacity>
+        </View>
+    );
 
     return (
         <SafeAreaView style={styles.mainContainer}>
@@ -141,7 +115,16 @@ const SavedAddressScreen = () => {
             <FlatList
                 data={addresses}
                 keyExtractor={(item) => item.id}
-                renderItem={({ item }) => <AddressCard item={item} />}
+                renderItem={({ item }) => (
+                    <AddressCard
+                        item={item}
+                        onSelectAddress={onSelectAddress}
+                        onThreeDotsClicked={onThreeDotsClicked}
+                        onDeleteClicked={onDeleteClicked}
+                        onCloseThreeDots={onCloseThreeDots}
+                        navigation={navigation}
+                    />
+                )}
                 showsVerticalScrollIndicator={false}
                 refreshControl={
                     <RefreshControl refreshing={isLoading} onRefresh={refreshAddresses} />

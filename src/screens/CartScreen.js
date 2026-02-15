@@ -243,6 +243,8 @@ const CartScreen = () => {
                                         selectedDeliveryType,
                                         selectedSlot,
                                         selectedDate,
+                                        preloadedBillCalculations: billCalculations,
+                                        preloadedCartSummary: cartSummary
                                     });
                                 }}
                                 style={{ backgroundColor: 'transparent', width: '100%', alignItems: 'center' }}

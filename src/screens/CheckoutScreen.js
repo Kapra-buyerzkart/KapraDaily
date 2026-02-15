@@ -23,7 +23,9 @@ const CheckoutScreen = () => {
         selectedDeliveryType,
         selectedSlot,
         selectedDate,
-        pincodeAreaId
+        pincodeAreaId,
+        preloadedBillCalculations,
+        preloadedCartSummary
     } = route.params || {};
 
     const {
@@ -56,12 +58,61 @@ const CheckoutScreen = () => {
     useEffect(() => {
         const currentPincodeAreaId = pincodeAreaId || currentSelectedAddress?.pincodeAreaId;
 
-        // Refresh summary whenever key dependencies change
+        // Refresh summary whenever key dependencies change, BUT ONLY if we need to.
+        // If we have preloaded data and nothing changed, we might skip or let it silent-update.
+        // For safety, we still sync, but the UI will use preloaded values initially if available.
         if (currentPincodeAreaId) {
             console.log('🔄 [CHECKOUT] Syncing summary for area:', currentPincodeAreaId);
             getCartSummary(deliveryType, selectedSlot, null, currentPincodeAreaId);
         }
     }, [currentSelectedAddress?.id, deliveryType, selectedSlot, pincodeAreaId]);
+
+    // ─── Bill calculations (Matches useCartScreen logic) ───
+    const frontendBillCalculations = React.useMemo(() => {
+        let mrpTotal = 0;
+        let itemTotal = 0;
+        cartItems.forEach(item => {
+            const quantity = item.quantity || 1;
+            const specialPrice = item.specialPrice || item.unitPrice || item.price || 0;
+            const mrpPrice = item.mrp || item.mrpPrice || specialPrice;
+            itemTotal += specialPrice * quantity;
+            mrpTotal += mrpPrice * quantity;
+        });
+        const savings = mrpTotal - itemTotal;
+        const deliveryCharge = (itemTotal > 0 && itemTotal < 500) ? 5 : 0;
+        const totalSavings = savings + (deliveryCharge === 0 && itemTotal >= 500 ? 5 : 0);
+        const toPay = itemTotal + deliveryCharge;
+        return { mrpTotal, itemTotal, savings, deliveryCharge, couponDiscount: 0, totalSavings, toPay };
+    }, [cartItems]);
+
+    const billCalculations = React.useMemo(() => {
+        // 1. Priority: Preloaded calculations passed from CartScreen (if available & valid)
+        if (preloadedBillCalculations) {
+            return preloadedBillCalculations;
+        }
+
+        // 2. Priority: Server-side Summary
+        // If we have a preloaded summary, use that structure, otherwise context summary
+        const summary = cartSummary || preloadedCartSummary;
+
+        if (summary) {
+            return {
+                mrpTotal: (summary.subTotal || 0) + (summary.productDiscount || 0),
+                itemTotal: summary.subTotal ?? frontendBillCalculations.itemTotal,
+                savings: summary.productDiscount ?? 0,
+                deliveryCharge: summary.deliveryAmount ?? 0,
+                couponDiscount: summary.couponAmount ?? 0,
+                giftCardAmount: summary.giftCardAmount ?? 0,
+                bcoinsAppliedValue: summary.bcoinsAppliedValue ?? 0,
+                totalTax: summary.totalTax ?? 0,
+                totalBtokens: summary.totalBtokens ?? 0,
+                totalSavings: summary.totalDiscount ?? 0,
+                toPay: summary.grandTotal ?? frontendBillCalculations.toPay
+            };
+        }
+        // 3. Fallback: Frontend calculations
+        return frontendBillCalculations;
+    }, [cartSummary, frontendBillCalculations, preloadedBillCalculations, preloadedCartSummary]);
 
     // Fetch payment modes once on mount
     useEffect(() => {
@@ -290,19 +341,7 @@ const CheckoutScreen = () => {
 
                 {showBill && !cartError && (
                     <View style={styles.billContainer}>
-                        <BillSection billCalculations={{
-                            mrpTotal: (cartSummary?.subTotal || 0) + (cartSummary?.productDiscount || 0),
-                            itemTotal: cartSummary?.subTotal || 0,
-                            savings: cartSummary?.productDiscount || 0,
-                            deliveryCharge: cartSummary?.deliveryAmount || 0,
-                            couponDiscount: cartSummary?.couponAmount || 0,
-                            giftCardAmount: cartSummary?.giftCardAmount || 0,
-                            bcoinsAppliedValue: cartSummary?.bcoinsAppliedValue || 0,
-                            totalTax: cartSummary?.totalTax || 0,
-                            totalBtokens: cartSummary?.totalBtokens || 0,
-                            totalSavings: cartSummary?.totalDiscount || 0,
-                            toPay: cartSummary?.grandTotal || 0
-                        }} />
+                        <BillSection billCalculations={billCalculations} />
                     </View>
                 )}
             </ScrollView>
@@ -312,7 +351,7 @@ const CheckoutScreen = () => {
                 <TouchableOpacity activeOpacity={0.7} onPress={() => setShowBill(!showBill)} style={styles.bottomAmountContainer}>
                     <Text style={styles.totalLabel}>Total Payable</Text>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <Text style={styles.totalAmount}>₹{cartSummary?.grandTotal?.toFixed(2) || '0.00'}</Text>
+                        <Text style={styles.totalAmount}>₹{billCalculations.toPay?.toFixed(2) || '0.00'}</Text>
                         <Image
                             style={[styles.arrowIcon, showBill && { transform: [{ rotate: '180deg' }] }]}
                             source={require('../assets/images/down_arrow.png')}
