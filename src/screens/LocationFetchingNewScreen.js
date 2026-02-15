@@ -747,7 +747,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
                                             {selectedLocation && selectedLocation?.pincodeAreaId == item?.pincodeAreaId && (
                                                 <View>
                                                     {/* {showIcon('tick', colours.kapraOrange, windowWidth * 0.05)} */}
-                                                    <Image source={require('../assets/icons/tick.png')} style={{
+                                                    <Image tintColor={'#FF7148'} source={require('../assets/icons/tick.png')} style={{
                                                         height: windowWidth * 0.05,
                                                         width: windowWidth * 0.05
                                                     }} />
