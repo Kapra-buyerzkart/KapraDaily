@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, FlatList, 
 import React, { useContext, useState, useEffect } from 'react'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import AntDesign from 'react-native-vector-icons/AntDesign'
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import { FONTS } from '../styles/typography'
 import { useNavigation } from '@react-navigation/native'
@@ -10,6 +11,7 @@ import OfferCard from '../components/OfferCard'
 import LinearGradient from 'react-native-linear-gradient'
 import Entypo from 'react-native-vector-icons/Entypo'
 import { useCartScreen } from '../hooks/useCartScreen'
+import { CartContext } from '../context/CartContext'
 import AppButton from '../components/AppButton'
 import { LoaderContext } from '../context/loaderContext'
 import ConfirmationModal from '../components/ConfirmationModal'
@@ -26,9 +28,7 @@ const CartScreen = () => {
     const navigation = useNavigation()
     const {
         // Cart
-        cartItems,
         billCalculations,
-        clearCart,
 
         // Offers
         offers,
@@ -58,20 +58,33 @@ const CartScreen = () => {
         deliveryModes,
 
         // Addresses
+        // cartError, // Removed as it comes from CartContext
+    } = useCartScreen();
+
+    const { showLoader } = useContext(LoaderContext);
+    const {
+        cartSummary,
+        cartItems,
+        clearCart,
+        getCartSummary,
+        error: cartError,
         addresses,
         showAddressModal,
         setShowAddressModal,
         onSelectAddress,
         onThreeDotsClicked,
         onDeleteClicked,
-        onCloseThreeDots,
-    } = useCartScreen();
-
-    const { showLoader } = useContext(LoaderContext);
+        onCloseThreeDots
+    } = useContext(CartContext);
     const [isClearCartModalVisible, setIsClearCartModalVisible] = useState(false);
     const [showBill, setShowBill] = useState(false);
     const [bTokens, setBTokens] = useState(0);
     const insets = useSafeAreaInsets();
+
+    useEffect(() => {
+        console.log('🧾 [CART SCREEN] Bill Calculations Update:', JSON.stringify(billCalculations, null, 2));
+        console.log('🧾 [CART SCREEN] Source:', cartSummary ? 'Server' : 'Frontend Fallback');
+    }, [billCalculations, cartSummary]);
 
     useEffect(() => {
         const fetchWalletData = async () => {
@@ -94,7 +107,7 @@ const CartScreen = () => {
         >
             {/* ─── Header ─── */}
             <View style={styles.headerContainer}>
-                <TouchableOpacity style={{ top: Platform.OS === 'android' && hp('-0.2%') }} onPress={() => navigation.goBack()}>
+                <TouchableOpacity style={{ top: Platform.OS === 'android' ? hp('-0.2%') : 0 }} onPress={() => navigation.goBack()}>
                     <AntDesign name={'left'} size={wp('5%')} color={'#777777'} />
                 </TouchableOpacity>
                 <Text style={styles.headerText}>Cart</Text>
@@ -114,7 +127,7 @@ const CartScreen = () => {
                 <Text style={styles.addressText} numberOfLines={1} ellipsizeMode="tail">
                     {addresses.find(a => a.selected)?.address || 'Select Address'}
                 </Text>
-                <Entypo style={Platform.OS === 'android' && { top: hp('-0.2%') }} name={"chevron-down"} size={wp('3.6%')} color={"#000000"} />
+                <Entypo style={Platform.OS === 'android' ? { top: hp('-0.2%') } : {}} name={"chevron-down"} size={wp('3.6%')} color={"#000000"} />
             </TouchableOpacity>
 
             {cartItems.length === 0 ? (
@@ -138,11 +151,18 @@ const CartScreen = () => {
 
                         {/* ─── Products ─── */}
                         <View style={styles.productListingContainer}>
-                            <FlatList
-                                data={cartItems}
-                                keyExtractor={(item, index) => item.cartItemId?.toString() || item.productId?.toString() || index.toString()}
-                                renderItem={({ item }) => <CartProductCard item={item} />}
-                            />
+                            {cartError && (
+                                <View style={styles.errorBanner}>
+                                    <MaterialCommunityIcons name="alert-circle-outline" size={wp('5%')} color="#D32F2F" />
+                                    <Text style={styles.errorText}>{cartError}</Text>
+                                </View>
+                            )}
+                            {cartItems.map((item, index) => (
+                                <CartProductCard
+                                    key={item.cartItemId?.toString() || item.productId?.toString() || index.toString()}
+                                    item={item}
+                                />
+                            ))}
                         </View>
 
                         {/* ─── Item Count + B-Tokens ─── */}
@@ -162,21 +182,26 @@ const CartScreen = () => {
                                 <Image style={styles.offersHeaderImage} source={require('../assets/images/add_offer.png')} />
                                 <Text style={styles.offersHeaderText}>Add Offers</Text>
                             </View>
-                            <FlatList
-                                data={offers}
-                                keyExtractor={(item) => item.id}
-                                renderItem={({ item }) => (
-                                    <OfferCard
-                                        item={item}
-                                        onApply={() => onApplyOffer(item.id)}
-                                        onReject={() => onRejectOffer(item.id)}
-                                    />
-                                )}
-                            />
+                            {offers.map((item) => (
+                                <OfferCard
+                                    key={item.id}
+                                    item={item}
+                                    onApply={() => onApplyOffer(item.id)}
+                                    onReject={() => onRejectOffer(item.id)}
+                                />
+                            ))}
                         </View>
 
-                        {/* ─── Bill Section ─── */}
-                        {showBill && <BillSection billCalculations={billCalculations} />}
+                        {/* Bill Section */}
+                        {cartError && (
+                            <View style={styles.errorSection}>
+                                <MaterialCommunityIcons name="alert-circle-outline" size={wp('6%')} color="#D32F2F" />
+                                <Text style={styles.errorText}>{cartError}</Text>
+                            </View>
+                        )}
+
+                        {showBill && !cartError && (
+                            <BillSection billCalculations={billCalculations} />)}
 
                         <View style={{ height: hp('15%') }} />
                     </ScrollView>
@@ -186,14 +211,14 @@ const CartScreen = () => {
                         <View>
                             <TouchableOpacity activeOpacity={0.7} onPress={() => setShowBill(!showBill)} style={styles.bottomContainerInnerView}>
                                 <Image style={styles.bottomContainerBillIcon} source={require('../assets/images/bill_icon.png')} />
-                                <Text style={styles.bottomContainerPriceText}>₹{billCalculations.toPay.toFixed(2)}</Text>
+                                <Text style={styles.bottomContainerPriceText}>₹{(billCalculations.toPay || 0).toFixed(2)}</Text>
                                 <Image
                                     style={[styles.bottomContainerDownArrowIcon, showBill && { transform: [{ rotate: '0deg' }] }]}
                                     source={require('../assets/images/down_arrow.png')}
                                 />
                             </TouchableOpacity>
                             {billCalculations.totalSavings > 0 && (
-                                <Text style={styles.savedPriceText}>You saved ₹{billCalculations.totalSavings.toFixed(2)}</Text>
+                                <Text style={styles.savedPriceText}>You saved ₹{(billCalculations.totalSavings || 0).toFixed(2)}</Text>
                             )}
                         </View>
                         <LinearGradient style={styles.selectAddressButtonGradient} colors={['#F25000', '#FF7B3A']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
@@ -489,4 +514,31 @@ const styles = StyleSheet.create({
         color: '#F25000',
         textDecorationLine: 'underline',
     },
+    errorBanner: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#FFEBEE',
+        padding: wp('3%'),
+        borderRadius: 8,
+        marginHorizontal: wp('4.65%'),
+        marginBottom: hp('1%')
+    },
+    errorSection: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#FFEBEE',
+        padding: wp('4%'),
+        marginHorizontal: wp('4.65%'),
+        marginTop: hp('2%'),
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: '#FFCDD2'
+    },
+    errorText: {
+        fontFamily: FONTS.outfit.medium,
+        fontSize: wp('3.5%'),
+        color: '#D32F2F',
+        marginLeft: wp('2%'),
+        flex: 1
+    }
 });

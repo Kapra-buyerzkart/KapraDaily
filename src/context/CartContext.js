@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useCallback, useMemo, useRef, useEffect } from 'react';
 import { addToCartApi, removeFromCartApi, updateCartItemApi, getCartApi, getCartSummaryApi, clearCartApi, applyCouponApi, removeCouponApi, applyGiftCardApi, removeGiftCardApi, applyBCoinApi, removeBCoinApi } from '../api/cartService';
+import { getAddressListApi, deleteAddressApi } from '../api/addressService';
 import Toast from 'react-native-simple-toast';
 
 export const CartContext = createContext();
@@ -9,11 +10,19 @@ export const CartProvider = ({ children }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [cartSummary, setCartSummary] = useState(null);
     const [cartId, setCartId] = useState(null);
+    const cartIdRef = useRef(null);
+    const [error, setError] = useState(null);
+
+    // ─── Addresses State ───
+    const [addresses, setAddresses] = useState([]);
+    const [isLoadingAddresses, setIsLoadingAddresses] = useState(false);
+    const [showAddressModal, setShowAddressModal] = useState(false);
 
     // ─── useRef for cartVersion so every callback always reads the LATEST value ───
     const cartVersionRef = useRef(null);
     const [cartVersion, setCartVersion] = useState(null); // kept for dependency tracking / re-renders
     const loadRequestRef = useRef(null);
+    const summaryRequestRef = useRef(null);
 
     // Helper to update version in both ref and state
     const updateCartVersion = useCallback((newVersion) => {
@@ -23,6 +32,76 @@ export const CartProvider = ({ children }) => {
 
     useEffect(() => {
         loadCart();
+        fetchAddresses();
+    }, []);
+
+    // ─── Addresses Logic ───
+    const fetchAddresses = useCallback(async () => {
+        setIsLoadingAddresses(true);
+        try {
+            const response = await getAddressListApi();
+            if (response && response.data) {
+                let selectionFound = false;
+                const mappedAddresses = response.data.map(addr => {
+                    const isSelected = addr.isDefaultShippingAddress && !selectionFound;
+                    if (isSelected) selectionFound = true;
+
+                    return {
+                        id: addr.addressId,
+                        type: addr.addressType || 'Home',
+                        address: `${addr.addLine1}, ${addr.addLine2}${addr.landmark ? `, ${addr.landmark}` : ''}`,
+                        phone: addr.phone,
+                        pin: addr.pincode,
+                        pincodeAreaId: addr.pincodeAreaId,
+                        icon: addr.addressType?.toLowerCase() === 'home'
+                            ? require('../assets/images/home_icon.png')
+                            : require('../assets/images/office_icon.png'),
+                        selected: isSelected,
+                        threeDotsClicked: false,
+                        raw: addr
+                    };
+                });
+
+                if (mappedAddresses.length > 0 && !selectionFound) {
+                    mappedAddresses[0].selected = true;
+                }
+                setAddresses(mappedAddresses);
+            }
+        } catch (error) {
+            console.error('Error fetching addresses:', error);
+        } finally {
+            setIsLoadingAddresses(false);
+        }
+    }, []);
+
+    const onSelectAddress = useCallback((addressId) => {
+        setAddresses(prev =>
+            prev.map(item => ({
+                ...item,
+                selected: String(item.id) === String(addressId)
+            }))
+        );
+    }, []);
+
+    const onThreeDotsClicked = useCallback((addressId) => {
+        setAddresses(prev =>
+            prev.map(item => ({ ...item, threeDotsClicked: item.id === addressId }))
+        );
+    }, []);
+
+    const onDeleteClicked = useCallback(async (addressId) => {
+        try {
+            await deleteAddressApi(addressId);
+            setAddresses(prev => prev.filter(item => item.id !== addressId));
+        } catch (error) {
+            console.error('Error deleting address:', error);
+        }
+    }, []);
+
+    const onCloseThreeDots = useCallback(() => {
+        setAddresses(prev =>
+            prev.map(item => ({ ...item, threeDotsClicked: false }))
+        );
     }, []);
 
     // ─── loadCart: fetches item list and returns cartVersion (bootstrap only) ───
@@ -43,6 +122,7 @@ export const CartProvider = ({ children }) => {
                     }
                     if (response.data.cart && response.data.cart.cartId) {
                         setCartId(response.data.cart.cartId);
+                        cartIdRef.current = response.data.cart.cartId;
                     }
                     if (response.data.items) {
                         const items = Array.isArray(response.data.items) ? response.data.items : [];
@@ -73,32 +153,55 @@ export const CartProvider = ({ children }) => {
         return promise;
     }, []);
 
-    // ─── getCartSummary: THE SINGLE SOURCE OF TRUTH for cartVersion ───
     // After this call, cartVersionRef.current is always up-to-date.
-    const getCartSummary = useCallback(async (deliveryMode = 'express', deliverySlotId = null, cartVersionOverride = null, pincodeAreaId = null) => {
-        try {
-            // Use override if provided (bootstrap from loadCart), otherwise use ref
-            const versionToUse = cartVersionOverride || cartVersionRef.current;
-            console.log('📊 [SUMMARY] Calling with version:', versionToUse, 'pincodeAreaId:', pincodeAreaId);
-            const response = await getCartSummaryApi(deliveryMode, deliverySlotId, versionToUse, cartId, pincodeAreaId);
-            console.log('📊 [SUMMARY] Response:', JSON.stringify(response, null, 2));
-            if (response && response.data) {
-                setCartSummary(response.data);
-                if (response.data.cartVersion) {
-                    updateCartVersion(response.data.cartVersion);
-                    console.log('📊 [SUMMARY] Updated cartVersion to:', response.data.cartVersion);
-                }
-                if (response.data.cartId) {
-                    setCartId(response.data.cartId);
-                }
-                return { success: true, data: response.data, cartVersion: response.data.cartVersion };
-            }
-            return { success: false };
-        } catch (error) {
-            console.error('Error fetching cart summary:', error);
-            return { success: false, error };
+    const getCartSummary = useCallback(async (deliveryMode = 'express', deliverySlotId = null, cartVersionOverride = null, pincodeAreaId = null, cartIdOverride = null) => {
+        if (summaryRequestRef.current) {
+            return summaryRequestRef.current;
         }
-    }, [cartId, updateCartVersion]);
+
+        const promise = (async () => {
+            try {
+                // Use override if provided (bootstrap from loadCart), otherwise use ref
+                const versionToUse = cartVersionOverride || cartVersionRef.current;
+                // Use ref for cartId to stabilize callback
+                const idToUse = cartIdOverride || cartIdRef.current;
+                console.log('📊 [SUMMARY] Calling with version:', versionToUse, 'cartId:', idToUse, 'pincodeAreaId:', pincodeAreaId);
+                const response = await getCartSummaryApi(deliveryMode, deliverySlotId, versionToUse, idToUse, pincodeAreaId);
+                console.log('📊 [SUMMARY] Response:', JSON.stringify(response, null, 2));
+
+                if (response && response.success && response.data) {
+                    setCartSummary(response.data);
+                    setError(null);
+                    if (response.data.cartVersion) {
+                        updateCartVersion(response.data.cartVersion);
+                        console.log('📊 [SUMMARY] Updated cartVersion to:', response.data.cartVersion);
+                    }
+                    if (response.data.cartId) {
+                        setCartId(response.data.cartId);
+                        cartIdRef.current = response.data.cartId;
+                    }
+                    return { success: true, data: response.data, cartVersion: response.data.cartVersion };
+                } else {
+                    setCartSummary(null);
+                    setError(response?.message || 'Failed to fetch summary');
+                    return {
+                        success: false,
+                        error: response?.message || 'Failed to fetch summary',
+                        status: response?.status
+                    };
+                }
+            } catch (error) {
+                console.error('Error fetching cart summary:', error);
+                setError('Error fetching cart summary');
+                return { success: false, error };
+            } finally {
+                summaryRequestRef.current = null;
+            }
+        })();
+
+        summaryRequestRef.current = promise;
+        return promise;
+    }, [updateCartVersion]);
 
     // ─── Helper: after any mutation, reload list + recalculate summary ───
     // Always uses the cartVersion from list API (freshest after mutation)
@@ -273,7 +376,7 @@ export const CartProvider = ({ children }) => {
     const applyCoupon = useCallback(async (couponCode) => {
         try {
             const version = cartVersionRef.current;
-            const response = await applyCouponApi(couponCode, version, null, cartId);
+            const response = await applyCouponApi(couponCode, version, null, cartIdRef.current);
             console.log('Coupon Applied:', response);
             await refreshCart();
             return { success: true, message: 'Coupon applied successfully' };
@@ -281,13 +384,13 @@ export const CartProvider = ({ children }) => {
             console.error('Error applying coupon:', error);
             return { success: false, message: error.Message || 'Failed to apply coupon' };
         }
-    }, [cartId, refreshCart]);
+    }, [refreshCart]);
 
     // ─── removeCoupon ───
     const removeCoupon = useCallback(async () => {
         try {
             const version = cartVersionRef.current;
-            const response = await removeCouponApi(version, cartId);
+            const response = await removeCouponApi(version, cartIdRef.current);
             console.log('Coupon Removed:', response);
             await refreshCart();
             return { success: true };
@@ -295,7 +398,7 @@ export const CartProvider = ({ children }) => {
             console.error('Error removing coupon:', error);
             return { success: false, message: error.Message || 'Failed to remove coupon' };
         }
-    }, [cartId, refreshCart]);
+    }, [refreshCart]);
 
     // ─── applyBCoins ───
     const applyBCoins = useCallback(async (bcoins) => {
@@ -338,7 +441,7 @@ export const CartProvider = ({ children }) => {
     const applyGiftCard = useCallback(async (giftCode) => {
         try {
             const version = cartVersionRef.current;
-            const response = await applyGiftCardApi(giftCode, version, cartId);
+            const response = await applyGiftCardApi(giftCode, version, cartIdRef.current);
             console.log('Gift Card Applied:', response);
             await refreshCart();
             return { success: true, message: 'Gift card applied successfully' };
@@ -346,13 +449,13 @@ export const CartProvider = ({ children }) => {
             console.error('Error applying gift card:', error);
             return { success: false, message: error.Message || 'Failed to apply gift card' };
         }
-    }, [cartId, refreshCart]);
+    }, [refreshCart]);
 
     // ─── removeGiftCard ───
     const removeGiftCard = useCallback(async () => {
         try {
             const version = cartVersionRef.current;
-            const response = await removeGiftCardApi(version, cartId);
+            const response = await removeGiftCardApi(version, cartIdRef.current);
             console.log('Gift Card Removed:', response);
             await refreshCart();
             return { success: true };
@@ -360,7 +463,7 @@ export const CartProvider = ({ children }) => {
             console.error('Error removing gift card:', error);
             return { success: false, message: error.Message || 'Failed to remove gift card' };
         }
-    }, [cartId, refreshCart]);
+    }, [refreshCart]);
 
     // ─── Derived values ───
     const cartCount = useMemo(() => {
@@ -381,6 +484,7 @@ export const CartProvider = ({ children }) => {
         cartTotal,
         cartSummary,
         isLoading,
+        error,
         addToCart,
         removeFromCart,
         updateCartItemQuantity,
@@ -392,8 +496,19 @@ export const CartProvider = ({ children }) => {
         applyGiftCard,
         removeGiftCard,
         applyBCoins,
-        removeBCoins
-    }), [cartItems, cartCount, cartTotal, cartSummary, isLoading, addToCart, removeFromCart, updateCartItemQuantity, loadCart, getCartSummary, clearCart, applyCoupon, removeCoupon, applyGiftCard, removeGiftCard, applyBCoins, removeBCoins]);
+        removeBCoins,
+
+        // Addresses
+        addresses,
+        isLoadingAddresses,
+        fetchAddresses,
+        onSelectAddress,
+        onThreeDotsClicked,
+        onDeleteClicked,
+        onCloseThreeDots,
+        showAddressModal,
+        setShowAddressModal
+    }), [cartItems, cartCount, cartTotal, cartSummary, isLoading, addToCart, removeFromCart, updateCartItemQuantity, loadCart, getCartSummary, clearCart, applyCoupon, removeCoupon, applyGiftCard, removeGiftCard, applyBCoins, removeBCoins, addresses, isLoadingAddresses, fetchAddresses, onSelectAddress, onThreeDotsClicked, onDeleteClicked, onCloseThreeDots, showAddressModal, setShowAddressModal]);
 
     return (
         <CartContext.Provider value={value}>

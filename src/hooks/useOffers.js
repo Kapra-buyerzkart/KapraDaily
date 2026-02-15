@@ -56,15 +56,13 @@ export const useOffers = () => {
     useEffect(() => {
         const fetchCoupons = async () => {
             try {
-                showLoader(true);
+                // Background fetch, do not block UI with global loader
                 const response = await getAvailableCouponsApi();
                 if (response?.data) {
                     setAvailableCoupons(response.data);
                 }
             } catch (error) {
                 console.error('Error fetching available coupons:', error);
-            } finally {
-                showLoader(false);
             }
         };
         fetchCoupons();

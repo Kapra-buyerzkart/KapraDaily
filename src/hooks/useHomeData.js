@@ -1,4 +1,5 @@
 import { useState, useEffect, useContext } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getHomepageData } from '../api/homeService';
 // import { searchPincodeArea } from '../api/pincodeService';
 // import { getCurrentLocation } from '../utils/locationUtils';
@@ -57,7 +58,21 @@ const useHomeData = () => {
         const fetchHomepageData = async () => {
             try {
                 // showLoader(true);
-                const response = await getHomepageData(105, 20);
+                const [storedPincodeAreaId, storedLocality, storedArea] = await Promise.all([
+                    AsyncStorage.getItem('pincodeAreaId'),
+                    AsyncStorage.getItem('locality'),
+                    AsyncStorage.getItem('area')
+                ]);
+
+                const areaId = storedPincodeAreaId ? parseInt(storedPincodeAreaId) : 105;
+                if (storedArea) {
+                    setUserLocation({
+                        locality: storedLocality || '',
+                        area: storedArea
+                    });
+                }
+
+                const response = await getHomepageData(areaId, 20);
                 setHomepageData(response);
 
                 if (response?.data) {

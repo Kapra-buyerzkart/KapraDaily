@@ -92,8 +92,9 @@ const styles = StyleSheet.create({
         width: wp('90.7%'),
         alignSelf: 'center',
         marginTop: hp('2%'),
-        paddingVertical: hp('3%'), // Increased vertical padding for receipt look
-        paddingHorizontal: wp('6%'), // Consistent horizontal padding
+        paddingVertical: hp('3.5%'), // Increased vertical padding
+        paddingHorizontal: wp('8%'), // Further increased horizontal padding to avoid cut-off
+        marginBottom: hp('5%'), // Reduced bottom margin
     },
     billImageStyle: {
         resizeMode: 'stretch', // Ensure the background stretches to fit content height
@@ -101,8 +102,8 @@ const styles = StyleSheet.create({
     billHeaderContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: hp('1.5%'),
-        marginHorizontal: wp('0.5%')
+        marginBottom: hp('2%'), // More space below header
+        marginLeft: wp('1%'), // Slight nudge for better alignment
     },
     billIcon: {
         width: wp('5%'),

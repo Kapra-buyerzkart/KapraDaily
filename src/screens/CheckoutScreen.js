@@ -26,7 +26,14 @@ const CheckoutScreen = () => {
         pincodeAreaId
     } = route.params || {};
 
-    const { cartSummary, cartItems, clearCart, getCartSummary } = useContext(CartContext);
+    const {
+        cartSummary,
+        cartItems,
+        clearCart,
+        getCartSummary,
+        error: cartError,
+        addresses
+    } = useContext(CartContext);
     const { showLoader } = useContext(LoaderContext);
 
     // Modal state
@@ -40,24 +47,34 @@ const CheckoutScreen = () => {
     const [deliveryType, setDeliveryType] = useState(selectedDeliveryType || 'express');
     const [paymentMethod, setPaymentMethod] = useState('cod');
     const [paymentModes, setPaymentModes] = useState([]);
+    const [showBill, setShowBill] = useState(false);
 
-    // Sync cart summary when address changes (different area)
+    // Get currently selected address from global context
+    const currentSelectedAddress = addresses.find(a => a.selected) || selectedAddress;
+
+    // Unified checkout initialization and dependency refresh
     useEffect(() => {
-        if (selectedAddress?.pincodeAreaId) {
-            console.log('🔄 [CHECKOUT] Address changed, refreshing summary for area:', selectedAddress.pincodeAreaId);
-            getCartSummary(deliveryType, selectedSlot, null, selectedAddress.pincodeAreaId);
-        }
-    }, [selectedAddress?.id]);
+        const currentPincodeAreaId = pincodeAreaId || currentSelectedAddress?.pincodeAreaId;
 
+        // Refresh summary whenever key dependencies change
+        if (currentPincodeAreaId) {
+            console.log('🔄 [CHECKOUT] Syncing summary for area:', currentPincodeAreaId);
+            getCartSummary(deliveryType, selectedSlot, null, currentPincodeAreaId);
+        }
+    }, [currentSelectedAddress?.id, deliveryType, selectedSlot, pincodeAreaId]);
+
+    // Fetch payment modes once on mount
     useEffect(() => {
         const fetchPaymentModes = async () => {
             try {
                 const response = await getPaymentModesApi();
                 if (response?.success && response?.data) {
                     setPaymentModes(response.data);
-                    // Default to first available if cod not found
-                    if (!response.data.find(m => m.code === 'cod')) {
-                        setPaymentMethod(response.data[0]?.code);
+                    const codMode = response.data.find(m => m.paymentModeName?.toUpperCase() === 'COD');
+                    if (codMode) {
+                        setPaymentMethod(codMode.paymentModeName);
+                    } else if (response.data.length > 0) {
+                        setPaymentMethod(response.data[0].paymentModeName);
                     }
                 }
             } catch (error) {
@@ -81,15 +98,15 @@ const CheckoutScreen = () => {
 
             const createPayload = {
                 cartId: cartSummary?.cartId || cartItems?.[0]?.cartId,
-                shippingAddressId: selectedAddress.id,
-                billingAddressId: selectedAddress.id,
+                shippingAddressId: currentSelectedAddress?.id || selectedAddress?.id,
+                billingAddressId: currentSelectedAddress?.id || selectedAddress?.id,
                 paymentMethod: paymentMethod, // Dynamically selected
                 ifMatchCartVersion: cartSummary?.cartVersion,
                 deliverySlotDate: deliveryType === 'slot' ? selectedDate : new Date().toISOString().split('T')[0],
                 deliverySlotTime: deliveryType === 'slot' ? selectedSlot : "Express",
                 deliveryMode: deliveryType === 'slot' ? "slotted" : "express",
                 orderPlacedFromDevice: "app",
-                pincodeAreaId: pincodeAreaId || 105
+                pincodeAreaId: pincodeAreaId || currentSelectedAddress?.pincodeAreaId || selectedAddress?.pincodeAreaId || 105
             };
 
             console.log('📦 [CHECKOUT] Creating Order Payload:', JSON.stringify(createPayload, null, 2));
@@ -161,9 +178,9 @@ const CheckoutScreen = () => {
                         </TouchableOpacity>
                     </View>
                     <View style={styles.card}>
-                        <Text style={styles.addressType}>{selectedAddress?.type || 'Home'}</Text>
-                        <Text style={styles.addressText}>{selectedAddress?.address || 'No address selected'}</Text>
-                        <Text style={styles.phoneText}>Phone: {selectedAddress?.phone || 'N/A'}</Text>
+                        <Text style={styles.addressType}>{currentSelectedAddress?.type || 'Home'}</Text>
+                        <Text style={styles.addressText}>{currentSelectedAddress?.address || 'No address selected'}</Text>
+                        <Text style={styles.phoneText}>Phone: {currentSelectedAddress?.phone || 'N/A'}</Text>
                     </View>
                 </View>
 
@@ -221,37 +238,42 @@ const CheckoutScreen = () => {
                         <Text style={styles.sectionTitle}>Payment Method</Text>
                     </View>
                     <View style={styles.card}>
-                        {paymentModes.map((mode, index) => (
-                            <React.Fragment key={mode.code}>
-                                <TouchableOpacity
-                                    style={styles.radioRow}
-                                    onPress={() => setPaymentMethod(mode.code)}
-                                    activeOpacity={0.7}
-                                >
-                                    <Ionicons
-                                        name={paymentMethod === mode.code ? 'radio-button-on' : 'radio-button-off'}
-                                        size={wp('5.5%')}
-                                        color={paymentMethod === mode.code ? '#F25000' : '#CCCCCC'}
-                                    />
-                                    <View style={styles.radioContent}>
-                                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                            <MaterialCommunityIcons
-                                                name={mode.code === 'cod' ? "cash" : mode.code === 'online' ? "cellphone" : "credit-card"}
-                                                size={wp('5.5%')}
-                                                color={mode.code === 'cod' ? "#0CA201" : mode.code === 'online' ? "#1A73E8" : "#777777"}
-                                            />
-                                            <Text style={[styles.radioTitle, { marginLeft: wp('2%') }, paymentMethod === mode.code && { color: '#F25000' }]}>
-                                                {mode.name}
+                        {paymentModes.map((mode, index) => {
+                            const isSelected = paymentMethod === mode.paymentModeName;
+                            const isCOD = mode.paymentModeName?.toUpperCase() === 'COD';
+
+                            return (
+                                <React.Fragment key={mode.paymentModeId}>
+                                    <TouchableOpacity
+                                        style={styles.radioRow}
+                                        onPress={() => setPaymentMethod(mode.paymentModeName)}
+                                        activeOpacity={0.7}
+                                    >
+                                        <Ionicons
+                                            name={isSelected ? 'radio-button-on' : 'radio-button-off'}
+                                            size={wp('5.5%')}
+                                            color={isSelected ? '#F25000' : '#CCCCCC'}
+                                        />
+                                        <View style={styles.radioContent}>
+                                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                                <MaterialCommunityIcons
+                                                    name={isCOD ? "cash" : "cellphone"}
+                                                    size={wp('5.5%')}
+                                                    color={isCOD ? "#0CA201" : "#1A73E8"}
+                                                />
+                                                <Text style={[styles.radioTitle, { marginLeft: wp('2%') }, isSelected && { color: '#F25000' }]}>
+                                                    {mode.paymentModeName}
+                                                </Text>
+                                            </View>
+                                            <Text style={styles.radioSubtitle}>
+                                                {isCOD ? "Pay when you receive" : "UPI, Cards, Net Banking"}
                                             </Text>
                                         </View>
-                                        <Text style={styles.radioSubtitle}>
-                                            {mode.code === 'cod' ? "Pay when you receive" : mode.code === 'online' ? "UPI, Cards, Net Banking" : mode.description || ""}
-                                        </Text>
-                                    </View>
-                                </TouchableOpacity>
-                                {index < paymentModes.length - 1 && <View style={styles.radioDivider} />}
-                            </React.Fragment>
-                        ))}
+                                    </TouchableOpacity>
+                                    {index < paymentModes.length - 1 && <View style={styles.radioDivider} />}
+                                </React.Fragment>
+                            );
+                        })}
                         {paymentModes.length === 0 && (
                             <Text style={styles.radioSubtitle}>Loading payment methods...</Text>
                         )}
@@ -259,31 +281,55 @@ const CheckoutScreen = () => {
                 </View>
 
                 {/* Bill Section */}
-                <View style={styles.billContainer}>
-                    <BillSection billCalculations={{
-                        mrpTotal: cartSummary?.subTotal + (cartSummary?.productDiscount || 0),
-                        itemTotal: cartSummary?.subTotal || 0,
-                        savings: cartSummary?.productDiscount || 0,
-                        deliveryCharge: cartSummary?.deliveryAmount || 0,
-                        couponDiscount: cartSummary?.couponAmount || 0,
-                        giftCardAmount: cartSummary?.giftCardAmount || 0,
-                        bcoinsAppliedValue: cartSummary?.bcoinsAppliedValue || 0,
-                        totalTax: cartSummary?.totalTax || 0,
-                        totalBtokens: cartSummary?.totalBtokens || 0,
-                        totalSavings: cartSummary?.totalDiscount || 0,
-                        toPay: cartSummary?.grandTotal || 0
-                    }} />
-                </View>
+                {cartError && (
+                    <View style={styles.errorSection}>
+                        <MaterialCommunityIcons name="alert-circle-outline" size={wp('6%')} color="#D32F2F" />
+                        <Text style={styles.errorText}>{cartError}</Text>
+                    </View>
+                )}
+
+                {showBill && !cartError && (
+                    <View style={styles.billContainer}>
+                        <BillSection billCalculations={{
+                            mrpTotal: (cartSummary?.subTotal || 0) + (cartSummary?.productDiscount || 0),
+                            itemTotal: cartSummary?.subTotal || 0,
+                            savings: cartSummary?.productDiscount || 0,
+                            deliveryCharge: cartSummary?.deliveryAmount || 0,
+                            couponDiscount: cartSummary?.couponAmount || 0,
+                            giftCardAmount: cartSummary?.giftCardAmount || 0,
+                            bcoinsAppliedValue: cartSummary?.bcoinsAppliedValue || 0,
+                            totalTax: cartSummary?.totalTax || 0,
+                            totalBtokens: cartSummary?.totalBtokens || 0,
+                            totalSavings: cartSummary?.totalDiscount || 0,
+                            toPay: cartSummary?.grandTotal || 0
+                        }} />
+                    </View>
+                )}
             </ScrollView>
 
             {/* Bottom Bar */}
             <View style={styles.bottomBar}>
-                <View>
+                <TouchableOpacity activeOpacity={0.7} onPress={() => setShowBill(!showBill)} style={styles.bottomAmountContainer}>
                     <Text style={styles.totalLabel}>Total Payable</Text>
-                    <Text style={styles.totalAmount}>₹{cartSummary?.grandTotal?.toFixed(2) || '0.00'}</Text>
-                </View>
-                <LinearGradient style={styles.confirmButtonGradient} colors={['#F25000', '#FF7B3A']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
-                    <TouchableOpacity onPress={handleConfirmOrder} style={styles.confirmButton}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <Text style={styles.totalAmount}>₹{cartSummary?.grandTotal?.toFixed(2) || '0.00'}</Text>
+                        <Image
+                            style={[styles.arrowIcon, showBill && { transform: [{ rotate: '180deg' }] }]}
+                            source={require('../assets/images/down_arrow.png')}
+                        />
+                    </View>
+                </TouchableOpacity>
+                <LinearGradient
+                    style={[styles.confirmButtonGradient, cartError && { opacity: 0.5 }]}
+                    colors={['#F25000', '#FF7B3A']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                >
+                    <TouchableOpacity
+                        onPress={handleConfirmOrder}
+                        style={styles.confirmButton}
+                        disabled={!!cartError}
+                    >
                         <Text style={styles.confirmButtonText}>Confirm Order</Text>
                     </TouchableOpacity>
                 </LinearGradient>
@@ -407,10 +453,17 @@ const styles = StyleSheet.create({
         marginVertical: hp('0.5%'),
     },
     billContainer: {
-        marginTop: hp('3%'),
-        paddingHorizontal: wp('4.65%'),
-        backgroundColor: '#FFFFFF',
-        paddingVertical: hp('2%')
+        marginTop: hp('1%')
+    },
+    bottomAmountContainer: {
+        flex: 1
+    },
+    arrowIcon: {
+        width: wp('3%'),
+        height: wp('3%'),
+        resizeMode: 'contain',
+        marginLeft: wp('2%'),
+        transform: [{ rotate: '0deg' }]
     },
     bottomBar: {
         position: 'absolute',
@@ -453,5 +506,31 @@ const styles = StyleSheet.create({
         fontFamily: FONTS.poppins.semiBold,
         fontSize: wp('4.5%'),
         color: '#FFFFFF'
+    },
+    errorBanner: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#FFEBEE',
+        padding: wp('3%'),
+        borderRadius: 8,
+        marginBottom: hp('1%')
+    },
+    errorSection: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#FFEBEE',
+        padding: wp('4%'),
+        marginHorizontal: wp('4.65%'),
+        marginTop: hp('2%'),
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: '#FFCDD2'
+    },
+    errorText: {
+        fontFamily: FONTS.outfit.medium,
+        fontSize: wp('3.5%'),
+        color: '#D32F2F',
+        marginLeft: wp('2%'),
+        flex: 1
     }
 });
