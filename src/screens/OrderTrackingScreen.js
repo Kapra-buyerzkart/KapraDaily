@@ -472,51 +472,19 @@ const OrderTrackingScreen = () => {
                             <Text style={styles.productsHeaderCount}>{itemCount} items</Text>
                         </View>
 
-                        {orderStatus === 'delivered' ? (
-                            <View style={styles.productsContainerTwo}>
-                                {orderItems.map((item, index) => (
-                                    <View key={index} style={styles.productViewTwo}>
-                                        <Image
-                                            style={styles.productImageTwo}
-                                            source={item.prImage ? { uri: item.prImage } : require('../assets/images/wl1.png')}
-                                        />
-                                        <View style={{ flex: 1, marginLeft: wp('2%') }}>
-                                            <Text style={styles.productNameTwo}>{item.prName || item.productName}</Text>
-                                            <Text style={styles.productQuantityTwo}>Quantity: {item.quantity}</Text>
-                                        </View>
-                                        <View style={styles.productContainerThirdView}>
-                                            <Text style={styles.productPriceTwo}>₹{item.specialPrice || item.unitPrice || item.price}</Text>
-                                            <TouchableOpacity
-                                                style={styles.returnContainer}
-                                                onPress={() => {
-                                                    setSelectedReturnItem(item);
-                                                    setShowReturnModal(true);
-                                                }}
-                                            >
-                                                <Image style={styles.returnIcon} source={require('../assets/images/return.png')} />
-                                                <Text style={styles.returnText}>Return</Text>
-                                            </TouchableOpacity>
-                                        </View>
-                                    </View>
-                                ))}
-                            </View>
-                        ) : (
-                            <View style={styles.productsContainer}>
-                                {orderItems.map((item, index) => (
-                                    <View key={index} style={styles.productView}>
-                                        <Image
-                                            style={styles.productImage}
-                                            source={item.prImage ? { uri: item.prImage } : require('../assets/images/wl1.png')}
-                                        />
-                                        <View style={{ flex: 1, marginLeft: wp('2%') }}>
-                                            <Text style={styles.productName}>{item.prName || item.productName}</Text>
-                                            <Text style={styles.productQuantity}>Quantity: {item.quantity}</Text>
-                                        </View>
-                                        <Text style={styles.productPrice}>₹{item.specialPrice || item.unitPrice || item.price}</Text>
-                                    </View>
-                                ))}
-                            </View>
-                        )}
+                        <View style={styles.productsContainer}>
+                            {orderItems.map((item, index) => (
+                                <OrderProductCard
+                                    key={index}
+                                    item={item}
+                                    orderStatus={effectiveOrderStatus}
+                                    onReturn={(selectedItem) => {
+                                        setSelectedReturnItem(selectedItem || item);
+                                        setShowReturnModal(true);
+                                    }}
+                                />
+                            ))}
+                        </View>
 
 
 

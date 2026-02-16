@@ -195,7 +195,7 @@ export const useOffers = () => {
             setShowCouponModal(false);
             updateOfferState(isGiftCard ? '4' : '2', true);
         } else {
-            alert(result.message || "Failed to apply");
+            Alert.alert(isGiftCard ? "Gift Card Error" : "Coupon Error", result.message || "Failed to apply");
         }
     }, [couponCode, isGiftCard, applyGiftCard, applyCoupon, updateOfferState]);
 

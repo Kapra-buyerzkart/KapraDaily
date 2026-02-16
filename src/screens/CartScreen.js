@@ -5,7 +5,7 @@ import AntDesign from 'react-native-vector-icons/AntDesign'
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import { FONTS } from '../styles/typography'
-import { useNavigation } from '@react-navigation/native'
+import { useNavigation, useFocusEffect } from '@react-navigation/native'
 import CartProductCard from '../components/CartProductCard'
 import OfferCard from '../components/OfferCard'
 import LinearGradient from 'react-native-linear-gradient'
@@ -69,6 +69,7 @@ const CartScreen = () => {
         getCartSummary,
         error: cartError,
         addresses,
+        fetchAddresses,
         showAddressModal,
         setShowAddressModal,
         onSelectAddress,
@@ -80,6 +81,13 @@ const CartScreen = () => {
     const [showBill, setShowBill] = useState(false);
     const [bTokens, setBTokens] = useState(0);
     const insets = useSafeAreaInsets();
+
+    // Refresh addresses whenever the screen gains focus
+    useFocusEffect(
+        React.useCallback(() => {
+            fetchAddresses();
+        }, [fetchAddresses])
+    );
 
     useEffect(() => {
         console.log('🧾 [CART SCREEN] Bill Calculations Update:', JSON.stringify(billCalculations, null, 2));
@@ -228,15 +236,15 @@ const CartScreen = () => {
                                     const selectedAddress = addresses.find(a => a.selected);
                                     const selectedDate = datesList[selectedDateIndex]?.formatted;
 
-                                    if (!selectedAddress) {
-                                        setShowAddressModal(true);
-                                        return;
-                                    }
+                                    // if (!selectedAddress) {
+                                    //     setShowAddressModal(true);
+                                    //     return;
+                                    // }
 
-                                    if (selectedDeliveryType === 'slot' && !selectedSlot) {
-                                        setShowSlotModal(true);
-                                        return;
-                                    }
+                                    // if (selectedDeliveryType === 'slot' && !selectedSlot) {
+                                    //     setShowSlotModal(true);
+                                    //     return;
+                                    // }
 
                                     navigation.navigate("CheckoutScreen", {
                                         selectedAddress,

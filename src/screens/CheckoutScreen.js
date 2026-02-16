@@ -13,6 +13,7 @@ import { createOrderApi, confirmCodApi } from '../api/orderService';
 import { getPaymentModesApi } from '../api/configService';
 import BillSection from '../components/BillSection';
 import StatusModal from '../components/StatusModal';
+import DeliverySlotModal from '../components/DeliverySlotModal';
 import LinearGradient from 'react-native-linear-gradient';
 
 const CheckoutScreen = () => {
@@ -46,10 +47,14 @@ const CheckoutScreen = () => {
     const [onModalClose, setOnModalClose] = useState(null);
 
     // Delivery & Payment selection
-    const [deliveryType, setDeliveryType] = useState(selectedDeliveryType || 'express');
+    const [deliveryType, setDeliveryType] = useState(
+        selectedDeliveryType === 'slotted' || selectedDeliveryType === 'slot' ? 'slot' : 'express'
+    );
     const [paymentMethod, setPaymentMethod] = useState('cod');
     const [paymentModes, setPaymentModes] = useState([]);
     const [showBill, setShowBill] = useState(false);
+    const [showSlotModal, setShowSlotModal] = useState(false);
+    const [chosenSlot, setChosenSlot] = useState(null);
 
     // Get currently selected address from global context
     const currentSelectedAddress = addresses.find(a => a.selected) || selectedAddress;
@@ -58,12 +63,11 @@ const CheckoutScreen = () => {
     useEffect(() => {
         const currentPincodeAreaId = pincodeAreaId || currentSelectedAddress?.pincodeAreaId;
 
-        // Refresh summary whenever key dependencies change, BUT ONLY if we need to.
-        // If we have preloaded data and nothing changed, we might skip or let it silent-update.
-        // For safety, we still sync, but the UI will use preloaded values initially if available.
+        // Refresh summary whenever key dependencies change
         if (currentPincodeAreaId) {
-            console.log('🔄 [CHECKOUT] Syncing summary for area:', currentPincodeAreaId);
-            getCartSummary(deliveryType, selectedSlot, null, currentPincodeAreaId);
+            const apiDeliveryMode = deliveryType === 'slot' ? 'slotted' : 'express';
+            console.log('🔄 [CHECKOUT] Syncing summary for area:', currentPincodeAreaId, 'Mode:', apiDeliveryMode);
+            getCartSummary(apiDeliveryMode, selectedSlot, null, currentPincodeAreaId);
         }
     }, [currentSelectedAddress?.id, deliveryType, selectedSlot, pincodeAreaId]);
 
@@ -153,8 +157,12 @@ const CheckoutScreen = () => {
                 billingAddressId: currentSelectedAddress?.id || selectedAddress?.id,
                 paymentMethod: paymentMethod, // Dynamically selected
                 ifMatchCartVersion: cartSummary?.cartVersion,
-                deliverySlotDate: deliveryType === 'slot' ? selectedDate : new Date().toISOString().split('T')[0],
-                deliverySlotTime: deliveryType === 'slot' ? selectedSlot : "Express",
+                deliverySlotDate: deliveryType === 'slot'
+                    ? (chosenSlot?.date?.includes('T') ? chosenSlot.date.split('T')[0] : chosenSlot?.date || selectedDate)
+                    : null,
+                deliverySlotTime: deliveryType === 'slot'
+                    ? (chosenSlot?.slotValue || selectedSlot || null)
+                    : null,
                 deliveryMode: deliveryType === 'slot' ? "slotted" : "express",
                 orderPlacedFromDevice: "app",
                 pincodeAreaId: pincodeAreaId || currentSelectedAddress?.pincodeAreaId || selectedAddress?.pincodeAreaId || 105
@@ -173,7 +181,16 @@ const CheckoutScreen = () => {
 
                 if (confirmResponse?.success) {
                     await clearCart(); // Local clear
-                    navigation.navigate('OrderSuccessScreen', { orderId });
+                    navigation.navigate('OrderSuccessScreen', {
+                        orderId: createResponse.data.orderId,
+                        orderNumber: createResponse.data.orderNumber || createResponse.data.orderId,
+                        paymentMethod: paymentMethod,
+                        totalItems: cartItems?.length || 0,
+                        totalAmount: billCalculations?.toPay || 0,
+                        deliveryMode: deliveryType === 'slot' ? 'slotted' : 'express',
+                        deliverySlot: chosenSlot ? `${chosenSlot.dateDisplay} | ${chosenSlot.slotDisplay}` : null,
+                        address: currentSelectedAddress?.address || selectedAddress?.address || '',
+                    });
                 } else {
                     setStatusType('error');
                     setStatusTitle('Error');
@@ -264,7 +281,10 @@ const CheckoutScreen = () => {
                         {/* Slotted Option */}
                         <TouchableOpacity
                             style={styles.radioRow}
-                            onPress={() => setDeliveryType('slot')}
+                            onPress={() => {
+                                setDeliveryType('slot');
+                                if (!chosenSlot) setShowSlotModal(true);
+                            }}
                             activeOpacity={0.7}
                         >
                             <Ionicons
@@ -275,10 +295,24 @@ const CheckoutScreen = () => {
                             <View style={styles.radioContent}>
                                 <Text style={[styles.radioTitle, deliveryType === 'slot' && { color: '#F25000' }]}>Slotted Delivery</Text>
                                 <Text style={styles.radioSubtitle}>
-                                    {selectedDate && selectedSlot ? `${selectedDate} | ${selectedSlot}` : 'Choose a delivery slot'}
+                                    {chosenSlot
+                                        ? `${chosenSlot.dateDisplay} | ${chosenSlot.slotDisplay}`
+                                        : selectedDate && selectedSlot
+                                            ? `${selectedDate} | ${selectedSlot}`
+                                            : 'Choose a delivery slot'}
                                 </Text>
                             </View>
                         </TouchableOpacity>
+                        {deliveryType === 'slot' && (
+                            <TouchableOpacity
+                                onPress={() => setShowSlotModal(true)}
+                                style={{ alignSelf: 'flex-end', marginBottom: hp('0.5%') }}
+                            >
+                                <Text style={{ fontFamily: FONTS.poppins.medium, fontSize: wp('3%'), color: '#F25000' }}>
+                                    {chosenSlot ? 'Change Slot' : 'Select Slot'}
+                                </Text>
+                            </TouchableOpacity>
+                        )}
                     </View>
                 </View>
 
@@ -358,20 +392,28 @@ const CheckoutScreen = () => {
                         />
                     </View>
                 </TouchableOpacity>
-                <LinearGradient
-                    style={[styles.confirmButtonGradient, cartError && { opacity: 0.5 }]}
-                    colors={['#F25000', '#FF7B3A']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                >
-                    <TouchableOpacity
-                        onPress={handleConfirmOrder}
-                        style={styles.confirmButton}
-                        disabled={!!cartError}
-                    >
-                        <Text style={styles.confirmButtonText}>Confirm Order</Text>
-                    </TouchableOpacity>
-                </LinearGradient>
+                {(() => {
+                    const isSlotted = deliveryType === 'slot';
+                    const hasSlot = chosenSlot || (selectedDate && selectedSlot);
+                    const isButtonDisabled = !!cartError || (isSlotted && !hasSlot);
+
+                    return (
+                        <LinearGradient
+                            style={[styles.confirmButtonGradient, isButtonDisabled && { opacity: 0.5 }]}
+                            colors={['#F25000', '#FF7B3A']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 0 }}
+                        >
+                            <TouchableOpacity
+                                onPress={handleConfirmOrder}
+                                style={styles.confirmButton}
+                                disabled={isButtonDisabled}
+                            >
+                                <Text style={styles.confirmButtonText}>Confirm Order</Text>
+                            </TouchableOpacity>
+                        </LinearGradient>
+                    );
+                })()}
             </View>
 
             <StatusModal
@@ -380,6 +422,13 @@ const CheckoutScreen = () => {
                 type={statusType}
                 title={statusTitle}
                 message={statusMessage}
+            />
+
+            <DeliverySlotModal
+                visible={showSlotModal}
+                onClose={() => setShowSlotModal(false)}
+                pincodeAreaId={pincodeAreaId || currentSelectedAddress?.pincodeAreaId || 105}
+                onSelectSlot={(slot) => setChosenSlot(slot)}
             />
         </SafeAreaView>
     );

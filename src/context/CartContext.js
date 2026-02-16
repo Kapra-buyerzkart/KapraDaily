@@ -40,13 +40,20 @@ export const CartProvider = ({ children }) => {
         setIsLoadingAddresses(true);
         try {
             const response = await getAddressListApi();
-            if (response && response.data) {
+            console.log('📍 [ADDRESS] Raw API Response:', JSON.stringify(response, null, 2));
+
+            // Handle both formats: data as array or data as object with items
+            const addressList = Array.isArray(response?.data)
+                ? response.data
+                : response?.data?.items || response?.data || [];
+
+            if (addressList.length > 0) {
                 let selectionFound = false;
-                const mappedAddresses = response.data.map(addr => {
+                const mappedAddresses = addressList.map(addr => {
                     const isSelected = addr.isDefaultShippingAddress && !selectionFound;
                     if (isSelected) selectionFound = true;
 
-                    const validId = addr.addressId || addr.id;
+                    const validId = addr.custAddressId || addr.addressId || addr.id;
                     if (!validId) console.warn('⚠️ [ADDRESS] Found address with no ID:', addr);
 
                     // If mapping "raw", ensure it has the ID we expect for updates
@@ -77,7 +84,11 @@ export const CartProvider = ({ children }) => {
                 if (mappedAddresses.length > 0 && !selectionFound) {
                     mappedAddresses[0].selected = true;
                 }
+                console.log('📍 [ADDRESS] Mapped addresses:', mappedAddresses.length);
                 setAddresses(mappedAddresses);
+            } else {
+                console.log('📍 [ADDRESS] No addresses found in response');
+                setAddresses([]);
             }
         } catch (error) {
             console.error('Error fetching addresses:', error);
@@ -85,6 +96,16 @@ export const CartProvider = ({ children }) => {
             setIsLoadingAddresses(false);
         }
     }, []);
+
+    // Auto-select the first address if none is selected
+    useEffect(() => {
+        if (addresses.length > 0 && !addresses.some(a => a.selected)) {
+            setAddresses(prev => prev.map((addr, index) => ({
+                ...addr,
+                selected: index === 0
+            })));
+        }
+    }, [addresses]);
 
     const onSelectAddress = useCallback((addressId) => {
         console.log('👆 [ADDRESS] Selecting addressId:', addressId);
@@ -380,7 +401,7 @@ export const CartProvider = ({ children }) => {
             setCartItems([]);
             setCartSummary(null);
             const version = cartVersionRef.current;
-            const response = await clearCartApi(version);
+            const response = await clearCartApi(version, cartIdRef.current);
             console.log('Cart cleared:', response);
         } catch (error) {
             console.error('Error clearing cart:', error);
@@ -395,11 +416,15 @@ export const CartProvider = ({ children }) => {
             const version = cartVersionRef.current;
             const response = await applyCouponApi(couponCode, version, null, cartIdRef.current);
             console.log('Coupon Applied:', response);
-            await refreshCart();
-            return { success: true, message: 'Coupon applied successfully' };
+            if (response && response.success) {
+                await refreshCart();
+                return { success: true, message: response.message || 'Coupon applied successfully' };
+            } else {
+                return { success: false, message: response?.message || 'Failed to apply coupon', status: response?.status };
+            }
         } catch (error) {
             console.error('Error applying coupon:', error);
-            return { success: false, message: error.Message || 'Failed to apply coupon' };
+            return { success: false, message: error.Message || error.message || 'Failed to apply coupon' };
         }
     }, [refreshCart]);
 
@@ -460,11 +485,15 @@ export const CartProvider = ({ children }) => {
             const version = cartVersionRef.current;
             const response = await applyGiftCardApi(giftCode, version, cartIdRef.current);
             console.log('Gift Card Applied:', response);
-            await refreshCart();
-            return { success: true, message: 'Gift card applied successfully' };
+            if (response && response.success) {
+                await refreshCart();
+                return { success: true, message: response.message || 'Gift card applied successfully' };
+            } else {
+                return { success: false, message: response?.message || 'Failed to apply gift card', status: response?.status };
+            }
         } catch (error) {
             console.error('Error applying gift card:', error);
-            return { success: false, message: error.Message || 'Failed to apply gift card' };
+            return { success: false, message: error.Message || error.message || 'Failed to apply gift card' };
         }
     }, [refreshCart]);
 

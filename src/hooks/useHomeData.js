@@ -72,7 +72,7 @@ const useHomeData = () => {
                     });
                 }
 
-                const response = await getHomepageData(areaId, 20);
+                const response = await getHomepageData(areaId, 100);
                 setHomepageData(response);
 
                 if (response?.data) {

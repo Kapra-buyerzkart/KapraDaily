@@ -8,16 +8,26 @@ import AppButton from './AppButton'
 const OrderProductCard = ({ item, orderStatus, onReturn }) => {
     const [imageError, setImageError] = useState(false);
 
+    // Helper to resolve image source
+    const getImageSource = (img) => {
+        if (!img || imageError) return require('../assets/images/categories/dfn.png');
+        if (typeof img === 'string') {
+            if (img.startsWith('http')) return { uri: img };
+            return { uri: `${CONFIG.image_base_url}${img}` };
+        }
+        return img;
+    };
+
+    const imageSource = getImageSource(item.prImage || item.productImage || item.product_image || item.featuredImage || item.img);
+
     // Determine Status Eligibility for Return
-    // meaningful status logic: if delivered, allow return. 
-    // This logic might be complex (return window etc.), but for now just check status.
     const canReturn = orderStatus === 'delivered' && !item.isReturned && !item.returnRequested;
 
     return (
         <View style={styles.cardContainer}>
             <Image
                 style={styles.productImage}
-                source={imageError || !item.productImage ? require('../assets/images/categories/dfn.png') : { uri: CONFIG.image_base_url + item.productImage }}
+                source={imageSource}
                 onError={() => setImageError(true)}
             />
             <View style={styles.detailsContainer}>

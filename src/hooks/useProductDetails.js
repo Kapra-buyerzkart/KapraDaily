@@ -59,8 +59,8 @@ export const useProductDetails = (productId, initialProduct = null) => {
                         }
                     }
 
-                    if (relatedResponse?.data?.products) {
-                        setRelatedProducts(relatedResponse.data.products);
+                    if (relatedResponse?.data?.items) {
+                        setRelatedProducts(relatedResponse.data.items);
                     }
                 } catch (err) {
                     console.error('Error fetching product data:', err);

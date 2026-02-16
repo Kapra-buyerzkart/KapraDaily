@@ -123,7 +123,6 @@ export default function CategoriesScreen() {
     const fetchProducts = async (catId) => {
         try {
             setLoadingProducts(true);
-            showLoader(true);
             const payload = {
                 pincodeAreaId: pincodeAreaId,
                 prName: debouncedSearchText,
@@ -149,7 +148,6 @@ export default function CategoriesScreen() {
             setProductsList([]);
         } finally {
             setLoadingProducts(false);
-            showLoader(false);
         }
     };
 

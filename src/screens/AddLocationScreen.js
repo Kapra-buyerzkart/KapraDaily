@@ -71,6 +71,7 @@ const AddLocationScreen = () => {
             } else {
                 response = await addAddressApi(payload);
             }
+            console.log('ressssnm=====', response);
 
             if (response && response.success !== false) {
                 Toast.show(isEditMode ? 'Address updated' : 'Address added', Toast.SHORT);

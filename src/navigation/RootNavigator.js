@@ -24,6 +24,7 @@ import EditProfileScreen from '../screens/EditProfileScreen'
 import ChangePasswordScreen from '../screens/ChangePasswordScreen'
 import UpdateContactScreen from '../screens/UpdateContactScreen'
 import CheckoutScreen from '../screens/CheckoutScreen'
+import ProductListScreen from '../screens/ProductListScreen'
 
 const Stack = createNativeStackNavigator();
 
@@ -66,6 +67,7 @@ export default function RootNavigator() {
             <Stack.Screen name='ChangePasswordScreen' component={ChangePasswordScreen} />
             <Stack.Screen name='UpdateContactScreen' component={UpdateContactScreen} />
             <Stack.Screen name='CheckoutScreen' component={CheckoutScreen} />
+            <Stack.Screen name='ProductListScreen' component={ProductListScreen} />
         </Stack.Navigator>
     );
 }

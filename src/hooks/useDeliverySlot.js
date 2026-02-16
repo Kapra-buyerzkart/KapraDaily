@@ -24,7 +24,7 @@ const getNextDates = () => {
 };
 
 export const useDeliverySlot = () => {
-    const [selectedDeliveryType, setSelectedDeliveryType] = useState('quick');
+    const [selectedDeliveryType, setSelectedDeliveryType] = useState('express');
     const [selectedDateIndex, setSelectedDateIndex] = useState(0);
     const [selectedSlot, setSelectedSlot] = useState(null);
     const [showSlotModal, setShowSlotModal] = useState(false);
@@ -59,7 +59,7 @@ export const useDeliverySlot = () => {
     const datesList = useMemo(() => getNextDates(), []);
 
     // Computed delivery mode for API calls
-    const deliveryMode = selectedDeliveryType === 'quick' ? 'express' : 'slot';
+    const deliveryMode = selectedDeliveryType === 'slot' ? 'slotted' : 'express';
 
     const onSelectDate = (index) => {
         setSelectedDateIndex(index);

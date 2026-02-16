@@ -123,12 +123,14 @@ export const getCartSummaryApi = async (deliveryMode = 'express', deliverySlotId
 };
 
 
-export const clearCartApi = async (cartVersion) => {
+export const clearCartApi = async (cartVersion, cartId) => {
+    const userId = await getUserId();
+    const idToUse = cartId || userId;
     const payload = {
         ...(cartVersion && { ifMatchCartVersion: cartVersion })
     };
 
-    return deleteRequest('cart/clear', payload);
+    return post(`cart/${idToUse}/clear`, payload);
 };
 
 
@@ -201,4 +203,11 @@ export const removeGiftCardApi = async (cartVersion, cartId) => {
         ifMatchCartVersion: cartVersion
     };
     return post(`cart/${idToUse}/removegiftcard`, payload);
+};
+
+export const getDeliverySlotsApi = async (pincodeAreaId) => {
+    const areaId = pincodeAreaId || await getPincodeAreaId();
+    return get('cart/availableslots', {
+        params: { pincodeAreaId: areaId }
+    });
 };

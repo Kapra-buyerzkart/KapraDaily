@@ -1993,6 +1993,8 @@ PODS:
   - react-native-onesignal (5.3.0):
     - OneSignalXCFramework (= 5.4.0)
     - React (< 1.0.0, >= 0.13.0)
+  - react-native-otp-verify (1.1.8):
+    - React-Core
   - react-native-razorpay (2.3.1):
     - razorpay-pod (= 1.5.0)
     - React
@@ -2915,6 +2917,7 @@ DEPENDENCIES:
   - "react-native-geolocation (from `../node_modules/@react-native-community/geolocation`)"
   - react-native-maps (from `../node_modules/react-native-maps`)
   - react-native-onesignal (from `../node_modules/react-native-onesignal`)
+  - react-native-otp-verify (from `../node_modules/react-native-otp-verify`)
   - react-native-razorpay (from `../node_modules/react-native-razorpay`)
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
   - react-native-simple-toast (from `../node_modules/react-native-simple-toast`)
@@ -3066,6 +3069,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-maps"
   react-native-onesignal:
     :path: "../node_modules/react-native-onesignal"
+  react-native-otp-verify:
+    :path: "../node_modules/react-native-otp-verify"
   react-native-razorpay:
     :path: "../node_modules/react-native-razorpay"
   react-native-safe-area-context:
@@ -3205,6 +3210,7 @@ SPEC CHECKSUMS:
   react-native-geolocation: 95e48fe2687e5a8280103085372fa62c2297c5d6
   react-native-maps: 48cbc77581f2ffc121a296f9abe071fe4a7ea4ee
   react-native-onesignal: 68c8423063cc8ead827e09bc71d139c14850feaf
+  react-native-otp-verify: 6d153f8a8e8392c6a51f9d94c090dc16d7c756b2
   react-native-razorpay: 376ba84b614ef8a22b5701df4ffee10f4c116d14
   react-native-safe-area-context: c00143b4823773bba23f2f19f85663ae89ceb460
   react-native-simple-toast: e3add86605446b2c4fb2f77884ef7040c36817d2

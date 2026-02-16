@@ -18,24 +18,23 @@ export const useOrderDetails = (orderId) => {
 
     const mapOrderStatus = (status) => {
         if (!status) return 'placed';
-        const s = String(status).toLowerCase();
-        if (s === 'placed' || s === 'pending' || s === 'new' || s === 'created') return 'placed';
-        if (s === 'confirmed' || s === 'accepted' || s === 'processing') return 'accepted';
-        if (s === 'packed') return 'packed';
-        if (s === 'shipped' || s === 'dispatched') return 'dispatched';
-        // assigned or out_for_delivery
-        if (s === 'assigned' || s === 'out_for_delivery' || s === 'deliveryagentaccepted') return 'assigned';
-        if (s === 'outfordelivery') return 'dispatched';
-        if (s === 'delivered' || s === 'completed') return 'delivered';
-        if (s === 'cancelled') return 'cancelled';
-        if (s === 'returned') return 'returned';
-        return s; // Default to returning original status if no match, maybe it works directly
+        const s = String(status).toLowerCase().replace(/_/g, '').trim();
+
+        if (['placed', 'pending', 'new', 'created'].includes(s)) return 'placed';
+        if (['confirmed', 'accepted', 'processing', 'orderaccepted'].includes(s)) return 'accepted';
+        if (['packed'].includes(s)) return 'packed';
+        if (['shipped', 'dispatched', 'outfordelivery'].includes(s)) return 'dispatched';
+        if (['assigned', 'deliveryagentaccepted'].includes(s)) return 'assigned';
+        if (['delivered', 'completed', 'received'].includes(s)) return 'delivered';
+        if (['cancelled'].includes(s)) return 'cancelled';
+        if (['returned', 'itemreturned'].includes(s)) return 'returned';
+
+        return s;
     };
 
     const fetchOrderDetails = async (id) => {
         try {
             const response = await getOrderDetailsApi(id);
-            console.log('Order Details Response:', JSON.stringify(response, null, 2));
             if (response && response.success && response.data) {
                 setOrderData(response.data);
 
@@ -54,8 +53,9 @@ export const useOrderDetails = (orderId) => {
     const handleCancelOrder = async () => {
         try {
             setLoading(true);
+            const rawOrderId = orderData?.header?.orderId || orderData?.id || orderData?.orderId || orderId;
             const payload = {
-                orderId: Number(orderData?.header?.orderId || orderData?.id || orderData?.orderId || orderId),
+                orderId: String(rawOrderId), // Specified as string in user request
                 reason: "Cancelled by Customer",
                 requestedFromDevice: "app"
             };
@@ -81,11 +81,10 @@ export const useOrderDetails = (orderId) => {
     const handleReturnItem = async (reason) => {
         try {
             setLoading(true);
-            const currentOrderId = Number(orderData?.header?.orderId || orderData?.id || orderId);
+            const rawOrderId = orderData?.header?.orderId || orderData?.id || orderId;
             const payload = {
-                orderId: currentOrderId,
-                // Fallback to orderId if orderItemId/id is missing, as requested by user
-                orderItemId: Number(selectedReturnItem?.orderItemId || selectedReturnItem?.id || currentOrderId),
+                orderId: Number(rawOrderId),
+                orderItemId: Number(selectedReturnItem?.orderItemId || selectedReturnItem?.id || selectedReturnItem?.productId),
                 quantity: Number(selectedReturnItem?.quantity || 1),
                 requestReason: reason
             };
