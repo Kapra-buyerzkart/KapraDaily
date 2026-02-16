@@ -1,10 +1,11 @@
-import { View, Text, StyleSheet, ImageBackground, TouchableOpacity, Image, TextInput, FlatList, ScrollView, Dimensions } from 'react-native'
-import React, { startTransition, useContext, useEffect, useRef, useState } from 'react'
+import { View, Text, StyleSheet, ImageBackground, TouchableOpacity, Image, TextInput, FlatList, ScrollView, Dimensions, RefreshControl } from 'react-native'
+import React, { startTransition, useEffect, useRef, useState, useContext } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Icon from 'react-native-vector-icons/Ionicons';
 import Svg, { Defs, RadialGradient, LinearGradient as SvgLinearGradient, Stop, Path } from 'react-native-svg';
+const SvgAvailable = false; // Forced false for debugging
 import LinearGradient from 'react-native-linear-gradient';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Entypo from 'react-native-vector-icons/Entypo';
@@ -20,11 +21,14 @@ import { getAccessToken, setTokens } from '../api/tokenService';
 import useHomeData from '../hooks/useHomeData';
 import CONFIG from '../globals/config';
 import ShimmerPlaceholder from '../components/ShimmerPlaceholder';
+import { getDashboardDataApi } from '../api/userService';
+import { LoaderContext } from '../context/loaderContext';
 
 import EmptySection from '../components/EmptySection';
 import { AppContext } from '../context/appContext';
 import LoginScreen from './LoginScreen';
-import { LoaderContext } from '../context/loaderContext';
+import LocationModal from '../components/LocationModal';
+
 
 const { width } = Dimensions.get("window");
 const BANNER_HEIGHT = (283 / 390) * width;
@@ -35,6 +39,7 @@ const banners = [
 ];
 
 const HomeScreen = () => {
+    console.log('HomeScreen Rendered');
     const products = [
         { id: "1", name: "Tomato", img: require('../assets/images/products/tomato.png'), price: "₹324" },
         { id: "2", name: "Green Chilli", img: require('../assets/images/products/chilli.png'), price: "₹324" },
@@ -83,9 +88,9 @@ const HomeScreen = () => {
     const [activeIndex, setActiveIndex] = useState(0);
     const [accessToken, setAccessToken] = useState(null);
     const [isProfileLoaded, setIsProfileLoaded] = useState(false);
-
+    const [modalVisible, setModalVisible] = useState(false);
     const { profile, loadProfile, loadProfileTwo, logout } = useContext(AppContext);
-    const { showLoader } = useContext(LoaderContext);
+
 
     // useEffect(() => {
     //     const fetchProfile = async () => {
@@ -99,10 +104,15 @@ const HomeScreen = () => {
 
     useEffect(() => {
         const fetchProfile = async () => {
-            showLoader(true);
-            await loadProfileTwo();   // or loadProfileTwo() if guest-first
-            showLoader(false);
-            setIsProfileLoaded(true);
+            try {
+                showLoader(true);
+                await loadProfileTwo();   // or loadProfileTwo() if guest-first
+            } catch (error) {
+                console.error('Profile load error:', error);
+            } finally {
+                showLoader(false);
+                setIsProfileLoaded(true);
+            }
         };
 
         fetchProfile();
@@ -139,6 +149,8 @@ const HomeScreen = () => {
         }
     };
 
+    const [dashboardData, setDashboardData] = useState(null);
+    const [refreshing, setRefreshing] = useState(false);
     const {
         bestOffers,
         featuredProducts,
@@ -151,28 +163,44 @@ const HomeScreen = () => {
         featuredProductsTitle
     } = useHomeData();
 
-    const navigation = useNavigation()
+    const onRefresh = React.useCallback(async () => {
+        setRefreshing(true);
+        try {
+            await Promise.all([
+                fetchDashboardData(),
+                loadProfileTwo(),
+            ]);
+        } catch (error) {
+            console.error('Refresh error:', error);
+        } finally {
+            setRefreshing(false);
+        }
+    }, [loadProfileTwo]);
+
+    const navigation = useNavigation();
+    const { showLoader } = useContext(LoaderContext);
+
+    useEffect(() => {
+        fetchDashboardData();
+    }, []);
+
+    const fetchDashboardData = async () => {
+        try {
+            // showLoader(true);
+            const response = await getDashboardDataApi();
+            if (response && response.success) {
+                setDashboardData(response.data);
+            }
+        } catch (error) {
+            console.error('Error fetching dashboard data:', error);
+        } finally {
+            // showLoader(false);
+        }
+    };
 
     const GradientUserIcon = ({ size }) => {
         return (
-            <Svg width={size} height={size} viewBox="0 0 24 24">
-
-                <Defs>
-                    <RadialGradient
-                        id="grad"
-                        cx="50%" cy="50%"
-                        r="60%"
-                    >
-                        <Stop offset="0%" stopColor="#FFF09C" />
-                        <Stop offset="100%" stopColor="#D2B200" />
-                    </RadialGradient>
-                </Defs>
-
-                <Path
-                    fill="url(#grad)"
-                    d="M12 12c2.76 0 5-2.46 5-5.5S14.76 1 12 1 7 3.46 7 6.5 9.24 12 12 12zm0 2c-3.33 0-10 1.67-10 5v4h20v-4c0-3.33-6.67-5-10-5z"
-                />
-            </Svg>
+            <FontAwesome6 name="user" size={size * 0.7} color="#D2B200" />
         );
     };
 
@@ -206,7 +234,13 @@ const HomeScreen = () => {
         }
 
         return (
-            <TouchableOpacity style={styles.item}>
+            <TouchableOpacity
+                style={styles.item}
+                onPress={() => navigation.navigate('SearchScreen', {
+                    catId: item.catId || item.id,
+                    catName: item.catName || item.name
+                })}
+            >
                 <LinearGradient
                     colors={['#FF9D61', '#FFFFFF']}
                     start={{ x: 0, y: 0 }}
@@ -277,6 +311,8 @@ const HomeScreen = () => {
     }
 
     const CurvedSection = ({ children }) => {
+        if (!SvgAvailable) return <View style={[styles.curvedSectionView, { backgroundColor: '#FFC7AC' }]}>{children}</View>;
+
         const height = hp("29%");     // total height of section
         const curveDepth = 50; // downward curve depth
 
@@ -330,10 +366,21 @@ const HomeScreen = () => {
         <SafeAreaView
             edges={['top']}
             style={styles.mainContainer}>
-            {/* {console.log('tokennnnn', accessToken)} */}
+            {modalVisible && (
+                <LocationModal
+                    visible={modalVisible}
+                    onClose={() => setModalVisible(false)}
+                    // getAreasBySearch={getAreasBySearch}
+                    onSelect={(item) => console.log(item)}
+                />
+            )}
             <ScrollView
+                style={{ flex: 1 }}
                 contentContainerStyle={{ paddingBottom: hp("0.7%") }}
                 showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                }
             >
                 <View
                     style={styles.headerMainView}>
@@ -345,12 +392,19 @@ const HomeScreen = () => {
                     <View style={styles.headerViewOne}>
                         <View>
                             <Text style={styles.timeText}>20 min</Text>
-                            <TouchableOpacity style={styles.addressView}>
-                                <Text style={styles.addressText}
+                            <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.addressView}>
+                                {/* <Text style={styles.addressText}
                                     numberOfLines={1}
                                     ellipsizeMode="tail"
                                 >
                                     {userLocation ? `${userLocation.locality || ''}: ${userLocation.area || ''}` : 'Select Location'}
+                                </Text> */}
+                                <Text style={styles.addressText}
+                                    numberOfLines={1}
+                                    ellipsizeMode="tail"
+                                >
+                                    {/* {userLocation ? `${userLocation.locality || ''}: ${userLocation.area || ''}` : 'Select Location'} */}
+                                    {profile.pinAddress}
                                 </Text>
                                 <Entypo name={"chevron-right"} size={wp('3.6%')} color={"#FFFFFF"} />
                             </TouchableOpacity>
@@ -364,7 +418,7 @@ const HomeScreen = () => {
                                 end={{ x: 1, y: 1 }}
                                 style={styles.badge}
                             >
-                                <Text style={styles.bcoinText}>10.0 B</Text>
+                                <Text style={styles.bcoinText}>{dashboardData?.wallet?.bCoins || '0.0'} B</Text>
                             </LinearGradient>
 
                         </TouchableOpacity>
@@ -374,7 +428,9 @@ const HomeScreen = () => {
                                 type: "login"
                             })
                         }} style={styles.profileIconMainView}>
-                            <Image source={require('../assets/images/crown.png')} width={wp('6.3%')} height={hp('2.6%')} />
+                            {profile?.isPrevilaged === 1 && (
+                                <Image source={require('../assets/images/crown.png')} width={wp('6.3%')} height={hp('2.3%')} />
+                            )}
                             <View style={styles.profileIconView}>
                                 <GradientUserIcon size={wp('6%')} />
                             </View>
@@ -403,14 +459,11 @@ const HomeScreen = () => {
 
                 <View style={styles.categoryMainView}>
                     <Text style={styles.categoryHeaderText}>Category</Text>
-                    <FlatList
-                        data={categories}
-                        numColumns={4}
-                        keyExtractor={(item, index) => index.toString()}
-                        columnWrapperStyle={styles.row}
-                        renderItem={({ item }) => <CategoryItem item={item} />}
-                        showsVerticalScrollIndicator={false}
-                    />
+                    <View style={styles.categoriesContainer}>
+                        {categories.map((item, index) => (
+                            <CategoryItem key={index.toString()} item={item} />
+                        ))}
+                    </View>
                 </View>
 
                 <View style={styles.productsMainContainer}>
@@ -710,6 +763,8 @@ const styles = StyleSheet.create({
     bcoinContainer: {
         alignItems: 'center',
         width: wp('20%'),
+        // backgroundColor: 'red',
+        left: wp('15.9%')
     },
     bcoinRupee: {
         width: wp('6.5%'),
@@ -800,6 +855,11 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         marginBottom: hp('2%'),
     },
+    categoriesContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'space-between',
+    },
     item: {
         width: wp('18%'),
         alignItems: 'center',
@@ -824,7 +884,7 @@ const styles = StyleSheet.create({
     },
     profileIconMainView: {
         alignItems: "center",
-        top: hp("-1.1%")
+        top: hp("1.3%")
     },
     // headerBannerImage: {
     //     width: "100%",
