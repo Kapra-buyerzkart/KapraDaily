@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { getOrderDetailsApi, cancelOrderApi, returnOrderItemApi } from '../api/orderService';
 import Toast from 'react-native-simple-toast';
 
-export const useOrderDetails = (orderId) => {
+export const useOrderDetails = (orderId, initialOrderData = null) => {
     const [orderData, setOrderData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [orderStatus, setOrderStatus] = useState('placed');
@@ -32,8 +32,10 @@ export const useOrderDetails = (orderId) => {
         return s;
     };
 
-    const fetchOrderDetails = async (id) => {
+    const fetchOrderDetails = async (id, silent = false) => {
+        if (!id) return;
         try {
+            if (!silent) setLoading(true);
             const response = await getOrderDetailsApi(id);
             if (response && response.success && response.data) {
                 setOrderData(response.data);
@@ -64,11 +66,12 @@ export const useOrderDetails = (orderId) => {
             console.log('Cancel Order Response:', response);
 
             if (response && response.success) {
-                fetchOrderDetails(orderId);
+                await fetchOrderDetails(orderId);
                 Toast.show("Order cancelled successfully", Toast.LONG);
                 setShowCancelModal(false);
             } else {
                 Toast.show(response?.message || "Failed to cancel order", Toast.SHORT);
+                setShowCancelModal(false); // Close even on failure if it's a known error
             }
         } catch (error) {
             console.error('Error cancelling order:', error);
@@ -93,11 +96,12 @@ export const useOrderDetails = (orderId) => {
             console.log('Return Item Response:', response);
 
             if (response && response.success) {
-                fetchOrderDetails(orderId);
+                await fetchOrderDetails(orderId);
                 Toast.show("Return request submitted successfully", Toast.LONG);
                 setShowReturnModal(false);
             } else {
                 Toast.show(response?.message || "Failed to submit return request", Toast.SHORT);
+                setShowReturnModal(false);
             }
         } catch (error) {
             console.error('Error returning item:', error);
@@ -114,10 +118,64 @@ export const useOrderDetails = (orderId) => {
         const shipping = orderData?.shippingAddress || orderData?.shipping_address || {};
         const items = orderData?.items || orderData?.order_items || [];
         const payment = orderData?.payments?.[0] || orderData?.payment || {};
+        const timeline = orderData?.timeline || [];
+
+        // Image merging logic: If API items don't have images, try to find them in navigation data
+        const initialItems = initialOrderData?.items || initialOrderData?.products || initialOrderData?.selectedProducts || [];
+
+        const mergedItems = items.map(apiItem => {
+            if (apiItem.image || apiItem.prImage || apiItem.productImage || apiItem.featuredImage) return apiItem;
+
+            // Try to find a match in navigation data
+            const match = initialItems.find(navItem =>
+                String(navItem.productId || navItem.id) === String(apiItem.productId || apiItem.id) ||
+                (navItem.sku && navItem.sku === apiItem.sku)
+            );
+
+            if (match) {
+                return {
+                    ...apiItem,
+                    image: match.image || match.prImage || match.productImage || match.featuredImage
+                };
+            }
+            return apiItem;
+        });
+
+        const formatFriendlyDate = (dateString) => {
+            if (!dateString) return '';
+            try {
+                const date = new Date(dateString);
+                // Manual formatting for better cross-platform consistency without extra libs
+                const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+                const d = days[date.getDay()];
+                const day = date.getDate().toString().padStart(2, '0');
+                const m = months[date.getMonth()];
+                const y = date.getFullYear();
+
+                let hours = date.getHours();
+                const minutes = date.getMinutes().toString().padStart(2, '0');
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+                hours = hours % 12;
+                hours = hours ? hours : 12; // the hour '0' should be '12'
+
+                return `${d}, ${day} ${m} ${y}, ${hours}:${minutes} ${ampm}`;
+            } catch (e) {
+                return dateString;
+            }
+        };
+
+        // Improved status mapping using timeline if available
+        let rawStatus = header.orderStatusKey || orderData?.orderStatus || orderStatus;
+        if (timeline.length > 0) {
+            const latestStatus = timeline[timeline.length - 1];
+            rawStatus = latestStatus.statusKey || latestStatus.orderStatusKey || rawStatus;
+        }
 
         return {
             orderDetails: header,
-            effectiveOrderStatus: mapOrderStatus(header.orderStatusKey || orderData?.orderStatus || orderStatus),
+            effectiveOrderStatus: mapOrderStatus(rawStatus),
             storeName: header.storeName || header.store_name || 'Kapra Daily',
             shippingAddress: shipping,
             addressType: shipping.addressType || shipping.address_type || 'Home',
@@ -127,12 +185,27 @@ export const useOrderDetails = (orderId) => {
             grandTotal: header.grandTotal || orderData?.grandTotal || '0',
             displayOrderId: header.orderNumber || orderData?.orderNumber || orderData?.orderId || `ORD ${orderId}`,
             orderDate: header.orderDate || orderData?.orderDate || '',
-            orderItems: items,
-            itemCount: items.length,
+            formattedOrderDate: formatFriendlyDate(header.orderDate || orderData?.orderDate),
+            orderItems: mergedItems,
+            itemCount: mergedItems.length,
             deliveryAgentName: orderData?.deliveryAgent?.name || orderData?.deliveryAgentName || orderData?.driverName || null,
             deliveryAgentPhone: orderData?.deliveryAgent?.phone || orderData?.deliveryAgentPhone || orderData?.driverPhone || null,
+
+            // Bill Breakdown Aligned with provided JSON
+            bill: {
+                subTotal: Number(header.subtotal || header.subTotal || 0),
+                taxTotal: Number(header.taxTotal || header.totalTax || 0),
+                discountTotal: Number(header.discountTotal || header.totalDiscount || 0),
+                deliveryCharge: Number(header.deliveryCharge || header.deliveryAmount || 0),
+                grandTotal: Number(header.grandTotal || 0),
+                couponDiscount: Number(header.couponDiscount || header.couponAmount || 0),
+                giftCardAmount: Number(header.giftCardAmount || 0),
+                bCoinAppliedCoins: Number(header.bCoinAppliedCoins || 0),
+                bCoinAppliedValue: Number(header.bCoinAppliedValue || header.bcoinsAppliedValue || 0),
+            },
+            invoiceUrl: `order/${header.orderId || orderId}/invoice`
         };
-    }, [orderData, orderStatus, orderId]);
+    }, [orderData, orderStatus, orderId, initialOrderData]);
 
     return {
         // State
@@ -151,6 +224,6 @@ export const useOrderDetails = (orderId) => {
         // Actions
         handleCancelOrder,
         handleReturnItem,
-        refreshOrder: () => fetchOrderDetails(orderId)
+        refreshOrder: (silent = false) => fetchOrderDetails(orderId, silent)
     };
 };

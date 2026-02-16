@@ -60,7 +60,10 @@ const OrderSuccessScreen = () => {
     }
 
     const handleTrackOrder = () => {
-        navigation.navigate('MyOrdersScreen')
+        navigation.navigate('MainTabs', {
+            screen: 'Home',
+            params: { screen: 'MyOrdersScreen' }
+        });
     }
 
     const handleBackToHome = () => {

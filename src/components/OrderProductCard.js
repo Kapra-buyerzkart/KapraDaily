@@ -18,7 +18,7 @@ const OrderProductCard = ({ item, orderStatus, onReturn }) => {
         return img;
     };
 
-    const imageSource = getImageSource(item.prImage || item.productImage || item.product_image || item.featuredImage || item.img);
+    const imageSource = getImageSource(item.image || item.prImage || item.productImage || item.product_image || item.featuredImage || item.img);
 
     // Determine Status Eligibility for Return
     const canReturn = orderStatus === 'delivered' && !item.isReturned && !item.returnRequested;
@@ -33,7 +33,7 @@ const OrderProductCard = ({ item, orderStatus, onReturn }) => {
             <View style={styles.detailsContainer}>
                 <Text style={styles.productName} numberOfLines={2}>{item.productName}</Text>
                 <Text style={styles.quantityText}>Qty: {item.quantity}</Text>
-                <Text style={styles.priceText}>₹{item.netAmount || item.price || item.unitPrice * item.quantity}</Text>
+                <Text style={styles.priceText}>₹{item.lineTotal || item.netAmount || item.price || item.unitPrice * item.quantity}</Text>
 
                 {canReturn && (
                     <AppButton

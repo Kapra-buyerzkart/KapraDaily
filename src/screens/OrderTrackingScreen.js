@@ -14,11 +14,12 @@ import { useOrderDetails } from '../hooks/useOrderDetails'
 import { useOrderTracking } from '../hooks/useOrderTracking'
 import AppButton from '../components/AppButton'
 import CustomLoader from '../components/CustomLoader'
+import CONFIG from '../globals/config'
 
 const OrderTrackingScreen = () => {
     const navigation = useNavigation();
     const route = useRoute();
-    const { orderId } = route.params || {};
+    const { orderId, order: initialOrderData } = route.params || {};
 
     const {
         loading,
@@ -48,18 +49,24 @@ const OrderTrackingScreen = () => {
         // Actions
         handleCancelOrder,
         handleReturnItem,
-        refreshOrder
-    } = useOrderDetails(orderId);
+        refreshOrder,
+
+        // Enhanced Data
+        formattedOrderDate,
+        bill,
+        invoiceUrl
+    } = useOrderDetails(orderId, initialOrderData);
 
     const insets = useSafeAreaInsets();
     const [returnReason, setReturnReason] = useState('');
+    const [showBillBreakdown, setShowBillBreakdown] = useState(false);
 
     // SignalR Real-time Tracking
     useOrderTracking(
         orderId,
         (statusUpdate) => {
             console.log('🔄 [UI] Refreshing order details due to SignalR update');
-            refreshOrder?.();
+            refreshOrder?.(true);
         },
         (locationUpdate) => {
             console.log('📍 [UI] Driver location updated:', locationUpdate);
@@ -89,6 +96,15 @@ const OrderTrackingScreen = () => {
             default: return '#000000';
         }
     };
+
+    const BillRow = ({ label, value, isGreen }) => (
+        <View style={styles.billBreakdownRow}>
+            <Text style={styles.billBreakdownLabel}>{label}</Text>
+            <Text style={[styles.billBreakdownValue, isGreen && { color: '#0CA201' }]}>
+                {value}
+            </Text>
+        </View>
+    );
 
     return (
         <SafeAreaView edges={['top']} style={[styles.mainContainer, { paddingBottom: insets.bottom }]}>
@@ -155,6 +171,22 @@ const OrderTrackingScreen = () => {
                             height: hp('3%'),
                             resizeMode: 'contain',
                         }} source={require('../assets/images/delivered.png')} />
+                    )}
+                    {orderStatus === 'cancelled' && (
+                        <View style={{
+                            width: wp('72%'),
+                            height: hp('3%'),
+                            backgroundColor: '#EB5757',
+                            borderRadius: 20,
+                            justifyContent: 'center',
+                            alignItems: 'center'
+                        }}>
+                            <Text style={{
+                                color: '#FFFFFF',
+                                fontFamily: FONTS.poppins.bold,
+                                fontSize: wp('3.5%')
+                            }}>ORDER CANCELLED</Text>
+                        </View>
                     )}
                     <View style={styles.statusContainer}>
                         <View style={styles.statusView}>
@@ -431,7 +463,7 @@ const OrderTrackingScreen = () => {
                                 </View>
                                 <Text style={styles.addressLineText}>{storeName}</Text>
                                 <Text style={styles.addressLineText}>Main Branch</Text>
-                                <Text style={styles.addressLineText}>India</Text>
+                                <Text style={styles.addressLineText}>{shippingAddress?.country || 'India'}</Text>
                                 <Text style={[styles.addressLineText, { marginTop: hp('1%') }]}>7000000000</Text>
                             </View>
                             <Image style={styles.rightArrowIcon} source={require('../assets/images/right_arrow_two.png')} />
@@ -490,14 +522,41 @@ const OrderTrackingScreen = () => {
 
                         <View style={styles.productTotalView}>
                             <Text style={styles.totalText}>Total</Text>
-                            <TouchableOpacity style={styles.viewBillContainer}>
+                            <TouchableOpacity style={styles.viewBillContainer} onPress={() => setShowBillBreakdown(!showBillBreakdown)}>
                                 <Text style={styles.viewBillText}>View Your Bill</Text>
-                                <Entypo style={styles.viewBillIcon} name={'chevron-thin-down'} size={wp('3%')} />
+                                <Entypo style={styles.viewBillIcon} name={showBillBreakdown ? 'chevron-thin-up' : 'chevron-thin-down'} size={wp('3%')} />
                             </TouchableOpacity>
                             <Text style={styles.totalPriceText}>₹{grandTotal}</Text>
                         </View>
+
+                        {showBillBreakdown && bill && (
+                            <View style={styles.billBreakdownContainer}>
+                                <BillRow label="Item Total" value={`₹${bill.subTotal.toFixed(2)}`} />
+                                {bill.discountTotal > 0 && <BillRow label="Discount" value={`- ₹${bill.discountTotal.toFixed(2)}`} isGreen />}
+                                <BillRow label="Delivery Charge" value={bill.deliveryCharge === 0 ? 'FREE' : `₹${bill.deliveryCharge.toFixed(2)}`} />
+                                {bill.couponDiscount > 0 && <BillRow label="Coupon Discount" value={`- ₹${bill.couponDiscount.toFixed(2)}`} isGreen />}
+                                {bill.giftCardAmount > 0 && <BillRow label="Gift Card" value={`- ₹${bill.giftCardAmount.toFixed(2)}`} />}
+                                {bill.bCoinAppliedValue > 0 && <BillRow label="B-Coins Applied" value={`- ₹${bill.bCoinAppliedValue.toFixed(2)}`} isGreen />}
+                                {bill.taxTotal > 0 && <BillRow label="Tax" value={`₹${bill.taxTotal.toFixed(2)}`} />}
+                                <View style={styles.billRowDivider} />
+                                <View style={styles.finalTotalRow}>
+                                    <Text style={styles.finalTotalLabel}>Grand Total</Text>
+                                    <Text style={styles.finalTotalValue}>₹{bill.grandTotal.toFixed(2)}</Text>
+                                </View>
+                            </View>
+                        )}
                     </View>
-                    <TouchableOpacity style={styles.downloadBillContainer}>
+                    <TouchableOpacity
+                        style={styles.downloadBillContainer}
+                        onPress={() => {
+                            if (invoiceUrl) {
+                                Linking.openURL(`${CONFIG.base_url}${invoiceUrl}`).catch(err => {
+                                    console.error("Couldn't load page", err);
+                                    Toast.show("Unable to download invoice at this time", Toast.SHORT);
+                                });
+                            }
+                        }}
+                    >
                         <Image style={styles.downloadBillIcon} source={require('../assets/images/bill_icon_two.png')} />
                         <Text style={styles.downloadBillText}>Download the bill</Text>
                     </TouchableOpacity>
@@ -517,7 +576,7 @@ const OrderTrackingScreen = () => {
                         </View>
                         <View>
                             <Text style={styles.orderDetailsKeyText}>Order placed</Text>
-                            <Text style={styles.orderDetailsValueText}>Placed on {orderDate}</Text>
+                            <Text style={styles.orderDetailsValueText}>{formattedOrderDate || orderDate}</Text>
                         </View>
                     </View>
                     <View style={styles.dliveryAgentRatingMainContainer}>
@@ -1182,5 +1241,50 @@ const styles = StyleSheet.create({
         fontFamily: FONTS.poppins.light,
         fontSize: wp('2.79%'),
         color: '#696969'
-    }
+    },
+    billBreakdownContainer: {
+        paddingHorizontal: wp('8.5%'),
+        marginTop: hp('0.5%'),
+        paddingBottom: hp('2%'),
+        backgroundColor: '#FFFFFF',
+        width: wp('90.7%'),
+        alignSelf: 'center',
+    },
+    billBreakdownRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: hp('0.8%'),
+    },
+    billBreakdownLabel: {
+        fontFamily: FONTS.poppins.regular,
+        fontSize: wp('3.25%'),
+        color: '#616161',
+    },
+    billBreakdownValue: {
+        fontFamily: FONTS.poppins.medium,
+        fontSize: wp('3.25%'),
+        color: '#000000',
+    },
+    billRowDivider: {
+        borderWidth: 0.5,
+        borderStyle: 'dashed',
+        borderColor: '#E8E8E8',
+        marginVertical: hp('1.5%'),
+        borderRadius: 1,
+    },
+    finalTotalRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    finalTotalLabel: {
+        fontFamily: FONTS.poppins.semiBold,
+        fontSize: wp('4.2%'),
+        color: '#000000',
+    },
+    finalTotalValue: {
+        fontFamily: FONTS.poppins.bold,
+        fontSize: wp('4.5%'),
+        color: '#0CA201',
+    },
 })
