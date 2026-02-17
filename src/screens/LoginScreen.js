@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, ImageBackground, Image, TextInput, TouchableOpacity, KeyboardAvoidingView, ScrollView, Alert, ActivityIndicator } from 'react-native'
-import React, { useState } from 'react'
+import React, { useState, useContext } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import { FONTS } from '../styles/typography'
@@ -7,6 +7,7 @@ import { useNavigation, useRoute } from '@react-navigation/native'
 import { sendForgotPwdOtp, sendLoginOtp } from '../api'
 import { setTokens } from '../api/tokenService'
 import LoaderComponent from '../components/LoaderComponent'
+import { LoaderContext } from '../context/loaderContext'
 
 const LoginScreen = () => {
     const navigation = useNavigation()
@@ -16,6 +17,7 @@ const LoginScreen = () => {
     const [showPassword, setShowPassword] = useState(true);
     const [loading, setLoading] = useState(false);
     const { type } = route.params || {}
+    const { showLoader } = useContext(LoaderContext);
 
     const phoneNumber = '8137956574';
 
@@ -67,6 +69,7 @@ const LoginScreen = () => {
 
         try {
             setLoading(true);
+            showLoader(true);
             const response = await sendLoginOtp(phone);
             console.log('handleContinueLoginresponse', response)
             // console.log('OTP Response:', response);
@@ -90,6 +93,7 @@ const LoginScreen = () => {
             Alert.alert('Error', error?.Message || error?.message || 'Failed to send OTP');
         } finally {
             setLoading(false);
+            showLoader(false);
         }
     };
 
@@ -104,6 +108,7 @@ const LoginScreen = () => {
 
         try {
             setLoading(true);
+            showLoader(true);
             let response
             if (type === 'login') {
                 response = await sendForgotPwdOtp(phone);
@@ -127,6 +132,7 @@ const LoginScreen = () => {
             Alert.alert('Error', error?.Message || error?.message || 'Failed to send OTP');
         } finally {
             setLoading(false);
+            showLoader(false);
         }
     };
 
@@ -164,11 +170,7 @@ const LoginScreen = () => {
                             />
                         </View>
                         <TouchableOpacity onPress={type === 'login' ? handleContinueLogin : handleContinueRest} style={styles.continueButton}>
-                            {loading ? (
-                                <ActivityIndicator size="large" color="#FFFFFF" />
-                            ) : (
-                                <Text style={styles.continueButtonText}>Continue</Text>
-                            )}
+                            <Text style={styles.continueButtonText}>Continue</Text>
                         </TouchableOpacity>
                     </View>
                     {/* <View style={styles.bottomContainer}>

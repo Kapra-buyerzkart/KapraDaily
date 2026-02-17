@@ -21,6 +21,7 @@ export default WishListEmptyComponent
 const styles = StyleSheet.create({
     mainContainer: {
         alignItems: 'center',
+        width: wp('100%')
     },
     imageStyle: {
         width: wp('39.53%'),

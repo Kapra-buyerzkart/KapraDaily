@@ -1,84 +1,163 @@
-import { View, Text, StyleSheet, Image, TouchableOpacity, TextInput, Platform, FlatList } from 'react-native'
-import React from 'react'
+import { View, Text, StyleSheet, Image, TouchableOpacity, TextInput, Platform, FlatList, ActivityIndicator } from 'react-native'
+import React, { useState, useEffect, useCallback, useContext } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import { FONTS } from '../styles/typography'
-import { useNavigation } from '@react-navigation/native'
+import { useNavigation, useRoute } from '@react-navigation/native'
+import { getProductSuggestionsApi } from '../api/productService'
+import { getPincodeAreaId } from '../api/pincodeService'
+import CONFIG from '../globals/config'
+import { LoaderContext } from '../context/loaderContext'
+import useProductSearch from '../hooks/useProductSearch'
+import { useCart } from '../context/CartContext'
+import Entypo from 'react-native-vector-icons/Entypo'
 
-const DUMMY_RESULTS = Array(4).fill({
-    name: 'BBQ Flavored Potato Chips.',
-    brand: "Lay’s",
-    image: require('../assets/images/lays.png'),
-})
-
-const RECENT_SEARCH = ['Tomato', 'Tomato', 'Tomato', 'Tomato']
-
-const renderItem = ({ item }) => {
-    return (
-        <View style={styles.productContainer}>
-            <Image style={styles.productImage} source={require('../assets/images/lays.png')} />
-            <View style={styles.productInnerView}>
-                <Text style={styles.productName}>{item.name}</Text>
-                <Text style={[styles.productName, {
-                    color: '#616161'
-                }]}>{item.brand}</Text>
-            </View>
-            <TouchableOpacity>
-                <Image style={styles.rightArrowIcon} source={require('../assets/images/right-arrow-two.png')} />
-            </TouchableOpacity>
-        </View>
-    )
-}
-
-const ListFooter = () => {
-    return (
-        <View>
-            <TouchableOpacity style={styles.viewallButton}>
-                <Text style={styles.viewallText}>View All</Text>
-            </TouchableOpacity>
-            <Text style={styles.recentTitle}>Recent search</Text>
-            <View style={styles.recentContainer}>
-                {RECENT_SEARCH.map((item, index) => (
-                    <TouchableOpacity key={index} style={styles.recentProduct}>
-                        <Text style={styles.recentProductText}>Tomato</Text>
-                    </TouchableOpacity>
-                ))}
-            </View>
-        </View>
-    )
-}
+const RECENT_SEARCH = ['Tomato', 'Potato', 'Onion', 'Mango']
 
 const SearchScreen = () => {
     const navigation = useNavigation()
+    const route = useRoute()
+    const { catId, catName } = route.params || {}
+    const { addToCart, cartItems, updateCartItemQuantity, removeFromCart } = useCart();
+
+    const {
+        searchTerm,
+        setSearchTerm,
+        suggestions,
+        loading,
+        resultCount,
+        setCatId
+    } = useProductSearch(105, catId);
+
+    useEffect(() => {
+        if (catId) {
+            setCatId(catId);
+        }
+    }, [catId]);
+
+    // const { showLoader } = useContext(LoaderContext) // Loader handling moved to hook or local loading state used
+
+    const renderItem = ({ item }) => {
+        const itemId = item.productId || item.id;
+        const cartItem = cartItems.find(i => String(i.productId || i.id) === String(itemId));
+        const quantity = cartItem?.quantity || cartItem?.addedQty || 0;
+        const cartItemId = cartItem?.cartItemId || itemId;
+
+        const imageUri = item.featuredImage
+            ? { uri: `${CONFIG.image_base_url}${item.featuredImage}` }
+            : require('../assets/images/lays.png');
+
+        return (
+            <View style={styles.productContainer}>
+                <TouchableOpacity
+                    style={styles.productTouchable}
+                    onPress={() => navigation.navigate('ProductDetailsScreen', { productId: itemId })}
+                >
+                    <Image style={styles.productImage} source={imageUri} />
+                    <View style={styles.productInnerView}>
+                        <Text style={styles.productName}>{item.prName || item.name}</Text>
+                        <Text style={[styles.productName, { color: '#616161', fontSize: wp('2.8%') }]}>
+                            {item.brandName || item.brand || 'Kapra Daily'}
+                        </Text>
+                    </View>
+                </TouchableOpacity>
+
+                <View style={styles.actionContainer}>
+                    {quantity > 0 ? (
+                        <View style={styles.counterContainer}>
+                            <TouchableOpacity
+                                onPress={() => {
+                                    if (quantity === 1) {
+                                        removeFromCart(cartItemId);
+                                    } else {
+                                        updateCartItemQuantity(cartItemId, quantity - 1);
+                                    }
+                                }}
+                                style={styles.counterButton}
+                            >
+                                <Entypo name="minus" size={wp('4%')} color="#FFFFFF" />
+                            </TouchableOpacity>
+                            <Text style={styles.quantityText}>{quantity}</Text>
+                            <TouchableOpacity
+                                onPress={() => updateCartItemQuantity(cartItemId, quantity + 1)}
+                                style={styles.counterButton}
+                            >
+                                <Entypo name="plus" size={wp('4%')} color="#FFFFFF" />
+                            </TouchableOpacity>
+                        </View>
+                    ) : (
+                        <TouchableOpacity
+                            style={styles.addButtonCircle}
+                            onPress={() => addToCart(item)}
+                        >
+                            <Entypo name="plus" size={wp('4.5%')} color="#FFFFFF" />
+                        </TouchableOpacity>
+                    )}
+                </View>
+            </View>
+        )
+    }
+
+    const ListFooter = () => {
+        if (searchTerm.length > 0) return null;
+        return (
+            <View>
+                <Text style={styles.recentTitle}>Recent search</Text>
+                <View style={styles.recentContainer}>
+                    {RECENT_SEARCH.map((item, index) => (
+                        <TouchableOpacity
+                            key={index}
+                            style={styles.recentProduct}
+                            onPress={() => setSearchTerm(item)}
+                        >
+                            <Text style={styles.recentProductText}>{item}</Text>
+                        </TouchableOpacity>
+                    ))}
+                </View>
+            </View>
+        )
+    }
+
     return (
         <SafeAreaView style={styles.mainContainer}>
             <View style={styles.headerContainer}>
                 <TouchableOpacity onPress={() => navigation.goBack()}>
                     <Image style={styles.leftArrowIcon} source={require('../assets/images/left_arrow.png')} />
                 </TouchableOpacity>
-                <Text style={styles.searchText}>Search</Text>
+                <Text style={styles.searchText}>{catName ? catName : 'Search'}</Text>
             </View>
             <View style={styles.searchContainer}>
-                <Image style={Platform.OS === 'ios' ? (styles.searchIcon) : (
-                    [styles.searchIcon, {
-                        bottom: hp('0.1%')
-                    }]
-                )} tintColor={'#F25000'} source={require('../assets/images/search_icon.png')} />
+                <Image
+                    style={Platform.OS === 'ios' ? (styles.searchIcon) : ([styles.searchIcon, { bottom: hp('0.1%') }])}
+                    tintColor={'#F25000'}
+                    source={require('../assets/images/search_icon.png')}
+                />
                 <TextInput
                     placeholder='What are you looking for ?'
                     style={styles.searchInput}
+                    value={searchTerm}
+                    onChangeText={setSearchTerm}
+                    autoFocus={true}
                 />
-                <View
-                    style={styles.divider}
-                />
+                <View style={styles.divider} />
                 <Image style={styles.clipboardIcon} source={require('../assets/images/clipboard-two.png')} />
             </View>
-            <Text style={styles.resultText}>Results found : 12</Text>
+
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingRight: wp('5%') }}>
+                <Text style={styles.resultText}>Results found : {resultCount}</Text>
+            </View>
+
             <FlatList
-                data={DUMMY_RESULTS}
-                keyExtractor={(item, index) => index.toString()}
+                data={suggestions}
+                keyExtractor={(item, index) => (item.productId || item.id || index).toString()}
                 renderItem={renderItem}
                 ListFooterComponent={ListFooter}
+                contentContainerStyle={{ paddingBottom: hp('5%') }}
+                ListEmptyComponent={!loading && searchTerm.length > 0 && (
+                    <Text style={[styles.resultText, { textAlign: 'center', marginTop: hp('5%'), fontSize: wp('3.5%') }]}>
+                        No products found for "{searchTerm}"
+                    </Text>
+                )}
             />
         </SafeAreaView>
     )
@@ -153,7 +232,44 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         marginHorizontal: wp('5%'),
         borderBottomWidth: 1,
-        borderBottomColor: '#DADADA'
+        borderBottomColor: '#DADADA',
+        paddingVertical: hp('0.5%')
+    },
+    productTouchable: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flex: 1,
+    },
+    actionContainer: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginLeft: wp('2%'),
+        minWidth: wp('20%')
+    },
+    counterContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#F04B1B',
+        borderRadius: 15,
+        paddingHorizontal: wp('2%'),
+        paddingVertical: hp('0.5%'),
+    },
+    counterButton: {
+        padding: wp('1%'),
+    },
+    quantityText: {
+        color: '#FFFFFF',
+        fontFamily: FONTS.poppins.semiBold,
+        fontSize: wp('3.8%'),
+        marginHorizontal: wp('2.5%'),
+    },
+    addButtonCircle: {
+        backgroundColor: '#F04B1B',
+        width: wp('7%'),
+        height: wp('7%'),
+        borderRadius: 100,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     productImage: {
         width: wp('9.3%'),

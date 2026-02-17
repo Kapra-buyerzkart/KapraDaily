@@ -107,9 +107,10 @@ export const getCartApi = async (pincodeAreaId) => {
     });
 };
 
-export const getCartSummaryApi = async (deliveryMode = 'express', deliverySlotId = null, cartVersion = null) => {
+export const getCartSummaryApi = async (deliveryMode = 'express', deliverySlotId = null, cartVersion = null, cartId = null, pincodeAreaIdOverride = null) => {
     const userId = await getUserId();
-    const pincodeAreaId = await getPincodeAreaId();
+    const pincodeAreaId = pincodeAreaIdOverride || await getPincodeAreaId();
+    const idToUse = cartId || userId;
 
     const payload = {
         pincodeAreaId,
@@ -118,16 +119,18 @@ export const getCartSummaryApi = async (deliveryMode = 'express', deliverySlotId
         ...(cartVersion && { ifMatchCartVersion: cartVersion })
     };
 
-    return post(`cart/${userId}/summary`, payload);
+    return post(`cart/${idToUse}/summary`, payload);
 };
 
 
-export const clearCartApi = async (cartVersion) => {
+export const clearCartApi = async (cartVersion, cartId) => {
+    const userId = await getUserId();
+    const idToUse = cartId || userId;
     const payload = {
         ...(cartVersion && { ifMatchCartVersion: cartVersion })
     };
 
-    return deleteRequest('cart/clear', payload);
+    return post(`cart/${idToUse}/clear`, payload);
 };
 
 
@@ -146,6 +149,8 @@ export const removeBCoinApi = async (cartVersion) => {
     const payload = {
         ifMatchCartVersion: cartVersion
     };
+    console.log('wek32krlk4', payload);
+
     return post(`cart/${userId}/removebcoin`, payload);
 };
 
@@ -171,6 +176,13 @@ export const removeCouponApi = async (cartVersion, cartId) => {
     return post(`cart/${idToUse}/removecoupon`, payload);
 };
 
+export const getAvailableCouponsApi = async (pincodeAreaId) => {
+    const areaId = pincodeAreaId || await getPincodeAreaId();
+    return get(`cart/availablecoupons`, {
+        params: { pincodeAreaId: areaId }
+    });
+};
+
 
 export const applyGiftCardApi = async (giftCode, cartVersion, cartId) => {
     const userId = await getUserId();
@@ -191,4 +203,11 @@ export const removeGiftCardApi = async (cartVersion, cartId) => {
         ifMatchCartVersion: cartVersion
     };
     return post(`cart/${idToUse}/removegiftcard`, payload);
+};
+
+export const getDeliverySlotsApi = async (pincodeAreaId) => {
+    const areaId = pincodeAreaId || await getPincodeAreaId();
+    return get('cart/availableslots', {
+        params: { pincodeAreaId: areaId }
+    });
 };

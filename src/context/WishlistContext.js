@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useCallback, useMemo, useRef } from 'react';
+import React, { createContext, useState, useContext, useCallback, useMemo, useRef, useEffect } from 'react';
 import { addToWishlistApi, removeFromWishlistApi, getWishlistApi } from '../api/wishlistService';
 
 export const WishlistContext = createContext();
@@ -6,8 +6,17 @@ export const WishlistContext = createContext();
 export const WishlistProvider = ({ children }) => {
     const [wishlistItems, setWishlistItems] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [lastFetched, setLastFetched] = useState(0); // Keeping for UI if needed, but logic moves to ref
+    const lastFetchedRef = useRef(0);
     const loadRequestRef = useRef(null);
-    const loadWishlist = useCallback(async () => {
+
+    const loadWishlist = useCallback(async (force = false) => {
+        const now = Date.now();
+        // Prevent frequent fetches (e.g., within 30 seconds) unless forced
+        if (!force && lastFetchedRef.current && (now - lastFetchedRef.current < 30000)) {
+            return;
+        }
+
         if (loadRequestRef.current) {
             return loadRequestRef.current;
         }
@@ -16,11 +25,12 @@ export const WishlistProvider = ({ children }) => {
         const promise = (async () => {
             try {
                 const response = await getWishlistApi();
-                console.log('Wishlist Response:', response);
                 if (response && response.data && response.data.items) {
                     const items = Array.isArray(response.data.items) ? response.data.items : [];
                     setWishlistItems(items);
-                    console.log('Loaded wishlist items:', items.length);
+                    const timestamp = Date.now();
+                    lastFetchedRef.current = timestamp;
+                    setLastFetched(timestamp); // Update state for potential UI usage
                 } else {
                     setWishlistItems([]);
                 }
@@ -40,48 +50,45 @@ export const WishlistProvider = ({ children }) => {
     const addToWishlist = useCallback(async (item) => {
         const productId = item.productId || item.id;
 
+        // Optimistic Update
         setWishlistItems(prevItems => {
             if (!prevItems.find(i => (i.productId || i.id) === productId)) {
-                console.log('Added to wishlist local:', item.prName || item.name);
                 return [...prevItems, { ...item, productId }];
             }
             return prevItems;
         });
 
         try {
-            const response = await addToWishlistApi(productId);
-            console.log('Added to wishlist API:', response);
+            await addToWishlistApi(productId);
         } catch (error) {
             console.error('Error adding to wishlist API:', error);
+            // Revert on failure
             setWishlistItems(prevItems => prevItems.filter(i => (i.productId || i.id) !== productId));
-            await loadWishlist();
+            loadWishlist(true); // Retry fetch
         }
     }, [loadWishlist]);
 
     const removeFromWishlist = useCallback(async (itemId) => {
         let removedItem = null;
+
         setWishlistItems(prevItems => {
             removedItem = prevItems.find(item => (item.productId || item.id) === itemId);
             return prevItems.filter(item => (item.productId || item.id) !== itemId);
         });
-        console.log('Removed from wishlist local:', itemId);
 
         try {
-            const response = await removeFromWishlistApi(itemId);
-            console.log('Removed from wishlist API:', response);
+            await removeFromWishlistApi(itemId);
         } catch (error) {
             console.error('Error removing from wishlist API:', error);
+            // Revert on failure
             if (removedItem) {
                 setWishlistItems(prevItems => [...prevItems, removedItem]);
             }
-            await loadWishlist();
+            loadWishlist(true); // Retry fetch
         }
     }, [loadWishlist]);
 
     const isInWishlist = useCallback((itemId) => {
-        if (!wishlistItems || !Array.isArray(wishlistItems)) {
-            return false;
-        }
         return wishlistItems.some(wishlistItem => wishlistItem.productId === itemId);
     }, [wishlistItems]);
 

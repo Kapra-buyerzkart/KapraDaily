@@ -1,46 +1,118 @@
-import { View, Text, StyleSheet, TouchableOpacity, Image, Platform, ImageBackground, ScrollView } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Platform, FlatList, ImageBackground, Linking } from 'react-native'
+import LinearGradient from 'react-native-linear-gradient';
+import React, { useState } from 'react'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import Entypo from 'react-native-vector-icons/Entypo'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import { FONTS } from '../styles/typography'
-import { useNavigation } from '@react-navigation/native'
-import LinearGradient from 'react-native-linear-gradient'
+import { useNavigation, useRoute } from '@react-navigation/native'
+import OrderProductCard from '../components/OrderProductCard'
+import ConfirmationModal from '../components/ConfirmationModal'
+import ReturnItemModal from '../components/ReturnItemModal'
+import { useOrderDetails } from '../hooks/useOrderDetails'
+import { useOrderTracking } from '../hooks/useOrderTracking'
+import AppButton from '../components/AppButton'
+import CustomLoader from '../components/CustomLoader'
+import CONFIG from '../globals/config'
 
 const OrderTrackingScreen = () => {
-    const statuses = ['placed', 'accepted', 'packed', 'assigned', 'dispatched', 'delivered']
+    const navigation = useNavigation();
+    const route = useRoute();
+    const { orderId, order: initialOrderData } = route.params || {};
 
-    // const [orderStatus, setOrderStatus] = useState(statuses[0])
+    const {
+        loading,
+        orderStatus,
+        showCancelModal,
+        setShowCancelModal,
+        showReturnModal,
+        setShowReturnModal,
+        selectedReturnItem,
+        setSelectedReturnItem,
 
-    // useEffect(() => {
-    //     let index = 0
+        // Data
+        effectiveOrderStatus,
+        storeName,
+        shippingAddress,
+        fullAddress,
+        cityStateZip,
+        paymentMethod,
+        grandTotal,
+        displayOrderId,
+        orderDate,
+        orderItems,
+        itemCount,
+        deliveryAgentName,
+        deliveryAgentPhone,
 
-    //     const interval = setInterval(() => {
-    //         index++
-    //         if (index < statuses.length) {
-    //             setOrderStatus(statuses[index])
-    //         } else {
-    //             clearInterval(interval)
-    //         }
-    //     }, 5000) // 10 seconds
+        // Actions
+        handleCancelOrder,
+        handleReturnItem,
+        refreshOrder,
 
-    //     return () => clearInterval(interval)
-    // }, [])
-    const orderStatus = 'delivered'
-    const navigation = useNavigation()
+        // Enhanced Data
+        formattedOrderDate,
+        bill,
+        invoiceUrl
+    } = useOrderDetails(orderId, initialOrderData);
+
     const insets = useSafeAreaInsets();
+    const [returnReason, setReturnReason] = useState('');
+    const [showBillBreakdown, setShowBillBreakdown] = useState(false);
+
+    // SignalR Real-time Tracking
+    useOrderTracking(
+        orderId,
+        (statusUpdate) => {
+            console.log('🔄 [UI] Refreshing order details due to SignalR update');
+            refreshOrder?.(true);
+        },
+        (locationUpdate) => {
+            console.log('📍 [UI] Driver location updated:', locationUpdate);
+            // Future step: update map markers if applicable
+        }
+    );
+
+    const renderOrderItem = ({ item }) => (
+        <OrderProductCard
+            item={item}
+            orderStatus={effectiveOrderStatus}
+            onReturn={(selectedItem) => {
+                setSelectedReturnItem(selectedItem || item);
+                setShowReturnModal(true);
+            }}
+        />
+    );
+
+    const getStatusColor = (status) => {
+        switch (status) {
+            case 'placed': return '#F2994A'; // Orange
+            case 'confirmed': return '#2D9CDB'; // Blue
+            case 'shipped': return '#9B51E0'; // Purple
+            case 'delivered': return '#27AE60'; // Green
+            case 'cancelled': return '#EB5757'; // Red
+            case 'returned': return '#6F727A'; // Gray
+            default: return '#000000';
+        }
+    };
+
+    const BillRow = ({ label, value, isGreen }) => (
+        <View style={styles.billBreakdownRow}>
+            <Text style={styles.billBreakdownLabel}>{label}</Text>
+            <Text style={[styles.billBreakdownValue, isGreen && { color: '#0CA201' }]}>
+                {value}
+            </Text>
+        </View>
+    );
+
     return (
-        <SafeAreaView edges={['top']} style={Platform.OS === 'android' ? [styles.mainContainer, {
-            paddingBottom: insets.bottom
-        }] : styles.mainContainer}>
+        <SafeAreaView edges={['top']} style={[styles.mainContainer, { paddingBottom: insets.bottom }]}>
+            <CustomLoader visible={loading} text="Updating Order..." />
+
             <View style={styles.headerContainer}>
                 <TouchableOpacity onPress={() => navigation.goBack()}>
-                    <AntDesign
-                        name={'left'}
-                        size={wp('6%')}
-                        color={'#000000'}
-                    />
+                    <AntDesign name={'left'} size={wp('5%')} color={'#000000'} />
                 </TouchableOpacity>
                 <Text style={styles.headerText}>Order Tracking</Text>
                 <View style={styles.headerInnerView}>
@@ -99,6 +171,22 @@ const OrderTrackingScreen = () => {
                             height: hp('3%'),
                             resizeMode: 'contain',
                         }} source={require('../assets/images/delivered.png')} />
+                    )}
+                    {orderStatus === 'cancelled' && (
+                        <View style={{
+                            width: wp('72%'),
+                            height: hp('3%'),
+                            backgroundColor: '#EB5757',
+                            borderRadius: 20,
+                            justifyContent: 'center',
+                            alignItems: 'center'
+                        }}>
+                            <Text style={{
+                                color: '#FFFFFF',
+                                fontFamily: FONTS.poppins.bold,
+                                fontSize: wp('3.5%')
+                            }}>ORDER CANCELLED</Text>
+                        </View>
                     )}
                     <View style={styles.statusContainer}>
                         <View style={styles.statusView}>
@@ -347,13 +435,20 @@ const OrderTrackingScreen = () => {
                             <Text style={styles.deliveryAgentNameText}>
                                 {['placed', 'accepted', 'packed'].includes(orderStatus)
                                     ? 'Not assigned'
-                                    : 'Marvin Alex'}
+                                    : (deliveryAgentName || 'Marvin Alex')}
                             </Text>
                             <Text style={styles.deliveryAgentTextTwo}>Delivery Agent</Text>
                         </View>
                         {['placed', 'accepted', 'packed'].includes(orderStatus)
                             ? <View style={styles.callContainer} />
-                            : <TouchableOpacity style={styles.callContainer}>
+                            : <TouchableOpacity
+                                style={styles.callContainer}
+                                onPress={() => {
+                                    if (deliveryAgentPhone) {
+                                        Linking.openURL(`tel:${deliveryAgentPhone}`);
+                                    }
+                                }}
+                            >
                                 <Image style={styles.phoneIcon} source={require('../assets/images/phone_green.png')} />
                             </TouchableOpacity>}
 
@@ -366,25 +461,10 @@ const OrderTrackingScreen = () => {
                                     <Image style={styles.addressIconStyle} source={require('../assets/images/home_primary_two.png')} />
                                     <Text style={styles.addressHeaderText}>Store</Text>
                                 </View>
-                                <Text
-                                    style={styles.addressLineText}
-                                >
-                                    Lorem Ipsum is simply
-                                </Text>
-                                <Text
-                                    style={styles.addressLineText}
-                                >
-                                    dummy text, 464748,
-                                </Text>
-                                <Text
-                                    style={styles.addressLineText}
-                                >
-                                    India
-                                </Text>
-
-                                <Text style={[styles.addressLineText, {
-                                    marginTop: hp('1%')
-                                }]}>986767867834</Text>
+                                <Text style={styles.addressLineText}>{storeName}</Text>
+                                <Text style={styles.addressLineText}>Main Branch</Text>
+                                <Text style={styles.addressLineText}>{shippingAddress?.country || 'India'}</Text>
+                                <Text style={[styles.addressLineText, { marginTop: hp('1%') }]}>7000000000</Text>
                             </View>
                             <Image style={styles.rightArrowIcon} source={require('../assets/images/right_arrow_two.png')} />
                             <View style={[styles.addressInnerView, {
@@ -394,25 +474,12 @@ const OrderTrackingScreen = () => {
                                     <Image style={styles.addressIconStyle} source={require('../assets/images/home_primary_three.png')} />
                                     <Text style={styles.addressHeaderText}>Home</Text>
                                 </View>
-                                <Text
-                                    style={styles.addressLineText}
-                                >
-                                    Lorem Ipsum is simply
+                                <Text style={styles.addressLineText}>{fullAddress}</Text>
+                                <Text style={styles.addressLineText}>{cityStateZip}</Text>
+                                <Text style={styles.addressLineText}>India</Text>
+                                <Text style={[styles.addressLineText, { marginTop: hp('1%') }]}>
+                                    {shippingAddress?.mobileNo || shippingAddress?.phoneNo || ''}
                                 </Text>
-                                <Text
-                                    style={styles.addressLineText}
-                                >
-                                    dummy text, 464748,
-                                </Text>
-                                <Text
-                                    style={styles.addressLineText}
-                                >
-                                    India
-                                </Text>
-
-                                <Text style={[styles.addressLineText, {
-                                    marginTop: hp('1%')
-                                }]}>986767867834</Text>
                             </View>
                         </View>
                     </ImageBackground>
@@ -420,8 +487,8 @@ const OrderTrackingScreen = () => {
 
                     <View style={styles.deliveryAgentContainer}>
                         <Image style={styles.paymentImage} source={require('../assets/images/payment_image.png')} />
-                        <Text style={styles.paymentText}>Cash on delivery</Text>
-                        <Text style={styles.paymnetPrice}>₹324</Text>
+                        <Text style={styles.paymentText}>{paymentMethod}</Text>
+                        <Text style={styles.paymnetPrice}>₹{grandTotal}</Text>
                     </View>
                     {orderStatus === 'delivered' && (
                         <View style={styles.paidSuccessfullyContainer}>
@@ -434,100 +501,62 @@ const OrderTrackingScreen = () => {
                     <View style={styles.productsMainContainer}>
                         <View style={styles.productsHeaderView}>
                             <Text style={styles.productsHeaderText}>Your Orders</Text>
-                            <Text style={styles.productsHeaderCount}>3 items</Text>
+                            <Text style={styles.productsHeaderCount}>{itemCount} items</Text>
                         </View>
 
-                        {orderStatus === 'delivered' ? (
-
-                            <View style={styles.productsContainerTwo}>
-
-                                <View style={styles.productViewTwo}>
-                                    <Image style={styles.productImageTwo} source={require('../assets/images/wl1.png')} />
-                                    <View>
-                                        <Text style={styles.productNameTwo}>Lorem Ipsum is simply dummy text</Text>
-                                        <Text style={styles.productQuantityTwo}>Quantity: 3</Text>
-                                    </View>
-                                    <View style={styles.productContainerThirdView}>
-                                        <Text style={styles.productPriceTwo}>₹324.00</Text>
-                                        <TouchableOpacity style={styles.returnContainer}>
-                                            <Image style={styles.returnIcon} source={require('../assets/images/return.png')} />
-                                            <Text style={styles.returnText}>Return</Text>
-                                        </TouchableOpacity>
-                                    </View>
-                                </View>
-
-                                <View style={styles.productViewTwo}>
-                                    <Image style={styles.productImageTwo} source={require('../assets/images/wl1.png')} />
-                                    <View>
-                                        <Text style={styles.productNameTwo}>Lorem Ipsum is simply dummy text</Text>
-                                        <Text style={styles.productQuantityTwo}>Quantity: 3</Text>
-                                    </View>
-                                    <View style={styles.productContainerThirdView}>
-                                        <Text style={styles.productPriceTwo}>₹324.00</Text>
-                                        <TouchableOpacity style={styles.returnContainer}>
-                                            <Image style={styles.returnIcon} source={require('../assets/images/return.png')} />
-                                            <Text style={styles.returnText}>Return</Text>
-                                        </TouchableOpacity>
-                                    </View>
-                                </View>
-
-                                <View style={styles.productViewTwo}>
-                                    <Image style={styles.productImageTwo} source={require('../assets/images/wl1.png')} />
-                                    <View>
-                                        <Text style={styles.productNameTwo}>Lorem Ipsum is simply dummy text</Text>
-                                        <Text style={styles.productQuantityTwo}>Quantity: 3</Text>
-                                    </View>
-                                    <View style={styles.productContainerThirdView}>
-                                        <Text style={styles.productPriceTwo}>₹324.00</Text>
-                                        <TouchableOpacity style={styles.returnContainer}>
-                                            <Image style={styles.returnIcon} source={require('../assets/images/return.png')} />
-                                            <Text style={styles.returnText}>Return</Text>
-                                        </TouchableOpacity>
-                                    </View>
-                                </View>
-
-                            </View>
-                        ) : (
-                            <View style={styles.productsContainer}>
-                                <View style={styles.productView}>
-                                    <Image style={styles.productImage} source={require('../assets/images/wl1.png')} />
-                                    <View>
-                                        <Text style={styles.productName}>Lorem Ipsum is simply dummy text</Text>
-                                        <Text style={styles.productQuantity}>Quantity: 3</Text>
-                                    </View>
-                                    <Text style={styles.productPrice}>₹324.00</Text>
-                                </View>
-                                <View style={styles.productView}>
-                                    <Image style={styles.productImage} source={require('../assets/images/wl1.png')} />
-                                    <View>
-                                        <Text style={styles.productName}>Lorem Ipsum is simply dummy text</Text>
-                                        <Text style={styles.productQuantity}>Quantity: 3</Text>
-                                    </View>
-                                    <Text style={styles.productPrice}>₹324.00</Text>
-                                </View>
-                                <View style={styles.productView}>
-                                    <Image style={styles.productImage} source={require('../assets/images/wl1.png')} />
-                                    <View>
-                                        <Text style={styles.productName}>Lorem Ipsum is simply dummy text</Text>
-                                        <Text style={styles.productQuantity}>Quantity: 3</Text>
-                                    </View>
-                                    <Text style={styles.productPrice}>₹324.00</Text>
-                                </View>
-                            </View>
-                        )}
+                        <View style={styles.productsContainer}>
+                            {orderItems.map((item, index) => (
+                                <OrderProductCard
+                                    key={index}
+                                    item={item}
+                                    orderStatus={effectiveOrderStatus}
+                                    onReturn={(selectedItem) => {
+                                        setSelectedReturnItem(selectedItem || item);
+                                        setShowReturnModal(true);
+                                    }}
+                                />
+                            ))}
+                        </View>
 
 
 
                         <View style={styles.productTotalView}>
                             <Text style={styles.totalText}>Total</Text>
-                            <TouchableOpacity style={styles.viewBillContainer}>
+                            <TouchableOpacity style={styles.viewBillContainer} onPress={() => setShowBillBreakdown(!showBillBreakdown)}>
                                 <Text style={styles.viewBillText}>View Your Bill</Text>
-                                <Entypo style={styles.viewBillIcon} name={'chevron-thin-down'} size={wp('3%')} />
+                                <Entypo style={styles.viewBillIcon} name={showBillBreakdown ? 'chevron-thin-up' : 'chevron-thin-down'} size={wp('3%')} />
                             </TouchableOpacity>
-                            <Text style={styles.totalPriceText}>₹324</Text>
+                            <Text style={styles.totalPriceText}>₹{grandTotal}</Text>
                         </View>
+
+                        {showBillBreakdown && bill && (
+                            <View style={styles.billBreakdownContainer}>
+                                <BillRow label="Item Total" value={`₹${bill.subTotal.toFixed(2)}`} />
+                                {bill.discountTotal > 0 && <BillRow label="Discount" value={`- ₹${bill.discountTotal.toFixed(2)}`} isGreen />}
+                                <BillRow label="Delivery Charge" value={bill.deliveryCharge === 0 ? 'FREE' : `₹${bill.deliveryCharge.toFixed(2)}`} />
+                                {bill.couponDiscount > 0 && <BillRow label="Coupon Discount" value={`- ₹${bill.couponDiscount.toFixed(2)}`} isGreen />}
+                                {bill.giftCardAmount > 0 && <BillRow label="Gift Card" value={`- ₹${bill.giftCardAmount.toFixed(2)}`} />}
+                                {bill.bCoinAppliedValue > 0 && <BillRow label="B-Coins Applied" value={`- ₹${bill.bCoinAppliedValue.toFixed(2)}`} isGreen />}
+                                {bill.taxTotal > 0 && <BillRow label="Tax" value={`₹${bill.taxTotal.toFixed(2)}`} />}
+                                <View style={styles.billRowDivider} />
+                                <View style={styles.finalTotalRow}>
+                                    <Text style={styles.finalTotalLabel}>Grand Total</Text>
+                                    <Text style={styles.finalTotalValue}>₹{bill.grandTotal.toFixed(2)}</Text>
+                                </View>
+                            </View>
+                        )}
                     </View>
-                    <TouchableOpacity style={styles.downloadBillContainer}>
+                    <TouchableOpacity
+                        style={styles.downloadBillContainer}
+                        onPress={() => {
+                            if (invoiceUrl) {
+                                Linking.openURL(`${CONFIG.base_url}${invoiceUrl}`).catch(err => {
+                                    console.error("Couldn't load page", err);
+                                    Toast.show("Unable to download invoice at this time", Toast.SHORT);
+                                });
+                            }
+                        }}
+                    >
                         <Image style={styles.downloadBillIcon} source={require('../assets/images/bill_icon_two.png')} />
                         <Text style={styles.downloadBillText}>Download the bill</Text>
                     </TouchableOpacity>
@@ -535,19 +564,19 @@ const OrderTrackingScreen = () => {
                     <View style={styles.orderDetailsContainer}>
                         <View>
                             <Text style={styles.orderDetailsKeyText}>Order ID</Text>
-                            <Text style={styles.orderDetailsValueText}>ORD 74848993304</Text>
+                            <Text style={styles.orderDetailsValueText}>{displayOrderId}</Text>
                         </View>
                         <View>
                             <Text style={styles.orderDetailsKeyText}>Payment</Text>
-                            <Text style={styles.orderDetailsValueText}>Cash on delivery</Text>
+                            <Text style={styles.orderDetailsValueText}>{paymentMethod}</Text>
                         </View>
                         <View>
                             <Text style={styles.orderDetailsKeyText}>Deliver to</Text>
-                            <Text style={styles.orderDetailsValueText}>Lorem Ipsum is simply dummy text of the printing</Text>
+                            <Text style={styles.orderDetailsValueText}>{fullAddress}</Text>
                         </View>
                         <View>
                             <Text style={styles.orderDetailsKeyText}>Order placed</Text>
-                            <Text style={styles.orderDetailsValueText}>Placed on Thu, 20 Feb 2022, 11:20 PM</Text>
+                            <Text style={styles.orderDetailsValueText}>{formattedOrderDate || orderDate}</Text>
                         </View>
                     </View>
                     <View style={styles.dliveryAgentRatingMainContainer}>
@@ -565,20 +594,42 @@ const OrderTrackingScreen = () => {
                             </View>
                         </View>
                         <View style={styles.deliveryAgentInnerContainerTwo}>
-                            <Text style={styles.deliveryAgentRatingName}>Delivery boy : Marvin Alex</Text>
+                            <Text style={styles.deliveryAgentRatingName}>Delivery boy : {deliveryAgentName || 'Marvin Alex'}</Text>
                         </View>
                     </View>
-                    <TouchableOpacity>
-                        <LinearGradient colors={['#F25000', '#FF7B3A']}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 0 }}
-                            style={styles.cancelButtonGradient}
-                        >
-                            <Text style={styles.cancelButtonText}>Cancel</Text>
-                        </LinearGradient>
-                    </TouchableOpacity>
+                    {['placed', 'accepted', 'packed'].includes(orderStatus) && (
+                        <TouchableOpacity onPress={() => setShowCancelModal(true)}>
+                            <LinearGradient colors={['#F25000', '#FF7B3A']}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 0 }}
+                                style={styles.cancelButtonGradient}
+                            >
+                                <Text style={styles.cancelButtonText}>Cancel</Text>
+                            </LinearGradient>
+                        </TouchableOpacity>
+                    )}
                 </View>
             </ScrollView>
+
+            <ConfirmationModal
+                visible={showCancelModal}
+                title="Cancel Order"
+                message="Are you sure you want to cancel this order?"
+                confirmText="Yes, Cancel"
+                cancelText="No, Keep It"
+                onClose={() => setShowCancelModal(false)}
+                onConfirm={handleCancelOrder}
+            />
+
+            <ReturnItemModal
+                visible={showReturnModal}
+                item={selectedReturnItem}
+                onClose={() => {
+                    setShowReturnModal(false);
+                    setSelectedReturnItem(null);
+                }}
+                onSubmit={handleReturnItem}
+            />
         </SafeAreaView>
     )
 }
@@ -1190,5 +1241,50 @@ const styles = StyleSheet.create({
         fontFamily: FONTS.poppins.light,
         fontSize: wp('2.79%'),
         color: '#696969'
-    }
+    },
+    billBreakdownContainer: {
+        paddingHorizontal: wp('8.5%'),
+        marginTop: hp('0.5%'),
+        paddingBottom: hp('2%'),
+        backgroundColor: '#FFFFFF',
+        width: wp('90.7%'),
+        alignSelf: 'center',
+    },
+    billBreakdownRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: hp('0.8%'),
+    },
+    billBreakdownLabel: {
+        fontFamily: FONTS.poppins.regular,
+        fontSize: wp('3.25%'),
+        color: '#616161',
+    },
+    billBreakdownValue: {
+        fontFamily: FONTS.poppins.medium,
+        fontSize: wp('3.25%'),
+        color: '#000000',
+    },
+    billRowDivider: {
+        borderWidth: 0.5,
+        borderStyle: 'dashed',
+        borderColor: '#E8E8E8',
+        marginVertical: hp('1.5%'),
+        borderRadius: 1,
+    },
+    finalTotalRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    finalTotalLabel: {
+        fontFamily: FONTS.poppins.semiBold,
+        fontSize: wp('4.2%'),
+        color: '#000000',
+    },
+    finalTotalValue: {
+        fontFamily: FONTS.poppins.bold,
+        fontSize: wp('4.5%'),
+        color: '#0CA201',
+    },
 })

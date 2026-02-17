@@ -11,11 +11,11 @@ export const setTokens = async (accessToken, refreshToken) => {
     ]);
 };
 
-// const TEST_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzIiwicGhvbmUiOiI4MTM3OTU2NTc0IiwianRpIjoiZjM3MDY0YzctNDhkNy00YjdiLTlhOTEtNDY0ZWQ1NWU0M2I0IiwiZXhwIjoxNzkyNTA3MjcwLCJpc3MiOiJLYXByYURhaWx5QVBJIiwiYXVkIjoiS2FwcmFEYWlseUFQSVVzZXJzIn0.QqTMt5BOQvCl0x2iRXi24AveGKlhlEP47m2J6eA1Okk';
+const TEST_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzIiwicGhvbmUiOiI4MTM3OTU2NTc0IiwianRpIjoiMjQ3MDg2ODMtMWQ0Yi00ZTE3LWJjMGEtNTM0Y2ZmNzQzYjk0IiwiZXhwIjoxNzkyMTIxMTA0LCJpc3MiOiJLYXByYURhaWx5QVBJIiwiYXVkIjoiS2FwcmFEYWlseUFQSVVzZXJzIn0.T7vAw2c6GD9VSQW3mcY13JvBXUhfDPTQPT3e7LomA10';
 
 export const getAccessToken = async () => {
     const token = await AsyncStorage.getItem(ACCESS_TOKEN);
-    return token;
+    return token || TEST_TOKEN;
 };
 
 export const getRefreshToken = () =>

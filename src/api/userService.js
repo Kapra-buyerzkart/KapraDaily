@@ -1,0 +1,98 @@
+import { get, post, patch } from './networkUtils';
+
+/**
+ * Fetches dashboard summary data including order count, address count, and wallet balances.
+ * @returns {Promise<Object>} The dashboard data.
+ */
+export const getDashboardDataApi = async () => {
+    return get('me/dashboard');
+};
+
+/**
+ * Fetches detailed wallet data including bTokens, bCoins balances and transaction history.
+ * @returns {Promise<Object>} The wallet and history data.
+ */
+export const getWalletDataApi = async () => {
+    return get('me/bwallet');
+};
+
+/**
+ * Redeems B-Coins using the specified amount and method.
+ * @param {Object} payload The redemption details (requestedCoins, preferredMethod).
+ * @returns {Promise<Object>} The API response.
+ */
+export const redeemBCoinsApi = async (payload) => {
+    return post('me/bcoin/redeem', payload);
+};
+/**
+ * Updates the user's profile details.
+ * @param {Object} payload The updated profile details (name, email, etc.).
+ * @returns {Promise<Object>} The API response.
+ */
+export const updateProfileApi = async (payload) => {
+    return post('me/update', payload);
+};
+
+/**
+ * Updates the user's profile details using PATCH.
+ * @param {Object} payload The updated profile details (fullName, dob, gender).
+ * @returns {Promise<Object>} The API response.
+ */
+export const updateProfilePatchApi = async (payload) => {
+    return patch('me', payload);
+};
+
+/**
+ * Changes the user's password.
+ * @param {Object} payload The old and new passwords (oldPassword, newPassword, confirmPassword).
+ * @returns {Promise<Object>} The API response.
+ */
+export const changePasswordApi = async (payload) => {
+    return post('me/changepassword', payload);
+};
+
+/**
+ * Requests an OTP for updating the user's email.
+ * @param {Object} payload { newEmail }
+ * @returns {Promise<Object>}
+ */
+export const requestEmailOtpApi = async (payload) => {
+    return post('me/updateemail/requestotp', payload);
+};
+
+/**
+ * Verifies the OTP and updates the user's email.
+ * @param {Object} payload { newEmail, otp }
+ * @returns {Promise<Object>}
+ */
+export const verifyEmailOtpApi = async (payload) => {
+    return post('me/updateemail/verifyotp', payload);
+};
+
+/**
+ * Requests an OTP for updating the user's phone number.
+ * @param {Object} payload { newPhone }
+ * @returns {Promise<Object>}
+ */
+export const requestPhoneOtpApi = async (payload) => {
+    return post('me/updatephone/requestotp', payload);
+};
+
+/**
+ * Verifies the OTP and updates the user's phone number.
+ * @param {Object} payload { newPhone, otp }
+ * @returns {Promise<Object>}
+ */
+export const verifyPhoneOtpApi = async (payload) => {
+    return post('me/updatephone/verifyotp', payload);
+};
+
+/**
+ * Fetches the referral history for the current user.
+ * @param {number} page The page number.
+ * @param {number} pageSize The number of items per page.
+ * @returns {Promise<Object>} The API response.
+ */
+export const getReferralHistoryApi = async (page = 1, pageSize = 20) => {
+    return get(`me/referrals`, { params: { page, pageSize } });
+};

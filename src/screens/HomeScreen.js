@@ -474,7 +474,13 @@ const HomeScreen = () => {
                     >
                         <View style={styles.productsContainerViewOne}>
                             <Text style={styles.productsContainerHeader}>Todays Special</Text>
-                            <TouchableOpacity style={styles.viewAllContainer}>
+                            <TouchableOpacity
+                                style={styles.viewAllContainer}
+                                onPress={() => navigation.navigate('ProductListScreen', {
+                                    title: "Today's Special",
+                                    products: bestOffers
+                                })}
+                            >
                                 <Text style={styles.viewAllText}>View All</Text>
                                 <MaterialIcons name={"arrow-forward-ios"} color={"#FF7B3A"} size={wp("3.3%")} style={styles.viewAllRightArrowIcon} />
                             </TouchableOpacity>
@@ -495,7 +501,13 @@ const HomeScreen = () => {
                 <View style={styles.productsMainContainerTwo}>
                     <View style={styles.productsContainerViewOne}>
                         <Text style={styles.productsContainerHeader}>{featuredProductsTitle}</Text>
-                        <TouchableOpacity style={styles.viewAllContainer}>
+                        <TouchableOpacity
+                            style={styles.viewAllContainer}
+                            onPress={() => navigation.navigate('ProductListScreen', {
+                                title: featuredProductsTitle,
+                                products: featuredProducts
+                            })}
+                        >
                             <Text style={styles.viewAllText}>View All</Text>
                             <MaterialIcons name={"arrow-forward-ios"} color={"#FF7B3A"} size={wp("3.3%")} style={styles.viewAllRightArrowIcon} />
                         </TouchableOpacity>
@@ -512,7 +524,7 @@ const HomeScreen = () => {
                     />
                 </View>
 
-                <TouchableOpacity style={styles.wrapper}>
+                <TouchableOpacity onPress={() => navigation.navigate('ReferralScreen')} style={styles.wrapper}>
 
                     <Image
                         source={require("../assets/images/rneb3.png")}
@@ -684,9 +696,9 @@ const HomeScreen = () => {
 
                 </View>
                 {/* Pincode Area List Display */}
-                <View style={{ padding: 20 }}>
+                {/* <View style={{ padding: 20 }}>
                     <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10 }}>Pincode Areas (Nearby)</Text>
-                </View>
+                </View> */}
                 <View style={styles.tellusContainer}>
                     <Text style={styles.tellUsText}>Don't worry. Tel us what you require</Text>
                     <View style={styles.searchContainerTwo}>
@@ -1101,6 +1113,7 @@ const styles = StyleSheet.create({
         resizeMode: "contain",
     },
     tellusContainer: {
+        marginTop: hp("2%"),
         height: hp("36.05%"),
         width: wp("90.69%"),
         backgroundColor: "#481300",

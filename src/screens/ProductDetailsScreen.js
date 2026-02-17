@@ -1,5 +1,5 @@
 import { View, Text, Image, StyleSheet, TouchableOpacity, FlatList, Platform, ScrollView, Animated, ActivityIndicator } from 'react-native'
-import React, { useRef, useState, useEffect } from 'react'
+import React, { useRef, useState, useEffect, useContext } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen'
 import { FONTS } from '../styles/typography'
@@ -13,6 +13,8 @@ import SelectedProducts from '../components/SelectedProducts'
 import { useWishlist } from '../context/WishlistContext'
 import { useCart } from '../context/CartContext'
 import { useProductDetails } from '../hooks/useProductDetails'
+import { LoaderContext } from '../context/loaderContext'
+import Entypo from 'react-native-vector-icons/Entypo'
 
 const images = [
     require('../assets/images/lays.png'),
@@ -39,7 +41,7 @@ const ProductDetailsScreen = () => {
     const route = useRoute()
     const { product: initialProduct, productId } = route.params || {}
     const { isInWishlist, toggleWishlist } = useWishlist()
-    const { addToCart, cartItems, updateCartItemQuantity } = useCart()
+    const { addToCart, cartItems, updateCartItemQuantity, removeFromCart } = useCart()
 
     const {
         loading,
@@ -55,7 +57,10 @@ const ProductDetailsScreen = () => {
         discountPercentage,
         stockQty,
         isAvailable,
+        bTokenValue,
         productId: finalProductId,
+        relatedProducts,
+        relatedLoading,
     } = useProductDetails(productId, initialProduct)
 
     const isLiked = isInWishlist(finalProductId)
@@ -90,7 +95,7 @@ const ProductDetailsScreen = () => {
         { id: "5", name: "Tomato", img: require('../assets/images/products/tomato.png'), price: "₹324" },
     ];
 
-    if (loading) {
+    if (loading && !product) {
         return (
             <SafeAreaView edges={['top']} style={styles.mainContainer}>
                 <View style={styles.headerView}>
@@ -99,10 +104,7 @@ const ProductDetailsScreen = () => {
                     </TouchableOpacity>
                     <Text style={styles.headerText}>Product Details</Text>
                 </View>
-                <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="large" color="#F25000" />
-                    <Text style={styles.loadingText}>Loading product...</Text>
-                </View>
+                {/* Global loader handles the visual feedback */}
             </SafeAreaView>
         )
     }
@@ -153,7 +155,7 @@ const ProductDetailsScreen = () => {
                             <Image style={Platform.OS === 'android' ? [styles.btokenIcon, {
                                 bottom: hp('0.2%')
                             }] : styles.btokenIcon} source={require('../assets/images/btoken-icon-three.png')} />
-                            <Text style={styles.btokenText}>1B Token</Text>
+                            <Text style={styles.btokenText}>{Number(bTokenValue)} Token</Text>
                         </View>
                         <View style={styles.heartShareButtonContainer}>
                             <TouchableOpacity style={{
@@ -174,10 +176,10 @@ const ProductDetailsScreen = () => {
                     <Text style={styles.productDescription}>{shortDescription}</Text>
                     <View style={styles.quantityCategoryContainer}>
                         <View>
-                            <Text style={styles.quantity}>{product?.sku || 'SKU'}</Text>
-                            <Text style={styles.quantityTwo}>{stockQty > 0 ? `${stockQty} in stock` : 'Out of stock'}</Text>
+                            {/* <Text style={styles.quantity}>{product?.sku || 'SKU'}</Text> */}
+                            {/* <Text style={styles.quantityTwo}>{stockQty > 0 ? `${stockQty} in stock` : 'Out of stock'}</Text> */}
                         </View>
-                        <Text style={styles.category}>{isAvailable ? 'Available' : 'Unavailable'}</Text>
+                        {/* <Text style={styles.category}>{isAvailable ? 'Available' : 'Unavailable'}</Text> */}
                     </View>
                     <View style={styles.offerPriceAddButtonContainer}>
                         <View>
@@ -190,40 +192,55 @@ const ProductDetailsScreen = () => {
                             </View>
                         </View>
 
-                        {(() => {
-                            const cartItem = cartItems.find(i => (i.productId || i.id) === finalProductId);
-                            const quantity = cartItem ? cartItem.quantity : 0;
+                        <View style={{ alignItems: 'center' }}>
+                            {(() => {
+                                const cartItem = cartItems.find(i => String(i.productId || i.id) === String(finalProductId));
+                                const quantity = cartItem ? cartItem.quantity : 0;
+                                const cartItemId = cartItem?.cartItemId || finalProductId;
 
-                            if (quantity > 0) {
+                                if (quantity > 0) {
+                                    return (
+                                        <View style={[styles.quantitySelector, { marginTop: 0 }]}>
+                                            <TouchableOpacity
+                                                style={styles.qtyButton}
+                                                onPress={() => {
+                                                    if (quantity === 1) {
+                                                        removeFromCart(cartItemId);
+                                                    } else {
+                                                        updateCartItemQuantity(cartItemId, quantity - 1);
+                                                    }
+                                                }}
+                                            >
+                                                <Entypo name="minus" size={wp('4%')} color="#FFF" />
+                                            </TouchableOpacity>
+                                            <Text style={styles.qtyText}>{quantity}</Text>
+                                            <TouchableOpacity
+                                                style={styles.qtyButton}
+                                                onPress={() => updateCartItemQuantity(cartItemId, quantity + 1)}
+                                            >
+                                                <Entypo name="plus" size={wp('4%')} color="#FFF" />
+                                            </TouchableOpacity>
+                                        </View>
+                                    );
+                                }
+
                                 return (
-                                    <View style={styles.quantitySelector}>
-                                        <TouchableOpacity
-                                            style={styles.qtyButton}
-                                            onPress={() => updateCartItemQuantity(finalProductId, quantity - 1)}
-                                        >
-                                            <AntDesign name="minus" size={wp('4%')} color="#FFF" />
-                                        </TouchableOpacity>
-                                        <Text style={styles.qtyText}>{quantity}</Text>
-                                        <TouchableOpacity
-                                            style={styles.qtyButton}
-                                            onPress={() => updateCartItemQuantity(finalProductId, quantity + 1)}
-                                        >
-                                            <AntDesign name="plus" size={wp('4%')} color="#FFF" />
-                                        </TouchableOpacity>
-                                    </View>
+                                    <TouchableOpacity
+                                        style={[styles.addButton, ((isAvailable === false) || stockQty === 0) && { backgroundColor: '#CCCCCC' }]}
+                                        onPress={() => {
+                                            if ((isAvailable === false) || stockQty === 0) return;
+                                            product && addToCart(product);
+                                        }}
+                                        disabled={(isAvailable === false) || stockQty === 0}
+                                    >
+                                        <Text style={styles.addButtonText}>{((isAvailable !== false) && stockQty > 0) ? 'ADD' : 'OUT OF STOCK'}</Text>
+                                    </TouchableOpacity>
                                 );
-                            }
-
-                            return (
-                                <TouchableOpacity
-                                    style={[styles.addButton, !isAvailable && { backgroundColor: '#999' }]}
-                                    onPress={() => product && addToCart(product)}
-                                    disabled={!isAvailable}
-                                >
-                                    <Text style={styles.addButtonText}>{isAvailable ? 'ADD' : 'UNAVAILABLE'}</Text>
-                                </TouchableOpacity>
-                            );
-                        })()}
+                            })()}
+                            {stockQty > 0 && stockQty < 10 && (
+                                <Text style={styles.lowStockText}>Only {stockQty} left!</Text>
+                            )}
+                        </View>
                     </View>
                     <View style={styles.divider} />
                     <TouchableOpacity onPress={toggleDetails} style={styles.viewProductDetailsButton}>
@@ -241,37 +258,56 @@ const ProductDetailsScreen = () => {
                         <ScrollView showsVerticalScrollIndicator={false}>
                             <Text style={styles.productDetailsText}>{productDescription?.replace(/<[^>]*>?/gm, '')}</Text>
                             {attributes && attributes.length > 0 && (
-                                <View style={{ marginTop: hp('2%') }}>
+                                <>
                                     <Text style={[styles.productsContainerHeader, { marginLeft: 0, marginBottom: hp('1%') }]}>Attributes</Text>
-                                    {attributes.map((attr, idx) => (
-                                        <View key={idx} style={{ flexDirection: 'row', marginBottom: hp('0.5%') }}>
-                                            <Text style={{ fontFamily: FONTS.poppins.semiBold, fontSize: wp('3.3%'), color: '#000', width: wp('35%') }}>{attr.attrName}:</Text>
-                                            <Text style={{ fontFamily: FONTS.poppins.regular, fontSize: wp('3.3%'), color: '#616161', flex: 1 }}>{attr.attrValue}</Text>
-                                        </View>
-                                    ))}
-                                </View>
+                                    <View style={styles.specsContainer}>
+
+                                        {attributes.map((attr, idx) => (
+                                            <View key={idx} style={[styles.specRow, (idx + (product?.sku ? 1 : 0)) % 2 !== 0 && styles.specRowAlt]}>
+                                                <Text style={styles.specLabel}>{attr.attrName}</Text>
+                                                <Text style={styles.specValue}>{attr.attrValue}</Text>
+                                            </View>
+                                        ))}
+                                    </View>
+
+                                </>
                             )}
+                            <View style={{ marginTop: hp('2%') }} />
                         </ScrollView>
                     </Animated.View>
                 </View>
                 <View style={styles.productsMainContainerTwo}>
                     <View style={styles.productsContainerViewOne}>
                         <Text style={styles.productsContainerHeader}>Similar Products</Text>
-                        <TouchableOpacity style={styles.viewAllContainer}>
-                            <Text style={styles.viewAllText}>View All</Text>
-                            <MaterialIcons name={"arrow-forward-ios"} color={"#FF7B3A"} size={wp("3.3%")} style={styles.viewAllRightArrowIcon} />
-                        </TouchableOpacity>
+                        {relatedProducts && relatedProducts.length > 0 && (
+                            <TouchableOpacity style={styles.viewAllContainer}>
+                                <Text style={styles.viewAllText}>View All</Text>
+                                <MaterialIcons name={"arrow-forward-ios"} color={"#FF7B3A"} size={wp("3.3%")} style={styles.viewAllRightArrowIcon} />
+                            </TouchableOpacity>
+                        )}
                     </View>
-                    <FlatList
-                        horizontal={true}
-                        data={products}
-                        keyExtractor={(item, index) => item.id.toString()}
-                        renderItem={({ item }) => <ProductCard item={item} />}
-                        showsHorizontalScrollIndicator={false}
-                        contentContainerStyle={{
-                            paddingLeft: wp('4.6%'), // 👈 first card left spacing
-                        }}
-                    />
+                    {relatedLoading ? (
+                        <View style={{ paddingVertical: hp('2%'), alignItems: 'center' }}>
+                            <ActivityIndicator size="small" color="#F25000" />
+                        </View>
+                    ) : (
+                        <FlatList
+                            horizontal={true}
+                            data={relatedProducts}
+                            keyExtractor={(item, index) => (item.productId || item.id || index).toString()}
+                            renderItem={({ item }) => <ProductCard item={item} />}
+                            showsHorizontalScrollIndicator={false}
+                            contentContainerStyle={[
+                                { paddingLeft: wp('4.6%') },
+                                (!relatedProducts || relatedProducts.length === 0) && { flex: 1, justifyContent: 'center', paddingLeft: 0 }
+                            ]}
+                            ListEmptyComponent={!relatedLoading && (
+                                <View style={styles.emptyContainer}>
+                                    <Text style={styles.emptyText}>No similar products found</Text>
+                                </View>
+                            )}
+                        />
+                    )}
                 </View>
             </ScrollView >
             <View style={styles.floatingContainer}>
@@ -566,5 +602,53 @@ const styles = StyleSheet.create({
         fontSize: wp('4%'),
         color: '#666666',
         marginTop: hp('2%'),
+    },
+    emptyContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: wp('90.7%'),
+        marginTop: hp('2%'),
+    },
+    emptyText: {
+        fontFamily: FONTS.poppins.regular,
+        fontSize: wp('3.5%'),
+        color: '#616161',
+        textAlign: 'center'
+    },
+    lowStockText: {
+        color: '#FF0000',
+        fontFamily: FONTS.poppins.medium,
+        fontSize: wp('3%'),
+        marginTop: hp('0.5%')
+    },
+    specsContainer: {
+        marginTop: hp('2%'),
+        backgroundColor: '#F8F8F8',
+        borderRadius: wp('2%'),
+        padding: wp('2%')
+    },
+    specRow: {
+        flexDirection: 'row',
+        paddingVertical: hp('1.2%'),
+        paddingHorizontal: wp('3%'),
+        alignItems: 'center',
+        borderBottomWidth: 1,
+        borderBottomColor: '#EEEEEE'
+    },
+    specRowAlt: {
+        backgroundColor: '#FFFFFF'
+    },
+    specLabel: {
+        fontFamily: FONTS.poppins.semiBold,
+        fontSize: wp('3.3%'),
+        color: '#333333',
+        width: wp('35%')
+    },
+    specValue: {
+        fontFamily: FONTS.poppins.regular,
+        fontSize: wp('3.3%'),
+        color: '#616161',
+        flex: 1
     },
 })

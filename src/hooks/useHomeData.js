@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getHomepageData } from '../api/homeService';
-import { searchPincodeArea } from '../api/pincodeService';
-import { getCurrentLocation } from '../utils/locationUtils';
+// import { searchPincodeArea } from '../api/pincodeService';
+// import { getCurrentLocation } from '../utils/locationUtils';
 import CONFIG from '../globals/config';
 import { useWishlist } from '../context/WishlistContext';
+import { LoaderContext } from '../context/loaderContext';
 
 const useHomeData = () => {
     const [bestOffers, setBestOffers] = useState([]);
@@ -17,41 +19,60 @@ const useHomeData = () => {
     const [featuredProductsTitle, setFeaturedProductsTitle] = useState('Featured Products');
 
     const { loadWishlist } = useWishlist();
+    const { showLoader } = useContext(LoaderContext);
 
     useEffect(() => {
-        const fetchPincodeAreas = async () => {
-            try {
-                let searchTerm = 'ven';
-                try {
-                    const locationData = await getCurrentLocation();
-                    console.log('User Location:', locationData);
-                    if (locationData) {
-                        setUserLocation(locationData); // Store location
-                        if (locationData.pincode) {
-                            searchTerm = locationData.pincode;
-                            console.log('Searching Pincode Areas for:', searchTerm);
-                        }
-                    }
-                } catch (locError) {
-                    console.warn('Location fetch failed, using default:', locError);
-                }
+        // const fetchPincodeAreas = async () => {
+        //     try {
+        //         showLoader(true);
+        //         let searchTerm = 'ven';
+        //         try {
+        //             const locationData = await getCurrentLocation();
+        //             console.log('User Location:', locationData);
+        //             if (locationData) {
+        //                 setUserLocation(locationData); // Store location
+        //                 if (locationData.pincode) {
+        //                     searchTerm = locationData.pincode;
+        //                     console.log('Searching Pincode Areas for:', searchTerm);
+        //                 }
+        //             }
+        //         } catch (locError) {
+        //             console.warn('Location fetch failed, using default:', locError);
+        //         }
 
-                const response = await searchPincodeArea(searchTerm, 20);
-                if (response?.Data) {
-                    setPincodeAreas(response.Data);
-                } else if (Array.isArray(response)) {
-                    setPincodeAreas(response);
-                } else {
-                    setPincodeAreas([]);
-                }
-            } catch (error) {
-                console.error('Error fetching pincode areas:', error);
-            }
-        };
+        //         const response = await searchPincodeArea(searchTerm, 20);
+        //         if (response?.Data) {
+        //             setPincodeAreas(response.Data);
+        //         } else if (Array.isArray(response)) {
+        //             setPincodeAreas(response);
+        //         } else {
+        //             setPincodeAreas([]);
+        //         }
+        //     } catch (error) {
+        //         console.error('Error fetching pincode areas:', error);
+        //     } finally {
+        //         showLoader(false);
+        //     }
+        // };
 
         const fetchHomepageData = async () => {
             try {
-                const response = await getHomepageData(105, 20);
+                // showLoader(true);
+                const [storedPincodeAreaId, storedLocality, storedArea] = await Promise.all([
+                    AsyncStorage.getItem('pincodeAreaId'),
+                    AsyncStorage.getItem('locality'),
+                    AsyncStorage.getItem('area')
+                ]);
+
+                const areaId = storedPincodeAreaId ? parseInt(storedPincodeAreaId) : 105;
+                if (storedArea) {
+                    setUserLocation({
+                        locality: storedLocality || '',
+                        area: storedArea
+                    });
+                }
+
+                const response = await getHomepageData(areaId, 100);
                 setHomepageData(response);
 
                 if (response?.data) {
@@ -62,7 +83,6 @@ const useHomeData = () => {
                             return { ...b, uri: { uri: imageUri } };
                         });
                         setBanners(mappedBanners);
-                        console.log('mappedBanners', mappedBanners);
                     }
 
                     if (response.data.featuredCategories) {
@@ -87,13 +107,12 @@ const useHomeData = () => {
 
             } catch (error) {
                 console.error('Error fetching homepage data:', error);
+            } finally {
+                // showLoader(false);
             }
         };
-
-        fetchPincodeAreas();
-        fetchHomepageData();
-        loadWishlist();
-
+        fetchHomepageData().catch(e => console.error('fetchHomepageData failed', e));
+        // Removed redundant loadWishlist here as it's better handled where needed or once at root if desired
     }, []);
 
     return {

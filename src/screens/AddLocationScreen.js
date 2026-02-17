@@ -1,35 +1,101 @@
-import React, { useState } from 'react'
-import { View, Text, StyleSheet, Image, TouchableOpacity, TextInput, Platform, ScrollView, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard } from 'react-native'
+import React, { useState, useEffect } from 'react'
+import { View, Text, StyleSheet, Image, TouchableOpacity, TextInput, Platform, ScrollView, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, ActivityIndicator } from 'react-native'
 import MapView from 'react-native-maps'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { FONTS } from '../styles/typography'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
-import { useNavigation } from '@react-navigation/native'
+import { useNavigation, useRoute } from '@react-navigation/native'
 import DropDownPicker from 'react-native-dropdown-picker';
 import LinearGradient from 'react-native-linear-gradient'
+import { addAddressApi, updateAddressApi } from '../api/addressService'
+import Toast from 'react-native-simple-toast'
 
 const AddLocationScreen = () => {
+    const navigation = useNavigation()
+    const route = useRoute()
+    const insets = useSafeAreaInsets()
+
+    // Edit mode check
+    const editAddress = route.params?.address;
+    const isEditMode = !!editAddress;
+
     const [open, setOpen] = useState(false);
-    const [value, setValue] = useState(null);
+    const [pincodeAreaId, setPincodeAreaId] = useState(editAddress?.pincodeAreaId || null);
     const [items, setItems] = useState([
-        { label: 'Vennala', value: 'vennala' },
-        { label: 'Thrippunithura', value: 'thrippunithura' },
-        { label: 'Chalakudi', value: 'chalakudi' },
+        { label: 'Vennala', value: 10 }, // Dummy values for now, would ideally fetch these based on pincode
+        { label: 'Thrippunithura', value: 11 },
+        { label: 'Chalakudi', value: 12 },
+        { label: 'Edappally', value: 15 },
     ]);
 
-    const navigation = useNavigation()
-    const insets = useSafeAreaInsets()
+    // Form state
+    const [custName, setCustName] = useState(editAddress?.custName || '');
+    const [addLine1, setAddLine1] = useState(editAddress?.addLine1 || '');
+    const [addLine2, setAddLine2] = useState(editAddress?.addLine2 || '');
+    const [landmark, setLandmark] = useState(editAddress?.landmark || '');
+    const [phone, setPhone] = useState(editAddress?.phone || '');
+    const [pincode, setPincode] = useState(editAddress?.pincode || '');
+    const [addressType, setAddressType] = useState(editAddress?.addressType || 'HOME');
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleSave = async () => {
+        if (!custName || !addLine1 || !phone || !pincode || !pincodeAreaId) {
+            Toast.show('Please fill all required fields', Toast.SHORT);
+            return;
+        }
+
+        const payload = {
+            custName,
+            addLine1,
+            addLine2,
+            landmark,
+            phone,
+            country: "India",
+            state: "Kerala",
+            district: "Ernakulam",
+            pincode,
+            pincodeAreaId,
+            pincodeAreaName: items.find(i => i.value === pincodeAreaId)?.label || "",
+            latitude: 10.0205225253,
+            longitude: 76.30524553585,
+            addressType,
+            isDefaultBillingAddress: true,
+            isDefaultShippingAddress: true
+        };
+
+        setIsLoading(true);
+        try {
+            let response;
+            if (isEditMode) {
+                response = await updateAddressApi(editAddress.addressId, payload);
+            } else {
+                response = await addAddressApi(payload);
+            }
+            console.log('ressssnm=====', response);
+
+            if (response && response.success !== false) {
+                Toast.show(isEditMode ? 'Address updated' : 'Address added', Toast.SHORT);
+                navigation.goBack();
+            } else {
+                Toast.show(response.message || 'Failed to save address', Toast.SHORT);
+            }
+        } catch (error) {
+            console.error('Error saving address:', error);
+            Toast.show('An error occurred', Toast.SHORT);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     return (
         <SafeAreaView edges={['top']} style={Platform.OS === "android" ? [styles.mainContainer, {
             paddingBottom: insets.bottom
         }] : styles.mainContainer}>
-            {/* MAP */}
             <MapView
                 style={StyleSheet.absoluteFillObject}
                 initialRegion={{
-                    latitude: 10.8505,
-                    longitude: 76.2711,
+                    latitude: editAddress?.latitude || 10.8505,
+                    longitude: editAddress?.longitude || 76.2711,
                     latitudeDelta: 0.05,
                     longitudeDelta: 0.05,
                 }}
@@ -38,59 +104,17 @@ const AddLocationScreen = () => {
                 <TouchableOpacity onPress={() => navigation.goBack()}>
                     <Image style={styles.leftArrowIcon} source={require('../assets/images/left_arrow.png')} />
                 </TouchableOpacity>
-                <Text style={styles.addLocationText}>Add location</Text>
+                <Text style={styles.addLocationText}>{isEditMode ? 'Edit location' : 'Add location'}</Text>
                 <Image style={styles.homeIcon} source={require('../assets/images/home_two.png')} />
             </View>
-            {/* <View style={styles.searchContainer}>
-                <Image style={styles.searchIcon} source={require('../assets/images/search_icon.png')} />
-                <TextInput
-                    placeholderTextColor={'#3A3A3A'}
-                    placeholder='Search location'
-                    style={Platform.OS === "android" ? [styles.searchInput, {
-                        top: hp('0.2%')
-                    }] : styles.searchInput}
-                />
-            </View> */}
-            {/* <View style={Platform.OS === 'android' ? [styles.bottomContainer, {
-                marginBottom: insets.bottom
-            }] : styles.bottomContainer}>
-                <View style={styles.upperDivider} />
-                <View style={styles.innerView}>
-                    <Image style={styles.locationIcon} source={require('../assets/images/location_four.png')} />
-                    <Text style={styles.fetchingLocation}>Fetching Location...</Text>
-                </View>
-            </View> */}
-            {/* <View style={Platform.OS === 'android' ? [styles.bottomContainer, {
-                marginBottom: insets.bottom,
-                height: hp('17%')
-            }] : [styles.bottomContainer, {
-                height: hp('17%')
-            }]}>
-                <View style={styles.upperDivider} />
-                <View style={styles.innerView}>
-                    <Image style={[styles.locationIcon, {
-                        top: hp('-1%')
-                    }]} source={require('../assets/images/location_four.png')} />
-                    <View>
-                        <Text style={styles.fetchingLocation}>Lakshmi Nagar Phase 2,</Text>
-                        <Text style={styles.addressLineText}>Kakkanad,Kochi,Ernakulam District,
-                            Kerala - 682030,India.</Text>
-                    </View>
-                </View>
-            </View> */}
-            {/* <ScrollView style={styles.detailedAddressContainer}>
-            </ScrollView> */}
+
             <KeyboardAvoidingView
                 style={{ flex: 1 }}
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            // keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 0}
             >
                 <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                     <ScrollView
                         style={styles.detailedAddressContainer}
-                        // contentContainerStyle={{
-                        //     paddingBottom: hp('25%'), // 🔑 VERY IMPORTANT
-                        // }}
                         keyboardShouldPersistTaps="handled"
                         showsVerticalScrollIndicator={false}
                     >
@@ -100,9 +124,8 @@ const AddLocationScreen = () => {
                                 top: hp('-1%')
                             }]} source={require('../assets/images/location_four.png')} />
                             <View>
-                                <Text style={styles.fetchingLocation}>Lakshmi Nagar Phase 2,</Text>
-                                <Text style={styles.addressLineText}>Kakkanad,Kochi,Ernakulam District,
-                                    Kerala - 682030,India.</Text>
+                                <Text style={styles.fetchingLocation}>{addLine1 || 'Fetching Location...'}</Text>
+                                <Text style={styles.addressLineText}>{addLine2 || ''}</Text>
                             </View>
                         </View>
                         <View style={styles.delboyContainer}>
@@ -116,7 +139,10 @@ const AddLocationScreen = () => {
                         </View>
                         <Text style={styles.saveAsText}>Save as</Text>
                         <View style={styles.addressTypesContainer}>
-                            <TouchableOpacity style={styles.addressTypeContainer}>
+                            <TouchableOpacity
+                                onPress={() => setAddressType('HOME')}
+                                style={[styles.addressTypeContainer, addressType === 'HOME' && { borderColor: '#F25000', backgroundColor: '#FFF5F0' }]}
+                            >
                                 <Image style={Platform.OS === 'android' ?
                                     [styles.addressTypeIcon, {
                                         bottom: hp('0.2%')
@@ -125,7 +151,10 @@ const AddLocationScreen = () => {
                                 <Text style={styles.addressTypeText}>Home</Text>
                             </TouchableOpacity>
 
-                            <TouchableOpacity style={styles.addressTypeContainer}>
+                            <TouchableOpacity
+                                onPress={() => setAddressType('OFFICE')}
+                                style={[styles.addressTypeContainer, addressType === 'OFFICE' && { borderColor: '#F25000', backgroundColor: '#FFF5F0' }]}
+                            >
                                 <Image style={Platform.OS === 'android' ? [styles.addressTypeIcon, {
                                     width: wp('2.79%%'),
                                     bottom: hp('0.2%')
@@ -135,7 +164,10 @@ const AddLocationScreen = () => {
                                 <Text style={styles.addressTypeText}>Office</Text>
                             </TouchableOpacity>
 
-                            <TouchableOpacity style={styles.addressTypeContainer}>
+                            <TouchableOpacity
+                                onPress={() => setAddressType('OTHER')}
+                                style={[styles.addressTypeContainer, addressType === 'OTHER' && { borderColor: '#F25000', backgroundColor: '#FFF5F0' }]}
+                            >
                                 <Image style={Platform.OS === 'android' ? [styles.addressTypeIcon, {
                                     width: wp('2.55%'),
                                     bottom: hp('0.2%')
@@ -149,12 +181,16 @@ const AddLocationScreen = () => {
                             <Text style={styles.label}>Full Address House / Flat / Block no</Text>
                             <TextInput
                                 style={styles.input}
+                                value={addLine1}
+                                onChangeText={setAddLine1}
                             />
                         </View>
                         <View style={styles.inputWrapper}>
                             <Text style={styles.label}>Appartment / Road / Area</Text>
                             <TextInput
                                 style={styles.input}
+                                value={addLine2}
+                                onChangeText={setAddLine2}
                             />
                         </View>
                         <View style={styles.pincodeContainer}>
@@ -164,15 +200,18 @@ const AddLocationScreen = () => {
                                 <Text style={styles.label}>PIN Code</Text>
                                 <TextInput
                                     style={styles.input}
+                                    value={pincode}
+                                    onChangeText={setPincode}
+                                    keyboardType="numeric"
                                 />
                             </View>
                             <View>
                                 <DropDownPicker
                                     open={open}
-                                    value={value}
+                                    value={pincodeAreaId}
                                     items={items}
                                     setOpen={setOpen}
-                                    setValue={setValue}
+                                    setValue={setPincodeAreaId}
                                     setItems={setItems}
                                     placeholder={'PIN Code Area'}
                                     placeholderStyle={{
@@ -198,16 +237,25 @@ const AddLocationScreen = () => {
                                 color: '#000000',
                                 fontSize: wp('3.4%')
                             }}>Land mark / Delivery instruction</Text>
-                            <TextInput placeholderTextColor={'#616161'} placeholder='eg. Warning' multiline style={[styles.input, {
-                                height: hp('14.27%'),
-                                paddingHorizontal: wp('3.25%'),
-                                textAlignVertical: 'top'
-                            }]} />
+                            <TextInput
+                                placeholderTextColor={'#616161'}
+                                placeholder='eg. Near Lulu Mall'
+                                value={landmark}
+                                onChangeText={setLandmark}
+                                multiline
+                                style={[styles.input, {
+                                    height: hp('14.27%'),
+                                    paddingHorizontal: wp('3.25%'),
+                                    textAlignVertical: 'top'
+                                }]}
+                            />
                         </View>
                         <View style={styles.inputWrapper}>
                             <Text style={styles.label}>Customer name</Text>
                             <TextInput
                                 style={styles.input}
+                                value={custName}
+                                onChangeText={setCustName}
                             />
                         </View>
                         <View style={styles.inputWrapper}>
@@ -216,6 +264,9 @@ const AddLocationScreen = () => {
                                 placeholder='000 000 0000'
                                 style={styles.input}
                                 placeholderTextColor={'#616161'}
+                                value={phone}
+                                onChangeText={setPhone}
+                                keyboardType="phone-pad"
                             />
                         </View>
                         <LinearGradient colors={['#F25000', '#FF7B3A']}
@@ -223,8 +274,12 @@ const AddLocationScreen = () => {
                             end={{ x: 1, y: 0 }}
                             style={styles.buttonGradientStyle}
                         >
-                            <TouchableOpacity>
-                                <Text style={styles.buttonText}>Proceed to PAY</Text>
+                            <TouchableOpacity disabled={isLoading} onPress={handleSave}>
+                                {isLoading ? (
+                                    <ActivityIndicator color="#FFFFFF" />
+                                ) : (
+                                    <Text style={styles.buttonText}>{isEditMode ? 'UPDATE ADDRESS' : 'SAVE ADDRESS'}</Text>
+                                )}
                             </TouchableOpacity>
                         </LinearGradient>
                     </ScrollView>

@@ -9,16 +9,39 @@ const windowWidth = Dimensions.get('window').width;
 export const LoaderContext = createContext();
 
 export const LoaderContextProvider = ({ children }) => {
-    const [loading, setLoading] = useState(false);
+    const [loadingCount, setLoadingCount] = React.useState(0);
+    const timeoutRef = React.useRef(null);
 
-    const showLoader = (show) => {
-        // console.log('show', show)
-        setLoading(show);
-    };
-    const value = {
+    const showLoader = React.useCallback((show) => {
+        setLoadingCount(prev => {
+            const nextCount = show ? prev + 1 : Math.max(0, prev - 1);
+            console.log(`Loader count: ${prev} -> ${nextCount} (request: ${show})`);
+
+            // Safety: If count goes from 0 to 1, start a global timeout
+            if (show && nextCount === 1) {
+                if (timeoutRef.current) clearTimeout(timeoutRef.current);
+                timeoutRef.current = setTimeout(() => {
+                    console.warn('Loader safety timeout reached! Forcing hide.');
+                    setLoadingCount(0);
+                }, 15000); // 15s absolute timeout for any operation
+            }
+
+            // If count goes to 0, clear timeout
+            if (nextCount === 0 && timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+                timeoutRef.current = null;
+            }
+
+            return nextCount;
+        });
+    }, []);
+
+    const loading = loadingCount > 0;
+
+    const value = React.useMemo(() => ({
         showLoader,
         loading,
-    };
+    }), [showLoader, loading]);
 
     return (
         <>

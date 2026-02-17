@@ -1,9 +1,11 @@
-import { View, Text, TouchableOpacity, FlatList, Image, TextInput, ScrollView } from 'react-native'
-import React, { useState, useEffect } from 'react'
+import { View, Text, TouchableOpacity, FlatList, Image, TextInput, ScrollView, ActivityIndicator } from 'react-native'
+import React, { useState, useEffect, useContext } from 'react'
+import { useRoute } from '@react-navigation/native';
 import { StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import Feather from 'react-native-vector-icons/Feather';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import ProductCard from '../components/ProductCard';
 import SelectedProducts from '../components/SelectedProducts';
 import LinearGradient from 'react-native-linear-gradient';
@@ -11,6 +13,10 @@ import { FONTS } from '../styles/typography'
 import { getCategoriesApi } from '../api/categoryService';
 import { searchProductsApi } from '../api/productService';
 import CONFIG from '../globals/config';
+import FilterSortModal from '../components/FilterSortModal';
+import { useCart } from '../context/CartContext';
+import { LoaderContext } from '../context/loaderContext';
+import { useDebounce } from '../hooks/useDebounce';
 
 
 const categories = [
@@ -66,16 +72,39 @@ const dummyProducts = [
 
 
 export default function CategoriesScreen() {
-    const [selectedId, setSelectedId] = useState("1");
-    const [selectedSubCatId, setSelectedSubCatId] = useState("1");
+    const route = useRoute();
+    const { catId } = route.params || {};
+    const [selectedId, setSelectedId] = useState(catId?.toString() || "1");
+    const [selectedSubCatId, setSelectedSubCatId] = useState(null);
     const [categoriesList, setCategoriesList] = useState([]);
     const [subCategoriesList, setSubCategoriesList] = useState([]);
     const [productsList, setProductsList] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [searchText, setSearchText] = useState("");
+    const [pincodeAreaId, setPincodeAreaId] = useState(105);
+    const [pageNumber, setPageNumber] = useState(1);
+    const [pageSize, setPageSize] = useState(20);
+    const [isFilterSortModalVisible, setIsFilterSortModalVisible] = useState(false);
+    const [loadingProducts, setLoadingProducts] = useState(false);
+    const { showLoader } = useContext(LoaderContext);
+
+    const [filters, setFilters] = useState({
+        sortBy: 'relevance',
+        priceMin: 0,
+        priceMax: 5000
+    });
+
+    const debouncedSearchText = useDebounce(searchText, 500);
 
     useEffect(() => {
         fetchCategories();
     }, []);
+
+    useEffect(() => {
+        if (catId) {
+            setSelectedId(catId.toString());
+        }
+    }, [catId]);
 
     useEffect(() => {
         if (selectedId) {
@@ -86,41 +115,46 @@ export default function CategoriesScreen() {
     useEffect(() => {
         const catIdToFetch = selectedSubCatId || selectedId;
         if (catIdToFetch) {
-            console.log('bvsdnmzkue', catIdToFetch, selectedId, selectedSubCatId);
-
+            console.log('Fetching products for:', catIdToFetch, 'with search:', debouncedSearchText);
             fetchProducts(catIdToFetch);
         }
-    }, [selectedSubCatId]);
+    }, [selectedSubCatId, debouncedSearchText, selectedId, filters]);
 
     const fetchProducts = async (catId) => {
         try {
+            setLoadingProducts(true);
             const payload = {
-                pincodeAreaId: 105,
-                prName: "a",
+                pincodeAreaId: pincodeAreaId,
+                prName: debouncedSearchText,
                 catId: parseInt(catId),
-                priceMin: 0,
-                priceMax: 10000,
+                priceMin: filters.priceMin,
+                priceMax: filters.priceMax,
                 filterValues: null,
-                sortBy: "relevance",
-                pageNumber: 1,
-                pageSize: 20
+                sortBy: filters.sortBy,
+                pageNumber: 1, // Reset to page 1 on new sort/filter
+                pageSize: pageSize
             };
             console.log('Fetching Products Payload:', JSON.stringify(payload, null, 2));
             const response = await searchProductsApi(payload);
             console.log('Products Response:', JSON.stringify(response, null, 2));
             if (response && response.success && response.data && response.data.items) {
                 setProductsList(response.data.items);
+                setPageNumber(1);
             } else {
                 setProductsList([]);
             }
         } catch (error) {
             console.error('Error fetching products:', error);
             setProductsList([]);
+        } finally {
+            setLoadingProducts(false);
         }
     };
 
     const fetchCategories = async () => {
         try {
+            setLoading(true);
+            showLoader(true);
             const response = await getCategoriesApi(1); // Fetch main categories
             console.log('Categories Response:', JSON.stringify(response, null, 2));
             if (response && response.success && response.data && response.data.items) {
@@ -133,11 +167,13 @@ export default function CategoriesScreen() {
             console.error('Error fetching categories:', error);
         } finally {
             setLoading(false);
+            showLoader(false);
         }
     };
 
     const fetchSubCategories = async (parentId) => {
         try {
+            showLoader(true);
             const response = await getCategoriesApi(parentId);
             console.log('SubCategories Response:', JSON.stringify(response, null, 2));
             if (response && response.success && response.data && response.data.items) {
@@ -153,6 +189,8 @@ export default function CategoriesScreen() {
         } catch (error) {
             console.error('Error fetching subcategories:', error);
             setSubCategoriesList([]);
+        } finally {
+            showLoader(false);
         }
     };
 
@@ -204,8 +242,8 @@ export default function CategoriesScreen() {
                 )}
                 <Text style={isSelected ? styles.title : [styles.title, {
                     color: "#666666", marginTop: 0
-                }]}>
-                    {item.name}
+                }]} numberOfLines={2}>
+                    {item.catName || item.name}
                 </Text>
 
             </TouchableOpacity>
@@ -231,9 +269,34 @@ export default function CategoriesScreen() {
                         </View>
                         <Text style={styles.unselectedSubCatText}>{item.catName}</Text>
                     </TouchableOpacity>)}
+                <View style={{ width: wp('1%') }} />
             </>
         );
     };
+
+    const renderHeader = React.useCallback(() => (
+        <>
+            <FlatList
+                data={subCategoriesList}
+                keyExtractor={(item) => item.catId.toString()}
+                renderItem={renderSubCategory}
+                horizontal={true}
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{
+                    paddingLeft: wp("3%"),
+                    paddingRight: wp("3%"),
+                    marginTop: hp("0.8%"),
+                    paddingBottom: hp("1.5%"),
+                    gap: wp('2.5%'),
+                }}
+            />
+            {loadingProducts && (
+                <View style={{ alignItems: 'center', marginTop: hp('10%') }}>
+                    <ActivityIndicator size="large" color="#F25000" />
+                </View>
+            )}
+        </>
+    ), [subCategoriesList, selectedSubCatId, loadingProducts]);
 
 
     return (
@@ -251,13 +314,19 @@ export default function CategoriesScreen() {
                                 style={styles.searchInput}
                                 placeholder="Search product"
                                 placeholderTextColor="#000000"
+                                value={searchText}
+                                onChangeText={setSearchText}
                             />
                             {/* <View style={styles.divider} />
-                        <Ionicons name="clipboard-outline" color={"#8F8F8F"} size={wp("6%")} style={styles.clipboardIcon} /> */}
+                    <Ionicons name="clipboard-outline" color={"#8F8F8F"} size={wp("6%")} style={styles.clipboardIcon} /> */}
                         </View>
-                        <View style={styles.filterView}>
-                            <Image source={require("../assets/images/filter.png")} style={styles.filterIconStyle} />
-                            <Text style={styles.filterText}>Filter</Text>
+                        <View style={{ flexDirection: 'row', gap: wp('2%') }}>
+                            <TouchableOpacity
+                                style={[styles.filterView, { width: wp('10%'), paddingHorizontal: 0 }]}
+                                onPress={() => setIsFilterSortModalVisible(true)}
+                            >
+                                <Ionicons name="options-outline" color={"#2D0F0D"} size={wp("5%")} />
+                            </TouchableOpacity>
                         </View>
                     </View>
                 </View>
@@ -279,76 +348,9 @@ export default function CategoriesScreen() {
                 </View>
 
                 {/* RIGHT CONTENT */}
-                <ScrollView style={styles.rightContent}>
-                    {/* <View style={{
-                        alignItems: 'center'
-                    }}>
-                        <Image source={require("../assets/images/cat-banner.jpeg")}
-                            style={styles.categoryBanner}
-                        />
-                    </View> */}
+                <View style={styles.rightContent}>
                     <FlatList
-                        data={subCategoriesList}
-                        keyExtractor={(item) => item.catId.toString()}
-                        renderItem={renderSubCategory}
-                        horizontal={true}
-                        showsHorizontalScrollIndicator={false}
-                        contentContainerStyle={{
-                            paddingLeft: wp("2.3%"),
-                            marginTop: hp("0.8%")
-                            // alignItems: "flex-end"
-                        }}
-                    />
-                    {/* <TouchableOpacity style={{
-                        // alignItems: "center"
-                        // backgroundColor: "green",
-                        width: wp("18.6%"),
-                        alignItems: "center"
-                    }}>
-                        <View style={{
-                            width: wp("18.6%"),
-                            height: hp("8.04%"),
-                            borderRadius: 10,
-                            backgroundColor: "#FFDB99",
-                            justifyContent: "center",
-                            alignItems: "center"
-                        }}>
-                            <Image style={{
-                                width: wp("13.95%"),
-                                height: wp("13.95%"),
-                                borderRadius: 60,
-                                resizeMode: "cover"
-                            }} source={require("../assets/images/mango.jpg")} />
-                        </View>
-                        <Text style={{
-                            color: "#000000",
-                            fontFamily: "Lexend-Medium",
-                            fontSize: wp("2.79%"),
-                            marginTop: hp("0.1%")
-                        }}>Orange</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity style={{
-                        // backgroundColor: "red",
-                        width: wp("16.28%"),
-                        alignItems: "center"
-                    }}>
-                        <Image style={{
-                            width: wp("11.63%"),
-                            height: wp("11.63%%"),
-                            borderRadius: 60,
-                            resizeMode: "cover"
-                        }} source={require("../assets/images/mango.jpg")} />
-                        <Text style={{
-                            color: "#666666",
-                            fontFamily: "Lexend-Medium",
-                            fontSize: wp("2.79%"),
-                            marginTop: hp("0.1%")
-                        }}>Orange</Text>
-                    </TouchableOpacity> */}
-
-                    <FlatList
-                        data={productsList}
+                        data={loadingProducts ? [] : productsList}
                         keyExtractor={(item) => (item.productId || item.id).toString()}
                         renderItem={({ item }) => <ProductCard item={item} />}
                         numColumns={2}
@@ -358,18 +360,44 @@ export default function CategoriesScreen() {
                             paddingBottom: hp("8.5%"),
                             paddingTop: hp("0.5%")
                         }}
-                        ListEmptyComponent={() => (
-                            <View style={{ flex: 1, alignItems: 'center', marginTop: hp('5%') }}>
-                                <Text style={{ fontFamily: FONTS.lexend.regular, color: '#999' }}>No products found</Text>
-                            </View>
-                        )}
+                        ListHeaderComponent={renderHeader}
+                        ListEmptyComponent={
+                            !loadingProducts ? (
+                                <View style={{ flex: 1, alignItems: 'center', marginTop: hp('5%') }}>
+                                    <Text style={{ fontFamily: FONTS.lexend.regular, color: '#999' }}>No products found</Text>
+                                </View>
+                            ) : null
+                        }
                     />
-                </ScrollView>
+                </View>
             </View>
             <View style={styles.floatingContainer}>
                 <SelectedProducts selectedProducts={selectedProducts} />
             </View>
-        </SafeAreaView>
+            <FilterSortModal
+                visible={isFilterSortModalVisible}
+                onClose={() => setIsFilterSortModalVisible(false)}
+                initialSort={filters.sortBy}
+                initialMin={filters.priceMin}
+                initialMax={filters.priceMax}
+                onApply={({ sort, min, max }) => {
+                    setFilters({ sortBy: sort, priceMin: min, priceMax: max });
+                }}
+            />
+
+            {/* <FilterSortModal
+                visible={filterVisible}
+                onClose={() => setFilterVisible(false)}
+                onApply={(filters) => {
+                    setSortBy(filters.sort);
+                    setMinPrice(filters.min);
+                    setMaxPrice(filters.max);
+                }}
+                initialSort={sortBy}
+                initialMin={minPrice}
+                initialMax={maxPrice}
+            /> */}
+        </SafeAreaView >
     );
 }
 

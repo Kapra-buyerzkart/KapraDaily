@@ -19,13 +19,18 @@ const ProductCard = (props) => {
 
     // Hooks
     const navigation = useNavigation();
-    const { addToCart } = useCart();
+    const { addToCart, cartItems, updateCartItemQuantity, removeFromCart } = useCart();
     const { isInWishlist, toggleWishlist } = useWishlist();
 
     const { item } = props;
     // API products use productId, local products might use id
     const itemId = item.productId || item.id;
     const isLiked = isInWishlist(itemId);
+
+    // Find quantity in cart — convert to string to avoid type mismatch (number vs string)
+    const cartItem = cartItems.find(i => String(i.productId || i.id) === String(itemId));
+    const quantity = cartItem?.quantity || cartItem?.addedQty || 0;
+    const cartItemId = cartItem?.cartItemId || itemId;
 
     // Helper to resolve image source
     const getImageSource = (img) => {
@@ -39,6 +44,7 @@ const ProductCard = (props) => {
         }
         return img; // For require(...) local images
     };
+
 
     // const { item } = props;
     // Map API fields to UI expected fields or use them directly
@@ -57,6 +63,8 @@ const ProductCard = (props) => {
         setImageLoading(true);
     }, [item.featuredImage, item.img]);
 
+    // console.log('ProductCard Render', item.id || item.productId);
+
     return (
         <TouchableOpacity
             onPress={() => navigation.navigate('ProductDetailsScreen', {
@@ -66,29 +74,58 @@ const ProductCard = (props) => {
             style={styles.productCard}
         >
             <View style={styles.productCardViewOne}>
-                {/* <EvilIcons name={"heart"} size={wp("7%")} /> */}
                 <TouchableOpacity onPress={() => toggleWishlist(item)}>
                     <FontAwesome
                         name={isLiked ? 'heart' : 'heart-o'}
-                        size={wp('5%')}
+                        size={wp('4.5%')}
                         color={isLiked ? '#FF0048' : '#979797'}
                     />
                 </TouchableOpacity>
-                <Text style={styles.btokenText}>Upto 1B Token</Text>
-                <TouchableOpacity
-                    style={styles.plusIconView}
-                    onPress={() => addToCart(item)}
-                    hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
-                    activeOpacity={0.7}
-                >
-                    <Entypo name={"plus"} color={"#FFFFFF"} size={wp("4.5%")} />
-                </TouchableOpacity>
+
+                {quantity > 0 ? (
+                    <View style={styles.counterContainer}>
+                        <TouchableOpacity
+                            onPress={() => {
+                                if (quantity === 1) {
+                                    removeFromCart(cartItemId);
+                                } else {
+                                    updateCartItemQuantity(cartItemId, quantity - 1);
+                                }
+                            }}
+                            style={styles.counterButton}
+                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                        >
+                            <Entypo name="minus" size={wp('3.5%')} color="#F04B1B" />
+                        </TouchableOpacity>
+                        <Text style={styles.quantityText}>{quantity}</Text>
+                        <TouchableOpacity
+                            onPress={() => updateCartItemQuantity(cartItemId, quantity + 1)}
+                            style={styles.counterButton}
+                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                        >
+                            <Entypo name="plus" size={wp('3.5%')} color="#F04B1B" />
+                        </TouchableOpacity>
+                    </View>
+                ) : (
+                    <TouchableOpacity
+                        style={[styles.plusIconView, ((item.stockQty === 0 || item.stockQty === '0') || item.isAvailable === false) && { backgroundColor: '#CCCCCC' }]}
+                        onPress={() => {
+                            if ((item.stockQty === 0 || item.stockQty === '0') || item.isAvailable === false) return;
+                            addToCart(item);
+                        }}
+                        hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+                        activeOpacity={0.7}
+                        disabled={(item.stockQty === 0 || item.stockQty === '0') || item.isAvailable === false}
+                    >
+                        <Entypo name={"plus"} color={"#FFFFFF"} size={wp("4%")} />
+                    </TouchableOpacity>
+                )}
             </View>
             <View style={styles.productCardViewTwo}>
                 {imageLoading && <ShimmerPlaceholder style={[styles.productCardImage, { position: 'absolute' }]} />}
                 <Image
                     source={imageSource}
-                    style={styles.productCardImage}
+                    style={[styles.productCardImage, { opacity: ((item.stockQty === 0 || item.stockQty === '0') || item.isAvailable === false) ? 0.5 : 1 }]}
                     resizeMode="contain"
                     onLoadStart={() => setImageLoading(true)}
                     onLoadEnd={() => setImageLoading(false)}
@@ -97,11 +134,17 @@ const ProductCard = (props) => {
                         setImageLoading(false);
                     }}
                 />
+                {((item.stockQty === 0 || item.stockQty === '0') || item.isAvailable === false) && (
+                    <View style={styles.outOfStockOverlay}>
+                        <Text style={styles.outOfStockText}>Out of Stock</Text>
+                    </View>
+                )}
             </View>
 
             <View style={styles.productCardViewThree}>
                 <View>
                     {offer > 0 && <Text style={styles.offerText}>{offer}% OFF</Text>}
+                    <Text style={styles.btokenText}>Upto {item.bTokenValue || item.bTokens || 1} B Token</Text>
                 </View>
 
                 <View>
@@ -177,6 +220,26 @@ const styles = StyleSheet.create({
         padding: wp("1%"),
         borderRadius: 100
     },
+    counterContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderWidth: 0.7,
+        borderColor: '#F04B1B',
+        borderRadius: 7,
+        paddingHorizontal: wp('1.5%'),
+        paddingVertical: hp('0.15%'),
+    },
+    counterButton: {
+        padding: wp('0.5%'),
+    },
+    quantityText: {
+        color: '#F04B1B',
+        fontFamily: FONTS.poppins.semiBold,
+        fontSize: wp('3%'),
+        marginHorizontal: wp('1.5%'),
+        minWidth: wp('3%'),
+        textAlign: 'center',
+    },
     productCardViewTwo: {
         // backgroundColor:"blue",
         alignItems: "center"
@@ -226,6 +289,28 @@ const styles = StyleSheet.create({
         textAlign: "center",
         marginTop: hp("0.5%")
     },
+    outOfStockOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(255,255,255,0.6)',
+        borderRadius: 20
+    },
+    outOfStockText: {
+        color: '#FF0000',
+        fontFamily: FONTS.poppins.semiBold,
+        fontSize: wp('2.8%'),
+        transform: [{ rotate: '-15deg' }],
+        borderWidth: 1,
+        borderColor: '#FF0000',
+        paddingHorizontal: 4,
+        paddingVertical: 2,
+        borderRadius: 4
+    }
 })
 
 // Wrap in React.memo to prevent unnecessary re-renders

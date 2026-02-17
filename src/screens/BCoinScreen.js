@@ -1,16 +1,121 @@
-import { View, Text, StyleSheet, ImageBackground, Image, TouchableOpacity, ScrollView, Modal } from 'react-native'
-import React, { useState } from 'react'
+import { View, Text, StyleSheet, ImageBackground, Image, TouchableOpacity, ScrollView, Modal, TextInput, Alert, ActivityIndicator } from 'react-native'
+import React, { useState, useEffect } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen'
 import { FONTS } from '../styles/typography'
 import { useNavigation } from '@react-navigation/native'
 import FastImage from 'react-native-fast-image'
+import { getWalletDataApi, redeemBCoinsApi } from '../api/userService'
+import StatusModal from '../components/StatusModal'
 
 const BCoinScreen = () => {
     const [selected, setSelected] = useState('bcoin')
     const [showModal, setShowModal] = useState(false)
+    const [walletData, setWalletData] = useState(null)
+    const [isLoading, setIsLoading] = useState(false)
+
+    // Redemption State
+    const [showRedeemModal, setShowRedeemModal] = useState(false)
+    const [requestedCoins, setRequestedCoins] = useState('')
+    const [preferredMethod, setPreferredMethod] = useState('bank')
+    const [isRedeeming, setIsRedeeming] = useState(false)
+
+    // Status Modal State
+    const [statusModalVisible, setStatusModalVisible] = useState(false)
+    const [statusType, setStatusType] = useState('success')
+    const [statusTitle, setStatusTitle] = useState('')
+    const [statusMessage, setStatusMessage] = useState('')
 
     const navigation = useNavigation()
+    const isMounted = React.useRef(true)
+
+    useEffect(() => {
+        return () => {
+            isMounted.current = false
+        }
+    }, [])
+
+    useEffect(() => {
+        fetchWalletData()
+    }, [])
+
+    const fetchWalletData = async () => {
+        if (!isMounted.current) return
+        setIsLoading(true)
+        try {
+            const response = await getWalletDataApi()
+            if (isMounted.current && response && response.success) {
+                setWalletData(response.data)
+            }
+        } catch (error) {
+            console.error('Error fetching wallet data:', error)
+        } finally {
+            if (isMounted.current) setIsLoading(false)
+        }
+    }
+
+    const handleRedeem = async () => {
+        if (!requestedCoins || isNaN(requestedCoins) || Number(requestedCoins) <= 0) {
+            Alert.alert('Invalid Amount', 'Please enter a valid amount of coins to redeem.')
+            return
+        }
+
+        if (Number(requestedCoins) > (walletData?.wallet?.bCoins || 0)) {
+            Alert.alert('Insufficient Balance', 'You do not have enough B-Coins.')
+            return
+        }
+
+        setIsRedeeming(true)
+        try {
+            const payload = {
+                requestedCoins: Number(requestedCoins),
+                preferredMethod: preferredMethod
+            }
+            const response = await redeemBCoinsApi(payload)
+
+            if (!isMounted.current) return
+
+            setShowRedeemModal(false)
+
+            setTimeout(() => {
+                if (!isMounted.current) return
+
+                if (response && response.success) {
+                    setRequestedCoins('')
+                    fetchWalletData() // Refresh data
+
+                    setStatusType('success')
+                    setStatusTitle('Success')
+                    setStatusMessage(response.message || 'Redemption request submitted successfully.')
+                } else {
+                    if (response?.status === 'PENDING_REQUEST') {
+                        setStatusType('error')
+                        setStatusTitle('Request Pending')
+                        setStatusMessage(response.message || 'You already have a pending redemption request.')
+                    } else {
+                        setStatusType('error')
+                        setStatusTitle('Error')
+                        setStatusMessage(response?.message || 'Failed to submit redemption request.')
+                    }
+                }
+                setStatusModalVisible(true)
+            }, 500)
+        } catch (error) {
+            console.error('Redemption error:', error)
+            if (isMounted.current) {
+                setShowRedeemModal(false)
+                setTimeout(() => {
+                    if (!isMounted.current) return
+                    setStatusType('error')
+                    setStatusTitle('Error')
+                    setStatusMessage('An error occurred while processing your request.')
+                    setStatusModalVisible(true)
+                }, 500)
+            }
+        } finally {
+            if (isMounted.current) setIsRedeeming(false)
+        }
+    }
 
     return (
         <SafeAreaView style={styles.mainContainer}>
@@ -31,13 +136,13 @@ const BCoinScreen = () => {
                         <Text style={styles.bcoinText}>B-Coin</Text>
                         <View style={styles.bcoinInnerView}>
                             <Text style={styles.availableBalanceHeaderText}>Available Balance</Text>
-                            <Text style={styles.availableBalanceValueText}>3000</Text>
+                            <Text style={styles.availableBalanceValueText}>{walletData?.wallet?.bCoins || '0.00'}</Text>
                         </View>
                     </View>
                     <View style={styles.bcoinContainerTwo}>
                         <View style={styles.bcoinInnerViewTwo}>
                             <Text style={styles.bcoinTextTwo}>Today’s B-coin value : </Text>
-                            <Text style={styles.bcoinPriceText}>₹394</Text>
+                            <Text style={styles.bcoinPriceText}>₹{walletData?.wallet?.bCoinValue || '0.00'}</Text>
                         </View>
                         <TouchableOpacity onPress={() => setShowModal(true)} style={styles.bcoinInnerViewTwo}>
                             <Text style={styles.viewText}>View</Text>
@@ -53,7 +158,7 @@ const BCoinScreen = () => {
                     <Text style={styles.bcoinText}>B-Token</Text>
                     <View style={styles.bcoinInnerView}>
                         <Text style={styles.availableBalanceHeaderText}>Available Balance</Text>
-                        <Text style={styles.availableBalanceValueText}>3000</Text>
+                        <Text style={styles.availableBalanceValueText}>{walletData?.wallet?.bTokens || '0'}</Text>
                     </View>
                 </View>
                 <Text style={styles.historyHeaderText}>History</Text>
@@ -84,100 +189,99 @@ const BCoinScreen = () => {
                     </TouchableOpacity>
                 </View>
                 <ScrollView>
-                    <View style={styles.bcoinContainer}>
-                        <Image style={styles.bcoinImageTwo} source={require('../assets/images/bcoin-three.png')} />
-                        <View>
-                            <Text style={styles.bcoinContent}>Redeemed for Order ID</Text>
-                            <Text style={[styles.bcoinContent, {
-                                fontSize: wp('3.25%'),
-                            }]}>#OGERFGFGHBFGD</Text>
-                            <Text style={[styles.bcoinContent, {
-                                fontSize: wp('3.25%'),
-                                marginTop: hp('0.5%')
-                            }]}>22-01-2026</Text>
+                    {(selected === 'bcoin' ? walletData?.bcoinHistory : walletData?.btokenHistory)?.map((item, index, array) => (
+                        <View key={item.historyId} style={[styles.bcoinContainer, {
+                            borderBottomWidth: index === array.length - 1 ? 0 : 1
+                        }]}>
+                            <Image
+                                style={styles.bcoinImageTwo}
+                                source={selected === 'bcoin' ? require('../assets/images/bcoin-three.png') : require('../assets/images/btoken-icon-four.png')}
+                            />
+                            <View style={{ flex: 1, marginLeft: wp('3%') }}>
+                                <Text style={styles.bcoinContent}>{item.description}</Text>
+                                <Text style={[styles.bcoinContent, {
+                                    fontSize: wp('3.25%'),
+                                    marginTop: hp('0.5%')
+                                }]}>
+                                    {item.transactionDate ? new Date(item.transactionDate).toLocaleDateString('en-IN', {
+                                        day: '2-digit',
+                                        month: '2-digit',
+                                        year: 'numeric'
+                                    }) : ''}
+                                </Text>
+                            </View>
+                            <Text style={[styles.bcoinPriceTextTwo, {
+                                color: item.transactionType === 'credit' ? '#0CA201' : '#FF0000'
+                            }]}>
+                                {item.transactionType === 'credit' ? '+' : '-'}{item.amount} {selected === 'bcoin' ? 'coins' : 'tokens'}
+                            </Text>
                         </View>
-                        <Text style={[styles.bcoinContent, {
-                            fontSize: wp('3.25%'),
-                        }]}>0.00 coins</Text>
-                        <Text style={styles.bcoinPriceTextTwo}>₹324</Text>
-                    </View>
-                    <View style={styles.bcoinContainer}>
-                        <Image style={styles.bcoinImageTwo} source={require('../assets/images/bcoin-three.png')} />
-                        <View>
-                            <Text style={styles.bcoinContent}>Redeemed for Order ID</Text>
-                            <Text style={[styles.bcoinContent, {
-                                fontSize: wp('3.25%'),
-                            }]}>#OGERFGFGHBFGD</Text>
-                            <Text style={[styles.bcoinContent, {
-                                fontSize: wp('3.25%'),
-                                marginTop: hp('0.5%')
-                            }]}>22-01-2026</Text>
+                    ))}
+                    {!isLoading && (!walletData || (selected === 'bcoin' ? walletData?.bcoinHistory?.length === 0 : walletData?.btokenHistory?.length === 0)) && (
+                        <View style={{ alignItems: 'center', marginTop: hp('5%') }}>
+                            <Text style={styles.viewText}>No history available</Text>
                         </View>
-                        <Text style={[styles.bcoinContent, {
-                            fontSize: wp('3.25%'),
-                        }]}>0.00 coins</Text>
-                        <Text style={styles.bcoinPriceTextTwo}>₹324</Text>
-                    </View>
-                    <View style={styles.bcoinContainer}>
-                        <Image style={styles.bcoinImageTwo} source={require('../assets/images/bcoin-three.png')} />
-                        <View>
-                            <Text style={styles.bcoinContent}>Redeemed for Order ID</Text>
-                            <Text style={[styles.bcoinContent, {
-                                fontSize: wp('3.25%'),
-                            }]}>#OGERFGFGHBFGD</Text>
-                            <Text style={[styles.bcoinContent, {
-                                fontSize: wp('3.25%'),
-                                marginTop: hp('0.5%')
-                            }]}>22-01-2026</Text>
-                        </View>
-                        <Text style={[styles.bcoinContent, {
-                            fontSize: wp('3.25%'),
-                        }]}>0.00 coins</Text>
-                        <Text style={styles.bcoinPriceTextTwo}>₹324</Text>
-                    </View>
-                    <View style={styles.bcoinContainer}>
-                        <Image style={styles.bcoinImageTwo} source={require('../assets/images/bcoin-three.png')} />
-                        <View>
-                            <Text style={styles.bcoinContent}>Redeemed for Order ID</Text>
-                            <Text style={[styles.bcoinContent, {
-                                fontSize: wp('3.25%'),
-                            }]}>#OGERFGFGHBFGD</Text>
-                            <Text style={[styles.bcoinContent, {
-                                fontSize: wp('3.25%'),
-                                marginTop: hp('0.5%')
-                            }]}>22-01-2026</Text>
-                        </View>
-                        <Text style={[styles.bcoinContent, {
-                            fontSize: wp('3.25%'),
-                        }]}>0.00 coins</Text>
-                        <Text style={styles.bcoinPriceTextTwo}>₹324</Text>
-                    </View>
-                    <View style={[styles.bcoinContainer, {
-                        borderBottomWidth: 0
-                    }]}>
-                        <Image style={styles.bcoinImageTwo} source={require('../assets/images/btoken-icon-four.png')} />
-                        <View>
-                            <Text style={styles.bcoinContent}>Credited for Order ID</Text>
-                            <Text style={[styles.bcoinContent, {
-                                fontSize: wp('3.25%'),
-                            }]}>#OGERFGFGHBFGD</Text>
-                            <Text style={[styles.bcoinContent, {
-                                fontSize: wp('3.25%'),
-                                marginTop: hp('0.5%')
-                            }]}>22-01-2026</Text>
-                        </View>
-                        <Text style={[styles.bcoinContent, {
-                            fontSize: wp('3.25%'),
-                        }]}>0.00 coins</Text>
-                        <Text style={[styles.bcoinPriceTextTwo, {
-                            color: '#0CA201'
-                        }]}>₹324</Text>
-                    </View>
+                    )}
                 </ScrollView>
             </View>
-            <TouchableOpacity style={styles.redeemButton}>
+            <TouchableOpacity onPress={() => setShowRedeemModal(true)} style={styles.redeemButton}>
                 <Text style={styles.redeemText}>Redeem B-Coin</Text>
             </TouchableOpacity>
+            <Modal
+                visible={showRedeemModal}
+                animationType='slide'
+                transparent
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContainer}>
+                        <View style={styles.modalHeaderContainer}>
+                            <Text style={styles.modalHeaderText}>Redeem B-Coin</Text>
+                            <TouchableOpacity onPress={() => setShowRedeemModal(false)}>
+                                <Image style={styles.closeIcon}
+                                    source={require('../assets/images/close_two.png')} />
+                            </TouchableOpacity>
+                        </View>
+                        <View style={{ paddingHorizontal: wp('5%') }}>
+                            <Text style={styles.availableBalanceHeaderText}>Requested Coins</Text>
+                            <TextInput
+                                style={styles.redeemInput}
+                                placeholder="Enter coins (e.g. 15)"
+                                keyboardType="numeric"
+                                value={requestedCoins}
+                                onChangeText={setRequestedCoins}
+                            />
+
+                            <Text style={[styles.availableBalanceHeaderText, { marginTop: hp('2%') }]}>Preferred Method</Text>
+                            <View style={styles.methodContainer}>
+                                <TouchableOpacity
+                                    onPress={() => setPreferredMethod('bank')}
+                                    style={[styles.methodButton, preferredMethod === 'bank' && styles.methodButtonActive]}
+                                >
+                                    <Text style={[styles.methodText, preferredMethod === 'bank' && styles.methodTextActive]}>Bank Transfer</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    onPress={() => setPreferredMethod('wallet')}
+                                    style={[styles.methodButton, preferredMethod === 'wallet' && styles.methodButtonActive]}
+                                >
+                                    <Text style={[styles.methodText, preferredMethod === 'wallet' && styles.methodTextActive]}>Wallet</Text>
+                                </TouchableOpacity>
+                            </View>
+
+                            <TouchableOpacity
+                                onPress={handleRedeem}
+                                disabled={isRedeeming}
+                                style={[styles.redeemButton, { marginTop: hp('4%'), width: '100%' }]}
+                            >
+                                {isRedeeming ? (
+                                    <ActivityIndicator color="#FFF" />
+                                ) : (
+                                    <Text style={styles.redeemText}>Submit Request</Text>
+                                )}
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
             <Modal
                 visible={showModal}
                 animationType='slide'
@@ -215,6 +319,13 @@ const BCoinScreen = () => {
                     </View>
                 </View>
             </Modal>
+            <StatusModal
+                visible={statusModalVisible}
+                onClose={() => setStatusModalVisible(false)}
+                type={statusType}
+                title={statusTitle}
+                message={statusMessage}
+            />
         </SafeAreaView>
     )
 }
@@ -472,5 +583,43 @@ const styles = StyleSheet.create({
         alignSelf: 'center',
         // marginTop: hp('4.1%')
         bottom: hp('1.1%')
+    },
+    redeemInput: {
+        borderWidth: 1,
+        borderColor: '#DADADA',
+        borderRadius: wp('2%'),
+        paddingHorizontal: wp('4%'),
+        paddingVertical: hp('1.5%'),
+        marginTop: hp('1%'),
+        fontFamily: FONTS.poppins.regular,
+        fontSize: wp('4%'),
+        color: '#000',
+        backgroundColor: '#F9F9F9'
+    },
+    methodContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: hp('1.5%'),
+    },
+    methodButton: {
+        flex: 0.48,
+        borderWidth: 1,
+        borderColor: '#DADADA',
+        borderRadius: wp('2%'),
+        paddingVertical: hp('1.5%'),
+        alignItems: 'center',
+        backgroundColor: '#FFFFFF'
+    },
+    methodButtonActive: {
+        borderColor: '#F25000',
+        backgroundColor: '#FFF5F0'
+    },
+    methodText: {
+        fontFamily: FONTS.poppins.medium,
+        fontSize: wp('3.72%'),
+        color: '#616161'
+    },
+    methodTextActive: {
+        color: '#F25000'
     }
 })

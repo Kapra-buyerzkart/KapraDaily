@@ -4,7 +4,7 @@ import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-nat
 import { FONTS } from '../styles/typography';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
-const ConfirmationModal = ({ visible, onClose, onConfirm, title, message }) => {
+const ConfirmationModal = ({ visible, onClose, onConfirm, title, message, confirmText = "Remove", cancelText = "Cancel" }) => {
     return (
         <Modal
             transparent={true}
@@ -26,7 +26,7 @@ const ConfirmationModal = ({ visible, onClose, onConfirm, title, message }) => {
                             style={[styles.button, styles.cancelButton]}
                             onPress={onClose}
                         >
-                            <Text style={styles.cancelButtonText}>Cancel</Text>
+                            <Text style={styles.cancelButtonText}>{cancelText}</Text>
                         </TouchableOpacity>
 
                         <TouchableOpacity
@@ -36,7 +36,7 @@ const ConfirmationModal = ({ visible, onClose, onConfirm, title, message }) => {
                                 onClose();
                             }}
                         >
-                            <Text style={styles.confirmButtonText}>Remove</Text>
+                            <Text style={styles.confirmButtonText}>{confirmText}</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
