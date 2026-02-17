@@ -44,7 +44,7 @@ const getPincodeAreaId = async () => {
         if (pincodeAreaId) {
             return parseInt(pincodeAreaId);
         }
-        const profileStr = await AsyncStorage.getItem('userProfile');
+        const profileStr = await AsyncStorage.getItem('profile');
         if (profileStr) {
             const profile = JSON.parse(profileStr);
             if (profile.pincodeAreaId) {
@@ -184,11 +184,13 @@ export const getAvailableCouponsApi = async (pincodeAreaId) => {
 };
 
 
-export const applyGiftCardApi = async (giftCode, cartVersion, cartId) => {
+export const applyGiftCardApi = async (giftCode, cartVersion, pincodeAreaId, cartId) => {
     const userId = await getUserId();
     const idToUse = cartId || userId;
+    const areaId = pincodeAreaId || await getPincodeAreaId();
     const payload = {
         giftCode,
+        pincodeAreaId: areaId,
         ifMatchCartVersion: cartVersion
     };
     console.log('Applying GiftCard Payload:', JSON.stringify(payload, null, 2));
@@ -208,6 +210,13 @@ export const removeGiftCardApi = async (cartVersion, cartId) => {
 export const getDeliverySlotsApi = async (pincodeAreaId) => {
     const areaId = pincodeAreaId || await getPincodeAreaId();
     return get('cart/availableslots', {
+        params: { pincodeAreaId: areaId }
+    });
+};
+
+export const getAvailableGiftCardsApi = async (pincodeAreaId) => {
+    const areaId = pincodeAreaId || await getPincodeAreaId();
+    return get('cart/availablegiftcards', {
         params: { pincodeAreaId: areaId }
     });
 };

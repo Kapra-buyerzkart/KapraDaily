@@ -111,5 +111,6 @@ export const useProductDetails = (productId, initialProduct = null) => {
         isAvailable: product?.isAvailable !== false,
         bTokenValue: product?.bTokenValue || 0,
         productId: productId || product?.productId || product?.id,
+        urlKey: product?.urlKey || product?.slug || '',
     };
 };

@@ -1,9 +1,10 @@
-import { View, Text, StyleSheet, Touchable, TouchableOpacity, Image, ScrollView, TextInput } from 'react-native'
+import { View, Text, StyleSheet, Touchable, TouchableOpacity, Image, ScrollView, TextInput, Clipboard } from 'react-native'
 import React, { useContext, useEffect, useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons'
 import FontAwesome6 from 'react-native-vector-icons/FontAwesome6'
+import Ionicons from 'react-native-vector-icons/Ionicons'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import LinearGradient from 'react-native-linear-gradient'
 import { useNavigation } from '@react-navigation/native'
@@ -12,8 +13,9 @@ import { getAccessToken } from '../api/tokenService'
 import LoginScreen from './LoginScreen'
 import { AppContext } from '../context/appContext'
 import { LoaderContext } from '../context/loaderContext'
-import ProfileOffersModal from '../components/ProfileOffersModal'
-import { getAvailableCouponsApi } from '../api/cartService'
+import CouponModal from '../components/CouponModal'
+import { getAvailableCouponsApi, getAvailableGiftCardsApi } from '../api/cartService'
+import Toast from 'react-native-simple-toast'
 
 export default function ProfileScreen() {
     const [accessToken, setAccessToken] = useState(null);
@@ -21,8 +23,10 @@ export default function ProfileScreen() {
     const { profile, loadProfile, logout } = useContext(AppContext);
     const { showLoader } = useContext(LoaderContext);
     const [offersModalVisible, setOffersModalVisible] = useState(false);
-    const [offersModalTitle, setOffersModalTitle] = useState('');
     const [availableCoupons, setAvailableCoupons] = useState([]);
+    const [availableGiftCards, setAvailableGiftCards] = useState([]);
+    const [isGiftCard, setIsGiftCard] = useState(false);
+    const [couponCode, setCouponCode] = useState('');
 
     // useEffect(() => {
     //     const fetchProfile = async () => {
@@ -61,23 +65,46 @@ export default function ProfileScreen() {
     }
 
     useEffect(() => {
-        fetchCoupons();
-    }, []);
+        fetchOffers();
+    }, [profile]);
 
-    const fetchCoupons = async () => {
+    const fetchOffers = async () => {
         try {
-            const response = await getAvailableCouponsApi();
-            if (response && response.data) {
-                setAvailableCoupons(Array.isArray(response.data) ? response.data : []);
+            const pincodeAreaId = profile?.pincode || profile?.pincodeAreaId;
+            const [couponsRes, giftCardsRes] = await Promise.all([
+                getAvailableCouponsApi(pincodeAreaId),
+                getAvailableGiftCardsApi(pincodeAreaId)
+            ]);
+
+            if (couponsRes && couponsRes.data) {
+                const coupons = couponsRes.data.items || (Array.isArray(couponsRes.data) ? couponsRes.data : []);
+                setAvailableCoupons(coupons);
+            }
+            if (giftCardsRes && giftCardsRes.data) {
+                const giftCards = giftCardsRes.data.items || (Array.isArray(giftCardsRes.data) ? giftCardsRes.data : []);
+                setAvailableGiftCards(giftCards);
             }
         } catch (error) {
-            console.log('Error fetching coupons:', error);
+            console.log('Error fetching offers:', error);
         }
     };
 
-    const openOffersModal = (title) => {
-        setOffersModalTitle(title);
+    const openOffersModal = (type) => {
+        setIsGiftCard(type === 'Gift Cards');
+        setCouponCode('');
         setOffersModalVisible(true);
+    };
+
+    const handleApplyCoupon = (codeToApply) => {
+        const code = codeToApply || couponCode;
+        if (!code) {
+            Toast.show('Please enter a code', Toast.SHORT);
+            return;
+        }
+        // Copy functionality
+        Clipboard.setString(code);
+        Toast.show(`Code: ${code} copied to clipboard`, Toast.SHORT);
+        setOffersModalVisible(false);
     };
 
     return (
@@ -99,13 +126,13 @@ export default function ProfileScreen() {
                                 />
                             </TouchableOpacity>
                             <Text style={styles.profileHeaderText}>Profile</Text>
-                            <TouchableOpacity>
+                            {/* <TouchableOpacity>
                                 <Image source={require('../assets/images/dots.png')} style={styles.dotsIcon} />
-                            </TouchableOpacity>
+                            </TouchableOpacity> */}
                         </View>
                         <View style={styles.userView}>
                             <View style={styles.userAvatarContainer}>
-                                {profile?.isPrevilaged === 1 && (
+                                {profile?.isPrivileged && (
                                     <Image source={require('../assets/images/crown.png')} style={styles.profileCrown} />
                                 )}
                                 <View style={styles.userIconBorder}>
@@ -121,10 +148,10 @@ export default function ProfileScreen() {
                                 </View>
                                 <Text style={styles.phoneNumberStyle}>{profile.phoneNo}</Text>
                             </View>
-                            <View style={styles.bcoinContainer}>
+                            <TouchableOpacity onPress={() => navigation.navigate('BCoinScreen')} style={styles.bcoinContainer}>
                                 <Image style={styles.bcoinImage} source={require('../assets/images/rupee.png')} />
                                 <Text style={styles.bcoinText}>{profile.totalBCoins}</Text>
-                            </View>
+                            </TouchableOpacity>
                         </View>
                     </View>
                 </LinearGradient>
@@ -146,9 +173,9 @@ export default function ProfileScreen() {
                 <View style={styles.containerThree}>
                     <Text style={styles.offersText}>Offers</Text>
 
-                    <TouchableOpacity onPress={() => openOffersModal('Smart Points')} style={styles.offerView}>
+                    <TouchableOpacity onPress={() => openOffersModal('Gift Cards')} style={styles.offerView}>
                         <Image style={styles.offerImage} source={require('../assets/images/smart_point.png')} />
-                        <Text style={styles.offerText}>Smart Point</Text>
+                        <Text style={styles.offerText}>Gift Card</Text>
                         <AntDesign name={"right"} color={'#DADADA'} size={wp('4.4%')} />
                     </TouchableOpacity>
 
@@ -162,17 +189,17 @@ export default function ProfileScreen() {
                 <View style={styles.containerThree}>
                     <Text style={styles.offersText}>My Account</Text>
                     <TouchableOpacity onPress={() => navigation.navigate('Wishlist')} style={[styles.offerView, { paddingVertical: wp('3%') }]}>
-                        <Image style={styles.offerImage} source={require('../assets/images/heart.png')} />
+                        <Ionicons name="heart-outline" color={'#F25000'} size={wp('5.5%')} />
                         <Text style={styles.offerText}>My Wishlist</Text>
                         <AntDesign name={"right"} color={'#DADADA'} size={wp('4.4%')} />
                     </TouchableOpacity>
                     <TouchableOpacity onPress={() => navigation.navigate('MyOrdersScreen')} style={[styles.offerView, { paddingVertical: wp('3%') }]}>
-                        <Image style={styles.offerImage} source={require('../assets/images/order.png')} />
+                        <Ionicons name="receipt-outline" color={'#F25000'} size={wp('5.5%')} />
                         <Text style={styles.offerText}>My Orders</Text>
                         <AntDesign name={"right"} color={'#DADADA'} size={wp('4.4%')} />
                     </TouchableOpacity>
                     <TouchableOpacity onPress={() => navigation.navigate('CartScreen')} style={[styles.offerView, { paddingVertical: wp('3%') }]}>
-                        <Image style={styles.offerImage} source={require('../assets/images/cart-banner.png')} />
+                        <Ionicons name="cart-outline" color={'#F25000'} size={wp('5.5%')} />
                         <Text style={styles.offerText}>My Cart</Text>
                         <AntDesign name={"right"} color={'#DADADA'} size={wp('4.4%')} />
                     </TouchableOpacity>
@@ -181,19 +208,19 @@ export default function ProfileScreen() {
                 <View style={styles.containerThree}>
                     <Text style={styles.offersText}>Account Security</Text>
                     <TouchableOpacity onPress={() => navigation.navigate('UpdateContactScreen', { type: 'phone' })} style={[styles.offerView, { paddingVertical: wp('3%') }]}>
-                        <MaterialIcons name="phone-android" color={'#F25000'} size={wp('6%')} />
+                        <MaterialIcons name="phone-android" color={'#F25000'} size={wp('5.5%')} />
                         <Text style={styles.offerText}>Update Phone Number</Text>
                         <AntDesign name={"right"} color={'#DADADA'} size={wp('4.4%')} />
                     </TouchableOpacity>
                     <TouchableOpacity onPress={() => navigation.navigate('UpdateContactScreen', { type: 'email' })} style={[styles.offerView, { paddingVertical: wp('3%') }]}>
-                        <MaterialIcons name="email" color={'#F25000'} size={wp('6%')} />
+                        <MaterialIcons name="email" color={'#F25000'} size={wp('5.5%')} />
                         <Text style={styles.offerText}>Update Email ID</Text>
                         <AntDesign name={"right"} color={'#DADADA'} size={wp('4.4%')} />
                     </TouchableOpacity>
                     <TouchableOpacity onPress={() => navigation.navigate('ChangePasswordScreen')} style={[styles.offerView, {
                         paddingVertical: wp('3%')
                     }]}>
-                        <MaterialIcons name="lock" color={'#F25000'} size={wp('6%')} />
+                        <MaterialIcons name="lock" color={'#F25000'} size={wp('5.5%')} />
                         <Text style={styles.offerText}>Change Password</Text>
                         <AntDesign name={"right"} color={'#DADADA'} size={wp('4.4%')} />
                     </TouchableOpacity>
@@ -243,11 +270,17 @@ export default function ProfileScreen() {
                 </TouchableOpacity>
             </ScrollView >
 
-            <ProfileOffersModal
+            <CouponModal
                 visible={offersModalVisible}
                 onClose={() => setOffersModalVisible(false)}
-                title={offersModalTitle}
-                data={availableCoupons}
+                isGiftCard={isGiftCard}
+                couponCode={couponCode}
+                setCouponCode={setCouponCode}
+                onApply={handleApplyCoupon}
+                availableCoupons={availableCoupons}
+                availableGiftCards={availableGiftCards}
+                onCouponClick={handleApplyCoupon}
+                isCopyOnly={true}
             />
         </SafeAreaView >
     )
@@ -398,8 +431,9 @@ const styles = StyleSheet.create({
         marginBottom: hp('0.8%')
     },
     offerImage: {
-        width: wp('7%'),
-        height: wp('7%')
+        width: wp('5.5%'),
+        height: wp('5.5%'),
+        resizeMode: 'contain'
     },
     offerText: {
         flex: 1,

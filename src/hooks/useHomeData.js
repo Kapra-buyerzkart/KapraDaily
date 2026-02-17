@@ -6,6 +6,7 @@ import { getHomepageData } from '../api/homeService';
 import CONFIG from '../globals/config';
 import { useWishlist } from '../context/WishlistContext';
 import { LoaderContext } from '../context/loaderContext';
+import { AppContext } from '../context/appContext';
 
 const useHomeData = () => {
     const [bestOffers, setBestOffers] = useState([]);
@@ -17,9 +18,15 @@ const useHomeData = () => {
     const [categories, setCategories] = useState([]);
     const [userLocation, setUserLocation] = useState(null);
     const [featuredProductsTitle, setFeaturedProductsTitle] = useState('Featured Products');
+    const [topBanner, setTopBanner] = useState(null);
+    const [midBanner, setMidBanner] = useState(null);
+    const [midBannerBottom, setMidBannerBottom] = useState(null);
+    const [bottomBanner, setBottomBanner] = useState(null);
+    const [refreshing, setRefreshing] = useState(false);
 
     const { loadWishlist } = useWishlist();
     const { showLoader } = useContext(LoaderContext);
+    const { profile } = useContext(AppContext);
 
     useEffect(() => {
         // const fetchPincodeAreas = async () => {
@@ -55,21 +62,31 @@ const useHomeData = () => {
         //     }
         // };
 
-        const fetchHomepageData = async () => {
+        const fetchHomepageData = async (isRefreshing = false) => {
             try {
-                // showLoader(true);
-                const [storedPincodeAreaId, storedLocality, storedArea] = await Promise.all([
-                    AsyncStorage.getItem('pincodeAreaId'),
-                    AsyncStorage.getItem('locality'),
-                    AsyncStorage.getItem('area')
-                ]);
+                if (isRefreshing) setRefreshing(true);
 
-                const areaId = storedPincodeAreaId ? parseInt(storedPincodeAreaId) : 105;
-                if (storedArea) {
+                // Use pincode from profile (AppContext) if available, otherwise fallback
+                const areaId = profile?.pincode ? parseInt(profile.pincode) : 105;
+
+                // Update user location from profile for consistency
+                if (profile?.pinAddress) {
                     setUserLocation({
-                        locality: storedLocality || '',
-                        area: storedArea
+                        locality: '',
+                        area: profile.pinAddress
                     });
+                } else {
+                    // Fallback to local storage for guest/initial state if needed
+                    const [storedLocality, storedArea] = await Promise.all([
+                        AsyncStorage.getItem('locality'),
+                        AsyncStorage.getItem('area')
+                    ]);
+                    if (storedArea) {
+                        setUserLocation({
+                            locality: storedLocality || '',
+                            area: storedArea
+                        });
+                    }
                 }
 
                 const response = await getHomepageData(areaId, 100);
@@ -77,12 +94,37 @@ const useHomeData = () => {
 
                 if (response?.data) {
                     if (response.data.banners) {
-                        const mappedBanners = response.data.banners.map(b => {
-                            let imageUri = b.imageUrl;
-                            imageUri = `${CONFIG.image_base_url}${b.imageUrl}`;
-                            return { ...b, uri: { uri: imageUri } };
+                        const allBanners = response.data.banners;
+
+                        const mapBanner = (banner) => ({
+                            ...banner,
+                            uri: { uri: `${CONFIG.image_base_url}${banner.imageUrl}` }
                         });
-                        setBanners(mappedBanners);
+
+                        // Extract Specific Banners
+                        const top = allBanners.find(b => b.placementKey === 'app_home_top_banner');
+                        setTopBanner(top ? mapBanner(top) : null);
+
+                        const mid = allBanners.find(b => b.placementKey === 'app_home_mid_banner');
+                        setMidBanner(mid ? mapBanner(mid) : null);
+
+                        const midBot = allBanners.find(b => b.placementKey === 'app_home_mid_banner_bottom');
+                        setMidBannerBottom(midBot ? mapBanner(midBot) : null);
+
+                        const bot = allBanners.find(b => b.placementKey === 'app_home_bottom');
+                        setBottomBanner(bot ? mapBanner(bot) : null);
+
+                        // Slider Banners (exclude specifically placed ones)
+                        const specificPlacementKeys = [
+                            'app_home_top_banner',
+                            'app_home_mid_banner',
+                            'app_home_mid_banner_bottom',
+                            'app_home_bottom'
+                        ];
+                        const sliderBanners = allBanners
+                            .filter(b => !specificPlacementKeys.includes(b.placementKey))
+                            .map(mapBanner);
+                        setBanners(sliderBanners);
                     }
 
                     if (response.data.featuredCategories) {
@@ -108,12 +150,11 @@ const useHomeData = () => {
             } catch (error) {
                 console.error('Error fetching homepage data:', error);
             } finally {
-                // showLoader(false);
+                if (isRefreshing) setRefreshing(false);
             }
         };
         fetchHomepageData().catch(e => console.error('fetchHomepageData failed', e));
-        // Removed redundant loadWishlist here as it's better handled where needed or once at root if desired
-    }, []);
+    }, [profile?.pincode]);
 
     return {
         bestOffers,
@@ -124,7 +165,13 @@ const useHomeData = () => {
         banners,
         categories,
         userLocation,
-        featuredProductsTitle
+        featuredProductsTitle,
+        topBanner,
+        midBanner,
+        midBannerBottom,
+        bottomBanner,
+        refreshHomeData: () => fetchHomepageData(true),
+        isHomeLoading: refreshing
     };
 };
 

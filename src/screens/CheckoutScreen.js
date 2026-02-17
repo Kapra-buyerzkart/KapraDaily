@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import Entypo from 'react-native-vector-icons/Entypo';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { FONTS } from '../styles/typography';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -52,7 +53,7 @@ const CheckoutScreen = () => {
     );
     const [paymentMethod, setPaymentMethod] = useState('cod');
     const [paymentModes, setPaymentModes] = useState([]);
-    const [showBill, setShowBill] = useState(false);
+    const [showBill, setShowBill] = useState(true);
     const [showSlotModal, setShowSlotModal] = useState(false);
     const [chosenSlot, setChosenSlot] = useState(null);
 
@@ -245,10 +246,23 @@ const CheckoutScreen = () => {
                             <Text style={styles.changeButtonText}>Change</Text>
                         </TouchableOpacity>
                     </View>
-                    <View style={styles.card}>
-                        <Text style={styles.addressType}>{currentSelectedAddress?.type || 'Home'}</Text>
-                        <Text style={styles.addressText}>{currentSelectedAddress?.address || 'No address selected'}</Text>
-                        <Text style={styles.phoneText}>Phone: {currentSelectedAddress?.phone || 'N/A'}</Text>
+                    <View style={[styles.card, { flexDirection: 'row', alignItems: 'flex-start' }]}>
+                        {(() => {
+                            const type = currentSelectedAddress?.type?.toLowerCase() || '';
+                            if (type === 'home') {
+                                return <Entypo name="home" size={wp('6%')} color="#F25000" style={{ marginRight: wp('3%'), marginTop: hp('0.5%') }} />;
+                            } else if (type === 'office') {
+                                return <MaterialCommunityIcons name="briefcase" size={wp('6%')} color="#F25000" style={{ marginRight: wp('3%'), marginTop: hp('0.5%') }} />;
+                            } else {
+                                return <Entypo name="location-pin" size={wp('6%')} color="#F25000" style={{ marginRight: wp('3%'), marginTop: hp('0.5%') }} />;
+                            }
+                        })()}
+                        <View style={{ flex: 1 }}>
+                            <Text style={styles.addressType}>{currentSelectedAddress?.type || 'Home'}</Text>
+                            <View style={styles.addressDivider} />
+                            <Text style={styles.addressText}>{currentSelectedAddress?.address || 'No address selected'}</Text>
+                            <Text style={styles.phoneText}>Phone: {currentSelectedAddress?.phone || 'N/A'}</Text>
+                        </View>
                     </View>
                 </View>
 
@@ -313,6 +327,32 @@ const CheckoutScreen = () => {
                                 </Text>
                             </TouchableOpacity>
                         )}
+                    </View>
+                </View>
+
+                {/* Order Items Section */}
+                <View style={styles.sectionContainer}>
+                    <View style={styles.sectionHeader}>
+                        <MaterialCommunityIcons name="format-list-bulleted" size={wp('6%')} color="#F25000" />
+                        <Text style={styles.sectionTitle}>Order Items</Text>
+                        <View style={styles.itemCountBadge}>
+                            <Text style={styles.itemCountText}>{cartItems.length} items</Text>
+                        </View>
+                    </View>
+                    <View style={styles.card}>
+                        {cartItems.map((item, index) => {
+                            const price = item.specialPrice || item.unitPrice || item.price || 0;
+                            return (
+                                <View key={item.id || index} style={styles.itemRow}>
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={styles.itemName} numberOfLines={1}>{item.prName || item.productName || item.name}</Text>
+                                        <Text style={styles.itemPriceText}>₹{price.toFixed(2)} per unit</Text>
+                                    </View>
+                                    <Text style={styles.itemQty}>x{item.quantity || item.addedQty}</Text>
+                                    <Text style={styles.itemTotalText}>₹{(price * (item.quantity || item.addedQty)).toFixed(2)}</Text>
+                                </View>
+                            );
+                        })}
                     </View>
                 </View>
 
@@ -503,6 +543,11 @@ const styles = StyleSheet.create({
         color: '#000000',
         marginBottom: hp('0.5%')
     },
+    addressDivider: {
+        height: 1,
+        backgroundColor: '#EEEEEE',
+        marginVertical: hp('0.8%')
+    },
     addressText: {
         fontFamily: FONTS.outfit.regular,
         fontSize: wp('3.5%'),
@@ -620,5 +665,52 @@ const styles = StyleSheet.create({
         color: '#D32F2F',
         marginLeft: wp('2%'),
         flex: 1
+    },
+    itemCountBadge: {
+        fontFamily: FONTS.outfit.medium,
+        fontSize: wp('3%'),
+        color: '#777777',
+        backgroundColor: '#F5F5F5',
+        paddingHorizontal: wp('2%'),
+        paddingVertical: hp('0.2%'),
+        borderRadius: 4
+    },
+    itemCountText: {
+        fontFamily: FONTS.outfit.medium,
+        fontSize: wp('3%'),
+        color: '#777777',
+    },
+    itemRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: hp('0.8%')
+    },
+    itemName: {
+        fontFamily: FONTS.outfit.regular,
+        fontSize: wp('3.5%'),
+        color: '#333333',
+        flex: 1,
+        marginRight: wp('4%')
+    },
+    itemQty: {
+        fontFamily: FONTS.outfit.medium,
+        fontSize: wp('3.5%'),
+        color: '#777777',
+        width: wp('12%'),
+        textAlign: 'center'
+    },
+    itemPriceText: {
+        fontFamily: FONTS.outfit.regular,
+        fontSize: wp('3%'),
+        color: '#999999',
+        marginTop: hp('0.2%')
+    },
+    itemTotalText: {
+        fontFamily: FONTS.poppins.medium,
+        fontSize: wp('3.5%'),
+        color: '#333333',
+        width: wp('20%'),
+        textAlign: 'right'
     }
 });

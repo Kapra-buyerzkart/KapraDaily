@@ -1,10 +1,12 @@
-import { View, Text, Image, TouchableOpacity, StyleSheet, FlatList, RefreshControl } from 'react-native'
+import { View, Text, Image, TouchableOpacity, StyleSheet, FlatList, RefreshControl, Alert } from 'react-native'
 import React, { useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import { useNavigation } from '@react-navigation/native'
 import { FONTS } from '../styles/typography'
 import { useAddresses } from '../hooks/useAddresses'
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import AntDesign from 'react-native-vector-icons/AntDesign';
 
 const SavedAddressScreen = () => {
     const navigation = useNavigation()
@@ -76,7 +78,7 @@ const SavedAddressScreen = () => {
                     )}
                 </View>
 
-                <View style={!item.selected ? styles.unSelectedAddressInnerContainer : undefined}>
+                <View style={[styles.unSelectedAddressInnerContainer, { marginTop: hp('0.5%') }]}>
                     <Text style={[styles.addressLine, { marginHorizontal: wp('4%') }]}>{item.address}</Text>
                     <View style={styles.addressContainerBottomView}>
                         <View style={styles.addressBottomInnerView}>
@@ -93,13 +95,13 @@ const SavedAddressScreen = () => {
     const ThreeDotsActions = ({ onEdit, onDelete, onCloseThreeDots }) => (
         <View style={styles.threeDotActionContainer}>
             <TouchableOpacity onPress={onEdit}>
-                <Image style={styles.editIcon} source={require('../assets/images/edit_icon.png')} />
+                <MaterialCommunityIcons name="pencil-outline" size={wp('4.5%')} color="#777777" />
             </TouchableOpacity>
             <TouchableOpacity hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} onPress={onDelete}>
-                <Image style={styles.editIcon} source={require('../assets/images/delete_icon_two.png')} />
+                <MaterialCommunityIcons name="trash-can-outline" size={wp('4.5%')} color="#D32F2F" />
             </TouchableOpacity>
             <TouchableOpacity hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} onPress={onCloseThreeDots}>
-                <Image style={styles.editIcon} source={require('../assets/images/right_arrow.png')} />
+                <AntDesign name="right" size={wp('4%')} color="#777777" />
             </TouchableOpacity>
         </View>
     );
@@ -135,13 +137,13 @@ const SavedAddressScreen = () => {
                 }}
                 ListFooterComponent={() => (
                     <>
-                        <Text style={styles.addAddressText}>Add Address</Text>
-                        <TouchableOpacity style={styles.chooseLocationContainer}>
+                        {/* <Text style={styles.addAddressText}>Add Address</Text> */}
+                        {/* <TouchableOpacity style={styles.chooseLocationContainer}>
                             <Image style={Platform.OS === 'ios' ? styles.locationIcon : [styles.locationIcon, {
                                 bottom: hp('0.25%')
                             }]} source={require('../assets/images/location_three.png')} />
                             <Text style={styles.locationText}>Choose current location</Text>
-                        </TouchableOpacity>
+                        </TouchableOpacity> */}
                         <TouchableOpacity onPress={() => {
                             navigation.navigate('AddLocationScreen')
                         }} style={styles.chooseLocationContainer}>
@@ -188,7 +190,7 @@ const styles = StyleSheet.create({
         // paddingHorizontal: wp('4%'),
         paddingVertical: hp('1.1%'),
         marginBottom: hp('2.5%'),
-        height: hp('16.1%')
+        minHeight: hp('16.1%')
     },
     addressContainerTopView: {
         flexDirection: "row",
@@ -243,11 +245,12 @@ const styles = StyleSheet.create({
         borderColor: '#DADADA',
         borderWidth: 1,
         borderRadius: wp('2.32%'),
-        width: wp('26.5%'),
+        width: wp('22%'),
         height: hp('3.64%'),
         justifyContent: 'space-between',
         paddingLeft: wp('1.5%'),
-        paddingRight: wp('2.5%')
+        paddingRight: wp('1.5%'),
+        backgroundColor: '#F5F5F5'
     },
     editIcon: {
         width: wp('3.72%'),

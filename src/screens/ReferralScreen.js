@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react'
-import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList } from 'react-native'
+import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList, Share } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import { useNavigation } from '@react-navigation/native'
@@ -17,6 +17,8 @@ const ReferralScreen = () => {
 
     useEffect(() => {
         fetchReferralHistory()
+        console.log('profileelelle', profile);
+
     }, [])
 
     const fetchReferralHistory = async () => {
@@ -57,6 +59,16 @@ const ReferralScreen = () => {
         );
     };
 
+    const onShare = async () => {
+        try {
+            const message = `Hey! Download KapraDaily and get fresh groceries delivered to your doorstep. Join me using my referral code: ${profile?.referalCode || 'WELCOME'} and enjoy exclusive rewards! Download now: https://kapradaily.com`;
+            await Share.share({
+                message: message,
+            });
+        } catch (error) {
+            console.error('Error sharing:', error.message);
+        }
+    };
 
     return (
         <SafeAreaView style={styles.mainContainer}>
@@ -67,7 +79,7 @@ const ReferralScreen = () => {
                 <Text style={styles.referralText}>Referral</Text>
                 <View style={styles.bcoinContainer}>
                     <Image style={styles.bcoinImage} source={require('../assets/images/rupee.png')} />
-                    <Text style={styles.bcoinText}>0.00</Text>
+                    <Text style={styles.bcoinText}>{profile?.totalBCoins || '0.00'}</Text>
                 </View>
             </View>
             <Text style={styles.referEarnText}>Refer and Earn</Text>
@@ -76,9 +88,9 @@ const ReferralScreen = () => {
                 <Text style={styles.referralRewardText}>Referral reward you Earned</Text>
                 <View style={styles.bcoinContainerTwo}>
                     <Image style={styles.bcoinImageTwo} source={require('../assets/images/rupee.png')} />
-                    <Text style={styles.bcoinTextTwo}>{profile?.referalBonus || '0.00'}</Text>
+                    <Text style={styles.bcoinTextTwo}>{profile?.referralEarning || '0.00'}</Text>
                 </View>
-                <TouchableOpacity style={styles.sendInviteButton}>
+                <TouchableOpacity style={styles.sendInviteButton} onPress={onShare}>
                     <Image style={styles.sendIcon} source={require('../assets/images/share-icon.png')} />
                     <Text style={styles.sendInviteText}>Send invite</Text>
                 </TouchableOpacity>

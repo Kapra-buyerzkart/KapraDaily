@@ -4,7 +4,7 @@ import HomeScreen from '../screens/HomeScreen';
 import CategoriesScreen from '../screens/CategoriesScreen';
 import WishlistScreen from '../screens/WishlistScreen';
 import KshopeScreen from '../screens/KshopeScreen';
-import { Image, Platform, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { Image, Platform, StyleSheet, Text, TouchableOpacity, Alert } from 'react-native';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -16,9 +16,16 @@ const Tab = createBottomTabNavigator();
 export default function MainTabNavigator() {
 
     const KshopeButton = ({ onPress }) => {
+        const handleComingSoon = () => {
+            Alert.alert(
+                "Coming Soon!",
+                "We're working hard to bring you K-shope. Stay tuned for a premium shopping experience!",
+                [{ text: "Got it!", style: "default" }]
+            );
+        };
+
         return (
-            <TouchableOpacity style={styles.KshopeButton} onPress={onPress}>
-                {/* <Text style={styles.KshopeButtonText}>K-shope</Text> */}
+            <TouchableOpacity style={styles.KshopeButton} onPress={handleComingSoon}>
                 <Image source={require("../assets/images/kshope.png")} style={{
                     width: wp("19.53%"),
                     height: hp("3%"),
@@ -138,7 +145,7 @@ export default function MainTabNavigator() {
                 component={KshopeScreen}
                 options={{
                     tabBarButton: (props) => (
-                        <KshopeButton onPress={props.onPress} />
+                        <KshopeButton onPress={() => { }} />
                     ),
                 }} />
 

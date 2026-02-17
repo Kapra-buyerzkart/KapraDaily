@@ -363,8 +363,12 @@ export default function CategoriesScreen() {
                         ListHeaderComponent={renderHeader}
                         ListEmptyComponent={
                             !loadingProducts ? (
-                                <View style={{ flex: 1, alignItems: 'center', marginTop: hp('5%') }}>
-                                    <Text style={{ fontFamily: FONTS.lexend.regular, color: '#999' }}>No products found</Text>
+                                <View style={styles.emptyContainer}>
+                                    <Image
+                                        source={require('../assets/images/noimages/noproductfound.png')}
+                                        style={styles.emptyImage}
+                                    />
+                                    <Text style={styles.emptyText}>No products found</Text>
                                 </View>
                             ) : null
                         }
@@ -599,7 +603,8 @@ const styles = StyleSheet.create({
         color: "#000000",
         fontFamily: FONTS.lexend.medium,
         fontSize: wp("2.79%"),
-        marginTop: hp("0.1%")
+        marginTop: hp("0.1%"),
+        textAlign: "center"
     },
     unselectedSubCatImageView: {
         width: wp("18.6%"),
@@ -611,7 +616,7 @@ const styles = StyleSheet.create({
     },
     unselectedSubCatImage: {
         width: wp("11.63%"),
-        height: wp("11.63%%"),
+        height: wp("11.63%"),
         borderRadius: 60,
         resizeMode: "cover"
     },
@@ -619,5 +624,25 @@ const styles = StyleSheet.create({
         color: "#666666",
         fontFamily: FONTS.lexend.medium,
         fontSize: wp("2.79%"),
+        textAlign: "center"
+    },
+    emptyContainer: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: hp('5%'),
+        paddingHorizontal: wp('10%')
+    },
+    emptyImage: {
+        width: wp('40%'),
+        height: wp('40%'),
+        resizeMode: 'contain',
+        marginBottom: hp('2%')
+    },
+    emptyText: {
+        fontFamily: FONTS.lexend.regular,
+        fontSize: wp('3.5%'),
+        color: '#999',
+        textAlign: 'center'
     }
 });

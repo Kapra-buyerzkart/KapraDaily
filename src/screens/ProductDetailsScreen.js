@@ -1,4 +1,4 @@
-import { View, Text, Image, StyleSheet, TouchableOpacity, FlatList, Platform, ScrollView, Animated, ActivityIndicator } from 'react-native'
+import { View, Text, Image, StyleSheet, TouchableOpacity, FlatList, Platform, ScrollView, Animated, ActivityIndicator, Share, Alert } from 'react-native'
 import React, { useRef, useState, useEffect, useContext } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen'
@@ -59,9 +59,36 @@ const ProductDetailsScreen = () => {
         isAvailable,
         bTokenValue,
         productId: finalProductId,
+        urlKey,
         relatedProducts,
         relatedLoading,
     } = useProductDetails(productId, initialProduct)
+
+    const handleShare = async () => {
+        try {
+            const productUrl = `https://kapradaily.com/product/${urlKey || finalProductId}`;
+            const message = `Take a look at this product from Kapra Daily.\n${productUrl}`;
+
+            const result = await Share.share({
+                message: message,
+                url: productUrl, // iOS specific
+                title: productName // Android specific
+            });
+
+            if (result.action === Share.sharedAction) {
+                if (result.activityType) {
+                    // shared with activity type of result.activityType
+                } else {
+                    // shared
+                }
+            } else if (result.action === Share.dismissedAction) {
+                // dismissed
+            }
+        } catch (error) {
+            Alert.alert('Error', 'An error occurred while sharing the product.');
+            console.error('Share Error:', error);
+        }
+    };
 
     const isLiked = isInWishlist(finalProductId)
 
@@ -76,7 +103,7 @@ const ProductDetailsScreen = () => {
 
     const heightInterpolate = animation.interpolate({
         inputRange: [0, 1],
-        outputRange: [0, hp('25%')],
+        outputRange: [0, hp('40%')],
     })
     // Set selected image from productImage
     useEffect(() => {
@@ -167,7 +194,7 @@ const ProductDetailsScreen = () => {
                                     color={isLiked ? '#FF0048' : '#000000'}
                                 />
                             </TouchableOpacity>
-                            <TouchableOpacity>
+                            <TouchableOpacity onPress={handleShare}>
                                 <Image style={styles.shareIcon} source={require('../assets/images/share.png')} />
                             </TouchableOpacity>
                         </View>
@@ -255,36 +282,44 @@ const ProductDetailsScreen = () => {
                         height: heightInterpolate,
                         overflow: 'hidden'
                     }]}>
-                        <ScrollView showsVerticalScrollIndicator={false}>
-                            <Text style={styles.productDetailsText}>{productDescription?.replace(/<[^>]*>?/gm, '')}</Text>
-                            {attributes && attributes.length > 0 && (
-                                <>
-                                    <Text style={[styles.productsContainerHeader, { marginLeft: 0, marginBottom: hp('1%') }]}>Attributes</Text>
-                                    <View style={styles.specsContainer}>
+                        <View style={{ flex: 1 }}>
+                            <ScrollView showsVerticalScrollIndicator={true}>
+                                <Text style={styles.productDetailsText}>{productDescription?.replace(/<[^>]*>?/gm, '')}</Text>
+                                {attributes && attributes.length > 0 && (
+                                    <>
+                                        <Text style={[styles.productsContainerHeader, { marginLeft: 0, marginBottom: hp('1%'), marginTop: hp('2%') }]}>Attributes</Text>
+                                        <View style={styles.specsContainer}>
 
-                                        {attributes.map((attr, idx) => (
-                                            <View key={idx} style={[styles.specRow, (idx + (product?.sku ? 1 : 0)) % 2 !== 0 && styles.specRowAlt]}>
-                                                <Text style={styles.specLabel}>{attr.attrName}</Text>
-                                                <Text style={styles.specValue}>{attr.attrValue}</Text>
-                                            </View>
-                                        ))}
-                                    </View>
+                                            {attributes.map((attr, idx) => (
+                                                <View key={idx} style={[styles.specRow, (idx + (product?.sku ? 1 : 0)) % 2 !== 0 && styles.specRowAlt]}>
+                                                    <Text style={styles.specLabel}>{attr.attrName}</Text>
+                                                    <Text style={styles.specValue}>{attr.attrValue}</Text>
+                                                </View>
+                                            ))}
+                                        </View>
 
-                                </>
+                                    </>
+                                )}
+                                <View style={{ marginTop: hp('2%') }} />
+                            </ScrollView>
+                            {/* Scroll Indicator */}
+                            {productDescription && productDescription.length > 200 && (
+                                <View style={styles.scrollIndicator}>
+                                    <MaterialIcons name="keyboard-arrow-down" size={wp('5%')} color="#F25000" />
+                                </View>
                             )}
-                            <View style={{ marginTop: hp('2%') }} />
-                        </ScrollView>
+                        </View>
                     </Animated.View>
                 </View>
                 <View style={styles.productsMainContainerTwo}>
                     <View style={styles.productsContainerViewOne}>
                         <Text style={styles.productsContainerHeader}>Similar Products</Text>
-                        {relatedProducts && relatedProducts.length > 0 && (
+                        {/* {relatedProducts && relatedProducts.length > 0 && (
                             <TouchableOpacity style={styles.viewAllContainer}>
                                 <Text style={styles.viewAllText}>View All</Text>
                                 <MaterialIcons name={"arrow-forward-ios"} color={"#FF7B3A"} size={wp("3.3%")} style={styles.viewAllRightArrowIcon} />
                             </TouchableOpacity>
-                        )}
+                        )} */}
                     </View>
                     {relatedLoading ? (
                         <View style={{ paddingVertical: hp('2%'), alignItems: 'center' }}>
@@ -651,4 +686,12 @@ const styles = StyleSheet.create({
         color: '#616161',
         flex: 1
     },
+    scrollIndicator: {
+        position: 'absolute',
+        bottom: 5,
+        right: wp('4.65%'),
+        backgroundColor: 'rgba(255,255,255,0.8)',
+        borderRadius: 20,
+        padding: 2
+    }
 })

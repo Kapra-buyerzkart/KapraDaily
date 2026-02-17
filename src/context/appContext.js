@@ -24,6 +24,8 @@ export const AppContextProvider = ({ children }) => {
 
         await AsyncStorage.setItem('profile', JSON.stringify(mergedProfile));
         setProfile(mergedProfile);
+        console.log('profilee', profile);
+
       }
     } catch (error) {
       console.log('Profile fetch error:', error);
@@ -36,8 +38,8 @@ export const AppContextProvider = ({ children }) => {
 
     const defaultProfile = {
       guestId: Math.floor(Math.random() * 9000000000) + 1000000000,
-      pincode: 661,
-      pinAddress: 'Vennala',
+      pincode: 105,
+      pinAddress: 'Kakkanad',
     };
 
     const mergedProfile = storedProfile

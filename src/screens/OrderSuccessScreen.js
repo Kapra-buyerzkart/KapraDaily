@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, Image, TouchableOpacity, StatusBar } from 'react-native'
+import { View, Text, StyleSheet, Image, TouchableOpacity, StatusBar, ScrollView } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import LinearGradient from 'react-native-linear-gradient'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -93,127 +93,129 @@ const OrderSuccessScreen = () => {
                 end={{ x: 0, y: 0.6 }}
                 style={styles.gradientContainer}
             >
-                {/* Success Animation Area */}
-                <View style={styles.successSection}>
-                    <Image style={styles.successImage} source={require('../assets/images/success-two.png')} />
-                    <View style={styles.thankYouContainer}>
-                        <Text style={styles.thankYouText}>Thank You!</Text>
-                        <Text style={styles.thankYouTextTwo}>Your order has been placed successfully</Text>
-                    </View>
-                </View>
-
-                {/* Order Details Card */}
-                <View style={styles.orderCard}>
-                    <View style={styles.orderCardHeader}>
-                        <MaterialCommunityIcons name="receipt" size={wp('5%')} color="#F25000" />
-                        <Text style={styles.orderCardTitle}>Order Summary</Text>
-                    </View>
-
-                    <View style={styles.detailRow}>
-                        <Text style={styles.detailLabel}>Order ID</Text>
-                        <Text style={styles.detailValue}>#{displayOrderNumber}</Text>
-                    </View>
-
-                    <View style={styles.divider} />
-
-                    <View style={styles.detailRow}>
-                        <Text style={styles.detailLabel}>Payment</Text>
-                        <View style={styles.detailBadge}>
-                            <MaterialCommunityIcons
-                                name={displayPayment?.toUpperCase() === 'COD' ? 'cash' : 'cellphone'}
-                                size={wp('3.5%')}
-                                color={displayPayment?.toUpperCase() === 'COD' ? '#0CA201' : '#1A73E8'}
-                            />
-                            <Text style={styles.detailBadgeText}>{getPaymentLabel(displayPayment)}</Text>
+                <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+                    {/* Success Animation Area */}
+                    <View style={styles.successSection}>
+                        <Image style={styles.successImage} source={require('../assets/images/success-two.png')} />
+                        <View style={styles.thankYouContainer}>
+                            <Text style={styles.thankYouText}>Thank You!</Text>
+                            <Text style={styles.thankYouTextTwo}>Your order has been placed successfully</Text>
                         </View>
                     </View>
 
-                    <View style={styles.divider} />
+                    {/* Order Details Card */}
+                    <View style={styles.orderCard}>
+                        <View style={styles.orderCardHeader}>
+                            <MaterialCommunityIcons name="receipt" size={wp('5%')} color="#F25000" />
+                            <Text style={styles.orderCardTitle}>Order Summary</Text>
+                        </View>
 
-                    <View style={styles.detailRow}>
-                        <Text style={styles.detailLabel}>Total Items</Text>
-                        <Text style={styles.detailValue}>{displayItems} item{displayItems !== 1 ? 's' : ''}</Text>
-                    </View>
+                        <View style={styles.detailRow}>
+                            <Text style={styles.detailLabel}>Order ID</Text>
+                            <Text style={styles.detailValue}>#{displayOrderNumber}</Text>
+                        </View>
 
-                    <View style={styles.divider} />
+                        <View style={styles.divider} />
 
-                    <View style={styles.detailRow}>
-                        <Text style={styles.detailLabel}>Delivery</Text>
-                        <View style={styles.deliveryBadge}>
-                            <Ionicons
-                                name={displayDeliveryMode === 'express' ? 'flash' : 'time-outline'}
-                                size={wp('3.5%')}
-                                color="#F25000"
-                            />
-                            <Text style={styles.deliveryBadgeText}>
-                                {displayDeliveryMode === 'express' ? 'Express (20-30 min)' : 'Slotted'}
-                            </Text>
+                        <View style={styles.detailRow}>
+                            <Text style={styles.detailLabel}>Payment</Text>
+                            <View style={styles.detailBadge}>
+                                <MaterialCommunityIcons
+                                    name={displayPayment?.toUpperCase() === 'COD' ? 'cash' : 'cellphone'}
+                                    size={wp('3.5%')}
+                                    color={displayPayment?.toUpperCase() === 'COD' ? '#0CA201' : '#1A73E8'}
+                                />
+                                <Text style={styles.detailBadgeText}>{getPaymentLabel(displayPayment)}</Text>
+                            </View>
+                        </View>
+
+                        <View style={styles.divider} />
+
+                        <View style={styles.detailRow}>
+                            <Text style={styles.detailLabel}>Total Items</Text>
+                            <Text style={styles.detailValue}>{displayItems} item{displayItems !== 1 ? 's' : ''}</Text>
+                        </View>
+
+                        <View style={styles.divider} />
+
+                        <View style={styles.detailRow}>
+                            <Text style={styles.detailLabel}>Delivery</Text>
+                            <View style={styles.deliveryBadge}>
+                                <Ionicons
+                                    name={displayDeliveryMode === 'express' ? 'flash' : 'time-outline'}
+                                    size={wp('3.5%')}
+                                    color="#F25000"
+                                />
+                                <Text style={styles.deliveryBadgeText}>
+                                    {displayDeliveryMode === 'express' ? 'Express (20-30 min)' : 'Slotted'}
+                                </Text>
+                            </View>
+                        </View>
+
+                        {displayDeliverySlot && (
+                            <>
+                                <View style={styles.divider} />
+                                <View style={styles.detailRow}>
+                                    <Text style={styles.detailLabel}>Slot</Text>
+                                    <Text style={styles.detailValueSmall}>{displayDeliverySlot}</Text>
+                                </View>
+                            </>
+                        )}
+
+                        {displayAddress ? (
+                            <>
+                                <View style={styles.divider} />
+                                <View style={styles.detailRow}>
+                                    <Text style={styles.detailLabel}>Delivering to</Text>
+                                    <Text style={styles.detailValueSmall} numberOfLines={2}>{displayAddress}</Text>
+                                </View>
+                            </>
+                        ) : null}
+
+                        {/* Total Amount */}
+                        <View style={styles.totalRow}>
+                            <Text style={styles.totalLabel}>Total Amount</Text>
+                            <Text style={styles.totalAmount}>₹{Number(displayTotal).toFixed(2)}</Text>
                         </View>
                     </View>
 
-                    {displayDeliverySlot && (
-                        <>
-                            <View style={styles.divider} />
-                            <View style={styles.detailRow}>
-                                <Text style={styles.detailLabel}>Slot</Text>
-                                <Text style={styles.detailValueSmall}>{displayDeliverySlot}</Text>
-                            </View>
-                        </>
-                    )}
-
-                    {displayAddress ? (
-                        <>
-                            <View style={styles.divider} />
-                            <View style={styles.detailRow}>
-                                <Text style={styles.detailLabel}>Delivering to</Text>
-                                <Text style={styles.detailValueSmall} numberOfLines={2}>{displayAddress}</Text>
-                            </View>
-                        </>
-                    ) : null}
-
-                    {/* Total Amount */}
-                    <View style={styles.totalRow}>
-                        <Text style={styles.totalLabel}>Total Amount</Text>
-                        <Text style={styles.totalAmount}>₹{Number(displayTotal).toFixed(2)}</Text>
-                    </View>
-                </View>
-
-                {/* Buttons */}
-                <View style={styles.buttonsContainer}>
-                    <TouchableOpacity
-                        style={styles.trackButton}
-                        onPress={handleTrackOrder}
-                        activeOpacity={0.7}
-                    >
-                        <Ionicons name="location-outline" size={wp('5%')} color="#F25000" />
-                        <Text style={styles.trackButtonText}>Track Order</Text>
-                    </TouchableOpacity>
-
-                    <LinearGradient
-                        colors={['#F25000', '#FF7B3A']}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 0 }}
-                        style={styles.homeButtonGradient}
-                    >
+                    {/* Buttons */}
+                    <View style={styles.buttonsContainer}>
                         <TouchableOpacity
-                            style={styles.homeButton}
-                            onPress={handleBackToHome}
+                            style={styles.trackButton}
+                            onPress={handleTrackOrder}
                             activeOpacity={0.7}
                         >
-                            <Ionicons name="home-outline" size={wp('5%')} color="#FFFFFF" />
-                            <Text style={styles.homeButtonText}>Back to Home</Text>
+                            <Ionicons name="location-outline" size={wp('5%')} color="#F25000" />
+                            <Text style={styles.trackButtonText}>Track Order</Text>
                         </TouchableOpacity>
-                    </LinearGradient>
-                </View>
 
-                <TouchableOpacity
-                    style={styles.continueShoppingBtn}
-                    onPress={handleContinueShopping}
-                    activeOpacity={0.7}
-                >
-                    <Text style={styles.continueShoppingText}>Continue Shopping</Text>
-                    <Ionicons name="arrow-forward" size={wp('4%')} color="#F25000" />
-                </TouchableOpacity>
+                        <LinearGradient
+                            colors={['#F25000', '#FF7B3A']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 0 }}
+                            style={styles.homeButtonGradient}
+                        >
+                            <TouchableOpacity
+                                style={styles.homeButton}
+                                onPress={handleBackToHome}
+                                activeOpacity={0.7}
+                            >
+                                <Ionicons name="home-outline" size={wp('5%')} color="#FFFFFF" />
+                                <Text style={styles.homeButtonText}>Back to Home</Text>
+                            </TouchableOpacity>
+                        </LinearGradient>
+                    </View>
+
+                    <TouchableOpacity
+                        style={styles.continueShoppingBtn}
+                        onPress={handleContinueShopping}
+                        activeOpacity={0.7}
+                    >
+                        <Text style={styles.continueShoppingText}>Continue Shopping</Text>
+                        <Ionicons name="arrow-forward" size={wp('4%')} color="#F25000" />
+                    </TouchableOpacity>
+                </ScrollView>
             </LinearGradient>
         </SafeAreaView>
     )
@@ -229,6 +231,9 @@ const styles = StyleSheet.create({
     gradientContainer: {
         flex: 1,
         paddingHorizontal: wp('5%'),
+    },
+    scrollContent: {
+        paddingBottom: hp('5%'),
     },
     successSection: {
         alignItems: 'center',

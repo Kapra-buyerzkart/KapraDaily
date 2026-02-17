@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, Image, FlatList, Modal, TextInput, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { FONTS } from '../styles/typography';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const CouponModal = ({
     visible,
@@ -13,6 +14,7 @@ const CouponModal = ({
     availableCoupons,
     availableGiftCards,
     onCouponClick,
+    isCopyOnly = false,
 }) => (
     <Modal visible={visible} animationType="slide" transparent>
         <KeyboardAvoidingView
@@ -21,9 +23,12 @@ const CouponModal = ({
         >
             <View style={styles.modalContainer}>
                 <View style={styles.modalHeaderView}>
-                    <Text style={styles.modalHeaderText}>
-                        {isGiftCard ? "Apply Gift Card" : "Apply Coupon"}
-                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: wp('2%') }}>
+                        <MaterialCommunityIcons name="ticket-percent" size={wp('6%')} color="#F25000" />
+                        <Text style={styles.modalHeaderText}>
+                            {isGiftCard ? "Apply Gift Card" : "Apply Coupon"}
+                        </Text>
+                    </View>
                     <TouchableOpacity onPress={onClose}>
                         <Image style={styles.closeIcon} source={require('../assets/images/close_two.png')} />
                     </TouchableOpacity>
@@ -33,13 +38,13 @@ const CouponModal = ({
                 <View style={styles.couponInputContainer}>
                     <TextInput
                         style={styles.couponInput}
-                        placeholder={isGiftCard ? "Enter Gift Card Code" : "Enter Coupon Code"}
+                        placeholder="Enter coupon code"
                         value={couponCode}
                         onChangeText={setCouponCode}
                         autoCapitalize="characters"
                     />
                     <TouchableOpacity style={styles.applyCouponButton} onPress={onApply}>
-                        <Text style={styles.applyCouponButtonText}>APPLY</Text>
+                        <Text style={styles.applyCouponButtonText}>{isCopyOnly ? "COPY" : "APPLY"}</Text>
                     </TouchableOpacity>
                 </View>
 
@@ -49,16 +54,55 @@ const CouponModal = ({
                 </Text>
                 <FlatList
                     data={isGiftCard ? availableGiftCards : availableCoupons}
-                    keyExtractor={(item, index) => item.id?.toString() || item.code || index.toString()}
-                    renderItem={({ item }) => (
-                        <TouchableOpacity style={styles.couponCard} onPress={() => onCouponClick(item.code)}>
-                            <View style={styles.couponCodeContainer}>
-                                <Text style={styles.couponCodeText}>{item.code}</Text>
-                            </View>
-                            <Text style={styles.couponDescription}>{item.description}</Text>
-                            <Text style={styles.applyText}>TAP TO APPLY</Text>
-                        </TouchableOpacity>
-                    )}
+                    keyExtractor={(item, index) => (item.couponId || item.giftCardId || index).toString()}
+                    renderItem={({ item }) => {
+                        const code = item.couponCode || item.giftCode || item.code;
+                        const expiryDate = item.validTo ? new Date(item.validTo).toLocaleDateString('en-GB', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric'
+                        }) : null;
+
+                        let description = item.description;
+                        if (!description) {
+                            if (item.discountType === 'PERCENT') {
+                                description = `Get ${item.discountValue}% OFF up to ₹${item.maxDiscountAmount}`;
+                            } else if (item.discountType === 'FLAT') {
+                                description = `Flat ₹${item.discountValue} OFF`;
+                            }
+                        }
+
+                        return (
+                            <TouchableOpacity style={styles.couponCard} onPress={() => onCouponClick(code)}>
+                                <View style={styles.couponTopRow}>
+                                    <View style={styles.couponCodeContainer}>
+                                        <Text style={styles.couponCodeText}>{code}</Text>
+                                    </View>
+                                    <Text style={styles.applyText}>{isCopyOnly ? "COPY" : "APPLY"}</Text>
+                                </View>
+
+                                <Text style={styles.couponDescription}>{description}</Text>
+
+                                <View style={styles.couponFooter}>
+                                    {item.minOrderAmount > 0 && (
+                                        <Text style={styles.footerText}>Min. order: ₹{item.minOrderAmount}</Text>
+                                    )}
+                                    {expiryDate && (
+                                        <Text style={styles.footerText}>Expires: {expiryDate}</Text>
+                                    )}
+                                </View>
+                            </TouchableOpacity>
+                        );
+                    }}
+                    ListEmptyComponent={
+                        <View style={styles.emptyContainer}>
+                            <Image
+                                source={isGiftCard ? require('../assets/images/noimages/nogiftcard.png') : require('../assets/images/noimages/nocoupon.png')}
+                                style={styles.emptyImage}
+                            />
+                            {/* <Text style={styles.emptyText}>{isGiftCard ? "No gift cards available" : "No coupons available"}</Text> */}
+                        </View>
+                    }
                     contentContainerStyle={{ paddingBottom: hp('2%') }}
                 />
             </View>
@@ -138,17 +182,26 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         padding: wp('4%'),
         marginBottom: hp('1.5%'),
-        backgroundColor: '#F9F9F9'
+        backgroundColor: '#FFFFFF',
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+    },
+    couponTopRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: hp('1%')
     },
     couponCodeContainer: {
         backgroundColor: '#FFF5F0',
-        alignSelf: 'flex-start',
         borderWidth: 1,
         borderColor: '#F25000',
         borderRadius: 4,
         paddingHorizontal: wp('2%'),
         paddingVertical: hp('0.5%'),
-        marginBottom: hp('1%'),
         borderStyle: 'dashed'
     },
     couponCodeText: {
@@ -157,15 +210,45 @@ const styles = StyleSheet.create({
         color: '#F25000'
     },
     couponDescription: {
+        fontFamily: FONTS.outfit.medium,
+        fontSize: wp('3.8%'),
+        color: '#333333',
+        marginBottom: hp('0.5%')
+    },
+    couponFooter: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        borderTopWidth: 1,
+        borderTopColor: '#F0F0F0',
+        paddingTop: hp('1%'),
+        marginTop: hp('0.5%')
+    },
+    footerText: {
         fontFamily: FONTS.outfit.regular,
-        fontSize: wp('3.5%'),
-        color: '#777777',
-        marginBottom: hp('1%')
+        fontSize: wp('3%'),
+        color: '#888888'
     },
     applyText: {
-        fontFamily: FONTS.poppins.medium,
+        fontFamily: FONTS.poppins.semiBold,
         fontSize: wp('3.5%'),
         color: '#F25000',
-        alignSelf: 'flex-end'
     },
+    emptyContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: hp('4%'),
+        gap: hp('2%')
+    },
+    emptyImage: {
+        width: wp('40%'),
+        height: wp('40%'),
+        resizeMode: 'contain'
+    },
+    emptyText: {
+        fontFamily: FONTS.poppins.medium,
+        fontSize: wp('3.5%'),
+        color: '#999',
+        textAlign: 'center'
+    }
 });

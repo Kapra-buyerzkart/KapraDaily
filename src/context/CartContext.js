@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext, useCallback, useMemo, useRef, useEffect } from 'react';
+import { Alert } from 'react-native';
 import { addToCartApi, removeFromCartApi, updateCartItemApi, getCartApi, getCartSummaryApi, clearCartApi, applyCouponApi, removeCouponApi, applyGiftCardApi, removeGiftCardApi, applyBCoinApi, removeBCoinApi } from '../api/cartService';
 import { getAddressListApi, deleteAddressApi } from '../api/addressService';
 import Toast from 'react-native-simple-toast';
@@ -128,19 +129,67 @@ export const CartProvider = ({ children }) => {
     }, []);
 
     const onDeleteClicked = useCallback(async (addressId) => {
-        try {
-            await deleteAddressApi(addressId);
-            setAddresses(prev => prev.filter(item => item.id !== addressId));
-        } catch (error) {
-            console.error('Error deleting address:', error);
-        }
-    }, []);
+        Alert.alert(
+            "Delete Address",
+            "Are you sure you want to delete this address?",
+            [
+                { text: "Cancel", style: "cancel" },
+                {
+                    text: "Delete",
+                    style: "destructive",
+                    onPress: async () => {
+                        try {
+                            const response = await deleteAddressApi(addressId);
+                            if (response?.success) {
+                                setAddresses(prev => {
+                                    const deletedItem = prev.find(item => item.id === addressId);
+                                    const newList = prev.filter(item => item.id !== addressId);
+
+                                    // If we deleted the selected address and have other addresses, select the first one
+                                    if (deletedItem?.selected && newList.length > 0) {
+                                        newList[0].selected = true;
+                                    }
+                                    return newList;
+                                });
+                                Toast.show('Address deleted successfully');
+                            } else {
+                                Toast.show(response?.message || 'Failed to delete address');
+                            }
+                        } catch (error) {
+                            console.error('Error deleting address:', error);
+                            Toast.show(typeof error === 'string' ? error : 'Failed to delete address');
+                        }
+                    }
+                }
+            ]
+        );
+    }, [deleteAddressApi]);
 
     const onCloseThreeDots = useCallback(() => {
         setAddresses(prev =>
             prev.map(item => ({ ...item, threeDotsClicked: false }))
         );
     }, []);
+
+    // Ensure at least one address is selected if list is not empty
+    useEffect(() => {
+        if (addresses.length > 0) {
+            const hasSelection = addresses.some(a => a.selected);
+            if (!hasSelection) {
+                console.log('🔄 [ADDRESS] No selected address found, auto-selecting first one');
+                setAddresses(prev => {
+                    if (prev.length === 0) return prev;
+                    // Check again inside setAddresses to avoid race conditions with multiple updates
+                    const currentSelection = prev.find(a => a.selected);
+                    if (currentSelection) return prev;
+
+                    const next = [...prev];
+                    next[0] = { ...next[0], selected: true };
+                    return next;
+                });
+            }
+        }
+    }, [addresses]);
 
     // ─── loadCart: fetches item list and returns cartVersion (bootstrap only) ───
     const loadCart = useCallback(async () => {
@@ -414,7 +463,10 @@ export const CartProvider = ({ children }) => {
     const applyCoupon = useCallback(async (couponCode) => {
         try {
             const version = cartVersionRef.current;
-            const response = await applyCouponApi(couponCode, version, null, cartIdRef.current);
+            const selectedAddress = addresses.find(a => a.selected);
+            const pincodeAreaId = selectedAddress?.pincodeAreaId;
+
+            const response = await applyCouponApi(couponCode, version, pincodeAreaId, cartIdRef.current);
             console.log('Coupon Applied:', response);
             if (response && response.success) {
                 await refreshCart();
@@ -483,7 +535,10 @@ export const CartProvider = ({ children }) => {
     const applyGiftCard = useCallback(async (giftCode) => {
         try {
             const version = cartVersionRef.current;
-            const response = await applyGiftCardApi(giftCode, version, cartIdRef.current);
+            const selectedAddress = addresses.find(a => a.selected);
+            const pincodeAreaId = selectedAddress?.pincodeAreaId;
+
+            const response = await applyGiftCardApi(giftCode, version, pincodeAreaId, cartIdRef.current);
             console.log('Gift Card Applied:', response);
             if (response && response.success) {
                 await refreshCart();
