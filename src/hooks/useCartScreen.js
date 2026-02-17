@@ -62,6 +62,9 @@ export const useCartScreen = () => {
             const initCart = async () => {
                 console.log('🏁 [FOCUS] Initializing Cart Screen...');
                 try {
+                    console.log('🏁 [FOCUS] Fetching fresh addresses...');
+                    await addressHook.refreshAddresses();
+
                     const loadResult = await loadCart();
                     if (!isActive) return;
 

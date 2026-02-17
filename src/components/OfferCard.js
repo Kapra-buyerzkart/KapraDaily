@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native'
 import React, { useState } from 'react'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
+import Entypo from 'react-native-vector-icons/Entypo'
 import { FONTS } from '../styles/typography'
 
 const OfferCard = ({ item, onApply, onReject }) => {
@@ -22,7 +23,10 @@ const OfferCard = ({ item, onApply, onReject }) => {
                     }]} source={item.image} />
                     <View style={styles.offerInnerView}>
                         <Text style={styles.offerText}>{item.name}</Text>
-                        <Text style={styles.offerTextTwo}>{item.content}</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <Text style={styles.offerTextTwo}>{item.content}</Text>
+                            <Entypo name="chevron-small-right" size={wp('4%')} color="#424242" />
+                        </View>
                     </View>
 
                     <TouchableOpacity onPress={onReject} style={[styles.applyButton, {
@@ -40,7 +44,10 @@ const OfferCard = ({ item, onApply, onReject }) => {
                 <Image style={styles.offerImage} source={item.image} />
                 <View style={styles.offerInnerView}>
                     <Text style={styles.offerText}>{item.name}</Text>
-                    <Text style={styles.offerTextTwo}>{item.content}</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <Text style={styles.offerTextTwo}>{item.content}</Text>
+                        <Entypo name="chevron-small-right" size={wp('4%')} color="#424242" />
+                    </View>
                 </View>
                 <TouchableOpacity onPress={onApply} style={styles.applyButton}>
                     <Text style={styles.applyButtonText}>Apply</Text>

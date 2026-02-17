@@ -154,12 +154,16 @@ const HomeScreen = () => {
         bestOffers,
         featuredProducts,
         halfPriceStore,
-        pincodeAreas,
-        homepageData,
         banners,
         categories,
         userLocation,
-        featuredProductsTitle
+        featuredProductsTitle,
+        topBanner,
+        midBanner,
+        midBannerBottom,
+        bottomBanner,
+        refreshHomeData,
+        isHomeLoading
     } = useHomeData();
 
     const onRefresh = React.useCallback(async () => {
@@ -168,13 +172,14 @@ const HomeScreen = () => {
             await Promise.all([
                 fetchDashboardData(),
                 loadProfileTwo(),
+                refreshHomeData()
             ]);
         } catch (error) {
             console.error('Refresh error:', error);
         } finally {
             setRefreshing(false);
         }
-    }, [loadProfileTwo]);
+    }, [loadProfileTwo, refreshHomeData]);
 
     const navigation = useNavigation();
     const { showLoader } = useContext(LoaderContext);
@@ -356,9 +361,28 @@ const HomeScreen = () => {
         if (banner.linkType === 'Product') {
             navigation.navigate('ProductDetailsScreen', { productId: banner.linkValue });
         } else if (banner.linkType === 'Category') {
-            // Check if it's 'fruits' or general category
-            navigation.navigate('SearchScreen', { searchTerm: banner.linkValue }); // Or specific CategoryScreen if exists
+            navigation.navigate('SearchScreen', {
+                catId: banner.linkValue,
+                catName: banner.linkName || banner.title || 'Category'
+            });
         }
+    };
+
+    const PlacementBanner = ({ banner, style = {} }) => {
+        if (!banner) return null;
+        return (
+            <TouchableOpacity
+                activeOpacity={0.9}
+                onPress={() => handleBannerPress(banner)}
+                style={[styles.topHomeBannerView, style]}
+            >
+                <Image
+                    source={banner.uri}
+                    style={styles.topHomeBannerImage}
+                    resizeMode="stretch"
+                />
+            </TouchableOpacity>
+        );
     };
 
     return (
@@ -384,6 +408,7 @@ const HomeScreen = () => {
                         <View>
                             <Text style={styles.timeText}>20 min</Text>
                             <TouchableOpacity style={styles.addressView}>
+                                <Entypo name={"location-pin"} size={wp('3.6%')} color={"#FFFFFF"} style={{ marginRight: wp('1%') }} />
                                 <Text style={styles.addressText}
                                     numberOfLines={1}
                                     ellipsizeMode="tail"
@@ -412,7 +437,7 @@ const HomeScreen = () => {
                                 type: "login"
                             })
                         }} style={styles.profileIconMainView}>
-                            {profile?.isPrevilaged === 1 && (
+                            {profile?.isPrivileged && (
                                 <Image source={require('../assets/images/crown.png')} width={wp('6.3%')} height={hp('2.3%')} />
                             )}
                             <View style={styles.profileIconView}>
@@ -429,7 +454,11 @@ const HomeScreen = () => {
                         <Image style={styles.clipboardIcon} source={require('../assets/images/clip_board.png')} />
                     </TouchableOpacity>
                 </View>
-                <TouchableOpacity
+
+                {/* Top Home Banner */}
+                <PlacementBanner banner={topBanner} />
+
+                {/* <TouchableOpacity
                     activeOpacity={0.9}
                     onPress={() => banners.length > 0 && handleBannerPress(banners[0])}
                     style={styles.headerBannerView}
@@ -439,16 +468,19 @@ const HomeScreen = () => {
                         style={styles.headerBannerImage}
                         resizeMode="contain"
                     />
-                </TouchableOpacity>
+                </TouchableOpacity> */}
 
                 <View style={styles.categoryMainView}>
-                    <Text style={styles.categoryHeaderText}>Category</Text>
+                    <Text style={styles.categoryHeaderText}>Shop By Categories</Text>
                     <View style={styles.categoriesContainer}>
                         {categories.map((item, index) => (
                             <CategoryItem key={index.toString()} item={item} />
                         ))}
                     </View>
                 </View>
+
+                {/* Mid Home Banner */}
+                <PlacementBanner banner={midBanner} style={{ marginTop: hp('2%') }} />
 
                 <View style={styles.productsMainContainer}>
                     <ImageBackground
@@ -481,6 +513,9 @@ const HomeScreen = () => {
                         />
                     </ImageBackground>
                 </View>
+
+                {/* Mid Bottom Home Banner */}
+                <PlacementBanner banner={midBannerBottom} style={{ marginTop: hp('2%') }} />
 
                 <View style={styles.productsMainContainerTwo}>
                     <View style={styles.productsContainerViewOne}>
@@ -594,6 +629,9 @@ const HomeScreen = () => {
                         }}
                     />
                 </LinearGradient>
+
+                {/* Bottom Home Banner */}
+                <PlacementBanner banner={bottomBanner} style={{ marginTop: hp('2%') }} />
                 {/* <LinearGradient
                     colors={['#FFC7AC', '#FFFFFF']}
                     start={{ x: 0, y: 0 }}
@@ -760,7 +798,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         width: wp('20%'),
         // backgroundColor: 'red',
-        left: wp('15.9%')
+        left: wp('18.9%')
     },
     bcoinRupee: {
         width: wp('6.5%'),
@@ -854,13 +892,13 @@ const styles = StyleSheet.create({
     categoriesContainer: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        justifyContent: 'space-between',
-        marginHorizontal: wp("4.6%"),
-        marginStart: 10
+        justifyContent: 'flex-start',
+        marginTop: hp('0.5%'),
     },
     item: {
-        width: wp('18%'),
+        width: wp('22.7%'),
         alignItems: 'center',
+        marginBottom: hp('2.5%'),
     },
     gradientBox: {
         width: wp('18%'),
@@ -882,7 +920,7 @@ const styles = StyleSheet.create({
     },
     profileIconMainView: {
         alignItems: "center",
-        top: hp("1.3%")
+        top: hp("-1.3%")
     },
     // headerBannerImage: {
     //     width: "100%",
@@ -1313,5 +1351,17 @@ const styles = StyleSheet.create({
         fontFamily: FONTS.poppins.light,
         fontSize: wp('3.72%'),
         color: '#3A3A3A',
+    },
+    topHomeBannerView: {
+        width: wp('100%'),
+        height: hp('20%'),
+        alignSelf: 'center',
+        //  marginTop: hp('2.5%'),
+        //  borderRadius: 15,
+        overflow: 'hidden',
+    },
+    topHomeBannerImage: {
+        width: '100%',
+        height: '100%',
     }
 })

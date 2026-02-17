@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useContext } from 'react';
 import { Alert } from 'react-native';
 import { useCart } from '../context/CartContext';
-import { getAvailableCouponsApi } from '../api/cartService';
+import { getAvailableCouponsApi, getAvailableGiftCardsApi } from '../api/cartService';
 import { getDashboardDataApi } from '../api/userService';
 import { LoaderContext } from '../context/loaderContext';
 
@@ -16,7 +16,7 @@ const DEFAULT_OFFERS = [
     {
         id: '2',
         name: "Coupon",
-        content: "get flat 50%",
+        content: "View All Coupons",
         applyCliked: false,
         image: require('../assets/images/coupon-two.png')
     },
@@ -30,7 +30,7 @@ const DEFAULT_OFFERS = [
     {
         id: '4',
         name: "Gift Card",
-        content: "Add Gift Card",
+        content: "View All Gift Cards",
         applyCliked: false,
         image: require('../assets/images/gift_two.png')
     },
@@ -50,22 +50,33 @@ export const useOffers = () => {
     const [couponCode, setCouponCode] = useState('');
     const [isGiftCard, setIsGiftCard] = useState(false);
     const [availableCoupons, setAvailableCoupons] = useState([]);
-    const [availableGiftCards] = useState(DEFAULT_GIFT_CARDS);
+    const [availableGiftCards, setAvailableGiftCards] = useState([]);
 
-    // Fetch available coupons on mount
+    // Fetch available coupons and gift cards on mount
     useEffect(() => {
-        const fetchCoupons = async () => {
+        const fetchRewards = async () => {
             try {
                 // Background fetch, do not block UI with global loader
-                const response = await getAvailableCouponsApi();
-                if (response?.data) {
-                    setAvailableCoupons(response.data);
+                const [couponsRes, giftCardsRes] = await Promise.all([
+                    getAvailableCouponsApi(),
+                    getAvailableGiftCardsApi()
+                ]);
+
+                if (couponsRes?.data) {
+                    // Extract items if nested, otherwise use data directly
+                    const coupons = couponsRes.data.items || (Array.isArray(couponsRes.data) ? couponsRes.data : []);
+                    setAvailableCoupons(coupons);
+                }
+                if (giftCardsRes?.data) {
+                    // Extract items if nested, otherwise use data directly
+                    const giftCards = giftCardsRes.data.items || (Array.isArray(giftCardsRes.data) ? giftCardsRes.data : []);
+                    setAvailableGiftCards(giftCards);
                 }
             } catch (error) {
-                console.error('Error fetching available coupons:', error);
+                console.error('Error fetching available rewards:', error);
             }
         };
-        fetchCoupons();
+        fetchRewards();
     }, []);
 
     // Fetch wallet data and update B-Coin offer content
@@ -79,7 +90,7 @@ export const useOffers = () => {
                         offer.id === '3'
                             ? {
                                 ...offer,
-                                content: `${parseFloat(bCoins).toFixed(2)}`,
+                                content: `Available B-Coin: ${parseFloat(bCoins).toFixed(2)}`,
                                 applyCliked: cartSummary?.bcoinsAppliedValue > 0
                             }
                             : offer
@@ -119,7 +130,10 @@ export const useOffers = () => {
 
         if (offerId === '3') {
             const bCoinOffer = offers.find(o => o.id === '3');
-            const availableBCoins = parseFloat(bCoinOffer?.content || '0');
+            // Extract numerical value from content string (e.g., "Available B-Coin: 100.00")
+            const contentValue = bCoinOffer?.content || '0';
+            const availableBCoinsMatch = contentValue.match(/(\d+\.?\d*)/);
+            const availableBCoins = availableBCoinsMatch ? parseFloat(availableBCoinsMatch[0]) : 0;
             if (availableBCoins <= 0) {
                 alert("No B-Coins available to apply");
                 return;

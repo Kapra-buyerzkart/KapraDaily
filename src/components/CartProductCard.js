@@ -14,7 +14,7 @@ const CartProductCard = (props) => {
     const { updateCartItemQuantity, removeFromCart } = useCart();
     const { isInWishlist, toggleWishlist } = useWishlist();
 
-    const { item } = props;
+    const { item, disableManage } = props;
     const [imageError, setImageError] = useState(false);
     const [quantity, setQuantity] = useState(item.addedQty || item.quantity || 1);
     const [isRemovalModalVisible, setIsRemovalModalVisible] = useState(false);
@@ -116,13 +116,27 @@ const CartProductCard = (props) => {
                         source={imageSource}
                         onError={() => setImageError(true)}
                     />
-
+                    {(() => {
+                        const btokens = item.totalBtokens || item.bTokenValue || item.bTokens || 0;
+                        if (btokens > 0) {
+                            return (
+                                <View style={styles.btokenContainerSmall}>
+                                    <Image style={styles.btokenImageSmall} source={require('../assets/images/btoken-icon.png')} />
+                                    <Text style={styles.btokenTextSmall}>{btokens} B Token</Text>
+                                </View>
+                            )
+                        }
+                        return null;
+                    })()}
 
                 </View>
 
                 <View style={styles.productCardInnerViewTwo}>
                     <Text style={styles.productNameText} numberOfLines={2}>{productName}</Text>
-                    <Text style={styles.productCount}>{quantity} pcs</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingRight: wp('2%') }}>
+                        <Text style={styles.productCount}>{quantity} pcs</Text>
+
+                    </View>
 
                     <View style={styles.productCardInnerViewThree}>
                         <View style={styles.productPrizeView}>
@@ -132,21 +146,23 @@ const CartProductCard = (props) => {
                             <Text style={styles.sellingPriceText}>₹{specialPrice}</Text>
                         </View>
 
-                        <View style={styles.countContainer}>
-                            <TouchableOpacity
-                                onPress={handleDecrease}
-                                disabled={isSoldOut}
-                            >
-                                <Image style={styles.countButtonStyle} source={require('../assets/images/minus-button.png')} />
-                            </TouchableOpacity>
-                            <Text style={styles.countText}>{quantity}</Text>
-                            <TouchableOpacity
-                                onPress={handleIncrease}
-                                disabled={isSoldOut}
-                            >
-                                <Image style={styles.countButtonStyle} source={require('../assets/images/plus-button.png')} />
-                            </TouchableOpacity>
-                        </View>
+                        {!disableManage && (
+                            <View style={styles.countContainer}>
+                                <TouchableOpacity
+                                    onPress={handleDecrease}
+                                    disabled={isSoldOut}
+                                >
+                                    <Image style={styles.countButtonStyle} source={require('../assets/images/minus-button.png')} />
+                                </TouchableOpacity>
+                                <Text style={styles.countText}>{quantity}</Text>
+                                <TouchableOpacity
+                                    onPress={handleIncrease}
+                                    disabled={isSoldOut}
+                                >
+                                    <Image style={styles.countButtonStyle} source={require('../assets/images/plus-button.png')} />
+                                </TouchableOpacity>
+                            </View>
+                        )}
                     </View>
                 </View>
             </View>
@@ -233,7 +249,7 @@ const styles = StyleSheet.create({
     productImageView: {
         width: wp('21.4%'),
         height: hp('9.2%'),
-        backgroundColor: '#F3F3F3',
+        backgroundColor: '#ffffff',
         borderRadius: wp('3.7%'),
         justifyContent: 'center',
         alignItems: 'center'
@@ -337,6 +353,26 @@ const styles = StyleSheet.create({
         ...StyleSheet.absoluteFillObject,
         backgroundColor: 'rgba(0,0,0,0.4)',
     },
+    btokenContainerSmall: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#F3E5F5', // Lighter purple tint
+        paddingHorizontal: wp('1.5%'),
+        paddingVertical: hp('0.2%'),
+        borderRadius: 4,
+        gap: wp('1%'),
+        alignSelf: 'flex-start'
+    },
+    btokenImageSmall: {
+        width: wp('2.8%'),
+        height: wp('2.8%'),
+        resizeMode: 'contain'
+    },
+    btokenTextSmall: {
+        fontFamily: FONTS.lexend.medium,
+        fontSize: wp('2.5%'),
+        color: '#5E3568'
+    }
 })
 
 export default React.memo(CartProductCard);
