@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import {
     View,
     Text,
@@ -8,6 +8,7 @@ import {
     ActivityIndicator,
     FlatList,
     Image,
+    Keyboard,
 } from 'react-native';
 import DelayInput from 'react-native-debounce-input';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
@@ -26,6 +27,16 @@ const LocationModal = ({
     const [search, setSearch] = useState('');
     const [areas, setAreas] = useState([]);
     const [loading, setLoading] = useState(false);
+
+    const inputRef = useRef(null);
+
+    useEffect(() => {
+        if (visible) {
+            setTimeout(() => {
+                inputRef.current?.focus();
+            }, 300);
+        }
+    }, [visible]);
 
     const onSearch = async (text) => {
         setSearch(text);
@@ -47,8 +58,9 @@ const LocationModal = ({
     };
 
     const onSelectLocation = async (item) => {
-        await editPincode(item);   // ✅ CALL CONTEXT METHOD
-        onClose();                 // ✅ CLOSE MODAL
+        Keyboard.dismiss();
+        await editPincode(item);
+        onClose();
     };
 
     return (
@@ -71,12 +83,15 @@ const LocationModal = ({
 
                     {/* Search */}
                     <DelayInput
+                        inputRef={inputRef}
                         value={search}
                         delayTimeout={500}
                         minLength={3}
                         onChangeText={onSearch}
-                        placeholder="Search location..."
+                        placeholder="Search location (Please enter at least 3 characters)"
                         style={styles.input}
+                        placeholderTextColor={'black'}
+                        autoFocus={true}
                     />
 
                     {/* Loader */}
@@ -86,6 +101,7 @@ const LocationModal = ({
                     <FlatList
                         data={areas.data}
                         keyExtractor={(_, i) => i.toString()}
+                        keyboardShouldPersistTaps="handled"
                         renderItem={({ item }) => (
                             <TouchableOpacity
                                 style={styles.item}
@@ -143,8 +159,8 @@ const styles = StyleSheet.create({
         padding: wp('3%'),
         backgroundColor: '#F2F2F2',
         borderRadius: 8,
-        fontSize: wp('3.3%'),
-        fontFamily: 'Poppins-Regular'
+        fontSize: wp('3.2%'),
+        fontFamily: 'Poppins-Regular',
     },
     item: {
         paddingVertical: wp('4%'),
