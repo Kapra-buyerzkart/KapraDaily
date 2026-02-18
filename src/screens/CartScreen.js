@@ -43,6 +43,8 @@ const CartScreen = () => {
         onRejectOffer,
         handleApplyCoupon,
         handleCouponClick,
+        appliedCouponCode,
+        appliedGiftCardCode,
 
         // Delivery
         selectedDeliveryType,
@@ -235,6 +237,11 @@ const CartScreen = () => {
                                     item={item}
                                     onApply={() => onApplyOffer(item.id)}
                                     onReject={() => onRejectOffer(item.id)}
+                                    appliedCode={
+                                        item.id === '2' ? appliedCouponCode
+                                            : item.id === '4' ? appliedGiftCardCode
+                                                : null
+                                    }
                                 />
                             ))}
                         </View>

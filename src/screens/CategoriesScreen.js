@@ -320,14 +320,12 @@ export default function CategoriesScreen() {
                             {/* <View style={styles.divider} />
                     <Ionicons name="clipboard-outline" color={"#8F8F8F"} size={wp("6%")} style={styles.clipboardIcon} /> */}
                         </View>
-                        <View style={{ flexDirection: 'row', gap: wp('2%') }}>
-                            <TouchableOpacity
-                                style={[styles.filterView, { width: wp('10%'), paddingHorizontal: 0 }]}
-                                onPress={() => setIsFilterSortModalVisible(true)}
-                            >
-                                <Ionicons name="options-outline" color={"#2D0F0D"} size={wp("5%")} />
-                            </TouchableOpacity>
-                        </View>
+                        <TouchableOpacity
+                            style={styles.filterView}
+                            onPress={() => setIsFilterSortModalVisible(true)}
+                        >
+                            <Ionicons name="options-outline" color={"#2D0F0D"} size={wp("5%")} />
+                        </TouchableOpacity>
                     </View>
                 </View>
             </View>
@@ -368,7 +366,7 @@ export default function CategoriesScreen() {
                                         source={require('../assets/images/noimages/noproductfound.png')}
                                         style={styles.emptyImage}
                                     />
-                                    <Text style={styles.emptyText}>No products found</Text>
+                                    {/* <Text style={styles.emptyText}>No products found</Text> */}
                                 </View>
                             ) : null
                         }
@@ -500,17 +498,16 @@ const styles = StyleSheet.create({
         marginTop: hp("0.5%")
     },
     searchContainer: {
-        // marginTop: hp('1.7%'),
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: '#FFFFFF',
         borderRadius: wp('1.4%'),
         paddingHorizontal: wp('2%'),
         height: hp('4.5%'),
-        width: wp("46.52%"),
-        // marginHorizontal: wp('4.7%'),
+        flex: 1,
         borderWidth: 1,
-        borderColor: "#E3E3E3"
+        borderColor: "#E3E3E3",
+        marginRight: wp('2.5%')
     },
     searchInput: {
         flex: 1,
@@ -542,15 +539,13 @@ const styles = StyleSheet.create({
         marginTop: hp("1%"),
     },
     filterView: {
-        width: wp("20%"),
+        width: wp("10%"),
         height: hp("4.5%"),
         borderWidth: 1,
         borderColor: "#E3E3E3",
         borderRadius: wp('1.4%'),
-        flexDirection: "row",
         alignItems: "center",
-        justifyContent: "space-between",
-        paddingHorizontal: wp("3%"),
+        justifyContent: "center",
     },
     filterIconStyle: {
         height: wp("3.25%"),

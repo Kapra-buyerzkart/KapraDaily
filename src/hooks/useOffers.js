@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useContext } from 'react';
-import { Alert } from 'react-native';
+import Toast from 'react-native-simple-toast';
 import { useCart } from '../context/CartContext';
 import { getAvailableCouponsApi, getAvailableGiftCardsApi } from '../api/cartService';
 import { getDashboardDataApi } from '../api/userService';
@@ -42,7 +42,7 @@ const DEFAULT_GIFT_CARDS = [
 ];
 
 export const useOffers = () => {
-    const { cartSummary, applyCoupon, removeCoupon, applyGiftCard, removeGiftCard, applyBCoins, removeBCoins } = useCart();
+    const { cartSummary, applyCoupon, removeCoupon, applyGiftCard, removeGiftCard, applyBCoins, removeBCoins, getCartSummary } = useCart();
     const { showLoader } = useContext(LoaderContext);
 
     const [offers, setOffers] = useState(DEFAULT_OFFERS);
@@ -51,6 +51,8 @@ export const useOffers = () => {
     const [isGiftCard, setIsGiftCard] = useState(false);
     const [availableCoupons, setAvailableCoupons] = useState([]);
     const [availableGiftCards, setAvailableGiftCards] = useState([]);
+    const [appliedCouponCode, setAppliedCouponCode] = useState(null);
+    const [appliedGiftCardCode, setAppliedGiftCardCode] = useState(null);
 
     // Fetch available coupons and gift cards on mount
     useEffect(() => {
@@ -145,11 +147,11 @@ export const useOffers = () => {
                 if (result.success) {
                     updateOfferState(offerId, true);
                 } else {
-                    Alert.alert("Error", result.message || "Failed to apply B-Coins");
+                    Toast.show(result.message || 'Failed to apply B-Coins', Toast.LONG);
                 }
             } catch (error) {
                 showLoader(false);
-                Alert.alert("Error", "An unexpected error occurred");
+                Toast.show('An unexpected error occurred', Toast.LONG);
             }
             return;
         }
@@ -167,13 +169,21 @@ export const useOffers = () => {
     const onRejectOffer = useCallback(async (offerId) => {
         if (offerId === '2') {
             const res = await removeCoupon();
-            if (res.success) updateOfferState(offerId, false);
+            if (res.success) {
+                updateOfferState(offerId, false);
+                setAppliedCouponCode(null);
+                getCartSummary();
+            }
             return;
         }
 
         if (offerId === '4') {
             const res = await removeGiftCard();
-            if (res.success) updateOfferState(offerId, false);
+            if (res.success) {
+                updateOfferState(offerId, false);
+                setAppliedGiftCardCode(null);
+                getCartSummary();
+            }
             return;
         }
 
@@ -185,11 +195,11 @@ export const useOffers = () => {
                 if (result.success) {
                     updateOfferState(offerId, false);
                 } else {
-                    Alert.alert("Error", result.message || "Failed to remove B-Coins");
+                    Toast.show(result.message || 'Failed to remove B-Coins', Toast.LONG);
                 }
             } catch (error) {
                 showLoader(false);
-                Alert.alert("Error", "Failed to remove B-Coins");
+                Toast.show('Failed to remove B-Coins', Toast.LONG);
             }
             return;
         }
@@ -208,8 +218,14 @@ export const useOffers = () => {
         if (result.success) {
             setShowCouponModal(false);
             updateOfferState(isGiftCard ? '4' : '2', true);
+            if (isGiftCard) {
+                setAppliedGiftCardCode(codeToApply);
+            } else {
+                setAppliedCouponCode(codeToApply);
+            }
+            getCartSummary();
         } else {
-            Alert.alert(isGiftCard ? "Gift Card Error" : "Coupon Error", result.message || "Failed to apply");
+            Toast.show(result.message || (isGiftCard ? 'Failed to apply gift card' : 'Failed to apply coupon'), Toast.LONG);
         }
     }, [couponCode, isGiftCard, applyGiftCard, applyCoupon, updateOfferState]);
 
@@ -231,5 +247,7 @@ export const useOffers = () => {
         onRejectOffer,
         handleApplyCoupon,
         handleCouponClick,
+        appliedCouponCode,
+        appliedGiftCardCode,
     };
 };

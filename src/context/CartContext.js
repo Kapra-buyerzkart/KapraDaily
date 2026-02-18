@@ -1,8 +1,7 @@
 import React, { createContext, useState, useContext, useCallback, useMemo, useRef, useEffect } from 'react';
-import { Alert } from 'react-native';
+import Toast from 'react-native-simple-toast';
 import { addToCartApi, removeFromCartApi, updateCartItemApi, getCartApi, getCartSummaryApi, clearCartApi, applyCouponApi, removeCouponApi, applyGiftCardApi, removeGiftCardApi, applyBCoinApi, removeBCoinApi } from '../api/cartService';
 import { getAddressListApi, deleteAddressApi } from '../api/addressService';
-import Toast from 'react-native-simple-toast';
 
 export const CartContext = createContext();
 
@@ -206,6 +205,8 @@ export const CartProvider = ({ children }) => {
                 if (response && response.data) {
                     if (response.data.cart && response.data.cart.cartVersion) {
                         fetchedCartVersion = response.data.cart.cartVersion;
+                        // Always keep the ref up-to-date so coupon/gift card apply calls have the latest version
+                        updateCartVersion(fetchedCartVersion);
                     }
                     if (response.data.cart && response.data.cart.cartId) {
                         setCartId(response.data.cart.cartId);
@@ -238,7 +239,7 @@ export const CartProvider = ({ children }) => {
 
         loadRequestRef.current = promise;
         return promise;
-    }, []);
+    }, [updateCartVersion]);
 
     // After this call, cartVersionRef.current is always up-to-date.
     const getCartSummary = useCallback(async (deliveryMode = 'express', deliverySlotId = null, cartVersionOverride = null, pincodeAreaId = null, cartIdOverride = null) => {
@@ -499,17 +500,24 @@ export const CartProvider = ({ children }) => {
         try {
             const version = cartVersionRef.current;
             console.log('🪙 [BCOIN] Applying with version:', version);
-            const response = await applyBCoinApi(bcoins, version);
+            const response = await applyBCoinApi(bcoins, version, cartIdRef.current);
             console.log('🪙 [BCOIN] Applied:', response);
-            // After apply, recalculate summary (which updates version)
-            await refreshCart();
-            return { success: true, ...response };
+            if (response && response.success) {
+                await refreshCart();
+                return { success: true, message: response.message || 'B-Coins applied successfully' };
+            } else {
+                const msg = response?.message || 'Failed to apply B-Coins';
+                Toast.show(msg, Toast.LONG);
+                return { success: false, message: msg };
+            }
         } catch (error) {
             console.error('Error applying BCoins:', error);
             if (error?.response?.data?.status === 'CART_VERSION_MISMATCH') {
                 await refreshCart();
             }
-            return { success: false, message: error.Message || 'Failed to apply BCoins' };
+            const msg = error?.Message || error?.message || 'Failed to apply B-Coins';
+            Toast.show(msg, Toast.LONG);
+            return { success: false, message: msg };
         }
     }, [refreshCart]);
 
@@ -518,16 +526,24 @@ export const CartProvider = ({ children }) => {
         try {
             const version = cartVersionRef.current;
             console.log('🪙 [BCOIN] Removing with version:', version);
-            const response = await removeBCoinApi(version);
+            const response = await removeBCoinApi(version, cartIdRef.current);
             console.log('🪙 [BCOIN] Removed:', response);
-            await refreshCart();
-            return { success: true, ...response };
+            if (response && response.success) {
+                await refreshCart();
+                return { success: true };
+            } else {
+                const msg = response?.message || 'Failed to remove B-Coins';
+                Toast.show(msg, Toast.LONG);
+                return { success: false, message: msg };
+            }
         } catch (error) {
             console.error('Error removing BCoins:', error);
             if (error?.response?.data?.status === 'CART_VERSION_MISMATCH') {
                 await refreshCart();
             }
-            return { success: false, message: error.Message || 'Failed to remove BCoins' };
+            const msg = error?.Message || error?.message || 'Failed to remove B-Coins';
+            Toast.show(msg, Toast.LONG);
+            return { success: false, message: msg };
         }
     }, [refreshCart]);
 

@@ -1,16 +1,18 @@
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native'
-import React, { useState } from 'react'
+import React from 'react'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import Entypo from 'react-native-vector-icons/Entypo'
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'
 import { FONTS } from '../styles/typography'
 
-const OfferCard = ({ item, onApply, onReject }) => {
+const OfferCard = ({ item, onApply, onReject, appliedCode }) => {
 
-    const [addClicked, setAddClicked] = useState(true)
-    // console.log('item.applyClicked', item)
+    const isApplied = item.applyCliked;
+    const showPill = isApplied && appliedCode; // coupon/gift card with a code
+
     return (
-        <>{
-            item.applyCliked ? (
+        <>
+            {isApplied ? (
                 <View style={[styles.offerContainer, {
                     borderColor: '#0CA201',
                     height: hp('9.54%'),
@@ -23,10 +25,20 @@ const OfferCard = ({ item, onApply, onReject }) => {
                     }]} source={item.image} />
                     <View style={styles.offerInnerView}>
                         <Text style={styles.offerText}>{item.name}</Text>
-                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                            <Text style={styles.offerTextTwo}>{item.content}</Text>
-                            <Entypo name="chevron-small-right" size={wp('4%')} color="#424242" />
-                        </View>
+                        {showPill ? (
+                            <View style={styles.appliedPillRow}>
+                                <View style={styles.appliedPill}>
+                                    <MaterialCommunityIcons name="ticket-percent" size={wp('3.2%')} color="#F25000" />
+                                    <Text style={styles.appliedPillCode}>{appliedCode}</Text>
+                                </View>
+                                <Text style={styles.appliedSavingsText}>✓ Applied</Text>
+                            </View>
+                        ) : (
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <Text style={styles.offerTextTwo}>{item.content}</Text>
+                                <Entypo name="chevron-small-right" size={wp('4%')} color="#424242" />
+                            </View>
+                        )}
                     </View>
 
                     <TouchableOpacity onPress={onReject} style={[styles.applyButton, {
@@ -53,8 +65,7 @@ const OfferCard = ({ item, onApply, onReject }) => {
                     <Text style={styles.applyButtonText}>Apply</Text>
                 </TouchableOpacity>
             </View>
-            )
-        }
+            )}
 
         </>
     )
@@ -111,12 +122,36 @@ const styles = StyleSheet.create({
         fontFamily: FONTS.poppins.medium,
         fontSize: wp('3%')
     },
+    appliedPillRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: wp('2%'),
+        marginTop: hp('0.2%'),
+    },
+    appliedPill: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#FFF5F0',
+        borderWidth: 1,
+        borderColor: '#F25000',
+        borderStyle: 'dashed',
+        borderRadius: 4,
+        paddingHorizontal: wp('2%'),
+        paddingVertical: hp('0.25%'),
+        gap: wp('1%'),
+    },
+    appliedPillCode: {
+        color: '#F25000',
+        fontFamily: FONTS.poppins.semiBold,
+        fontSize: wp('3%'),
+        letterSpacing: 0.5,
+    },
+    appliedSavingsText: {
+        color: '#0CA201',
+        fontFamily: FONTS.poppins.medium,
+        fontSize: wp('2.8%'),
+    },
     appliedStyle: {
-        // width: wp('25.1%'),
-        // height: hp('3.86%'),
-        // backgroundColor: '#FFFFFF',
-        // borderRadius: wp('2.3%'),
-        // justifyContent: "center",
         alignItems: "center",
         flexDirection: 'row',
         justifyContent: "space-between",

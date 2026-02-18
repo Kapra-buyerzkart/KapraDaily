@@ -245,7 +245,8 @@ const BCoinScreen = () => {
                             <Text style={styles.availableBalanceHeaderText}>Requested Coins</Text>
                             <TextInput
                                 style={styles.redeemInput}
-                                placeholder="Enter coins (e.g. 15)"
+                                placeholder="Enter requested B-Coin"
+                                placeholderTextColor="#AAAAAA"
                                 keyboardType="numeric"
                                 value={requestedCoins}
                                 onChangeText={setRequestedCoins}

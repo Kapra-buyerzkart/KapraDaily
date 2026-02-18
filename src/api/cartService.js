@@ -124,34 +124,34 @@ export const getCartSummaryApi = async (deliveryMode = 'express', deliverySlotId
 
 
 export const clearCartApi = async (cartVersion, cartId) => {
-    const userId = await getUserId();
-    const idToUse = cartId || userId;
     const payload = {
         ...(cartVersion && { ifMatchCartVersion: cartVersion })
     };
 
-    return post(`cart/${idToUse}/clear`, payload);
+    return deleteRequest('cart/clear', payload);
 };
 
 
-export const applyBCoinApi = async (bcoins, cartVersion) => {
+export const applyBCoinApi = async (bcoins, cartVersion, cartId) => {
     const userId = await getUserId();
+    const idToUse = cartId || userId;
     const payload = {
         bcoins,
         ifMatchCartVersion: cartVersion
     };
-    return post(`cart/${userId}/applybcoin`, payload);
+    return post(`cart/${idToUse}/applybcoin`, payload);
 };
 
 
-export const removeBCoinApi = async (cartVersion) => {
+export const removeBCoinApi = async (cartVersion, cartId) => {
     const userId = await getUserId();
+    const idToUse = cartId || userId;
     const payload = {
         ifMatchCartVersion: cartVersion
     };
     console.log('wek32krlk4', payload);
 
-    return post(`cart/${userId}/removebcoin`, payload);
+    return post(`cart/${idToUse}/removebcoin`, payload);
 };
 
 export const applyCouponApi = async (couponCode, cartVersion, pincodeAreaId, cartId) => {

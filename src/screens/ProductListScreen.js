@@ -63,7 +63,11 @@ const ProductListScreen = () => {
                 contentContainerStyle={styles.listContent}
                 ListEmptyComponent={
                     <View style={styles.emptyContainer}>
-                        <Text style={styles.emptyText}>No products found</Text>
+                        <Image
+                            source={require('../assets/images/noimages/noproductfound.png')}
+                            style={styles.emptyImage}
+                        />
+                        {/* <Text style={styles.emptyText}>No products found</Text> */}
                     </View>
                 }
             />

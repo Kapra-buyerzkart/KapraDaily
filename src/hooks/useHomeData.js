@@ -18,10 +18,10 @@ const useHomeData = () => {
     const [categories, setCategories] = useState([]);
     const [userLocation, setUserLocation] = useState(null);
     const [featuredProductsTitle, setFeaturedProductsTitle] = useState('Featured Products');
-    const [topBanner, setTopBanner] = useState(null);
-    const [midBanner, setMidBanner] = useState(null);
-    const [midBannerBottom, setMidBannerBottom] = useState(null);
-    const [bottomBanner, setBottomBanner] = useState(null);
+    const [topBanner, setTopBanner] = useState([]);
+    const [midBanner, setMidBanner] = useState([]);
+    const [midBannerBottom, setMidBannerBottom] = useState([]);
+    const [bottomBanner, setBottomBanner] = useState([]);
     const [refreshing, setRefreshing] = useState(false);
 
     const { loadWishlist } = useWishlist();
@@ -65,15 +65,23 @@ const useHomeData = () => {
         const fetchHomepageData = async (isRefreshing = false) => {
             try {
                 if (isRefreshing) setRefreshing(true);
+                // showLoader(true);
+                const [storedPincodeAreaId, storedLocality, storedArea] = await Promise.all([
+                    AsyncStorage.getItem('pincodeAreaId'),
+                    AsyncStorage.getItem('locality'),
+                    AsyncStorage.getItem('area')
+                ]);
 
-                // Use pincode from profile (AppContext) if available, otherwise fallback
-                const areaId = profile?.pincode ? parseInt(profile.pincode) : 105;
+                const areaId = storedPincodeAreaId ? parseInt(storedPincodeAreaId) : 105;
+                if (storedArea) {
+                    // Use pincode from profile (AppContext) if available, otherwise fallback
+                    // const areaId = profile?.pincode ? parseInt(profile.pincode) : 105;
 
-                // Update user location from profile for consistency
-                if (profile?.pinAddress) {
+                    // Update user location from profile for consistency
+
                     setUserLocation({
-                        locality: '',
-                        area: profile.pinAddress
+                        locality: storedLocality || '',
+                        area: storedArea
                     });
                 } else {
                     // Fallback to local storage for guest/initial state if needed
@@ -102,17 +110,17 @@ const useHomeData = () => {
                         });
 
                         // Extract Specific Banners
-                        const top = allBanners.find(b => b.placementKey === 'app_home_top_banner');
-                        setTopBanner(top ? mapBanner(top) : null);
+                        const top = allBanners.filter(b => b.placementKey === 'app_home_top_banner');
+                        setTopBanner(top.length > 0 ? top.map(mapBanner) : []);
 
-                        const mid = allBanners.find(b => b.placementKey === 'app_home_mid_banner');
-                        setMidBanner(mid ? mapBanner(mid) : null);
+                        const mid = allBanners.filter(b => b.placementKey === 'app_home_mid_banner');
+                        setMidBanner(mid.length > 0 ? mid.map(mapBanner) : []);
 
-                        const midBot = allBanners.find(b => b.placementKey === 'app_home_mid_banner_bottom');
-                        setMidBannerBottom(midBot ? mapBanner(midBot) : null);
+                        const midBot = allBanners.filter(b => b.placementKey === 'app_home_mid_banner_bottom');
+                        setMidBannerBottom(midBot.length > 0 ? midBot.map(mapBanner) : []);
 
-                        const bot = allBanners.find(b => b.placementKey === 'app_home_bottom');
-                        setBottomBanner(bot ? mapBanner(bot) : null);
+                        const bot = allBanners.filter(b => b.placementKey === 'app_home_bottom');
+                        setBottomBanner(bot.length > 0 ? bot.map(mapBanner) : []);
 
                         // Slider Banners (exclude specifically placed ones)
                         const specificPlacementKeys = [

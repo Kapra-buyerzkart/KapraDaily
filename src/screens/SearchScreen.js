@@ -134,6 +134,7 @@ const SearchScreen = () => {
                 />
                 <TextInput
                     placeholder='What are you looking for ?'
+                    placeholderTextColor={'#222222'}
                     style={styles.searchInput}
                     value={searchTerm}
                     onChangeText={setSearchTerm}
@@ -154,9 +155,17 @@ const SearchScreen = () => {
                 ListFooterComponent={ListFooter}
                 contentContainerStyle={{ paddingBottom: hp('5%') }}
                 ListEmptyComponent={!loading && searchTerm.length > 0 && (
-                    <Text style={[styles.resultText, { textAlign: 'center', marginTop: hp('5%'), fontSize: wp('3.5%') }]}>
-                        No products found for "{searchTerm}"
-                    </Text>
+                    <View style={styles.emptyContainer}>
+                        <Image
+                            source={require('../assets/images/noimages/noproductfound.png')}
+                            style={styles.emptyImage}
+                        />
+                        {/* <Text style={styles.emptyText}>No products found</Text> */}
+
+                        <Text style={[styles.resultText, { textAlign: 'center', marginTop: hp('5%'), fontSize: wp('3.5%') }]}>
+                            No products found for "{searchTerm}"
+                        </Text>
+                    </View>
                 )}
             />
         </SafeAreaView>
@@ -205,7 +214,7 @@ const styles = StyleSheet.create({
     searchInput: {
         fontFamily: FONTS.poppins.light,
         fontSize: wp('3.72%'),
-        color: '#3A3A3A',
+        color: '#222222',
         marginLeft: wp('2%'),
         flex: 1
     },

@@ -31,11 +31,94 @@ import LoginScreen from './LoginScreen';
 
 const { width } = Dimensions.get("window");
 const BANNER_HEIGHT = (283 / 390) * width;
-const banners = [
+const staticBanners = [
     require("../assets/images/image.png"),
     require("../assets/images/image.png"),
     require("../assets/images/image.png"),
 ];
+
+const PlacementBannerCarousel = ({ banners, onBannerPress, style, fullWidth = false }) => {
+    const [activeIndex, setActiveIndex] = useState(0);
+
+    if (!banners || banners.length === 0) return null;
+
+    const BANNER_WIDTH = fullWidth ? wp('100%') : wp('85%');
+    const BANNER_SPACING = fullWidth ? 0 : wp('4%');
+    const SNAP_INTERVAL = BANNER_WIDTH + BANNER_SPACING;
+
+    const onScroll = (e) => {
+        const offsetX = e.nativeEvent.contentOffset.x;
+        const slideIndex = Math.round(offsetX / SNAP_INTERVAL);
+        if (slideIndex !== activeIndex) {
+            setActiveIndex(slideIndex);
+        }
+    };
+
+    if (banners.length === 1) {
+        return (
+            <TouchableOpacity
+                activeOpacity={0.9}
+                onPress={() => onBannerPress(banners[0])}
+                style={[fullWidth ? styles.topHomeBannerViewFull : styles.topHomeBannerView, style]}
+            >
+                <Image
+                    source={banners[0].uri}
+                    style={styles.topHomeBannerImage}
+                    resizeMode="stretch"
+                />
+            </TouchableOpacity>
+        );
+    }
+
+    return (
+        <View style={style}>
+            <FlatList
+                data={banners}
+                horizontal
+                pagingEnabled={fullWidth}
+                snapToInterval={fullWidth ? undefined : SNAP_INTERVAL}
+                snapToAlignment={fullWidth ? undefined : "start"}
+                decelerationRate="fast"
+                showsHorizontalScrollIndicator={false}
+                onScroll={onScroll}
+                scrollEventThrottle={16}
+                keyExtractor={(_, index) => index.toString()}
+                contentContainerStyle={fullWidth ? undefined : { paddingHorizontal: wp('4.6%') }}
+                renderItem={({ item }) => (
+                    <TouchableOpacity
+                        activeOpacity={0.9}
+                        onPress={() => onBannerPress(item)}
+                        style={{
+                            width: BANNER_WIDTH,
+                            height: hp('20%'),
+                            marginRight: BANNER_SPACING,
+                            borderRadius: fullWidth ? 0 : wp('4%'),
+                            overflow: 'hidden'
+                        }}
+                    >
+                        <Image
+                            source={item.uri}
+                            style={styles.topHomeBannerImage}
+                            resizeMode="stretch"
+                        />
+                    </TouchableOpacity>
+                )}
+            />
+            <View style={styles.pagination}>
+                {banners.map((_, i) => (
+                    <View
+                        key={i}
+                        style={[
+                            styles.dot,
+                            { opacity: i === activeIndex ? 1 : 0.3 },
+                            i === activeIndex && styles.activeDot,
+                        ]}
+                    />
+                ))}
+            </View>
+        </View>
+    );
+};
 
 const HomeScreen = () => {
     console.log('HomeScreen Rendered');
@@ -154,6 +237,8 @@ const HomeScreen = () => {
         bestOffers,
         featuredProducts,
         halfPriceStore,
+        pincodeAreas,
+        homepageData,
         banners,
         categories,
         userLocation,
@@ -368,22 +453,7 @@ const HomeScreen = () => {
         }
     };
 
-    const PlacementBanner = ({ banner, style = {} }) => {
-        if (!banner) return null;
-        return (
-            <TouchableOpacity
-                activeOpacity={0.9}
-                onPress={() => handleBannerPress(banner)}
-                style={[styles.topHomeBannerView, style]}
-            >
-                <Image
-                    source={banner.uri}
-                    style={styles.topHomeBannerImage}
-                    resizeMode="stretch"
-                />
-            </TouchableOpacity>
-        );
-    };
+
 
     return (
         <SafeAreaView
@@ -418,32 +488,32 @@ const HomeScreen = () => {
                                 <Entypo name={"chevron-right"} size={wp('3.6%')} color={"#FFFFFF"} />
                             </TouchableOpacity>
                         </View>
-                        <TouchableOpacity onPress={() => navigation.navigate("BCoinScreen")} style={styles.bcoinContainer}>
+                        <View style={styles.headerRightWrapper}>
+                            <TouchableOpacity onPress={() => navigation.navigate("BCoinScreen")} style={styles.bcoinContainer}>
+                                <Image style={styles.rupeeImageTwo} source={require('../assets/images/premium_rupee.png')} />
+                                <LinearGradient
+                                    colors={['#FDED94', '#DEC32B']}
+                                    start={{ x: 0, y: 0 }}
+                                    end={{ x: 1, y: 1 }}
+                                    style={styles.badge}
+                                >
+                                    <Text style={styles.bcoinText}>{dashboardData?.wallet?.bCoins || '0.0'} B</Text>
+                                </LinearGradient>
+                            </TouchableOpacity>
 
-                            <Image style={styles.rupeeImageTwo} source={require('../assets/images/premium_rupee.png')} />
-                            <LinearGradient
-                                colors={['#FDED94', '#DEC32B']}
-                                start={{ x: 0, y: 0 }}
-                                end={{ x: 1, y: 1 }}
-                                style={styles.badge}
-                            >
-                                <Text style={styles.bcoinText}>{dashboardData?.wallet?.bCoins || '0.0'} B</Text>
-                            </LinearGradient>
-
-                        </TouchableOpacity>
-
-                        <TouchableOpacity onPress={() => {
-                            navigation.navigate('ProfileScreen', {
-                                type: "login"
-                            })
-                        }} style={styles.profileIconMainView}>
-                            {profile?.isPrivileged && (
-                                <Image source={require('../assets/images/crown.png')} width={wp('6.3%')} height={hp('2.3%')} />
-                            )}
-                            <View style={styles.profileIconView}>
-                                <GradientUserIcon size={wp('6%')} />
-                            </View>
-                        </TouchableOpacity>
+                            <TouchableOpacity onPress={() => {
+                                navigation.navigate('ProfileScreen', {
+                                    type: "login"
+                                })
+                            }} style={styles.profileIconMainView}>
+                                {profile?.isPrivileged && (
+                                    <Image source={require('../assets/images/crown.png')} width={wp('6.3%')} height={hp('2.3%')} />
+                                )}
+                                <View style={styles.profileIconView}>
+                                    <GradientUserIcon size={wp('6%')} />
+                                </View>
+                            </TouchableOpacity>
+                        </View>
 
                     </View>
                     <TouchableOpacity onPress={() => navigation.navigate('SearchScreen')} style={styles.searchContainer}>
@@ -456,7 +526,7 @@ const HomeScreen = () => {
                 </View>
 
                 {/* Top Home Banner */}
-                <PlacementBanner banner={topBanner} />
+                <PlacementBannerCarousel banners={topBanner} onBannerPress={handleBannerPress} fullWidth />
 
                 {/* <TouchableOpacity
                     activeOpacity={0.9}
@@ -480,7 +550,7 @@ const HomeScreen = () => {
                 </View>
 
                 {/* Mid Home Banner */}
-                <PlacementBanner banner={midBanner} style={{ marginTop: hp('2%') }} />
+                <PlacementBannerCarousel banners={midBanner} onBannerPress={handleBannerPress} style={{ marginTop: hp('2%') }} />
 
                 <View style={styles.productsMainContainer}>
                     <ImageBackground
@@ -515,7 +585,7 @@ const HomeScreen = () => {
                 </View>
 
                 {/* Mid Bottom Home Banner */}
-                <PlacementBanner banner={midBannerBottom} style={{ marginTop: hp('2%') }} />
+                <PlacementBannerCarousel banners={midBannerBottom} onBannerPress={handleBannerPress} style={{ marginTop: hp('2%') }} />
 
                 <View style={styles.productsMainContainerTwo}>
                     <View style={styles.productsContainerViewOne}>
@@ -631,7 +701,7 @@ const HomeScreen = () => {
                 </LinearGradient>
 
                 {/* Bottom Home Banner */}
-                <PlacementBanner banner={bottomBanner} style={{ marginTop: hp('2%') }} />
+                <PlacementBannerCarousel banners={bottomBanner} onBannerPress={handleBannerPress} style={{ marginTop: hp('2%') }} />
                 {/* <LinearGradient
                     colors={['#FFC7AC', '#FFFFFF']}
                     start={{ x: 0, y: 0 }}
@@ -778,6 +848,7 @@ const styles = StyleSheet.create({
         marginTop: hp('4%'),
         marginHorizontal: wp('6.9%'),
         justifyContent: "space-between",
+        alignItems: 'flex-end',
     },
     timeText: {
         fontFamily: FONTS.poppins.extraBold,
@@ -798,7 +869,14 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         width: wp('20%'),
         // backgroundColor: 'red',
-        left: wp('18.9%')
+        //    left: wp('18.9%')
+
+        // width: wp('20%'),
+    },
+    headerRightWrapper: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: wp('3%'),
     },
     bcoinRupee: {
         width: wp('6.5%'),
@@ -852,7 +930,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: '#FFFFFF',
-        top: hp("-1.1%")
+        top: hp("-1.0%")
     },
     bear: {
         position: 'absolute',
@@ -920,7 +998,6 @@ const styles = StyleSheet.create({
     },
     profileIconMainView: {
         alignItems: "center",
-        top: hp("-1.3%")
     },
     // headerBannerImage: {
     //     width: "100%",
@@ -1353,11 +1430,15 @@ const styles = StyleSheet.create({
         color: '#3A3A3A',
     },
     topHomeBannerView: {
-        width: wp('100%'),
+        width: wp('90.8%'),
         height: hp('20%'),
         alignSelf: 'center',
-        //  marginTop: hp('2.5%'),
-        //  borderRadius: 15,
+        borderRadius: wp('4%'),
+        overflow: 'hidden',
+    },
+    topHomeBannerViewFull: {
+        width: wp('100%'),
+        height: hp('20%'),
         overflow: 'hidden',
     },
     topHomeBannerImage: {

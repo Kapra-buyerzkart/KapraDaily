@@ -38,7 +38,8 @@ const CouponModal = ({
                 <View style={styles.couponInputContainer}>
                     <TextInput
                         style={styles.couponInput}
-                        placeholder="Enter coupon code"
+                        placeholder={isGiftCard ? "Enter gift card code" : "Enter coupon code"}
+                        placeholderTextColor="#AAAAAA"
                         value={couponCode}
                         onChangeText={setCouponCode}
                         autoCapitalize="characters"

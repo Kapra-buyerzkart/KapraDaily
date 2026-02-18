@@ -11,7 +11,7 @@ const CartEmptyComponent = () => {
         <View style={styles.mainContainer}>
             <Image
                 style={styles.imageStyle}
-                source={require('../assets/images/empty_cart_illustration.png')}
+                source={require('../assets/images/empty_cart_illustration.jpg')}
             />
             <Text style={styles.titleText}>Your cart is empty</Text>
             <Text style={styles.subtitleText}>Looks like you haven't added anything to your cart yet.</Text>
