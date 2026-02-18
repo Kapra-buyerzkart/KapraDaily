@@ -414,25 +414,26 @@ const LocationFetchingNewScreen = ({ navigation }) => {
                 }
             } else if (area?.data?.length == 1) {
                 console.log("444444444")
+                setShowConfirm(false);
                 await editPincode(area.data[0]);
                 setTimeout(() => {
-                    if (!userInteractedRef.current) {
-                        setLocationNotFetched(false);
-                        navigation.reset({
-                            index: 0,
-                            routes: [
-                                {
-                                    name: 'MainTabs',
-                                    params: {
-                                        screen: 'Home',
-                                        // params: {
-                                        //     locationNotFetched: false,
-                                        // },
-                                    },
+                    // if (!userInteractedRef.current) {
+                    setLocationNotFetched(false);
+                    navigation.reset({
+                        index: 0,
+                        routes: [
+                            {
+                                name: 'MainTabs',
+                                params: {
+                                    screen: 'Home',
+                                    // params: {
+                                    //     locationNotFetched: false,
+                                    // },
                                 },
-                            ],
-                        });
-                    }
+                            },
+                        ],
+                    });
+                    // }
                 }, 2000);
             }
         } catch (error) {
@@ -448,27 +449,35 @@ const LocationFetchingNewScreen = ({ navigation }) => {
             //     }
             //   }],
             // });
-            await editPincode("")
+            setShowConfirm(false);
+            await editPincode({
+                areaName: "Panampilly Nagar",
+                pincodeAreaId: 262,
+                pincodeId: 32,
+                tags: null
+            })
             setTimeout(() => {
-                if (!userInteractedRef.current) {
-                    setLocationNotFetched(true);
-                    navigation.reset({
-                        index: 0,
-                        routes: [
-                            {
-                                name: 'MainTabs',
-                                params: {
-                                    screen: 'Home',
-                                    // params: {
-                                    //     locationNotFetched: true,
-                                    // },
-                                },
+                // if (!userInteractedRef.current) {
+                setLocationNotFetched(true);
+                navigation.reset({
+                    index: 0,
+                    routes: [
+                        {
+                            name: 'MainTabs',
+                            params: {
+                                screen: 'Home',
+                                // params: {
+                                //     locationNotFetched: true,
+                                // },
                             },
-                        ],
-                    });
-                }
-            }, 10000);
-            Toast.show("Delivery is not available to your location")
+                        },
+                    ],
+                });
+                // }
+            }, 2000);
+            Toast.show(
+                "Delivery is not available to your location\nDelivery location changed to Panampally Nagar"
+            );
         }
     };
 
@@ -496,7 +505,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
 
     return (
         <SafeAreaView style={styles.maninContainer}>
-            {/* {console.log('manualOverride', manualOverride)} */}
+            {console.log('userInteractedRef', userInteractedRef)}
             <ImageBackground style={styles.backgroundImage} resizeMode="cover" source={require('../assets/images/location-background.png')}>
                 <View
                     style={[
@@ -594,7 +603,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
                         OnPress={() => {
                             stopAutoNavigateTimer();
                             setLocationSelectionModal(true);
-                            setShowConfirm(false);
+                            // setShowConfirm(false);
                         }}
                         ButtonText={'Confirm'}
                         ButtonWidth={80}
@@ -678,9 +687,9 @@ const LocationFetchingNewScreen = ({ navigation }) => {
                                         );
                                         setLocationSearchModal(false);
                                         setManualOverride(true); // Save to AsyncStorage 
-                                        await AsyncStorage.setItem('manualOverride', 'true');
-                                        await AsyncStorage.setItem('manualRegion', JSON.stringify(newRegion));
-                                        await AsyncStorage.setItem('manualAddress', JSON.stringify(details));
+                                        // await AsyncStorage.setItem('manualOverride', 'true');
+                                        // await AsyncStorage.setItem('manualRegion', JSON.stringify(newRegion));
+                                        // await AsyncStorage.setItem('manualAddress', JSON.stringify(details));
                                     }}
                                     query={{
                                         key: 'AIzaSyDhItv0zoWdQbDh-5jjKLAEjwRDDrFNc1Y',

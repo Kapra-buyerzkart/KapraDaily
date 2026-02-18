@@ -117,6 +117,7 @@ export const getAreasByPincode = async (pincode) => {
   return get(`pincodearea/getbypincode?search=${pincode}`);
 };
 
-
-
-
+export const getAreasBySearch = async (search) => {
+  console.log('search', search);
+  return get(`/pincodearea/search?search=${search}`);
+};

@@ -30,10 +30,10 @@ const Stack = createNativeStackNavigator();
 
 export default function RootNavigator() {
 
-    const { loadProfileTwo, profile } = useContext(AppContext);
+    const { loadProfileTwo, profile, loadProfile } = useContext(AppContext);
 
     useEffect(() => {
-        loadProfileTwo();
+        loadProfile();
     }, []);
 
     if (!profile) {

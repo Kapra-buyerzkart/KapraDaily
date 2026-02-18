@@ -27,6 +27,7 @@ import { LoaderContext } from '../context/loaderContext';
 import EmptySection from '../components/EmptySection';
 import { AppContext } from '../context/appContext';
 import LoginScreen from './LoginScreen';
+import LocationModal from '../components/LocationModal';
 
 
 const { width } = Dimensions.get("window");
@@ -170,7 +171,7 @@ const HomeScreen = () => {
     const [activeIndex, setActiveIndex] = useState(0);
     const [accessToken, setAccessToken] = useState(null);
     const [isProfileLoaded, setIsProfileLoaded] = useState(false);
-
+    const [modalVisible, setModalVisible] = useState(false);
     const { profile, loadProfile, loadProfileTwo, logout } = useContext(AppContext);
 
 
@@ -483,6 +484,14 @@ const HomeScreen = () => {
         <SafeAreaView
             edges={['top']}
             style={styles.mainContainer}>
+            {modalVisible && (
+                <LocationModal
+                    visible={modalVisible}
+                    onClose={() => setModalVisible(false)}
+                    // getAreasBySearch={getAreasBySearch}
+                    onSelect={(item) => console.log(item)}
+                />
+            )}
             <ScrollView
                 style={{ flex: 1 }}
                 contentContainerStyle={{ paddingBottom: hp("0.7%") }}
@@ -512,6 +521,13 @@ const HomeScreen = () => {
                                     ellipsizeMode="tail"
                                 >
                                     {userLocation ? `${userLocation.locality || ''}: ${userLocation.area || ''}` : 'Select Location'}
+                                </Text> */}
+                                <Text style={styles.addressText}
+                                    numberOfLines={1}
+                                    ellipsizeMode="tail"
+                                >
+                                    {/* {userLocation ? `${userLocation.locality || ''}: ${userLocation.area || ''}` : 'Select Location'} */}
+                                    {profile.pinAddress}
                                 </Text>
                                 <Entypo name={"chevron-right"} size={wp('3.6%')} color={"#FFFFFF"} />
                             </TouchableOpacity>
