@@ -90,6 +90,7 @@ export default function WishlistScreen() {
                 </TouchableOpacity> */}
             </View>
 
+
             <ConfirmationModal
                 visible={confirmationVisible}
                 onClose={() => setConfirmationVisible(false)}
