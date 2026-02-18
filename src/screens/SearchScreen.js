@@ -11,6 +11,8 @@ import { LoaderContext } from '../context/loaderContext'
 import useProductSearch from '../hooks/useProductSearch'
 import { useCart } from '../context/CartContext'
 import Entypo from 'react-native-vector-icons/Entypo'
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { AppContext } from '../context/appContext';
 
 const RECENT_SEARCH = ['Tomato', 'Potato', 'Onion', 'Mango']
 
@@ -19,6 +21,9 @@ const SearchScreen = () => {
     const route = useRoute()
     const { catId, catName } = route.params || {}
     const { addToCart, cartItems, updateCartItemQuantity, removeFromCart } = useCart();
+    const { profile } = useContext(AppContext);
+
+    const [currentPincodeId, setCurrentPincodeId] = useState(null);
 
     const {
         searchTerm,
@@ -27,7 +32,19 @@ const SearchScreen = () => {
         loading,
         resultCount,
         setCatId
-    } = useProductSearch(105, catId);
+    } = useProductSearch(currentPincodeId, catId);
+
+    useEffect(() => {
+        const fetchPincode = async () => {
+            const stored = await AsyncStorage.getItem('pincodeAreaId');
+            if (stored) {
+                setCurrentPincodeId(parseInt(stored));
+            } else if (profile?.pincode) {
+                setCurrentPincodeId(profile.pincode);
+            }
+        };
+        fetchPincode();
+    }, [profile]);
 
     useEffect(() => {
         if (catId) {

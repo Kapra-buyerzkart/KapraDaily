@@ -1,4 +1,5 @@
 import { View, Text, TouchableOpacity, FlatList, Image, TextInput, ScrollView, ActivityIndicator } from 'react-native'
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useState, useEffect, useContext } from 'react'
 import { useRoute } from '@react-navigation/native';
 import { StyleSheet } from 'react-native'
@@ -17,6 +18,7 @@ import FilterSortModal from '../components/FilterSortModal';
 import { useCart } from '../context/CartContext';
 import { LoaderContext } from '../context/loaderContext';
 import { useDebounce } from '../hooks/useDebounce';
+import { AppContext } from '../context/appContext';
 
 
 const categories = [
@@ -81,12 +83,13 @@ export default function CategoriesScreen() {
     const [productsList, setProductsList] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchText, setSearchText] = useState("");
-    const [pincodeAreaId, setPincodeAreaId] = useState(105);
+    const [pincodeAreaId, setPincodeAreaId] = useState(null);
     const [pageNumber, setPageNumber] = useState(1);
     const [pageSize, setPageSize] = useState(20);
     const [isFilterSortModalVisible, setIsFilterSortModalVisible] = useState(false);
     const [loadingProducts, setLoadingProducts] = useState(false);
     const { showLoader } = useContext(LoaderContext);
+    const { profile } = useContext(AppContext);
 
     const [filters, setFilters] = useState({
         sortBy: 'relevance',
@@ -97,6 +100,20 @@ export default function CategoriesScreen() {
     const debouncedSearchText = useDebounce(searchText, 500);
 
     useEffect(() => {
+        const initializeLocation = async () => {
+            try {
+                const storedPincodeAreaId = await AsyncStorage.getItem('pincodeAreaId');
+                if (storedPincodeAreaId) {
+                    setPincodeAreaId(parseInt(storedPincodeAreaId));
+                } else if (profile?.pincode) {
+                    setPincodeAreaId(profile.pincode);
+                }
+            } catch (error) {
+                console.error('Error fetching pincodeAreaId in CategoriesScreen:', error);
+            }
+        };
+
+        initializeLocation();
         fetchCategories();
     }, []);
 

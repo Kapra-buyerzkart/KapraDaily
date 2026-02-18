@@ -1,8 +1,10 @@
 import { useState, useEffect, useContext } from 'react';
 import { getProductDetails, getRelatedProductsApi } from '../api/productService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getPincodeAreaId } from '../api/pincodeService';
 import CONFIG from '../globals/config';
 import { LoaderContext } from '../context/loaderContext';
+import { AppContext } from '../context/appContext';
 
 export const useProductDetails = (productId, initialProduct = null) => {
     const [loading, setLoading] = useState(true);
@@ -14,8 +16,9 @@ export const useProductDetails = (productId, initialProduct = null) => {
     const [customerSpecific, setCustomerSpecific] = useState(null);
     const [error, setError] = useState(null);
     const [productImage, setProductImage] = useState(null);
-    const [pincodeAreaId, setPincodeAreaId] = useState(105);
+    const [pincodeAreaId, setPincodeAreaId] = useState(null);
     const { showLoader } = useContext(LoaderContext);
+    const { profile } = useContext(AppContext);
 
     useEffect(() => {
         const fetchProductData = async () => {
@@ -29,10 +32,19 @@ export const useProductDetails = (productId, initialProduct = null) => {
                     console.log(' nm,./,mnbvnjkml;', pincodeAreaId);
 
 
+                    let currentPincodeId = pincodeAreaId || profile?.pincode;
+                    if (!currentPincodeId) {
+                        const stored = await AsyncStorage.getItem('pincodeAreaId');
+                        if (stored) {
+                            currentPincodeId = parseInt(stored);
+                            setPincodeAreaId(currentPincodeId);
+                        }
+                    }
+
                     // Fetch product details and related products in parallel
                     const [detailsResponse, relatedResponse] = await Promise.all([
-                        getProductDetails(productId, pincodeAreaId),
-                        getRelatedProductsApi(productId, pincodeAreaId)
+                        getProductDetails(productId, currentPincodeId),
+                        getRelatedProductsApi(productId, currentPincodeId)
                     ]);
 
                     console.log('Product Details Response:', detailsResponse);

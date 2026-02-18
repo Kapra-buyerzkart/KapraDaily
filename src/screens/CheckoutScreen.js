@@ -166,7 +166,7 @@ const CheckoutScreen = () => {
                     : null,
                 deliveryMode: deliveryType === 'slot' ? "slotted" : "express",
                 orderPlacedFromDevice: "app",
-                pincodeAreaId: pincodeAreaId || currentSelectedAddress?.pincodeAreaId || selectedAddress?.pincodeAreaId || 105
+                pincodeAreaId: pincodeAreaId || currentSelectedAddress?.pincodeAreaId || selectedAddress?.pincodeAreaId
             };
 
             console.log('📦 [CHECKOUT] Creating Order Payload:', JSON.stringify(createPayload, null, 2));

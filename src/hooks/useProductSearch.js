@@ -1,13 +1,17 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useContext } from 'react';
 import { getProductSuggestionsApi, searchProductsApi } from '../api/productService';
 import { useDebounce } from './useDebounce';
+import { AppContext } from '../context/appContext';
 
-const useProductSearch = (initialPincodeId = 105, initialCatId = null) => {
+const useProductSearch = (initialPincodeId, initialCatId = null) => {
+    const { profile } = useContext(AppContext);
     const [searchTerm, setSearchTerm] = useState('');
     const [catId, setCatId] = useState(initialCatId);
     const [suggestions, setSuggestions] = useState([]);
     const [loading, setLoading] = useState(false);
     const [resultCount, setResultCount] = useState(0);
+
+    const activePincodeId = initialPincodeId || profile?.pincode;
     const [error, setError] = useState(null);
 
     // Debounce the search term to avoid excessive API calls
@@ -32,7 +36,7 @@ const useProductSearch = (initialPincodeId = 105, initialCatId = null) => {
                 if (catId) {
                     // Use searchProductsApi for category-based search
                     const payload = {
-                        pincodeAreaId: initialPincodeId,
+                        pincodeAreaId: activePincodeId,
                         prName: trimmedTerm,
                         catId: parseInt(catId),
                         pageNumber: 1,
@@ -50,7 +54,7 @@ const useProductSearch = (initialPincodeId = 105, initialCatId = null) => {
                     }
                 } else {
                     // Use getProductSuggestionsApi for general search suggestions
-                    response = await getProductSuggestionsApi(trimmedTerm, initialPincodeId);
+                    response = await getProductSuggestionsApi(trimmedTerm, activePincodeId);
 
                     if (response && response.success && Array.isArray(response.data)) {
                         setSuggestions(response.data);

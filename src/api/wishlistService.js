@@ -11,7 +11,7 @@ export const removeFromWishlistApi = async (productId) => {
     return post(`wishlist/delete/${productId}`);
 };
 
-export const getWishlistApi = async (pincodeAreaId = 105) => {
+export const getWishlistApi = async (pincodeAreaId) => {
     return get(`wishlist/list`, {
         params: { pincodeAreaId }
     });

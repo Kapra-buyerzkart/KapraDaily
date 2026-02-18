@@ -96,3 +96,19 @@ export const verifyPhoneOtpApi = async (payload) => {
 export const getReferralHistoryApi = async (page = 1, pageSize = 20) => {
     return get(`me/referrals`, { params: { page, pageSize } });
 };
+
+/**
+ * Fetches general settings for the app.
+ * @returns {Promise<Object>} The API response.
+ */
+export const getGeneralSettingsApi = async () => {
+    return get('general/settings');
+};
+/**
+ * Requests a product that is not currently available.
+ * @param {Object} payload { requestdetails }
+ * @returns {Promise<Object>}
+ */
+export const requestProductApi = async (payload) => {
+    return post('me/requestproduct', payload);
+};

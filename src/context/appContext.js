@@ -22,10 +22,17 @@ export const AppContextProvider = ({ children }) => {
           ...response.data, // API data overrides local
         };
 
-        await AsyncStorage.setItem('profile', JSON.stringify(mergedProfile));
-        setProfile(mergedProfile);
-        console.log('profilee', profile);
+        // Ensure pincode is normalized to the area ID
+        if (response.data.pincodeAreaId && !response.data.pincode) {
+          mergedProfile.pincode = response.data.pincodeAreaId;
+        }
 
+        await AsyncStorage.setItem('profile', JSON.stringify(mergedProfile));
+        if (mergedProfile.pincode) {
+          await AsyncStorage.setItem('pincodeAreaId', mergedProfile.pincode.toString());
+        }
+        setProfile(mergedProfile);
+        console.log('profilee', mergedProfile);
       }
     } catch (error) {
       console.log('Profile fetch error:', error);
@@ -47,6 +54,9 @@ export const AppContextProvider = ({ children }) => {
       : defaultProfile;
 
     await AsyncStorage.setItem('profile', JSON.stringify(mergedProfile));
+    if (mergedProfile.pincode) {
+      await AsyncStorage.setItem('pincodeAreaId', mergedProfile.pincode.toString());
+    }
     setProfile(mergedProfile);
   };
 
@@ -62,6 +72,9 @@ export const AppContextProvider = ({ children }) => {
     };
 
     await AsyncStorage.setItem('profile', JSON.stringify(updatedProfile));
+    if (item?.pincodeAreaId) {
+      await AsyncStorage.setItem('pincodeAreaId', item.pincodeAreaId.toString());
+    }
     setProfile(updatedProfile);
   };
 

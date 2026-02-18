@@ -47,6 +47,9 @@ const getPincodeAreaId = async () => {
         const profileStr = await AsyncStorage.getItem('profile');
         if (profileStr) {
             const profile = JSON.parse(profileStr);
+            if (profile.pincode) {
+                return profile.pincode;
+            }
             if (profile.pincodeAreaId) {
                 return profile.pincodeAreaId;
             }
@@ -54,7 +57,7 @@ const getPincodeAreaId = async () => {
     } catch (error) {
         console.error('Error getting pincodeAreaId:', error);
     }
-    return 105;
+    return null;
 };
 
 
