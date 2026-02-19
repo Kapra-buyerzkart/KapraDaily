@@ -7,9 +7,11 @@ import { reorderApi } from '../api/orderService';
 import { useCart } from '../context/CartContext';
 import CONFIG from '../globals/config';
 import ConfirmationModal from './ConfirmationModal';
-import { useState } from 'react';
+import { AppContext } from '../context/appContext';
+import { useState, useContext } from 'react';
 
 const MyOrdersProductCard = (props) => {
+    const { isStoreUnavailable } = useContext(AppContext);
     const [showReorderModal, setShowReorderModal] = useState(false);
 
     const itemData = props.item.item || props.item || {};
@@ -41,7 +43,7 @@ const MyOrdersProductCard = (props) => {
 
     return (
         <View style={{
-            marginBottom: hp('2%')
+            marginBottom: hp('2%'), alignSelf: 'center'
         }}>
             <View style={styles.orderInnerContainer}>
                 <View style={styles.orderTopView}>
@@ -102,8 +104,9 @@ const MyOrdersProductCard = (props) => {
                         }]}>Details</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                        style={[styles.button, { backgroundColor: '#F25000' }]}
-                        onPress={() => setShowReorderModal(true)}
+                        style={[styles.button, { backgroundColor: '#F25000' }, isStoreUnavailable && { opacity: 0.6 }]}
+                        onPress={() => !isStoreUnavailable && setShowReorderModal(true)}
+                        activeOpacity={isStoreUnavailable ? 1 : 0.7}
                     >
                         <Text style={[styles.buttonText, {
                             color: '#FFFFFF',

@@ -1,5 +1,8 @@
 import { View, Text, Image, TouchableOpacity, StyleSheet, FlatList, RefreshControl, Alert } from 'react-native'
-import React, { useState } from 'react'
+import React, { useState, useContext } from 'react'
+import { AppContext } from '../context/appContext'
+import StoreUnavailable from '../components/StoreUnavailable'
+import LocationModal from '../components/LocationModal'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import { useNavigation, useFocusEffect } from '@react-navigation/native'
@@ -10,6 +13,8 @@ import AntDesign from 'react-native-vector-icons/AntDesign';
 
 const SavedAddressScreen = () => {
     const navigation = useNavigation()
+    const { isStoreUnavailable, storeUnavailableData } = useContext(AppContext)
+    const [isLocationModalVisible, setIsLocationModalVisible] = useState(false)
     const {
         addresses,
         onSelectAddress,
@@ -161,6 +166,10 @@ const SavedAddressScreen = () => {
                         </TouchableOpacity>
                     </>
                 )}
+            />
+            <LocationModal
+                visible={isLocationModalVisible}
+                onClose={() => setIsLocationModalVisible(false)}
             />
         </SafeAreaView>
     )

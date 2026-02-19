@@ -10,13 +10,21 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import HomeStack from './HomeStack';
 import { FONTS } from '../styles/typography'
+import { useContext } from 'react';
+import { AppContext } from '../context/appContext';
+import Toast from 'react-native-simple-toast';
 
 const Tab = createBottomTabNavigator();
 
 export default function MainTabNavigator() {
+    const { isStoreUnavailable } = useContext(AppContext);
 
     const KshopeButton = ({ onPress }) => {
         const handleComingSoon = () => {
+            if (isStoreUnavailable) {
+                Toast.show('Store is currently unavailable in your location', Toast.SHORT);
+                return;
+            }
             Alert.alert(
                 "Coming Soon!",
                 "We're working hard to bring you K-shope. Stay tuned for a premium shopping experience!",
@@ -99,6 +107,14 @@ export default function MainTabNavigator() {
             <Tab.Screen
                 name="Categories"
                 component={CategoriesScreen}
+                listeners={{
+                    tabPress: e => {
+                        if (isStoreUnavailable) {
+                            e.preventDefault();
+                            Toast.show('Store is currently unavailable in your location', Toast.SHORT);
+                        }
+                    },
+                }}
                 options={{
                     headerShown: false,
 
@@ -119,6 +135,14 @@ export default function MainTabNavigator() {
             <Tab.Screen
                 name="Wishlist"
                 component={WishlistScreen}
+                listeners={{
+                    tabPress: e => {
+                        if (isStoreUnavailable) {
+                            e.preventDefault();
+                            Toast.show('Store is currently unavailable in your location', Toast.SHORT);
+                        }
+                    },
+                }}
                 options={{
                     headerShown: false,
 

@@ -10,9 +10,9 @@ export const useCartScreen = () => {
     const { cartItems, loadCart, cartTotal, cartCount, cartSummary, getCartSummary, clearCart, error: cartError } = useCart();
 
     // ─── Composed hooks ───
-    const offersHook = useOffers();
     const deliveryHook = useDeliverySlot();
     const addressHook = useAddresses();
+    const offersHook = useOffers(deliveryHook, addressHook);
 
     // ─── Bill calculations ───
     const frontendBillCalculations = useMemo(() => {

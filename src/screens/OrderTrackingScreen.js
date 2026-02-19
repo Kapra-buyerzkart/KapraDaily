@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import Entypo from 'react-native-vector-icons/Entypo'
+import Ionicons from 'react-native-vector-icons/Ionicons'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import { FONTS } from '../styles/typography'
 import { useNavigation, useRoute } from '@react-navigation/native'
@@ -120,7 +121,7 @@ const OrderTrackingScreen = () => {
                         <Image style={styles.headPhoneImage} source={require('../assets/images/head_phone.png')} />
                         <Text style={styles.helpText}>Help</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity>
+                    <TouchableOpacity onPress={() => navigation.navigate('CartScreen')}>
                         <Image style={styles.homeIcon} source={require('../assets/images/home_two.png')} />
                     </TouchableOpacity>
                 </View>
@@ -405,7 +406,7 @@ const OrderTrackingScreen = () => {
                                             [styles.statusNumberView, { backgroundColor: '#0CA201' }, { bottom: hp('0.15%') }] :
                                             [styles.statusNumberView, { backgroundColor: '#0CA201' }]
                                         }>
-                                            <Text style={styles.statusNumberText}>3</Text>
+
                                         </View>
                                         <Text style={[styles.statusNameText, {
                                             color: '#0CA201'
@@ -461,10 +462,10 @@ const OrderTrackingScreen = () => {
                                     <Image style={styles.addressIconStyle} source={require('../assets/images/home_primary_two.png')} />
                                     <Text style={styles.addressHeaderText}>Store</Text>
                                 </View>
-                                <Text style={styles.addressLineText}>{storeName}</Text>
-                                <Text style={styles.addressLineText}>Main Branch</Text>
-                                <Text style={styles.addressLineText}>{shippingAddress?.country || 'India'}</Text>
-                                <Text style={[styles.addressLineText, { marginTop: hp('1%') }]}>7000000000</Text>
+                                <Text numberOfLines={1} ellipsizeMode="tail" style={styles.addressLineText}>{storeName}</Text>
+                                <Text numberOfLines={1} ellipsizeMode="tail" style={styles.addressLineText}>Main Branch</Text>
+                                <Text numberOfLines={1} ellipsizeMode="tail" style={styles.addressLineText}>{shippingAddress?.country || 'India'}</Text>
+                                <Text numberOfLines={1} ellipsizeMode="tail" style={[styles.addressLineText, { marginTop: hp('1%') }]}>7000000000</Text>
                             </View>
                             <Image style={styles.rightArrowIcon} source={require('../assets/images/right_arrow_two.png')} />
                             <View style={[styles.addressInnerView, {
@@ -474,10 +475,10 @@ const OrderTrackingScreen = () => {
                                     <Image style={styles.addressIconStyle} source={require('../assets/images/home_primary_three.png')} />
                                     <Text style={styles.addressHeaderText}>Home</Text>
                                 </View>
-                                <Text style={styles.addressLineText}>{fullAddress}</Text>
-                                <Text style={styles.addressLineText}>{cityStateZip}</Text>
-                                <Text style={styles.addressLineText}>India</Text>
-                                <Text style={[styles.addressLineText, { marginTop: hp('1%') }]}>
+                                <Text numberOfLines={1} ellipsizeMode="tail" style={styles.addressLineText}>{fullAddress}</Text>
+                                <Text numberOfLines={1} ellipsizeMode="tail" style={styles.addressLineText}>{cityStateZip}</Text>
+                                <Text numberOfLines={1} ellipsizeMode="tail" style={styles.addressLineText}>India</Text>
+                                <Text numberOfLines={1} ellipsizeMode="tail" style={[styles.addressLineText, { marginTop: hp('1%') }]}>
                                     {shippingAddress?.mobileNo || shippingAddress?.phoneNo || ''}
                                 </Text>
                             </View>
@@ -486,18 +487,21 @@ const OrderTrackingScreen = () => {
                     <Text style={styles.paymentMethodText}>Payment method</Text>
 
                     <View style={styles.deliveryAgentContainer}>
-                        <Image style={styles.paymentImage} source={require('../assets/images/payment_image.png')} />
-                        <Text style={styles.paymentText}>{paymentMethod}</Text>
-                        <Text style={styles.paymnetPrice}>₹{grandTotal}</Text>
-                    </View>
-                    {orderStatus === 'delivered' && (
-                        <View style={styles.paidSuccessfullyContainer}>
-                            <View style={styles.paidSuccessfullyInnerView}>
-                                <Image style={styles.paidSuccessfullyIcon} source={require('../assets/images/green_tick.png')} />
-                                <Text style={styles.paidSuccessfullyText}>Paid successfully</Text>
-                            </View>
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <Image style={styles.paymentImage} source={require('../assets/images/payment_image.png')} />
+                            <Text style={styles.paymentText}>{paymentMethod}</Text>
                         </View>
-                    )}
+                        <View style={{ alignItems: 'flex-end' }}>
+                            <Text style={styles.paymnetPrice}>₹{grandTotal}</Text>
+                            {orderStatus === 'delivered' && (
+                                <View style={[styles.paidBadge, { marginTop: hp('0.5%') }]}>
+                                    <Ionicons name="checkmark-circle" size={wp('3%')} color="#27AE60" />
+                                    <Text style={styles.paidBadgeText}>Paid successfully</Text>
+                                </View>
+                            )}
+                        </View>
+                    </View>
+
                     <View style={styles.productsMainContainer}>
                         <View style={styles.productsHeaderView}>
                             <Text style={styles.productsHeaderText}>Your Orders</Text>
@@ -572,7 +576,7 @@ const OrderTrackingScreen = () => {
                         </View>
                         <View>
                             <Text style={styles.orderDetailsKeyText}>Deliver to</Text>
-                            <Text style={styles.orderDetailsValueText}>{fullAddress}</Text>
+                            <Text numberOfLines={1} ellipsizeMode="tail" style={styles.orderDetailsValueText}>{fullAddress}</Text>
                         </View>
                         <View>
                             <Text style={styles.orderDetailsKeyText}>Order placed</Text>
@@ -628,9 +632,12 @@ const OrderTrackingScreen = () => {
                     setShowReturnModal(false);
                     setSelectedReturnItem(null);
                 }}
-                onSubmit={handleReturnItem}
+                onSubmit={(reason) => {
+                    handleReturnItem(reason);
+                    refreshOrder?.(true);
+                }}
             />
-        </SafeAreaView>
+        </SafeAreaView >
     )
 }
 
@@ -682,7 +689,27 @@ const styles = StyleSheet.create({
     homeIcon: {
         width: wp('7.9%'),
         height: wp('7.9%'),
-        marginLeft: wp('5%')
+        marginLeft: wp('3%')
+    },
+    paidBadgeContainer: {
+        paddingHorizontal: wp('4.65%'),
+        marginTop: hp('0.5%'),
+        marginBottom: hp('1.5%'),
+    },
+    paidBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#E6FAF0',
+        alignSelf: 'flex-end',
+        paddingHorizontal: wp('2.5%'),
+        paddingVertical: hp('0.4%'),
+        borderRadius: 20,
+    },
+    paidBadgeText: {
+        fontFamily: FONTS.outfit.medium,
+        fontSize: wp('3%'),
+        color: '#27AE60',
+        marginLeft: wp('1%'),
     },
     statusContainer: {
         flexDirection: 'row',
@@ -777,10 +804,9 @@ const styles = StyleSheet.create({
     },
     deliveryAgentContainer: {
         width: wp('90.7%'),
-        height: hp('6.44%'),
+        // height: hp('6.44%'),
+        paddingVertical: hp('1.5%'),
         borderRadius: wp('4.65%'),
-        // justifyContent: 'center',
-        // alignItems: 'center',
         backgroundColor: '#FFFFFF',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 0 },
@@ -1141,36 +1167,29 @@ const styles = StyleSheet.create({
         paddingHorizontal: wp('0.5%')
     },
     paidSuccessfullyContainer: {
-        borderBottomLeftRadius: wp('4.65%'),
-        borderBottomRightRadius: wp('4.65%'),
-        // justifyContent: 'center',
-        // alignItems: 'center',
-        backgroundColor: '#FFFFFF',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.1,
-        shadowRadius: 20,
-        elevation: 8,
-        width: wp('89%'),
-        paddingRight: wp('4%'),
-        paddingTop: hp('1.5%'),
-        paddingBottom: hp('0.5%'),
-        bottom: hp('1%'),
+        backgroundColor: '#E6FAF0',
+        borderRadius: wp('50%'),
+        paddingHorizontal: wp('3%'),
+        paddingVertical: hp('0.5%'),
+        alignSelf: 'flex-start',
+        marginLeft: wp('6%'),
+        marginTop: hp('1%'),
+        flexDirection: 'row',
+        alignItems: 'center',
     },
     paidSuccessfullyInnerView: {
         flexDirection: 'row',
         alignItems: 'center',
-        alignSelf: 'flex-end'
     },
     paidSuccessfullyIcon: {
         width: wp('2.8%'),
         height: wp('2.8%')
     },
     paidSuccessfullyText: {
-        fontFamily: FONTS.poppins.regular,
+        fontFamily: FONTS.poppins.medium,
         fontSize: wp('2.8%'),
-        color: '#00D018',
-        marginLeft: wp('0.5%')
+        color: '#0CA201',
+        marginLeft: wp('1.5%')
     },
     productContainerThirdView: {
         alignItems: 'flex-end',

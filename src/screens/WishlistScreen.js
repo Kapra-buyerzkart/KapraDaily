@@ -14,12 +14,17 @@ import { LoaderContext } from '../context/loaderContext';
 import { useContext } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import SelectedProducts from '../components/SelectedProducts';
+import StoreUnavailable from '../components/StoreUnavailable';
+import LocationModal from '../components/LocationModal';
+import { AppContext } from '../context/appContext';
 
 export default function WishlistScreen() {
     const navigation = useNavigation();
     const { wishlistItems, removeFromWishlist, loadWishlist, isLoading } = useWishlist();
     const { addToCart, cartItems } = useCart();
     const { showLoader } = useContext(LoaderContext);
+    const { isStoreUnavailable, storeUnavailableData } = useContext(AppContext);
+    const [isLocationModalVisible, setIsLocationModalVisible] = useState(false);
 
     const [confirmationVisible, setConfirmationVisible] = useState(false);
     const [itemToRemove, setItemToRemove] = useState(null);
@@ -87,18 +92,22 @@ export default function WishlistScreen() {
                 </View>
             </LinearGradient>
             <View style={styles.productListView}>
-                <FlatList
-                    data={wishlistItems}
-                    keyExtractor={(item) => item.wishlistItemId?.toString() || item.productId?.toString()}
-                    renderItem={renderItem}
-                    showsVerticalScrollIndicator={false}
-                    ListEmptyComponent={!isLoading && <WishListEmptyComponent />}
-                    contentContainerStyle={{ width: wp('100%'), paddingBottom: hp('2%') }}
-                />
-                {/* <TouchableOpacity style={styles.newWishesContainer}>
-                    <Image source={require("../assets/images/heart_two.png")} style={styles.newWishesHeart} />
-                    <Text style={styles.newWishesText}>New wishes</Text>
-                </TouchableOpacity> */}
+                {isStoreUnavailable ? (
+                    <StoreUnavailable
+                        image={storeUnavailableData.image}
+                        text={storeUnavailableData.text}
+                        onChangeLocation={() => setIsLocationModalVisible(true)}
+                    />
+                ) : (
+                    <FlatList
+                        data={wishlistItems}
+                        keyExtractor={(item) => item.wishlistItemId?.toString() || item.productId?.toString()}
+                        renderItem={renderItem}
+                        showsVerticalScrollIndicator={false}
+                        ListEmptyComponent={!isLoading && <WishListEmptyComponent />}
+                        contentContainerStyle={{ width: wp('100%'), paddingBottom: hp('2%') }}
+                    />
+                )}
             </View>
 
             {cartItems && cartItems.length > 0 && (
@@ -114,6 +123,10 @@ export default function WishlistScreen() {
                 onConfirm={confirmRemove}
                 title="Remove from Wishlist"
                 message={itemToRemove ? `Are you sure you want to remove "${itemToRemove.productName}" from your wishlist?` : ''}
+            />
+            <LocationModal
+                visible={isLocationModalVisible}
+                onClose={() => setIsLocationModalVisible(false)}
             />
         </SafeAreaView>
     )

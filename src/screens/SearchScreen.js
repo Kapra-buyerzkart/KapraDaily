@@ -4,15 +4,10 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import { FONTS } from '../styles/typography'
 import { useNavigation, useRoute } from '@react-navigation/native'
-import { getProductSuggestionsApi } from '../api/productService'
-import { getPincodeAreaId } from '../api/pincodeService'
-import CONFIG from '../globals/config'
-import { LoaderContext } from '../context/loaderContext'
 import useProductSearch from '../hooks/useProductSearch'
-import { useCart } from '../context/CartContext'
-import Entypo from 'react-native-vector-icons/Entypo'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppContext } from '../context/appContext';
+import ProductCard from '../components/ProductCard';
 
 // Truncate text to a specific limit with dots
 const truncateText = (text, limit = 7) => {
@@ -21,14 +16,17 @@ const truncateText = (text, limit = 7) => {
     return text.substring(0, limit) + '..';
 };
 
+import StoreUnavailable from '../components/StoreUnavailable';
+import LocationModal from '../components/LocationModal';
+
 const RECENT_SEARCH_KEY = 'recent_searches_list';
 
 const SearchScreen = () => {
     const navigation = useNavigation()
     const route = useRoute()
     const { catId, catName } = route.params || {}
-    const { addToCart, cartItems, updateCartItemQuantity, removeFromCart } = useCart();
-    const { profile } = useContext(AppContext);
+    const { profile, isStoreUnavailable, storeUnavailableData } = useContext(AppContext);
+    const [isLocationModalVisible, setIsLocationModalVisible] = useState(false);
 
     const [currentPincodeId, setCurrentPincodeId] = useState(null);
     const [recentSearches, setRecentSearches] = useState([]);
@@ -85,74 +83,21 @@ const SearchScreen = () => {
         }
     }, [catId]);
 
+    // Save search term if results are found
+    useEffect(() => {
+        if (!loading && searchTerm.trim().length > 0 && resultCount > 0) {
+            saveSearch(searchTerm);
+        }
+    }, [loading, resultCount]);
+
     // const { showLoader } = useContext(LoaderContext) // Loader handling moved to hook or local loading state used
 
     const renderItem = ({ item }) => {
-        const itemId = item.productId || item.id;
-        const cartItem = cartItems.find(i => String(i.productId || i.id) === String(itemId));
-        const quantity = cartItem?.quantity || cartItem?.addedQty || 0;
-        const cartItemId = cartItem?.cartItemId || itemId;
-
-        const imageUri = item.featuredImage
-            ? { uri: `${CONFIG.image_base_url}${item.featuredImage}` }
-            : require('../assets/images/lays.png');
-
-        return (
-            <View style={styles.productContainer}>
-                <TouchableOpacity
-                    style={styles.productTouchable}
-                    onPress={() => {
-                        saveSearch(searchTerm || item.prName || item.name);
-                        navigation.navigate('ProductDetailsScreen', { productId: itemId });
-                    }}
-                >
-                    <Image style={styles.productImage} source={imageUri} />
-                    <View style={styles.productInnerView}>
-                        <Text style={styles.productName}>{truncateText(item.prName || item.name, 7)}</Text>
-                        <Text style={[styles.productName, { color: '#616161', fontSize: wp('2.8%') }]}>
-                            {item.brandName || item.brand || 'Kapra Daily'}
-                        </Text>
-                    </View>
-                </TouchableOpacity>
-
-                <View style={styles.actionContainer}>
-                    {quantity > 0 ? (
-                        <View style={styles.counterContainer}>
-                            <TouchableOpacity
-                                onPress={() => {
-                                    if (quantity === 1) {
-                                        removeFromCart(cartItemId);
-                                    } else {
-                                        updateCartItemQuantity(cartItemId, quantity - 1);
-                                    }
-                                }}
-                                style={styles.counterButton}
-                            >
-                                <Entypo name="minus" size={wp('4%')} color="#FFFFFF" />
-                            </TouchableOpacity>
-                            <Text style={styles.quantityText}>{quantity}</Text>
-                            <TouchableOpacity
-                                onPress={() => updateCartItemQuantity(cartItemId, quantity + 1)}
-                                style={styles.counterButton}
-                            >
-                                <Entypo name="plus" size={wp('4%')} color="#FFFFFF" />
-                            </TouchableOpacity>
-                        </View>
-                    ) : (
-                        <TouchableOpacity
-                            style={styles.addButtonCircle}
-                            onPress={() => addToCart(item)}
-                        >
-                            <Entypo name="plus" size={wp('4.5%')} color="#FFFFFF" />
-                        </TouchableOpacity>
-                    )}
-                </View>
-            </View>
-        )
+        return <ProductCard item={item} hideWishlist={true} />
     }
 
     const ListFooter = () => {
-        if (searchTerm.length > 0) return null;
+        if (searchTerm.length > 0 || recentSearches.length === 0) return null;
         return (
             <View>
                 <Text style={styles.recentTitle}>Recent search</Text>
@@ -197,35 +142,57 @@ const SearchScreen = () => {
                 <Image style={styles.clipboardIcon} source={require('../assets/images/clipboard-two.png')} />
             </View>
 
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingRight: wp('5%') }}>
-                <Text style={styles.resultText}>
-                    {loading ? 'Searching...' : `Results found : ${resultCount}`}
-                </Text>
-            </View>
+            {isStoreUnavailable ? (
+                <StoreUnavailable
+                    image={storeUnavailableData.image}
+                    text={storeUnavailableData.text}
+                    onChangeLocation={() => setIsLocationModalVisible(true)}
+                />
+            ) : (
+                <>
+                    {searchTerm.trim().length > 0 && (
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingRight: wp('5%') }}>
+                            <Text style={styles.resultText}>
+                                {loading ? 'Searching...' : `Results found : ${resultCount}`}
+                            </Text>
+                        </View>
+                    )}
 
-            {loading && (
-                <View style={styles.centeredLoader}>
-                    <ActivityIndicator size="large" color="#F25000" />
-                </View>
+                    {loading && (
+                        <View style={styles.centeredLoader}>
+                            <ActivityIndicator size="large" color="#F25000" />
+                        </View>
+                    )}
+
+                    <FlatList
+                        data={loading ? [] : suggestions}
+                        keyExtractor={(item, index) => (item.productId || item.id || index).toString()}
+                        renderItem={renderItem}
+                        numColumns={2}
+                        showsVerticalScrollIndicator={false}
+                        ListFooterComponent={ListFooter}
+                        contentContainerStyle={{
+                            paddingLeft: wp("2.3%"),
+                            paddingBottom: hp("8.5%"),
+                            paddingTop: hp("0.5%")
+                        }}
+                        ListEmptyComponent={!loading && searchTerm.length > 0 && (
+                            <View style={styles.emptyContainer}>
+                                <Image
+                                    source={require('../assets/images/noimages/noproductfound.png')}
+                                    style={styles.emptyImage}
+                                />
+                                <Text style={styles.noResultsText}>
+                                    No products found for "{searchTerm}"
+                                </Text>
+                            </View>
+                        )}
+                    />
+                </>
             )}
-
-            <FlatList
-                data={loading ? [] : suggestions}
-                keyExtractor={(item, index) => (item.productId || item.id || index).toString()}
-                renderItem={renderItem}
-                ListFooterComponent={ListFooter}
-                contentContainerStyle={{ flexGrow: 1, paddingBottom: hp('5%') }}
-                ListEmptyComponent={!loading && searchTerm.length > 0 && (
-                    <View style={styles.emptyContainer}>
-                        <Image
-                            source={require('../assets/images/noimages/noproductfound.png')}
-                            style={styles.emptyImage}
-                        />
-                        <Text style={styles.noResultsText}>
-                            No products found for "{searchTerm}"
-                        </Text>
-                    </View>
-                )}
+            <LocationModal
+                visible={isLocationModalVisible}
+                onClose={() => setIsLocationModalVisible(false)}
             />
         </SafeAreaView>
     )
@@ -294,79 +261,13 @@ const styles = StyleSheet.create({
         marginHorizontal: wp('5%'),
         marginTop: hp('1.5%')
     },
-    productContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginHorizontal: wp('5%'),
-        borderBottomWidth: 1,
-        borderBottomColor: '#DADADA',
-        paddingVertical: hp('0.5%')
-    },
-    productTouchable: {
-        flexDirection: 'row',
-        alignItems: 'center',
+    productCardWrapper: {
         flex: 1,
-    },
-    actionContainer: {
-        justifyContent: 'center',
         alignItems: 'center',
-        marginLeft: wp('2%'),
-        minWidth: wp('20%')
+        marginBottom: hp('0.5%'),
     },
-    counterContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#F04B1B',
-        borderRadius: 15,
-        paddingHorizontal: wp('2%'),
-        paddingVertical: hp('0.5%'),
-    },
-    counterButton: {
-        padding: wp('1%'),
-    },
-    quantityText: {
-        color: '#FFFFFF',
-        fontFamily: FONTS.poppins.semiBold,
-        fontSize: wp('3.8%'),
-        marginHorizontal: wp('2.5%'),
-    },
-    addButtonCircle: {
-        backgroundColor: '#F04B1B',
-        width: wp('7%'),
-        height: wp('7%'),
-        borderRadius: 100,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    productImage: {
-        width: wp('9.3%'),
-        height: hp('9.3%'),
-        resizeMode: 'contain'
-    },
-    productInnerView: {
-        flex: 1,
-        marginLeft: wp('6%')
-    },
-    productName: {
-        fontFamily: FONTS.poppins.regular,
-        fontSize: wp('3.02%'),
-        color: '#000000'
-    },
-    rightArrowIcon: {
-        width: wp('5.12%'),
-        height: hp('5.12%'),
-        resizeMode: 'contain'
-    },
-    viewallText: {
-        fontSize: wp('2.79%'),
-        color: '#616161',
-        fontFamily: FONTS.poppins.medium,
-        textDecorationLine: 'underline'
-    },
-    viewallButton: {
-        alignSelf: 'center',
-        marginTop: hp('2%')
+    columnWrapper: {
+        justifyContent: 'flex-start',
     },
     recentTitle: {
         fontFamily: FONTS.poppins.medium,

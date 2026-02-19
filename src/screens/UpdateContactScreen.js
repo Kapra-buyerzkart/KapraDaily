@@ -8,6 +8,8 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { FONTS } from '../styles/typography';
 import { LoaderContext } from '../context/loaderContext';
 import { AppContext } from '../context/appContext';
+import StoreUnavailable from '../components/StoreUnavailable';
+import LocationModal from '../components/LocationModal';
 
 // Placeholder for actual APIs - these should be added to userService.js securely
 // Since I don't have the final endpoints, I'll use placeholders that call updateProfilePatchApi on success
@@ -24,7 +26,8 @@ const UpdateContactScreen = () => {
     const route = useRoute();
     const { type } = route.params || { type: 'phone' }; // 'phone' or 'email'
     const { showLoader } = useContext(LoaderContext);
-    const { profile, loadProfile } = useContext(AppContext);
+    const { profile, loadProfile, isStoreUnavailable, storeUnavailableData } = useContext(AppContext);
+    const [isLocationModalVisible, setIsLocationModalVisible] = useState(false);
 
     const [value, setValue] = useState('');
     const [originalValue, setOriginalValue] = useState('');
@@ -266,6 +269,10 @@ const UpdateContactScreen = () => {
                     </View>
                 </ScrollView>
             </KeyboardAvoidingView>
+            <LocationModal
+                visible={isLocationModalVisible}
+                onClose={() => setIsLocationModalVisible(false)}
+            />
             <StatusModal
                 visible={statusModalVisible}
                 onClose={handleModalClose}

@@ -7,13 +7,16 @@ import { FONTS } from '../styles/typography'
 import { getReferralHistoryApi } from '../api/userService'
 import { LoaderContext } from '../context/loaderContext'
 import { AppContext } from '../context/appContext'
+import StoreUnavailable from '../components/StoreUnavailable'
+import LocationModal from '../components/LocationModal'
 // import moment from 'moment'
 
 const ReferralScreen = () => {
     const navigation = useNavigation()
     const { showLoader } = useContext(LoaderContext)
-    const { profile } = useContext(AppContext)
+    const { profile, isStoreUnavailable, storeUnavailableData } = useContext(AppContext)
     const [referrals, setReferrals] = useState([])
+    const [isLocationModalVisible, setIsLocationModalVisible] = useState(false)
 
     useEffect(() => {
         fetchReferralHistory()
@@ -82,30 +85,46 @@ const ReferralScreen = () => {
                     <Text style={styles.bcoinText}>{profile?.totalBCoins || '0.00'}</Text>
                 </View>
             </View>
-            <Text style={styles.referEarnText}>Refer and Earn</Text>
-            <View style={styles.innerContainer}>
-                <Image style={styles.loudspeakerImageStyle} source={require('../assets/images/loud-speaker.png')} />
-                <Text style={styles.referralRewardText}>Referral reward you Earned</Text>
-                <View style={styles.bcoinContainerTwo}>
-                    <Image style={styles.bcoinImageTwo} source={require('../assets/images/rupee.png')} />
-                    <Text style={styles.bcoinTextTwo}>{profile?.referralEarning || '0.00'}</Text>
+            {isStoreUnavailable ? (
+                <View style={{ marginTop: hp('2%'), flex: 1 }}>
+                    <StoreUnavailable
+                        image={storeUnavailableData.image}
+                        text={storeUnavailableData.text}
+                        onChangeLocation={() => setIsLocationModalVisible(true)}
+                    />
                 </View>
-                <TouchableOpacity style={styles.sendInviteButton} onPress={onShare}>
-                    <Image style={styles.sendIcon} source={require('../assets/images/share-icon.png')} />
-                    <Text style={styles.sendInviteText}>Send invite</Text>
-                </TouchableOpacity>
-            </View>
-            <Text style={[styles.referEarnText, {
-                marginTop: hp('3%'),
-                marginBottom: hp('1%')
-            }]}>Referral History</Text>
-            <FlatList
-                data={referrals}
-                keyExtractor={(item, index) => index.toString()}
-                renderItem={renderItem}
-                contentContainerStyle={{
-                    alignItems: 'center'
-                }}
+            ) : (
+                <>
+                    <Text style={styles.referEarnText}>Refer and Earn</Text>
+                    <View style={styles.innerContainer}>
+                        <Image style={styles.loudspeakerImageStyle} source={require('../assets/images/loud-speaker.png')} />
+                        <Text style={styles.referralRewardText}>Referral reward you Earned</Text>
+                        <View style={styles.bcoinContainerTwo}>
+                            <Image style={styles.bcoinImageTwo} source={require('../assets/images/rupee.png')} />
+                            <Text style={styles.bcoinTextTwo}>{profile?.referralEarning || '0.00'}</Text>
+                        </View>
+                        <TouchableOpacity style={styles.sendInviteButton} onPress={onShare}>
+                            <Image style={styles.sendIcon} source={require('../assets/images/share-icon.png')} />
+                            <Text style={styles.sendInviteText}>Send invite</Text>
+                        </TouchableOpacity>
+                    </View>
+                    <Text style={[styles.referEarnText, {
+                        marginTop: hp('3%'),
+                        marginBottom: hp('1%')
+                    }]}>Referral History</Text>
+                    <FlatList
+                        data={referrals}
+                        keyExtractor={(item, index) => index.toString()}
+                        renderItem={renderItem}
+                        contentContainerStyle={{
+                            alignItems: 'center'
+                        }}
+                    />
+                </>
+            )}
+            <LocationModal
+                visible={isLocationModalVisible}
+                onClose={() => setIsLocationModalVisible(false)}
             />
         </SafeAreaView>
     )

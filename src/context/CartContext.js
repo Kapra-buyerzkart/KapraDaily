@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext, useCallback, useMemo, useRef, useEffect } from 'react';
+import { AppContext } from './appContext';
 import { Alert } from 'react-native';
 import Toast from 'react-native-simple-toast';
 import { addToCartApi, removeFromCartApi, updateCartItemApi, getCartApi, getCartSummaryApi, clearCartApi, applyCouponApi, removeCouponApi, applyGiftCardApi, removeGiftCardApi, applyBCoinApi, removeBCoinApi } from '../api/cartService';
@@ -31,10 +32,23 @@ export const CartProvider = ({ children }) => {
         setCartVersion(newVersion);
     }, []);
 
+    const { profile } = useContext(AppContext);
+    const lastPincodeRef = useRef(profile?.pincode);
+
     useEffect(() => {
         loadCart();
         fetchAddresses();
     }, []);
+
+    // ─── Location Sync: Refresh cart when pincode changes ───
+    useEffect(() => {
+        const currentPincode = profile?.pincode;
+        if (currentPincode !== lastPincodeRef.current) {
+            console.log('📍 [CART] Location changed, refreshing cart:', lastPincodeRef.current, '->', currentPincode);
+            lastPincodeRef.current = currentPincode;
+            refreshCart();
+        }
+    }, [profile?.pincode, refreshCart]);
 
     // ─── Addresses Logic ───
     const fetchAddresses = useCallback(async () => {
@@ -346,7 +360,7 @@ export const CartProvider = ({ children }) => {
             if (response && response.success === false) {
                 if (response.status === 'INSUFFICIENT_STOCK' || response.message?.includes('stock')) {
                     Toast.show('Requested qty is not available', Toast.LONG);
-                } else {
+                } else if (!response.message?.toLowerCase().includes('modified')) {
                     Toast.show(response.message || 'Failed to add to cart', Toast.SHORT);
                 }
                 rollback();
@@ -507,8 +521,11 @@ export const CartProvider = ({ children }) => {
                 await refreshCart();
                 return { success: true, message: response.message || 'B-Coins applied successfully' };
             } else {
-                const msg = response?.message || 'Failed to apply B-Coins';
-                Toast.show(msg, Toast.LONG);
+                if (msg?.toLowerCase().includes('modified')) {
+                    console.log('🚫 [CART] Suppressing modified Toast:', msg);
+                } else {
+                    Toast.show(msg, Toast.LONG);
+                }
                 return { success: false, message: msg };
             }
         } catch (error) {
@@ -516,8 +533,11 @@ export const CartProvider = ({ children }) => {
             if (error?.response?.data?.status === 'CART_VERSION_MISMATCH') {
                 await refreshCart();
             }
-            const msg = error?.Message || error?.message || 'Failed to apply B-Coins';
-            Toast.show(msg, Toast.LONG);
+            if (msg?.toLowerCase().includes('modified')) {
+                console.log('🚫 [CART] Suppressing modified Toast:', msg);
+            } else {
+                Toast.show(msg, Toast.LONG);
+            }
             return { success: false, message: msg };
         }
     }, [refreshCart]);
@@ -533,8 +553,11 @@ export const CartProvider = ({ children }) => {
                 await refreshCart();
                 return { success: true };
             } else {
-                const msg = response?.message || 'Failed to remove B-Coins';
-                Toast.show(msg, Toast.LONG);
+                if (msg?.toLowerCase().includes('modified')) {
+                    console.log('🚫 [CART] Suppressing modified Toast:', msg);
+                } else {
+                    Toast.show(msg, Toast.LONG);
+                }
                 return { success: false, message: msg };
             }
         } catch (error) {
@@ -542,8 +565,11 @@ export const CartProvider = ({ children }) => {
             if (error?.response?.data?.status === 'CART_VERSION_MISMATCH') {
                 await refreshCart();
             }
-            const msg = error?.Message || error?.message || 'Failed to remove B-Coins';
-            Toast.show(msg, Toast.LONG);
+            if (msg?.toLowerCase().includes('modified')) {
+                console.log('🚫 [CART] Suppressing modified Toast:', msg);
+            } else {
+                Toast.show(msg, Toast.LONG);
+            }
             return { success: false, message: msg };
         }
     }, [refreshCart]);

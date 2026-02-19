@@ -1,5 +1,8 @@
 import { View, Text, StyleSheet, TouchableOpacity, Image, Platform, FlatList } from 'react-native'
-import React, { useContext } from 'react'
+import React, { useContext, useState } from 'react'
+import { AppContext } from '../context/appContext'
+import StoreUnavailable from '../components/StoreUnavailable'
+import LocationModal from '../components/LocationModal'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import { useNavigation } from '@react-navigation/native'
@@ -14,6 +17,8 @@ const MyOrdersScreen = () => {
     const [orders, setOrders] = React.useState([]);
     const [loading, setLoading] = React.useState(true);
     const { showLoader } = useContext(LoaderContext);
+    const { isStoreUnavailable, storeUnavailableData } = useContext(AppContext);
+    const [isLocationModalVisible, setIsLocationModalVisible] = useState(false);
 
     const fetchOrders = async () => {
         try {
@@ -68,20 +73,25 @@ const MyOrdersScreen = () => {
                 borderTopRightRadius: wp('9.3%'),
                 paddingTop: hp('1%'),
                 paddingBottom: hp('2%'),
-                alignItems: 'center'
+                alignItems: 'center',
+                flex: 1,
             }}>
-                {/* <MyOrdersProductCard /> */}
                 <FlatList
                     data={orders}
                     keyExtractor={(item, index) => (item.id || item.orderId || index).toString()}
                     renderItem={(item, index) => <MyOrdersProductCard item={item} />}
                     contentContainerStyle={{
                         marginTop: hp('2%'),
-                        paddingBottom: hp('7%')
+                        paddingBottom: hp('7%'),
+                        width: wp('100%')
                     }}
                     showsVerticalScrollIndicator={false}
                 />
             </View>
+            <LocationModal
+                visible={isLocationModalVisible}
+                onClose={() => setIsLocationModalVisible(false)}
+            />
         </SafeAreaView>
     )
 }

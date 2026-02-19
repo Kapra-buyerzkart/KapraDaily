@@ -25,13 +25,9 @@ const useHomeData = () => {
     const [bottomBanner, setBottomBanner] = useState([]);
     const [refreshing, setRefreshing] = useState(false);
 
-    // Store Unavailable State
-    const [isStoreUnavailable, setIsStoreUnavailable] = useState(false);
-    const [storeUnavailableData, setStoreUnavailableData] = useState({ image: null, text: '' });
-
     const { loadWishlist } = useWishlist();
     const { showLoader } = useContext(LoaderContext);
-    const { profile, loadProfileTwo } = useContext(AppContext);
+    const { profile, loadProfileTwo, isStoreUnavailable, storeUnavailableData, setStoreUnavailable } = useContext(AppContext);
 
     useEffect(() => {
         // const fetchPincodeAreas = async () => {
@@ -89,16 +85,19 @@ const useHomeData = () => {
                         const imageItem = items.find(i => i.stName === 'store_not_available_image');
                         const textItem = items.find(i => i.stName === 'store_not_available_text');
 
-                        setStoreUnavailableData({
+                        const unavailableData = {
                             image: imageItem ? imageItem.stValue : null,
                             text: textItem ? textItem.stValue : ''
-                        });
+                        };
+
+                        // We will set this in AppContext if store is actually not found below
+                        var currentUnavailableData = unavailableData;
                     }
                 } catch (settingsError) {
                     console.error("Failed to fetch general settings:", settingsError);
                 }
 
-                const areaId = 105; // Hardcoded for testing // storedPincodeAreaId ? parseInt(storedPincodeAreaId) : (profile?.pincode || null);
+                const areaId = storedPincodeAreaId ? parseInt(storedPincodeAreaId) : (profile?.pincode || null);
                 if (storedArea) {
                     setUserLocation({
                         locality: storedLocality || '',
@@ -136,7 +135,7 @@ const useHomeData = () => {
                 }
 
                 if (storeNotFound) {
-                    setIsStoreUnavailable(true);
+                    setStoreUnavailable(true, currentUnavailableData);
                     setHomepageData(null); // Clear data if store is unavailable
                     setBanners([]);
                     setTopBanner([]);
@@ -148,7 +147,7 @@ const useHomeData = () => {
                     setFeaturedProducts([]);
                     setHalfPriceStore([]);
                 } else {
-                    setIsStoreUnavailable(false);
+                    setStoreUnavailable(false);
                     setHomepageData(response);
 
                     if (response?.data) {

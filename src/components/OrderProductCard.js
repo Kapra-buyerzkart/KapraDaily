@@ -21,7 +21,7 @@ const OrderProductCard = ({ item, orderStatus, onReturn }) => {
     const imageSource = getImageSource(item.image || item.prImage || item.productImage || item.product_image || item.featuredImage || item.img);
 
     // Determine Status Eligibility for Return
-    const canReturn = orderStatus === 'delivered' && !item.isReturned && !item.returnRequested;
+    const canReturn = orderStatus === 'delivered' && item.canReturn && !item.isReturned && !item.returnRequested;
 
     return (
         <View style={styles.cardContainer}>

@@ -53,9 +53,10 @@ const CheckoutScreen = () => {
     );
     const [paymentMethod, setPaymentMethod] = useState('cod');
     const [paymentModes, setPaymentModes] = useState([]);
-    const [showBill, setShowBill] = useState(true);
+    const [showBill, setShowBill] = useState(false);
     const [showSlotModal, setShowSlotModal] = useState(false);
     const [chosenSlot, setChosenSlot] = useState(null);
+    const scrollViewRef = React.useRef(null);
 
     // Get currently selected address from global context
     const currentSelectedAddress = addresses.find(a => a.selected) || selectedAddress;
@@ -233,7 +234,7 @@ const CheckoutScreen = () => {
                 <View style={{ width: wp('6%') }} />
             </View>
 
-            <ScrollView contentContainerStyle={styles.scrollContent}>
+            <ScrollView ref={scrollViewRef} contentContainerStyle={styles.scrollContent}>
                 {/* Delivery Address Section */}
                 <View style={styles.sectionContainer}>
                     <View style={styles.sectionHeader}>
@@ -426,7 +427,19 @@ const CheckoutScreen = () => {
 
             {/* Bottom Bar */}
             <View style={styles.bottomBar}>
-                <TouchableOpacity activeOpacity={0.7} onPress={() => setShowBill(!showBill)} style={styles.bottomAmountContainer}>
+                <TouchableOpacity
+                    activeOpacity={0.7}
+                    onPress={() => {
+                        const nextShowBill = !showBill;
+                        setShowBill(nextShowBill);
+                        if (nextShowBill) {
+                            setTimeout(() => {
+                                scrollViewRef.current?.scrollToEnd({ animated: true });
+                            }, 100);
+                        }
+                    }}
+                    style={styles.bottomAmountContainer}
+                >
                     <Text style={styles.totalLabel}>Total Payable</Text>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <Text style={styles.totalAmount}>₹{billCalculations.toPay?.toFixed(2) || '0.00'}</Text>
@@ -471,7 +484,7 @@ const CheckoutScreen = () => {
             <DeliverySlotModal
                 visible={showSlotModal}
                 onClose={() => setShowSlotModal(false)}
-                pincodeAreaId={pincodeAreaId || currentSelectedAddress?.pincodeAreaId || 105}
+                pincodeAreaId={pincodeAreaId || currentSelectedAddress?.pincodeAreaId || selectedAddress?.pincodeAreaId}
                 onSelectSlot={(slot) => setChosenSlot(slot)}
             />
         </SafeAreaView>

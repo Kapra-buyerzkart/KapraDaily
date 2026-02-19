@@ -8,6 +8,10 @@ import { useNavigation, useRoute } from '@react-navigation/native'
 import ProductCard from '../components/ProductCard'
 import SelectedProducts from '../components/SelectedProducts'
 import { FONTS } from '../styles/typography'
+import StoreUnavailable from '../components/StoreUnavailable'
+import LocationModal from '../components/LocationModal'
+import { AppContext } from '../context/appContext'
+import { useContext } from 'react'
 
 const ProductListScreen = () => {
     const navigation = useNavigation()
@@ -15,6 +19,8 @@ const ProductListScreen = () => {
     const { title, products } = route.params || { title: 'Products', products: [] }
 
     const [searchText, setSearchText] = useState('')
+    const { isStoreUnavailable, storeUnavailableData } = useContext(AppContext)
+    const [isLocationModalVisible, setIsLocationModalVisible] = useState(false)
 
     const filteredProducts = products.filter(item =>
         (item.prName || item.name || '').toLowerCase().includes(searchText.toLowerCase())
@@ -49,33 +55,44 @@ const ProductListScreen = () => {
                 </View>
             </View>
 
-            {/* Product Grid */}
-            <FlatList
-                data={filteredProducts}
-                keyExtractor={(item) => (item.productId || item.id || Math.random()).toString()}
-                renderItem={({ item }) => (
-                    <View style={styles.productWrapper}>
-                        <ProductCard item={item} />
-                    </View>
-                )}
-                numColumns={2}
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={styles.listContent}
-                ListEmptyComponent={
-                    <View style={styles.emptyContainer}>
-                        <Image
-                            source={require('../assets/images/noimages/noproductfound.png')}
-                            style={styles.emptyImage}
-                        />
-                        {/* <Text style={styles.emptyText}>No products found</Text> */}
-                    </View>
-                }
-            />
+            {isStoreUnavailable ? (
+                <StoreUnavailable
+                    image={storeUnavailableData.image}
+                    text={storeUnavailableData.text}
+                    onChangeLocation={() => setIsLocationModalVisible(true)}
+                />
+            ) : (
+                <FlatList
+                    data={filteredProducts}
+                    keyExtractor={(item) => (item.productId || item.id || Math.random()).toString()}
+                    renderItem={({ item }) => (
+                        <View style={styles.productWrapper}>
+                            <ProductCard item={item} />
+                        </View>
+                    )}
+                    numColumns={2}
+                    showsVerticalScrollIndicator={false}
+                    contentContainerStyle={styles.listContent}
+                    ListEmptyComponent={
+                        <View style={styles.emptyContainer}>
+                            <Image
+                                source={require('../assets/images/noimages/noproductfound.png')}
+                                style={styles.emptyImage}
+                            />
+                            {/* <Text style={styles.emptyText}>No products found</Text> */}
+                        </View>
+                    }
+                />
+            )}
 
             {/* Floating Selection Bar */}
             <View style={styles.floatingContainer}>
                 <SelectedProducts />
             </View>
+            <LocationModal
+                visible={isLocationModalVisible}
+                onClose={() => setIsLocationModalVisible(false)}
+            />
         </SafeAreaView>
     )
 }

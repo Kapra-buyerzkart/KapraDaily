@@ -1,5 +1,8 @@
 import { View, Text, StyleSheet, ImageBackground, Image, TextInput, TouchableOpacity, KeyboardAvoidingView, ScrollView, Alert } from 'react-native'
 import React, { useState, useContext } from 'react'
+import { AppContext } from '../context/appContext'
+import StoreUnavailable from '../components/StoreUnavailable'
+import LocationModal from '../components/LocationModal'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import { FONTS } from '../styles/typography'
@@ -12,6 +15,8 @@ import StatusModal from '../components/StatusModal'
 const ChangePasswordScreen = () => {
     const navigation = useNavigation()
     const { showLoader } = useContext(LoaderContext)
+    const { isStoreUnavailable, storeUnavailableData } = useContext(AppContext)
+    const [isLocationModalVisible, setIsLocationModalVisible] = useState(false)
 
     const [oldPassword, setOldPassword] = useState('')
     const [newPassword, setNewPassword] = useState('')
@@ -158,6 +163,10 @@ const ChangePasswordScreen = () => {
                     </View>
                 </ScrollView>
             </KeyboardAvoidingView>
+            <LocationModal
+                visible={isLocationModalVisible}
+                onClose={() => setIsLocationModalVisible(false)}
+            />
             <StatusModal
                 visible={statusModalVisible}
                 onClose={handleModalClose}
@@ -165,7 +174,7 @@ const ChangePasswordScreen = () => {
                 title={statusTitle}
                 message={statusMessage}
             />
-        </SafeAreaView>
+        </SafeAreaView >
     )
 }
 

@@ -41,7 +41,7 @@ const DEFAULT_GIFT_CARDS = [
     { id: '2', code: 'BDAY1000', description: 'Birthday Gift Card worth ₹1000' },
 ];
 
-export const useOffers = () => {
+export const useOffers = (deliveryHook, addressHook) => {
     const { cartSummary, applyCoupon, removeCoupon, applyGiftCard, removeGiftCard, applyBCoins, removeBCoins, getCartSummary } = useCart();
     const { showLoader } = useContext(LoaderContext);
 
@@ -172,7 +172,8 @@ export const useOffers = () => {
             if (res.success) {
                 updateOfferState(offerId, false);
                 setAppliedCouponCode(null);
-                getCartSummary();
+                const selectedAddr = addressHook?.addresses?.find(a => a.selected);
+                getCartSummary(deliveryHook?.deliveryMode, deliveryHook?.selectedSlot, null, selectedAddr?.pincodeAreaId);
             }
             return;
         }
@@ -182,7 +183,8 @@ export const useOffers = () => {
             if (res.success) {
                 updateOfferState(offerId, false);
                 setAppliedGiftCardCode(null);
-                getCartSummary();
+                const selectedAddr = addressHook?.addresses?.find(a => a.selected);
+                getCartSummary(deliveryHook?.deliveryMode, deliveryHook?.selectedSlot, null, selectedAddr?.pincodeAreaId);
             }
             return;
         }
@@ -223,7 +225,8 @@ export const useOffers = () => {
             } else {
                 setAppliedCouponCode(codeToApply);
             }
-            getCartSummary();
+            const selectedAddr = addressHook?.addresses?.find(a => a.selected);
+            getCartSummary(deliveryHook?.deliveryMode, deliveryHook?.selectedSlot, null, selectedAddr?.pincodeAreaId);
         } else {
             Toast.show(result.message || (isGiftCard ? 'Failed to apply gift card' : 'Failed to apply coupon'), Toast.LONG);
         }

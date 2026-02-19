@@ -1,6 +1,8 @@
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native'
 import React, { useState, useEffect } from 'react'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
+import EvilIcons from 'react-native-vector-icons/EvilIcons';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Entypo from 'react-native-vector-icons/Entypo';
 import FontAwesome from 'react-native-vector-icons/FontAwesome'
 import { FONTS } from '../styles/typography'
@@ -20,24 +22,32 @@ const ProductCard = (props) => {
     const { addToCart, cartItems, updateCartItemQuantity, removeFromCart } = useCart();
     const { isInWishlist, toggleWishlist } = useWishlist();
 
-    const { item } = props;
+    const { item, hideWishlist } = props;
+    // API products use productId, local products might use id
     const itemId = item.productId || item.id;
     const isLiked = isInWishlist(itemId);
 
+    // Find quantity in cart — convert to string to avoid type mismatch (number vs string)
     const cartItem = cartItems.find(i => String(i.productId || i.id) === String(itemId));
     const quantity = cartItem?.quantity || cartItem?.addedQty || 0;
     const cartItemId = cartItem?.cartItemId || itemId;
 
     // Helper to resolve image source
     const getImageSource = (img) => {
-        if (!img || imageError) return require('../assets/images/categories/dfn.png');
+        if (!img || imageError) return require('../assets/images/categories/dfn.png'); // Fallback to clock.png on error or empty
         if (typeof img === 'string') {
+            // Check if it's already a full URL or needs base URL
             if (img.startsWith('http')) return { uri: img };
+            // Use CONFIG.image_base_url if available, assume it might need specific path handling
+            // Based on config: image_base_url: `https://grocery.kapradaily.com/webadmin/`
             return { uri: `${CONFIG.image_base_url}${img}` };
         }
-        return img;
+        return img; // For require(...) local images
     };
 
+
+    // const { item } = props;
+    // Map API fields to UI expected fields or use them directly
     const name = item.prName || item.name || '';
     const price = item.specialPrice || item.price || '';
     const mrp = item.unitPrice || item.mrp || '';
@@ -48,11 +58,12 @@ const ProductCard = (props) => {
     const imageSource = getImageSource(item.featuredImage || item.img || item.imageUrl);
 
     useEffect(() => {
+        // Reset state when item changes
         setImageError(false);
         setImageLoading(true);
     }, [item.featuredImage, item.img]);
 
-    const isOutOfStock = (item.stockQty === 0 || item.stockQty === '0') || item.isAvailable === false;
+    // console.log('ProductCard Render', item.id || item.productId);
 
     return (
         <TouchableOpacity
@@ -60,96 +71,115 @@ const ProductCard = (props) => {
                 productId: itemId,
                 product: item
             })}
-            activeOpacity={0.9}
             style={styles.productCard}
         >
-            {/* Top Row: Offer Badge & Heart */}
-            <View style={styles.topRow}>
-                {offer > 0 ? (
-                    <View style={styles.offerBadge}>
-                        <Text style={styles.offerBadgeText}>{offer}% OFF</Text>
+            <View style={styles.productCardViewOne}>
+                {!hideWishlist && (
+                    <TouchableOpacity onPress={() => toggleWishlist(item)}>
+                        <FontAwesome
+                            name={isLiked ? 'heart' : 'heart-o'}
+                            size={wp('4.5%')}
+                            color={isLiked ? '#FF0048' : '#979797'}
+                        />
+                    </TouchableOpacity>
+                )}
+
+                {quantity > 0 ? (
+                    <View style={styles.counterContainer}>
+                        <TouchableOpacity
+                            onPress={() => {
+                                if (quantity === 1) {
+                                    removeFromCart(cartItemId);
+                                } else {
+                                    updateCartItemQuantity(cartItemId, quantity - 1);
+                                }
+                            }}
+                            style={styles.counterButton}
+                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                        >
+                            <Entypo name="minus" size={wp('3.5%')} color="#F04B1B" />
+                        </TouchableOpacity>
+                        <Text style={styles.quantityText}>{quantity}</Text>
+                        <TouchableOpacity
+                            onPress={() => updateCartItemQuantity(cartItemId, quantity + 1)}
+                            style={styles.counterButton}
+                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                        >
+                            <Entypo name="plus" size={wp('3.5%')} color="#F04B1B" />
+                        </TouchableOpacity>
                     </View>
-                ) : <View />}
-
-                <TouchableOpacity
-                    onPress={() => toggleWishlist(item)}
-                    style={styles.heartContainer}
-                >
-                    <FontAwesome
-                        name={isLiked ? 'heart' : 'heart-o'}
-                        size={wp('4%')}
-                        color={isLiked ? '#FF0048' : '#979797'}
-                    />
-                </TouchableOpacity>
+                ) : (
+                    <TouchableOpacity
+                        style={[styles.plusIconView, ((item.stockQty === 0 || item.stockQty === '0') || item.isAvailable === false) && { backgroundColor: '#CCCCCC' }]}
+                        onPress={() => {
+                            if ((item.stockQty === 0 || item.stockQty === '0') || item.isAvailable === false) return;
+                            addToCart(item);
+                        }}
+                        hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+                        activeOpacity={0.7}
+                        disabled={(item.stockQty === 0 || item.stockQty === '0') || item.isAvailable === false}
+                    >
+                        <Entypo name={"plus"} color={"#FFFFFF"} size={wp("4%")} />
+                    </TouchableOpacity>
+                )}
             </View>
-
-            {/* Image Section */}
-            <View style={styles.imageContainer}>
-                {imageLoading && <ShimmerPlaceholder style={styles.productCardImage} />}
+            <View style={styles.productCardViewTwo}>
+                {imageLoading && <ShimmerPlaceholder style={[styles.productCardImage, { position: 'absolute' }]} />}
                 <Image
                     source={imageSource}
-                    style={[styles.productCardImage, { opacity: isOutOfStock ? 0.5 : 1 }]}
+                    style={[styles.productCardImage, { opacity: ((item.stockQty === 0 || item.stockQty === '0') || item.isAvailable === false) ? 0.5 : 1 }]}
                     resizeMode="contain"
+                    onLoadStart={() => setImageLoading(true)}
                     onLoadEnd={() => setImageLoading(false)}
                     onError={() => {
                         setImageError(true);
                         setImageLoading(false);
                     }}
                 />
-                {isOutOfStock && (
+                {((item.stockQty === 0 || item.stockQty === '0') || item.isAvailable === false) && (
                     <View style={styles.outOfStockOverlay}>
                         <Text style={styles.outOfStockText}>Out of Stock</Text>
                     </View>
                 )}
             </View>
 
-            {/* Info Section */}
-            <View style={styles.infoContainer}>
-                <Text style={styles.productNameText} numberOfLines={2}>{name}</Text>
+            <View style={styles.productCardViewThree}>
+                <View>
+                    {offer > 0 ? <Text style={styles.offerText}>{offer}% OFF</Text> : <Text style={styles.offerText}> </Text>}
+                    <Text style={styles.btokenText}>Upto {item.bTokenValue || item.bTokens || 1} B Token</Text>
+                </View>
 
-                <Text style={styles.btokenText}>Upto {item.bTokenValue || item.bTokens || 1} B token</Text>
+                <View>
+                    <View style={styles.productCardViewFour}>
+                        {mrp !== price ? (
+                            <>
+                                <Text style={styles.mrpText}>MRP </Text>
+                                <Text style={[styles.mrpText, {
+                                    textDecorationLine: "line-through",
+                                    textDecorationColor: "#777777"
+                                }]}>₹{mrp}</Text>
+                            </>
+                        ) : <>
+                            <Text style={styles.mrpText}> </Text>
+                            <Text style={[styles.mrpText, {
+                                textDecorationLine: "line-through",
+                                textDecorationColor: "#777777"
+                            }]}></Text>
+                        </>}
 
-                <View style={styles.bottomRow}>
-                    <View style={styles.priceContainer}>
-                        {mrp && mrp != price && (
-                            <Text style={styles.mrpText}>₹{mrp}</Text>
-                        )}
+                    </View>
+                    <View style={styles.priceView}>
+                        {/* <MaterialIcons name={'currency-rupee'} color={'#0CA201'} size={wp("3.7%")} style={{
+                            bottom: hp("0.15%")
+                        }} /> */}
                         <Text style={styles.priceText}>₹{price}</Text>
                     </View>
-
-                    {/* Add Button Section */}
-                    {quantity > 0 ? (
-                        <View style={styles.counterContainer}>
-                            <TouchableOpacity
-                                onPress={() => {
-                                    if (quantity === 1) {
-                                        removeFromCart(cartItemId);
-                                    } else {
-                                        updateCartItemQuantity(cartItemId, quantity - 1);
-                                    }
-                                }}
-                                style={styles.counterBtn}
-                            >
-                                <Entypo name="minus" size={wp('3.2%')} color="#FFFFFF" />
-                            </TouchableOpacity>
-                            <Text style={styles.quantityText}>{quantity}</Text>
-                            <TouchableOpacity
-                                onPress={() => updateCartItemQuantity(cartItemId, quantity + 1)}
-                                style={styles.counterBtn}
-                            >
-                                <Entypo name="plus" size={wp('3.2%')} color="#FFFFFF" />
-                            </TouchableOpacity>
-                        </View>
-                    ) : (
-                        <TouchableOpacity
-                            style={[styles.addButton, isOutOfStock && { backgroundColor: '#CCCCCC' }]}
-                            onPress={() => !isOutOfStock && addToCart(item)}
-                            disabled={isOutOfStock}
-                        >
-                            <Text style={styles.addButtonText}>ADD</Text>
-                        </TouchableOpacity>
-                    )}
                 </View>
+            </View>
+            <View style={{
+                // alignSelf: "center"
+            }}>
+                <Text style={styles.productNameText} numberOfLines={2}>{name}</Text>
             </View>
         </TouchableOpacity>
     )
@@ -157,136 +187,139 @@ const ProductCard = (props) => {
 
 const styles = StyleSheet.create({
     productCard: {
-        width: wp('37%'),
-        height: hp('26%'),
+        width: wp('34.7%'),
+        height: hp('24.2%'),
         backgroundColor: '#FFFFFF',
-        borderRadius: 16,
-        padding: wp('2.5%'),
-        marginRight: wp('4%'),
-        marginBottom: hp('2%'),
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.08,
-        shadowRadius: 8,
-        elevation: 4,
-        justifyContent: 'space-between',
+        borderRadius: 20,
+        padding: wp('1.9%'),
+        marginRight: wp('3.8%'),
+        shadowColor: '#000000',
+        shadowOpacity: 0.10,
+        shadowOffset: { width: 0, height: 0 },
+        shadowRadius: 4,
+        elevation: 3,
+        marginTop: hp("1.5%"),
+        // alignItems:'center'
+        // width: wp('34%'),
+        // height: hp('23%'),
+        // backgroundColor: '#FFFFFF',
+        // borderRadius: 20,
+        // padding: wp('3%'),
+        // marginRight: wp('4%'),
+        // shadowColor: '#000',
+        // shadowOpacity: 0.10,
+        // shadowOffset: { width: 0, height: 2 },
+        // shadowRadius: 4,
+        // elevation: 3,
     },
-    topRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        zIndex: 1,
-        height: hp('2.5%'),
-    },
-    offerBadge: {
-        backgroundColor: '#F04B1B',
-        paddingHorizontal: wp('1.5%'),
-        paddingVertical: hp('0.2%'),
-        borderRadius: 4,
-    },
-    offerBadgeText: {
-        color: '#FFFFFF',
-        fontFamily: FONTS.outfit.semiBold,
-        fontSize: wp('2%'),
-    },
-    heartContainer: {
-        padding: wp('0.5%'),
-    },
-    imageContainer: {
-        height: hp('10%'),
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    productCardImage: {
-        width: '100%',
-        height: '100%',
-    },
-    infoContainer: {
-        flex: 1,
-        justifyContent: 'flex-end',
-        marginTop: hp('0.3%'),
-    },
-    productNameText: {
-        fontFamily: FONTS.outfit.semiBold,
-        fontSize: wp('3.2%'),
-        color: '#222222',
-        lineHeight: wp('4%'),
-        marginBottom: hp('0.2%'),
+    productCardViewOne: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        // backgroundColor: "yellow",
     },
     btokenText: {
         fontFamily: FONTS.outfit.regular,
-        fontSize: wp('2.2%'),
-        color: '#5E3568',
-        marginBottom: hp('0.4%'),
+        fontSize: wp("2.3%"),
+        color: "#5E3568"
     },
-    bottomRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-    },
-    priceContainer: {
-        flex: 1,
-    },
-    mrpText: {
-        fontFamily: FONTS.outfit.regular,
-        fontSize: wp('2.5%'),
-        color: '#999999',
-        textDecorationLine: 'line-through',
-    },
-    priceText: {
-        fontFamily: FONTS.outfit.bold || FONTS.outfit.semiBold,
-        fontSize: wp('3.7%'),
-        color: '#0CA201',
-    },
-    addButton: {
-        backgroundColor: '#F04B1B',
-        paddingHorizontal: wp('3%'),
-        paddingVertical: hp('0.5%'),
-        borderRadius: 6,
-    },
-    addButtonText: {
-        color: '#FFFFFF',
-        fontFamily: FONTS.outfit.semiBold,
-        fontSize: wp('2.8%'),
+    plusIconView: {
+        backgroundColor: "#F04B1B",
+        padding: wp("1%"),
+        borderRadius: 100
     },
     counterContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#F04B1B',
-        borderRadius: 6,
-        paddingHorizontal: wp('1%'),
-        paddingVertical: hp('0.3%'),
+        borderWidth: 0.7,
+        borderColor: '#F04B1B',
+        borderRadius: 7,
+        paddingHorizontal: wp('1.5%'),
+        paddingVertical: hp('0.15%'),
     },
-    counterBtn: {
-        padding: wp('0.8%'),
+    counterButton: {
+        padding: wp('0.5%'),
     },
     quantityText: {
-        color: '#FFFFFF',
-        fontFamily: FONTS.outfit.semiBold,
+        color: '#F04B1B',
+        fontFamily: FONTS.poppins.semiBold,
         fontSize: wp('3%'),
-        marginHorizontal: wp('1%'),
-        minWidth: wp('3.5%'),
+        marginHorizontal: wp('1.5%'),
+        minWidth: wp('3%'),
         textAlign: 'center',
+    },
+    productCardViewTwo: {
+        // backgroundColor:"blue",
+        alignItems: "center"
+    },
+    productCardImage: {
+        width: wp("24.65%"),
+        height: wp("23.25%")
+    },
+    productCardViewThree: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        // backgroundColor: "yellow",
+        alignItems: "center"
+    },
+    offerText: {
+        color: "#F04B1B",
+        fontSize: wp("2.5%"),
+        fontFamily: FONTS.outfit.semiBold
+    },
+    productCardViewFour: {
+        flexDirection: "row",
+        alignItems: "center"
+    },
+    mrpText: {
+        fontFamily: FONTS.poppins.light,
+        fontSize: wp("2.5%"),
+        color: "#777777"
+    },
+    priceView: {
+        // flexDirection: "row",
+        alignItems: "center",
+        borderColor: "#0CA201",
+        borderWidth: 1,
+        borderRadius: 8,
+        padding: wp("0.5%")
+    },
+    priceText: {
+        fontFamily: FONTS.poppins.semiBold,
+        fontSize: wp("3.7%"),
+        color: "#0CA201"
+    },
+    productNameText: {
+        // fontFamily: "Outfit-Light",
+        fontFamily: FONTS.outfit.light,
+        fontSize: wp("3.25%"),
+        color: "#000000",
+        textAlign: "center",
+        marginTop: hp("0.5%")
     },
     outOfStockOverlay: {
         position: 'absolute',
-        backgroundColor: 'rgba(255,255,255,0.7)',
-        width: '100%',
-        height: '100%',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
         justifyContent: 'center',
         alignItems: 'center',
-        borderRadius: 8,
+        backgroundColor: 'rgba(255,255,255,0.6)',
+        borderRadius: 20
     },
     outOfStockText: {
         color: '#FF0000',
-        fontFamily: FONTS.outfit.semiBold,
+        fontFamily: FONTS.poppins.semiBold,
         fontSize: wp('2.8%'),
+        transform: [{ rotate: '-15deg' }],
         borderWidth: 1,
         borderColor: '#FF0000',
-        paddingHorizontal: wp('1.5%'),
-        borderRadius: 4,
-        transform: [{ rotate: '-10deg' }],
-    },
+        paddingHorizontal: 4,
+        paddingVertical: 2,
+        borderRadius: 4
+    }
 })
 
+// Wrap in React.memo to prevent unnecessary re-renders
 export default React.memo(ProductCard);

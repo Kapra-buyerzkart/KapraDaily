@@ -16,17 +16,45 @@ import { LoaderContext } from '../context/loaderContext'
 import CouponModal from '../components/CouponModal'
 import { getAvailableCouponsApi, getAvailableGiftCardsApi } from '../api/cartService'
 import Toast from 'react-native-simple-toast'
+import { requestProductApi } from '../api/userService'
+import StoreUnavailable from '../components/StoreUnavailable'
+import LocationModal from '../components/LocationModal'
+import ConfirmationModal from '../components/ConfirmationModal'
 
 export default function ProfileScreen() {
     const [accessToken, setAccessToken] = useState(null);
     const navigation = useNavigation()
-    const { profile, loadProfile, logout } = useContext(AppContext);
+    const { profile, loadProfile, logout, isStoreUnavailable, storeUnavailableData } = useContext(AppContext);
     const { showLoader } = useContext(LoaderContext);
     const [offersModalVisible, setOffersModalVisible] = useState(false);
+    const [isLocationModalVisible, setIsLocationModalVisible] = useState(false);
     const [availableCoupons, setAvailableCoupons] = useState([]);
     const [availableGiftCards, setAvailableGiftCards] = useState([]);
     const [isGiftCard, setIsGiftCard] = useState(false);
     const [couponCode, setCouponCode] = useState('');
+    const [requestText, setRequestText] = useState('');
+    const [isSubmittingRequest, setIsSubmittingRequest] = useState(false);
+    const [isLogoutModalVisible, setIsLogoutModalVisible] = useState(false);
+
+    const handleRequestProduct = async () => {
+        if (!requestText.trim()) return;
+
+        try {
+            setIsSubmittingRequest(true);
+            const response = await requestProductApi({ requestdetails: requestText });
+            if (response && response.success) {
+                alert('Thank you! Your request has been submitted.');
+                setRequestText('');
+            } else {
+                alert(response?.message || 'Failed to submit request. Please try again.');
+            }
+        } catch (error) {
+            console.error('Request product error:', error);
+            alert('Something went wrong. Please try again.');
+        } finally {
+            setIsSubmittingRequest(false);
+        }
+    };
 
     // useEffect(() => {
     //     const fetchProfile = async () => {
@@ -258,14 +286,21 @@ export default function ProfileScreen() {
                         <TextInput
                             placeholderTextColor={'#DADADA'}
                             placeholder='eg: biscuit, caske, fruits ...'
-                            style={styles.sendTextInput} />
-                        <TouchableOpacity>
-                            <Image style={styles.sendImage} source={require('../assets/images/send.png')} />
+                            style={styles.sendTextInput}
+                            value={requestText}
+                            onChangeText={setRequestText}
+                        />
+                        <TouchableOpacity
+                            onPress={handleRequestProduct}
+                            disabled={isSubmittingRequest}
+                            style={styles.sendButton}
+                        >
+                            <Text style={styles.sendButtonText}>Send</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
 
-                <TouchableOpacity onPress={handleLogout} style={styles.logoutContainer}>
+                <TouchableOpacity onPress={() => setIsLogoutModalVisible(true)} style={styles.logoutContainer}>
                     <Text style={styles.logoutText}>Log Out</Text>
                 </TouchableOpacity>
             </ScrollView >
@@ -281,6 +316,20 @@ export default function ProfileScreen() {
                 availableGiftCards={availableGiftCards}
                 onCouponClick={handleApplyCoupon}
                 isCopyOnly={true}
+            />
+            <LocationModal
+                visible={isLocationModalVisible}
+                onClose={() => setIsLocationModalVisible(false)}
+            />
+
+            <ConfirmationModal
+                visible={isLogoutModalVisible}
+                onClose={() => setIsLogoutModalVisible(false)}
+                onConfirm={handleLogout}
+                title="Log Out"
+                message="Are you sure you want to log out?"
+                confirmText="Log Out"
+                cancelText="Cancel"
             />
         </SafeAreaView >
     )
@@ -478,6 +527,20 @@ const styles = StyleSheet.create({
         fontFamily: FONTS.poppins.light,
         fontSize: wp('3.72%'),
         color: '#000000'
+    },
+    sendButton: {
+        backgroundColor: '#F25000',
+        paddingHorizontal: wp('5%'),
+        paddingVertical: hp('0.5%'),
+        borderRadius: 15,
+        height: hp('4.3%'),
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    sendButtonText: {
+        color: '#FFFFFF',
+        fontFamily: FONTS.poppins.semiBold,
+        fontSize: wp('3.2%'),
     },
     sendImage: {
         width: wp('18.6%'),

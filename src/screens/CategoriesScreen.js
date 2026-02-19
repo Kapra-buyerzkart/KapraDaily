@@ -92,9 +92,8 @@ export default function CategoriesScreen() {
     const [isFilterSortModalVisible, setIsFilterSortModalVisible] = useState(false);
     const [loadingProducts, setLoadingProducts] = useState(false);
     const { showLoader } = useContext(LoaderContext);
-    const { profile } = useContext(AppContext);
-    const [isStoreUnavailable, setIsStoreUnavailable] = useState(false);
-    const [storeUnavailableData, setStoreUnavailableData] = useState({ image: null, text: '' });
+    const { profile, isStoreUnavailable, storeUnavailableData, setStoreUnavailable } = useContext(AppContext);
+    const [isStoreUnavailableLocal, setIsStoreUnavailableLocal] = useState(false); // Kept for safety if needed, but will prioritize global
     const [isLocationModalVisible, setIsLocationModalVisible] = useState(false);
 
     const [filters, setFilters] = useState({
@@ -109,27 +108,9 @@ export default function CategoriesScreen() {
         const initializeLocationAndSettings = async () => {
             try {
                 const storedPincodeAreaId = await AsyncStorage.getItem('pincodeAreaId');
-                // Hardcoded for testing
-                setPincodeAreaId(105);
-
-                // Fetch general settings for store unavailable info
-                try {
-                    const settingsRes = await getGeneralSettingsApi();
-                    if (settingsRes && settingsRes.success && settingsRes.data?.items) {
-                        const items = settingsRes.data.items;
-                        const imageItem = items.find(i => i.stName === 'store_not_available_image');
-                        const textItem = items.find(i => i.stName === 'store_not_available_text');
-
-                        setStoreUnavailableData({
-                            image: imageItem ? imageItem.stValue : null,
-                            text: textItem ? textItem.stValue : ''
-                        });
-                    }
-                } catch (settingsError) {
-                    console.error("Failed to fetch general settings in CategoriesScreen:", settingsError);
-                }
+                setPincodeAreaId(storedPincodeAreaId ? parseInt(storedPincodeAreaId) : (profile?.pincode || null));
             } catch (error) {
-                console.error('Error in initializeLocationAndSettings in CategoriesScreen:', error);
+                console.error("Error in initializeLocationAndSettings in CategoriesScreen:", error);
             }
         };
 
@@ -195,7 +176,7 @@ export default function CategoriesScreen() {
             const response = await getCategoriesApi(1); // Fetch root categories to find 105
             console.log('Categories Response:', JSON.stringify(response, null, 2));
             if (response && response.success && response.data && response.data.items) {
-                setIsStoreUnavailable(false);
+                setStoreUnavailable(false);
                 setCategoriesList(response.data.items);
 
                 // Try to find and select 105 as requested
@@ -206,9 +187,10 @@ export default function CategoriesScreen() {
                     setSelectedId(response.data.items[0]?.catId?.toString());
                 }
             } else if (response?.status === 'STORE_NOT_FOUND' || response?.data?.status === 'STORE_NOT_FOUND') {
-                setIsStoreUnavailable(true);
+                setStoreUnavailable(true, response.data);
                 setCategoriesList([]);
-            } else {
+            }
+            else {
                 setCategoriesList([]);
             }
         } catch (error) {

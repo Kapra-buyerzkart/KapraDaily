@@ -23,9 +23,12 @@ import SlotModal from '../components/SlotModal'
 import CouponModal from '../components/CouponModal'
 import BillSection from '../components/BillSection'
 import CartEmptyComponent from '../components/CartEmptyComponent'
+import StoreUnavailable from '../components/StoreUnavailable'
+import { AppContext } from '../context/appContext'
 
 const CartScreen = () => {
     const navigation = useNavigation()
+    const { profile, isStoreUnavailable, storeUnavailableData } = useContext(AppContext)
     const {
         // Cart
         billCalculations,
@@ -171,7 +174,13 @@ const CartScreen = () => {
                 <Entypo style={Platform.OS === 'android' ? { top: hp('-0.2%') } : {}} name={"chevron-down"} size={wp('3.6%')} color={"#000000"} />
             </TouchableOpacity>
 
-            {cartItems.length === 0 ? (
+            {isStoreUnavailable ? (
+                <StoreUnavailable
+                    image={storeUnavailableData.image}
+                    text={storeUnavailableData.text}
+                    onChangeLocation={() => setShowAddressModal(true)}
+                />
+            ) : cartItems.length === 0 ? (
                 <CartEmptyComponent />
             ) : (
                 <>

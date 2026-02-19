@@ -34,20 +34,6 @@ const CouponModal = ({
                     </TouchableOpacity>
                 </View>
 
-                {/* Input */}
-                <View style={styles.couponInputContainer}>
-                    <TextInput
-                        style={styles.couponInput}
-                        placeholder={isGiftCard ? "Enter gift card code" : "Enter coupon code"}
-                        placeholderTextColor="#AAAAAA"
-                        value={couponCode}
-                        onChangeText={setCouponCode}
-                        autoCapitalize="characters"
-                    />
-                    <TouchableOpacity style={styles.applyCouponButton} onPress={onApply}>
-                        <Text style={styles.applyCouponButtonText}>{isCopyOnly ? "COPY" : "APPLY"}</Text>
-                    </TouchableOpacity>
-                </View>
 
                 {/* List */}
                 <Text style={styles.sectionTitle}>

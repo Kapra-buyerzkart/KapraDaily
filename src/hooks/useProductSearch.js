@@ -32,6 +32,7 @@ const useProductSearch = (initialPincodeId, initialCatId = null) => {
             if (trimmedTerm.length === 0 && !catId) {
                 setSuggestions([]);
                 setResultCount(0);
+                setLoading(false);
                 return;
             }
 

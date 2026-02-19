@@ -16,6 +16,9 @@ import { useProductDetails } from '../hooks/useProductDetails'
 import { LoaderContext } from '../context/loaderContext'
 import Entypo from 'react-native-vector-icons/Entypo'
 import LinearGradient from 'react-native-linear-gradient'
+import StoreUnavailable from '../components/StoreUnavailable'
+import LocationModal from '../components/LocationModal'
+import { AppContext } from '../context/appContext'
 
 const images = [
     require('../assets/images/lays.png'),
@@ -38,7 +41,10 @@ const ProductDetailsScreen = () => {
     const [showDetails, setShowDetails] = useState(false)
     const animation = useRef(new Animated.Value(0)).current
     const mainScrollViewRef = useRef(null)
+    const detailsScrollViewRef = useRef(null)
     const [showScrollHint, setShowScrollHint] = useState(false);
+    const { isStoreUnavailable, storeUnavailableData } = useContext(AppContext)
+    const [isLocationModalVisible, setIsLocationModalVisible] = useState(false)
 
     const navigation = useNavigation()
     const route = useRoute()
@@ -105,13 +111,10 @@ const ProductDetailsScreen = () => {
         setShowDetails(isExpanding)
 
         if (isExpanding) {
-            // Scroll down a bit to show parts of the expanded description
+            // Scroll to the end of the content so user can see the last part
             setTimeout(() => {
-                mainScrollViewRef.current?.scrollTo({
-                    y: hp('35%'),
-                    animated: true
-                });
-            }, 50);
+                mainScrollViewRef.current?.scrollToEnd({ animated: true });
+            }, 300);
         }
     }
 
@@ -164,230 +167,245 @@ const ProductDetailsScreen = () => {
                 </TouchableOpacity>
                 <Text style={styles.headerText}>Product Details</Text>
             </View>
-            <ScrollView
-                ref={mainScrollViewRef}
-                contentContainerStyle={{ paddingBottom: hp("9%") }}
-                showsVerticalScrollIndicator={false}
-            >
-                <Image style={styles.imageStyle} source={selectedImage || (apiImages && apiImages[0])} />
-                <View style={styles.thumbnailContainer}>
-                    <FlatList
-                        data={apiImages && apiImages.length > 0 ? apiImages : []}
-                        horizontal
-                        keyExtractor={(_, index) => index.toString()}
-                        showsHorizontalScrollIndicator={false}
-                        contentContainerStyle={styles.thumbnailList}
-                        renderItem={({ item }) => {
-                            const isSelected = selectedImage?.uri === item?.uri
-                            return (
-                                <TouchableOpacity
-                                    style={[
-                                        styles.thumbnailWrapper,
-                                        isSelected && styles.activeThumbnail,
-                                    ]}
-                                    onPress={() => setSelectedImage(item)}
-                                >
-                                    <Image
-                                        source={item}
-                                        style={styles.thumbnailImage}
-                                        resizeMode="contain"
+            {isStoreUnavailable ? (
+                <StoreUnavailable
+                    image={storeUnavailableData.image}
+                    text={storeUnavailableData.text}
+                    onChangeLocation={() => setIsLocationModalVisible(true)}
+                />
+            ) : (
+                <ScrollView
+                    ref={mainScrollViewRef}
+                    contentContainerStyle={{ paddingBottom: hp("9%") }}
+                    showsVerticalScrollIndicator={false}
+                >
+                    <Image style={styles.imageStyle} source={selectedImage || (apiImages && apiImages[0])} />
+                    <View style={styles.thumbnailContainer}>
+                        <FlatList
+                            data={apiImages && apiImages.length > 0 ? apiImages : []}
+                            horizontal
+                            keyExtractor={(_, index) => index.toString()}
+                            showsHorizontalScrollIndicator={false}
+                            contentContainerStyle={styles.thumbnailList}
+                            renderItem={({ item }) => {
+                                const isSelected = selectedImage?.uri === item?.uri
+                                return (
+                                    <TouchableOpacity
+                                        style={[
+                                            styles.thumbnailWrapper,
+                                            isSelected && styles.activeThumbnail,
+                                        ]}
+                                        onPress={() => setSelectedImage(item)}
+                                    >
+                                        <Image
+                                            source={item}
+                                            style={styles.thumbnailImage}
+                                            resizeMode="contain"
+                                        />
+                                    </TouchableOpacity>
+                                )
+                            }}
+                        />
+                    </View>
+                    <View style={styles.detailsContainer}>
+                        <View style={styles.detailsContainerTopView}>
+                            <View style={styles.btokenView}>
+                                <Image style={Platform.OS === 'android' ? [styles.btokenIcon, {
+                                    bottom: hp('0.2%')
+                                }] : styles.btokenIcon} source={require('../assets/images/btoken-icon-three.png')} />
+                                <Text style={styles.btokenText}>{Number(bTokenValue)} Token</Text>
+                            </View>
+                            <View style={styles.heartShareButtonContainer}>
+                                <TouchableOpacity style={{
+                                    marginRight: wp('4%')
+                                }} onPress={() => product && toggleWishlist(product)}>
+                                    <FontAwesome
+                                        name={isLiked ? 'heart' : 'heart-o'}
+                                        size={wp('5%')}
+                                        color={isLiked ? '#FF0048' : '#000000'}
                                     />
                                 </TouchableOpacity>
-                            )
-                        }}
-                    />
-                </View>
-                <View style={styles.detailsContainer}>
-                    <View style={styles.detailsContainerTopView}>
-                        <View style={styles.btokenView}>
-                            <Image style={Platform.OS === 'android' ? [styles.btokenIcon, {
-                                bottom: hp('0.2%')
-                            }] : styles.btokenIcon} source={require('../assets/images/btoken-icon-three.png')} />
-                            <Text style={styles.btokenText}>{Number(bTokenValue)} Token</Text>
+                                <TouchableOpacity onPress={handleShare}>
+                                    <Image style={styles.shareIcon} source={require('../assets/images/share.png')} />
+                                </TouchableOpacity>
+                            </View>
                         </View>
-                        <View style={styles.heartShareButtonContainer}>
-                            <TouchableOpacity style={{
-                                marginRight: wp('4%')
-                            }} onPress={() => product && toggleWishlist(product)}>
-                                <FontAwesome
-                                    name={isLiked ? 'heart' : 'heart-o'}
-                                    size={wp('5%')}
-                                    color={isLiked ? '#FF0048' : '#000000'}
-                                />
-                            </TouchableOpacity>
-                            <TouchableOpacity onPress={handleShare}>
-                                <Image style={styles.shareIcon} source={require('../assets/images/share.png')} />
-                            </TouchableOpacity>
+                        <Text style={styles.productName}>{productName}</Text>
+                        <Text style={styles.productDescription}>{shortDescription}</Text>
+                        <View style={styles.quantityCategoryContainer}>
+                            <View>
+                                {/* <Text style={styles.quantity}>{product?.sku || 'SKU'}</Text> */}
+                                {/* <Text style={styles.quantityTwo}>{stockQty > 0 ? `${stockQty} in stock` : 'Out of stock'}</Text> */}
+                            </View>
+                            {/* <Text style={styles.category}>{isAvailable ? 'Available' : 'Unavailable'}</Text> */}
                         </View>
-                    </View>
-                    <Text style={styles.productName}>{productName}</Text>
-                    <Text style={styles.productDescription}>{shortDescription}</Text>
-                    <View style={styles.quantityCategoryContainer}>
-                        <View>
-                            {/* <Text style={styles.quantity}>{product?.sku || 'SKU'}</Text> */}
-                            {/* <Text style={styles.quantityTwo}>{stockQty > 0 ? `${stockQty} in stock` : 'Out of stock'}</Text> */}
-                        </View>
-                        {/* <Text style={styles.category}>{isAvailable ? 'Available' : 'Unavailable'}</Text> */}
-                    </View>
-                    <View style={styles.offerPriceAddButtonContainer}>
-                        <View>
-                            {discountPercentage > 0 && <Text style={styles.offerText}>{discountPercentage}% OFF</Text>}
-                            <View style={styles.priceContainer}>
-                                <Text style={styles.sellingPrice}>₹{specialPrice}</Text>
-                                {unitPrice && unitPrice !== specialPrice && (
-                                    <Text style={styles.mrpText}>₹{unitPrice}</Text>
+                        <View style={styles.offerPriceAddButtonContainer}>
+                            <View>
+                                {discountPercentage > 0 && <Text style={styles.offerText}>{discountPercentage}% OFF</Text>}
+                                <View style={styles.priceContainer}>
+                                    <Text style={styles.sellingPrice}>₹{specialPrice}</Text>
+                                    {unitPrice && unitPrice !== specialPrice && (
+                                        <Text style={styles.mrpText}>₹{unitPrice}</Text>
+                                    )}
+                                </View>
+                            </View>
+
+                            <View style={{ alignItems: 'center' }}>
+                                {(() => {
+                                    const cartItem = cartItems.find(i => String(i.productId || i.id) === String(finalProductId));
+                                    const quantity = cartItem ? cartItem.quantity : 0;
+                                    const cartItemId = cartItem?.cartItemId || finalProductId;
+
+                                    if (quantity > 0) {
+                                        return (
+                                            <View style={[styles.quantitySelector, { marginTop: 0 }]}>
+                                                <TouchableOpacity
+                                                    style={styles.qtyButton}
+                                                    onPress={() => {
+                                                        if (quantity === 1) {
+                                                            removeFromCart(cartItemId);
+                                                        } else {
+                                                            updateCartItemQuantity(cartItemId, quantity - 1);
+                                                        }
+                                                    }}
+                                                >
+                                                    <Entypo name="minus" size={wp('4%')} color="#FFF" />
+                                                </TouchableOpacity>
+                                                <Text style={styles.qtyText}>{quantity}</Text>
+                                                <TouchableOpacity
+                                                    style={styles.qtyButton}
+                                                    onPress={() => updateCartItemQuantity(cartItemId, quantity + 1)}
+                                                >
+                                                    <Entypo name="plus" size={wp('4%')} color="#FFF" />
+                                                </TouchableOpacity>
+                                            </View>
+                                        );
+                                    }
+
+                                    return (
+                                        <TouchableOpacity
+                                            style={[styles.addButton, ((isAvailable === false) || stockQty === 0) && { backgroundColor: '#CCCCCC' }]}
+                                            onPress={() => {
+                                                if ((isAvailable === false) || stockQty === 0) return;
+                                                product && addToCart(product);
+                                            }}
+                                            disabled={(isAvailable === false) || stockQty === 0}
+                                        >
+                                            <Text style={styles.addButtonText}>{((isAvailable !== false) && stockQty > 0) ? 'ADD' : 'OUT OF STOCK'}</Text>
+                                        </TouchableOpacity>
+                                    );
+                                })()}
+                                {stockQty > 0 && stockQty < 10 && (
+                                    <Text style={styles.lowStockText}>Only {stockQty} left!</Text>
                                 )}
                             </View>
                         </View>
+                        <View style={styles.divider} />
+                        <TouchableOpacity onPress={toggleDetails} style={styles.viewProductDetailsButton}>
+                            <Text style={styles.viewProductDetailsButtonText}>View product details</Text>
+                            <AntDesign
+                                name={showDetails ? 'up' : 'down'}
+                                size={wp('3%')}
+                                color="#000"
+                            />
+                        </TouchableOpacity>
+                        <Animated.View style={[styles.productDetailsView, {
+                            height: heightInterpolate,
+                            overflow: 'hidden'
+                        }]}>
+                            <View style={{ flex: 1 }}>
+                                <ScrollView
+                                    ref={detailsScrollViewRef}
+                                    showsVerticalScrollIndicator={false}
+                                    onContentSizeChange={(w, h) => {
+                                        if (h > hp('35%')) {
+                                            setShowScrollHint(true);
+                                        }
+                                    }}
+                                    onScroll={(event) => {
+                                        const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
+                                        const isCloseToBottom = layoutMeasurement.height + contentOffset.y >= contentSize.height - 20;
+                                        setShowScrollHint(!isCloseToBottom);
+                                    }}
+                                    scrollEventThrottle={16}
+                                >
+                                    <Text style={styles.productDetailsText}>{productDescription?.replace(/<[^>]*>?/gm, '')}</Text>
+                                    {attributes && attributes.length > 0 && (
+                                        <>
+                                            <Text style={[styles.productsContainerHeader, { marginLeft: 0, marginBottom: hp('1%'), marginTop: hp('2%') }]}>Attributes</Text>
+                                            <View style={styles.specsContainer}>
+                                                {attributes.map((attr, idx) => (
+                                                    <View key={idx} style={[styles.specRow, (idx + (product?.sku ? 1 : 0)) % 2 !== 0 && styles.specRowAlt]}>
+                                                        <Text style={styles.specLabel}>{attr.attrName}</Text>
+                                                        <Text style={styles.specValue}>{attr.attrValue}</Text>
+                                                    </View>
+                                                ))}
+                                            </View>
+                                        </>
+                                    )}
+                                    <View style={{ marginTop: hp('2%') }} />
+                                </ScrollView>
 
-                        <View style={{ alignItems: 'center' }}>
-                            {(() => {
-                                const cartItem = cartItems.find(i => String(i.productId || i.id) === String(finalProductId));
-                                const quantity = cartItem ? cartItem.quantity : 0;
-                                const cartItemId = cartItem?.cartItemId || finalProductId;
-
-                                if (quantity > 0) {
-                                    return (
-                                        <View style={[styles.quantitySelector, { marginTop: 0 }]}>
-                                            <TouchableOpacity
-                                                style={styles.qtyButton}
-                                                onPress={() => {
-                                                    if (quantity === 1) {
-                                                        removeFromCart(cartItemId);
-                                                    } else {
-                                                        updateCartItemQuantity(cartItemId, quantity - 1);
-                                                    }
-                                                }}
-                                            >
-                                                <Entypo name="minus" size={wp('4%')} color="#FFF" />
-                                            </TouchableOpacity>
-                                            <Text style={styles.qtyText}>{quantity}</Text>
-                                            <TouchableOpacity
-                                                style={styles.qtyButton}
-                                                onPress={() => updateCartItemQuantity(cartItemId, quantity + 1)}
-                                            >
-                                                <Entypo name="plus" size={wp('4%')} color="#FFF" />
-                                            </TouchableOpacity>
-                                        </View>
-                                    );
-                                }
-
-                                return (
-                                    <TouchableOpacity
-                                        style={[styles.addButton, ((isAvailable === false) || stockQty === 0) && { backgroundColor: '#CCCCCC' }]}
-                                        onPress={() => {
-                                            if ((isAvailable === false) || stockQty === 0) return;
-                                            product && addToCart(product);
-                                        }}
-                                        disabled={(isAvailable === false) || stockQty === 0}
-                                    >
-                                        <Text style={styles.addButtonText}>{((isAvailable !== false) && stockQty > 0) ? 'ADD' : 'OUT OF STOCK'}</Text>
-                                    </TouchableOpacity>
-                                );
-                            })()}
-                            {stockQty > 0 && stockQty < 10 && (
-                                <Text style={styles.lowStockText}>Only {stockQty} left!</Text>
-                            )}
-                        </View>
-                    </View>
-                    <View style={styles.divider} />
-                    <TouchableOpacity onPress={toggleDetails} style={styles.viewProductDetailsButton}>
-                        <Text style={styles.viewProductDetailsButtonText}>View product details</Text>
-                        <AntDesign
-                            name={showDetails ? 'up' : 'down'}
-                            size={wp('3%')}
-                            color="#000"
-                        />
-                    </TouchableOpacity>
-                    <Animated.View style={[styles.productDetailsView, {
-                        height: heightInterpolate,
-                        overflow: 'hidden'
-                    }]}>
-                        <View style={{ flex: 1 }}>
-                            <ScrollView
-                                showsVerticalScrollIndicator={false}
-                                onContentSizeChange={(w, h) => {
-                                    if (h > hp('35%')) {
-                                        setShowScrollHint(true);
-                                    }
-                                }}
-                                onScroll={(event) => {
-                                    const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
-                                    const isCloseToBottom = layoutMeasurement.height + contentOffset.y >= contentSize.height - 20;
-                                    setShowScrollHint(!isCloseToBottom);
-                                }}
-                                scrollEventThrottle={16}
-                            >
-                                <Text style={styles.productDetailsText}>{productDescription?.replace(/<[^>]*>?/gm, '')}</Text>
-                                {attributes && attributes.length > 0 && (
+                                {/* Scroll Gradient and Indicator */}
+                                {showScrollHint && showDetails && (
                                     <>
-                                        <Text style={[styles.productsContainerHeader, { marginLeft: 0, marginBottom: hp('1%'), marginTop: hp('2%') }]}>Attributes</Text>
-                                        <View style={styles.specsContainer}>
-                                            {attributes.map((attr, idx) => (
-                                                <View key={idx} style={[styles.specRow, (idx + (product?.sku ? 1 : 0)) % 2 !== 0 && styles.specRowAlt]}>
-                                                    <Text style={styles.specLabel}>{attr.attrName}</Text>
-                                                    <Text style={styles.specValue}>{attr.attrValue}</Text>
-                                                </View>
-                                            ))}
-                                        </View>
+                                        <LinearGradient
+                                            colors={['rgba(255,255,255,0)', 'rgba(255,255,255,0.8)', '#FFFFFF']}
+                                            style={styles.fadeGradient}
+                                        />
+                                        <TouchableOpacity onPress={() => detailsScrollViewRef.current?.scrollToEnd({ animated: true })} style={styles.scrollIndicator}>
+                                            <Text style={styles.scrollHintText}>Scroll for more</Text>
+                                            <MaterialIcons name="keyboard-arrow-down" size={wp('4%')} color="#F25000" />
+                                        </TouchableOpacity>
                                     </>
                                 )}
-                                <View style={{ marginTop: hp('2%') }} />
-                            </ScrollView>
-
-                            {/* Scroll Gradient and Indicator */}
-                            {showScrollHint && showDetails && (
-                                <>
-                                    <LinearGradient
-                                        colors={['rgba(255,255,255,0)', 'rgba(255,255,255,0.8)', '#FFFFFF']}
-                                        style={styles.fadeGradient}
-                                    />
-                                    <View style={styles.scrollIndicator}>
-                                        <Text style={styles.scrollHintText}>Scroll for more</Text>
-                                        <MaterialIcons name="keyboard-arrow-down" size={wp('4%')} color="#F25000" />
-                                    </View>
-                                </>
-                            )}
-                        </View>
-                    </Animated.View>
-                </View>
-                <View style={styles.productsMainContainerTwo}>
-                    <View style={styles.productsContainerViewOne}>
-                        <Text style={styles.productsContainerHeader}>Similar Products</Text>
-                        {/* {relatedProducts && relatedProducts.length > 0 && (
+                            </View>
+                        </Animated.View>
+                    </View>
+                    <View style={styles.productsMainContainerTwo}>
+                        <View style={styles.productsContainerViewOne}>
+                            <Text style={styles.productsContainerHeader}>Similar Products</Text>
+                            {/* {relatedProducts && relatedProducts.length > 0 && (
                             <TouchableOpacity style={styles.viewAllContainer}>
                                 <Text style={styles.viewAllText}>View All</Text>
                                 <MaterialIcons name={"arrow-forward-ios"} color={"#FF7B3A"} size={wp("3.3%")} style={styles.viewAllRightArrowIcon} />
                             </TouchableOpacity>
                         )} */}
-                    </View>
-                    {relatedLoading ? (
-                        <View style={{ paddingVertical: hp('2%'), alignItems: 'center' }}>
-                            <ActivityIndicator size="small" color="#F25000" />
                         </View>
-                    ) : (
-                        <FlatList
-                            horizontal={true}
-                            data={relatedProducts}
-                            keyExtractor={(item, index) => (item.productId || item.id || index).toString()}
-                            renderItem={({ item }) => <ProductCard item={item} />}
-                            showsHorizontalScrollIndicator={false}
-                            contentContainerStyle={[
-                                { paddingLeft: wp('4.6%') },
-                                (!relatedProducts || relatedProducts.length === 0) && { flex: 1, justifyContent: 'center', paddingLeft: 0 }
-                            ]}
-                            ListEmptyComponent={!relatedLoading && (
-                                <View style={styles.emptyContainer}>
-                                    <Text style={styles.emptyText}>No similar products found</Text>
-                                </View>
-                            )}
-                        />
-                    )}
+                        {relatedLoading ? (
+                            <View style={{ paddingVertical: hp('2%'), alignItems: 'center' }}>
+                                <ActivityIndicator size="small" color="#F25000" />
+                            </View>
+                        ) : (
+                            <FlatList
+                                horizontal={true}
+                                data={relatedProducts}
+                                keyExtractor={(item, index) => (item.productId || item.id || index).toString()}
+                                renderItem={({ item }) => <ProductCard item={item} />}
+                                showsHorizontalScrollIndicator={false}
+                                contentContainerStyle={[
+                                    { paddingLeft: wp('4.6%') },
+                                    (!relatedProducts || relatedProducts.length === 0) && { flex: 1, justifyContent: 'center', paddingLeft: 0 }
+                                ]}
+                                ListEmptyComponent={!relatedLoading && (
+                                    <View style={styles.emptyContainer}>
+                                        <Text style={styles.emptyText}>No similar products found</Text>
+                                    </View>
+                                )}
+                            />
+                        )}
+                    </View>
+                </ScrollView >
+            )}
+            {cartItems && cartItems.length > 0 && (
+                <View style={styles.floatingContainer}>
+                    <SelectedProducts selectedProducts={cartItems} />
                 </View>
-            </ScrollView >
-            <View style={styles.floatingContainer}>
-                <SelectedProducts selectedProducts={selectedProducts} />
-            </View>
+            )}
+            <LocationModal
+                visible={isLocationModalVisible}
+                onClose={() => setIsLocationModalVisible(false)}
+            />
         </SafeAreaView >
     )
 }
@@ -459,6 +477,7 @@ const styles = StyleSheet.create({
         marginTop: hp('1.5%'),
         backgroundColor: '#FFFFFF',
         borderRadius: wp('9.3%'),
+        // overflow: 'hidden',
 
         // iOS shadow
         shadowColor: '#000',
@@ -600,8 +619,12 @@ const styles = StyleSheet.create({
         marginRight: wp('1.5%')
     },
     productDetailsView: {
-        paddingHorizontal: wp('4.65%'),
-        paddingTop: hp('2%')
+        paddingHorizontal: wp('7.65%'),
+        paddingTop: hp('2%'),
+        overflow: 'hidden',
+
+        // borderBottomLeftRadius: 25, borderBottomRightRadius: 25
+        //backgroundColor: 'red'
     },
     productDetailsText: {
         fontFamily: FONTS.poppins.light,

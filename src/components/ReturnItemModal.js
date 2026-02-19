@@ -70,14 +70,15 @@ const ReturnItemModal = ({ visible, onClose, onSubmit, item, title = "Return Ite
                                     title="Cancel"
                                     onPress={handleClose}
                                     variant="outline"
-                                    style={styles.modalButton}
+                                    style={styles.cancelButton}
                                     textStyle={styles.cancelButtonText}
                                 />
 
                                 <AppButton
                                     title="Confirm Return"
                                     onPress={handleConfirm}
-                                    style={styles.modalButton}
+                                    style={styles.confirmButton}
+                                    textStyle={styles.confirmButtonText}
                                 />
                             </View>
                         </View>
@@ -162,8 +163,23 @@ const styles = StyleSheet.create({
     },
     cancelButtonText: {
         fontFamily: FONTS.poppins.medium,
-        fontSize: wp('3.7%'),
+        fontSize: wp('3.5%'),
         color: '#666666',
+    },
+    confirmButtonText: {
+        fontFamily: FONTS.poppins.semiBold,
+        fontSize: wp('3.5%'),
+        color: '#FFFFFF',
+    },
+    cancelButton: {
+        flex: 1,
+        minHeight: hp('5%'),
+        paddingVertical: hp('0.8%'),
+    },
+    confirmButton: {
+        flex: 1.2,
+        minHeight: hp('5%'),
+        paddingVertical: hp('0.8%'),
     },
 });
 

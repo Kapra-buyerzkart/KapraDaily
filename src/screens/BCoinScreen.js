@@ -1,5 +1,8 @@
 import { View, Text, StyleSheet, ImageBackground, Image, TouchableOpacity, ScrollView, Modal, TextInput, Alert, ActivityIndicator } from 'react-native'
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useContext } from 'react'
+import { AppContext } from '../context/appContext'
+import StoreUnavailable from '../components/StoreUnavailable'
+import LocationModal from '../components/LocationModal'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen'
 import { FONTS } from '../styles/typography'
@@ -29,6 +32,8 @@ const BCoinScreen = () => {
     const [statusMessage, setStatusMessage] = useState('')
 
     const navigation = useNavigation()
+    const { isStoreUnavailable, storeUnavailableData } = useContext(AppContext)
+    const [isLocationModalVisible, setIsLocationModalVisible] = useState(false)
     const isMounted = React.useRef(true)
 
     useEffect(() => {
@@ -147,106 +152,112 @@ const BCoinScreen = () => {
                 <FastImage style={styles.bcoinGif} resizeMode={FastImage.resizeMode.contain} source={require('../assets/gifs/bcoin.gif')} />
             </ImageBackground>
             <View style={styles.innerContainer}>
-                <View>
-                    <View style={styles.bcoinContainerOne}>
-                        <Image style={styles.bcoinImage} source={require('../assets/images/bcoin_rupee.png')} />
-                        <Text style={styles.bcoinText}>B-Coin</Text>
+                <>
+                    <View>
+                        <View style={styles.bcoinContainerOne}>
+                            <Image style={styles.bcoinImage} source={require('../assets/images/bcoin_rupee.png')} />
+                            <Text style={styles.bcoinText}>B-Coin</Text>
+                            <View style={styles.bcoinInnerView}>
+                                <Text style={styles.availableBalanceHeaderText}>Available Balance</Text>
+                                <Text style={styles.availableBalanceValueText}>{walletData?.wallet?.bCoins || '0.00'}</Text>
+                            </View>
+                        </View>
+                        <View style={styles.bcoinContainerTwo}>
+                            <View style={styles.bcoinInnerViewTwo}>
+                                <Text style={styles.bcoinTextTwo}>Today's B-coin value : </Text>
+                                <Text style={styles.bcoinPriceText}>₹{walletData?.wallet?.bCoinValue || '0.00'}</Text>
+                            </View>
+                            <TouchableOpacity onPress={() => {
+                                fetchBCoinValueHistory()
+                                setShowModal(true)
+                            }} style={styles.bcoinInnerViewTwo}>
+                                <Text style={styles.viewText}>View</Text>
+                                <Image style={styles.rightArrowsIcon} source={require('../assets/images/right-arrows-two.png')} />
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                    <View style={[styles.bcoinContainerOne, {
+                        borderRadius: wp('2.33%'),
+                        marginTop: hp('1.5%')
+                    }]}>
+                        <Image style={styles.bcoinImage} source={require('../assets/images/btoken-icon-four.png')} />
+                        <Text style={styles.bcoinText}>B-Token</Text>
                         <View style={styles.bcoinInnerView}>
                             <Text style={styles.availableBalanceHeaderText}>Available Balance</Text>
-                            <Text style={styles.availableBalanceValueText}>{walletData?.wallet?.bCoins || '0.00'}</Text>
+                            <Text style={styles.availableBalanceValueText}>{walletData?.wallet?.bTokens || '0'}</Text>
                         </View>
                     </View>
-                    <View style={styles.bcoinContainerTwo}>
-                        <View style={styles.bcoinInnerViewTwo}>
-                            <Text style={styles.bcoinTextTwo}>Today’s B-coin value : </Text>
-                            <Text style={styles.bcoinPriceText}>₹{walletData?.wallet?.bCoinValue || '0.00'}</Text>
-                        </View>
-                        <TouchableOpacity onPress={() => {
-                            fetchBCoinValueHistory()
-                            setShowModal(true)
-                        }} style={styles.bcoinInnerViewTwo}>
-                            <Text style={styles.viewText}>View</Text>
-                            <Image style={styles.rightArrowsIcon} source={require('../assets/images/right-arrows-two.png')} />
+                    <Text style={styles.historyHeaderText}>History</Text>
+                    <View style={styles.bcoinTokenHeaderContainer}>
+                        <TouchableOpacity onPress={() => setSelected('bcoin')} style={selected === 'bcoin' ? (
+                            [styles.bcoinSingleContainer, {
+                                borderBottomWidth: hp('0.43%'),
+                                borderBottomColor: '#F25000',
+                            }]
+                        ) : (styles.bcoinSingleContainer)}>
+                            <Text style={selected === 'bcoin' ? (
+                                [styles.bcoinSingleText, {
+                                    color: '#F25000'
+                                }]
+                            ) : (styles.bcoinSingleText)}>B-Coin</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => setSelected('btoken')} style={selected === 'btoken' ? (
+                            [styles.bcoinSingleContainer, {
+                                borderBottomWidth: hp('0.43%'),
+                                borderBottomColor: '#F25000',
+                            }]
+                        ) : (styles.bcoinSingleContainer)}>
+                            <Text style={selected === 'btoken' ? (
+                                [styles.bcoinSingleText, {
+                                    color: '#F25000'
+                                }]
+                            ) : (styles.bcoinSingleText)}>B-Token</Text>
                         </TouchableOpacity>
                     </View>
-                </View>
-                <View style={[styles.bcoinContainerOne, {
-                    borderRadius: wp('2.33%'),
-                    marginTop: hp('1.5%')
-                }]}>
-                    <Image style={styles.bcoinImage} source={require('../assets/images/btoken-icon-four.png')} />
-                    <Text style={styles.bcoinText}>B-Token</Text>
-                    <View style={styles.bcoinInnerView}>
-                        <Text style={styles.availableBalanceHeaderText}>Available Balance</Text>
-                        <Text style={styles.availableBalanceValueText}>{walletData?.wallet?.bTokens || '0'}</Text>
-                    </View>
-                </View>
-                <Text style={styles.historyHeaderText}>History</Text>
-                <View style={styles.bcoinTokenHeaderContainer}>
-                    <TouchableOpacity onPress={() => setSelected('bcoin')} style={selected === 'bcoin' ? (
-                        [styles.bcoinSingleContainer, {
-                            borderBottomWidth: hp('0.43%'),
-                            borderBottomColor: '#F25000',
-                        }]
-                    ) : (styles.bcoinSingleContainer)}>
-                        <Text style={selected === 'bcoin' ? (
-                            [styles.bcoinSingleText, {
-                                color: '#F25000'
-                            }]
-                        ) : (styles.bcoinSingleText)}>B-Coin</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => setSelected('btoken')} style={selected === 'btoken' ? (
-                        [styles.bcoinSingleContainer, {
-                            borderBottomWidth: hp('0.43%'),
-                            borderBottomColor: '#F25000',
-                        }]
-                    ) : (styles.bcoinSingleContainer)}>
-                        <Text style={selected === 'btoken' ? (
-                            [styles.bcoinSingleText, {
-                                color: '#F25000'
-                            }]
-                        ) : (styles.bcoinSingleText)}>B-Token</Text>
-                    </TouchableOpacity>
-                </View>
-                <ScrollView>
-                    {(selected === 'bcoin' ? walletData?.bcoinHistory : walletData?.btokenHistory)?.map((item, index, array) => (
-                        <View key={item.historyId} style={[styles.bcoinContainer, {
-                            borderBottomWidth: index === array.length - 1 ? 0 : 1
-                        }]}>
-                            <Image
-                                style={styles.bcoinImageTwo}
-                                source={selected === 'bcoin' ? require('../assets/images/bcoin-three.png') : require('../assets/images/btoken-icon-four.png')}
-                            />
-                            <View style={{ flex: 1, marginLeft: wp('3%') }}>
-                                <Text style={styles.bcoinContent}>{item.description}</Text>
-                                <Text style={[styles.bcoinContent, {
-                                    fontSize: wp('3.25%'),
-                                    marginTop: hp('0.5%')
+                    <ScrollView>
+                        {(selected === 'bcoin' ? walletData?.bcoinHistory : walletData?.btokenHistory)?.map((item, index, array) => (
+                            <View key={item.historyId} style={[styles.bcoinContainer, {
+                                borderBottomWidth: index === array.length - 1 ? 0 : 1
+                            }]}>
+                                <Image
+                                    style={styles.bcoinImageTwo}
+                                    source={selected === 'bcoin' ? require('../assets/images/bcoin-three.png') : require('../assets/images/btoken-icon-four.png')}
+                                />
+                                <View style={{ flex: 1, marginLeft: wp('3%') }}>
+                                    <Text style={styles.bcoinContent}>{item.description}</Text>
+                                    <Text style={[styles.bcoinContent, {
+                                        fontSize: wp('3.25%'),
+                                        marginTop: hp('0.5%')
+                                    }]}>
+                                        {item.transactionDate ? new Date(item.transactionDate).toLocaleDateString('en-IN', {
+                                            day: '2-digit',
+                                            month: '2-digit',
+                                            year: 'numeric'
+                                        }) : ''}
+                                    </Text>
+                                </View>
+                                <Text style={[styles.bcoinPriceTextTwo, {
+                                    color: item.transactionType === 'credit' ? '#0CA201' : '#FF0000'
                                 }]}>
-                                    {item.transactionDate ? new Date(item.transactionDate).toLocaleDateString('en-IN', {
-                                        day: '2-digit',
-                                        month: '2-digit',
-                                        year: 'numeric'
-                                    }) : ''}
+                                    {item.transactionType === 'credit' ? '+' : '-'}{item.amount} {selected === 'bcoin' ? 'coins' : 'tokens'}
                                 </Text>
                             </View>
-                            <Text style={[styles.bcoinPriceTextTwo, {
-                                color: item.transactionType === 'credit' ? '#0CA201' : '#FF0000'
-                            }]}>
-                                {item.transactionType === 'credit' ? '+' : '-'}{item.amount} {selected === 'bcoin' ? 'coins' : 'tokens'}
-                            </Text>
-                        </View>
-                    ))}
-                    {!isLoading && (!walletData || (selected === 'bcoin' ? walletData?.bcoinHistory?.length === 0 : walletData?.btokenHistory?.length === 0)) && (
-                        <View style={{ alignItems: 'center', marginTop: hp('5%') }}>
-                            <Text style={styles.viewText}>No history available</Text>
-                        </View>
-                    )}
-                </ScrollView>
+                        ))}
+                        {!isLoading && (!walletData || (selected === 'bcoin' ? walletData?.bcoinHistory?.length === 0 : walletData?.btokenHistory?.length === 0)) && (
+                            <View style={{ alignItems: 'center', marginTop: hp('5%') }}>
+                                <Text style={styles.viewText}>No history available</Text>
+                            </View>
+                        )}
+                    </ScrollView>
+                </>
             </View>
             <TouchableOpacity onPress={() => setShowRedeemModal(true)} style={styles.redeemButton}>
                 <Text style={styles.redeemText}>Redeem B-Coin</Text>
             </TouchableOpacity>
+            <LocationModal
+                visible={isLocationModalVisible}
+                onClose={() => setIsLocationModalVisible(false)}
+            />
             <Modal
                 visible={showRedeemModal}
                 animationType='slide'

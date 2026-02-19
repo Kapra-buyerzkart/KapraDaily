@@ -580,8 +580,6 @@ const HomeScreen = () => {
                         {/* Top Home Banner */}
                         <PlacementBannerCarousel banners={topBanner} onBannerPress={handleBannerPress} fullWidth />
 
-
-
                         <View style={styles.categoryMainView}>
                             <Text style={styles.categoryHeaderText}>Shop By Categories</Text>
                             <View style={styles.categoriesContainer}>
@@ -654,30 +652,11 @@ const HomeScreen = () => {
                                 }}
                             />
                         </View>
-
                         <TouchableOpacity onPress={() => navigation.navigate('ReferralScreen')} style={styles.wrapper}>
-
-                            <Image
-                                source={require("../assets/images/rneb3.png")}
-                                style={styles.leftConfetti}
-                            />
-
-                            <Image
-                                source={require("../assets/images/rneb2.png")}
-                                style={styles.benefitsBackground}
-                            />
-
-
-                            <Image
-                                source={require("../assets/images/rneb.png")}
-                                style={styles.mainBanner}
-                            />
-
-                            <Image
-                                source={require("../assets/images/rneb4.png")}
-                                style={styles.borderOverlay}
-                            />
-
+                            <Image source={require("../assets/images/rneb3.png")} style={styles.leftConfetti} />
+                            <Image source={require("../assets/images/rneb2.png")} style={styles.benefitsBackground} />
+                            <Image source={require("../assets/images/rneb.png")} style={styles.mainBanner} />
+                            <Image source={require("../assets/images/rneb4.png")} style={styles.borderOverlay} />
                         </TouchableOpacity>
 
                         <View style={styles.bannerContainer}>
@@ -686,7 +665,7 @@ const HomeScreen = () => {
                                 horizontal
                                 pagingEnabled={false}
                                 showsHorizontalScrollIndicator={false}
-                                snapToInterval={SNAP_INTERVAL}
+                                snapToInterval={wp("100%")} // Simplified for clarity
                                 decelerationRate="fast"
                                 snapToAlignment="start"
                                 contentContainerStyle={{ paddingRight: wp("4.6%") }}
@@ -698,20 +677,6 @@ const HomeScreen = () => {
                                     </TouchableOpacity>
                                 )}
                             />
-
-                            {/* Pagination Dots */}
-                            <View style={styles.pagination}>
-                                {banners.map((_, i) => (
-                                    <View
-                                        key={i}
-                                        style={[
-                                            styles.dot,
-                                            { opacity: i === activeIndex ? 1 : 0.3 },
-                                            i === activeIndex && styles.activeDot,
-                                        ]}
-                                    />
-                                ))}
-                            </View>
                         </View>
 
                         <LinearGradient
@@ -727,62 +692,37 @@ const HomeScreen = () => {
                                 <Image source={require('../assets/images/star2.png')} style={styles.starImage} />
                             </View>
                             <FlatList
-                                style={{
-                                    // marginLeft: wp("3%"),
-                                    marginTop: hp("3%")
-                                }}
+                                style={{ marginTop: hp("3%") }}
                                 horizontal={true}
                                 data={bestOffers}
                                 keyExtractor={(item, index) => item.productId ? item.productId.toString() : index.toString()}
                                 renderItem={({ item }) => <ProductCard item={item} />}
                                 showsHorizontalScrollIndicator={false}
-                                contentContainerStyle={{
-                                    marginLeft: wp('3%')
-                                }}
+                                contentContainerStyle={{ marginLeft: wp('3%') }}
                             />
                         </LinearGradient>
 
                         {/* Bottom Home Banner */}
-                        <PlacementBannerCarousel banners={bottomBanner} onBannerPress={handleBannerPress} style={{ marginTop: hp('2%') }} />
+                        <PlacementBannerCarousel banners={bottomBanner} onBannerPress={handleBannerPress} style={{ marginTop: hp('2%'), marginBottom: 10 }} />
 
                         <View style={styles.searchingForSomethingView}>
-
                             <CurvedSection>
-
-                                {/* ADD ANYTHING YOU WANT INSIDE! */}
-                                {/* <View style={{ alignItems: "center" }}> */}
                                 <View style={styles.searchingForSomethingViewTwo}>
                                     <View>
-                                        <Image
-                                            source={require("../assets/images/boy.png")}
-                                            style={styles.searchingForSomethingImageOne}
-                                        />
-                                        <Image
-                                            source={require("../assets/images/shadow.png")}
-                                            style={styles.searchingForSomethingImageTwo}
-                                        />
+                                        <Image source={require("../assets/images/boy.png")} style={styles.searchingForSomethingImageOne} />
+                                        <Image source={require("../assets/images/shadow.png")} style={styles.searchingForSomethingImageTwo} />
                                     </View>
                                     <View style={styles.searchingForSomethingViewThree}>
-                                        <Text style={[styles.searchingForSomethingText, {
-                                            color: "#000000"
-                                        }]}>Searching for something</Text>
-                                        <Text style={[styles.searchingForSomethingText, {
-                                            color: "#FF0000"
-                                        }]}>but couldn't find it?</Text>
+                                        <Text style={[styles.searchingForSomethingText, { color: "#000000" }]}>Searching for something</Text>
+                                        <Text style={[styles.searchingForSomethingText, { color: "#FF0000" }]}>but couldn't find it?</Text>
                                     </View>
-
                                 </View>
                             </CurvedSection>
-
                         </View>
-                        {/* Pincode Area List Display */}
-                        {/* <View style={{ padding: 20 }}>
-                            <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10 }}>Pincode Areas (Nearby)</Text>
-                        </View> */}
+
                         <View style={styles.tellusContainer}>
                             <Text style={styles.tellUsText}>Don't worry. Tel us what you require</Text>
                             <View style={styles.searchContainerTwo}>
-                                {/* <Feather name="search" color={"#8F8F8F"} size={wp("6%")} /> */}
                                 <TextInput
                                     style={styles.searchInput}
                                     placeholder="example: apple"
@@ -791,13 +731,11 @@ const HomeScreen = () => {
                                     onChangeText={setRequestText}
                                 />
                                 <TouchableOpacity
-                                    style={styles.enterContainer}
                                     onPress={handleRequestProduct}
                                     disabled={isSubmittingRequest}
+                                    style={styles.sendButton}
                                 >
-                                    <Text style={styles.enterText}>
-                                        {isSubmittingRequest ? '...' : 'enter'}
-                                    </Text>
+                                    <Text style={styles.sendButtonText}>Send</Text>
                                 </TouchableOpacity>
                             </View>
                             <Image style={styles.kapraLogo} source={require("../assets/images/logo.png")} />
@@ -809,7 +747,7 @@ const HomeScreen = () => {
             <View style={styles.floatingContainer}>
                 <SelectedProducts />
             </View>
-        </SafeAreaView>
+        </SafeAreaView >
     )
 }
 
@@ -1106,7 +1044,7 @@ const styles = StyleSheet.create({
         // width: wp("100%"),
     },
     bannerContainer: {
-        marginTop: hp("4%"),
+        //   marginTop: hp("0.5%"),
     },
     scroll: {
         width: wp("100%"),
@@ -1149,7 +1087,7 @@ const styles = StyleSheet.create({
     },
     offerGradient: {
         width: wp("96%"),
-        height: hp("50%"),
+        height: hp("45%"),
         marginTop: hp('3.5%'),
         // marginHorizontal: wp("1.86%")
         // marginHorizontal: wp("4%"),
@@ -1164,7 +1102,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         marginHorizontal: wp("3%"),
-        marginTop: hp("4%"),
+        marginTop: hp("2%"),
         // backgroundColor: "red"
     },
     starImage: {
@@ -1268,6 +1206,26 @@ const styles = StyleSheet.create({
         color: "#000000",
         fontSize: wp("3.8%"),
         fontFamily: FONTS.poppins.semiBold,
+    },
+    sendButton: {
+        backgroundColor: '#F25000',
+        paddingHorizontal: wp('5%'),
+        paddingVertical: hp('0.5%'),
+        borderRadius: 15,
+        marginRight: wp('1%'),
+        height: hp('4%'),
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    sendButtonText: {
+        color: '#FFFFFF',
+        fontFamily: FONTS.poppins.semiBold,
+        fontSize: wp('3.2%'),
+    },
+    sendImage: {
+        width: wp('18.6%'),
+        height: hp('4.3%'),
+        resizeMode: 'contain'
     },
     kapraLogo: {
         width: wp("64.65%"),

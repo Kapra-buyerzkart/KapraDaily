@@ -9,11 +9,14 @@ import { AppContext } from '../context/appContext'
 import { LoaderContext } from '../context/loaderContext'
 import { updateProfilePatchApi } from '../api/userService'
 import StatusModal from '../components/StatusModal'
+import StoreUnavailable from '../components/StoreUnavailable'
+import LocationModal from '../components/LocationModal'
 
 const EditProfileScreen = () => {
     const navigation = useNavigation()
-    const { profile, loadProfile } = useContext(AppContext)
+    const { profile, loadProfile, isStoreUnavailable, storeUnavailableData } = useContext(AppContext)
     const { showLoader } = useContext(LoaderContext)
+    const [isLocationModalVisible, setIsLocationModalVisible] = useState(false)
 
     const [fullName, setFullName] = useState(profile?.custName || '')
     const [dob, setDob] = useState(profile?.dob || '')
@@ -183,6 +186,10 @@ const EditProfileScreen = () => {
                     </View>
                 </ScrollView>
             </KeyboardAvoidingView>
+            <LocationModal
+                visible={isLocationModalVisible}
+                onClose={() => setIsLocationModalVisible(false)}
+            />
             <StatusModal
                 visible={statusModalVisible}
                 onClose={handleModalClose}
