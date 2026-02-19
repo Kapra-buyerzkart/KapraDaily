@@ -9,11 +9,13 @@ import DropDownPicker from 'react-native-dropdown-picker';
 import LinearGradient from 'react-native-linear-gradient'
 import { addAddressApi, updateAddressApi } from '../api/addressService'
 import Toast from 'react-native-simple-toast'
+import { useAddresses } from '../hooks/useAddresses'
 
 const AddLocationScreen = () => {
     const navigation = useNavigation()
     const route = useRoute()
     const insets = useSafeAreaInsets()
+    const { refreshAddresses } = useAddresses();
 
     // Edit mode check
     const editAddress = route.params?.address;
@@ -75,9 +77,10 @@ const AddLocationScreen = () => {
 
             if (response && response.success !== false) {
                 Toast.show(isEditMode ? 'Address updated' : 'Address added', Toast.SHORT);
+                await refreshAddresses();
                 navigation.goBack();
             } else {
-                Toast.show(response.message || 'Failed to save address', Toast.SHORT);
+                Toast.show(response?.message || 'Failed to save address', Toast.SHORT);
             }
         } catch (error) {
             console.error('Error saving address:', error);

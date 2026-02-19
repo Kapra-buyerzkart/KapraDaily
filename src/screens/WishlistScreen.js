@@ -12,10 +12,13 @@ import { useFocusEffect } from '@react-navigation/native';
 import WishlistProductCard from '../components/WishlistProductCard';
 import { LoaderContext } from '../context/loaderContext';
 import { useContext } from 'react';
+import { useNavigation } from '@react-navigation/native';
+import SelectedProducts from '../components/SelectedProducts';
 
 export default function WishlistScreen() {
+    const navigation = useNavigation();
     const { wishlistItems, removeFromWishlist, loadWishlist, isLoading } = useWishlist();
-    const { addToCart } = useCart();
+    const { addToCart, cartItems } = useCart();
     const { showLoader } = useContext(LoaderContext);
 
     const [confirmationVisible, setConfirmationVisible] = useState(false);
@@ -56,6 +59,7 @@ export default function WishlistScreen() {
             item={item}
             onRemove={handleRemoveFromWishlist}
             onAddToCart={addToCart}
+            onPress={() => navigation.navigate('ProductDetailsScreen', { productId: item.productId })}
         />
     );
 
@@ -70,8 +74,15 @@ export default function WishlistScreen() {
                 <View style={{
                     flexDirection: 'row',
                     justifyContent: 'space-between',
+                    alignItems: 'center',
+                    paddingHorizontal: wp('4.65%'),
                 }}>
-                    <Text style={styles.header}>Wishlist</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <TouchableOpacity onPress={() => navigation.goBack()}>
+                            <Image style={styles.leftArrowIcon} source={require('../assets/images/left_arrow.png')} />
+                        </TouchableOpacity>
+                        <Text style={styles.header}>Wishlist</Text>
+                    </View>
                     <Image style={styles.giftImage} source={require('../assets/images/gift_two.png')} />
                 </View>
             </LinearGradient>
@@ -89,6 +100,12 @@ export default function WishlistScreen() {
                     <Text style={styles.newWishesText}>New wishes</Text>
                 </TouchableOpacity> */}
             </View>
+
+            {cartItems && cartItems.length > 0 && (
+                <View style={styles.floatingContainer}>
+                    <SelectedProducts selectedProducts={cartItems} />
+                </View>
+            )}
 
 
             <ConfirmationModal
@@ -112,7 +129,12 @@ const styles = StyleSheet.create({
         fontFamily: FONTS.poppins.semiBold,
         fontSize: wp('4.65%'),
         alignSelf: 'center',
-        marginLeft: wp('10%')
+        marginLeft: wp('4%')
+    },
+    leftArrowIcon: {
+        width: wp('2.33%'),
+        height: hp('2.04%'),
+        resizeMode: 'contain'
     },
     giftImage: {
         width: wp('37.9%'),
@@ -155,5 +177,11 @@ const styles = StyleSheet.create({
         color: "#000000",
         fontFamily: FONTS.outfit.regular,
         fontSize: wp("3.25%")
+    },
+    floatingContainer: {
+        position: "absolute",
+        bottom: hp("0.7%"),
+        left: 0,
+        right: 0,
     }
 })

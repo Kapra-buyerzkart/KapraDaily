@@ -415,25 +415,28 @@ const styles = StyleSheet.create({
         fontFamily: FONTS.outfit.regular,
         fontSize: wp('3.5%'),
         color: '#000000',
-        maxWidth: wp('85%')
+        maxWidth: wp('70%')
     },
     bannerContainer: {
-        // No padding or margin as per user request
+        // backgroundColor: '#F25000',
+        // width: wp('100%'),
+        // alignItems: 'center',
+
     },
     bannerView: {
+        //  backgroundColor: '#F25000',
         width: wp('100%'),
-        height: hp('15%'), // Reduced slightly from the user's manual hp('25%') to maintain balance, or user can adjust
-        overflow: 'hidden',
+        height: hp('10%'),
         alignSelf: 'center',
     },
     bannerStyle: {
         width: '100%',
         height: '100%',
-        resizeMode: 'stretch', // Changed to stretch for full-width coverage
+        resizeMode: 'contain',
     },
     productListingContainer: {
         paddingHorizontal: wp('4.65%'),
-        marginTop: hp('2%')
+        marginTop: hp('1%')
     },
     itemsCountContainer: {
         flexDirection: 'row',
@@ -552,7 +555,7 @@ const styles = StyleSheet.create({
     clearCartWrapper: {
         width: '100%',
         alignItems: 'flex-end',
-        marginTop: hp('1%'),
+        // marginTop: hp('1%'),
     },
     clearCartButton: {
         paddingVertical: hp('0.5%'),

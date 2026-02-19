@@ -19,6 +19,9 @@ import { useCart } from '../context/CartContext';
 import { LoaderContext } from '../context/loaderContext';
 import { useDebounce } from '../hooks/useDebounce';
 import { AppContext } from '../context/appContext';
+import StoreUnavailable from '../components/StoreUnavailable';
+import { getGeneralSettingsApi } from '../api/userService';
+import LocationModal from '../components/LocationModal';
 
 
 const categories = [
@@ -90,6 +93,9 @@ export default function CategoriesScreen() {
     const [loadingProducts, setLoadingProducts] = useState(false);
     const { showLoader } = useContext(LoaderContext);
     const { profile } = useContext(AppContext);
+    const [isStoreUnavailable, setIsStoreUnavailable] = useState(false);
+    const [storeUnavailableData, setStoreUnavailableData] = useState({ image: null, text: '' });
+    const [isLocationModalVisible, setIsLocationModalVisible] = useState(false);
 
     const [filters, setFilters] = useState({
         sortBy: 'relevance',
@@ -100,20 +106,34 @@ export default function CategoriesScreen() {
     const debouncedSearchText = useDebounce(searchText, 500);
 
     useEffect(() => {
-        const initializeLocation = async () => {
+        const initializeLocationAndSettings = async () => {
             try {
                 const storedPincodeAreaId = await AsyncStorage.getItem('pincodeAreaId');
-                if (storedPincodeAreaId) {
-                    setPincodeAreaId(parseInt(storedPincodeAreaId));
-                } else if (profile?.pincode) {
-                    setPincodeAreaId(profile.pincode);
+                // Hardcoded for testing
+                setPincodeAreaId(105);
+
+                // Fetch general settings for store unavailable info
+                try {
+                    const settingsRes = await getGeneralSettingsApi();
+                    if (settingsRes && settingsRes.success && settingsRes.data?.items) {
+                        const items = settingsRes.data.items;
+                        const imageItem = items.find(i => i.stName === 'store_not_available_image');
+                        const textItem = items.find(i => i.stName === 'store_not_available_text');
+
+                        setStoreUnavailableData({
+                            image: imageItem ? imageItem.stValue : null,
+                            text: textItem ? textItem.stValue : ''
+                        });
+                    }
+                } catch (settingsError) {
+                    console.error("Failed to fetch general settings in CategoriesScreen:", settingsError);
                 }
             } catch (error) {
-                console.error('Error fetching pincodeAreaId in CategoriesScreen:', error);
+                console.error('Error in initializeLocationAndSettings in CategoriesScreen:', error);
             }
         };
 
-        initializeLocation();
+        initializeLocationAndSettings();
         fetchCategories();
     }, []);
 
@@ -172,13 +192,24 @@ export default function CategoriesScreen() {
         try {
             setLoading(true);
             showLoader(true);
-            const response = await getCategoriesApi(1); // Fetch main categories
+            const response = await getCategoriesApi(1); // Fetch root categories to find 105
             console.log('Categories Response:', JSON.stringify(response, null, 2));
             if (response && response.success && response.data && response.data.items) {
+                setIsStoreUnavailable(false);
                 setCategoriesList(response.data.items);
-                if (response.data.items.length > 0) {
+
+                // Try to find and select 105 as requested
+                const targetCat = response.data.items.find(item => item.catId === 105);
+                if (targetCat) {
+                    setSelectedId("105");
+                } else if (response.data.items.length > 0) {
                     setSelectedId(response.data.items[0]?.catId?.toString());
                 }
+            } else if (response?.status === 'STORE_NOT_FOUND' || response?.data?.status === 'STORE_NOT_FOUND') {
+                setIsStoreUnavailable(true);
+                setCategoriesList([]);
+            } else {
+                setCategoriesList([]);
             }
         } catch (error) {
             console.error('Error fetching categories:', error);
@@ -195,11 +226,7 @@ export default function CategoriesScreen() {
             console.log('SubCategories Response:', JSON.stringify(response, null, 2));
             if (response && response.success && response.data && response.data.items) {
                 setSubCategoriesList(response.data.items);
-                if (response.data.items.length > 0) {
-                    setSelectedSubCatId(response.data.items[0]?.catId?.toString());
-                } else {
-                    setSelectedSubCatId(null);
-                }
+                setSelectedSubCatId(null);
             } else {
                 setSubCategoriesList([]);
             }
@@ -268,17 +295,17 @@ export default function CategoriesScreen() {
     };
 
     const renderSubCategory = ({ item }) => {
-        const isSelected = item.catId.toString() === selectedSubCatId;
+        const isSelected = item?.catId?.toString() === selectedSubCatId;
 
         return (
             <>
-                {isSelected ? (<TouchableOpacity onPress={() => setSelectedSubCatId(item.catId.toString())} style={styles.selectedSubCategory}>
+                {isSelected ? (<TouchableOpacity onPress={() => setSelectedSubCatId(null)} style={styles.selectedSubCategory}>
                     <View style={styles.selectedSubCategoryImageView}>
                         <Image style={styles.selectedSubCategoryImage} source={getImageUrl(item.imageUrl)} />
                     </View>
                     <Text style={styles.selectedSubCatText}>{item.catName}</Text>
                 </TouchableOpacity>) : (
-                    <TouchableOpacity onPress={() => setSelectedSubCatId(item.catId.toString())} style={[styles.selectedSubCategory, {
+                    <TouchableOpacity onPress={() => setSelectedSubCatId(item?.catId?.toString())} style={[styles.selectedSubCategory, {
                         justifyContent: "center"
                     }]}>
                         <View style={styles.unselectedSubCatImageView}>
@@ -290,12 +317,11 @@ export default function CategoriesScreen() {
             </>
         );
     };
-
     const renderHeader = React.useCallback(() => (
         <>
             <FlatList
                 data={subCategoriesList}
-                keyExtractor={(item) => item.catId.toString()}
+                keyExtractor={(item, index) => (item?.catId || index).toString()}
                 renderItem={renderSubCategory}
                 horizontal={true}
                 showsHorizontalScrollIndicator={false}
@@ -347,48 +373,57 @@ export default function CategoriesScreen() {
                 </View>
             </View>
             <View style={styles.row}>
-
-                {/* LEFT MENU */}
-                <View style={styles.leftMenu}>
-                    <FlatList
-                        data={categoriesList}
-                        keyExtractor={(item) => item.catId.toString()}
-                        renderItem={renderItem}
-                        showsVerticalScrollIndicator={false}
-                        contentContainerStyle={{
-                            paddingBottom: hp("6%"),
-                            // alignItems: "flex-end"
-                        }}
+                {isStoreUnavailable ? (
+                    <StoreUnavailable
+                        image={storeUnavailableData.image}
+                        text={storeUnavailableData.text}
+                        onChangeLocation={() => setIsLocationModalVisible(true)}
                     />
-                </View>
+                ) : (
+                    <>
+                        {/* LEFT MENU */}
+                        <View style={styles.leftMenu}>
+                            <FlatList
+                                data={categoriesList}
+                                keyExtractor={(item, index) => (item?.catId || index).toString()}
+                                renderItem={renderItem}
+                                showsVerticalScrollIndicator={false}
+                                contentContainerStyle={{
+                                    paddingBottom: hp("6%"),
+                                    // alignItems: "flex-end"
+                                }}
+                            />
+                        </View>
 
-                {/* RIGHT CONTENT */}
-                <View style={styles.rightContent}>
-                    <FlatList
-                        data={loadingProducts ? [] : productsList}
-                        keyExtractor={(item) => (item.productId || item.id).toString()}
-                        renderItem={({ item }) => <ProductCard item={item} />}
-                        numColumns={2}
-                        showsVerticalScrollIndicator={false}
-                        contentContainerStyle={{
-                            paddingLeft: wp("2.3%"),
-                            paddingBottom: hp("8.5%"),
-                            paddingTop: hp("0.5%")
-                        }}
-                        ListHeaderComponent={renderHeader}
-                        ListEmptyComponent={
-                            !loadingProducts ? (
-                                <View style={styles.emptyContainer}>
-                                    <Image
-                                        source={require('../assets/images/noimages/noproductfound.png')}
-                                        style={styles.emptyImage}
-                                    />
-                                    {/* <Text style={styles.emptyText}>No products found</Text> */}
-                                </View>
-                            ) : null
-                        }
-                    />
-                </View>
+                        {/* RIGHT CONTENT */}
+                        <View style={styles.rightContent}>
+                            <FlatList
+                                data={loadingProducts ? [] : productsList}
+                                keyExtractor={(item, index) => (item?.productId || item?.id || index).toString()}
+                                renderItem={({ item }) => <ProductCard item={item} />}
+                                numColumns={2}
+                                showsVerticalScrollIndicator={false}
+                                contentContainerStyle={{
+                                    paddingLeft: wp("2.3%"),
+                                    paddingBottom: hp("8.5%"),
+                                    paddingTop: hp("0.5%")
+                                }}
+                                ListHeaderComponent={renderHeader}
+                                ListEmptyComponent={
+                                    !loadingProducts ? (
+                                        <View style={styles.emptyContainer}>
+                                            <Image
+                                                source={require('../assets/images/noimages/noproductfound.png')}
+                                                style={styles.emptyImage}
+                                            />
+                                            {/* <Text style={styles.emptyText}>No products found</Text> */}
+                                        </View>
+                                    ) : null
+                                }
+                            />
+                        </View>
+                    </>
+                )}
             </View>
             <View style={styles.floatingContainer}>
                 <SelectedProducts selectedProducts={selectedProducts} />
@@ -402,6 +437,11 @@ export default function CategoriesScreen() {
                 onApply={({ sort, min, max }) => {
                     setFilters({ sortBy: sort, priceMin: min, priceMax: max });
                 }}
+            />
+
+            <LocationModal
+                visible={isLocationModalVisible}
+                onClose={() => setIsLocationModalVisible(false)}
             />
 
             {/* <FilterSortModal

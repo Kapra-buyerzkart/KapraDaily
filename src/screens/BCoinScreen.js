@@ -5,7 +5,7 @@ import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-nat
 import { FONTS } from '../styles/typography'
 import { useNavigation } from '@react-navigation/native'
 import FastImage from 'react-native-fast-image'
-import { getWalletDataApi, redeemBCoinsApi } from '../api/userService'
+import { getWalletDataApi, redeemBCoinsApi, getBCoinValueChangesApi } from '../api/userService'
 import StatusModal from '../components/StatusModal'
 
 const BCoinScreen = () => {
@@ -13,6 +13,8 @@ const BCoinScreen = () => {
     const [showModal, setShowModal] = useState(false)
     const [walletData, setWalletData] = useState(null)
     const [isLoading, setIsLoading] = useState(false)
+    const [bCoinValueHistory, setBCoinValueHistory] = useState([])
+    const [isLoadingHistory, setIsLoadingHistory] = useState(false)
 
     // Redemption State
     const [showRedeemModal, setShowRedeemModal] = useState(false)
@@ -51,6 +53,21 @@ const BCoinScreen = () => {
             console.error('Error fetching wallet data:', error)
         } finally {
             if (isMounted.current) setIsLoading(false)
+        }
+    }
+
+    const fetchBCoinValueHistory = async () => {
+        if (!isMounted.current) return
+        setIsLoadingHistory(true)
+        try {
+            const response = await getBCoinValueChangesApi()
+            if (isMounted.current && response && response.success && response.data) {
+                setBCoinValueHistory(response.data)
+            }
+        } catch (error) {
+            console.error('Error fetching B-Coin value history:', error)
+        } finally {
+            if (isMounted.current) setIsLoadingHistory(false)
         }
     }
 
@@ -144,7 +161,10 @@ const BCoinScreen = () => {
                             <Text style={styles.bcoinTextTwo}>Today’s B-coin value : </Text>
                             <Text style={styles.bcoinPriceText}>₹{walletData?.wallet?.bCoinValue || '0.00'}</Text>
                         </View>
-                        <TouchableOpacity onPress={() => setShowModal(true)} style={styles.bcoinInnerViewTwo}>
+                        <TouchableOpacity onPress={() => {
+                            fetchBCoinValueHistory()
+                            setShowModal(true)
+                        }} style={styles.bcoinInnerViewTwo}>
                             <Text style={styles.viewText}>View</Text>
                             <Image style={styles.rightArrowsIcon} source={require('../assets/images/right-arrows-two.png')} />
                         </TouchableOpacity>
@@ -298,24 +318,45 @@ const BCoinScreen = () => {
                             </TouchableOpacity>
                         </View>
                         <ScrollView>
-                            <View style={styles.bcoinRateSingleContainer}>
-                                <Text style={styles.dateText}>Today</Text>
-                                <Text style={styles.timeText}>10:02 am</Text>
-                                <View style={styles.rateView}>
-                                    <Text style={styles.rateText}>₹394</Text>
-                                    <Image style={styles.upImage} source={require('../assets/images/down.png')} />
+                            {isLoadingHistory ? (
+                                <ActivityIndicator size="large" color="#F25000" style={{ marginTop: hp('5%') }} />
+                            ) : bCoinValueHistory && bCoinValueHistory.length > 0 ? (
+                                bCoinValueHistory.map((item, index) => (
+                                    <View key={item.id || index} style={styles.bcoinRateSingleContainer}>
+                                        <View style={{ width: wp('30%') }}>
+                                            <Text style={styles.dateText}>
+                                                {item.changeAt ? new Date(item.changeAt).toLocaleDateString('en-IN', {
+                                                    day: '2-digit',
+                                                    month: '2-digit',
+                                                    year: 'numeric'
+                                                }) : ''}
+                                            </Text>
+                                        </View>
+                                        <View style={{ width: wp('40%') }}>
+                                            <Text style={styles.timeText}>
+                                                {item.changeAt ? new Date(item.changeAt).toLocaleTimeString('en-IN', {
+                                                    hour: '2-digit',
+                                                    minute: '2-digit',
+                                                    hour12: true
+                                                }) : ''}
+                                            </Text>
+                                        </View>
+                                        <View style={styles.rateView}>
+                                            <Text style={[styles.rateText, {
+                                                color: item.changeType === 'up' ? '#0CA201' : '#FF0000'
+                                            }]}>₹{item.newValue || item.value}</Text>
+                                            <Image
+                                                style={styles.upImage}
+                                                source={item.changeType === 'up' ? require('../assets/images/up.png') : require('../assets/images/down.png')}
+                                            />
+                                        </View>
+                                    </View>
+                                ))
+                            ) : (
+                                <View style={{ alignItems: 'center', marginTop: hp('5%') }}>
+                                    <Text style={styles.viewText}>No history available</Text>
                                 </View>
-                            </View>
-                            <View style={styles.bcoinRateSingleContainer}>
-                                <Text style={styles.dateText}>26-01-2026</Text>
-                                <Text style={styles.timeText}>10:02 am</Text>
-                                <View style={styles.rateView}>
-                                    <Text style={[styles.rateText, {
-                                        color: '#0CA201'
-                                    }]}>₹394</Text>
-                                    <Image style={styles.upImage} source={require('../assets/images/up.png')} />
-                                </View>
-                            </View>
+                            )}
                         </ScrollView>
                     </View>
                 </View>

@@ -98,7 +98,7 @@ const useHomeData = () => {
                     console.error("Failed to fetch general settings:", settingsError);
                 }
 
-                const areaId = storedPincodeAreaId ? parseInt(storedPincodeAreaId) : (profile?.pincode || null);
+                const areaId = 105; // Hardcoded for testing // storedPincodeAreaId ? parseInt(storedPincodeAreaId) : (profile?.pincode || null);
                 if (storedArea) {
                     setUserLocation({
                         locality: storedLocality || '',

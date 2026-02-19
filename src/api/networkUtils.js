@@ -140,12 +140,12 @@ export const post = async (url, payload, config) => {
 
 export const put = async (url, payload) => {
   const res = await axiosInstance.put(url, payload);
-  return res.data.Data;
+  return res.data;
 };
 
 export const postRegister = async (url, payload) => {
   const res = await axiosInstance.post(url, payload);
-  return res.data.Data;
+  return res.data;
 };
 
 export const patch = async (url, payload) => {

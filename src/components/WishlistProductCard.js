@@ -8,7 +8,7 @@ import CONFIG from '../globals/config';
 import AppButton from './AppButton';
 import { useCart } from '../context/CartContext';
 
-const WishlistProductCard = ({ item, onRemove, onAddToCart }) => {
+const WishlistProductCard = ({ item, onRemove, onAddToCart, onPress }) => {
     const [imageError, setImageError] = useState(false);
     const { cartItems, updateCartItemQuantity, removeFromCart } = useCart();
 
@@ -28,7 +28,7 @@ const WishlistProductCard = ({ item, onRemove, onAddToCart }) => {
     const isOutOfStock = item.isAvailable === false || (item.stockQty !== undefined && Number(item.stockQty) === 0);
 
     return (
-        <TouchableOpacity style={styles.productCard}>
+        <TouchableOpacity style={styles.productCard} onPress={onPress}>
             <View style={styles.productCardViewOne}>
                 <TouchableOpacity onPress={() => onRemove(item.productId, item.productName)}>
                     <Image style={styles.productHeart} source={require("../assets/images/heart_red.png")} />

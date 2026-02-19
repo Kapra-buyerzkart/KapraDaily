@@ -2,7 +2,7 @@ import { View, Text, Image, TouchableOpacity, StyleSheet, FlatList, RefreshContr
 import React, { useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
-import { useNavigation } from '@react-navigation/native'
+import { useNavigation, useFocusEffect } from '@react-navigation/native'
 import { FONTS } from '../styles/typography'
 import { useAddresses } from '../hooks/useAddresses'
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -19,6 +19,13 @@ const SavedAddressScreen = () => {
         isLoading,
         refreshAddresses
     } = useAddresses();
+
+    // Auto-refresh address list when the screen comes into focus
+    useFocusEffect(
+        React.useCallback(() => {
+            refreshAddresses();
+        }, [refreshAddresses])
+    );
 
     const AddressCard = React.memo(({ item, onSelectAddress, onThreeDotsClicked, onDeleteClicked, navigation, onCloseThreeDots }) => {
         const handlePress = () => {

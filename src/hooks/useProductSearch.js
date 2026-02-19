@@ -17,6 +17,13 @@ const useProductSearch = (initialPincodeId, initialCatId = null) => {
     // Debounce the search term to avoid excessive API calls
     const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
+    // Set loading to true as soon as the user starts typing
+    useEffect(() => {
+        if (searchTerm.trim() !== debouncedSearchTerm.trim()) {
+            setLoading(true);
+        }
+    }, [searchTerm]);
+
     useEffect(() => {
         const fetchProducts = async () => {
             const trimmedTerm = debouncedSearchTerm.trim();

@@ -112,3 +112,11 @@ export const getGeneralSettingsApi = async () => {
 export const requestProductApi = async (payload) => {
     return post('me/requestproduct', payload);
 };
+
+/**
+ * Fetches the history of B-Coin value changes.
+ * @returns {Promise<Object>} The API response.
+ */
+export const getBCoinValueChangesApi = async () => {
+    return get('general/bcoinvaluechanges');
+};

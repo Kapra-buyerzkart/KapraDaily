@@ -134,7 +134,7 @@ const CartProductCard = (props) => {
                 <View style={styles.productCardInnerViewTwo}>
                     <Text style={styles.productNameText} numberOfLines={2}>{productName}</Text>
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingRight: wp('2%') }}>
-                        <Text style={styles.productCount}>{quantity} pcs</Text>
+                        <Text style={styles.productCount}>x {quantity} Qty</Text>
 
                     </View>
 

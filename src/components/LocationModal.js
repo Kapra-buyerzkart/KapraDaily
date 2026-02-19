@@ -14,6 +14,7 @@ import DelayInput from 'react-native-debounce-input';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { getAreasBySearch } from '../api';
 import { AppContext } from '../context/appContext';
+import { FONTS } from '../styles/typography';
 
 const LocationModal = ({
     visible,
@@ -110,7 +111,9 @@ const LocationModal = ({
                                     onClose();
                                 }}
                             >
-                                <Text style={styles.itemText}>{item.areaName}</Text>
+                                <Text style={styles.itemText}>
+                                    {item.areaName} {item.pincode ? `(${item.pincode})` : ''}
+                                </Text>
                             </TouchableOpacity>
                         )}
                     />
@@ -148,7 +151,7 @@ const styles = StyleSheet.create({
     title: {
         fontSize: wp('4.3%'),
         // fontWeight: '600',
-        fontFamily: 'Outfit-SemiBold',
+        fontFamily: FONTS.outfit.semiBold,
         color: '#ffffff'
     },
     close: {
@@ -160,7 +163,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#F2F2F2',
         borderRadius: 8,
         fontSize: wp('3.2%'),
-        fontFamily: 'Poppins-Regular',
+        fontFamily: FONTS.poppins.regular,
     },
     item: {
         paddingVertical: wp('4%'),
@@ -170,7 +173,7 @@ const styles = StyleSheet.create({
     },
     itemText: {
         fontSize: wp('3.3%'),
-        fontFamily: 'Poppins-Regular',
+        fontFamily: FONTS.poppins.regular,
         color: '#000000'
     },
 });

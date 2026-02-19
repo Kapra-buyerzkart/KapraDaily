@@ -14,7 +14,14 @@ import Entypo from 'react-native-vector-icons/Entypo'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppContext } from '../context/appContext';
 
-const RECENT_SEARCH = ['Tomato', 'Potato', 'Onion', 'Mango']
+// Truncate text to a specific limit with dots
+const truncateText = (text, limit = 7) => {
+    if (!text) return '';
+    if (text.length <= limit) return text;
+    return text.substring(0, limit) + '..';
+};
+
+const RECENT_SEARCH_KEY = 'recent_searches_list';
 
 const SearchScreen = () => {
     const navigation = useNavigation()
@@ -24,6 +31,7 @@ const SearchScreen = () => {
     const { profile } = useContext(AppContext);
 
     const [currentPincodeId, setCurrentPincodeId] = useState(null);
+    const [recentSearches, setRecentSearches] = useState([]);
 
     const {
         searchTerm,
@@ -44,7 +52,32 @@ const SearchScreen = () => {
             }
         };
         fetchPincode();
+        loadRecentSearches();
     }, [profile]);
+
+    const loadRecentSearches = async () => {
+        try {
+            const stored = await AsyncStorage.getItem(RECENT_SEARCH_KEY);
+            if (stored) {
+                setRecentSearches(JSON.parse(stored));
+            }
+        } catch (error) {
+            console.error('Error loading recent searches:', error);
+        }
+    };
+
+    const saveSearch = async (keyword) => {
+        if (!keyword || keyword.trim().length === 0) return;
+        const cleanKeyword = keyword.trim();
+
+        try {
+            const updated = [cleanKeyword, ...recentSearches.filter(s => s !== cleanKeyword)].slice(0, 10);
+            setRecentSearches(updated);
+            await AsyncStorage.setItem(RECENT_SEARCH_KEY, JSON.stringify(updated));
+        } catch (error) {
+            console.error('Error saving search:', error);
+        }
+    };
 
     useEffect(() => {
         if (catId) {
@@ -68,11 +101,14 @@ const SearchScreen = () => {
             <View style={styles.productContainer}>
                 <TouchableOpacity
                     style={styles.productTouchable}
-                    onPress={() => navigation.navigate('ProductDetailsScreen', { productId: itemId })}
+                    onPress={() => {
+                        saveSearch(searchTerm || item.prName || item.name);
+                        navigation.navigate('ProductDetailsScreen', { productId: itemId });
+                    }}
                 >
                     <Image style={styles.productImage} source={imageUri} />
                     <View style={styles.productInnerView}>
-                        <Text style={styles.productName}>{item.prName || item.name}</Text>
+                        <Text style={styles.productName}>{truncateText(item.prName || item.name, 7)}</Text>
                         <Text style={[styles.productName, { color: '#616161', fontSize: wp('2.8%') }]}>
                             {item.brandName || item.brand || 'Kapra Daily'}
                         </Text>
@@ -121,13 +157,13 @@ const SearchScreen = () => {
             <View>
                 <Text style={styles.recentTitle}>Recent search</Text>
                 <View style={styles.recentContainer}>
-                    {RECENT_SEARCH.map((item, index) => (
+                    {recentSearches.map((item, index) => (
                         <TouchableOpacity
                             key={index}
                             style={styles.recentProduct}
                             onPress={() => setSearchTerm(item)}
                         >
-                            <Text style={styles.recentProductText}>{item}</Text>
+                            <Text style={styles.recentProductText}>{truncateText(item, 7)}</Text>
                         </TouchableOpacity>
                     ))}
                 </View>
@@ -162,24 +198,30 @@ const SearchScreen = () => {
             </View>
 
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingRight: wp('5%') }}>
-                <Text style={styles.resultText}>Results found : {resultCount}</Text>
+                <Text style={styles.resultText}>
+                    {loading ? 'Searching...' : `Results found : ${resultCount}`}
+                </Text>
             </View>
 
+            {loading && (
+                <View style={styles.centeredLoader}>
+                    <ActivityIndicator size="large" color="#F25000" />
+                </View>
+            )}
+
             <FlatList
-                data={suggestions}
+                data={loading ? [] : suggestions}
                 keyExtractor={(item, index) => (item.productId || item.id || index).toString()}
                 renderItem={renderItem}
                 ListFooterComponent={ListFooter}
-                contentContainerStyle={{ paddingBottom: hp('5%') }}
+                contentContainerStyle={{ flexGrow: 1, paddingBottom: hp('5%') }}
                 ListEmptyComponent={!loading && searchTerm.length > 0 && (
                     <View style={styles.emptyContainer}>
                         <Image
                             source={require('../assets/images/noimages/noproductfound.png')}
                             style={styles.emptyImage}
                         />
-                        {/* <Text style={styles.emptyText}>No products found</Text> */}
-
-                        <Text style={[styles.resultText, { textAlign: 'center', marginTop: hp('5%'), fontSize: wp('3.5%') }]}>
+                        <Text style={styles.noResultsText}>
                             No products found for "{searchTerm}"
                         </Text>
                     </View>
@@ -354,5 +396,31 @@ const styles = StyleSheet.create({
         flexWrap: 'wrap',
         marginHorizontal: wp('5%'),
         marginTop: hp('1%')
+    },
+    emptyContainer: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingTop: hp('10%'),
+    },
+    emptyImage: {
+        width: wp('50%'),
+        height: wp('50%'),
+        resizeMode: 'contain',
+    },
+    noResultsText: {
+        fontFamily: FONTS.poppins.medium,
+        fontSize: wp('3.5%'),
+        color: '#666666',
+        textAlign: 'center',
+        marginTop: hp('2%'),
+        paddingHorizontal: wp('10%'),
+    },
+    centeredLoader: {
+        position: 'absolute',
+        top: hp('35%'),
+        left: 0,
+        right: 0,
+        zIndex: 10,
     }
 })

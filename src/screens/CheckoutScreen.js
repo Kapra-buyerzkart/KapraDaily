@@ -246,19 +246,23 @@ const CheckoutScreen = () => {
                             <Text style={styles.changeButtonText}>Change</Text>
                         </TouchableOpacity>
                     </View>
-                    <View style={[styles.card, { flexDirection: 'row', alignItems: 'flex-start' }]}>
-                        {(() => {
-                            const type = currentSelectedAddress?.type?.toLowerCase() || '';
-                            if (type === 'home') {
-                                return <Entypo name="home" size={wp('6%')} color="#F25000" style={{ marginRight: wp('3%'), marginTop: hp('0.5%') }} />;
-                            } else if (type === 'office') {
-                                return <MaterialCommunityIcons name="briefcase" size={wp('6%')} color="#F25000" style={{ marginRight: wp('3%'), marginTop: hp('0.5%') }} />;
-                            } else {
-                                return <Entypo name="location-pin" size={wp('6%')} color="#F25000" style={{ marginRight: wp('3%'), marginTop: hp('0.5%') }} />;
-                            }
-                        })()}
+                    <View style={styles.card}>
                         <View style={{ flex: 1 }}>
-                            <Text style={styles.addressType}>{currentSelectedAddress?.type || 'Home'}</Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                {(() => {
+                                    const type = currentSelectedAddress?.type?.toLowerCase() || '';
+                                    const iconSize = wp('4.5%');
+                                    const iconStyle = { marginRight: wp('2%') };
+                                    if (type === 'home') {
+                                        return <Entypo name="home" size={iconSize} color="#F25000" style={iconStyle} />;
+                                    } else if (type === 'office') {
+                                        return <MaterialCommunityIcons name="briefcase" size={iconSize} color="#F25000" style={iconStyle} />;
+                                    } else {
+                                        return <Entypo name="location-pin" size={iconSize} color="#F25000" style={iconStyle} />;
+                                    }
+                                })()}
+                                <Text style={[styles.addressType, { marginTop: 5 }]}>{currentSelectedAddress?.type || 'Home'}</Text>
+                            </View>
                             <View style={styles.addressDivider} />
                             <Text style={styles.addressText}>{currentSelectedAddress?.address || 'No address selected'}</Text>
                             <Text style={styles.phoneText}>Phone: {currentSelectedAddress?.phone || 'N/A'}</Text>
@@ -320,7 +324,7 @@ const CheckoutScreen = () => {
                         {deliveryType === 'slot' && (
                             <TouchableOpacity
                                 onPress={() => setShowSlotModal(true)}
-                                style={{ alignSelf: 'flex-end', marginBottom: hp('0.5%') }}
+                                style={{ alignSelf: 'flex-end', marginBottom: hp('0.01%') }}
                             >
                                 <Text style={{ fontFamily: FONTS.poppins.medium, fontSize: wp('3%'), color: '#F25000' }}>
                                     {chosenSlot ? 'Change Slot' : 'Select Slot'}
@@ -500,13 +504,13 @@ const styles = StyleSheet.create({
         paddingBottom: hp('15%')
     },
     sectionContainer: {
-        marginTop: hp('2%'),
+        marginTop: hp('1.5%'),
         paddingHorizontal: wp('4.65%')
     },
     sectionHeader: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: hp('1%')
+        marginBottom: hp('0.5%')
     },
     sectionTitle: {
         fontFamily: FONTS.poppins.semiBold,
@@ -530,7 +534,8 @@ const styles = StyleSheet.create({
     card: {
         backgroundColor: '#FFFFFF',
         borderRadius: 12,
-        padding: wp('4%'),
+        paddingHorizontal: wp('3%'),
+        paddingVertical: hp('0.8%'),
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.1,
@@ -541,12 +546,12 @@ const styles = StyleSheet.create({
         fontFamily: FONTS.poppins.semiBold,
         fontSize: wp('3.8%'),
         color: '#000000',
-        marginBottom: hp('0.5%')
+        marginBottom: hp('0.2%')
     },
     addressDivider: {
         height: 1,
         backgroundColor: '#EEEEEE',
-        marginVertical: hp('0.8%')
+        marginVertical: hp('0.4%')
     },
     addressText: {
         fontFamily: FONTS.outfit.regular,
@@ -558,12 +563,12 @@ const styles = StyleSheet.create({
         fontFamily: FONTS.outfit.medium,
         fontSize: wp('3.5%'),
         color: '#000000',
-        marginTop: hp('1%')
+        marginTop: hp('0.5%')
     },
     radioRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: hp('1.2%'),
+        paddingVertical: hp('0.2%'),
     },
     radioContent: {
         marginLeft: wp('3%'),
@@ -578,12 +583,12 @@ const styles = StyleSheet.create({
         fontFamily: FONTS.outfit.regular,
         fontSize: wp('3.2%'),
         color: '#999999',
-        marginTop: hp('0.2%'),
+        marginTop: hp('0.1%'),
     },
     radioDivider: {
         height: 1,
         backgroundColor: '#F0F0F0',
-        marginVertical: hp('0.5%'),
+        marginVertical: hp('0.1%'),
     },
     billContainer: {
         marginTop: hp('1%')

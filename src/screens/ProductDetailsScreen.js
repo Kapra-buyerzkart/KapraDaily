@@ -15,6 +15,7 @@ import { useCart } from '../context/CartContext'
 import { useProductDetails } from '../hooks/useProductDetails'
 import { LoaderContext } from '../context/loaderContext'
 import Entypo from 'react-native-vector-icons/Entypo'
+import LinearGradient from 'react-native-linear-gradient'
 
 const images = [
     require('../assets/images/lays.png'),
@@ -36,6 +37,8 @@ const ProductDetailsScreen = () => {
     const [selectedImage, setSelectedImage] = useState(null)
     const [showDetails, setShowDetails] = useState(false)
     const animation = useRef(new Animated.Value(0)).current
+    const mainScrollViewRef = useRef(null)
+    const [showScrollHint, setShowScrollHint] = useState(false);
 
     const navigation = useNavigation()
     const route = useRoute()
@@ -93,19 +96,29 @@ const ProductDetailsScreen = () => {
     const isLiked = isInWishlist(finalProductId)
 
     const toggleDetails = () => {
+        const isExpanding = !showDetails;
         Animated.timing(animation, {
-            toValue: showDetails ? 0 : 1,
+            toValue: isExpanding ? 1 : 0,
             duration: 250,
             useNativeDriver: false,
         }).start()
-        setShowDetails(!showDetails)
+        setShowDetails(isExpanding)
+
+        if (isExpanding) {
+            // Scroll down a bit to show parts of the expanded description
+            setTimeout(() => {
+                mainScrollViewRef.current?.scrollTo({
+                    y: hp('35%'),
+                    animated: true
+                });
+            }, 50);
+        }
     }
 
     const heightInterpolate = animation.interpolate({
         inputRange: [0, 1],
         outputRange: [0, hp('40%')],
     })
-    // Set selected image from productImage
     useEffect(() => {
         if (productImage) {
             setSelectedImage(productImage)
@@ -113,6 +126,13 @@ const ProductDetailsScreen = () => {
             setSelectedImage(apiImages[0])
         }
     }, [productImage, apiImages])
+
+    // Scroll to top when product ID changes (e.g., similar product clicked)
+    useEffect(() => {
+        if (finalProductId) {
+            mainScrollViewRef.current?.scrollTo({ y: 0, animated: true });
+        }
+    }, [finalProductId])
 
     const products = [
         { id: "1", name: "Tomato", img: require('../assets/images/products/tomato.png'), price: "₹324" },
@@ -145,6 +165,7 @@ const ProductDetailsScreen = () => {
                 <Text style={styles.headerText}>Product Details</Text>
             </View>
             <ScrollView
+                ref={mainScrollViewRef}
                 contentContainerStyle={{ paddingBottom: hp("9%") }}
                 showsVerticalScrollIndicator={false}
             >
@@ -283,13 +304,25 @@ const ProductDetailsScreen = () => {
                         overflow: 'hidden'
                     }]}>
                         <View style={{ flex: 1 }}>
-                            <ScrollView showsVerticalScrollIndicator={true}>
+                            <ScrollView
+                                showsVerticalScrollIndicator={false}
+                                onContentSizeChange={(w, h) => {
+                                    if (h > hp('35%')) {
+                                        setShowScrollHint(true);
+                                    }
+                                }}
+                                onScroll={(event) => {
+                                    const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
+                                    const isCloseToBottom = layoutMeasurement.height + contentOffset.y >= contentSize.height - 20;
+                                    setShowScrollHint(!isCloseToBottom);
+                                }}
+                                scrollEventThrottle={16}
+                            >
                                 <Text style={styles.productDetailsText}>{productDescription?.replace(/<[^>]*>?/gm, '')}</Text>
                                 {attributes && attributes.length > 0 && (
                                     <>
                                         <Text style={[styles.productsContainerHeader, { marginLeft: 0, marginBottom: hp('1%'), marginTop: hp('2%') }]}>Attributes</Text>
                                         <View style={styles.specsContainer}>
-
                                             {attributes.map((attr, idx) => (
                                                 <View key={idx} style={[styles.specRow, (idx + (product?.sku ? 1 : 0)) % 2 !== 0 && styles.specRowAlt]}>
                                                     <Text style={styles.specLabel}>{attr.attrName}</Text>
@@ -297,16 +330,23 @@ const ProductDetailsScreen = () => {
                                                 </View>
                                             ))}
                                         </View>
-
                                     </>
                                 )}
                                 <View style={{ marginTop: hp('2%') }} />
                             </ScrollView>
-                            {/* Scroll Indicator */}
-                            {productDescription && productDescription.length > 200 && (
-                                <View style={styles.scrollIndicator}>
-                                    <MaterialIcons name="keyboard-arrow-down" size={wp('5%')} color="#F25000" />
-                                </View>
+
+                            {/* Scroll Gradient and Indicator */}
+                            {showScrollHint && showDetails && (
+                                <>
+                                    <LinearGradient
+                                        colors={['rgba(255,255,255,0)', 'rgba(255,255,255,0.8)', '#FFFFFF']}
+                                        style={styles.fadeGradient}
+                                    />
+                                    <View style={styles.scrollIndicator}>
+                                        <Text style={styles.scrollHintText}>Scroll for more</Text>
+                                        <MaterialIcons name="keyboard-arrow-down" size={wp('4%')} color="#F25000" />
+                                    </View>
+                                </>
                             )}
                         </View>
                     </Animated.View>
@@ -688,10 +728,32 @@ const styles = StyleSheet.create({
     },
     scrollIndicator: {
         position: 'absolute',
-        bottom: 5,
-        right: wp('4.65%'),
-        backgroundColor: 'rgba(255,255,255,0.8)',
+        bottom: hp('1%'),
+        alignSelf: 'center',
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#FFFFFF',
         borderRadius: 20,
-        padding: 2
+        paddingHorizontal: wp('3%'),
+        paddingVertical: hp('0.5%'),
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3
+    },
+    scrollHintText: {
+        fontFamily: FONTS.poppins.medium,
+        fontSize: wp('2.8%'),
+        color: '#F25000',
+        marginRight: wp('1%')
+    },
+    fadeGradient: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: hp('8%'),
+        pointerEvents: 'none'
     }
 })

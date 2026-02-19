@@ -28,6 +28,7 @@ import EmptySection from '../components/EmptySection';
 import { AppContext } from '../context/appContext';
 import LoginScreen from './LoginScreen';
 import LocationModal from '../components/LocationModal';
+import StoreUnavailable from '../components/StoreUnavailable';
 
 
 const { width } = Dimensions.get("window");
@@ -57,17 +58,19 @@ const PlacementBannerCarousel = ({ banners, onBannerPress, style, fullWidth = fa
 
     if (banners.length === 1) {
         return (
-            <TouchableOpacity
-                activeOpacity={0.9}
-                onPress={() => onBannerPress(banners[0])}
-                style={[fullWidth ? styles.topHomeBannerViewFull : styles.topHomeBannerView, style]}
-            >
-                <Image
-                    source={banners[0].uri}
-                    style={styles.topHomeBannerImage}
-                    resizeMode="stretch"
-                />
-            </TouchableOpacity>
+            <View style={[!fullWidth && styles.carouselShadowWrapper, { width: BANNER_WIDTH, alignSelf: 'center' }, style]}>
+                <TouchableOpacity
+                    activeOpacity={0.9}
+                    onPress={() => onBannerPress(banners[0])}
+                    style={fullWidth ? styles.topHomeBannerViewFull : styles.topHomeBannerView}
+                >
+                    <Image
+                        source={banners[0].uri}
+                        style={styles.topHomeBannerImage}
+                        resizeMode="stretch"
+                    />
+                </TouchableOpacity>
+            </View>
         );
     }
 
@@ -86,23 +89,24 @@ const PlacementBannerCarousel = ({ banners, onBannerPress, style, fullWidth = fa
                 keyExtractor={(_, index) => index.toString()}
                 contentContainerStyle={fullWidth ? undefined : { paddingHorizontal: wp('4.6%') }}
                 renderItem={({ item }) => (
-                    <TouchableOpacity
-                        activeOpacity={0.9}
-                        onPress={() => onBannerPress(item)}
-                        style={{
-                            width: BANNER_WIDTH,
-                            height: hp('20%'),
-                            marginRight: BANNER_SPACING,
-                            borderRadius: fullWidth ? 0 : wp('4%'),
-                            overflow: 'hidden'
-                        }}
-                    >
-                        <Image
-                            source={item.uri}
-                            style={styles.topHomeBannerImage}
-                            resizeMode="stretch"
-                        />
-                    </TouchableOpacity>
+                    <View style={[!fullWidth && styles.carouselShadowWrapper, { width: BANNER_WIDTH, marginRight: BANNER_SPACING }]}>
+                        <TouchableOpacity
+                            activeOpacity={0.9}
+                            onPress={() => onBannerPress(item)}
+                            style={{
+                                width: BANNER_WIDTH,
+                                height: hp('20%'),
+                                borderRadius: fullWidth ? 0 : wp('4%'),
+                                overflow: 'hidden'
+                            }}
+                        >
+                            <Image
+                                source={item.uri}
+                                style={styles.topHomeBannerImage}
+                                resizeMode="stretch"
+                            />
+                        </TouchableOpacity>
+                    </View>
                 )}
             />
             <View style={styles.pagination}>
@@ -513,21 +517,14 @@ const HomeScreen = () => {
                             <Text style={styles.timeText}>20 min</Text>
                             <TouchableOpacity
                                 style={styles.addressView}
-                                onPress={() => navigation.navigate('SearchScreen', { type: 'location' })}
+                                onPress={() => setModalVisible(true)}
                             >
                                 <Entypo name={"location-pin"} size={wp('3.6%')} color={"#FFFFFF"} style={{ marginRight: wp('1%') }} />
                                 <Text style={styles.addressText}
                                     numberOfLines={1}
                                     ellipsizeMode="tail"
                                 >
-                                    {userLocation ? `${userLocation.locality || ''}: ${userLocation.area || ''}` : 'Select Location'}
-                                </Text> */}
-                                <Text style={styles.addressText}
-                                    numberOfLines={1}
-                                    ellipsizeMode="tail"
-                                >
-                                    {/* {userLocation ? `${userLocation.locality || ''}: ${userLocation.area || ''}` : 'Select Location'} */}
-                                    {profile.pinAddress}
+                                    {profile?.pinAddress || 'Select Location'}
                                 </Text>
                                 <Entypo name={"chevron-right"} size={wp('3.6%')} color={"#FFFFFF"} />
                             </TouchableOpacity>
@@ -551,7 +548,7 @@ const HomeScreen = () => {
                                 })
                             }} style={styles.profileIconMainView}>
                                 {profile?.isPrivileged && (
-                                    <Image source={require('../assets/images/crown.png')} width={wp('6.3%')} height={hp('2.3%')} />
+                                    <Image source={require('../assets/images/crown.png')} style={[styles.crownImage, { width: wp('6.3%'), height: hp('2.3%') }]} />
                                 )}
                                 <View style={styles.profileIconView}>
                                     <GradientUserIcon size={wp('6%')} />
@@ -573,29 +570,13 @@ const HomeScreen = () => {
                     </TouchableOpacity>
                 </View>
                 {isStoreUnavailable ? (
-                    <View style={styles.unavailableContainer}>
-                        {storeUnavailableData.image ? (
-                            <Image
-                                source={{ uri: `${CONFIG.image_base_url}${storeUnavailableData.image}` }}
-                                style={styles.unavailableImage}
-                                resizeMode="contain"
-                            />
-                        ) : (
-                            <View style={styles.fallbackIconContainer}>
-                                <Ionicons name="storefront-outline" size={wp('30%')} color="#FF7B3A" />
-                            </View>
-                        )}
-                        <Text style={styles.unavailableText}>
-                            {storeUnavailableData.text || "Service not available in your area yet. We're coming soon!"}
-                        </Text>
-
-                        {/* <TouchableOpacity
-                            style={styles.changeLocationButton}
-                            onPress={() => navigation.navigate('SearchScreen', { type: 'location' })}
-                        >
-                            <Text style={styles.changeLocationButtonText}>Change Location</Text>
-                        </TouchableOpacity> */}
-                    </View>) : (<>
+                    <StoreUnavailable
+                        image={storeUnavailableData.image}
+                        text={storeUnavailableData.text}
+                        onChangeLocation={() => setModalVisible(true)}
+                    />
+                ) : (
+                    <>
                         {/* Top Home Banner */}
                         <PlacementBannerCarousel banners={topBanner} onBannerPress={handleBannerPress} fullWidth />
 
@@ -837,6 +818,7 @@ export default HomeScreen
 const styles = StyleSheet.create({
     mainContainer: {
         flex: 1,
+        backgroundColor: '#FFFFFF',
     },
     headerMainView: {
         backgroundColor: "#CD827F",
@@ -865,7 +847,7 @@ const styles = StyleSheet.create({
         marginTop: hp('4%'),
         marginHorizontal: wp('6.9%'),
         justifyContent: "space-between",
-        alignItems: 'flex-end',
+        alignItems: 'center',
     },
     timeText: {
         fontFamily: FONTS.poppins.extraBold,
@@ -920,7 +902,7 @@ const styles = StyleSheet.create({
         borderRadius: wp('4%'),
         justifyContent: 'center',
         alignItems: 'center',
-        marginTop: -hp('1%'),
+        // marginTop: -hp('1%'),
 
         shadowColor: '#744700',
         shadowOpacity: 0.5,
@@ -947,7 +929,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: '#FFFFFF',
-        top: hp("-1.0%")
+        // top: hp("-1.0%")
     },
     bear: {
         position: 'absolute',
@@ -1015,6 +997,12 @@ const styles = StyleSheet.create({
     },
     profileIconMainView: {
         alignItems: "center",
+        justifyContent: 'center',
+    },
+    crownImage: {
+        position: 'absolute',
+        top: -hp('1.5%'),
+        zIndex: 1,
     },
     // headerBannerImage: {
     //     width: "100%",
@@ -1025,6 +1013,7 @@ const styles = StyleSheet.create({
         height: hp("22%"),   // adjust based on design
     },
     categoryMainView: {
+        // backgroundColor: '#FFFFFF',
         marginHorizontal: wp("4.6%"),
         marginTop: hp("2%")
     },
@@ -1479,11 +1468,24 @@ const styles = StyleSheet.create({
         color: '#3A3A3A',
     },
     topHomeBannerView: {
-        width: wp('90.8%'),
+        width: '100%',
         height: hp('20%'),
         alignSelf: 'center',
         borderRadius: wp('4%'),
         overflow: 'hidden',
+    },
+    carouselShadowWrapper: {
+        shadowColor: "#000000",
+        shadowOffset: {
+            width: 0,
+            height: 3,
+        },
+        shadowOpacity: 0.18,
+        shadowRadius: 4.5,
+        elevation: 6,
+        backgroundColor: '#FFFFFF',
+        borderRadius: wp('4%'),
+        marginVertical: hp('1%'),
     },
     topHomeBannerViewFull: {
         width: wp('100%'),
