@@ -487,11 +487,11 @@ const OrderTrackingScreen = () => {
                     <Text style={styles.paymentMethodText}>Payment method</Text>
 
                     <View style={styles.deliveryAgentContainer}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: wp('2%') }}>
                             <Image style={styles.paymentImage} source={require('../assets/images/payment_image.png')} />
-                            <Text style={styles.paymentText}>{paymentMethod}</Text>
+                            <Text numberOfLines={1} ellipsizeMode="tail" style={[styles.paymentText, { flex: 1 }]}>{paymentMethod}</Text>
                         </View>
-                        <View style={{ alignItems: 'flex-end' }}>
+                        <View style={{ alignItems: 'flex-end', flexShrink: 0 }}>
                             <Text style={styles.paymnetPrice}>₹{grandTotal}</Text>
                             {orderStatus === 'delivered' && (
                                 <View style={[styles.paidBadge, { marginTop: hp('0.5%') }]}>
@@ -877,6 +877,7 @@ const styles = StyleSheet.create({
         fontFamily: FONTS.poppins.light,
         fontSize: wp('2.55%'), // ✅ FIXED
         color: '#606060',
+        width: '85%',
     },
     rightArrowIcon: {
         width: wp('7%'),
@@ -923,7 +924,7 @@ const styles = StyleSheet.create({
         elevation: 8,
         alignSelf: 'center',
         paddingHorizontal: wp('3%'),
-        paddingTop: hp('1.5%'),
+        paddingTop: hp('0.5%'),
         paddingBottom: hp('0.5%'),
         // justifyContent: 'space-between',
         zIndex: 1

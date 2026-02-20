@@ -18,7 +18,7 @@ const OrderProductCard = ({ item, orderStatus, onReturn }) => {
         return img;
     };
 
-    const imageSource = getImageSource(item.image || item.prImage || item.productImage || item.product_image || item.featuredImage || item.img);
+    const imageSource = getImageSource(item.image || item.prImage || item.productImage || item.product_image || item.featuredImage || item.img || item?.productImg);
 
     // Determine Status Eligibility for Return
     const canReturn = orderStatus === 'delivered' && item.canReturn && !item.isReturned && !item.returnRequested;
@@ -64,14 +64,14 @@ export default OrderProductCard
 const styles = StyleSheet.create({
     cardContainer: {
         flexDirection: 'row',
-        paddingVertical: hp('1.5%'),
+        paddingVertical: hp('1%'),
         borderBottomWidth: 1,
         borderBottomColor: '#F0F0F0',
         alignItems: 'center'
     },
     productImage: {
-        width: wp('18%'),
-        height: wp('18%'),
+        width: wp('14%'),
+        height: wp('14%'),
         resizeMode: 'contain',
         borderRadius: 8,
         borderWidth: 1,
