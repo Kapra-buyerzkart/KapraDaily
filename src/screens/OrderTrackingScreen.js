@@ -16,6 +16,7 @@ import { useOrderTracking } from '../hooks/useOrderTracking'
 import AppButton from '../components/AppButton'
 import CustomLoader from '../components/CustomLoader'
 import CONFIG from '../globals/config'
+import RatingModal from '../components/RatingModal'
 
 const OrderTrackingScreen = () => {
     const navigation = useNavigation();
@@ -51,6 +52,8 @@ const OrderTrackingScreen = () => {
         handleCancelOrder,
         handleReturnItem,
         refreshOrder,
+        submitDeliveryAgentRating,
+        submitOrderRating,
 
         // Enhanced Data
         formattedOrderDate,
@@ -61,6 +64,34 @@ const OrderTrackingScreen = () => {
     const insets = useSafeAreaInsets();
     const [returnReason, setReturnReason] = useState('');
     const [showBillBreakdown, setShowBillBreakdown] = useState(false);
+    const [orderRating, setOrderRating] = useState(0);
+    const [agentRating, setAgentRating] = useState(0);
+    const [isRatingModalVisible, setIsRatingModalVisible] = useState(false);
+    const [ratingType, setRatingType] = useState('order'); // 'order' or 'agent'
+    const [pendingRating, setPendingRating] = useState(0);
+
+    const handleOrderRating = (rating) => {
+        setPendingRating(rating);
+        setRatingType('order');
+        setIsRatingModalVisible(true);
+    };
+
+    const handleAgentRating = (rating) => {
+        setPendingRating(rating);
+        setRatingType('agent');
+        setIsRatingModalVisible(true);
+    };
+
+    const onRatingSubmit = async (review) => {
+        setIsRatingModalVisible(false);
+        if (ratingType === 'order') {
+            setOrderRating(pendingRating);
+            await submitOrderRating(pendingRating, review);
+        } else {
+            setAgentRating(pendingRating);
+            await submitDeliveryAgentRating(pendingRating, review);
+        }
+    };
 
     // SignalR Real-time Tracking
     useOrderTracking(
@@ -117,7 +148,10 @@ const OrderTrackingScreen = () => {
                 </TouchableOpacity>
                 <Text style={styles.headerText}>Order Tracking</Text>
                 <View style={styles.headerInnerView}>
-                    <TouchableOpacity style={styles.helpContainer}>
+                    <TouchableOpacity
+                        style={styles.helpContainer}
+                        onPress={() => navigation.navigate('SupportTicketScreen', { orderId: orderId })}
+                    >
                         <Image style={styles.headPhoneImage} source={require('../assets/images/head_phone.png')} />
                         <Text style={styles.helpText}>Help</Text>
                     </TouchableOpacity>
@@ -424,11 +458,14 @@ const OrderTrackingScreen = () => {
                     {orderStatus === 'delivered' ? (<View style={styles.ratingContainer}>
                         <Text style={styles.ratingText}>How was your experience ?</Text>
                         <View style={styles.starContainer}>
-                            <Image style={styles.ratingStarStyle} source={require('../assets/images/star.png')} />
-                            <Image style={styles.ratingStarStyle} source={require('../assets/images/star.png')} />
-                            <Image style={styles.ratingStarStyle} source={require('../assets/images/star.png')} />
-                            <Image style={styles.ratingStarStyle} source={require('../assets/images/star.png')} />
-                            <Image style={styles.ratingStarStyle} source={require('../assets/images/star.png')} />
+                            {[1, 2, 3, 4, 5].map((star) => (
+                                <TouchableOpacity key={star} onPress={() => handleOrderRating(star)}>
+                                    <Image
+                                        style={[styles.ratingStarStyle, { tintColor: star <= orderRating ? '#F2C94C' : '#DADADA' }]}
+                                        source={require('../assets/images/star.png')}
+                                    />
+                                </TouchableOpacity>
+                            ))}
                         </View>
                     </View>
                     ) : (<View style={styles.deliveryAgentContainer}>
@@ -550,20 +587,30 @@ const OrderTrackingScreen = () => {
                             </View>
                         )}
                     </View>
-                    <TouchableOpacity
-                        style={styles.downloadBillContainer}
-                        onPress={() => {
-                            if (invoiceUrl) {
-                                Linking.openURL(`${CONFIG.base_url}${invoiceUrl}`).catch(err => {
-                                    console.error("Couldn't load page", err);
-                                    Toast.show("Unable to download invoice at this time", Toast.SHORT);
-                                });
-                            }
-                        }}
-                    >
-                        <Image style={styles.downloadBillIcon} source={require('../assets/images/bill_icon_two.png')} />
-                        <Text style={styles.downloadBillText}>Download the bill</Text>
-                    </TouchableOpacity>
+                    {['packed', 'assigned', 'dispatched', 'delivered'].includes(orderStatus) && (
+                        <TouchableOpacity
+                            style={styles.downloadBillContainer}
+                            onPress={() => {
+                                if (invoiceUrl) {
+                                    // Use siteUrl if invoiceUrl is a relative asset path
+                                    const fullUrl = invoiceUrl.startsWith('http')
+                                        ? invoiceUrl
+                                        : `${CONFIG.siteUrl}${invoiceUrl}`;
+
+                                    console.log('Opening Invoice URL:', fullUrl);
+                                    Linking.openURL(fullUrl).catch(err => {
+                                        console.error("Couldn't load page", err);
+                                        Toast.show("Unable to download invoice at this time", Toast.SHORT);
+                                    });
+                                } else {
+                                    Toast.show("Invoice not available yet", Toast.SHORT);
+                                }
+                            }}
+                        >
+                            <Image style={styles.downloadBillIcon} source={require('../assets/images/bill_icon_two.png')} />
+                            <Text style={styles.downloadBillText}>Download the bill</Text>
+                        </TouchableOpacity>
+                    )}
                     <Text style={styles.orderDetailsText}>Order Details</Text>
                     <View style={styles.orderDetailsContainer}>
                         <View>
@@ -589,11 +636,14 @@ const OrderTrackingScreen = () => {
                             <View style={styles.deliveryAgentContainerInnerView}>
                                 <Text style={styles.deliveryAgentRatingText}>Rate our delivery boy</Text>
                                 <View style={styles.starContainerTwo}>
-                                    <Image style={styles.ratingStarStyleTwo} source={require('../assets/images/star.png')} />
-                                    <Image style={styles.ratingStarStyleTwo} source={require('../assets/images/star.png')} />
-                                    <Image style={styles.ratingStarStyleTwo} source={require('../assets/images/star.png')} />
-                                    <Image style={styles.ratingStarStyleTwo} source={require('../assets/images/star.png')} />
-                                    <Image style={styles.ratingStarStyleTwo} source={require('../assets/images/star.png')} />
+                                    {[1, 2, 3, 4, 5].map((star) => (
+                                        <TouchableOpacity key={star} onPress={() => handleAgentRating(star)}>
+                                            <Image
+                                                style={[styles.ratingStarStyleTwo, { tintColor: star <= agentRating ? '#F2C94C' : '#DADADA' }]}
+                                                source={require('../assets/images/star.png')}
+                                            />
+                                        </TouchableOpacity>
+                                    ))}
                                 </View>
                             </View>
                         </View>
@@ -614,6 +664,15 @@ const OrderTrackingScreen = () => {
                     )}
                 </View>
             </ScrollView>
+
+            <RatingModal
+                visible={isRatingModalVisible}
+                onClose={() => setIsRatingModalVisible(false)}
+                onSubmit={onRatingSubmit}
+                rating={pendingRating}
+                title={ratingType === 'order' ? 'Rate Your Order' : 'Rate Delivery Agent'}
+                placeholder={ratingType === 'order' ? 'How was the quality of items and service?' : 'Comment on delivery speed and behavior...'}
+            />
 
             <ConfirmationModal
                 visible={showCancelModal}

@@ -6,9 +6,10 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 const StatusModal = ({ visible, onClose, type = 'success', title, message }) => {
     const isSuccess = type === 'success';
-    const iconName = isSuccess ? 'check-circle' : 'error';
-    const iconColor = isSuccess ? '#0CA201' : '#FF0000';
-    const buttonColor = isSuccess ? '#0CA201' : '#FF0000';
+    const isOrange = type === 'orange';
+    const iconName = (isSuccess || isOrange) ? 'check-circle' : 'error';
+    const iconColor = isOrange ? '#F25000' : (isSuccess ? '#0CA201' : '#FF0000');
+    const buttonColor = isOrange ? '#F25000' : (isSuccess ? '#0CA201' : '#FF0000');
 
     return (
         <Modal

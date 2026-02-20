@@ -259,24 +259,31 @@ export default function ProfileScreen() {
                     <View style={[styles.offerView, {
                         paddingVertical: wp('3%')
                     }]}>
-                        <Image style={styles.circle} source={require('../assets/images/circle.png')} />
+                        <Ionicons name="shield-checkmark-outline" color={'#F25000'} size={wp('5.5%')} />
                         <Text style={styles.offerText}>Privacy Policy</Text>
                         <AntDesign name={"right"} color={'#DADADA'} size={wp('4.4%')} />
                     </View>
                     <View style={[styles.offerView, {
                         paddingVertical: wp('3%')
                     }]}>
-                        <Image style={styles.circle} source={require('../assets/images/circle.png')} />
+                        <Ionicons name="document-text-outline" color={'#F25000'} size={wp('5.5%')} />
                         <Text style={styles.offerText}>Terms Of Use</Text>
                         <AntDesign name={"right"} color={'#DADADA'} size={wp('4.4%')} />
                     </View>
                     <View style={[styles.offerView, {
                         paddingVertical: wp('3%')
                     }]}>
-                        <Image style={styles.circle} source={require('../assets/images/circle.png')} />
+                        <Ionicons name="information-circle-outline" color={'#F25000'} size={wp('5.5%')} />
                         <Text style={styles.offerText}>About Us</Text>
                         <AntDesign name={"right"} color={'#DADADA'} size={wp('4.4%')} />
                     </View>
+                    <TouchableOpacity onPress={() => navigation.navigate('SupportTicketsListScreen')} style={[styles.offerView, {
+                        paddingVertical: wp('3%')
+                    }]}>
+                        <Ionicons name="help-circle-outline" color={'#F25000'} size={wp('5.5%')} />
+                        <Text style={styles.offerText}>Help & Support</Text>
+                        <AntDesign name={"right"} color={'#DADADA'} size={wp('4.4%')} />
+                    </TouchableOpacity>
                 </View>
 
                 <View style={styles.sendContainer}>
@@ -301,6 +308,7 @@ export default function ProfileScreen() {
                 </View>
 
                 <TouchableOpacity onPress={() => setIsLogoutModalVisible(true)} style={styles.logoutContainer}>
+                    <MaterialIcons name="logout" color={'#FF0000'} size={wp('5%')} style={{ marginRight: wp('2%') }} />
                     <Text style={styles.logoutText}>Log Out</Text>
                 </TouchableOpacity>
             </ScrollView >
@@ -555,6 +563,7 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         justifyContent: 'center',
         alignItems: 'center',
+        flexDirection: 'row',
         alignSelf: 'center',
         marginTop: hp('3%'),
         marginBottom: hp('2%')

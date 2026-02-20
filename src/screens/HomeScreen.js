@@ -28,6 +28,7 @@ import EmptySection from '../components/EmptySection';
 import { AppContext } from '../context/appContext';
 import LoginScreen from './LoginScreen';
 import LocationModal from '../components/LocationModal';
+import StatusModal from '../components/StatusModal';
 import StoreUnavailable from '../components/StoreUnavailable';
 
 
@@ -274,22 +275,47 @@ const HomeScreen = () => {
 
     const [requestText, setRequestText] = useState('');
     const [isSubmittingRequest, setIsSubmittingRequest] = useState(false);
+    const [statusModal, setStatusModal] = useState({
+        visible: false,
+        type: 'success',
+        title: '',
+        message: ''
+    });
+    const [showError, setShowError] = useState(false);
 
     const handleRequestProduct = async () => {
-        if (!requestText.trim()) return;
-
+        if (!requestText.trim() || requestText.trim().length < 3) {
+            setShowError(true);
+            return;
+        }
+        setShowError(false);
         try {
             setIsSubmittingRequest(true);
             const response = await requestProductApi({ requestdetails: requestText });
             if (response && response.success) {
-                alert('Thank you! Your request has been submitted.');
+                setStatusModal({
+                    visible: true,
+                    type: 'orange',
+                    title: 'Request Submitted',
+                    message: 'Thank you! Your request has been submitted.'
+                });
                 setRequestText('');
             } else {
-                alert(response?.message || 'Failed to submit request. Please try again.');
+                setStatusModal({
+                    visible: true,
+                    type: 'error',
+                    title: 'Request Failed',
+                    message: response?.message || 'Failed to submit request. Please try again.'
+                });
             }
         } catch (error) {
             console.error('Request product error:', error);
-            alert('Something went wrong. Please try again.');
+            setStatusModal({
+                visible: true,
+                type: 'error',
+                title: 'Error',
+                message: 'Something went wrong. Please try again.'
+            });
         } finally {
             setIsSubmittingRequest(false);
         }
@@ -728,7 +754,10 @@ const HomeScreen = () => {
                                     placeholder="example: apple"
                                     placeholderTextColor="#767676"
                                     value={requestText}
-                                    onChangeText={setRequestText}
+                                    onChangeText={(text) => {
+                                        setRequestText(text);
+                                        if (text.trim().length >= 3) setShowError(false);
+                                    }}
                                 />
                                 <TouchableOpacity
                                     onPress={handleRequestProduct}
@@ -738,6 +767,9 @@ const HomeScreen = () => {
                                     <Text style={styles.sendButtonText}>Send</Text>
                                 </TouchableOpacity>
                             </View>
+                            {showError && (
+                                <Text style={styles.errorText}>Please enter at least 3 characters</Text>
+                            )}
                             <Image style={styles.kapraLogo} source={require("../assets/images/logo.png")} />
                             <Text style={[styles.tellUsText, { marginTop: hp("2.5%") }]}>Is here to help you</Text>
                         </View>
@@ -747,6 +779,14 @@ const HomeScreen = () => {
             <View style={styles.floatingContainer}>
                 <SelectedProducts />
             </View>
+
+            <StatusModal
+                visible={statusModal.visible}
+                type={statusModal.type}
+                title={statusModal.title}
+                message={statusModal.message}
+                onClose={() => setStatusModal({ ...statusModal, visible: false })}
+            />
         </SafeAreaView >
     )
 }
@@ -1453,5 +1493,14 @@ const styles = StyleSheet.create({
     topHomeBannerImage: {
         width: '100%',
         height: '100%',
+    },
+    errorText: {
+        color: '#FF0000',
+        fontSize: wp('3%'),
+        fontFamily: FONTS.poppins.regular,
+        marginTop: hp('1%'),
+        marginBottom: hp('1%'),
+        textAlign: 'left'
+        // marginLeft: wp('2%'),
     }
 })

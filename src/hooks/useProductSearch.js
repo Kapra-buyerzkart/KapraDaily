@@ -10,6 +10,7 @@ const useProductSearch = (initialPincodeId, initialCatId = null) => {
     const [suggestions, setSuggestions] = useState([]);
     const [loading, setLoading] = useState(false);
     const [resultCount, setResultCount] = useState(0);
+    const [isGlobalFallback, setIsGlobalFallback] = useState(false);
 
     const activePincodeId = initialPincodeId || profile?.pincode;
     const [error, setError] = useState(null);
@@ -53,12 +54,28 @@ const useProductSearch = (initialPincodeId, initialCatId = null) => {
                     console.log('useProductSearch: Fetching with payload:', payload);
                     response = await searchProductsApi(payload);
 
-                    if (response && response.success && response.data && Array.isArray(response.data.items)) {
+                    if (response && response.success && response.data && Array.isArray(response.data.items) && response.data.items.length > 0) {
                         setSuggestions(response.data.items);
                         setResultCount(response.data.items.length);
+                        setIsGlobalFallback(false);
+                    } else if (trimmedTerm.length > 0) {
+                        // FALLBACK: Search globally if category search results are 0
+                        console.log('useProductSearch: No results in category, trying global search...');
+                        const globalResponse = await getProductSuggestionsApi(trimmedTerm, activePincodeId);
+
+                        if (globalResponse && globalResponse.success && Array.isArray(globalResponse.data) && globalResponse.data.length > 0) {
+                            setSuggestions(globalResponse.data);
+                            setResultCount(globalResponse.data.length);
+                            setIsGlobalFallback(true);
+                        } else {
+                            setSuggestions([]);
+                            setResultCount(0);
+                            setIsGlobalFallback(false);
+                        }
                     } else {
                         setSuggestions([]);
                         setResultCount(0);
+                        setIsGlobalFallback(false);
                     }
                 } else {
                     // Use getProductSuggestionsApi for general search suggestions
@@ -102,6 +119,7 @@ const useProductSearch = (initialPincodeId, initialCatId = null) => {
         loading,
         resultCount,
         error,
+        isGlobalFallback,
         clearSearch
     };
 };

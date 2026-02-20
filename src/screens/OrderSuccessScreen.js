@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, Image, TouchableOpacity, StatusBar, ScrollView } from 'react-native'
+import { View, Text, StyleSheet, Image, TouchableOpacity, StatusBar, ScrollView, BackHandler } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import LinearGradient from 'react-native-linear-gradient'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -29,7 +29,28 @@ const OrderSuccessScreen = () => {
         if (orderId) {
             fetchOrderDetails()
         }
-    }, [orderId])
+
+        // 1. Prevent Android hardware back button
+        const backAction = () => {
+            return true; // Return true to prevent default back action
+        };
+
+        const backHandler = BackHandler.addEventListener(
+            'hardwareBackPress',
+            backAction
+        );
+
+        // 2. Prevent navigation remove (iOS swipe, back button)
+        const unsubscribe = navigation.addListener('beforeRemove', (e) => {
+            // Prevent default behavior of leaving the screen
+            e.preventDefault();
+        });
+
+        return () => {
+            backHandler.remove();
+            unsubscribe();
+        };
+    }, [orderId, navigation])
 
     const fetchOrderDetails = async () => {
         try {

@@ -43,3 +43,19 @@ export const createOrderApi = async (payload) => {
 export const confirmCodApi = async (orderId) => {
     return post(`order/${orderId}/confirmcod`);
 };
+
+/**
+ * Submits a review for the delivery agent.
+ * @param {Object} payload { orderid, rating, reviewtext }
+ */
+export const rateDeliveryAgentApi = async (payload) => {
+    return post(`order/deliveryagent/review`, payload);
+};
+
+/**
+ * Submits a review for the order.
+ * @param {Object} payload { orderid, rating, reviewtext }
+ */
+export const rateOrderApi = async (payload) => {
+    return post(`order/review`, payload);
+};

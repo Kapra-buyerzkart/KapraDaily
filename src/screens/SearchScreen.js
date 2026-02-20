@@ -37,7 +37,8 @@ const SearchScreen = () => {
         suggestions,
         loading,
         resultCount,
-        setCatId
+        setCatId,
+        isGlobalFallback
     } = useProductSearch(currentPincodeId, catId);
 
     useEffect(() => {
@@ -93,16 +94,20 @@ const SearchScreen = () => {
     // const { showLoader } = useContext(LoaderContext) // Loader handling moved to hook or local loading state used
 
     const renderItem = ({ item }) => {
-        return <ProductCard item={item} hideWishlist={true} />
+        return (
+            <View style={styles.productWrapper}>
+                <ProductCard item={item} hideWishlist={true} />
+            </View>
+        )
     }
 
-    const ListFooter = () => {
+    const ListHeader = () => {
         if (searchTerm.length > 0 || recentSearches.length === 0) return null;
         return (
             <View>
                 <Text style={styles.recentTitle}>Recent search</Text>
                 <View style={styles.recentContainer}>
-                    {recentSearches.map((item, index) => (
+                    {recentSearches.slice(0, 8).map((item, index) => (
                         <TouchableOpacity
                             key={index}
                             style={styles.recentProduct}
@@ -155,6 +160,11 @@ const SearchScreen = () => {
                             <Text style={styles.resultText}>
                                 {loading ? 'Searching...' : `Results found : ${resultCount}`}
                             </Text>
+                            {isGlobalFallback && (
+                                <Text style={styles.fallbackNoticeText}>
+                                    Showing results from all categories
+                                </Text>
+                            )}
                         </View>
                     )}
 
@@ -170,20 +180,23 @@ const SearchScreen = () => {
                         renderItem={renderItem}
                         numColumns={2}
                         showsVerticalScrollIndicator={false}
-                        ListFooterComponent={ListFooter}
+                        ListHeaderComponent={ListHeader}
                         contentContainerStyle={{
-                            paddingLeft: wp("2.3%"),
-                            paddingBottom: hp("8.5%"),
-                            paddingTop: hp("0.5%")
+                            paddingHorizontal: wp('2%'),
+                            paddingTop: hp('1%'),
+                            paddingBottom: hp('10%')
                         }}
-                        ListEmptyComponent={!loading && searchTerm.length > 0 && (
+                        ListEmptyComponent={!loading && (searchTerm.length > 0 || catId) && (
                             <View style={styles.emptyContainer}>
                                 <Image
                                     source={require('../assets/images/noimages/noproductfound.png')}
                                     style={styles.emptyImage}
                                 />
                                 <Text style={styles.noResultsText}>
-                                    No products found for "{searchTerm}"
+                                    {searchTerm.length > 0
+                                        ? `No products found for "${searchTerm}"`
+                                        : `No products found in ${catName || 'this category'}`
+                                    }
                                 </Text>
                             </View>
                         )}
@@ -261,6 +274,13 @@ const styles = StyleSheet.create({
         marginHorizontal: wp('5%'),
         marginTop: hp('1.5%')
     },
+    fallbackNoticeText: {
+        color: '#F25000',
+        fontFamily: FONTS.outfit.medium,
+        fontSize: wp('2.8%'),
+        marginHorizontal: wp('5%'),
+        marginTop: hp('0.5%')
+    },
     productCardWrapper: {
         flex: 1,
         alignItems: 'center',
@@ -297,6 +317,10 @@ const styles = StyleSheet.create({
         flexWrap: 'wrap',
         marginHorizontal: wp('5%'),
         marginTop: hp('1%')
+    },
+    productWrapper: {
+        flex: 0.5,
+        alignItems: 'center',
     },
     emptyContainer: {
         flex: 1,

@@ -8,6 +8,7 @@ import { useNavigation, useRoute } from '@react-navigation/native'
 import DropDownPicker from 'react-native-dropdown-picker';
 import LinearGradient from 'react-native-linear-gradient'
 import { addAddressApi, updateAddressApi } from '../api/addressService'
+import { getAreasByPincode } from '../api';
 import Toast from 'react-native-simple-toast'
 import { useAddresses } from '../hooks/useAddresses'
 
@@ -23,12 +24,7 @@ const AddLocationScreen = () => {
 
     const [open, setOpen] = useState(false);
     const [pincodeAreaId, setPincodeAreaId] = useState(editAddress?.pincodeAreaId || null);
-    const [items, setItems] = useState([
-        { label: 'Vennala', value: 10 }, // Dummy values for now, would ideally fetch these based on pincode
-        { label: 'Thrippunithura', value: 11 },
-        { label: 'Chalakudi', value: 12 },
-        { label: 'Edappally', value: 15 },
-    ]);
+    const [items, setItems] = useState([]);
 
     // Form state
     const [custName, setCustName] = useState(editAddress?.custName || '');
@@ -39,6 +35,41 @@ const AddLocationScreen = () => {
     const [pincode, setPincode] = useState(editAddress?.pincode || '');
     const [addressType, setAddressType] = useState(editAddress?.addressType || 'HOME');
     const [isLoading, setIsLoading] = useState(false);
+    const [isAreasLoading, setIsAreasLoading] = useState(false);
+
+    useEffect(() => {
+        if (pincode && pincode.length === 6) {
+            fetchAreas(pincode);
+        } else {
+            setItems([]);
+            if (!isEditMode) setPincodeAreaId(null);
+        }
+    }, [pincode]);
+
+    const fetchAreas = async (pin) => {
+        try {
+            setIsAreasLoading(true);
+            const response = await getAreasByPincode(pin);
+            if (response && response.success && Array.isArray(response.data)) {
+                const formattedAreas = response.data.map(area => ({
+                    label: area.areaName,
+                    value: area.pincodeAreaId || area.id // Assuming pincodeAreaId or id
+                }));
+                setItems(formattedAreas);
+                if (formattedAreas.length === 1 && !isEditMode) {
+                    setPincodeAreaId(formattedAreas[0].value);
+                }
+            } else {
+                setItems([]);
+                Toast.show('No areas found for this pincode', Toast.SHORT);
+            }
+        } catch (error) {
+            console.error('Error fetching areas:', error);
+            setItems([]);
+        } finally {
+            setIsAreasLoading(false);
+        }
+    };
 
     const handleSave = async () => {
         if (!custName || !addLine1 || !phone || !pincode || !pincodeAreaId) {
@@ -222,6 +253,7 @@ const AddLocationScreen = () => {
                                         color: '#DADADA',
                                         fontSize: wp('3.4%')
                                     }}
+                                    loading={isAreasLoading}
                                     style={{
                                         borderColor: '#DADADA',
                                         height: hp('5.5%'),

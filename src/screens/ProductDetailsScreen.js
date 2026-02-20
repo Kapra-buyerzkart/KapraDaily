@@ -317,6 +317,7 @@ const ProductDetailsScreen = () => {
                                 <ScrollView
                                     ref={detailsScrollViewRef}
                                     showsVerticalScrollIndicator={false}
+                                    nestedScrollEnabled={true}
                                     onContentSizeChange={(w, h) => {
                                         if (h > hp('35%')) {
                                             setShowScrollHint(true);

@@ -25,6 +25,9 @@ import ChangePasswordScreen from '../screens/ChangePasswordScreen'
 import UpdateContactScreen from '../screens/UpdateContactScreen'
 import CheckoutScreen from '../screens/CheckoutScreen'
 import ProductListScreen from '../screens/ProductListScreen'
+import SupportTicketScreen from '../screens/SupportTicketScreen'
+import SupportTicketsListScreen from '../screens/SupportTicketsListScreen'
+import TicketDetailsScreen from '../screens/TicketDetailsScreen'
 
 const Stack = createNativeStackNavigator();
 
@@ -60,7 +63,7 @@ export default function RootNavigator() {
             <Stack.Screen name="BCoinScreen" component={BCoinScreen} />
             <Stack.Screen name="SearchScreen" component={SearchScreen} />
             {/* <Stack.Screen name="ProfileScreen" component={ProfileScreen} /> */}
-            <Stack.Screen name="OrderSuccessScreen" component={OrderSuccessScreen} />
+            <Stack.Screen name="OrderSuccessScreen" component={OrderSuccessScreen} options={{ gestureEnabled: false }} />
             <Stack.Screen name='SavedAddressScreen' component={SavedAddressScreen} />
             <Stack.Screen name='ReferralScreen' component={ReferralScreen} />
             <Stack.Screen name='EditProfileScreen' component={EditProfileScreen} />
@@ -68,6 +71,9 @@ export default function RootNavigator() {
             <Stack.Screen name='UpdateContactScreen' component={UpdateContactScreen} />
             <Stack.Screen name='CheckoutScreen' component={CheckoutScreen} />
             <Stack.Screen name='ProductListScreen' component={ProductListScreen} />
+            <Stack.Screen name='SupportTicketScreen' component={SupportTicketScreen} />
+            <Stack.Screen name='SupportTicketsListScreen' component={SupportTicketsListScreen} />
+            <Stack.Screen name='TicketDetailsScreen' component={TicketDetailsScreen} />
         </Stack.Navigator>
     );
 }

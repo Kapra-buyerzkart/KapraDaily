@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { getOrderDetailsApi, cancelOrderApi, returnOrderItemApi } from '../api/orderService';
+import { getOrderDetailsApi, cancelOrderApi, returnOrderItemApi, rateDeliveryAgentApi, rateOrderApi } from '../api/orderService';
 import Toast from 'react-native-simple-toast';
 
 export const useOrderDetails = (orderId, initialOrderData = null) => {
@@ -112,6 +112,56 @@ export const useOrderDetails = (orderId, initialOrderData = null) => {
         }
     };
 
+    const submitDeliveryAgentRating = async (rating, review) => {
+        try {
+            setLoading(true);
+            const payload = {
+                orderId: Number(orderId),
+                rating: Number(rating),
+                reviewText: review || ""
+            };
+            const response = await rateDeliveryAgentApi(payload);
+            if (response && response.success) {
+                Toast.show("Delivery agent rated successfully", Toast.SHORT);
+                return true;
+            } else {
+                Toast.show(response?.message || "Failed to submit rating", Toast.SHORT);
+                return false;
+            }
+        } catch (error) {
+            console.error('Error rating delivery agent:', error);
+            Toast.show("An error occurred", Toast.SHORT);
+            return false;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const submitOrderRating = async (rating, review) => {
+        try {
+            setLoading(true);
+            const payload = {
+                orderId: Number(orderId),
+                rating: Number(rating),
+                reviewText: review || ""
+            };
+            const response = await rateOrderApi(payload);
+            if (response && response.success) {
+                Toast.show("Order rated successfully", Toast.SHORT);
+                return true;
+            } else {
+                Toast.show(response?.message || "Failed to submit rating", Toast.SHORT);
+                return false;
+            }
+        } catch (error) {
+            console.error('Error rating order:', error);
+            Toast.show("An error occurred", Toast.SHORT);
+            return false;
+        } finally {
+            setLoading(false);
+        }
+    };
+
     // Derived Data using useMemo for performance
     const derivedData = useMemo(() => {
         const header = orderData?.header || {};
@@ -203,7 +253,8 @@ export const useOrderDetails = (orderId, initialOrderData = null) => {
                 bCoinAppliedCoins: Number(header.bCoinAppliedCoins || 0),
                 bCoinAppliedValue: Number(header.bCoinAppliedValue || header.bcoinsAppliedValue || 0),
             },
-            invoiceUrl: `order/${header.orderId || orderId}/invoice`
+            invoiceUrl: header.invoiceFileUrl || orderData?.invoiceFileUrl || `order/${header.orderId || orderId}/invoice`,
+            invoiceNumber: header.invoiceNumber || orderData?.invoiceNumber || null,
         };
     }, [orderData, orderStatus, orderId, initialOrderData]);
 
@@ -224,6 +275,8 @@ export const useOrderDetails = (orderId, initialOrderData = null) => {
         // Actions
         handleCancelOrder,
         handleReturnItem,
+        submitDeliveryAgentRating,
+        submitOrderRating,
         refreshOrder: (silent = false) => fetchOrderDetails(orderId, silent)
     };
 };
