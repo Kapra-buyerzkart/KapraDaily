@@ -19,6 +19,7 @@ export const CartProvider = ({ children }) => {
     const [addresses, setAddresses] = useState([]);
     const [isLoadingAddresses, setIsLoadingAddresses] = useState(false);
     const [showAddressModal, setShowAddressModal] = useState(false);
+    const [addressConfirmationData, setAddressConfirmationData] = useState(null);
 
     // ─── useRef for cartVersion so every callback always reads the LATEST value ───
     const cartVersionRef = useRef(null);
@@ -65,8 +66,7 @@ export const CartProvider = ({ children }) => {
             if (addressList.length > 0) {
                 let selectionFound = false;
                 const mappedAddresses = addressList.map(addr => {
-                    const isSelected = addr.isDefaultShippingAddress && !selectionFound;
-                    if (isSelected) selectionFound = true;
+                    const isSelected = false;
 
                     const validId = addr.custAddressId || addr.addressId || addr.id;
                     if (!validId) console.warn('⚠️ [ADDRESS] Found address with no ID:', addr);
@@ -97,7 +97,7 @@ export const CartProvider = ({ children }) => {
                 });
 
                 if (mappedAddresses.length > 0 && !selectionFound) {
-                    mappedAddresses[0].selected = true;
+                    // Do not auto-select address if none is selected
                 }
                 console.log('📍 [ADDRESS] Mapped addresses:', mappedAddresses.length);
                 setAddresses(mappedAddresses);
@@ -112,15 +112,7 @@ export const CartProvider = ({ children }) => {
         }
     }, []);
 
-    // Auto-select the first address if none is selected
-    useEffect(() => {
-        if (addresses.length > 0 && !addresses.some(a => a.selected)) {
-            setAddresses(prev => prev.map((addr, index) => ({
-                ...addr,
-                selected: index === 0
-            })));
-        }
-    }, [addresses]);
+    // Auto-select address removed
 
     const onSelectAddress = useCallback((addressId) => {
         console.log('👆 [ADDRESS] Selecting addressId:', addressId);
@@ -128,12 +120,32 @@ export const CartProvider = ({ children }) => {
             console.warn('⚠️ [ADDRESS] Attempted to select invalid addressId:', addressId);
             return;
         }
-        setAddresses(prev =>
-            prev.map(item => ({
+
+        // We must extract the address synchronously before running state setter, 
+        // calling setAddressConfirmationData inside setAddresses(prev) is a React anti-pattern
+        setAddresses(prev => {
+            const selectedAddr = prev.find(item => String(item.id) === String(addressId));
+            if (selectedAddr) {
+                // Ensure we do this asynchronously (next tick) or outside to avoid infinite renders during setState
+                setTimeout(() => {
+                    const pincode = selectedAddr.pin || '';
+                    const area = selectedAddr.raw?.areaName || selectedAddr.raw?.pincodeAreaName || selectedAddr.raw?.area_name || 'N/A';
+
+                    // Close the AddressModal if it was open to avoid "multiple Modal" conflict on Native
+                    setShowAddressModal(false);
+
+                    // Add a slight delay for modal closing animation before opening the confirmation modal
+                    setTimeout(() => {
+                        setAddressConfirmationData({ pincode, areaName: area });
+                    }, 400);
+
+                }, 0);
+            }
+            return prev.map(item => ({
                 ...item,
                 selected: String(item.id) === String(addressId)
-            }))
-        );
+            }));
+        });
     }, []);
 
     const onThreeDotsClicked = useCallback((addressId) => {
@@ -185,25 +197,11 @@ export const CartProvider = ({ children }) => {
         );
     }, []);
 
-    // Ensure at least one address is selected if list is not empty
-    useEffect(() => {
-        if (addresses.length > 0) {
-            const hasSelection = addresses.some(a => a.selected);
-            if (!hasSelection) {
-                console.log('🔄 [ADDRESS] No selected address found, auto-selecting first one');
-                setAddresses(prev => {
-                    if (prev.length === 0) return prev;
-                    // Check again inside setAddresses to avoid race conditions with multiple updates
-                    const currentSelection = prev.find(a => a.selected);
-                    if (currentSelection) return prev;
+    // Ensure at least one address is selected removed
 
-                    const next = [...prev];
-                    next[0] = { ...next[0], selected: true };
-                    return next;
-                });
-            }
-        }
-    }, [addresses]);
+    const clearSelectedAddress = useCallback(() => {
+        setAddresses(prev => prev.map(item => ({ ...item, selected: false })));
+    }, []);
 
     // ─── loadCart: fetches item list and returns cartVersion (bootstrap only) ───
     const loadCart = useCallback(async () => {
@@ -257,7 +255,7 @@ export const CartProvider = ({ children }) => {
     }, [updateCartVersion]);
 
     // After this call, cartVersionRef.current is always up-to-date.
-    const getCartSummary = useCallback(async (deliveryMode = 'express', deliverySlotId = null, cartVersionOverride = null, pincodeAreaId = null, cartIdOverride = null) => {
+    const getCartSummary = useCallback(async (deliveryMode = 'express', deliverySlotId = null, cartVersionOverride = null, pincodeAreaId = null, cartIdOverride = null, isAutoReload = false) => {
         if (summaryRequestRef.current) {
             return summaryRequestRef.current;
         }
@@ -285,11 +283,26 @@ export const CartProvider = ({ children }) => {
                     }
                     return { success: true, data: response.data, cartVersion: response.data.cartVersion };
                 } else {
+                    const errorMsg = response?.message || 'Failed to fetch summary';
+
+                    if (!isAutoReload && errorMsg.toLowerCase().includes('modified')) {
+                        console.log('🔄 [SUMMARY] Cart modified error caught. Auto-reloading...');
+                        setTimeout(async () => {
+                            const loadResult = await loadCart();
+                            const newListVersion = loadResult?.cartVersion;
+                            await getCartSummary(deliveryMode, deliverySlotId, newListVersion, pincodeAreaId, cartIdOverride, true);
+                        }, 0);
+
+                        setCartSummary(null);
+                        setError(null);
+                        return { success: false, error: 'Auto-reloading...', status: response?.status };
+                    }
+
                     setCartSummary(null);
-                    setError(response?.message || 'Failed to fetch summary');
+                    setError(errorMsg);
                     return {
                         success: false,
-                        error: response?.message || 'Failed to fetch summary',
+                        error: errorMsg,
                         status: response?.status
                     };
                 }
@@ -304,7 +317,7 @@ export const CartProvider = ({ children }) => {
 
         summaryRequestRef.current = promise;
         return promise;
-    }, [updateCartVersion]);
+    }, [updateCartVersion, loadCart]);
 
     // ─── Helper: after any mutation, reload list + recalculate summary ───
     // Always uses the cartVersion from list API (freshest after mutation)
@@ -488,11 +501,21 @@ export const CartProvider = ({ children }) => {
                 await refreshCart();
                 return { success: true, message: response.message || 'Coupon applied successfully' };
             } else {
-                return { success: false, message: response?.message || 'Failed to apply coupon', status: response?.status };
+                const msg = response?.message || 'Failed to apply coupon';
+                if (msg.toLowerCase().includes('modified')) {
+                    console.log('🔄 [CART] Auto-refreshing cart due to modified error in applyCoupon');
+                    await refreshCart();
+                }
+                return { success: false, message: msg, status: response?.status };
             }
         } catch (error) {
             console.error('Error applying coupon:', error);
-            return { success: false, message: error.Message || error.message || 'Failed to apply coupon' };
+            const msg = error.Message || error.message || 'Failed to apply coupon';
+            if (msg.toLowerCase().includes('modified') || error?.response?.data?.status === 'CART_VERSION_MISMATCH') {
+                console.log('🔄 [CART] Auto-refreshing cart due to modified error in applyCoupon catch');
+                await refreshCart();
+            }
+            return { success: false, message: msg };
         }
     }, [refreshCart]);
 
@@ -587,11 +610,21 @@ export const CartProvider = ({ children }) => {
                 await refreshCart();
                 return { success: true, message: response.message || 'Gift card applied successfully' };
             } else {
-                return { success: false, message: response?.message || 'Failed to apply gift card', status: response?.status };
+                const msg = response?.message || 'Failed to apply gift card';
+                if (msg.toLowerCase().includes('modified')) {
+                    console.log('🔄 [CART] Auto-refreshing cart due to modified error in applyGiftCard');
+                    await refreshCart();
+                }
+                return { success: false, message: msg, status: response?.status };
             }
         } catch (error) {
             console.error('Error applying gift card:', error);
-            return { success: false, message: error.Message || error.message || 'Failed to apply gift card' };
+            const msg = error.Message || error.message || 'Failed to apply gift card';
+            if (msg.toLowerCase().includes('modified') || error?.response?.data?.status === 'CART_VERSION_MISMATCH') {
+                console.log('🔄 [CART] Auto-refreshing cart due to modified error in applyGiftCard catch');
+                await refreshCart();
+            }
+            return { success: false, message: msg };
         }
     }, [refreshCart]);
 
@@ -650,9 +683,12 @@ export const CartProvider = ({ children }) => {
         onThreeDotsClicked,
         onDeleteClicked,
         onCloseThreeDots,
+        clearSelectedAddress,
         showAddressModal,
-        setShowAddressModal
-    }), [cartItems, cartCount, cartTotal, cartSummary, isLoading, addToCart, removeFromCart, updateCartItemQuantity, loadCart, getCartSummary, clearCart, applyCoupon, removeCoupon, applyGiftCard, removeGiftCard, applyBCoins, removeBCoins, addresses, isLoadingAddresses, fetchAddresses, onSelectAddress, onThreeDotsClicked, onDeleteClicked, onCloseThreeDots, showAddressModal, setShowAddressModal]);
+        setShowAddressModal,
+        addressConfirmationData,
+        setAddressConfirmationData
+    }), [cartItems, cartCount, cartTotal, cartSummary, isLoading, addToCart, removeFromCart, updateCartItemQuantity, loadCart, getCartSummary, clearCart, applyCoupon, removeCoupon, applyGiftCard, removeGiftCard, applyBCoins, removeBCoins, addresses, isLoadingAddresses, fetchAddresses, onSelectAddress, onThreeDotsClicked, onDeleteClicked, onCloseThreeDots, clearSelectedAddress, showAddressModal, setShowAddressModal, addressConfirmationData, setAddressConfirmationData]);
 
     return (
         <CartContext.Provider value={value}>

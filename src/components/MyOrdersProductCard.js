@@ -85,33 +85,40 @@ const MyOrdersProductCard = (props) => {
 
                         <Text style={[styles.orderNumberText, {
                             marginTop: hp('0.2%')
-                        }]}>Total item : {itemData.totalItems || productList.length}</Text>
+                        }]}>Total item : {itemData.totalOrderItems || productList.length}</Text>
                     </View>
-                    <Text style={styles.priceText}>₹{itemData.grandTotal || itemData.price || itemData.totalAmount}</Text>
+                    <Text style={styles.priceText}>₹{
+                        (itemData.grandTotal ?? itemData.price ?? itemData.totalAmount ?? 0).toFixed(2)}</Text>
                 </View>
-                <View style={styles.buttonContainer}>
+                <View style={[styles.buttonContainer, !itemData.canReorder && { justifyContent: 'center' }]}>
                     <TouchableOpacity onPress={() => navigation.navigate('OrderTrackingScreen', {
                         orderId: itemData.orderId || itemData.id,
-                        orderNumber: itemData.orderNumber, // Pass orderNumber too if needed
+                        orderNumber: itemData.orderNumber,
                         order: itemData
-                    })} style={[styles.button, {
-                        borderWidth: 1,
-                        borderColor: '#DADADA',
-                    }]}>
+                    })} style={[
+                        styles.button,
+                        {
+                            borderWidth: 1,
+                            borderColor: '#DADADA',
+                        },
+                        !itemData.canReorder && { width: wp('85%') }
+                    ]}>
                         <Text style={[styles.buttonText, {
                             color: '#616161',
 
                         }]}>Details</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[styles.button, { backgroundColor: '#F25000' }, isStoreUnavailable && { opacity: 0.6 }]}
-                        onPress={() => !isStoreUnavailable && setShowReorderModal(true)}
-                        activeOpacity={isStoreUnavailable ? 1 : 0.7}
-                    >
-                        <Text style={[styles.buttonText, {
-                            color: '#FFFFFF',
-                        }]}>Reorder</Text>
-                    </TouchableOpacity>
+                    {itemData.canReorder && (
+                        <TouchableOpacity
+                            style={[styles.button, { backgroundColor: '#F25000' }, isStoreUnavailable && { opacity: 0.6 }]}
+                            onPress={() => !isStoreUnavailable && setShowReorderModal(true)}
+                            activeOpacity={isStoreUnavailable ? 1 : 0.7}
+                        >
+                            <Text style={[styles.buttonText, {
+                                color: '#FFFFFF',
+                            }]}>Reorder</Text>
+                        </TouchableOpacity>
+                    )}
                 </View>
             </View>
             <View style={styles.orderBottomView}>

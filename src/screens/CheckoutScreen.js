@@ -34,6 +34,7 @@ const CheckoutScreen = () => {
         cartSummary,
         cartItems,
         clearCart,
+        clearSelectedAddress,
         getCartSummary,
         error: cartError,
         addresses
@@ -53,7 +54,6 @@ const CheckoutScreen = () => {
     );
     const [paymentMethod, setPaymentMethod] = useState('cod');
     const [paymentModes, setPaymentModes] = useState([]);
-    const [showBill, setShowBill] = useState(false);
     const [showSlotModal, setShowSlotModal] = useState(false);
     const [chosenSlot, setChosenSlot] = useState(null);
     const scrollViewRef = React.useRef(null);
@@ -183,6 +183,7 @@ const CheckoutScreen = () => {
 
                 if (confirmResponse?.success) {
                     await clearCart(); // Local clear
+                    if (clearSelectedAddress) clearSelectedAddress(); // Clear selected address
                     navigation.navigate('OrderSuccessScreen', {
                         orderId: createResponse.data.orderId,
                         orderNumber: createResponse.data.orderNumber || createResponse.data.orderId,
@@ -418,7 +419,7 @@ const CheckoutScreen = () => {
                     </View>
                 )}
 
-                {showBill && !cartError && (
+                {!cartError && (
                     <View style={styles.billContainer}>
                         <BillSection billCalculations={billCalculations} />
                     </View>
@@ -430,13 +431,9 @@ const CheckoutScreen = () => {
                 <TouchableOpacity
                     activeOpacity={0.7}
                     onPress={() => {
-                        const nextShowBill = !showBill;
-                        setShowBill(nextShowBill);
-                        if (nextShowBill) {
-                            setTimeout(() => {
-                                scrollViewRef.current?.scrollToEnd({ animated: true });
-                            }, 100);
-                        }
+                        setTimeout(() => {
+                            scrollViewRef.current?.scrollToEnd({ animated: true });
+                        }, 100);
                     }}
                     style={styles.bottomAmountContainer}
                 >
@@ -444,7 +441,7 @@ const CheckoutScreen = () => {
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <Text style={styles.totalAmount}>₹{billCalculations.toPay?.toFixed(2) || '0.00'}</Text>
                         <Image
-                            style={[styles.arrowIcon, showBill && { transform: [{ rotate: '180deg' }] }]}
+                            style={styles.arrowIcon}
                             source={require('../assets/images/down_arrow.png')}
                         />
                     </View>
@@ -613,8 +610,7 @@ const styles = StyleSheet.create({
         width: wp('3%'),
         height: wp('3%'),
         resizeMode: 'contain',
-        marginLeft: wp('2%'),
-        transform: [{ rotate: '0deg' }]
+        marginLeft: wp('2%')
     },
     bottomBar: {
         position: 'absolute',

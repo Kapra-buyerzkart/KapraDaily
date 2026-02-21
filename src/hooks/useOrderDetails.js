@@ -116,17 +116,16 @@ export const useOrderDetails = (orderId, initialOrderData = null) => {
         try {
             setLoading(true);
             const payload = {
-                orderId: Number(orderId),
+                orderid: Number(orderId),
                 rating: Number(rating),
-                reviewText: review || ""
+                reviewtext: review || ""
             };
             const response = await rateDeliveryAgentApi(payload);
             if (response && response.success) {
                 Toast.show("Delivery agent rated successfully", Toast.SHORT);
-                return true;
+                return { success: true };
             } else {
-                Toast.show(response?.message || "Failed to submit rating", Toast.SHORT);
-                return false;
+                return response || { success: false, message: "Failed to submit rating" };
             }
         } catch (error) {
             console.error('Error rating delivery agent:', error);
@@ -141,17 +140,16 @@ export const useOrderDetails = (orderId, initialOrderData = null) => {
         try {
             setLoading(true);
             const payload = {
-                orderId: Number(orderId),
+                orderid: Number(orderId),
                 rating: Number(rating),
-                reviewText: review || ""
+                reviewtext: review || ""
             };
             const response = await rateOrderApi(payload);
             if (response && response.success) {
                 Toast.show("Order rated successfully", Toast.SHORT);
-                return true;
+                return { success: true };
             } else {
-                Toast.show(response?.message || "Failed to submit rating", Toast.SHORT);
-                return false;
+                return response || { success: false, message: "Failed to submit rating" };
             }
         } catch (error) {
             console.error('Error rating order:', error);
@@ -255,6 +253,8 @@ export const useOrderDetails = (orderId, initialOrderData = null) => {
             },
             invoiceUrl: header.invoiceFileUrl || orderData?.invoiceFileUrl || `order/${header.orderId || orderId}/invoice`,
             invoiceNumber: header.invoiceNumber || orderData?.invoiceNumber || null,
+            canMarkDeliveryReview: header.canMarkDeliveryReview ?? orderData?.canMarkDeliveryReview ?? false,
+            canMarkOverallReview: header.canMarkOverallReview ?? orderData?.canMarkOverallReview ?? false,
         };
     }, [orderData, orderStatus, orderId, initialOrderData]);
 

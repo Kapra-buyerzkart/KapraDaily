@@ -10,6 +10,7 @@ import { FONTS } from '../styles/typography'
 import { useAddresses } from '../hooks/useAddresses'
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import AntDesign from 'react-native-vector-icons/AntDesign';
+import AddressConfirmationModal from '../components/AddressConfirmationModal';
 
 const SavedAddressScreen = () => {
     const navigation = useNavigation()
@@ -22,7 +23,9 @@ const SavedAddressScreen = () => {
         onDeleteClicked,
         onCloseThreeDots,
         isLoading,
-        refreshAddresses
+        refreshAddresses,
+        addressConfirmationData,
+        setAddressConfirmationData
     } = useAddresses();
 
     // Auto-refresh address list when the screen comes into focus
@@ -170,6 +173,13 @@ const SavedAddressScreen = () => {
             <LocationModal
                 visible={isLocationModalVisible}
                 onClose={() => setIsLocationModalVisible(false)}
+            />
+            {/* Address Confirmation Modal */}
+            <AddressConfirmationModal
+                visible={!!addressConfirmationData}
+                pincode={addressConfirmationData?.pincode}
+                areaName={addressConfirmationData?.areaName}
+                onClose={() => setAddressConfirmationData(null)}
             />
         </SafeAreaView>
     )

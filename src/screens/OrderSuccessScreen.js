@@ -81,9 +81,8 @@ const OrderSuccessScreen = () => {
     }
 
     const handleTrackOrder = () => {
-        navigation.navigate('MainTabs', {
-            screen: 'Home',
-            params: { screen: 'MyOrdersScreen' }
+        navigation.navigate('OrderTrackingScreen', {
+            orderId: orderId || orderDetails?._id
         });
     }
 
@@ -228,14 +227,14 @@ const OrderSuccessScreen = () => {
                         </LinearGradient>
                     </View>
 
-                    <TouchableOpacity
+                    {/* <TouchableOpacity
                         style={styles.continueShoppingBtn}
                         onPress={handleContinueShopping}
                         activeOpacity={0.7}
                     >
                         <Text style={styles.continueShoppingText}>Continue Shopping</Text>
                         <Ionicons name="arrow-forward" size={wp('4%')} color="#F25000" />
-                    </TouchableOpacity>
+                    </TouchableOpacity> */}
                 </ScrollView>
             </LinearGradient>
         </SafeAreaView>
@@ -251,14 +250,17 @@ const styles = StyleSheet.create({
     },
     gradientContainer: {
         flex: 1,
-        paddingHorizontal: wp('5%'),
+        // paddingHorizontal: wp('5%'),
     },
     scrollContent: {
         paddingBottom: hp('5%'),
+        paddingHorizontal: wp('5%'),
+        // backgroundColor: 'red'
     },
     successSection: {
         alignItems: 'center',
         marginTop: hp('6%'),
+        // backgroundColor: 'red'
     },
     successImage: {
         width: wp('30%'),

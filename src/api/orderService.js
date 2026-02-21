@@ -57,5 +57,5 @@ export const rateDeliveryAgentApi = async (payload) => {
  * @param {Object} payload { orderid, rating, reviewtext }
  */
 export const rateOrderApi = async (payload) => {
-    return post(`order/review`, payload);
+    return post(`order/delivery/review`, payload);
 };

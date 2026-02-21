@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useContext } from 'react';
+import { useState, useEffect, useCallback, useContext, useRef } from 'react';
 import Toast from 'react-native-simple-toast';
 import { useCart } from '../context/CartContext';
 import { getAvailableCouponsApi, getAvailableGiftCardsApi } from '../api/cartService';
@@ -53,6 +53,7 @@ export const useOffers = (deliveryHook, addressHook) => {
     const [availableGiftCards, setAvailableGiftCards] = useState([]);
     const [appliedCouponCode, setAppliedCouponCode] = useState(null);
     const [appliedGiftCardCode, setAppliedGiftCardCode] = useState(null);
+    const isApplyingRef = useRef(false);
 
     // Fetch available coupons and gift cards on mount
     useEffect(() => {
@@ -213,24 +214,41 @@ export const useOffers = (deliveryHook, addressHook) => {
         const codeToApply = typeof codeOverride === 'string' ? codeOverride : couponCode;
         if (!codeToApply?.trim()) return;
 
-        const result = isGiftCard
-            ? await applyGiftCard(codeToApply)
-            : await applyCoupon(codeToApply);
-
-        if (result.success) {
-            setShowCouponModal(false);
-            updateOfferState(isGiftCard ? '4' : '2', true);
-            if (isGiftCard) {
-                setAppliedGiftCardCode(codeToApply);
-            } else {
-                setAppliedCouponCode(codeToApply);
-            }
-            const selectedAddr = addressHook?.addresses?.find(a => a.selected);
-            getCartSummary(deliveryHook?.deliveryMode, deliveryHook?.selectedSlot, null, selectedAddr?.pincodeAreaId);
-        } else {
-            Toast.show(result.message || (isGiftCard ? 'Failed to apply gift card' : 'Failed to apply coupon'), Toast.LONG);
+        if (isApplyingRef.current) {
+            console.log('⏳ [OFFERS] Apply already in progress...');
+            return;
         }
-    }, [couponCode, isGiftCard, applyGiftCard, applyCoupon, updateOfferState]);
+        isApplyingRef.current = true;
+        showLoader(true);
+
+        try {
+            const result = isGiftCard
+                ? await applyGiftCard(codeToApply)
+                : await applyCoupon(codeToApply);
+
+            if (result.success) {
+                setShowCouponModal(false);
+                updateOfferState(isGiftCard ? '4' : '2', true);
+                if (isGiftCard) {
+                    setAppliedGiftCardCode(codeToApply);
+                } else {
+                    setAppliedCouponCode(codeToApply);
+                }
+                const selectedAddr = addressHook?.addresses?.find(a => a.selected);
+                getCartSummary(deliveryHook?.deliveryMode, deliveryHook?.selectedSlot, null, selectedAddr?.pincodeAreaId);
+            } else {
+                const errorMsg = result.message || (isGiftCard ? 'Failed to apply gift card' : 'Failed to apply coupon');
+                if (errorMsg.toLowerCase().includes('modified')) {
+                    console.log('🚫 [OFFERS] Suppressing modified Toast:', errorMsg);
+                } else {
+                    Toast.show(errorMsg, Toast.LONG);
+                }
+            }
+        } finally {
+            isApplyingRef.current = false;
+            showLoader(false);
+        }
+    }, [couponCode, isGiftCard, applyGiftCard, applyCoupon, updateOfferState, addressHook?.addresses, deliveryHook?.deliveryMode, deliveryHook?.selectedSlot, getCartSummary, showLoader]);
 
     const handleCouponClick = useCallback((code) => {
         setCouponCode(code);

@@ -10,6 +10,7 @@ import { LoaderContext } from '../context/loaderContext';
 import { AppContext } from '../context/appContext';
 import StoreUnavailable from '../components/StoreUnavailable';
 import LocationModal from '../components/LocationModal';
+import { validatePhoneNumbers } from '../utils/validation';
 
 // Placeholder for actual APIs - these should be added to userService.js securely
 // Since I don't have the final endpoints, I'll use placeholders that call updateProfilePatchApi on success
@@ -74,7 +75,7 @@ const UpdateContactScreen = () => {
             return;
         }
 
-        if (type === 'phone' && (value.length !== 10 || isNaN(value))) {
+        if (type === 'phone' && !validatePhoneNumbers(value)) {
             setStatusType('error');
             setStatusTitle('Error');
             setStatusMessage('Please enter a valid 10-digit mobile number');
@@ -178,7 +179,7 @@ const UpdateContactScreen = () => {
     };
 
     const isDifferent = value.trim() !== originalValue.trim();
-    const isInputValid = type === 'phone' ? (value.length === 10 && !isNaN(value)) : value.includes('@');
+    const isInputValid = type === 'phone' ? validatePhoneNumbers(value) : value.includes('@');
     const canRequestOtp = isDifferent && isInputValid;
 
     return (

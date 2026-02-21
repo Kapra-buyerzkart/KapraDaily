@@ -11,7 +11,9 @@ export const useAddresses = () => {
         onDeleteClicked,
         onCloseThreeDots,
         setShowAddressModal,
-        showAddressModal
+        showAddressModal,
+        addressConfirmationData,
+        setAddressConfirmationData
     } = useContext(CartContext);
 
     return {
@@ -24,5 +26,7 @@ export const useAddresses = () => {
         onCloseThreeDots,
         isLoading,
         refreshAddresses,
+        addressConfirmationData,
+        setAddressConfirmationData
     };
 };

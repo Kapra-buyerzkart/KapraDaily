@@ -8,6 +8,7 @@ import { sendForgotPwdOtp, sendLoginOtp } from '../api'
 import { setTokens } from '../api/tokenService'
 import LoaderComponent from '../components/LoaderComponent'
 import { LoaderContext } from '../context/loaderContext'
+import { validatePhoneNumbers } from '../utils/validation'
 
 const LoginScreen = () => {
     const navigation = useNavigation()
@@ -62,7 +63,7 @@ const LoginScreen = () => {
         // console.log(phone);
         // console.log('type', type);
 
-        if (phone.length !== 10) {
+        if (!validatePhoneNumbers(phone)) {
             Alert.alert('Error', 'Please enter a valid mobile number');
             return;
         }
@@ -101,7 +102,7 @@ const LoginScreen = () => {
         // console.log(phone);
         // console.log('type', type);
 
-        if (phone.length !== 10) {
+        if (!validatePhoneNumbers(phone)) {
             Alert.alert('Error', 'Please enter a valid mobile number');
             return;
         }

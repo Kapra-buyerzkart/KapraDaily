@@ -66,8 +66,29 @@ const BCoinScreen = () => {
         setIsLoadingHistory(true)
         try {
             const response = await getBCoinValueChangesApi()
-            if (isMounted.current && response && response.success && response.data) {
-                setBCoinValueHistory(response.data)
+            if (isMounted.current && response && response.success && response.data && response.data.items) {
+                // Determine changeType (up/down) by comparing to the previous value over time
+                const items = [...response.data.items];
+
+                // Sort purely chronologically (oldest first) to compare correctly
+                items.sort((a, b) => new Date(a.updatedOn) - new Date(b.updatedOn));
+
+                const mappedItems = items.map((item, index) => {
+                    let changeType = 'up';
+                    if (index > 0) {
+                        const prevValue = items[index - 1].bCoinValue;
+                        if (item.bCoinValue < prevValue) {
+                            changeType = 'down';
+                        }
+                    }
+                    return {
+                        ...item,
+                        changeType
+                    };
+                });
+
+                // Present newest first
+                setBCoinValueHistory(mappedItems.reverse());
             }
         } catch (error) {
             console.error('Error fetching B-Coin value history:', error)
@@ -336,7 +357,7 @@ const BCoinScreen = () => {
                                     <View key={item.id || index} style={styles.bcoinRateSingleContainer}>
                                         <View style={{ width: wp('30%') }}>
                                             <Text style={styles.dateText}>
-                                                {item.changeAt ? new Date(item.changeAt).toLocaleDateString('en-IN', {
+                                                {item.updatedOn ? new Date(item.updatedOn).toLocaleDateString('en-IN', {
                                                     day: '2-digit',
                                                     month: '2-digit',
                                                     year: 'numeric'
@@ -345,7 +366,7 @@ const BCoinScreen = () => {
                                         </View>
                                         <View style={{ width: wp('40%') }}>
                                             <Text style={styles.timeText}>
-                                                {item.changeAt ? new Date(item.changeAt).toLocaleTimeString('en-IN', {
+                                                {item.updatedOn ? new Date(item.updatedOn).toLocaleTimeString('en-IN', {
                                                     hour: '2-digit',
                                                     minute: '2-digit',
                                                     hour12: true
@@ -354,11 +375,11 @@ const BCoinScreen = () => {
                                         </View>
                                         <View style={styles.rateView}>
                                             <Text style={[styles.rateText, {
-                                                color: item.changeType === 'up' ? '#0CA201' : '#FF0000'
-                                            }]}>₹{item.newValue || item.value}</Text>
+                                                color: item.changeType === 'down' ? '#FF0000' : '#0CA201'
+                                            }]}>₹{item.bCoinValue?.toFixed(2) || (item.newValue || item.value)}</Text>
                                             <Image
                                                 style={styles.upImage}
-                                                source={item.changeType === 'up' ? require('../assets/images/up.png') : require('../assets/images/down.png')}
+                                                source={item.changeType === 'down' ? require('../assets/images/down.png') : require('../assets/images/up.png')}
                                             />
                                         </View>
                                     </View>

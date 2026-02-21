@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Platform, FlatList, ImageBackground, Linking } from 'react-native'
+import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Platform, FlatList, ImageBackground, Linking, BackHandler } from 'react-native'
 import LinearGradient from 'react-native-linear-gradient';
 import React, { useState } from 'react'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -7,7 +7,7 @@ import Entypo from 'react-native-vector-icons/Entypo'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import { FONTS } from '../styles/typography'
-import { useNavigation, useRoute } from '@react-navigation/native'
+import { useNavigation, useRoute, CommonActions } from '@react-navigation/native'
 import OrderProductCard from '../components/OrderProductCard'
 import ConfirmationModal from '../components/ConfirmationModal'
 import ReturnItemModal from '../components/ReturnItemModal'
@@ -17,6 +17,7 @@ import AppButton from '../components/AppButton'
 import CustomLoader from '../components/CustomLoader'
 import CONFIG from '../globals/config'
 import RatingModal from '../components/RatingModal'
+import StatusModal from '../components/StatusModal'
 
 const OrderTrackingScreen = () => {
     const navigation = useNavigation();
@@ -58,8 +59,35 @@ const OrderTrackingScreen = () => {
         // Enhanced Data
         formattedOrderDate,
         bill,
-        invoiceUrl
+        invoiceUrl,
+        canMarkDeliveryReview,
+        canMarkOverallReview
     } = useOrderDetails(orderId, initialOrderData);
+
+    const handleBackPress = () => {
+        navigation.dispatch(
+            CommonActions.reset({
+                index: 0,
+                routes: [
+                    {
+                        name: 'MainTabs',
+                        params: { screen: 'Profile' }
+                    }
+                ],
+            })
+        );
+        setTimeout(() => {
+            navigation.navigate('MyOrdersScreen');
+        }, 100);
+        return true; // Prevent default behavior
+    };
+
+    React.useEffect(() => {
+        BackHandler.addEventListener('hardwareBackPress', handleBackPress);
+        return () => {
+            BackHandler.removeEventListener('hardwareBackPress', handleBackPress);
+        };
+    }, []);
 
     const insets = useSafeAreaInsets();
     const [returnReason, setReturnReason] = useState('');
@@ -69,6 +97,12 @@ const OrderTrackingScreen = () => {
     const [isRatingModalVisible, setIsRatingModalVisible] = useState(false);
     const [ratingType, setRatingType] = useState('order'); // 'order' or 'agent'
     const [pendingRating, setPendingRating] = useState(0);
+    const [statusModal, setStatusModal] = useState({
+        visible: false,
+        type: 'error',
+        title: '',
+        message: ''
+    });
 
     const handleOrderRating = (rating) => {
         setPendingRating(rating);
@@ -84,12 +118,26 @@ const OrderTrackingScreen = () => {
 
     const onRatingSubmit = async (review) => {
         setIsRatingModalVisible(false);
+        let response;
         if (ratingType === 'order') {
-            setOrderRating(pendingRating);
-            await submitOrderRating(pendingRating, review);
+            response = await submitOrderRating(pendingRating, review);
+            if (response && response.success) {
+                setOrderRating(pendingRating);
+            }
         } else {
-            setAgentRating(pendingRating);
-            await submitDeliveryAgentRating(pendingRating, review);
+            response = await submitDeliveryAgentRating(pendingRating, review);
+            if (response && response.success) {
+                setAgentRating(pendingRating);
+            }
+        }
+
+        if (response && !response.success) {
+            setStatusModal({
+                visible: true,
+                type: 'error',
+                title: 'Rating Failed',
+                message: response.message || 'Failed to submit rating. Please try again.'
+            });
         }
     };
 
@@ -143,7 +191,7 @@ const OrderTrackingScreen = () => {
             <CustomLoader visible={loading} text="Updating Order..." />
 
             <View style={styles.headerContainer}>
-                <TouchableOpacity onPress={() => navigation.goBack()}>
+                <TouchableOpacity onPress={handleBackPress}>
                     <AntDesign name={'left'} size={wp('5%')} color={'#000000'} />
                 </TouchableOpacity>
                 <Text style={styles.headerText}>Order Tracking</Text>
@@ -455,7 +503,7 @@ const OrderTrackingScreen = () => {
                     )}
                 </View>
                 <View style={styles.containerTwo}>
-                    {orderStatus === 'delivered' ? (<View style={styles.ratingContainer}>
+                    {canMarkOverallReview ? (<View style={styles.ratingContainer}>
                         <Text style={styles.ratingText}>How was your experience ?</Text>
                         <View style={styles.starContainer}>
                             {[1, 2, 3, 4, 5].map((star) => (
@@ -468,29 +516,34 @@ const OrderTrackingScreen = () => {
                             ))}
                         </View>
                     </View>
-                    ) : (<View style={styles.deliveryAgentContainer}>
-                        <View>
-                            <Text style={styles.deliveryAgentNameText}>
-                                {['placed', 'accepted', 'packed'].includes(orderStatus)
-                                    ? 'Not assigned'
-                                    : (deliveryAgentName || 'Marvin Alex')}
-                            </Text>
-                            <Text style={styles.deliveryAgentTextTwo}>Delivery Agent</Text>
+                    ) : (
+                        !canMarkDeliveryReview && !['placed', 'accepted', 'packed', 'assigned', 'dispatched'].includes(orderStatus) && (
+                            <View style={{ height: hp('1%') }} />
+                        )
+                    )}
+                    {!canMarkOverallReview && (orderStatus !== 'delivered') && (
+                        <View style={styles.deliveryAgentContainer}>
+                            <View>
+                                <Text style={styles.deliveryAgentNameText}>
+                                    {['placed', 'accepted', 'packed'].includes(orderStatus)
+                                        ? 'Not assigned'
+                                        : (deliveryAgentName || 'Marvin Alex')}
+                                </Text>
+                                <Text style={styles.deliveryAgentTextTwo}>Delivery Agent</Text>
+                            </View>
+                            {['placed', 'accepted', 'packed'].includes(orderStatus)
+                                ? <View style={styles.callContainer} />
+                                : <TouchableOpacity
+                                    style={styles.callContainer}
+                                    onPress={() => {
+                                        if (deliveryAgentPhone) {
+                                            Linking.openURL(`tel:${deliveryAgentPhone}`);
+                                        }
+                                    }}
+                                >
+                                    <Image style={styles.phoneIcon} source={require('../assets/images/phone_green.png')} />
+                                </TouchableOpacity>}
                         </View>
-                        {['placed', 'accepted', 'packed'].includes(orderStatus)
-                            ? <View style={styles.callContainer} />
-                            : <TouchableOpacity
-                                style={styles.callContainer}
-                                onPress={() => {
-                                    if (deliveryAgentPhone) {
-                                        Linking.openURL(`tel:${deliveryAgentPhone}`);
-                                    }
-                                }}
-                            >
-                                <Image style={styles.phoneIcon} source={require('../assets/images/phone_green.png')} />
-                            </TouchableOpacity>}
-
-                    </View>
                     )}
                     <ImageBackground style={styles.addressBackgroundImageStyle} source={require('../assets/images/order_tracking_background.png')}>
                         <View style={styles.addressContainer}>
@@ -541,7 +594,7 @@ const OrderTrackingScreen = () => {
 
                     <View style={styles.productsMainContainer}>
                         <View style={styles.productsHeaderView}>
-                            <Text style={styles.productsHeaderText}>Your Orders</Text>
+                            <Text style={styles.productsHeaderText}>Items in this order</Text>
                             <Text style={styles.productsHeaderCount}>{itemCount} items</Text>
                         </View>
 
@@ -575,15 +628,23 @@ const OrderTrackingScreen = () => {
                                 <BillRow label="Item Total" value={`₹${bill.subTotal.toFixed(2)}`} />
                                 {bill.discountTotal > 0 && <BillRow label="Discount" value={`- ₹${bill.discountTotal.toFixed(2)}`} isGreen />}
                                 <BillRow label="Delivery Charge" value={bill.deliveryCharge === 0 ? 'FREE' : `₹${bill.deliveryCharge.toFixed(2)}`} />
-                                {bill.couponDiscount > 0 && <BillRow label="Coupon Discount" value={`- ₹${bill.couponDiscount.toFixed(2)}`} isGreen />}
-                                {bill.giftCardAmount > 0 && <BillRow label="Gift Card" value={`- ₹${bill.giftCardAmount.toFixed(2)}`} />}
-                                {bill.bCoinAppliedValue > 0 && <BillRow label="B-Coins Applied" value={`- ₹${bill.bCoinAppliedValue.toFixed(2)}`} isGreen />}
                                 {bill.taxTotal > 0 && <BillRow label="Tax" value={`₹${bill.taxTotal.toFixed(2)}`} />}
+                                {bill.couponDiscount > 0 && <BillRow label="Coupon Discount" value={`- ₹${bill.couponDiscount.toFixed(2)}`} isGreen />}
+                                {bill.giftCardAmount > 0 && <BillRow label="GiftCard Applied" value={`- ₹${bill.giftCardAmount.toFixed(2)}`} isGreen />}
+                                {bill.bCoinAppliedValue > 0 && <BillRow label="Bcoins Applied" value={`- ₹${bill.bCoinAppliedValue.toFixed(2)}`} isGreen />}
                                 <View style={styles.billRowDivider} />
                                 <View style={styles.finalTotalRow}>
-                                    <Text style={styles.finalTotalLabel}>Grand Total</Text>
+                                    <Text style={styles.finalTotalLabel}>To Pay</Text>
                                     <Text style={styles.finalTotalValue}>₹{bill.grandTotal.toFixed(2)}</Text>
                                 </View>
+
+                                {((bill.discountTotal || 0) + (bill.couponDiscount || 0) + (bill.bCoinAppliedValue || 0)) > 0 && (
+                                    <View style={{ marginTop: hp('1%') }}>
+                                        <Text style={[styles.billBreakdownLabel, { color: '#0CA201', fontFamily: FONTS.outfit.medium }]}>
+                                            You saved : ₹{((bill.discountTotal || 0) + (bill.couponDiscount || 0) + (bill.bCoinAppliedValue || 0)).toFixed(2)}
+                                        </Text>
+                                    </View>
+                                )}
                             </View>
                         )}
                     </View>
@@ -595,7 +656,7 @@ const OrderTrackingScreen = () => {
                                     // Use siteUrl if invoiceUrl is a relative asset path
                                     const fullUrl = invoiceUrl.startsWith('http')
                                         ? invoiceUrl
-                                        : `${CONFIG.siteUrl}${invoiceUrl}`;
+                                        : `${CONFIG.image_base_url}${invoiceUrl}`;
 
                                     console.log('Opening Invoice URL:', fullUrl);
                                     Linking.openURL(fullUrl).catch(err => {
@@ -630,27 +691,29 @@ const OrderTrackingScreen = () => {
                             <Text style={styles.orderDetailsValueText}>{formattedOrderDate || orderDate}</Text>
                         </View>
                     </View>
-                    <View style={styles.dliveryAgentRatingMainContainer}>
-                        <View style={styles.deliveryAgentInnerContainerOne}>
-                            <Image style={styles.deliveryAgentIcon} source={require('../assets/images/del_agent.png')} />
-                            <View style={styles.deliveryAgentContainerInnerView}>
-                                <Text style={styles.deliveryAgentRatingText}>Rate our delivery boy</Text>
-                                <View style={styles.starContainerTwo}>
-                                    {[1, 2, 3, 4, 5].map((star) => (
-                                        <TouchableOpacity key={star} onPress={() => handleAgentRating(star)}>
-                                            <Image
-                                                style={[styles.ratingStarStyleTwo, { tintColor: star <= agentRating ? '#F2C94C' : '#DADADA' }]}
-                                                source={require('../assets/images/star.png')}
-                                            />
-                                        </TouchableOpacity>
-                                    ))}
+                    {canMarkDeliveryReview && (
+                        <View style={styles.dliveryAgentRatingMainContainer}>
+                            <View style={styles.deliveryAgentInnerContainerOne}>
+                                <Image style={styles.deliveryAgentIcon} source={require('../assets/images/del_agent.png')} />
+                                <View style={styles.deliveryAgentContainerInnerView}>
+                                    <Text style={styles.deliveryAgentRatingText}>Rate our delivery boy</Text>
+                                    <View style={styles.starContainerTwo}>
+                                        {[1, 2, 3, 4, 5].map((star) => (
+                                            <TouchableOpacity key={star} onPress={() => handleAgentRating(star)}>
+                                                <Image
+                                                    style={[styles.ratingStarStyleTwo, { tintColor: star <= agentRating ? '#F2C94C' : '#DADADA' }]}
+                                                    source={require('../assets/images/star.png')}
+                                                />
+                                            </TouchableOpacity>
+                                        ))}
+                                    </View>
                                 </View>
                             </View>
+                            <View style={styles.deliveryAgentInnerContainerTwo}>
+                                <Text style={styles.deliveryAgentRatingName}>Delivery boy : {deliveryAgentName || 'Marvin Alex'}</Text>
+                            </View>
                         </View>
-                        <View style={styles.deliveryAgentInnerContainerTwo}>
-                            <Text style={styles.deliveryAgentRatingName}>Delivery boy : {deliveryAgentName || 'Marvin Alex'}</Text>
-                        </View>
-                    </View>
+                    )}
                     {['placed', 'accepted', 'packed'].includes(orderStatus) && (
                         <TouchableOpacity onPress={() => setShowCancelModal(true)}>
                             <LinearGradient colors={['#F25000', '#FF7B3A']}
@@ -695,6 +758,14 @@ const OrderTrackingScreen = () => {
                     handleReturnItem(reason);
                     refreshOrder?.(true);
                 }}
+            />
+
+            <StatusModal
+                visible={statusModal.visible}
+                type={statusModal.type}
+                title={statusModal.title}
+                message={statusModal.message}
+                onClose={() => setStatusModal({ ...statusModal, visible: false })}
             />
         </SafeAreaView >
     )

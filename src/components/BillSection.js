@@ -34,45 +34,37 @@ const BillSection = ({ billCalculations }) => {
             </View>
             <View>
                 {/* Item Total */}
-                <View style={styles.billContentContainer}>
-                    <Text style={styles.billContentText}>Item total</Text>
-                    <View style={styles.priceContainer}>
-                        {savings > 0 && (
-                            <Text style={styles.mrpText}>₹{mrpTotal.toFixed(2)}</Text>
-                        )}
-                        <Text style={styles.priceText}>₹{itemTotal.toFixed(2)}</Text>
-                    </View>
-                </View>
+                <BillRow label="Item Total" value={`₹${itemTotal.toFixed(2)}`} />
+
+                {/* Discount */}
+                {savings > 0 && (
+                    <BillRow label="Discount" value={`- ₹${savings.toFixed(2)}`} isGreen />
+                )}
 
                 {/* Delivery */}
                 <BillRow
-                    label="Delivery charge"
+                    label="Delivery Charge"
                     value={deliveryCharge === 0 ? 'FREE' : `₹${deliveryCharge.toFixed(2)}`}
                 />
 
                 {/* Tax */}
                 {totalTax > 0 && (
-                    <BillRow label="Total Tax" value={`₹${totalTax.toFixed(2)}`} />
+                    <BillRow label="Tax" value={`₹${totalTax.toFixed(2)}`} />
                 )}
 
                 {/* Coupon */}
                 {couponDiscount > 0 && (
-                    <BillRow label="Coupon Discount" value={`- ₹${couponDiscount.toFixed(2)}`} />
+                    <BillRow label="Coupon Discount" value={`- ₹${couponDiscount.toFixed(2)}`} isGreen />
                 )}
 
                 {/* Gift Card */}
                 {giftCardAmount > 0 && (
-                    <BillRow label="Gift Card" value={`- ₹${giftCardAmount.toFixed(2)}`} />
+                    <BillRow label="GiftCard Applied" value={`- ₹${giftCardAmount.toFixed(2)}`} isGreen />
                 )}
 
                 {/* B-Coins */}
                 {bcoinsAppliedValue > 0 && (
-                    <BillRow label="B-Coins Applied" value={`- ₹${bcoinsAppliedValue.toFixed(2)}`} />
-                )}
-
-                {/* Savings */}
-                {totalSavings > 0 && (
-                    <BillRow label="You have saved" value={`₹${totalSavings.toFixed(2)}`} isGreen />
+                    <BillRow label="Bcoins Applied" value={`- ₹${bcoinsAppliedValue.toFixed(2)}`} isGreen />
                 )}
 
                 <View style={styles.billDivider} />
@@ -80,6 +72,15 @@ const BillSection = ({ billCalculations }) => {
                     <Text style={styles.billSumText}>To Pay</Text>
                     <Text style={styles.billSumText}>₹{toPay.toFixed(2)}</Text>
                 </View>
+
+                {/* Savings */}
+                {totalSavings > 0 && (
+                    <View style={{ marginTop: hp('1%') }}>
+                        <Text style={[styles.billContentText, { color: '#0CA201', fontFamily: FONTS.outfit.medium }]}>
+                            You saved : ₹{totalSavings.toFixed(2)}
+                        </Text>
+                    </View>
+                )}
             </View>
         </ImageBackground>
     );

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { View, Text, StyleSheet, Image, TouchableOpacity, TextInput, Platform, ScrollView, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, ActivityIndicator } from 'react-native'
-import MapView from 'react-native-maps'
+import MapView, { Marker } from 'react-native-maps'
+import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { FONTS } from '../styles/typography'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
@@ -11,6 +12,8 @@ import { addAddressApi, updateAddressApi } from '../api/addressService'
 import { getAreasByPincode } from '../api';
 import Toast from 'react-native-simple-toast'
 import { useAddresses } from '../hooks/useAddresses'
+import axios from 'axios'
+import { validatePhoneNumbers } from '../utils/validation'
 
 const AddLocationScreen = () => {
     const navigation = useNavigation()
@@ -36,6 +39,14 @@ const AddLocationScreen = () => {
     const [addressType, setAddressType] = useState(editAddress?.addressType || 'HOME');
     const [isLoading, setIsLoading] = useState(false);
     const [isAreasLoading, setIsAreasLoading] = useState(false);
+    const [isGeocoding, setIsGeocoding] = useState(false);
+
+    const [region, setRegion] = useState({
+        latitude: Number(editAddress?.latitude) || 10.0205,
+        longitude: Number(editAddress?.longitude) || 76.3052,
+        latitudeDelta: 0.005,
+        longitudeDelta: 0.005,
+    });
 
     useEffect(() => {
         if (pincode && pincode.length === 6) {
@@ -61,7 +72,8 @@ const AddLocationScreen = () => {
                 }
             } else {
                 setItems([]);
-                Toast.show('No areas found for this pincode', Toast.SHORT);
+                // Only show toast if explicitly entered, not if from geocoding
+                // Toast.show('No areas found for this pincode', Toast.SHORT);
             }
         } catch (error) {
             console.error('Error fetching areas:', error);
@@ -71,9 +83,55 @@ const AddLocationScreen = () => {
         }
     };
 
+    const apiKey = 'AIzaSyDhItv0zoWdQbDh-5jjKLAEjwRDDrFNc1Y';
+
+    const reverseGeocode = async (lat, lng) => {
+        const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`;
+
+        try {
+            setIsGeocoding(true);
+            const response = await axios.get(url);
+            if (response.data.results && response.data.results.length > 0) {
+                const result = response.data.results[0];
+                const address = result.formatted_address;
+
+                // Simple parsing for address lines
+                const components = result.address_components;
+                const streetNumber = components.find(c => c.types.includes('street_number'))?.long_name || '';
+                const routeName = components.find(c => c.types.includes('route'))?.long_name || '';
+                const sublocality2 = components.find(c => c.types.includes('sublocality_level_2'))?.long_name || '';
+                const sublocality1 = components.find(c => c.types.includes('sublocality_level_1'))?.long_name || '';
+                const neighborhood = components.find(c => c.types.includes('neighborhood'))?.long_name || '';
+                const locality = components.find(c => c.types.includes('locality'))?.long_name || '';
+                const postalCode = components.find(c => c.types.includes('postal_code'))?.long_name || '';
+
+                if (!custName) setCustName(editAddress?.custName || ''); // Keep name if already there
+                setAddLine1(`${streetNumber} ${routeName}`.trim() || sublocality2 || sublocality1 || '');
+                setAddLine2(`${sublocality1 || neighborhood || locality}`.trim());
+                if (postalCode) {
+                    setPincode(postalCode);
+                }
+            }
+        } catch (error) {
+            console.error('Reverse geocode error', error);
+        } finally {
+            setIsGeocoding(false);
+        }
+    };
+
+    const onRegionChangeComplete = (newRegion) => {
+        setRegion(newRegion);
+        // Map movement no longer triggers geocoding, marker drag does
+    };
+
     const handleSave = async () => {
         if (!custName || !addLine1 || !phone || !pincode || !pincodeAreaId) {
             Toast.show('Please fill all required fields', Toast.SHORT);
+            return;
+        }
+
+        if (!validatePhoneNumbers(phone)) {
+            Toast.show('Please enter a valid phone number', Toast.SHORT);
             return;
         }
 
@@ -89,8 +147,8 @@ const AddLocationScreen = () => {
             pincode,
             pincodeAreaId,
             pincodeAreaName: items.find(i => i.value === pincodeAreaId)?.label || "",
-            latitude: 10.0205225253,
-            longitude: 76.30524553585,
+            latitude: Number(region.latitude),
+            longitude: Number(region.longitude),
             addressType,
             isDefaultBillingAddress: true,
             isDefaultShippingAddress: true
@@ -126,20 +184,93 @@ const AddLocationScreen = () => {
             paddingBottom: insets.bottom
         }] : styles.mainContainer}>
             <MapView
-                style={StyleSheet.absoluteFillObject}
-                initialRegion={{
-                    latitude: editAddress?.latitude || 10.8505,
-                    longitude: editAddress?.longitude || 76.2711,
-                    latitudeDelta: 0.05,
-                    longitudeDelta: 0.05,
-                }}
-            />
-            <View style={styles.topView}>
-                <TouchableOpacity onPress={() => navigation.goBack()}>
-                    <Image style={styles.leftArrowIcon} source={require('../assets/images/left_arrow.png')} />
-                </TouchableOpacity>
-                <Text style={styles.addLocationText}>{isEditMode ? 'Edit location' : 'Add location'}</Text>
-                <Image style={styles.homeIcon} source={require('../assets/images/home_two.png')} />
+                style={styles.map}
+                region={region}
+                onRegionChangeComplete={onRegionChangeComplete}
+            >
+                <Marker
+                    draggable
+                    coordinate={{
+                        latitude: region.latitude,
+                        longitude: region.longitude
+                    }}
+                    onDragEnd={(e) => {
+                        const newCoord = e.nativeEvent.coordinate;
+                        setRegion({
+                            ...region,
+                            latitude: newCoord.latitude,
+                            longitude: newCoord.longitude
+                        });
+                        reverseGeocode(newCoord.latitude, newCoord.longitude);
+                    }}
+                >
+                    <Image
+                        style={styles.markerIcon}
+                        source={require('../assets/images/location_four.png')}
+                    />
+                </Marker>
+            </MapView>
+            <View style={{ zIndex: 1, elevation: 5 }}>
+                <View style={[styles.searchAbsoluteContainer, { zIndex: 999 }]}>
+                    <GooglePlacesAutocomplete
+                        placeholder="Search Location"
+                        fetchDetails={true}
+                        onPress={(data, details = null) => {
+                            if (details) {
+                                const lat = details.geometry.location.lat;
+                                const lng = details.geometry.location.lng;
+                                setRegion(prev => ({ ...prev, latitude: lat, longitude: lng }));
+                                reverseGeocode(lat, lng);
+                            }
+                        }}
+                        query={{
+                            key: apiKey,
+                            language: 'en',
+                            components: 'country:in',
+                        }}
+                        styles={{
+                            container: { flex: 1 },
+                            textInputContainer: {
+                                // backgroundColor: '#FFFFFF',
+                                // borderRadius: wp('2.32%'),
+                                // borderWidth: 1,
+                                // borderColor: '#DADADA',
+                                height: hp('5.36%'),
+                                paddingHorizontal: wp('2%'),
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                            },
+                            textInput: {
+                                fontFamily: FONTS.poppins.light,
+                                fontSize: wp('3.72%'),
+                                color: '#000000',
+                                height: hp('5.36%'),
+                                flex: 1,
+                            },
+                            listView: {
+                                backgroundColor: '#FFFFFF',
+                                borderRadius: wp('2.32%'),
+                                marginTop: hp('1%'),
+                                borderWidth: 1,
+                                borderColor: '#DADADA',
+                                elevation: 5,
+                                position: 'absolute',
+                                top: hp('5.5%'),
+                                width: '100%',
+                                zIndex: 100
+                            },
+                            row: {
+                                padding: wp('3%'),
+                                height: hp('6%'),
+                                flexDirection: 'row',
+                            },
+                            separator: {
+                                height: 1,
+                                backgroundColor: '#DADADA',
+                            }
+                        }}
+                    />
+                </View>
             </View>
 
             <KeyboardAvoidingView
@@ -149,10 +280,20 @@ const AddLocationScreen = () => {
                 <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                     <ScrollView
                         style={styles.detailedAddressContainer}
+                        contentContainerStyle={{ paddingBottom: hp('10%') }}
                         keyboardShouldPersistTaps="handled"
                         showsVerticalScrollIndicator={false}
                     >
                         <View style={styles.upperDivider} />
+                        <View style={styles.topView}>
+                            <TouchableOpacity style={styles.backButtonContainer} onPress={() => navigation.goBack()} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                                <Image style={styles.leftArrowIcon} source={require('../assets/images/left_arrow.png')} />
+                            </TouchableOpacity>
+                            <Text style={styles.addLocationText}>{isEditMode ? 'Edit location' : 'Add location'}</Text>
+                            <TouchableOpacity onPress={() => navigation.navigate('MainTabs')} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                                <Image style={styles.homeIcon} source={require('../assets/images/home_two.png')} />
+                            </TouchableOpacity>
+                        </View>
                         <View style={styles.innerView}>
                             <Image style={[styles.locationIcon, {
                                 top: hp('-1%')
@@ -175,40 +316,45 @@ const AddLocationScreen = () => {
                         <View style={styles.addressTypesContainer}>
                             <TouchableOpacity
                                 onPress={() => setAddressType('HOME')}
-                                style={[styles.addressTypeContainer, addressType === 'HOME' && { borderColor: '#F25000', backgroundColor: '#FFF5F0' }]}
+                                style={[styles.addressTypeContainer, addressType === 'HOME' ? { borderColor: '#F25000', backgroundColor: '#F25000' } : { borderColor: '#DADADA' }]}
                             >
                                 <Image style={Platform.OS === 'android' ?
                                     [styles.addressTypeIcon, {
-                                        bottom: hp('0.2%')
-                                    }] : styles.addressTypeIcon
+                                        bottom: hp('0.2%'),
+                                        tintColor: addressType === 'HOME' ? '#FFFFFF' : undefined
+                                    }] : [styles.addressTypeIcon, { tintColor: addressType === 'HOME' ? '#FFFFFF' : undefined }]
                                 } source={require('../assets/images/home_primary_color.png')} />
-                                <Text style={styles.addressTypeText}>Home</Text>
+                                <Text style={[styles.addressTypeText, addressType === 'HOME' && { color: '#FFFFFF' }]}>Home</Text>
                             </TouchableOpacity>
 
                             <TouchableOpacity
                                 onPress={() => setAddressType('OFFICE')}
-                                style={[styles.addressTypeContainer, addressType === 'OFFICE' && { borderColor: '#F25000', backgroundColor: '#FFF5F0' }]}
+                                style={[styles.addressTypeContainer, addressType === 'OFFICE' ? { borderColor: '#F25000', backgroundColor: '#F25000' } : { borderColor: '#DADADA' }]}
                             >
                                 <Image style={Platform.OS === 'android' ? [styles.addressTypeIcon, {
-                                    width: wp('2.79%%'),
-                                    bottom: hp('0.2%')
+                                    width: wp('2.79%'),
+                                    bottom: hp('0.2%'),
+                                    tintColor: addressType === 'OFFICE' ? '#FFFFFF' : undefined
                                 }] : [styles.addressTypeIcon, {
-                                    width: wp('2.79%%'),
+                                    width: wp('2.79%'),
+                                    tintColor: addressType === 'OFFICE' ? '#FFFFFF' : undefined
                                 }]} source={require('../assets/images/office_primary_color.png')} />
-                                <Text style={styles.addressTypeText}>Office</Text>
+                                <Text style={[styles.addressTypeText, addressType === 'OFFICE' && { color: '#FFFFFF' }]}>Office</Text>
                             </TouchableOpacity>
 
                             <TouchableOpacity
                                 onPress={() => setAddressType('OTHER')}
-                                style={[styles.addressTypeContainer, addressType === 'OTHER' && { borderColor: '#F25000', backgroundColor: '#FFF5F0' }]}
+                                style={[styles.addressTypeContainer, addressType === 'OTHER' ? { borderColor: '#F25000', backgroundColor: '#F25000' } : { borderColor: '#DADADA' }]}
                             >
                                 <Image style={Platform.OS === 'android' ? [styles.addressTypeIcon, {
                                     width: wp('2.55%'),
-                                    bottom: hp('0.2%')
+                                    bottom: hp('0.2%'),
+                                    tintColor: addressType === 'OTHER' ? '#FFFFFF' : undefined
                                 }] : [styles.addressTypeIcon, {
                                     width: wp('2.55%'),
+                                    tintColor: addressType === 'OTHER' ? '#FFFFFF' : undefined
                                 }]} source={require('../assets/images/location_five.png')} />
-                                <Text style={styles.addressTypeText}>Other</Text>
+                                <Text style={[styles.addressTypeText, addressType === 'OTHER' && { color: '#FFFFFF' }]}>Other</Text>
                             </TouchableOpacity>
                         </View>
                         <View style={styles.inputWrapper}>
@@ -279,7 +425,7 @@ const AddLocationScreen = () => {
                                 onChangeText={setLandmark}
                                 multiline
                                 style={[styles.input, {
-                                    height: hp('14.27%'),
+                                    height: hp('6.27%'),
                                     paddingHorizontal: wp('3.25%'),
                                     textAlignVertical: 'top'
                                 }]}
@@ -338,18 +484,30 @@ const styles = StyleSheet.create({
         marginLeft: wp('4%')
     },
     leftArrowIcon: {
-        width: wp('2.33%'),
-        height: hp('2.04%')
+        width: wp('4.5%'),
+        height: hp('2.5%'),
+        resizeMode: 'contain',
+        tintColor: '#000000'
     },
     homeIcon: {
-        height: wp('7.9'),
+        height: wp('7.9%'),
         width: wp('7.9%'),
     },
     topView: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginHorizontal: wp('4.65%'),
-        marginTop: hp('1%')
+        marginTop: hp('2%'),
+        marginBottom: hp('1%'),
+    },
+    backButtonContainer: {
+        padding: wp('1%'),
+    },
+    searchAbsoluteContainer: {
+        width: wp('90.7%'),
+        alignSelf: 'center',
+        marginTop: hp('1.5%'),
+        zIndex: 999,
+        elevation: 10
     },
     searchContainer: {
         flexDirection: 'row',
@@ -419,9 +577,27 @@ const styles = StyleSheet.create({
         flex: 1,
         borderTopLeftRadius: hp('4.3%'),
         borderTopRightRadius: hp('4.3%'),
-        marginTop: hp('2%'),
+        marginTop: hp('35%'), // Give more space for map
         paddingTop: hp('1%'),
         paddingHorizontal: wp('4.65%'),
+    },
+    map: {
+        width: wp('100%'),
+        height: hp('45%'),
+        position: 'absolute',
+        top: 0
+    },
+    markerFixed: {
+        left: '50%',
+        marginLeft: -wp('2.8%'),
+        marginTop: -wp('7%'),
+        position: 'absolute',
+        top: hp('22.5%') // Center of map height (45% / 2)
+    },
+    markerIcon: {
+        width: wp('5.6%'),
+        height: wp('7%'),
+        tintColor: '#F25000'
     },
     delboyContainer: {
         height: hp('6.2%'),
@@ -468,7 +644,8 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#F25000',
         borderRadius: wp('2.32%'),
-        paddingHorizontal: wp('1.7%'),
+        paddingHorizontal: wp('2.5%'),
+        paddingVertical: hp('0.8%'),
     },
     addressTypeIcon: {
         width: wp('3.95%'),

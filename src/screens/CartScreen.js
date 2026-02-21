@@ -17,8 +17,8 @@ import { LoaderContext } from '../context/loaderContext'
 import ConfirmationModal from '../components/ConfirmationModal'
 import { getDashboardDataApi } from '../api/userService'
 
-// ─── Extracted Components ───
 import AddressModal from '../components/AddressModal'
+import AddressConfirmationModal from '../components/AddressConfirmationModal'
 import SlotModal from '../components/SlotModal'
 import CouponModal from '../components/CouponModal'
 import BillSection from '../components/BillSection'
@@ -80,10 +80,11 @@ const CartScreen = () => {
         onSelectAddress,
         onThreeDotsClicked,
         onDeleteClicked,
-        onCloseThreeDots
+        onCloseThreeDots,
+        addressConfirmationData,
+        setAddressConfirmationData
     } = useContext(CartContext);
     const [isClearCartModalVisible, setIsClearCartModalVisible] = useState(false);
-    const [showBill, setShowBill] = useState(false);
     const [lastShownError, setLastShownError] = useState(null);
     const [refreshing, setRefreshing] = useState(false);
     const scrollViewRef = useRef(null);
@@ -119,16 +120,12 @@ const CartScreen = () => {
         }
     }, [getCartSummary, fetchAddresses]);
 
-    // Auto-scroll to bill when expanded
-    const toggleBill = () => {
-        const nextShowBill = !showBill;
-        setShowBill(nextShowBill);
-        if (nextShowBill) {
-            // Wait for layout update before scrolling
-            setTimeout(() => {
-                scrollViewRef.current?.scrollToEnd({ animated: true });
-            }, 100);
-        }
+    // Auto-scroll to bill
+    const scrollToBill = () => {
+        // Wait for layout update before scrolling
+        setTimeout(() => {
+            scrollViewRef.current?.scrollToEnd({ animated: true });
+        }, 100);
     };
 
     return (
@@ -256,8 +253,7 @@ const CartScreen = () => {
                         </View>
 
                         {/* Bill Section */}
-                        {showBill && (
-                            <BillSection billCalculations={billCalculations} />)}
+                        <BillSection billCalculations={billCalculations} />
 
                         <View style={{ height: hp('15%') }} />
                     </ScrollView>
@@ -265,11 +261,11 @@ const CartScreen = () => {
                     {/* ─── Bottom Bar ─── */}
                     <View style={styles.bottomContainer}>
                         <View>
-                            <TouchableOpacity activeOpacity={0.7} onPress={toggleBill} style={styles.bottomContainerInnerView}>
+                            <TouchableOpacity activeOpacity={0.7} onPress={scrollToBill} style={styles.bottomContainerInnerView}>
                                 <Image style={styles.bottomContainerBillIcon} source={require('../assets/images/bill_icon.png')} />
                                 <Text style={styles.bottomContainerPriceText}>₹{(billCalculations.toPay || 0).toFixed(2)}</Text>
                                 <Image
-                                    style={[styles.bottomContainerDownArrowIcon, showBill && { transform: [{ rotate: '0deg' }] }]}
+                                    style={styles.bottomContainerDownArrowIcon}
                                     source={require('../assets/images/down_arrow.png')}
                                 />
                             </TouchableOpacity>
@@ -293,10 +289,14 @@ const CartScreen = () => {
                                     const selectedAddress = addresses.find(a => a.selected);
                                     const selectedDate = datesList[selectedDateIndex]?.formatted;
 
-                                    // if (!selectedAddress) {
-                                    //     setShowAddressModal(true);
-                                    //     return;
-                                    // }
+                                    if (!selectedAddress) {
+                                        if (addresses.length === 0) {
+                                            navigation.navigate('AddLocationScreen');
+                                        } else {
+                                            setShowAddressModal(true);
+                                        }
+                                        return;
+                                    }
 
                                     // if (selectedDeliveryType === 'slot' && !selectedSlot) {
                                     //     setShowSlotModal(true);
@@ -321,6 +321,12 @@ const CartScreen = () => {
             )}
 
             {/* ─── Modals (extracted) ─── */}
+            <AddressConfirmationModal
+                visible={!!addressConfirmationData}
+                pincode={addressConfirmationData?.pincode}
+                areaName={addressConfirmationData?.areaName}
+                onClose={() => setAddressConfirmationData(null)}
+            />
             <AddressModal
                 visible={showAddressModal}
                 onClose={() => setShowAddressModal(false)}
@@ -539,8 +545,7 @@ const styles = StyleSheet.create({
         width: wp('3%'),
         height: wp('3%'),
         resizeMode: 'contain',
-        marginLeft: wp('2%'),
-        transform: [{ rotate: '180deg' }]
+        marginLeft: wp('2%')
     },
     savedPriceText: {
         fontFamily: FONTS.outfit.regular,
