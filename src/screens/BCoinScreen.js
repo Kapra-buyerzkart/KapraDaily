@@ -1,5 +1,6 @@
-import { View, Text, StyleSheet, ImageBackground, Image, TouchableOpacity, ScrollView, Modal, TextInput, Alert, ActivityIndicator } from 'react-native'
-import React, { useState, useEffect, useContext } from 'react'
+import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Alert, RefreshControl, ImageBackground, Modal } from 'react-native'
+import React, { useState, useEffect, useCallback, useContext } from 'react'
+import { useCart } from '../context/CartContext'
 import { AppContext } from '../context/appContext'
 import StoreUnavailable from '../components/StoreUnavailable'
 import LocationModal from '../components/LocationModal'
@@ -98,14 +99,25 @@ const BCoinScreen = () => {
     }
 
     const handleRedeem = async () => {
-        if (!requestedCoins || isNaN(requestedCoins) || Number(requestedCoins) <= 0) {
-            Alert.alert('Invalid Amount', 'Please enter a valid amount of coins to redeem.')
-            return
+        const redeemAmount = Number(requestedCoins);
+
+        if (isNaN(redeemAmount) || redeemAmount <= 0) {
+            showStatus({
+                type: 'error',
+                title: 'Invalid Amount',
+                message: 'Please enter a valid amount of coins to redeem.'
+            });
+            return;
         }
 
-        if (Number(requestedCoins) > (walletData?.wallet?.bCoins || 0)) {
-            Alert.alert('Insufficient Balance', 'You do not have enough B-Coins.')
-            return
+        // Assuming coinsData is walletData.wallet and totalCoins is bCoins
+        if (redeemAmount > (walletData?.wallet?.bCoins || 0)) { // Changed coinsData?.totalCoins to walletData?.wallet?.bCoins
+            showStatus({
+                type: 'error',
+                title: 'Insufficient Balance',
+                message: 'You do not have enough B-Coins.'
+            });
+            return;
         }
 
         setIsRedeeming(true)

@@ -50,7 +50,7 @@ const ProductDetailsScreen = () => {
     const route = useRoute()
     const { product: initialProduct, productId } = route.params || {}
     const { isInWishlist, toggleWishlist } = useWishlist()
-    const { addToCart, cartItems, updateCartItemQuantity, removeFromCart } = useCart()
+    const { addToCart, cartItems, updateCartItemQuantity, removeFromCart, showStatus } = useCart()
 
     const {
         loading,
@@ -94,7 +94,11 @@ const ProductDetailsScreen = () => {
                 // dismissed
             }
         } catch (error) {
-            Alert.alert('Error', 'An error occurred while sharing the product.');
+            showStatus({
+                type: 'error',
+                title: 'Error',
+                message: 'An error occurred while sharing the product.'
+            });
             console.error('Share Error:', error);
         }
     };

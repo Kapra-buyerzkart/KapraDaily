@@ -4,6 +4,8 @@ import { Alert } from 'react-native';
 import Toast from 'react-native-simple-toast';
 import { addToCartApi, removeFromCartApi, updateCartItemApi, getCartApi, getCartSummaryApi, clearCartApi, applyCouponApi, removeCouponApi, applyGiftCardApi, removeGiftCardApi, applyBCoinApi, removeBCoinApi } from '../api/cartService';
 import { getAddressListApi, deleteAddressApi } from '../api/addressService';
+import ConfirmationModal from '../components/ConfirmationModal';
+import StatusModal from '../components/StatusModal';
 
 export const CartContext = createContext();
 
@@ -20,6 +22,8 @@ export const CartProvider = ({ children }) => {
     const [isLoadingAddresses, setIsLoadingAddresses] = useState(false);
     const [showAddressModal, setShowAddressModal] = useState(false);
     const [addressConfirmationData, setAddressConfirmationData] = useState(null);
+    const [confirmationConfig, setConfirmationConfig] = useState(null);
+    const [statusConfig, setStatusConfig] = useState(null);
 
     // ─── useRef for cartVersion so every callback always reads the LATEST value ───
     const cartVersionRef = useRef(null);
@@ -50,6 +54,14 @@ export const CartProvider = ({ children }) => {
             refreshCart();
         }
     }, [profile?.pincode, refreshCart]);
+
+    const showConfirmation = useCallback((config) => {
+        setConfirmationConfig(config);
+    }, []);
+
+    const showStatus = useCallback((config) => {
+        setStatusConfig(config);
+    }, []);
 
     // ─── Addresses Logic ───
     const fetchAddresses = useCallback(async () => {
@@ -155,41 +167,49 @@ export const CartProvider = ({ children }) => {
     }, []);
 
     const onDeleteClicked = useCallback(async (addressId) => {
-        Alert.alert(
-            "Delete Address",
-            "Are you sure you want to delete this address?",
-            [
-                { text: "Cancel", style: "cancel" },
-                {
-                    text: "Delete",
-                    style: "destructive",
-                    onPress: async () => {
-                        try {
-                            const response = await deleteAddressApi(addressId);
-                            if (response?.success) {
-                                setAddresses(prev => {
-                                    const deletedItem = prev.find(item => item.id === addressId);
-                                    const newList = prev.filter(item => item.id !== addressId);
+        // Close the AddressModal first if it's open to avoid modal collision on iOS
+        setShowAddressModal(false);
 
-                                    // If we deleted the selected address and have other addresses, select the first one
-                                    if (deletedItem?.selected && newList.length > 0) {
-                                        newList[0].selected = true;
-                                    }
-                                    return newList;
-                                });
-                                Toast.show('Address deleted successfully');
-                            } else {
-                                Toast.show(response?.message || 'Failed to delete address');
-                            }
-                        } catch (error) {
-                            console.error('Error deleting address:', error);
-                            Toast.show(typeof error === 'string' ? error : 'Failed to delete address');
+        // Slight delay to allow AddressModal to close before showing confirmation
+        setTimeout(() => {
+            showConfirmation({
+                title: "Delete Address",
+                message: "Are you sure you want to delete this address?",
+                confirmText: "Delete",
+                onConfirm: async () => {
+                    try {
+                        const response = await deleteAddressApi(addressId);
+                        if (response?.success) {
+                            setAddresses(prev => {
+                                const deletedItem = prev.find(item => item.id === addressId);
+                                const newList = prev.filter(item => item.id !== addressId);
+
+                                if (deletedItem?.selected && newList.length > 0) {
+                                    newList[0].selected = true;
+                                }
+                                return newList;
+                            });
+                            Toast.show('Address deleted successfully');
+                        } else {
+                            showStatus({
+                                type: 'error',
+                                title: 'Error',
+                                message: response?.message || 'Failed to delete address'
+                            });
                         }
+                    } catch (error) {
+                        console.error('Error deleting address:', error);
+                        showStatus({
+                            type: 'error',
+                            title: 'Error',
+                            message: typeof error === 'string' ? error : 'Failed to delete address'
+                        });
                     }
                 }
-            ]
-        );
-    }, [deleteAddressApi]);
+            });
+        }, 400);
+    }, [deleteAddressApi, showConfirmation, showStatus]);
+
 
     const onCloseThreeDots = useCallback(() => {
         setAddresses(prev =>
@@ -497,7 +517,7 @@ export const CartProvider = ({ children }) => {
 
             const response = await applyCouponApi(couponCode, version, pincodeAreaId, cartIdRef.current);
             console.log('Coupon Applied:', response);
-            if (response && response.success) {
+            if (response && (response.success === true || response.status === 'OK')) {
                 await refreshCart();
                 return { success: true, message: response.message || 'Coupon applied successfully' };
             } else {
@@ -606,7 +626,7 @@ export const CartProvider = ({ children }) => {
 
             const response = await applyGiftCardApi(giftCode, version, pincodeAreaId, cartIdRef.current);
             console.log('Gift Card Applied:', response);
-            if (response && response.success) {
+            if (response && (response.success === true || response.status === 'OK')) {
                 await refreshCart();
                 return { success: true, message: response.message || 'Gift card applied successfully' };
             } else {
@@ -687,12 +707,37 @@ export const CartProvider = ({ children }) => {
         showAddressModal,
         setShowAddressModal,
         addressConfirmationData,
-        setAddressConfirmationData
-    }), [cartItems, cartCount, cartTotal, cartSummary, isLoading, addToCart, removeFromCart, updateCartItemQuantity, loadCart, getCartSummary, clearCart, applyCoupon, removeCoupon, applyGiftCard, removeGiftCard, applyBCoins, removeBCoins, addresses, isLoadingAddresses, fetchAddresses, onSelectAddress, onThreeDotsClicked, onDeleteClicked, onCloseThreeDots, clearSelectedAddress, showAddressModal, setShowAddressModal, addressConfirmationData, setAddressConfirmationData]);
+        setAddressConfirmationData,
+        showConfirmation,
+        showStatus
+    }), [cartItems, cartCount, cartTotal, cartSummary, isLoading, addToCart, removeFromCart, updateCartItemQuantity, loadCart, getCartSummary, clearCart, applyCoupon, removeCoupon, applyGiftCard, removeGiftCard, applyBCoins, removeBCoins, addresses, isLoadingAddresses, fetchAddresses, onSelectAddress, onThreeDotsClicked, onDeleteClicked, onCloseThreeDots, clearSelectedAddress, showAddressModal, setShowAddressModal, addressConfirmationData, setAddressConfirmationData, showConfirmation, showStatus]);
 
     return (
         <CartContext.Provider value={value}>
             {children}
+            {confirmationConfig && (
+                <ConfirmationModal
+                    visible={!!confirmationConfig}
+                    onClose={() => setConfirmationConfig(null)}
+                    onConfirm={confirmationConfig.onConfirm}
+                    title={confirmationConfig.title}
+                    message={confirmationConfig.message}
+                    confirmText={confirmationConfig.confirmText}
+                    cancelText={confirmationConfig.cancelText}
+                />
+            )}
+            {statusConfig && (
+                <StatusModal
+                    visible={!!statusConfig}
+                    type={statusConfig.type}
+                    title={statusConfig.title}
+                    message={statusConfig.message}
+                    onClose={() => {
+                        statusConfig.onClose?.();
+                        setStatusConfig(null);
+                    }}
+                />
+            )}
         </CartContext.Provider>
     );
 };

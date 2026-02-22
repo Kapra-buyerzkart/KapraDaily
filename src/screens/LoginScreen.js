@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import { FONTS } from '../styles/typography'
 import { useNavigation, useRoute } from '@react-navigation/native'
+import { useCart } from '../context/CartContext'
 import { sendForgotPwdOtp, sendLoginOtp } from '../api'
 import { setTokens } from '../api/tokenService'
 import LoaderComponent from '../components/LoaderComponent'
@@ -13,6 +14,7 @@ import { validatePhoneNumbers } from '../utils/validation'
 const LoginScreen = () => {
     const navigation = useNavigation()
     const route = useRoute()
+    const { showStatus } = useCart()
     const [phone, setPhone] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(true);
@@ -64,7 +66,11 @@ const LoginScreen = () => {
         // console.log('type', type);
 
         if (!validatePhoneNumbers(phone)) {
-            Alert.alert('Error', 'Please enter a valid mobile number');
+            showStatus({
+                type: 'error',
+                title: 'Error',
+                message: 'Please enter a valid mobile number'
+            });
             return;
         }
 
@@ -87,11 +93,19 @@ const LoginScreen = () => {
                 });
             }
             else {
-                Alert.alert('Error', response?.message || 'Failed to send OTP');
+                showStatus({
+                    type: 'error',
+                    title: 'Error',
+                    message: response?.message || 'Failed to send OTP'
+                });
             }
         } catch (error) {
             console.log('OTP Error:', error);
-            Alert.alert('Error', error?.Message || error?.message || 'Failed to send OTP');
+            showStatus({
+                type: 'error',
+                title: 'Error',
+                message: error?.Message || error?.message || 'Failed to send OTP'
+            });
         } finally {
             setLoading(false);
             showLoader(false);
@@ -103,7 +117,11 @@ const LoginScreen = () => {
         // console.log('type', type);
 
         if (!validatePhoneNumbers(phone)) {
-            Alert.alert('Error', 'Please enter a valid mobile number');
+            showStatus({
+                type: 'error',
+                title: 'Error',
+                message: 'Please enter a valid mobile number'
+            });
             return;
         }
 
@@ -126,11 +144,19 @@ const LoginScreen = () => {
                     type: 'reset'
                 });
             } else {
-                Alert.alert('Error', response?.message || 'Failed to send OTP');
+                showStatus({
+                    type: 'error',
+                    title: 'Error',
+                    message: response?.message || 'Failed to send OTP'
+                });
             }
         } catch (error) {
             console.log('OTP Error:', error);
-            Alert.alert('Error', error?.Message || error?.message || 'Failed to send OTP');
+            showStatus({
+                type: 'error',
+                title: 'Error',
+                message: error?.Message || error?.message || 'Failed to send OTP'
+            });
         } finally {
             setLoading(false);
             showLoader(false);

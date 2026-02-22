@@ -121,7 +121,7 @@ const TicketDetailsScreen = () => {
                 {ticket.orderId > 0 && (
                     <View style={styles.orderCard}>
                         <AntDesign name="shoppingcart" size={wp('5%')} color="#F25000" />
-                        <Text style={styles.orderText}>Related to Order ID: <Text style={{ fontFamily: FONTS.poppins.semiBold }}>#{ticket.orderId}</Text></Text>
+                        <Text style={styles.orderText}>Related to Order Number: <Text style={{ fontFamily: FONTS.poppins.semiBold }}>#{ticket.orderNumber || ticket.orderId}</Text></Text>
                     </View>
                 )}
 

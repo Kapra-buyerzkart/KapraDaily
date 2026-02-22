@@ -8,10 +8,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert } from 'react-native';
 import { getResetToken } from '../api/tokenService'
 import { useNavigation, useRoute } from '@react-navigation/native'
+import { useCart } from '../context/CartContext'
 
 const ChangePwdScreen = () => {
     const navigation = useNavigation()
     const route = useRoute()
+    const { showStatus } = useCart()
     const { resetToken, phone } = route.params || {}
     const [showNewPassword, setShowNewPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -21,12 +23,20 @@ const ChangePwdScreen = () => {
 
     const handleChangePassword = async () => {
         if (!newPassword || !confirmPassword) {
-            Alert.alert('Error', 'Please fill in both fields');
+            showStatus({
+                type: 'error',
+                title: 'Error',
+                message: 'Please fill in both fields'
+            });
             return;
         }
 
         if (newPassword !== confirmPassword) {
-            Alert.alert('Error', 'Passwords do not match');
+            showStatus({
+                type: 'error',
+                title: 'Error',
+                message: 'Passwords do not match'
+            });
             return;
         }
 
@@ -34,27 +44,35 @@ const ChangePwdScreen = () => {
             setLoading(true);
             // const resetToken = await getResetToken();
             if (!resetToken) {
-                Alert.alert('Error', 'Reset token not found. Please restart the process.');
+                showStatus({
+                    type: 'error',
+                    title: 'Error',
+                    message: 'Reset token not found. Please restart the process.'
+                });
                 return;
             }
 
             const response = await resetPassword(resetToken, newPassword);
             if (response?.success) {
-                Alert.alert(
-                    'Success',
-                    'Password changed successfully',
-                    [{
-                        text: 'OK', onPress: () => navigation.navigate('LoginPwdScreen', {
-                            phone
-                        }),
-                    },]
-                );
-                // Optionally navigate to login screen
+                showStatus({
+                    type: 'success',
+                    title: 'Success',
+                    message: 'Password changed successfully',
+                    onClose: () => navigation.navigate('LoginPwdScreen', { phone })
+                });
             } else {
-                Alert.alert('Error', response?.message || 'Something went wrong');
+                showStatus({
+                    type: 'error',
+                    title: 'Error',
+                    message: response?.message || 'Something went wrong'
+                });
             }
         } catch (error) {
-            Alert.alert('Error', 'Failed to reset password');
+            showStatus({
+                type: 'error',
+                title: 'Error',
+                message: 'Failed to reset password'
+            });
         } finally {
             setLoading(false);
         }

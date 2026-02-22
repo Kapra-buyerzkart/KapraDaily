@@ -14,6 +14,7 @@ import Toast from 'react-native-simple-toast'
 import { useAddresses } from '../hooks/useAddresses'
 import axios from 'axios'
 import { validatePhoneNumbers } from '../utils/validation'
+import Geolocation from '@react-native-community/geolocation';
 
 const AddLocationScreen = () => {
     const navigation = useNavigation()
@@ -47,6 +48,32 @@ const AddLocationScreen = () => {
         latitudeDelta: 0.005,
         longitudeDelta: 0.005,
     });
+
+    useEffect(() => {
+        if (!isEditMode) {
+            getCurrentLocation();
+        }
+    }, []);
+
+    const getCurrentLocation = () => {
+        Geolocation.getCurrentPosition(
+            (position) => {
+                const { latitude, longitude } = position.coords;
+                const newRegion = {
+                    ...region,
+                    latitude,
+                    longitude,
+                };
+                setRegion(newRegion);
+                reverseGeocode(latitude, longitude);
+            },
+            (error) => {
+                console.error('Geolocation Error:', error);
+                // Fallback to default region if failed
+            },
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+        );
+    };
 
     useEffect(() => {
         if (pincode && pincode.length === 6) {
@@ -121,7 +148,6 @@ const AddLocationScreen = () => {
 
     const onRegionChangeComplete = (newRegion) => {
         setRegion(newRegion);
-        // Map movement no longer triggers geocoding, marker drag does
     };
 
     const handleSave = async () => {
@@ -131,7 +157,7 @@ const AddLocationScreen = () => {
         }
 
         if (!validatePhoneNumbers(phone)) {
-            Toast.show('Please enter a valid phone number', Toast.SHORT);
+            Toast.show('Please enter a valid 10-digit phone number', Toast.SHORT);
             return;
         }
 
@@ -214,6 +240,7 @@ const AddLocationScreen = () => {
                 <View style={[styles.searchAbsoluteContainer, { zIndex: 999 }]}>
                     <GooglePlacesAutocomplete
                         placeholder="Search Location"
+                        placeholderTextColor="#DADADA"
                         fetchDetails={true}
                         onPress={(data, details = null) => {
                             if (details) {
@@ -246,6 +273,12 @@ const AddLocationScreen = () => {
                                 color: '#000000',
                                 height: hp('5.36%'),
                                 flex: 1,
+                            },
+                            description: {
+                                color: '#000000',
+                            },
+                            predefinedPlacesDescription: {
+                                color: '#000000',
                             },
                             listView: {
                                 backgroundColor: '#FFFFFF',
@@ -442,12 +475,13 @@ const AddLocationScreen = () => {
                         <View style={styles.inputWrapper}>
                             <Text style={styles.label}>Phone number</Text>
                             <TextInput
-                                placeholder='000 000 0000'
+                                placeholder='Enter mobile number'
                                 style={styles.input}
                                 placeholderTextColor={'#616161'}
                                 value={phone}
                                 onChangeText={setPhone}
                                 keyboardType="phone-pad"
+                                maxLength={10}
                             />
                         </View>
                         <LinearGradient colors={['#F25000', '#FF7B3A']}

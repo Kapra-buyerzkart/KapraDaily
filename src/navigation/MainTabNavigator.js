@@ -12,12 +12,14 @@ import HomeStack from './HomeStack';
 import { FONTS } from '../styles/typography'
 import { useContext } from 'react';
 import { AppContext } from '../context/appContext';
+import { useCart } from '../context/CartContext';
 import Toast from 'react-native-simple-toast';
 
 const Tab = createBottomTabNavigator();
 
 export default function MainTabNavigator() {
     const { isStoreUnavailable } = useContext(AppContext);
+    const { showStatus } = useCart();
 
     const KshopeButton = ({ onPress }) => {
         const handleComingSoon = () => {
@@ -25,11 +27,11 @@ export default function MainTabNavigator() {
                 Toast.show('Store is currently unavailable in your location', Toast.SHORT);
                 return;
             }
-            Alert.alert(
-                "Coming Soon!",
-                "We're working hard to bring you K-shope. Stay tuned for a premium shopping experience!",
-                [{ text: "Got it!", style: "default" }]
-            );
+            showStatus({
+                type: 'orange',
+                title: 'Coming Soon!',
+                message: "We're working hard to bring you K-shope. Stay tuned for a premium shopping experience!"
+            });
         };
 
         return (

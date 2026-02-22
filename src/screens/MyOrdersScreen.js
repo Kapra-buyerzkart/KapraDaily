@@ -55,7 +55,13 @@ const MyOrdersScreen = () => {
                 end={{ x: 0, y: 1 }}
             >
                 <View style={styles.headerContainer}>
-                    <TouchableOpacity onPress={() => navigation.goBack()}>
+                    <TouchableOpacity onPress={() => {
+                        if (navigation.canGoBack()) {
+                            navigation.goBack();
+                        } else {
+                            navigation.navigate('HomeScreen');
+                        }
+                    }}>
                         <AntDesign
                             name={'left'}
                             size={wp('6%')}

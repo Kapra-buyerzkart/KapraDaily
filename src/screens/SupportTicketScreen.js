@@ -13,14 +13,15 @@ import StatusModal from '../components/StatusModal'
 const SupportTicketScreen = () => {
     const navigation = useNavigation()
     const route = useRoute()
-    const { orderId: passedOrderId } = route.params || {}
+    const { orderId: passedOrderId, orderNumber: passedOrderNumber } = route.params || {}
     const { profile } = useContext(AppContext)
     const { showLoader } = useContext(LoaderContext)
 
     const [title, setTitle] = useState('')
     const [message, setMessage] = useState('')
     const [priority, setPriority] = useState('medium')
-    const [orderId, setOrderId] = useState(passedOrderId ? passedOrderId.toString() : '')
+    const [orderNumber, setOrderNumber] = useState(passedOrderNumber || (passedOrderId ? passedOrderId.toString() : ''))
+    const [internalOrderId, setInternalOrderId] = useState(passedOrderId || 0)
 
     const [statusModalVisible, setStatusModalVisible] = useState(false)
     const [statusType, setStatusType] = useState('success')
@@ -42,7 +43,7 @@ const SupportTicketScreen = () => {
                 title: title.trim(),
                 message: message.trim(),
                 priority: priority,
-                orderId: orderId ? parseInt(orderId) : 0
+                orderId: internalOrderId || (orderNumber ? parseInt(orderNumber) : 0)
             }
             const response = await createSupportTicketApi(payload)
             if (response?.success) {
@@ -54,7 +55,10 @@ const SupportTicketScreen = () => {
                 setTitle('')
                 setMessage('')
                 setPriority('medium')
-                if (!passedOrderId) setOrderId('')
+                if (!passedOrderId && !passedOrderNumber) {
+                    setOrderNumber('')
+                    setInternalOrderId(0)
+                }
             } else {
                 setStatusType('error')
                 setStatusTitle('Error')
@@ -115,16 +119,20 @@ const SupportTicketScreen = () => {
                         </View>
 
                         <View style={styles.inputContainer}>
-                            <Text style={styles.label}>Order ID (Optional)</Text>
-                            <View style={[styles.inputWrapper, passedOrderId && { backgroundColor: '#F9F9F9' }]}>
+                            <Text style={styles.label}>Order Number (Optional)</Text>
+                            <View style={[styles.inputWrapper, (passedOrderId || passedOrderNumber) && { backgroundColor: '#F9F9F9' }]}>
                                 <TextInput
-                                    placeholder="e.g. 12345"
+                                    placeholder="e.g. ORD123"
                                     placeholderTextColor="#DADADA"
                                     style={styles.input}
-                                    value={orderId}
-                                    onChangeText={setOrderId}
-                                    keyboardType="numeric"
-                                    editable={!passedOrderId}
+                                    value={orderNumber}
+                                    onChangeText={(val) => {
+                                        setOrderNumber(val)
+                                        // If user manually types, clear internal ID so it defaults to parseInt(orderNumber)
+                                        setInternalOrderId(0)
+                                    }}
+                                    keyboardType={passedOrderId || passedOrderNumber ? "default" : "numeric"}
+                                    editable={!passedOrderId && !passedOrderNumber}
                                 />
                             </View>
                         </View>

@@ -66,7 +66,7 @@ const SearchScreen = () => {
     };
 
     const saveSearch = async (keyword) => {
-        if (!keyword || keyword.trim().length === 0) return;
+        if (!keyword || keyword.trim().length < 3) return;
         const cleanKeyword = keyword.trim();
 
         try {
@@ -86,7 +86,7 @@ const SearchScreen = () => {
 
     // Save search term if results are found
     useEffect(() => {
-        if (!loading && searchTerm.trim().length > 0 && resultCount > 0) {
+        if (!loading && searchTerm.trim().length >= 3 && resultCount > 0) {
             saveSearch(searchTerm);
         }
     }, [loading, resultCount]);
@@ -294,7 +294,7 @@ const styles = StyleSheet.create({
         fontSize: wp('2.79%'),
         color: '#000000',
         marginLeft: wp('5%'),
-        marginTop: hp('4%')
+        marginTop: hp('2%')
     },
     recentProduct: {
         width: wp('20.23%'),
@@ -315,7 +315,7 @@ const styles = StyleSheet.create({
     recentContainer: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        marginHorizontal: wp('5%'),
+        marginHorizontal: wp('3%'),
         marginTop: hp('1%')
     },
     productWrapper: {

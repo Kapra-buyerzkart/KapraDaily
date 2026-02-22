@@ -215,6 +215,7 @@ const UpdateContactScreen = () => {
                                             onChangeText={setValue}
                                             keyboardType={type === 'phone' ? 'phone-pad' : 'email-address'}
                                             autoCapitalize="none"
+                                            maxLength={type === 'phone' ? 10 : undefined}
                                         />
                                     </View>
                                 </View>

@@ -1,13 +1,13 @@
 import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Platform, FlatList, ImageBackground, Linking, BackHandler } from 'react-native'
 import LinearGradient from 'react-native-linear-gradient';
-import React, { useState } from 'react'
+import React, { useState, useCallback } from 'react'
+import { useNavigation, useRoute, CommonActions, useFocusEffect } from '@react-navigation/native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import Entypo from 'react-native-vector-icons/Entypo'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import { FONTS } from '../styles/typography'
-import { useNavigation, useRoute, CommonActions } from '@react-navigation/native'
 import OrderProductCard from '../components/OrderProductCard'
 import ConfirmationModal from '../components/ConfirmationModal'
 import ReturnItemModal from '../components/ReturnItemModal'
@@ -18,6 +18,7 @@ import CustomLoader from '../components/CustomLoader'
 import CONFIG from '../globals/config'
 import RatingModal from '../components/RatingModal'
 import StatusModal from '../components/StatusModal'
+import BillSection from '../components/BillSection'
 
 const OrderTrackingScreen = () => {
     const navigation = useNavigation();
@@ -64,30 +65,30 @@ const OrderTrackingScreen = () => {
         canMarkOverallReview
     } = useOrderDetails(orderId, initialOrderData);
 
-    const handleBackPress = () => {
+    const handleBackPress = useCallback(() => {
         navigation.dispatch(
             CommonActions.reset({
                 index: 0,
                 routes: [
                     {
                         name: 'MainTabs',
-                        params: { screen: 'Profile' }
+                        params: {
+                            screen: 'Home',
+                            params: { screen: 'MyOrdersScreen' }
+                        }
                     }
                 ],
             })
         );
-        setTimeout(() => {
-            navigation.navigate('MyOrdersScreen');
-        }, 100);
         return true; // Prevent default behavior
-    };
+    }, [navigation]);
 
-    React.useEffect(() => {
-        BackHandler.addEventListener('hardwareBackPress', handleBackPress);
-        return () => {
-            BackHandler.removeEventListener('hardwareBackPress', handleBackPress);
-        };
-    }, []);
+    useFocusEffect(
+        useCallback(() => {
+            const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackPress);
+            return () => backHandler.remove();
+        }, [handleBackPress])
+    );
 
     const insets = useSafeAreaInsets();
     const [returnReason, setReturnReason] = useState('');
@@ -154,6 +155,21 @@ const OrderTrackingScreen = () => {
         }
     );
 
+    const billCalculations = React.useMemo(() => {
+        if (!bill) return null;
+        return {
+            itemTotal: bill.subTotal || 0,
+            savings: bill.discountTotal || 0,
+            deliveryCharge: bill.deliveryCharge || 0,
+            totalTax: bill.taxTotal || 0,
+            couponDiscount: bill.couponDiscount || 0,
+            giftCardAmount: bill.giftCardAmount || 0,
+            bcoinsAppliedValue: bill.bCoinAppliedValue || 0,
+            totalSavings: (bill.discountTotal || 0) + (bill.couponDiscount || 0) + (bill.bCoinAppliedValue || 0),
+            toPay: bill.grandTotal || 0
+        };
+    }, [bill]);
+
     const renderOrderItem = ({ item }) => (
         <OrderProductCard
             item={item}
@@ -198,14 +214,14 @@ const OrderTrackingScreen = () => {
                 <View style={styles.headerInnerView}>
                     <TouchableOpacity
                         style={styles.helpContainer}
-                        onPress={() => navigation.navigate('SupportTicketScreen', { orderId: orderId })}
+                        onPress={() => navigation.navigate('SupportTicketScreen', { orderId: orderId, orderNumber: displayOrderId })}
                     >
                         <Image style={styles.headPhoneImage} source={require('../assets/images/head_phone.png')} />
                         <Text style={styles.helpText}>Help</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={() => navigation.navigate('CartScreen')}>
+                    {/* <TouchableOpacity onPress={() => navigation.navigate('CartScreen')}>
                         <Image style={styles.homeIcon} source={require('../assets/images/home_two.png')} />
-                    </TouchableOpacity>
+                    </TouchableOpacity> */}
                 </View>
             </View>
             <ScrollView>
@@ -623,29 +639,8 @@ const OrderTrackingScreen = () => {
                             <Text style={styles.totalPriceText}>₹{grandTotal}</Text>
                         </View>
 
-                        {showBillBreakdown && bill && (
-                            <View style={styles.billBreakdownContainer}>
-                                <BillRow label="Item Total" value={`₹${bill.subTotal.toFixed(2)}`} />
-                                {bill.discountTotal > 0 && <BillRow label="Discount" value={`- ₹${bill.discountTotal.toFixed(2)}`} isGreen />}
-                                <BillRow label="Delivery Charge" value={bill.deliveryCharge === 0 ? 'FREE' : `₹${bill.deliveryCharge.toFixed(2)}`} />
-                                {bill.taxTotal > 0 && <BillRow label="Tax" value={`₹${bill.taxTotal.toFixed(2)}`} />}
-                                {bill.couponDiscount > 0 && <BillRow label="Coupon Discount" value={`- ₹${bill.couponDiscount.toFixed(2)}`} isGreen />}
-                                {bill.giftCardAmount > 0 && <BillRow label="GiftCard Applied" value={`- ₹${bill.giftCardAmount.toFixed(2)}`} isGreen />}
-                                {bill.bCoinAppliedValue > 0 && <BillRow label="Bcoins Applied" value={`- ₹${bill.bCoinAppliedValue.toFixed(2)}`} isGreen />}
-                                <View style={styles.billRowDivider} />
-                                <View style={styles.finalTotalRow}>
-                                    <Text style={styles.finalTotalLabel}>To Pay</Text>
-                                    <Text style={styles.finalTotalValue}>₹{bill.grandTotal.toFixed(2)}</Text>
-                                </View>
-
-                                {((bill.discountTotal || 0) + (bill.couponDiscount || 0) + (bill.bCoinAppliedValue || 0)) > 0 && (
-                                    <View style={{ marginTop: hp('1%') }}>
-                                        <Text style={[styles.billBreakdownLabel, { color: '#0CA201', fontFamily: FONTS.outfit.medium }]}>
-                                            You saved : ₹{((bill.discountTotal || 0) + (bill.couponDiscount || 0) + (bill.bCoinAppliedValue || 0)).toFixed(2)}
-                                        </Text>
-                                    </View>
-                                )}
-                            </View>
+                        {showBillBreakdown && billCalculations && (
+                            <BillSection billCalculations={billCalculations} />
                         )}
                     </View>
                     {['packed', 'assigned', 'dispatched', 'delivered'].includes(orderStatus) && (

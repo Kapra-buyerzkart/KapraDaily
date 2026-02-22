@@ -4,11 +4,13 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import { FONTS } from '../styles/typography'
 import { useNavigation, useRoute } from '@react-navigation/native'
+import { useCart } from '../context/CartContext'
 import { loginWithPassword, sendLoginOtp } from '../api'
 import { setTokens } from '../api/tokenService'
 
 const LoginPwdScreen = () => {
     const navigation = useNavigation()
+    const { showStatus } = useCart()
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -21,7 +23,11 @@ const LoginPwdScreen = () => {
         // console.log(phone, password);
 
         if (!password) {
-            Alert.alert('Error', 'Please enter a valid password');
+            showStatus({
+                type: 'error',
+                title: 'Error',
+                message: 'Please enter a valid password'
+            });
             return;
         }
 
@@ -39,11 +45,19 @@ const LoginPwdScreen = () => {
                     routes: [{ name: 'MainTabs' }],
                 });
             } else {
-                Alert.alert('Error', response?.message || 'Login failed');
+                showStatus({
+                    type: 'error',
+                    title: 'Error',
+                    message: response?.message || 'Login failed'
+                });
             }
         } catch (error) {
             console.log('Login Error:', error);
-            Alert.alert('Error', error || 'Failed to login');
+            showStatus({
+                type: 'error',
+                title: 'Error',
+                message: error || 'Failed to login'
+            });
         } finally {
             setLoading(false);
         }

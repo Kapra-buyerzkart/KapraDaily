@@ -42,7 +42,14 @@ const OrderSuccessScreen = () => {
 
         // 2. Prevent navigation remove (iOS swipe, back button)
         const unsubscribe = navigation.addListener('beforeRemove', (e) => {
-            // Prevent default behavior of leaving the screen
+            const action = e.data.action;
+
+            // If the removal was triggered by a reset or replace action, allow it
+            if (action.type === 'RESET' || action.type === 'REPLACE') {
+                return;
+            }
+
+            // Otherwise, prevent default behavior of leaving the screen (back button, swipe)
             e.preventDefault();
         });
 

@@ -19,6 +19,7 @@ import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-nat
 import { FONTS } from '../styles/typography';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useCart } from '../context/CartContext';
 import { verifyLoginOtp, sendLoginOtp, sendForgotPwdOtp, verifyForgotPwdOtp, resendOtp, resendLoginOtp, resendForgotPwdOtp, verifyRegisterOtp, registerUser } from '../api'; // ✅ add sendLoginOtp
 import { setResetToken } from '../api/tokenService';
 import RNOtpVerify from 'react-native-otp-verify';
@@ -51,6 +52,7 @@ const mergeCustomerIdIntoProfile = async (custId) => {
 const OtpScreen = () => {
     const navigation = useNavigation();
     const route = useRoute();
+    const { showStatus } = useCart();
     const { phone, type, name, email, password, whatsAppNo, referCode, pincodeAreaId } = route.params || {};
 
     const [otp, setOtp] = useState(['', '', '', '', '']);
@@ -134,7 +136,11 @@ const OtpScreen = () => {
         // console.log('enteredOtp', enteredOtp)
         const enteredOtp = otp.join('');
         if (enteredOtp.length < 5) {
-            Alert.alert('Error', 'Please enter complete OTP');
+            showStatus({
+                type: 'error',
+                title: 'Error',
+                message: 'Please enter complete OTP'
+            });
             return;
         }
 
@@ -157,11 +163,19 @@ const OtpScreen = () => {
                     routes: [{ name: 'MainTabs' }],
                 });
             } else {
-                Alert.alert('Error', response?.message || 'OTP verification failed');
+                showStatus({
+                    type: 'error',
+                    title: 'Error',
+                    message: response?.message || 'OTP verification failed'
+                });
             }
         } catch (error) {
             console.log('Verify OTP Error:', error);
-            Alert.alert('Error', error || 'Failed to verify OTP');
+            showStatus({
+                type: 'error',
+                title: 'Error',
+                message: error || 'Failed to verify OTP'
+            });
         } finally {
             setLoading(false)
         }
@@ -171,7 +185,11 @@ const OtpScreen = () => {
         // console.log('enteredOtp', enteredOtp)
         const enteredOtp = otp.join('');
         if (enteredOtp.length < 5) {
-            Alert.alert('Error', 'Please enter complete OTP');
+            showStatus({
+                type: 'error',
+                title: 'Error',
+                message: 'Please enter complete OTP'
+            });
             return;
         }
 
@@ -196,18 +214,33 @@ const OtpScreen = () => {
                 //     routes: [{ name: 'MainTabs' }],
                 // });
                 if (registerResponse?.success) {
-                    Alert.alert('Success', 'Registration completed successfully',
-                        [{ text: 'OK', onPress: () => navigation.navigate('LoginScreen'), },]
-                    ); // Navigate to next screen or perform post-registration logic 
+                    showStatus({
+                        type: 'success',
+                        title: 'Success',
+                        message: 'Registration completed successfully',
+                        onClose: () => navigation.navigate('LoginScreen')
+                    });
                 } else {
-                    Alert.alert('Error', registerResponse?.message || 'Registration failed');
+                    showStatus({
+                        type: 'error',
+                        title: 'Error',
+                        message: registerResponse?.message || 'Registration failed'
+                    });
                 }
             } else {
-                Alert.alert('Error', response?.message || 'OTP verification failed');
+                showStatus({
+                    type: 'error',
+                    title: 'Error',
+                    message: response?.message || 'OTP verification failed'
+                });
             }
         } catch (error) {
             console.log('Verify OTP Error:', error);
-            Alert.alert('Error', error || 'Failed to verify OTP');
+            showStatus({
+                type: 'error',
+                title: 'Error',
+                message: error || 'Failed to verify OTP'
+            });
         } finally {
             setLoading(false)
         }
@@ -216,7 +249,11 @@ const OtpScreen = () => {
     const handleContinueReset = async () => {
         const enteredOtp = otp.join('');
         if (enteredOtp.length < 5) {
-            Alert.alert('Error', 'Please enter complete OTP');
+            showStatus({
+                type: 'error',
+                title: 'Error',
+                message: 'Please enter complete OTP'
+            });
             return;
         }
 
@@ -237,11 +274,19 @@ const OtpScreen = () => {
                     }],
                 });
             } else {
-                Alert.alert('Error', response?.message || 'OTP verification failed');
+                showStatus({
+                    type: 'error',
+                    title: 'Error',
+                    message: response?.message || 'OTP verification failed'
+                });
             }
         } catch (error) {
             console.log('Verify OTP Error:', error);
-            Alert.alert('Error', error || 'Failed to verify OTP');
+            showStatus({
+                type: 'error',
+                title: 'Error',
+                message: error || 'Failed to verify OTP'
+            });
         } finally {
             setLoading(false)
         }
@@ -256,14 +301,22 @@ const OtpScreen = () => {
             if (type === 'reset') {
                 await resendForgotPwdOtp(phone);
             }
-            Alert.alert('Success', 'OTP resent successfully');
+            showStatus({
+                type: 'success',
+                title: 'Success',
+                message: 'OTP resent successfully'
+            });
             setOtp(['', '', '', '', '']); // clear inputs
             inputRefs[0].current?.focus();
             setTimer(60);
             setIsResendDisabled(true);
         } catch (error) {
             console.log('Resend OTP Error:', error);
-            Alert.alert('Error', error?.message || 'Failed to resend OTP');
+            showStatus({
+                type: 'error',
+                title: 'Error',
+                message: error?.message || 'Failed to resend OTP'
+            });
         } finally {
             setLoading(false)
         }

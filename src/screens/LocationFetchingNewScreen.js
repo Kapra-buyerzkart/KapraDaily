@@ -11,6 +11,7 @@ import { BlurView } from '@react-native-community/blur';
 // import colours from '../../globals/colours';
 import { getFontontSize } from '../globals/GroFunctions';
 import { AppContext } from '../context/appContext';
+import { useCart } from '../context/CartContext';
 import { areaListPincodeWise, getAreasByPincode } from '../api';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { check, request, PERMISSIONS, RESULTS, openSettings } from 'react-native-permissions';
@@ -29,6 +30,7 @@ const windowHeight = Dimensions.get('window').height;
 
 const LocationFetchingNewScreen = ({ navigation }) => {
     const { profile, editPincode, setLocationNotFetched } = React.useContext(AppContext);
+    const { showStatus, showConfirmation } = useCart();
 
     const [loading, setLoading] = useState(false);
     const [addressComponent, setAddressComponent] = useState(null);
@@ -135,16 +137,12 @@ const LocationFetchingNewScreen = ({ navigation }) => {
             }
 
             if (result === RESULTS.BLOCKED || result === RESULTS.UNAVAILABLE) {
-                Alert.alert(
-                    'Location Permission Off',
-                    'Please enable location permission for Kapra Daily to continue.',
-                    [
-                        {
-                            text: 'Open Settings',
-                            onPress: () => openSettings(),
-                        },
-                    ]
-                );
+                showConfirmation({
+                    title: 'Location Permission Off',
+                    message: 'Please enable location permission for Kapra Daily to continue.',
+                    confirmText: 'Open Settings',
+                    onConfirm: () => openSettings()
+                });
                 return false;
             }
 
@@ -152,16 +150,12 @@ const LocationFetchingNewScreen = ({ navigation }) => {
             const gpsEnabled = await DeviceInfo.isLocationEnabled();
 
             if (!gpsEnabled) {
-                Alert.alert(
-                    'Location Services Off',
-                    'Please enable GPS/location services to continue.',
-                    [
-                        {
-                            text: 'Open Location Settings',
-                            onPress: () => openLocationSettings(),
-                        },
-                    ]
-                );
+                showConfirmation({
+                    title: 'Location Services Off',
+                    message: 'Please enable GPS/location services to continue.',
+                    confirmText: 'Open Settings',
+                    onConfirm: () => openLocationSettings()
+                });
                 return false;
             }
 
@@ -300,14 +294,12 @@ const LocationFetchingNewScreen = ({ navigation }) => {
 
             // ----------------- ⛔ USER DENIED -----------------
             if (!isGranted) {
-                Alert.alert(
-                    'Location Permission Required',
-                    'Please enable location permission for the app to function properly.',
-                    [
-                        { text: 'Open Settings', onPress: () => openSettings() },
-                        { text: 'Cancel', style: 'cancel' }
-                    ]
-                );
+                showConfirmation({
+                    title: 'Location Permission Required',
+                    message: 'Please enable location permission for the app to function properly.',
+                    confirmText: 'Open Settings',
+                    onConfirm: () => openSettings()
+                });
                 return;
             }
 
@@ -315,16 +307,12 @@ const LocationFetchingNewScreen = ({ navigation }) => {
             const gpsEnabled = await DeviceInfo.isLocationEnabled();
 
             if (!gpsEnabled) {
-                Alert.alert(
-                    'Location Services Off',
-                    'Please enable GPS/location services to continue.',
-                    [
-                        {
-                            text: 'Open Location Settings',
-                            onPress: () => openLocationSettings(),
-                        }
-                    ]
-                );
+                showConfirmation({
+                    title: 'Location Services Off',
+                    message: 'Please enable GPS/location services to continue.',
+                    confirmText: 'Open Location Settings',
+                    onConfirm: () => openLocationSettings()
+                });
                 return;
             }
 

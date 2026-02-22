@@ -159,15 +159,18 @@ const SavedAddressScreen = () => {
                             }]} source={require('../assets/images/location_three.png')} />
                             <Text style={styles.locationText}>Choose current location</Text>
                         </TouchableOpacity> */}
-                        <TouchableOpacity onPress={() => {
-                            navigation.navigate('AddLocationScreen')
-                        }} style={styles.chooseLocationContainer}>
-                            <Image style={Platform.OS === 'ios' ? styles.locationIcon : [styles.locationIcon, {
-                                bottom: hp('0.25%')
-                            }]} source={require('../assets/images/add_icon.png')} />
-                            <Text style={styles.locationText}>Add new location</Text>
-                        </TouchableOpacity>
+
                     </>
+                )}
+                ListHeaderComponent={() => (
+                    <TouchableOpacity onPress={() => {
+                        navigation.navigate('AddLocationScreen')
+                    }} style={styles.chooseLocationContainer}>
+                        <Image style={Platform.OS === 'ios' ? styles.locationIcon : [styles.locationIcon, {
+                            bottom: hp('0.25%')
+                        }]} source={require('../assets/images/add_icon.png')} />
+                        <Text style={styles.locationText}>Add new location</Text>
+                    </TouchableOpacity>
                 )}
             />
             <LocationModal
