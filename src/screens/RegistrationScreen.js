@@ -51,8 +51,8 @@ const RegistrationScreen = () => {
     }
 
     const handleContinue = async () => {
-        if (!name || !email || !password) {
-            alert('Please fill all details')
+        if (!name || !password) {
+            alert('Please fill all mandatory fields')
             return
         }
 
@@ -114,14 +114,21 @@ const RegistrationScreen = () => {
                         <Text style={[styles.headerText, {
                             marginBottom: hp('1%')
                         }]}>Registration</Text>
-                        <View style={styles.mobilenoContainer}>
+                        <Text style={styles.mandatoryInfoText}>
+                            <Text style={{ color: 'red' }}>*</Text> marked fields are mandatory
+                        </Text>
+                        <TouchableOpacity onPress={() => navigation.navigate("LoginScreen", {
+                            type: 'login'
+                        })} style={styles.mobilenoContainer}>
                             <Text style={styles.mobilenoText}>+91 {phone}</Text>
-                            <TouchableOpacity>
-                                <Image style={styles.editIcon} source={require('../assets/images/edit_icon.png')} />
-                            </TouchableOpacity>
-                        </View>
+                            {/* <TouchableOpacity> */}
+                            <Image style={[styles.editIcon, {
+                                bottom: 1
+                            }]} source={require('../assets/images/edit_icon.png')} />
+                            {/* </TouchableOpacity> */}
+                        </TouchableOpacity>
                         <View style={styles.inputContainer}>
-                            <Text style={styles.enterNumberText}>Name</Text>
+                            <Text style={styles.enterNumberText}>Name<Text style={styles.mandatoryStar}>*</Text></Text>
                             <View style={styles.inputWrapper}>
                                 <TextInput
                                     placeholder="Enter name"
@@ -146,7 +153,7 @@ const RegistrationScreen = () => {
                             </View>
                         </View>
                         <View style={styles.inputContainer}>
-                            <Text style={styles.enterNumberText}>Password</Text>
+                            <Text style={styles.enterNumberText}>Password<Text style={styles.mandatoryStar}>*</Text></Text>
                             <View style={styles.inputWrapper}>
                                 <TextInput
                                     placeholder="Enter password"
@@ -164,7 +171,7 @@ const RegistrationScreen = () => {
                             </View>
                         </View>
                         <View style={styles.inputContainer}>
-                            <Text style={styles.enterNumberText}>Pincode</Text>
+                            <Text style={styles.enterNumberText}>Pincode<Text style={styles.mandatoryStar}>*</Text></Text>
                             <View style={styles.inputWrapper}>
                                 <TextInput
                                     placeholder="00 00 00"
@@ -208,7 +215,7 @@ const RegistrationScreen = () => {
                             </TouchableOpacity>
                             <Text style={styles.agreeText}>I have read and agree to</Text>
                             <TouchableOpacity>
-                                <Text style={styles.termsAndConditionsText}>Terms and conditions</Text>
+                                <Text style={styles.termsAndConditionsText}>Terms and conditions<Text style={styles.mandatoryStar}>*</Text></Text>
                             </TouchableOpacity>
                         </View>
 
@@ -423,5 +430,16 @@ const styles = StyleSheet.create({
         fontFamily: FONTS.poppins.regular,
         fontSize: wp('3.25%'),
         marginLeft: wp('1%')
+    },
+    mandatoryStar: {
+        color: 'red',
+        fontSize: wp('3.72%'),
+    },
+    mandatoryInfoText: {
+        fontFamily: FONTS.poppins.regular,
+        fontSize: wp('3%'),
+        color: '#616161',
+        textAlign: 'center',
+        marginBottom: hp('1%'),
     }
 })

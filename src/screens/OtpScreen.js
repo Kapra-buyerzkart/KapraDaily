@@ -218,7 +218,20 @@ const OtpScreen = () => {
                         type: 'success',
                         title: 'Success',
                         message: 'Registration completed successfully',
-                        onClose: () => navigation.navigate('LoginScreen')
+                        // onClose: () => navigation.navigate('LoginScreen')
+                        onClose: async () => {
+                            const { accessToken, refreshToken, custId } = registerResponse.data;
+                            await setTokens(accessToken, refreshToken);
+                            if (custId) {
+                                await mergeCustomerIdIntoProfile(custId);
+                            }
+
+                            navigation.reset({
+                                index: 0,
+                                routes: [{ name: 'MainTabs' }],
+                            });
+                        }
+
                     });
                 } else {
                     showStatus({
@@ -340,9 +353,17 @@ const OtpScreen = () => {
                     </ImageBackground>
 
                     <View style={styles.bottomContainer}>
-                        <Text style={styles.headerText}>Login or Sign up</Text>
+                        <Text style={styles.headerText}>{
+                            type === 'login'
+                                ? "Login"
+                                : type === 'reset'
+                                    ? "Forgot Password"
+                                    : "Register"
+                        }</Text>
 
-                        <TouchableOpacity onPress={() => navigation.navigate('LoginScreen')} style={styles.phoneNoEditContainer}>
+                        <TouchableOpacity onPress={() => navigation.navigate('LoginScreen', {
+                            type: type
+                        })} style={styles.phoneNoEditContainer}>
                             <Text style={styles.phoneNoText}>{phone}</Text>
                             <Image
                                 style={

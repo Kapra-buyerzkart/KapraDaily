@@ -131,7 +131,7 @@ const LoginPwdScreen = () => {
                         </TouchableOpacity>
                     </View> */}
                     <View style={styles.bottomContainer}>
-                        <Text style={styles.headerText}>Login or Sign up</Text>
+                        <Text style={styles.headerText}>Login</Text>
                         <Text style={styles.enterNumberText}>Enter your password</Text>
 
                         <View style={styles.inputContainer}>
