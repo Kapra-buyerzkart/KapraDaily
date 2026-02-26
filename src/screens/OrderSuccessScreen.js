@@ -77,7 +77,10 @@ const OrderSuccessScreen = () => {
     const displayTotal = orderDetails?.grandTotal || orderDetails?.totalAmount || totalAmount || 0
     const displayDeliveryMode = orderDetails?.deliveryMode || deliveryMode || 'express'
     const displayDeliverySlot = deliverySlot || (orderDetails?.deliverySlotDate ? `${orderDetails.deliverySlotDate} | ${orderDetails.deliverySlotTime}` : null)
-    const displayAddress = address || orderDetails?.shippingAddress || ''
+    const addressObj = address || orderDetails?.shippingAddress;
+    const displayAddress = addressObj
+        ? `${addressObj.addLine1 || ''} ${addressObj.addLine2 || ''}, ${addressObj.landmark || ''}, ${addressObj.district || ''}`.replace(/,\s*,/g, ',').replace(/^,|,$/g, '').trim()
+        : '';
 
     const getPaymentLabel = (method) => {
         if (!method) return 'Cash On Delivery'
