@@ -6,7 +6,33 @@ import { FONTS } from '../styles/typography'
 import { useNavigation, useRoute } from '@react-navigation/native'
 import { useCart } from '../context/CartContext'
 import { loginWithPassword, sendLoginOtp } from '../api'
-import { setTokens } from '../api/tokenService'
+import AsyncStorage from '@react-native-async-storage/async-storage';
+// import { setTokens } from '../api/tokenService'
+
+const ACCESS_TOKEN = 'ACCESS_TOKEN';
+const REFRESH_TOKEN = 'REFRESH_TOKEN';
+
+const setTokens = async (accessToken, refreshToken) => {
+    await AsyncStorage.multiSet([
+        [ACCESS_TOKEN, accessToken],
+        [REFRESH_TOKEN, refreshToken],
+    ]);
+};
+
+const mergeCustomerIdIntoProfile = async (custId) => {
+    console.log('????????', custId)
+    const storedProfile = await AsyncStorage.getItem('profile');
+    const existingProfile = storedProfile ? JSON.parse(storedProfile) : {};
+
+    const updatedProfile = {
+        ...existingProfile,
+        custId,
+    };
+
+    console.log('updatedProfile', updatedProfile)
+
+    await AsyncStorage.setItem('profile', JSON.stringify(updatedProfile));
+};
 
 const LoginPwdScreen = () => {
     const navigation = useNavigation()
@@ -37,8 +63,12 @@ const LoginPwdScreen = () => {
             // console.log('Login Response:', response);
 
             if (response?.success && response?.data) {
-                const { accessToken, refreshToken } = response.data;
-                setTokens(accessToken, refreshToken)
+                const { accessToken, refreshToken, custId } = response.data;
+                await setTokens(accessToken, refreshToken);
+
+                if (custId) {
+                    await mergeCustomerIdIntoProfile(custId);
+                }
                 // ✅ Navigate to MainTabs
                 navigation.reset({
                     index: 0,
@@ -101,7 +131,7 @@ const LoginPwdScreen = () => {
                         </TouchableOpacity>
                     </View> */}
                     <View style={styles.bottomContainer}>
-                        <Text style={styles.headerText}>Login or Sign up</Text>
+                        <Text style={styles.headerText}>Login</Text>
                         <Text style={styles.enterNumberText}>Enter your password</Text>
 
                         <View style={styles.inputContainer}>

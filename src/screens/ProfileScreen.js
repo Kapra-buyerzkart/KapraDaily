@@ -84,10 +84,10 @@ export default function ProfileScreen() {
         navigation.reset({
             index: 0,
             routes: [{
-                name: 'LoginScreen',
-                params: {
-                    type: 'login'
-                }
+                name: 'LocationFetchingNew',
+                // params: {
+                //     type: 'login'
+                // }
             }],
         })
     }

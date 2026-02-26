@@ -180,7 +180,7 @@ const LoginScreen = () => {
                         <Image style={styles.tagLine} source={require('../assets/images/login_content.png')} />
                     </ImageBackground>
                     <View style={styles.bottomContainer}>
-                        <Text style={styles.headerText}>Login or Sign up</Text>
+                        <Text style={styles.headerText}>{type === 'reset' ? 'Forgot Password' : 'Login or Sign up'}</Text>
                         <Text style={styles.enterNumberText}>Enter your mobile number</Text>
 
                         <View style={styles.inputWrapper}>

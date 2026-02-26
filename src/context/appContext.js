@@ -107,10 +107,23 @@ export const AppContextProvider = ({ children }) => {
   }, []);
 
   /* ---------------- LOGOUT ---------------- */
-  const logout = useCallback(async () => {
+  // const logout = useCallback(async () => {
+  //   await AsyncStorage.clear();
+  //   // setProfile(null);
+  // }, []);
+
+  const logout = async () => {
     await AsyncStorage.clear();
-    // setProfile(null);
-  }, []);
+
+    setProfile(prev => {
+      if (!prev) return null;
+
+      const { pincode, ...rest } = prev;  // 🔥 remove pincode
+      return rest;
+    });
+
+    // setLocationNotFetched(false);
+  };
 
   const value = useMemo(() => ({
     logout,

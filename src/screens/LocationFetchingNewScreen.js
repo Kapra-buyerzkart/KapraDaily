@@ -368,14 +368,14 @@ const LocationFetchingNewScreen = ({ navigation }) => {
 
     const getLocationPincodeAreas = async (postcode) => {
         try {
-            console.log('postcode', postcode)
+            // console.log('postcode', postcode)
             let area = await getAreasByPincode(postcode);
-            console.log('area', area)
-            console.log('profile', profile)
+            // console.log('area', area)
+            // console.log('profile', profile)
             if (area?.data?.length > 1) {
-                console.log("1111111")
+                // console.log("1111111")
                 if (area?.data?.find((obj) => obj?.pincodeAreaId == profile?.pincode)) {
-                    console.log("2222222")
+                    // console.log("2222222")
                     setTimeout(() => {
                         if (!userInteractedRef.current) {
                             setLocationNotFetched(false);
@@ -396,12 +396,12 @@ const LocationFetchingNewScreen = ({ navigation }) => {
                         }
                     }, 2000);
                 } else {
-                    console.log("33333")
+                    // console.log("33333")
                     setShowConfirm(true);
                     setListOfLocations(area?.data);
                 }
             } else if (area?.data?.length == 1) {
-                console.log("444444444")
+                // console.log("444444444")
                 setShowConfirm(false);
                 await editPincode(area.data[0]);
                 setTimeout(() => {
@@ -493,7 +493,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
 
     return (
         <SafeAreaView style={styles.maninContainer}>
-            {console.log('userInteractedRef', userInteractedRef)}
+            {/* {console.log('userInteractedRef', userInteractedRef)} */}
             <ImageBackground style={styles.backgroundImage} resizeMode="cover" source={require('../assets/images/location-background.png')}>
                 <View
                     style={[
@@ -796,24 +796,29 @@ const LocationFetchingNewScreen = ({ navigation }) => {
                                         SecondColor={'#FF7148'}
                                         OnPress={async () => {
                                             // stopAutoNavigateTimer();
-                                            await editPincode(selectedLocation);
-                                            setSelectedLocation(null);
-                                            setLocationSelectionModal(false);
-                                            setLocationNotFetched(false);
-                                            navigation.reset({
-                                                index: 0,
-                                                routes: [
-                                                    {
-                                                        name: 'MainTabs',
-                                                        params: {
-                                                            screen: 'Home',
-                                                            // params: {
-                                                            //     locationNotFetched: false,
-                                                            // },
+                                            if (selectedLocation !== null) {
+                                                await editPincode(selectedLocation);
+                                                setSelectedLocation(null);
+                                                setLocationSelectionModal(false);
+                                                setLocationNotFetched(false);
+                                                navigation.reset({
+                                                    index: 0,
+                                                    routes: [
+                                                        {
+                                                            name: 'MainTabs',
+                                                            params: {
+                                                                screen: 'Home',
+                                                                // params: {
+                                                                //     locationNotFetched: false,
+                                                                // },
+                                                            },
                                                         },
-                                                    },
-                                                ],
-                                            });
+                                                    ],
+                                                });
+                                            }
+                                            else {
+                                                Alert.alert("Alert","Please select an area")
+                                            }
                                         }}
                                         ButtonText={'Apply'}
                                         ButtonWidth={44}
