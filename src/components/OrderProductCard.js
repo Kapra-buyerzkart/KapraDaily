@@ -31,7 +31,7 @@ const OrderProductCard = ({ item, orderStatus, onReturn }) => {
                 onError={() => setImageError(true)}
             />
             <View style={styles.detailsContainer}>
-                <Text style={styles.productName} numberOfLines={2}>{item.productName}</Text>
+                <Text style={styles.productName} numberOfLines={2}>{item.productName?.length > 20 ? item.productName.substring(0, 30) + '...' : item.productName}</Text>
                 <Text style={styles.quantityText}>Qty: {item.quantity}</Text>
                 <Text style={styles.priceText}>₹{item.lineTotal || item.netAmount || item.price || item.unitPrice * item.quantity}</Text>
 
@@ -52,6 +52,16 @@ const OrderProductCard = ({ item, orderStatus, onReturn }) => {
                 {item.isReturned && (
                     <View style={[styles.statusBadge, { backgroundColor: '#E8F5E9' }]}>
                         <Text style={[styles.returnStatusText, { color: '#2E7D32' }]}>Returned</Text>
+                    </View>
+                )}
+                {(item.returnStatusKey === 'requestrejected' || item.itemStatusKey === 'requestrejected') && (
+                    <View style={[styles.statusBadge, { backgroundColor: '#FFEBEE' }]}>
+                        <Text style={[styles.returnStatusText, { color: '#D32F2F' }]}>Return Rejected</Text>
+                    </View>
+                )}
+                {item.returnRefundStatus && (
+                    <View style={[styles.statusBadge, { backgroundColor: '#E3F2FD' }]}>
+                        <Text style={[styles.returnStatusText, { color: '#1E88E5' }]}>Refund: {item.returnRefundStatus}</Text>
                     </View>
                 )}
             </View>
@@ -112,10 +122,10 @@ const styles = StyleSheet.create({
     statusBadge: {
         backgroundColor: '#FFF3E0',
         paddingHorizontal: wp('2%'),
-        paddingVertical: hp('0.3%'),
+        paddingVertical: hp('0.1%'),
         borderRadius: 4,
-        alignSelf: 'flex-start',
-        marginTop: hp('0.8%'),
+        alignSelf: 'flex-end',
+        // marginTop: hp('0.8%'),
     },
     returnStatusText: {
         fontFamily: FONTS.outfit.medium,

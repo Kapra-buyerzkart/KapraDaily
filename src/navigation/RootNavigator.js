@@ -15,6 +15,8 @@ import ChangePwdScreen from '../screens/ChangePwdScreen'
 import BCoinScreen from '../screens/BCoinScreen'
 import SearchScreen from '../screens/SearchScreen'
 import OrderSuccessScreen from '../screens/OrderSuccessScreen'
+import OrderFailedScreen from '../screens/OrderFailedScreen'
+import OrderPendingScreen from '../screens/OrderPendingScreen'
 import SplashScreen from '../screens/SplashScreen'
 import LoginPwdScreen from '../screens/LoginPwdScreen'
 import SavedAddressScreen from '../screens/SavedAddressScreen'
@@ -64,6 +66,8 @@ export default function RootNavigator() {
             <Stack.Screen name="SearchScreen" component={SearchScreen} />
             {/* <Stack.Screen name="ProfileScreen" component={ProfileScreen} /> */}
             <Stack.Screen name="OrderSuccessScreen" component={OrderSuccessScreen} options={{ gestureEnabled: false }} />
+            <Stack.Screen name="OrderFailedScreen" component={OrderFailedScreen} options={{ gestureEnabled: false }} />
+            <Stack.Screen name="OrderPendingScreen" component={OrderPendingScreen} options={{ gestureEnabled: false }} />
             <Stack.Screen name='SavedAddressScreen' component={SavedAddressScreen} />
             <Stack.Screen name='ReferralScreen' component={ReferralScreen} />
             <Stack.Screen name='EditProfileScreen' component={EditProfileScreen} />

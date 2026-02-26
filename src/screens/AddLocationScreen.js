@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { View, Text, StyleSheet, Image, TouchableOpacity, TextInput, Platform, ScrollView, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, ActivityIndicator } from 'react-native'
+import { View, Text, StyleSheet, Image, TouchableOpacity, TextInput, Platform, ScrollView, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, ActivityIndicator, PermissionsAndroid } from 'react-native'
 import MapView, { Marker } from 'react-native-maps'
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -15,6 +15,8 @@ import { useAddresses } from '../hooks/useAddresses'
 import axios from 'axios'
 import { validatePhoneNumbers } from '../utils/validation'
 import Geolocation from '@react-native-community/geolocation';
+import CustomLoader from '../components/CustomLoader'
+import Ionicons from 'react-native-vector-icons/Ionicons'
 
 const AddLocationScreen = () => {
     const navigation = useNavigation()
@@ -39,6 +41,7 @@ const AddLocationScreen = () => {
     const [pincode, setPincode] = useState(editAddress?.pincode || '');
     const [addressType, setAddressType] = useState(editAddress?.addressType || 'HOME');
     const [isLoading, setIsLoading] = useState(false);
+    const [isInitialLoading, setIsInitialLoading] = useState(!isEditMode);
     const [isAreasLoading, setIsAreasLoading] = useState(false);
     const [isGeocoding, setIsGeocoding] = useState(false);
 
@@ -51,25 +54,66 @@ const AddLocationScreen = () => {
 
     useEffect(() => {
         if (!isEditMode) {
-            getCurrentLocation();
+            handleInitialLocation();
         }
     }, []);
 
-    const getCurrentLocation = () => {
+    const handleInitialLocation = async () => {
+        const hasPermission = await requestLocationPermission();
+        if (hasPermission) {
+            getCurrentLocation();
+        } else {
+            if (!isEditMode) setIsInitialLoading(false);
+            Toast.show('Location permission denied', Toast.SHORT);
+        }
+    };
+
+    const requestLocationPermission = async () => {
+        if (Platform.OS === 'ios') {
+            Geolocation.requestAuthorization();
+            return true; // Assume true as Geolocation lib handles it on iOS
+        }
+
+        try {
+            const granted = await PermissionsAndroid.request(
+                PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+                {
+                    title: 'Location Permission',
+                    message: 'This app needs access to your location to help you set the delivery address.',
+                    buttonNeutral: 'Ask Me Later',
+                    buttonNegative: 'Cancel',
+                    buttonPositive: 'OK',
+                },
+            );
+            return granted === PermissionsAndroid.RESULTS.GRANTED;
+        } catch (err) {
+            console.warn(err);
+            return false;
+        }
+    };
+
+    const getCurrentLocation = (showLoader = false) => {
+        if (showLoader) setIsLoading(true);
+        console.log('📍 [GEOLOCATION] Fetching current position...');
         Geolocation.getCurrentPosition(
             (position) => {
                 const { latitude, longitude } = position.coords;
+                console.log('📍 [GEOLOCATION] Position received:', latitude, longitude);
                 const newRegion = {
                     ...region,
                     latitude,
                     longitude,
                 };
                 setRegion(newRegion);
-                reverseGeocode(latitude, longitude);
+                reverseGeocode(latitude, longitude, !isEditMode);
+                if (showLoader) setIsLoading(false);
             },
             (error) => {
-                console.error('Geolocation Error:', error);
-                // Fallback to default region if failed
+                console.warn('📍 [GEOLOCATION] Error:', error);
+                if (!isEditMode) setIsInitialLoading(false);
+                if (showLoader) setIsLoading(false);
+                const msg = error.code === 1 ? 'Permission denied' : error.code === 2 ? 'Position unavailable' : error.code === 3 ? 'Timeout' : 'Failed to fetch location';
+                Toast.show(msg, Toast.SHORT);
             },
             { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
         );
@@ -112,7 +156,7 @@ const AddLocationScreen = () => {
 
     const apiKey = 'AIzaSyDhItv0zoWdQbDh-5jjKLAEjwRDDrFNc1Y';
 
-    const reverseGeocode = async (lat, lng) => {
+    const reverseGeocode = async (lat, lng, isInitial = false) => {
         const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`;
 
         try {
@@ -143,11 +187,14 @@ const AddLocationScreen = () => {
             console.error('Reverse geocode error', error);
         } finally {
             setIsGeocoding(false);
+            if (isInitial) setIsInitialLoading(false);
         }
     };
 
     const onRegionChangeComplete = (newRegion) => {
         setRegion(newRegion);
+        // Automatically geocode the center of the map whenever it stops moving
+        reverseGeocode(newRegion.latitude, newRegion.longitude);
     };
 
     const handleSave = async () => {
@@ -206,305 +253,304 @@ const AddLocationScreen = () => {
     };
 
     return (
-        <SafeAreaView edges={['top']} style={Platform.OS === "android" ? [styles.mainContainer, {
-            paddingBottom: insets.bottom
-        }] : styles.mainContainer}>
-            <MapView
-                style={styles.map}
-                region={region}
-                onRegionChangeComplete={onRegionChangeComplete}
-            >
-                <Marker
-                    draggable
-                    coordinate={{
-                        latitude: region.latitude,
-                        longitude: region.longitude
-                    }}
-                    onDragEnd={(e) => {
-                        const newCoord = e.nativeEvent.coordinate;
-                        setRegion({
-                            ...region,
-                            latitude: newCoord.latitude,
-                            longitude: newCoord.longitude
-                        });
-                        reverseGeocode(newCoord.latitude, newCoord.longitude);
-                    }}
-                >
-                    <Image
-                        style={styles.markerIcon}
-                        source={require('../assets/images/location_four.png')}
+        <>
+            {isInitialLoading && <CustomLoader visible={isInitialLoading} text="Fetching your location..." />}
+            <SafeAreaView edges={['top']} style={Platform.OS === "android" ? [styles.mainContainer, {
+                paddingBottom: insets.bottom
+            }] : styles.mainContainer}>
+                <View style={styles.mapContainer}>
+                    <MapView
+                        style={styles.map}
+                        region={region}
+                        onRegionChangeComplete={onRegionChangeComplete}
+                        showsUserLocation={true}
+                        showsMyLocationButton={false}
                     />
-                </Marker>
-            </MapView>
-            <View style={{ zIndex: 1, elevation: 5 }}>
-                <View style={[styles.searchAbsoluteContainer, { zIndex: 999 }]}>
-                    <GooglePlacesAutocomplete
-                        placeholder="Search Location"
-                        placeholderTextColor="#DADADA"
-                        fetchDetails={true}
-                        onPress={(data, details = null) => {
-                            if (details) {
-                                const lat = details.geometry.location.lat;
-                                const lng = details.geometry.location.lng;
-                                setRegion(prev => ({ ...prev, latitude: lat, longitude: lng }));
-                                reverseGeocode(lat, lng);
-                            }
-                        }}
-                        query={{
-                            key: apiKey,
-                            language: 'en',
-                            components: 'country:in',
-                        }}
-                        styles={{
-                            container: { flex: 1 },
-                            textInputContainer: {
-                                // backgroundColor: '#FFFFFF',
-                                // borderRadius: wp('2.32%'),
-                                // borderWidth: 1,
-                                // borderColor: '#DADADA',
-                                height: hp('5.36%'),
-                                paddingHorizontal: wp('2%'),
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                            },
-                            textInput: {
-                                fontFamily: FONTS.poppins.light,
-                                fontSize: wp('3.72%'),
-                                color: '#000000',
-                                height: hp('5.36%'),
-                                flex: 1,
-                            },
-                            description: {
-                                color: '#000000',
-                            },
-                            predefinedPlacesDescription: {
-                                color: '#000000',
-                            },
-                            listView: {
-                                backgroundColor: '#FFFFFF',
-                                borderRadius: wp('2.32%'),
-                                marginTop: hp('1%'),
-                                borderWidth: 1,
-                                borderColor: '#DADADA',
-                                elevation: 5,
-                                position: 'absolute',
-                                top: hp('5.5%'),
-                                width: '100%',
-                                zIndex: 100
-                            },
-                            row: {
-                                padding: wp('3%'),
-                                height: hp('6%'),
-                                flexDirection: 'row',
-                            },
-                            separator: {
-                                height: 1,
-                                backgroundColor: '#DADADA',
-                            }
-                        }}
-                    />
-                </View>
-            </View>
-
-            <KeyboardAvoidingView
-                style={{ flex: 1 }}
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            >
-                <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                    <ScrollView
-                        style={styles.detailedAddressContainer}
-                        contentContainerStyle={{ paddingBottom: hp('10%') }}
-                        keyboardShouldPersistTaps="handled"
-                        showsVerticalScrollIndicator={false}
+                    {/* Fixed marker in the center of the map */}
+                    <View style={styles.fixedMarkerContainer} pointerEvents="none">
+                        <Image
+                            style={styles.markerIcon}
+                            source={require('../assets/images/location_four.png')}
+                        />
+                    </View>
+                    {/* Re-center button */}
+                    <TouchableOpacity
+                        style={styles.reCenterButton}
+                        onPress={() => getCurrentLocation(true)}
                     >
-                        <View style={styles.upperDivider} />
-                        <View style={styles.topView}>
-                            <TouchableOpacity style={styles.backButtonContainer} onPress={() => navigation.goBack()} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                                <Image style={styles.leftArrowIcon} source={require('../assets/images/left_arrow.png')} />
-                            </TouchableOpacity>
-                            <Text style={styles.addLocationText}>{isEditMode ? 'Edit location' : 'Add location'}</Text>
-                            <TouchableOpacity onPress={() => navigation.navigate('MainTabs')} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                                <Image style={styles.homeIcon} source={require('../assets/images/home_two.png')} />
-                            </TouchableOpacity>
-                        </View>
-                        <View style={styles.innerView}>
-                            <Image style={[styles.locationIcon, {
-                                top: hp('-1%')
-                            }]} source={require('../assets/images/location_four.png')} />
-                            <View>
-                                <Text style={styles.fetchingLocation}>{addLine1 || 'Fetching Location...'}</Text>
-                                <Text style={styles.addressLineText}>{addLine2 || ''}</Text>
+                        <Ionicons name="locate" size={wp('6%')} color="#F25000" />
+                    </TouchableOpacity>
+                </View>
+                <View style={{ zIndex: 1, elevation: 5 }}>
+                    <View style={[styles.searchAbsoluteContainer, { zIndex: 999 }]}>
+                        <GooglePlacesAutocomplete
+                            placeholder="Search Location"
+                            placeholderTextColor="#DADADA"
+                            fetchDetails={true}
+                            onPress={(data, details = null) => {
+                                if (details) {
+                                    const lat = details.geometry.location.lat;
+                                    const lng = details.geometry.location.lng;
+                                    setRegion(prev => ({ ...prev, latitude: lat, longitude: lng }));
+                                    reverseGeocode(lat, lng);
+                                }
+                            }}
+                            query={{
+                                key: apiKey,
+                                language: 'en',
+                                components: 'country:in',
+                            }}
+                            styles={{
+                                container: { flex: 1 },
+                                textInputContainer: {
+                                    // backgroundColor: '#FFFFFF',
+                                    // borderRadius: wp('2.32%'),
+                                    // borderWidth: 1,
+                                    // borderColor: '#DADADA',
+                                    height: hp('5.36%'),
+                                    paddingHorizontal: wp('2%'),
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                },
+                                textInput: {
+                                    fontFamily: FONTS.poppins.light,
+                                    fontSize: wp('3.72%'),
+                                    color: '#000000',
+                                    height: hp('5.36%'),
+                                    flex: 1,
+                                },
+                                description: {
+                                    color: '#000000',
+                                },
+                                predefinedPlacesDescription: {
+                                    color: '#000000',
+                                },
+                                listView: {
+                                    backgroundColor: '#FFFFFF',
+                                    borderRadius: wp('2.32%'),
+                                    marginTop: hp('1%'),
+                                    borderWidth: 1,
+                                    borderColor: '#DADADA',
+                                    elevation: 5,
+                                    position: 'absolute',
+                                    top: hp('5.5%'),
+                                    width: '100%',
+                                    zIndex: 100
+                                },
+                                row: {
+                                    padding: wp('3%'),
+                                    height: hp('6%'),
+                                    flexDirection: 'row',
+                                },
+                                separator: {
+                                    height: 1,
+                                    backgroundColor: '#DADADA',
+                                }
+                            }}
+                        />
+                    </View>
+                </View>
+
+                <KeyboardAvoidingView
+                    style={{ flex: 1 }}
+                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                >
+                    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                        <ScrollView
+                            style={styles.detailedAddressContainer}
+                            contentContainerStyle={{ paddingBottom: hp('10%') }}
+                            keyboardShouldPersistTaps="handled"
+                            showsVerticalScrollIndicator={false}
+                        >
+                            <View style={styles.upperDivider} />
+                            <View style={styles.topView}>
+                                <TouchableOpacity style={styles.backButtonContainer} onPress={() => navigation.goBack()} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                                    <Image style={styles.leftArrowIcon} source={require('../assets/images/left_arrow.png')} />
+                                </TouchableOpacity>
+                                <Text style={styles.addLocationText}>{isEditMode ? 'Edit location' : 'Add location'}</Text>
+                                {/* <TouchableOpacity onPress={() => navigation.navigate('MainTabs')} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                                    <Image style={styles.homeIcon} source={require('../assets/images/home_two.png')} />
+                            </TouchableOpacity> */}
                             </View>
-                        </View>
-                        <View style={styles.delboyContainer}>
-                            <Image style={styles.delBoyImage} source={require('../assets/images/del_boy.png')} />
-                            <View style={styles.detailedLocationContainer}>
-                                <Text style={styles.detailedLocationText}>Detailed location for helping our</Text>
-                                <Text style={[styles.detailedLocationText, {
-                                    fontFamily: FONTS.poppins.semiBold
-                                }]}>delivery boy</Text>
+                            <View style={styles.innerView}>
+                                <Image style={[styles.locationIcon, {
+                                    top: hp('-1%')
+                                }]} source={require('../assets/images/location_four.png')} />
+                                <View>
+                                    <Text style={styles.fetchingLocation}>{addLine1 || 'Fetching Location...'}</Text>
+                                    <Text style={styles.addressLineText}>{addLine2 || ''}</Text>
+                                </View>
                             </View>
-                        </View>
-                        <Text style={styles.saveAsText}>Save as</Text>
-                        <View style={styles.addressTypesContainer}>
-                            <TouchableOpacity
-                                onPress={() => setAddressType('HOME')}
-                                style={[styles.addressTypeContainer, addressType === 'HOME' ? { borderColor: '#F25000', backgroundColor: '#F25000' } : { borderColor: '#DADADA' }]}
-                            >
-                                <Image style={Platform.OS === 'android' ?
-                                    [styles.addressTypeIcon, {
+                            <View style={styles.delboyContainer}>
+                                <Image style={styles.delBoyImage} source={require('../assets/images/del_boy.png')} />
+                                <View style={styles.detailedLocationContainer}>
+                                    <Text style={styles.detailedLocationText}>Detailed location for helping our</Text>
+                                    <Text style={[styles.detailedLocationText, {
+                                        fontFamily: FONTS.poppins.semiBold
+                                    }]}>delivery boy</Text>
+                                </View>
+                            </View>
+                            <Text style={styles.saveAsText}>Save as</Text>
+                            <View style={styles.addressTypesContainer}>
+                                <TouchableOpacity
+                                    onPress={() => setAddressType('HOME')}
+                                    style={[styles.addressTypeContainer, addressType === 'HOME' ? { borderColor: '#F25000', backgroundColor: '#F25000' } : { borderColor: '#DADADA' }]}
+                                >
+                                    <Image style={Platform.OS === 'android' ?
+                                        [styles.addressTypeIcon, {
+                                            bottom: hp('0.2%'),
+                                            tintColor: addressType === 'HOME' ? '#FFFFFF' : undefined
+                                        }] : [styles.addressTypeIcon, { tintColor: addressType === 'HOME' ? '#FFFFFF' : undefined }]
+                                    } source={require('../assets/images/home_primary_color.png')} />
+                                    <Text style={[styles.addressTypeText, addressType === 'HOME' && { color: '#FFFFFF' }]}>Home</Text>
+                                </TouchableOpacity>
+
+                                <TouchableOpacity
+                                    onPress={() => setAddressType('OFFICE')}
+                                    style={[styles.addressTypeContainer, addressType === 'OFFICE' ? { borderColor: '#F25000', backgroundColor: '#F25000' } : { borderColor: '#DADADA' }]}
+                                >
+                                    <Image style={Platform.OS === 'android' ? [styles.addressTypeIcon, {
+                                        width: wp('2.79%'),
                                         bottom: hp('0.2%'),
-                                        tintColor: addressType === 'HOME' ? '#FFFFFF' : undefined
-                                    }] : [styles.addressTypeIcon, { tintColor: addressType === 'HOME' ? '#FFFFFF' : undefined }]
-                                } source={require('../assets/images/home_primary_color.png')} />
-                                <Text style={[styles.addressTypeText, addressType === 'HOME' && { color: '#FFFFFF' }]}>Home</Text>
-                            </TouchableOpacity>
+                                        tintColor: addressType === 'OFFICE' ? '#FFFFFF' : undefined
+                                    }] : [styles.addressTypeIcon, {
+                                        width: wp('2.79%'),
+                                        tintColor: addressType === 'OFFICE' ? '#FFFFFF' : undefined
+                                    }]} source={require('../assets/images/office_primary_color.png')} />
+                                    <Text style={[styles.addressTypeText, addressType === 'OFFICE' && { color: '#FFFFFF' }]}>Office</Text>
+                                </TouchableOpacity>
 
-                            <TouchableOpacity
-                                onPress={() => setAddressType('OFFICE')}
-                                style={[styles.addressTypeContainer, addressType === 'OFFICE' ? { borderColor: '#F25000', backgroundColor: '#F25000' } : { borderColor: '#DADADA' }]}
-                            >
-                                <Image style={Platform.OS === 'android' ? [styles.addressTypeIcon, {
-                                    width: wp('2.79%'),
-                                    bottom: hp('0.2%'),
-                                    tintColor: addressType === 'OFFICE' ? '#FFFFFF' : undefined
-                                }] : [styles.addressTypeIcon, {
-                                    width: wp('2.79%'),
-                                    tintColor: addressType === 'OFFICE' ? '#FFFFFF' : undefined
-                                }]} source={require('../assets/images/office_primary_color.png')} />
-                                <Text style={[styles.addressTypeText, addressType === 'OFFICE' && { color: '#FFFFFF' }]}>Office</Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                onPress={() => setAddressType('OTHER')}
-                                style={[styles.addressTypeContainer, addressType === 'OTHER' ? { borderColor: '#F25000', backgroundColor: '#F25000' } : { borderColor: '#DADADA' }]}
-                            >
-                                <Image style={Platform.OS === 'android' ? [styles.addressTypeIcon, {
-                                    width: wp('2.55%'),
-                                    bottom: hp('0.2%'),
-                                    tintColor: addressType === 'OTHER' ? '#FFFFFF' : undefined
-                                }] : [styles.addressTypeIcon, {
-                                    width: wp('2.55%'),
-                                    tintColor: addressType === 'OTHER' ? '#FFFFFF' : undefined
-                                }]} source={require('../assets/images/location_five.png')} />
-                                <Text style={[styles.addressTypeText, addressType === 'OTHER' && { color: '#FFFFFF' }]}>Other</Text>
-                            </TouchableOpacity>
-                        </View>
-                        <View style={styles.inputWrapper}>
-                            <Text style={styles.label}>Full Address House / Flat / Block no</Text>
-                            <TextInput
-                                style={styles.input}
-                                value={addLine1}
-                                onChangeText={setAddLine1}
-                            />
-                        </View>
-                        <View style={styles.inputWrapper}>
-                            <Text style={styles.label}>Appartment / Road / Area</Text>
-                            <TextInput
-                                style={styles.input}
-                                value={addLine2}
-                                onChangeText={setAddLine2}
-                            />
-                        </View>
-                        <View style={styles.pincodeContainer}>
-                            <View style={[styles.inputWrapper, {
-                                width: wp('42%')
-                            }]}>
-                                <Text style={styles.label}>PIN Code</Text>
+                                <TouchableOpacity
+                                    onPress={() => setAddressType('OTHER')}
+                                    style={[styles.addressTypeContainer, addressType === 'OTHER' ? { borderColor: '#F25000', backgroundColor: '#F25000' } : { borderColor: '#DADADA' }]}
+                                >
+                                    <Image style={Platform.OS === 'android' ? [styles.addressTypeIcon, {
+                                        width: wp('2.55%'),
+                                        bottom: hp('0.2%'),
+                                        tintColor: addressType === 'OTHER' ? '#FFFFFF' : undefined
+                                    }] : [styles.addressTypeIcon, {
+                                        width: wp('2.55%'),
+                                        tintColor: addressType === 'OTHER' ? '#FFFFFF' : undefined
+                                    }]} source={require('../assets/images/location_five.png')} />
+                                    <Text style={[styles.addressTypeText, addressType === 'OTHER' && { color: '#FFFFFF' }]}>Other</Text>
+                                </TouchableOpacity>
+                            </View>
+                            <View style={styles.inputWrapper}>
+                                <Text style={styles.label}>Full Address House / Flat / Block no</Text>
                                 <TextInput
                                     style={styles.input}
-                                    value={pincode}
-                                    onChangeText={setPincode}
-                                    keyboardType="numeric"
+                                    value={addLine1}
+                                    onChangeText={setAddLine1}
                                 />
                             </View>
-                            <View>
-                                <DropDownPicker
-                                    open={open}
-                                    value={pincodeAreaId}
-                                    items={items}
-                                    setOpen={setOpen}
-                                    setValue={setPincodeAreaId}
-                                    setItems={setItems}
-                                    placeholder={'PIN Code Area'}
-                                    placeholderStyle={{
-                                        fontFamily: FONTS.poppins.regular,
-                                        color: '#DADADA',
-                                        fontSize: wp('3.4%')
-                                    }}
-                                    loading={isAreasLoading}
-                                    style={{
-                                        borderColor: '#DADADA',
-                                        height: hp('5.5%'),
-                                        width: wp('42%'),
-                                        minHeight: hp('4.3%'),
-                                    }}
+                            <View style={styles.inputWrapper}>
+                                <Text style={styles.label}>Appartment / Road / Area</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    value={addLine2}
+                                    onChangeText={setAddLine2}
                                 />
                             </View>
-                        </View>
-                        <View style={{
-                            marginTop: hp('1.5%'),
-                            marginBottom: hp('3.5%')
-                        }}>
-                            <Text style={{
-                                fontFamily: FONTS.poppins.regular,
-                                color: '#000000',
-                                fontSize: wp('3.4%')
-                            }}>Land mark / Delivery instruction</Text>
-                            <TextInput
-                                placeholderTextColor={'#616161'}
-                                placeholder='eg. Near Lulu Mall'
-                                value={landmark}
-                                onChangeText={setLandmark}
-                                multiline
-                                style={[styles.input, {
-                                    height: hp('6.27%'),
-                                    paddingHorizontal: wp('3.25%'),
-                                    textAlignVertical: 'top'
-                                }]}
-                            />
-                        </View>
-                        <View style={styles.inputWrapper}>
-                            <Text style={styles.label}>Customer name</Text>
-                            <TextInput
-                                style={styles.input}
-                                value={custName}
-                                onChangeText={setCustName}
-                            />
-                        </View>
-                        <View style={styles.inputWrapper}>
-                            <Text style={styles.label}>Phone number</Text>
-                            <TextInput
-                                placeholder='Enter mobile number'
-                                style={styles.input}
-                                placeholderTextColor={'#616161'}
-                                value={phone}
-                                onChangeText={setPhone}
-                                keyboardType="phone-pad"
-                                maxLength={10}
-                            />
-                        </View>
-                        <LinearGradient colors={['#F25000', '#FF7B3A']}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 0 }}
-                            style={styles.buttonGradientStyle}
-                        >
-                            <TouchableOpacity disabled={isLoading} onPress={handleSave}>
-                                {isLoading ? (
-                                    <ActivityIndicator color="#FFFFFF" />
-                                ) : (
-                                    <Text style={styles.buttonText}>{isEditMode ? 'UPDATE ADDRESS' : 'SAVE ADDRESS'}</Text>
-                                )}
-                            </TouchableOpacity>
-                        </LinearGradient>
-                    </ScrollView>
-                </TouchableWithoutFeedback>
-            </KeyboardAvoidingView>
-        </SafeAreaView>
-    )
-}
+                            <View style={styles.pincodeContainer}>
+                                <View style={[styles.inputWrapper, {
+                                    width: wp('42%')
+                                }]}>
+                                    <Text style={styles.label}>PIN Code</Text>
+                                    <TextInput
+                                        style={styles.input}
+                                        value={pincode}
+                                        onChangeText={setPincode}
+                                        keyboardType="numeric"
+                                    />
+                                </View>
+                                <View>
+                                    <DropDownPicker
+                                        open={open}
+                                        value={pincodeAreaId}
+                                        items={items}
+                                        setOpen={setOpen}
+                                        setValue={setPincodeAreaId}
+                                        setItems={setItems}
+                                        placeholder={'PIN Code Area'}
+                                        placeholderStyle={{
+                                            fontFamily: FONTS.poppins.regular,
+                                            color: '#DADADA',
+                                            fontSize: wp('3.4%')
+                                        }}
+                                        loading={isAreasLoading}
+                                        style={{
+                                            borderColor: '#DADADA',
+                                            height: hp('5.5%'),
+                                            width: wp('42%'),
+                                            minHeight: hp('4.3%'),
+                                        }}
+                                    />
+                                </View>
+                            </View>
+                            <View style={{
+                                marginTop: hp('1.5%'),
+                                marginBottom: hp('3.5%')
+                            }}>
+                                <Text style={{
+                                    fontFamily: FONTS.poppins.regular,
+                                    color: '#000000',
+                                    fontSize: wp('3.4%')
+                                }}>Land mark / Delivery instruction</Text>
+                                <TextInput
+                                    placeholderTextColor={'#616161'}
+                                    placeholder='eg. Near Lulu Mall'
+                                    value={landmark}
+                                    onChangeText={setLandmark}
+                                    multiline
+                                    style={[styles.input, {
+                                        height: hp('6.27%'),
+                                        paddingHorizontal: wp('3.25%'),
+                                        textAlignVertical: 'top'
+                                    }]}
+                                />
+                            </View>
+                            <View style={styles.inputWrapper}>
+                                <Text style={styles.label}>Customer name</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    value={custName}
+                                    onChangeText={setCustName}
+                                />
+                            </View>
+                            <View style={styles.inputWrapper}>
+                                <Text style={styles.label}>Phone number</Text>
+                                <TextInput
+                                    placeholder='Enter mobile number'
+                                    style={styles.input}
+                                    placeholderTextColor={'#616161'}
+                                    value={phone}
+                                    onChangeText={setPhone}
+                                    keyboardType="phone-pad"
+                                    maxLength={10}
+                                />
+                            </View>
+                            <LinearGradient colors={['#F25000', '#FF7B3A']}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 0 }}
+                                style={styles.buttonGradientStyle}
+                            >
+                                <TouchableOpacity disabled={isLoading} onPress={handleSave}>
+                                    {isLoading ? (
+                                        <ActivityIndicator color="#FFFFFF" />
+                                    ) : (
+                                        <Text style={styles.buttonText}>{isEditMode ? 'UPDATE ADDRESS' : 'SAVE ADDRESS'}</Text>
+                                    )}
+                                </TouchableOpacity>
+                            </LinearGradient>
+                        </ScrollView>
+                    </TouchableWithoutFeedback>
+                </KeyboardAvoidingView>
+            </SafeAreaView>
+        </>
+    );
+};
 
-export default AddLocationScreen
+export default AddLocationScreen;
 
 const styles = StyleSheet.create({
     mainContainer: {
@@ -615,11 +661,41 @@ const styles = StyleSheet.create({
         paddingTop: hp('1%'),
         paddingHorizontal: wp('4.65%'),
     },
-    map: {
+    mapContainer: {
         width: wp('100%'),
         height: hp('45%'),
         position: 'absolute',
         top: 0
+    },
+    map: {
+        flex: 1
+    },
+    fixedMarkerContainer: {
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: [
+            { translateX: -wp('2.8%') },
+            { translateY: -wp('7%') }
+        ],
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    reCenterButton: {
+        position: 'absolute',
+        bottom: hp('2%'),
+        right: wp('4%'),
+        backgroundColor: '#FFFFFF',
+        width: wp('11%'),
+        height: wp('11%'),
+        borderRadius: wp('5.5%'),
+        justifyContent: 'center',
+        alignItems: 'center',
+        elevation: 5,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
     },
     markerFixed: {
         left: '50%',

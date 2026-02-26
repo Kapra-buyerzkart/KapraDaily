@@ -20,7 +20,8 @@ export const useOrderDetails = (orderId, initialOrderData = null) => {
         if (!status) return 'placed';
         const s = String(status).toLowerCase().replace(/_/g, '').trim();
 
-        if (['placed', 'pending', 'new', 'created'].includes(s)) return 'placed';
+        if (['pending', 'new', 'created'].includes(s)) return 'pending';
+        if (['placed'].includes(s)) return 'placed';
         if (['confirmed', 'accepted', 'processing', 'orderaccepted'].includes(s)) return 'accepted';
         if (['packed'].includes(s)) return 'packed';
         if (['shipped', 'dispatched', 'outfordelivery'].includes(s)) return 'dispatched';
@@ -123,6 +124,7 @@ export const useOrderDetails = (orderId, initialOrderData = null) => {
             const response = await rateDeliveryAgentApi(payload);
             if (response && response.success) {
                 Toast.show("Delivery agent rated successfully", Toast.SHORT);
+                await fetchOrderDetails(orderId, true); // Silent refresh
                 return { success: true };
             } else {
                 return response || { success: false, message: "Failed to submit rating" };
@@ -147,6 +149,7 @@ export const useOrderDetails = (orderId, initialOrderData = null) => {
             const response = await rateOrderApi(payload);
             if (response && response.success) {
                 Toast.show("Order rated successfully", Toast.SHORT);
+                await fetchOrderDetails(orderId, true); // Silent refresh
                 return { success: true };
             } else {
                 return response || { success: false, message: "Failed to submit rating" };
@@ -236,8 +239,8 @@ export const useOrderDetails = (orderId, initialOrderData = null) => {
             formattedOrderDate: formatFriendlyDate(header.orderDate || orderData?.orderDate),
             orderItems: mergedItems,
             itemCount: mergedItems.length,
-            deliveryAgentName: orderData?.deliveryAgent?.name || orderData?.deliveryAgentName || orderData?.driverName || null,
-            deliveryAgentPhone: orderData?.deliveryAgent?.phone || orderData?.deliveryAgentPhone || orderData?.driverPhone || null,
+            deliveryAgentName: orderData?.deliveryAgent?.name || orderData?.deliveryAgentName || orderData?.driverName || header?.deliveryAgentName || null,
+            deliveryAgentPhone: orderData?.deliveryAgent?.phone || orderData?.deliveryAgentPhone || orderData?.driverPhone || header?.deliveryAgentPhone || null,
 
             // Bill Breakdown Aligned with provided JSON
             bill: {
@@ -255,6 +258,14 @@ export const useOrderDetails = (orderId, initialOrderData = null) => {
             invoiceNumber: header.invoiceNumber || orderData?.invoiceNumber || null,
             canMarkDeliveryReview: header.canMarkDeliveryReview ?? orderData?.canMarkDeliveryReview ?? false,
             canMarkOverallReview: header.canMarkOverallReview ?? orderData?.canMarkOverallReview ?? false,
+            canShowDeliveryAgent: header.canShowDeliveryAgent ?? orderData?.canShowDeliveryAgent ?? true,
+            canRetryPayment: header.canRetryPayment ?? orderData?.canRetryPayment ?? false,
+            hasOnlinePaid: header.hasOnlinePaid ?? orderData?.hasOnlinePaid ?? false,
+            paymentStatus: header.paymentStatus || payment.paymentStatus || orderData?.paymentStatus || null,
+            rawOrderStatus: rawStatus,
+            razorpayOrderId: header.razorpayOrderId || header.razorPayOrderId || orderData?.razorpayOrderId || null,
+            razorpayAmount: header.razorpayAmount || header.razorPayAmount || payment.paymentAmount || orderData?.razorpayAmount || null,
+            razorpayKeyId: header.razorpayKeyId || header.razorPayKeyId || orderData?.razorpayKeyId || header.keyId || null,
         };
     }, [orderData, orderStatus, orderId, initialOrderData]);
 

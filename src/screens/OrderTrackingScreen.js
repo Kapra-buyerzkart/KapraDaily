@@ -19,6 +19,9 @@ import CONFIG from '../globals/config'
 import RatingModal from '../components/RatingModal'
 import StatusModal from '../components/StatusModal'
 import BillSection from '../components/BillSection'
+import RazorpayCheckout from 'react-native-razorpay'
+import { verifyRazorpayPaymentApi } from '../api/paymentService'
+import Toast from 'react-native-simple-toast'
 
 const OrderTrackingScreen = () => {
     const navigation = useNavigation();
@@ -62,7 +65,15 @@ const OrderTrackingScreen = () => {
         bill,
         invoiceUrl,
         canMarkDeliveryReview,
-        canMarkOverallReview
+        canMarkOverallReview,
+        canShowDeliveryAgent,
+        canRetryPayment,
+        hasOnlinePaid,
+        paymentStatus,
+        rawOrderStatus,
+        razorpayOrderId,
+        razorpayAmount,
+        razorpayKeyId
     } = useOrderDetails(orderId, initialOrderData);
 
     const handleBackPress = useCallback(() => {
@@ -104,6 +115,110 @@ const OrderTrackingScreen = () => {
         title: '',
         message: ''
     });
+    const [retryLoading, setRetryLoading] = useState(false);
+
+    const handleRetryPayment = async () => {
+        console.log('✅ [RETRY] Razorpay SDK Success:', razorpayOrderId, razorpayKeyId);
+
+        if (!razorpayOrderId || !razorpayKeyId) {
+            console.log('⚠️ [RETRY] Missing details - razorpayOrderId:', razorpayOrderId, 'razorpayKeyId:', razorpayKeyId);
+            setStatusModal({
+                visible: true,
+                type: 'error',
+                title: 'Retry Failed',
+                message: 'Payment details are missing. Please contact support.'
+            });
+            return;
+        }
+
+        const options = {
+            key: razorpayKeyId,
+            amount: razorpayAmount,
+            currency: 'INR',
+            name: 'Kapra Daily',
+            description: `Retry Payment for Order #${displayOrderId}`,
+            order_id: razorpayOrderId,
+            prefill: {
+                contact: shippingAddress?.mobileNo || shippingAddress?.phoneNo || shippingAddress?.phone || ''
+            },
+            theme: { color: '#F25000' }
+        };
+
+        try {
+            const sdkResponse = await RazorpayCheckout.open(options);
+            console.log('✅ [RETRY] Razorpay SDK Success:', sdkResponse);
+            setRetryLoading(true);
+
+            const verifyPayload = {
+                orderId: orderId,
+                razorpayOrderId: sdkResponse.razorpay_order_id,
+                razorpayPaymentId: sdkResponse.razorpay_payment_id,
+                razorpaySignature: sdkResponse.razorpay_signature,
+                amount: Number(razorpayAmount)
+            };
+
+            let verifyResponse;
+            let retryCount = 0;
+            const maxRetries = 1;
+
+            const attemptVerification = async () => {
+                try {
+                    console.log(`🔍 [RETRY] Verification Attempt ${retryCount + 1}...`);
+                    return await verifyRazorpayPaymentApi(verifyPayload);
+                } catch (e) {
+                    console.error(`⚠️ [RETRY] Verification Attempt ${retryCount + 1} Error:`, e);
+                    return null;
+                }
+            };
+
+            verifyResponse = await attemptVerification();
+
+            while (
+                (!verifyResponse?.success || verifyResponse?.status === 'pending') &&
+                retryCount < maxRetries
+            ) {
+                retryCount++;
+                console.log(`🔄 [RETRY] Retrying verification (Count: ${retryCount}) in 3s...`);
+                await new Promise(resolve => setTimeout(resolve, 3000));
+                verifyResponse = await attemptVerification();
+            }
+
+            setRetryLoading(false);
+
+            if (verifyResponse?.success) {
+                navigation.dispatch(
+                    CommonActions.reset({
+                        index: 0,
+                        routes: [{
+                            name: 'OrderSuccessScreen',
+                            params: {
+                                orderId,
+                                orderNumber: displayOrderId,
+                                totalAmount: grandTotal,
+                            }
+                        }],
+                    })
+                );
+            } else {
+                setStatusModal({
+                    visible: true,
+                    type: 'error',
+                    title: 'Verification Pending',
+                    message: 'Payment was received but verification is taking time. Please check back shortly.'
+                });
+                refreshOrder?.(true);
+            }
+        } catch (sdkError) {
+            console.error('❌ [RETRY] Error:', sdkError);
+            setRetryLoading(false);
+            setStatusModal({
+                visible: true,
+                type: 'error',
+                title: 'Payment Failed',
+                message: sdkError?.description || 'Payment was cancelled or failed. Please try again.'
+            });
+        }
+    };
 
     const handleOrderRating = (rating) => {
         setPendingRating(rating);
@@ -183,6 +298,7 @@ const OrderTrackingScreen = () => {
 
     const getStatusColor = (status) => {
         switch (status) {
+            case 'pending': return '#F2994A'; // Orange/Yellow
             case 'placed': return '#F2994A'; // Orange
             case 'confirmed': return '#2D9CDB'; // Blue
             case 'shipped': return '#9B51E0'; // Purple
@@ -192,6 +308,14 @@ const OrderTrackingScreen = () => {
             default: return '#000000';
         }
     };
+
+    const getPaymentLabel = (method) => {
+        if (!method) return 'Cash On Delivery'
+        const m = method.toUpperCase()
+        if (m === 'COD') return 'Cash On Delivery'
+        if (m === 'ONLINE' || m === 'UPI') return 'Online Payment'
+        return method
+    }
 
     const BillRow = ({ label, value, isGreen }) => (
         <View style={styles.billBreakdownRow}>
@@ -204,7 +328,7 @@ const OrderTrackingScreen = () => {
 
     return (
         <SafeAreaView edges={['top']} style={[styles.mainContainer, { paddingBottom: insets.bottom }]}>
-            <CustomLoader visible={loading} text="Updating Order..." />
+            <CustomLoader visible={loading || retryLoading} text={retryLoading ? "Verifying Payment..." : "Updating Order..."} />
 
             <View style={styles.headerContainer}>
                 <TouchableOpacity onPress={handleBackPress}>
@@ -229,49 +353,66 @@ const OrderTrackingScreen = () => {
                     alignItems: 'center',
                     paddingTop: hp('2%')
                 }}>
-                    {orderStatus === 'placed' && (
+                    {effectiveOrderStatus === 'pending' && (
+                        <View style={{
+                            width: wp('72%'),
+                            height: hp('3%'),
+                            backgroundColor: '#F2994A',
+                            borderRadius: 20,
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            marginBottom: hp('1%')
+                        }}>
+                            <Text style={{
+                                color: '#FFFFFF',
+                                fontFamily: FONTS.poppins.bold,
+                                fontSize: wp('3.5%')
+                            }}>ORDER PENDING</Text>
+                        </View>
+                    )}
+                    {effectiveOrderStatus === 'placed' && (
                         <Image style={{
                             width: wp('72%'),
                             height: hp('3%'),
                             resizeMode: 'contain',
                         }} source={require('../assets/images/order_placed.png')} />
                     )}
-                    {orderStatus === 'accepted' && (
+                    {effectiveOrderStatus === 'accepted' && (
                         <Image style={{
                             width: wp('72%'),
                             height: hp('3%'),
                             resizeMode: 'contain',
                         }} source={require('../assets/images/order_placed.png')} />
                     )}
-                    {orderStatus === 'packed' && (
+                    {effectiveOrderStatus === 'packed' && (
                         <Image style={{
                             width: wp('72%'),
                             height: hp('3%'),
                             resizeMode: 'contain',
                         }} source={require('../assets/images/order_packed.png')} />
                     )}
-                    {orderStatus === 'assigned' && (
+                    {effectiveOrderStatus === 'assigned' && (
                         <Image style={{
                             width: wp('72%'),
                             height: hp('3%'),
                             resizeMode: 'contain',
                         }} source={require('../assets/images/assigned.png')} />
                     )}
-                    {orderStatus === 'dispatched' && (
+                    {effectiveOrderStatus === 'dispatched' && (
                         <Image style={{
                             width: wp('72%'),
                             height: hp('3%'),
                             resizeMode: 'contain',
                         }} source={require('../assets/images/dispatched.png')} />
                     )}
-                    {orderStatus === 'delivered' && (
+                    {effectiveOrderStatus === 'delivered' && (
                         <Image style={{
                             width: wp('72%'),
                             height: hp('3%'),
                             resizeMode: 'contain',
                         }} source={require('../assets/images/delivered.png')} />
                     )}
-                    {orderStatus === 'cancelled' && (
+                    {effectiveOrderStatus === 'cancelled' && (
                         <View style={{
                             width: wp('72%'),
                             height: hp('3%'),
@@ -290,68 +431,67 @@ const OrderTrackingScreen = () => {
                     <View style={styles.statusContainer}>
                         <View style={styles.statusView}>
                             <View style={Platform.OS === 'android' ?
-                                [styles.statusNumberView, { backgroundColor: '#0CA201' }, { bottom: hp('0.15%') }] :
-                                [styles.statusNumberView, { backgroundColor: '#0CA201' }]
+                                [styles.statusNumberView, effectiveOrderStatus !== 'pending' && { backgroundColor: '#0CA201' }, { bottom: hp('0.15%') }] :
+                                [styles.statusNumberView, effectiveOrderStatus !== 'pending' && { backgroundColor: '#0CA201' }]
                             }>
                                 <Text style={styles.statusNumberText}>1</Text>
                             </View>
-                            <Text style={[styles.statusNameText, {
-                                color: '#0CA201'
-                            }]}>Order placed</Text>
+                            <Text style={[styles.statusNameText, effectiveOrderStatus !== 'pending' && { color: '#0CA201' }]}>Order placed</Text>
                         </View>
                         <View style={[styles.statusView, { left: wp('-2%') }]}>
                             <View style={Platform.OS === 'android' ?
-                                [styles.statusNumberView, { bottom: hp('0.15%') }] :
-                                styles.statusNumberView
+                                [styles.statusNumberView, ['assigned', 'dispatched', 'delivered'].includes(effectiveOrderStatus) && { backgroundColor: '#0CA201' }, { bottom: hp('0.15%') }] :
+                                [styles.statusNumberView, ['assigned', 'dispatched', 'delivered'].includes(effectiveOrderStatus) && { backgroundColor: '#0CA201' }]
                             }>
                                 <Text style={styles.statusNumberText}>2</Text>
                             </View>
-                            <Text style={styles.statusNameText}>Out for delivery</Text>
+                            <Text style={[styles.statusNameText, ['assigned', 'dispatched', 'delivered'].includes(effectiveOrderStatus) && { color: '#0CA201' }]}>Out for delivery</Text>
                         </View>
                         <View style={styles.statusView}>
                             <View style={Platform.OS === 'android' ?
-                                [styles.statusNumberView, { bottom: hp('0.15%') }] :
-                                styles.statusNumberView
+                                [styles.statusNumberView, effectiveOrderStatus === 'delivered' && { backgroundColor: '#0CA201' }, { bottom: hp('0.15%') }] :
+                                [styles.statusNumberView, effectiveOrderStatus === 'delivered' && { backgroundColor: '#0CA201' }]
                             }>
                                 <Text style={styles.statusNumberText}>3</Text>
                             </View>
-                            <Text style={styles.statusNameText}>Delivered</Text>
+                            <Text style={[styles.statusNameText, effectiveOrderStatus === 'delivered' && { color: '#0CA201' }]}>Delivered</Text>
                         </View>
                     </View>
-                    {orderStatus === 'placed' && (<ImageBackground style={styles.placedImageStyle} resizeMode="contain"
+                    {['placed', 'pending'].includes(effectiveOrderStatus) && (<ImageBackground style={styles.placedImageStyle} resizeMode="contain"
                         source={require('../assets/images/tracking_image_placed.png')}
                     >
-                        <View style={styles.wrapper}>
-                            <LinearGradient
-                                colors={[
-                                    'rgba(255,255,255,0)',
-                                    '#FFFFFF',
-                                    '#FFFFFF',
-                                ]}
-                                start={{ x: 0.5, y: 0 }}
-                                end={{ x: 0.5, y: 1 }}
-                                style={styles.gradient}
-                            >
-                                <View style={styles.orderPlacedView}>
-                                    <View style={styles.statusView}>
-                                        <View style={Platform.OS === 'android' ?
-                                            [styles.statusNumberView, { backgroundColor: '#0CA201' }, { bottom: hp('0.15%') }] :
-                                            [styles.statusNumberView, { backgroundColor: '#0CA201' }]
-                                        }>
-                                            <Text style={styles.statusNumberText}>1</Text>
+                        {effectiveOrderStatus !== "pending" && (
+                            <View style={styles.wrapper}>
+                                <LinearGradient
+                                    colors={[
+                                        'rgba(255,255,255,0)',
+                                        '#FFFFFF',
+                                        '#FFFFFF',
+                                    ]}
+                                    start={{ x: 0.5, y: 0 }}
+                                    end={{ x: 0.5, y: 1 }}
+                                    style={styles.gradient}
+                                >
+                                    <View style={styles.orderPlacedView}>
+                                        <View style={styles.statusView}>
+                                            <View style={Platform.OS === 'android' ?
+                                                [styles.statusNumberView, { backgroundColor: '#0CA201' }, { bottom: hp('0.15%') }] :
+                                                [styles.statusNumberView, { backgroundColor: '#0CA201' }]
+                                            }>
+                                                <Text style={styles.statusNumberText}>1</Text>
+                                            </View>
+                                            <Text style={[styles.statusNameText, {
+                                                color: '#0CA201'
+                                            }]}>Order placed</Text>
                                         </View>
-                                        <Text style={[styles.statusNameText, {
-                                            color: '#0CA201'
-                                        }]}>Order placed</Text>
+                                        <Image style={styles.dotsImage} source={require('../assets/images/dots_two.png')} />
+                                        <Text style={styles.placedDescription}>Waiting for acceptance...</Text>
                                     </View>
-                                    <Image style={styles.dotsImage} source={require('../assets/images/dots_two.png')} />
-                                    <Text style={styles.placedDescription}>Waiting for acceptance...</Text>
-                                </View>
-                            </LinearGradient>
-                        </View>
+                                </LinearGradient>
+                            </View>)}
                     </ImageBackground>
                     )}
-                    {orderStatus === 'accepted' && (<ImageBackground style={styles.placedImageStyle} resizeMode="contain"
+                    {effectiveOrderStatus === 'accepted' && (<ImageBackground style={styles.placedImageStyle} resizeMode="contain"
                         source={require('../assets/images/tracking_image_accepted.png')}
                     >
                         <View style={styles.wrapper}>
@@ -384,7 +524,7 @@ const OrderTrackingScreen = () => {
                         </View>
                     </ImageBackground>
                     )}
-                    {orderStatus === 'packed' && (<ImageBackground style={styles.placedImageStyle} resizeMode="contain"
+                    {effectiveOrderStatus === 'packed' && (<ImageBackground style={styles.placedImageStyle} resizeMode="contain"
                         source={require('../assets/images/tracking_image_packed.png')}
                     >
                         <View style={styles.wrapper}>
@@ -418,7 +558,7 @@ const OrderTrackingScreen = () => {
                         </View>
                     </ImageBackground>
                     )}
-                    {orderStatus === 'assigned' && (<View style={styles.assignedContainer}>
+                    {effectiveOrderStatus === 'assigned' && (<View style={styles.assignedContainer}>
                         <Image style={styles.assignedImageStyle} source={require('../assets/images/tracking_image_assigned.png')} />
                         <View style={styles.wrapper}>
                             <LinearGradient
@@ -451,7 +591,7 @@ const OrderTrackingScreen = () => {
                         </View>
                     </View>
                     )}
-                    {orderStatus === 'dispatched' && (<View style={styles.assignedContainer}>
+                    {effectiveOrderStatus === 'dispatched' && (<View style={styles.assignedContainer}>
                         <Image style={styles.assignedImageStyle} source={require('../assets/images/tracking_image_dispatched.png')} />
                         <View style={styles.wrapper}>
                             <LinearGradient
@@ -484,7 +624,7 @@ const OrderTrackingScreen = () => {
                         </View>
                     </View>
                     )}
-                    {orderStatus === 'delivered' && (<View style={styles.assignedContainer}>
+                    {effectiveOrderStatus === 'delivered' && (<View style={styles.assignedContainer}>
                         <Image style={styles.assignedImageStyle} source={require('../assets/images/tracking_image_delivered.png')} />
                         <View style={styles.wrapper}>
                             <LinearGradient
@@ -533,21 +673,21 @@ const OrderTrackingScreen = () => {
                         </View>
                     </View>
                     ) : (
-                        !canMarkDeliveryReview && !['placed', 'accepted', 'packed', 'assigned', 'dispatched'].includes(orderStatus) && (
+                        !canMarkDeliveryReview && !['pending', 'placed', 'accepted', 'packed', 'assigned', 'dispatched'].includes(effectiveOrderStatus) && (
                             <View style={{ height: hp('1%') }} />
                         )
                     )}
-                    {!canMarkOverallReview && (orderStatus !== 'delivered') && (
+                    {!canMarkOverallReview && (effectiveOrderStatus !== 'delivered') && canShowDeliveryAgent && (
                         <View style={styles.deliveryAgentContainer}>
                             <View>
                                 <Text style={styles.deliveryAgentNameText}>
-                                    {['placed', 'accepted', 'packed'].includes(orderStatus)
+                                    {['pending', 'placed', 'accepted', 'packed'].includes(effectiveOrderStatus)
                                         ? 'Not assigned'
                                         : (deliveryAgentName || 'Marvin Alex')}
                                 </Text>
                                 <Text style={styles.deliveryAgentTextTwo}>Delivery Agent</Text>
                             </View>
-                            {['placed', 'accepted', 'packed'].includes(orderStatus)
+                            {['pending', 'placed', 'accepted', 'packed'].includes(effectiveOrderStatus)
                                 ? <View style={styles.callContainer} />
                                 : <TouchableOpacity
                                     style={styles.callContainer}
@@ -595,16 +735,26 @@ const OrderTrackingScreen = () => {
                     <View style={styles.deliveryAgentContainer}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: wp('2%') }}>
                             <Image style={styles.paymentImage} source={require('../assets/images/payment_image.png')} />
-                            <Text numberOfLines={1} ellipsizeMode="tail" style={[styles.paymentText, { flex: 1 }]}>{paymentMethod}</Text>
+                            <Text numberOfLines={1} ellipsizeMode="tail" style={[styles.paymentText, { flex: 1 }]}>{getPaymentLabel(paymentMethod)}</Text>
                         </View>
                         <View style={{ alignItems: 'flex-end', flexShrink: 0 }}>
                             <Text style={styles.paymnetPrice}>₹{grandTotal}</Text>
-                            {orderStatus === 'delivered' && (
-                                <View style={[styles.paidBadge, { marginTop: hp('0.5%') }]}>
-                                    <Ionicons name="checkmark-circle" size={wp('3%')} color="#27AE60" />
-                                    <Text style={styles.paidBadgeText}>Paid successfully</Text>
-                                </View>
-                            )}
+                            {(effectiveOrderStatus === 'delivered' ||
+                                hasOnlinePaid ||
+                                (['online', 'prepaid', 'razorpay', 'upi'].includes(paymentMethod?.toLowerCase()) &&
+                                    (paymentStatus?.toLowerCase() === 'pending' ||
+                                        (paymentStatus?.toLowerCase() === 'initiated' && rawOrderStatus?.toLowerCase() === 'pending'))
+                                )
+                            ) && (
+                                    <View style={[styles.paidBadge, { marginTop: hp('0.5%') }]}>
+                                        <Ionicons name="checkmark-circle" size={wp('3%')} color="#27AE60" />
+                                        <Text style={styles.paidBadgeText}>
+                                            {(paymentStatus?.toLowerCase() === 'initiated' && rawOrderStatus?.toLowerCase() === 'pending')
+                                                ? 'Payment Initiated'
+                                                : 'Paid successfully'}
+                                        </Text>
+                                    </View>
+                                )}
                         </View>
                     </View>
 
@@ -643,7 +793,7 @@ const OrderTrackingScreen = () => {
                             <BillSection billCalculations={billCalculations} />
                         )}
                     </View>
-                    {['packed', 'assigned', 'dispatched', 'delivered'].includes(orderStatus) && (
+                    {['packed', 'assigned', 'dispatched', 'delivered'].includes(effectiveOrderStatus) && (
                         <TouchableOpacity
                             style={styles.downloadBillContainer}
                             onPress={() => {
@@ -675,7 +825,7 @@ const OrderTrackingScreen = () => {
                         </View>
                         <View>
                             <Text style={styles.orderDetailsKeyText}>Payment</Text>
-                            <Text style={styles.orderDetailsValueText}>{paymentMethod}</Text>
+                            <Text style={styles.orderDetailsValueText}>{getPaymentLabel(paymentMethod)}</Text>
                         </View>
                         <View>
                             <Text style={styles.orderDetailsKeyText}>Deliver to</Text>
@@ -709,7 +859,19 @@ const OrderTrackingScreen = () => {
                             </View>
                         </View>
                     )}
-                    {['placed', 'accepted', 'packed'].includes(orderStatus) && (
+
+                    {canRetryPayment && !hasOnlinePaid && (
+                        <TouchableOpacity onPress={handleRetryPayment}>
+                            <LinearGradient colors={['#27AE60', '#58D68D']}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 0 }}
+                                style={styles.cancelButtonGradient}
+                            >
+                                <Text style={styles.cancelButtonText}>Retry Payment</Text>
+                            </LinearGradient>
+                        </TouchableOpacity>
+                    )}
+                    {['pending', 'placed', 'accepted', 'packed'].includes(effectiveOrderStatus) && (
                         <TouchableOpacity onPress={() => setShowCancelModal(true)}>
                             <LinearGradient colors={['#F25000', '#FF7B3A']}
                                 start={{ x: 0, y: 0 }}

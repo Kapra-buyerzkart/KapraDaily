@@ -39,6 +39,14 @@ const MyOrdersProductCard = (props) => {
         }
     };
 
+    const getPaymentLabel = (method) => {
+        if (!method) return 'Cash On Delivery'
+        const m = method.toUpperCase()
+        if (m === 'COD') return 'Cash On Delivery'
+        if (m === 'ONLINE' || m === 'UPI' || m === 'PREPAID') return 'Online Payment'
+        return method
+    }
+
     const navigation = useNavigation()
 
     return (
@@ -59,7 +67,7 @@ const MyOrdersProductCard = (props) => {
                         <Image style={styles.successIcon} source={require('../assets/images/success.png')} />
                         <Text style={Platform.OS === 'android' ? [styles.homeText, {
                             top: hp('0.1')
-                        }] : styles.homeText}>{itemData.orderStatusText || itemData.status}</Text>
+                        }] : styles.homeText}>{itemData.orderStatusText || itemData.status || getPaymentLabel(itemData.paymentMethod)}</Text>
                     </View>
                 </View>
                 <View style={styles.orderMiddleView}>

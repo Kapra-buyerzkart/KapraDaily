@@ -10,8 +10,11 @@ import { FONTS } from '../styles/typography';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { LoaderContext } from '../context/loaderContext';
 import { CartContext } from '../context/CartContext';
-import { createOrderApi, confirmCodApi } from '../api/orderService';
+import { createOrderApi, confirmCodApi, getOrderDetailsApi, reorderApi } from '../api/orderService';
 import { getPaymentModesApi } from '../api/configService';
+import { createRazorpayOrderApi, verifyRazorpayPaymentApi } from '../api/paymentService';
+import RazorpayCheckout from 'react-native-razorpay';
+import { AppContext } from '../context/appContext';
 import BillSection from '../components/BillSection';
 import StatusModal from '../components/StatusModal';
 import DeliverySlotModal from '../components/DeliverySlotModal';
@@ -27,7 +30,11 @@ const CheckoutScreen = () => {
         selectedDate,
         pincodeAreaId,
         preloadedBillCalculations,
-        preloadedCartSummary
+        preloadedCartSummary,
+        orderId: resumeOrderId,
+        razorpayOrderId: resumeRazorpayOrderId,
+        razorpayAmount: resumeRazorpayAmount,
+        razorpayKeyId: resumeRazorpayKeyId
     } = route.params || {};
 
     const {
@@ -36,10 +43,12 @@ const CheckoutScreen = () => {
         clearCart,
         clearSelectedAddress,
         getCartSummary,
+        refreshCart,
         error: cartError,
         addresses
     } = useContext(CartContext);
     const { showLoader } = useContext(LoaderContext);
+    const { profile } = useContext(AppContext);
 
     // Modal state
     const [statusModalVisible, setStatusModalVisible] = useState(false);
@@ -125,13 +134,34 @@ const CheckoutScreen = () => {
         const fetchPaymentModes = async () => {
             try {
                 const response = await getPaymentModesApi();
+                console.log('💳 [CHECKOUT] Fetched Payment Modes:', JSON.stringify(response?.data, null, 2));
+
                 if (response?.success && response?.data) {
-                    setPaymentModes(response.data);
-                    const codMode = response.data.find(m => m.paymentModeName?.toUpperCase() === 'COD');
+                    let modes = [...response.data];
+
+                    // Check if an online payment mode exists
+                    const hasOnline = modes.some(m =>
+                        ['online', 'prepaid', 'razorpay', 'upi'].includes(m.paymentModeName?.toLowerCase())
+                    );
+
+                    // FOR TESTING: If no online mode is returned by backend, inject one 
+                    // so the Razorpay implementation can be tested.
+                    if (!hasOnline) {
+                        console.log('💳 [CHECKOUT] Injecting Online mode for testing purposes.');
+                        modes.push({
+                            paymentModeId: 'online_test_mode',
+                            paymentModeName: 'Online',
+                            description: 'UPI, Cards, Net Banking'
+                        });
+                    }
+
+                    setPaymentModes(modes);
+
+                    const codMode = modes.find(m => m.paymentModeName?.toUpperCase() === 'COD');
                     if (codMode) {
                         setPaymentMethod(codMode.paymentModeName);
-                    } else if (response.data.length > 0) {
-                        setPaymentMethod(response.data[0].paymentModeName);
+                    } else if (modes.length > 0) {
+                        setPaymentMethod(modes[0].paymentModeName);
                     }
                 }
             } catch (error) {
@@ -150,14 +180,25 @@ const CheckoutScreen = () => {
             return;
         }
 
+        const onlineTerms = ['online', 'prepaid', 'razorpay', 'upi'];
+        const isOnlinePayment = onlineTerms.includes(paymentMethod?.toLowerCase());
+
         try {
             showLoader(true);
+
+            if (resumeOrderId) {
+                // Skip creation, go straight to payment logic
+                console.log('🔄 [CHECKOUT] Resuming payment for existing order:', resumeOrderId);
+                // When resuming, we use the provided razorpay details if available
+                await handlePaymentFlow(resumeOrderId, resumeOrderId, resumeRazorpayOrderId, resumeRazorpayAmount, resumeRazorpayKeyId);
+                return;
+            }
 
             const createPayload = {
                 cartId: cartSummary?.cartId || cartItems?.[0]?.cartId,
                 shippingAddressId: currentSelectedAddress?.id || selectedAddress?.id,
                 billingAddressId: currentSelectedAddress?.id || selectedAddress?.id,
-                paymentMethod: paymentMethod, // Dynamically selected
+                paymentMethod: isOnlinePayment ? "online" : paymentMethod,
                 ifMatchCartVersion: cartSummary?.cartVersion,
                 deliverySlotDate: deliveryType === 'slot'
                     ? (chosenSlot?.date?.includes('T') ? chosenSlot.date.split('T')[0] : chosenSlot?.date || selectedDate)
@@ -173,34 +214,35 @@ const CheckoutScreen = () => {
             console.log('📦 [CHECKOUT] Creating Order Payload:', JSON.stringify(createPayload, null, 2));
             const createResponse = await createOrderApi(createPayload);
             console.log('📦 [CHECKOUT] Create Response:', JSON.stringify(createResponse, null, 2));
-
             if (createResponse?.success && createResponse?.data?.orderId) {
                 const orderId = createResponse.data.orderId;
+                const orderNumber = createResponse.data.orderNumber || orderId;
 
-                // Confirm COD
-                const confirmResponse = await confirmCodApi(orderId);
-                console.log('📦 [CHECKOUT] Confirm COD Response:', JSON.stringify(confirmResponse, null, 2));
-
-                if (confirmResponse?.success) {
-                    await clearCart(); // Local clear
-                    if (clearSelectedAddress) clearSelectedAddress(); // Clear selected address
-                    navigation.navigate('OrderSuccessScreen', {
-                        orderId: createResponse.data.orderId,
-                        orderNumber: createResponse.data.orderNumber || createResponse.data.orderId,
-                        paymentMethod: paymentMethod,
-                        totalItems: cartItems?.length || 0,
-                        totalAmount: billCalculations?.toPay || 0,
-                        deliveryMode: deliveryType === 'slot' ? 'slotted' : 'express',
-                        deliverySlot: chosenSlot ? `${chosenSlot.dateDisplay} | ${chosenSlot.slotDisplay}` : null,
-                        address: currentSelectedAddress?.address || selectedAddress?.address || '',
-                    });
+                if (isOnlinePayment) {
+                    await handlePaymentFlow(orderId, orderNumber);
                 } else {
-                    setStatusType('error');
-                    setStatusTitle('Error');
-                    setStatusMessage(confirmResponse?.message || 'Failed to confirm COD order');
-                    setStatusModalVisible(true);
+                    // --- COD FLOW ---
+                    const confirmResponse = await confirmCodApi(orderId);
+                    if (confirmResponse?.success) {
+                        await finalizeOrder(createResponse.data);
+                    } else {
+                        showLoader(false);
+                        setStatusType('error');
+                        setStatusTitle('Error');
+                        setStatusMessage(confirmResponse?.message || 'Failed to confirm COD order');
+                        setStatusModalVisible(true);
+                    }
                 }
+            } else if (createResponse?.status === 'CART_CONFLICT') {
+                console.log('🔄 [CHECKOUT] Conflict detected, refreshing cart...');
+                await refreshCart();
+                showLoader(false);
+                setStatusType('error');
+                setStatusTitle('Cart Updated');
+                setStatusMessage('Your cart was updated during checkout. Please try confirming your order again.');
+                setStatusModalVisible(true);
             } else {
+                showLoader(false);
                 setStatusType('error');
                 setStatusTitle('Error');
                 setStatusMessage(createResponse?.message || 'Failed to create order');
@@ -208,13 +250,193 @@ const CheckoutScreen = () => {
             }
         } catch (error) {
             console.error('📦 [CHECKOUT] Order Error:', error);
+            showLoader(false);
             setStatusType('error');
             setStatusTitle('Error');
             setStatusMessage('An unexpected error occurred during checkout');
             setStatusModalVisible(true);
-        } finally {
+        }
+    };
+
+    const handlePaymentFlow = async (orderId, orderNumber, passedRzpOrderId, passedAmount, passedKeyId) => {
+        try {
+            let razorpayOrderId = passedRzpOrderId;
+            let amount = passedAmount;
+            let keyId = passedKeyId;
+
+            if (!razorpayOrderId || !amount || !keyId) {
+                console.log('💳 [RAZORPAY] Initiating Payment Flow for Order:', orderId);
+                const rzpCreateResponse = await createRazorpayOrderApi({ orderId });
+                console.log('💳 [RAZORPAY] Create Response:', JSON.stringify(rzpCreateResponse, null, 2));
+
+                if (rzpCreateResponse?.success && rzpCreateResponse?.data) {
+                    keyId = rzpCreateResponse.data.keyId;
+                    razorpayOrderId = rzpCreateResponse.data.razorpayOrderId;
+                    amount = rzpCreateResponse.data.amount;
+                } else {
+                    showLoader(false);
+                    setStatusType('error');
+                    setStatusTitle('Error');
+                    setStatusMessage(rzpCreateResponse?.message || 'Failed to initiate payment');
+                    setStatusModalVisible(true);
+                    return;
+                }
+            }
+
+            const options = {
+                key: keyId,
+                amount: amount,
+                currency: "INR",
+                name: "Kapra Daily",
+                description: `Payment for Order #${orderNumber}`,
+                order_id: razorpayOrderId,
+                prefill: {
+                    email: profile?.email || '',
+                    contact: profile?.phone || currentSelectedAddress?.phone || ''
+                },
+                theme: { color: "#F25000" }
+            };
+
+            showLoader(false);
+            setTimeout(async () => {
+                try {
+                    const sdkResponse = await RazorpayCheckout.open(options);
+                    showLoader(true);
+                    const verifyPayload = {
+                        orderId: orderId,
+                        razorpayOrderId: sdkResponse.razorpay_order_id,
+                        razorpayPaymentId: sdkResponse.razorpay_payment_id,
+                        razorpaySignature: sdkResponse.razorpay_signature,
+                        amount: Number(amount)
+                    };
+
+                    let verifyResponse;
+                    let retryCount = 0;
+                    const maxRetries = 1; // Initial attempt + 1 retry = 2 attempts total
+
+                    const attemptVerification = async () => {
+                        try {
+                            console.log(`🔍 [RAZORPAY] Verification Attempt ${retryCount + 1}...`);
+                            const response = await verifyRazorpayPaymentApi(verifyPayload);
+                            return response;
+                        } catch (e) {
+                            console.error(`⚠️ [RAZORPAY] Verification Attempt ${retryCount + 1} Error:`, e);
+                            return null;
+                        }
+                    };
+
+                    verifyResponse = await attemptVerification();
+
+                    // Retry logic if failed or pending
+                    while (
+                        (!verifyResponse?.success || verifyResponse?.status === 'pending') &&
+                        retryCount < maxRetries
+                    ) {
+                        retryCount++;
+                        console.log(`🔄 [RAZORPAY] Retrying verification (Count: ${retryCount}) in 3s...`);
+                        await new Promise(resolve => setTimeout(resolve, 3000));
+                        verifyResponse = await attemptVerification();
+                    }
+
+                    if (verifyResponse?.success) {
+                        await finalizeOrder({ orderId, orderNumber });
+                    } else if (verifyResponse?.status === 'pending') {
+                        showLoader(false);
+                        navigation.navigate('OrderPendingScreen', {
+                            orderId,
+                            orderNumber,
+                            razorpayOrderId: sdkResponse.razorpay_order_id,
+                            razorpayAmount: amount,
+                            razorpayKeyId: keyId
+                        });
+                    } else {
+                        handleVerificationFailure(orderId, { orderId, orderNumber }, sdkResponse, keyId, amount);
+                    }
+                } catch (sdkError) {
+                    showLoader(false);
+                    navigation.navigate('OrderFailedScreen', {
+                        orderId,
+                        orderNumber,
+                        paymentMethod: paymentMethod || 'online',
+                        totalItems: cartItems?.length || 0,
+                        totalAmount: billCalculations?.toPay || amount || 0,
+                        errorMessage: sdkError?.description || 'Payment failed.'
+                    });
+                    refreshCart();
+                }
+            }, 200);
+        } catch (error) {
+            console.error('Payment Flow Error:', error);
             showLoader(false);
         }
+    };
+
+    const handleVerificationFailure = async (orderId, orderData, sdkResponse, keyId, amount) => {
+        console.log('⚠️ [RAZORPAY] Verification failed or timed out. Checking order details...');
+        setStatusType('info');
+        setStatusTitle('Verifying Payment...');
+        setStatusMessage('Your payment verification is taking longer than expected. Please wait...');
+        setStatusModalVisible(true);
+
+        // Wait for 3 seconds as suggested
+        setTimeout(async () => {
+            try {
+                const response = await getOrderDetailsApi(orderId);
+                console.log('🔍 [RAZORPAY] Order Details Check:', response?.data?.orderStatusKey);
+
+                if (response?.success && response?.data?.orderStatusKey?.toLowerCase() === 'placed') {
+                    setStatusModalVisible(false);
+                    await finalizeOrder(orderData);
+                } else if (response?.data?.orderStatusKey?.toLowerCase() === 'pending') {
+                    setStatusModalVisible(false);
+                    showLoader(false);
+                    navigation.navigate('OrderPendingScreen', {
+                        orderId: orderId,
+                        orderNumber: orderData.orderNumber || orderData.orderId,
+                        razorpayOrderId: sdkResponse?.razorpay_order_id,
+                        razorpayAmount: amount,
+                        razorpayKeyId: keyId
+                    });
+                } else {
+                    setStatusModalVisible(false);
+                    showLoader(false);
+                    navigation.navigate('OrderFailedScreen', {
+                        orderId: orderId,
+                        orderNumber: orderData.orderNumber || orderData.orderId,
+                        paymentMethod: paymentMethod,
+                        totalItems: cartItems?.length || 0,
+                        totalAmount: billCalculations?.toPay || 0,
+                        errorMessage: 'We could not verify your payment. Please check your order status in the My Orders section.'
+                    });
+
+                    // Sync cart state
+                    refreshCart();
+                }
+            } catch (err) {
+                console.error('Error fetching order details for verification fallback:', err);
+                showLoader(false);
+                setStatusType('error');
+                setStatusTitle('Verification Error');
+                setStatusMessage('Something went wrong during final verification.');
+                setStatusModalVisible(true);
+            }
+        }, 3000);
+    };
+
+    const finalizeOrder = async (orderData) => {
+        await clearCart(); // Local clear
+        if (clearSelectedAddress) clearSelectedAddress(); // Clear selected address
+        showLoader(false);
+        navigation.navigate('OrderSuccessScreen', {
+            orderId: orderData.orderId,
+            orderNumber: orderData.orderNumber || orderData.orderId,
+            paymentMethod: paymentMethod,
+            totalItems: cartItems?.length || 0,
+            totalAmount: billCalculations?.toPay || 0,
+            deliveryMode: deliveryType === 'slot' ? 'slotted' : 'express',
+            deliverySlot: chosenSlot ? `${chosenSlot.dateDisplay} | ${chosenSlot.slotDisplay}` : null,
+            address: currentSelectedAddress?.address || selectedAddress?.address || '',
+        });
     };
 
     const handleModalClose = () => {

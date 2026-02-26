@@ -687,6 +687,7 @@ export const CartProvider = ({ children }) => {
         updateCartItemQuantity,
         loadCart,
         getCartSummary,
+        refreshCart,
         clearCart,
         applyCoupon,
         removeCoupon,
