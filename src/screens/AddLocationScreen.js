@@ -95,27 +95,40 @@ const AddLocationScreen = () => {
     const getCurrentLocation = (showLoader = false) => {
         if (showLoader) setIsLoading(true);
         console.log('📍 [GEOLOCATION] Fetching current position...');
+
+        const onSuccess = (position) => {
+            const { latitude, longitude } = position.coords;
+            console.log('📍 [GEOLOCATION] Position received:', latitude, longitude);
+            const newRegion = {
+                ...region,
+                latitude,
+                longitude,
+            };
+            setRegion(newRegion);
+            reverseGeocode(latitude, longitude, !isEditMode);
+            if (showLoader) setIsLoading(false);
+        };
+
+        const onFinalError = (error) => {
+            console.warn('📍 [GEOLOCATION] Final Error:', error);
+            if (!isEditMode) setIsInitialLoading(false);
+            if (showLoader) setIsLoading(false);
+            const msg = error.code === 1 ? 'Permission denied' : error.code === 2 ? 'Position unavailable' : error.code === 3 ? 'Timeout' : 'Failed to fetch location';
+            Toast.show(msg, Toast.SHORT);
+        };
+
+        // Try high accuracy first, fallback to low accuracy
         Geolocation.getCurrentPosition(
-            (position) => {
-                const { latitude, longitude } = position.coords;
-                console.log('📍 [GEOLOCATION] Position received:', latitude, longitude);
-                const newRegion = {
-                    ...region,
-                    latitude,
-                    longitude,
-                };
-                setRegion(newRegion);
-                reverseGeocode(latitude, longitude, !isEditMode);
-                if (showLoader) setIsLoading(false);
-            },
+            onSuccess,
             (error) => {
-                console.warn('📍 [GEOLOCATION] Error:', error);
-                if (!isEditMode) setIsInitialLoading(false);
-                if (showLoader) setIsLoading(false);
-                const msg = error.code === 1 ? 'Permission denied' : error.code === 2 ? 'Position unavailable' : error.code === 3 ? 'Timeout' : 'Failed to fetch location';
-                Toast.show(msg, Toast.SHORT);
+                console.warn('📍 [GEOLOCATION] High accuracy failed, trying low accuracy...', error.message);
+                Geolocation.getCurrentPosition(
+                    onSuccess,
+                    onFinalError,
+                    { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 }
+                );
             },
-            { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
         );
     };
 
@@ -254,7 +267,7 @@ const AddLocationScreen = () => {
 
     return (
         <>
-            {isInitialLoading && <CustomLoader visible={isInitialLoading} text="Fetching your location..." />}
+            <CustomLoader visible={isInitialLoading} text="Fetching your location..." />
             <SafeAreaView edges={['top']} style={Platform.OS === "android" ? [styles.mainContainer, {
                 paddingBottom: insets.bottom
             }] : styles.mainContainer}>

@@ -78,9 +78,10 @@ const OrderSuccessScreen = () => {
     const displayDeliveryMode = orderDetails?.deliveryMode || deliveryMode || 'express'
     const displayDeliverySlot = deliverySlot || (orderDetails?.deliverySlotDate ? `${orderDetails.deliverySlotDate} | ${orderDetails.deliverySlotTime}` : null)
     const addressObj = address || orderDetails?.shippingAddress;
-    const displayAddress = addressObj
+    const displayAddress = address ? address : addressObj
         ? `${addressObj.addLine1 || ''} ${addressObj.addLine2 || ''}, ${addressObj.landmark || ''}, ${addressObj.district || ''}`.replace(/,\s*,/g, ',').replace(/^,|,$/g, '').trim()
         : '';
+    console.log('aaaaaaaaa', address, orderDetails);
 
     const getPaymentLabel = (method) => {
         if (!method) return 'Cash On Delivery'

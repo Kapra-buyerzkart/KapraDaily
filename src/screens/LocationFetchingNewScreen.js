@@ -326,20 +326,35 @@ const LocationFetchingNewScreen = ({ navigation }) => {
 
     const fetchLocation = () => {
         setLoading(true);
+
+        const onSuccess = (position) => {
+            setRegion({
+                latitude: position?.coords?.latitude,
+                longitude: position?.coords?.longitude,
+                latitudeDelta: 0.008,
+                longitudeDelta: 0.008,
+            });
+            reverseGeocode(position.coords.latitude, position.coords.longitude);
+        };
+
+        const onFinalError = (error) => {
+            console.log('Location fetch final error', error);
+            setLoading(false); // Make sure loader is removed on failure
+            Toast.show('Failed to fetch location automatically.', Toast.SHORT);
+        };
+
+        // Try high accuracy first, fallback to low accuracy
         Geolocation.getCurrentPosition(
-            (position) => {
-                setRegion({
-                    latitude: position?.coords?.latitude,
-                    longitude: position?.coords?.longitude,
-                    latitudeDelta: 0.008,
-                    longitudeDelta: 0.008,
-                });
-                reverseGeocode(position.coords.latitude, position.coords.longitude);
-            },
+            onSuccess,
             (error) => {
-                console.log('Location fetch error', error);
+                console.log('High accuracy failed, trying low accuracy...', error);
+                Geolocation.getCurrentPosition(
+                    onSuccess,
+                    onFinalError,
+                    { enableHighAccuracy: false, timeout: 20000, maximumAge: 60000 }
+                );
             },
-            { enableHighAccuracy: false, timeout: 20000, maximumAge: 1000 }
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
         );
     };
 
@@ -817,7 +832,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
                                                 });
                                             }
                                             else {
-                                                Alert.alert("Alert","Please select an area")
+                                                Alert.alert("Alert", "Please select an area")
                                             }
                                         }}
                                         ButtonText={'Apply'}

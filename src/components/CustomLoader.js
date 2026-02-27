@@ -43,5 +43,6 @@ const styles = StyleSheet.create({
         fontFamily: FONTS.poppins.medium,
         fontSize: wp('3.5%'),
         color: '#000000',
+        textAlign: 'center',
     }
 });
