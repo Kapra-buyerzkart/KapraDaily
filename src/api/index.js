@@ -121,3 +121,10 @@ export const getAreasBySearch = async (search) => {
   console.log('search', search);
   return get(`/pincodearea/search?search=${search}`);
 };
+
+export const checkPhone = async (phoneNo) => {
+  const payload = {
+    phone: phoneNo
+  };
+  return post(`auth/checkphone`, payload)
+}

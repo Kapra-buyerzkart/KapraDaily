@@ -4,12 +4,39 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import { FONTS } from '../styles/typography'
 import { useNavigation, useRoute } from '@react-navigation/native'
-import { getAreasByPincode, sendRegisterOtp } from '../api'
+import { getAreasByPincode, registerUser, sendRegisterOtp } from '../api'
+import { useCart } from '../context/CartContext'
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const PINCODE_AREA_MAP = {
     '676519': ['Chungathara', 'Pukkottumanna', 'Manjeri'],
     '682001': ['Kochi', 'Edappally', 'Vyttila']
 }
+
+const ACCESS_TOKEN = 'ACCESS_TOKEN';
+const REFRESH_TOKEN = 'REFRESH_TOKEN';
+
+const setTokens = async (accessToken, refreshToken) => {
+    await AsyncStorage.multiSet([
+        [ACCESS_TOKEN, accessToken],
+        [REFRESH_TOKEN, refreshToken],
+    ]);
+};
+
+const mergeCustomerIdIntoProfile = async (custId) => {
+    // console.log('????????', custId)
+    const storedProfile = await AsyncStorage.getItem('profile');
+    const existingProfile = storedProfile ? JSON.parse(storedProfile) : {};
+
+    const updatedProfile = {
+        ...existingProfile,
+        custId,
+    };
+
+    // console.log('updatedProfile', updatedProfile)
+
+    await AsyncStorage.setItem('profile', JSON.stringify(updatedProfile));
+};
 
 const RegistrationScreen = () => {
 
@@ -24,8 +51,9 @@ const RegistrationScreen = () => {
     const [loading, setLoading] = useState(false)
 
     const route = useRoute()
+    const { showStatus } = useCart();
 
-    const { phone } = route.params || {}
+    const { registerToken, phone } = route.params || {}
 
     const navigation = useNavigation()
 
@@ -35,7 +63,7 @@ const RegistrationScreen = () => {
         if (value.length === 6) {
             try {
                 const response = await getAreasByPincode(value)
-                console.log('resss', response)
+                // console.log('resss', response)
 
                 // adjust based on your API response structure
                 setAreas(response?.data || [])
@@ -69,21 +97,63 @@ const RegistrationScreen = () => {
         try {
             setLoading(true)
 
-            const response = await sendRegisterOtp(phone)
-            console.log('OTP response:', response)
+            // const response = await sendRegisterOtp(phone)
+            // console.log('OTP response:', response)
 
-            if (response?.success === true) {
-                navigation.navigate('OtpScreen', {
-                    phone: phone,
-                    otpType: 'register',
-                    name: name,
-                    email: email,
-                    password: password,
-                    pincodeAreaId: selectedArea.pincodeAreaId
+            // if (response?.success === true) {
+            //     navigation.navigate('OtpScreen', {
+            //         phone: phone,
+            //         otpType: 'register',
+            //         name: name,
+            //         email: email,
+            //         password: password,
+            //         pincodeAreaId: selectedArea.pincodeAreaId
 
-                })
+            //     })
+            // } else {
+            //     alert(response?.message || 'Failed to send OTP')
+            // }
+            const payload = {
+                registerToken,
+                name,
+                email,
+                password,
+                whatsAppNo: '',
+                referCode: '',
+                pincodeAreaId: selectedArea.pincodeAreaId
+            }
+            const registerResponse = await registerUser(payload);
+            // console.log('Register User Response:', registerResponse);
+            // navigation.reset({
+            //     index: 0,
+            //     routes: [{ name: 'MainTabs' }],
+            // });
+            if (registerResponse?.success) {
+                showStatus({
+                    type: 'success',
+                    title: 'Success',
+                    message: 'Registration completed successfully',
+                    // onClose: () => navigation.navigate('LoginScreen')
+                    onClose: async () => {
+                        const { accessToken, refreshToken, custId } = registerResponse.data;
+                        await setTokens(accessToken, refreshToken);
+                        if (custId) {
+                            await mergeCustomerIdIntoProfile(custId);
+                        }
+
+                        navigation.reset({
+                            index: 0,
+                            routes: [{ name: 'MainTabs' }],
+                        });
+                    }
+
+                });
             } else {
-                alert(response?.message || 'Failed to send OTP')
+                showStatus({
+                    type: 'error',
+                    title: 'Error',
+                    message: registerResponse?.message || 'Registration failed'
+                });
             }
 
         } catch (error) {
@@ -96,7 +166,7 @@ const RegistrationScreen = () => {
 
     return (
         <SafeAreaView style={styles.mainContainer}>
-            {console.log("KKKK", phone)}
+            {/* {console.log("KKKK", phone)} */}
             <KeyboardAvoidingView
                 style={{ flex: 1 }}
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -184,7 +254,7 @@ const RegistrationScreen = () => {
                                 />
                             </View>
                         </View>
-                        {console.log('areas', areas)}
+                        {/* {console.log('areas', areas)} */}
                         {areas.length > 0 && (
                             <View style={styles.areaCard}>
                                 <Text style={styles.title}>Select your area</Text>
@@ -199,7 +269,7 @@ const RegistrationScreen = () => {
                                         }}
                                     >
                                         <Text style={styles.areaText}>{area.areaName}</Text>
-                                        {console.log('selectedArea', selectedArea)}
+                                        {/* {console.log('selectedArea', selectedArea)} */}
                                         {selectedArea?.areaName !== area?.areaName ? (<View style={styles.radioOuter} />) : (
                                             <Image style={styles.successIcon} source={require('../assets/images/success.png')} />
                                         )}
