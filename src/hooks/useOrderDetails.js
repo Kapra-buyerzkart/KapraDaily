@@ -20,15 +20,15 @@ export const useOrderDetails = (orderId, initialOrderData = null) => {
         if (!status) return 'placed';
         const s = String(status).toLowerCase().replace(/_/g, '').trim();
 
-        if (['pending', 'new', 'created'].includes(s)) return 'pending';
-        if (['placed'].includes(s)) return 'placed';
-        if (['confirmed', 'accepted', 'processing', 'orderaccepted'].includes(s)) return 'accepted';
-        if (['packed'].includes(s)) return 'packed';
-        if (['shipped', 'dispatched', 'outfordelivery'].includes(s)) return 'dispatched';
-        if (['assigned', 'deliveryagentaccepted'].includes(s)) return 'assigned';
-        if (['delivered', 'completed', 'received'].includes(s)) return 'delivered';
-        if (['cancelled'].includes(s)) return 'cancelled';
-        if (['returned', 'itemreturned'].includes(s)) return 'returned';
+        if (['pending', 'new', 'created', 'paymentpending'].includes(s)) return 'pending';
+        if (['placed', 'orderplaced'].includes(s)) return 'placed';
+        if (['confirmed', 'accepted', 'processing', 'orderaccepted', 'orderconfirmed'].includes(s)) return 'accepted';
+        if (['packed', 'orderpacked'].includes(s)) return 'packed';
+        if (['shipped', 'dispatched', 'outfordelivery', 'orderdispatched', 'ordershipped'].includes(s)) return 'dispatched';
+        if (['assigned', 'deliveryagentaccepted', 'orderassigned'].includes(s)) return 'assigned';
+        if (['delivered', 'completed', 'received', 'orderdelivered', 'ordercompleted'].includes(s)) return 'delivered';
+        if (['cancelled', 'ordercancelled'].includes(s)) return 'cancelled';
+        if (['returned', 'itemreturned', 'orderreturned'].includes(s)) return 'returned';
 
         return s;
     };
@@ -223,6 +223,7 @@ export const useOrderDetails = (orderId, initialOrderData = null) => {
             const latestStatus = timeline[timeline.length - 1];
             rawStatus = latestStatus.statusKey || latestStatus.orderStatusKey || rawStatus;
         }
+        console.log('📊 [ORDER STATUS DEBUG] rawStatus:', rawStatus, '→ mapped:', mapOrderStatus(rawStatus), '| header.orderStatusKey:', header.orderStatusKey, '| timeline last:', timeline.length > 0 ? timeline[timeline.length - 1] : 'none');
 
         return {
             orderDetails: header,

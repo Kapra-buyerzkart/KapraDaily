@@ -26,7 +26,10 @@ import Toast from 'react-native-simple-toast'
 const OrderTrackingScreen = () => {
     const navigation = useNavigation();
     const route = useRoute();
-    const { orderId, order: initialOrderData } = route.params || {};
+    const { orderId, order: initialOrderData, autoScrollToRetry } = route.params || {};
+
+    const scrollViewRef = React.useRef(null);
+    const [retryYOffset, setRetryYOffset] = useState(0);
 
     const {
         loading,
@@ -109,6 +112,35 @@ const OrderTrackingScreen = () => {
     const [isRatingModalVisible, setIsRatingModalVisible] = useState(false);
     const [ratingType, setRatingType] = useState('order'); // 'order' or 'agent'
     const [pendingRating, setPendingRating] = useState(0);
+
+    useFocusEffect(
+        useCallback(() => {
+            if (autoScrollToRetry && retryYOffset > 0 && scrollViewRef.current) {
+                // Slight delay to ensure layout is complete before scrolling
+                setTimeout(() => {
+                    scrollViewRef.current.scrollTo({
+                        y: retryYOffset - hp('5%'), // Scroll slightly above the button for context
+                        animated: true
+                    });
+                }, 500);
+            }
+        }, [autoScrollToRetry, retryYOffset])
+    );
+
+    useFocusEffect(
+        useCallback(() => {
+            if (autoScrollToRetry && retryYOffset > 0 && scrollViewRef.current) {
+                // Slight delay to ensure layout is complete before scrolling
+                setTimeout(() => {
+                    scrollViewRef.current.scrollTo({
+                        y: retryYOffset - hp('10%'), // Scroll slightly above the button for context
+                        animated: true
+                    });
+                }, 500);
+            }
+        }, [autoScrollToRetry, retryYOffset])
+    );
+
     const [statusModal, setStatusModal] = useState({
         visible: false,
         type: 'error',
@@ -200,13 +232,14 @@ const OrderTrackingScreen = () => {
                     })
                 );
             } else {
-                setStatusModal({
-                    visible: true,
-                    type: 'error',
-                    title: 'Verification Pending',
-                    message: 'Payment was received but verification is taking time. Please check back shortly.'
+                // Verify API returned success: false — show pending screen
+                navigation.navigate('OrderPendingScreen', {
+                    orderId,
+                    orderNumber: displayOrderId,
+                    razorpayOrderId: sdkResponse.razorpay_order_id,
+                    razorpayAmount: razorpayAmount,
+                    razorpayKeyId: razorpayKeyId
                 });
-                refreshOrder?.(true);
             }
         } catch (sdkError) {
             console.error('❌ [RETRY] Error:', sdkError);
@@ -756,6 +789,27 @@ const OrderTrackingScreen = () => {
                                     </View>
                                 )}
                         </View>
+                    </View>
+
+                    {/* Retry Button Area */}
+                    <View
+                        style={styles.retryContainerWrapper}
+                        onLayout={(event) => {
+                            const { y } = event.nativeEvent.layout;
+                            setRetryYOffset(y);
+                        }}
+                    >
+                        {canRetryPayment && !hasOnlinePaid && (
+                            <TouchableOpacity onPress={handleRetryPayment}>
+                                <LinearGradient colors={['#27AE60', '#58D68D']}
+                                    start={{ x: 0, y: 0 }}
+                                    end={{ x: 1, y: 0 }}
+                                    style={styles.cancelButtonGradient}
+                                >
+                                    <Text style={styles.cancelButtonText}>Retry Payment</Text>
+                                </LinearGradient>
+                            </TouchableOpacity>
+                        )}
                     </View>
 
                     <View style={styles.productsMainContainer}>
@@ -1403,6 +1457,11 @@ const styles = StyleSheet.create({
         fontFamily: FONTS.poppins.light,
         fontSize: wp('3.25%'),
         color: "#8A8A8A"
+    },
+    retryContainerWrapper: {
+        width: wp('90.7%'),
+        alignItems: 'center',
+        marginTop: hp('1%')
     },
     orderDetailsValueText: {
         color: '#2B2B2B',

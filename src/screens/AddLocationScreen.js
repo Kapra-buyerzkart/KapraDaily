@@ -204,10 +204,27 @@ const AddLocationScreen = () => {
         }
     };
 
+    const lastGeocodedRegion = React.useRef(null);
+
+    const isSignificantMove = (newRegion, oldRegion) => {
+        if (!oldRegion) return true;
+        const latDiff = Math.abs(newRegion.latitude - oldRegion.latitude);
+        const lngDiff = Math.abs(newRegion.longitude - oldRegion.longitude);
+        // Approximately >5-10 meters to trigger a new reverse geocode
+        return latDiff > 0.0001 || lngDiff > 0.0001;
+    };
+
     const onRegionChangeComplete = (newRegion) => {
-        setRegion(newRegion);
-        // Automatically geocode the center of the map whenever it stops moving
-        reverseGeocode(newRegion.latitude, newRegion.longitude);
+        // Do NOT tightly bind setRegion(newRegion) here. 
+        // MapView already moves freely, and strictly re-applying `region` causes floating-point update loops (bouncing).
+        // Only setRegion externally when jumping (e.g., from search autocomplete or current location button).
+
+        if (isSignificantMove(newRegion, lastGeocodedRegion.current)) {
+            // Automatically geocode the center of the map whenever it significantly moves
+            setRegion(newRegion); // Only sync region state implicitly on significant stops
+            reverseGeocode(newRegion.latitude, newRegion.longitude);
+            lastGeocodedRegion.current = newRegion;
+        }
     };
 
     const handleSave = async () => {
@@ -298,7 +315,7 @@ const AddLocationScreen = () => {
                     <View style={[styles.searchAbsoluteContainer, { zIndex: 999 }]}>
                         <GooglePlacesAutocomplete
                             placeholder="Search Location"
-                            placeholderTextColor="#DADADA"
+                            placeholderTextColor="#000000"
                             fetchDetails={true}
                             onPress={(data, details = null) => {
                                 if (details) {
@@ -464,7 +481,7 @@ const AddLocationScreen = () => {
                                     onChangeText={setAddLine2}
                                 />
                             </View>
-                            <View style={styles.pincodeContainer}>
+                            <View style={[styles.pincodeContainer, { zIndex: 10 }]}>
                                 <View style={[styles.inputWrapper, {
                                     width: wp('42%')
                                 }]}>

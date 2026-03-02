@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext, useCallback, useMemo, useRef, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppContext } from './appContext';
 import { Alert } from 'react-native';
 import Toast from 'react-native-simple-toast';
@@ -76,12 +77,18 @@ export const CartProvider = ({ children }) => {
                 : response?.data?.items || response?.data || [];
 
             if (addressList.length > 0) {
+                const storedSelectedId = await AsyncStorage.getItem('selectedAddressId');
+
                 let selectionFound = false;
                 const mappedAddresses = addressList.map(addr => {
-                    const isSelected = false;
-
                     const validId = addr.custAddressId || addr.addressId || addr.id;
                     if (!validId) console.warn('⚠️ [ADDRESS] Found address with no ID:', addr);
+
+                    let isSelected = false;
+                    if (storedSelectedId && String(validId) === storedSelectedId) {
+                        isSelected = true;
+                        selectionFound = true;
+                    }
 
                     // If mapping "raw", ensure it has the ID we expect for updates
                     const rawWithId = { ...addr, addressId: validId };
@@ -126,11 +133,17 @@ export const CartProvider = ({ children }) => {
 
     // Auto-select address removed
 
-    const onSelectAddress = useCallback((addressId) => {
+    const onSelectAddress = useCallback(async (addressId) => {
         console.log('👆 [ADDRESS] Selecting addressId:', addressId);
         if (!addressId) {
             console.warn('⚠️ [ADDRESS] Attempted to select invalid addressId:', addressId);
             return;
+        }
+
+        try {
+            await AsyncStorage.setItem('selectedAddressId', String(addressId));
+        } catch (e) {
+            console.log('Error saving selectedAddressId', e);
         }
 
         // We must extract the address synchronously before running state setter, 
@@ -219,7 +232,12 @@ export const CartProvider = ({ children }) => {
 
     // Ensure at least one address is selected removed
 
-    const clearSelectedAddress = useCallback(() => {
+    const clearSelectedAddress = useCallback(async () => {
+        try {
+            await AsyncStorage.removeItem('selectedAddressId');
+        } catch (e) {
+            console.log('Error clearing selectedAddressId', e);
+        }
         setAddresses(prev => prev.map(item => ({ ...item, selected: false })));
     }, []);
 
@@ -427,7 +445,19 @@ export const CartProvider = ({ children }) => {
             console.warn('🛒 [REMOVE] Item not found for identifier:', identifier);
             return;
         }
-        setCartItems(prevItems => prevItems.filter(item => item !== removedItem));
+        setCartItems(prevItems => {
+            const newItems = prevItems.filter(item => item !== removedItem);
+            if (newItems.length === 0) {
+                // If cart is emptied manually, also void the selected address just like in clearCart
+                try {
+                    AsyncStorage.removeItem('selectedAddressId');
+                    setAddresses(prev => prev.map(a => ({ ...a, selected: false })));
+                } catch (e) {
+                    console.log('Error removing selectedAddressId', e);
+                }
+            }
+            return newItems;
+        });
 
         console.log('Removed from cart local:', cartItemId);
 
@@ -498,6 +528,15 @@ export const CartProvider = ({ children }) => {
         try {
             setCartItems([]);
             setCartSummary(null);
+
+            // Also clear the persistently selected address on checkout completion
+            try {
+                await AsyncStorage.removeItem('selectedAddressId');
+                setAddresses(prev => prev.map(item => ({ ...item, selected: false })));
+            } catch (clearErr) {
+                console.log('Error clearing selectedAddressId', clearErr);
+            }
+
             const version = cartVersionRef.current;
             const response = await clearCartApi(version, cartIdRef.current);
             console.log('Cart cleared:', response);
