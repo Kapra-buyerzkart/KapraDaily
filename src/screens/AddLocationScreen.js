@@ -45,15 +45,26 @@ const AddLocationScreen = () => {
     const [isAreasLoading, setIsAreasLoading] = useState(false);
     const [isGeocoding, setIsGeocoding] = useState(false);
 
+    const defaultCoords = { latitude: 10.0205, longitude: 76.3052 };
     const [region, setRegion] = useState({
-        latitude: Number(editAddress?.latitude) || 10.0205,
-        longitude: Number(editAddress?.longitude) || 76.3052,
+        latitude: Number(editAddress?.latitude) || defaultCoords.latitude,
+        longitude: Number(editAddress?.longitude) || defaultCoords.longitude,
         latitudeDelta: 0.005,
         longitudeDelta: 0.005,
     });
+    // Selected pin position (for save & geocode). Draggable marker uses this.
+    const [markerPosition, setMarkerPosition] = useState(() => ({
+        latitude: Number(editAddress?.latitude) || defaultCoords.latitude,
+        longitude: Number(editAddress?.longitude) || defaultCoords.longitude,
+    }));
 
     useEffect(() => {
-        if (!isEditMode) {
+        if (isEditMode && editAddress?.latitude != null && editAddress?.longitude != null) {
+            const lat = Number(editAddress.latitude);
+            const lng = Number(editAddress.longitude);
+            setRegion(r => ({ ...r, latitude: lat, longitude: lng }));
+            setMarkerPosition({ latitude: lat, longitude: lng });
+        } else {
             handleInitialLocation();
         }
     }, []);
@@ -105,6 +116,7 @@ const AddLocationScreen = () => {
                 longitude,
             };
             setRegion(newRegion);
+            setMarkerPosition({ latitude, longitude });
             reverseGeocode(latitude, longitude, !isEditMode);
             if (showLoader) setIsLoading(false);
         };
@@ -205,9 +217,9 @@ const AddLocationScreen = () => {
     };
 
     const onRegionChangeComplete = (newRegion) => {
+        // Selected position is the draggable marker only; panning the map does not change the pin.
+        // Keep region in sync for camera only (optional); we do not reverse-geocode on pan.
         setRegion(newRegion);
-        // Automatically geocode the center of the map whenever it stops moving
-        reverseGeocode(newRegion.latitude, newRegion.longitude);
     };
 
     const handleSave = async () => {
@@ -233,8 +245,8 @@ const AddLocationScreen = () => {
             pincode,
             pincodeAreaId,
             pincodeAreaName: items.find(i => i.value === pincodeAreaId)?.label || "",
-            latitude: Number(region.latitude),
-            longitude: Number(region.longitude),
+            latitude: Number(markerPosition.latitude),
+            longitude: Number(markerPosition.longitude),
             addressType,
             isDefaultBillingAddress: true,
             isDefaultShippingAddress: true
@@ -278,15 +290,21 @@ const AddLocationScreen = () => {
                         onRegionChangeComplete={onRegionChangeComplete}
                         showsUserLocation={true}
                         showsMyLocationButton={false}
-                    />
-                    {/* Fixed marker in the center of the map */}
-                    <View style={styles.fixedMarkerContainer} pointerEvents="none">
-                        <Image
-                            style={styles.markerIcon}
-                            source={require('../assets/images/location_four.png')}
+                    >
+                        <Marker
+                            coordinate={markerPosition}
+                            draggable
+                            onDragEnd={(e) => {
+                                const { latitude, longitude } = e.nativeEvent.coordinate;
+                                setMarkerPosition({ latitude, longitude });
+                                setRegion(r => ({ ...r, latitude, longitude }));
+                                reverseGeocode(latitude, longitude);
+                            }}
+                            image={require('../assets/images/location_four.png')}
+                            title="Delivery location"
                         />
-                    </View>
-                    {/* Re-center button */}
+                    </MapView>
+                    {/* Re-center to current location */}
                     <TouchableOpacity
                         style={styles.reCenterButton}
                         onPress={() => getCurrentLocation(true)}
@@ -298,13 +316,14 @@ const AddLocationScreen = () => {
                     <View style={[styles.searchAbsoluteContainer, { zIndex: 999 }]}>
                         <GooglePlacesAutocomplete
                             placeholder="Search Location"
-                            placeholderTextColor="#DADADA"
+                            placeholderTextColor="#000000"
                             fetchDetails={true}
                             onPress={(data, details = null) => {
                                 if (details) {
                                     const lat = details.geometry.location.lat;
                                     const lng = details.geometry.location.lng;
                                     setRegion(prev => ({ ...prev, latitude: lat, longitude: lng }));
+                                    setMarkerPosition({ latitude: lat, longitude: lng });
                                     reverseGeocode(lat, lng);
                                 }
                             }}
@@ -464,7 +483,7 @@ const AddLocationScreen = () => {
                                     onChangeText={setAddLine2}
                                 />
                             </View>
-                            <View style={styles.pincodeContainer}>
+                            <View style={[styles.pincodeContainer, { zIndex: 10 }]}>
                                 <View style={[styles.inputWrapper, {
                                     width: wp('42%')
                                 }]}>
@@ -718,8 +737,8 @@ const styles = StyleSheet.create({
         top: hp('22.5%') // Center of map height (45% / 2)
     },
     markerIcon: {
-        width: wp('5.6%'),
-        height: wp('7%'),
+        width: wp('2.6%'),
+        height: wp('3%'),
         tintColor: '#F25000'
     },
     delboyContainer: {

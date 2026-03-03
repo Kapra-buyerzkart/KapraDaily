@@ -1,11 +1,11 @@
-import { View, Text, StyleSheet, TouchableOpacity, Image, Platform, FlatList } from 'react-native'
-import React, { useContext, useState } from 'react'
+import { View, Text, StyleSheet, TouchableOpacity, Image, Platform, FlatList, BackHandler } from 'react-native'
+import React, { useContext, useState, useCallback } from 'react'
 import { AppContext } from '../context/appContext'
 import StoreUnavailable from '../components/StoreUnavailable'
 import LocationModal from '../components/LocationModal'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import AntDesign from 'react-native-vector-icons/AntDesign'
-import { useNavigation } from '@react-navigation/native'
+import { useNavigation, useFocusEffect } from '@react-navigation/native'
 import LinearGradient from 'react-native-linear-gradient'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import { FONTS } from '../styles/typography'
@@ -47,6 +47,22 @@ const MyOrdersScreen = () => {
         return unsubscribe;
     }, [navigation]);
     const navigation = useNavigation()
+
+    useFocusEffect(
+        useCallback(() => {
+            const onBackPress = () => {
+                if (navigation.canGoBack()) {
+                    navigation.goBack();
+                } else {
+                    navigation.navigate('HomeScreen');
+                }
+                return true; // Prevent default (closing the app)
+            };
+            const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+            return () => subscription.remove();
+        }, [navigation])
+    );
+
     return (
         <SafeAreaView style={styles.mainContainer}>
             <LinearGradient

@@ -312,7 +312,7 @@ const CheckoutScreen = () => {
 
                     let verifyResponse;
                     let retryCount = 0;
-                    const maxRetries = 1; // Initial attempt + 1 retry = 2 attempts total
+                    const maxRetries = 2; // Initial attempt + 2 retries = 3 attempts total
 
                     const attemptVerification = async () => {
                         try {
@@ -340,7 +340,8 @@ const CheckoutScreen = () => {
 
                     if (verifyResponse?.success) {
                         await finalizeOrder({ orderId, orderNumber });
-                    } else if (verifyResponse?.status === 'pending') {
+                    } else {
+                        // Verify API returned success: false — show pending screen
                         showLoader(false);
                         navigation.navigate('OrderPendingScreen', {
                             orderId,
@@ -349,11 +350,10 @@ const CheckoutScreen = () => {
                             razorpayAmount: amount,
                             razorpayKeyId: keyId
                         });
-                    } else {
-                        handleVerificationFailure(orderId, { orderId, orderNumber }, sdkResponse, keyId, amount);
                     }
                 } catch (sdkError) {
                     showLoader(false);
+                    if (clearSelectedAddress) clearSelectedAddress();
                     navigation.navigate('OrderFailedScreen', {
                         orderId,
                         orderNumber,
@@ -400,6 +400,7 @@ const CheckoutScreen = () => {
                 } else {
                     setStatusModalVisible(false);
                     showLoader(false);
+                    if (clearSelectedAddress) clearSelectedAddress();
                     navigation.navigate('OrderFailedScreen', {
                         orderId: orderId,
                         orderNumber: orderData.orderNumber || orderData.orderId,

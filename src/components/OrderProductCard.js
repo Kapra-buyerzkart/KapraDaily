@@ -59,11 +59,18 @@ const OrderProductCard = ({ item, orderStatus, onReturn }) => {
                         <Text style={[styles.returnStatusText, { color: '#D32F2F' }]}>Return Rejected</Text>
                     </View>
                 )}
-                {item.returnRefundStatus && (
-                    <View style={[styles.statusBadge, { backgroundColor: '#E3F2FD' }]}>
-                        <Text style={[styles.returnStatusText, { color: '#1E88E5' }]}>Refund: {item.returnRefundStatus}</Text>
-                    </View>
-                )}
+                {item.returnRefundStatus && (() => {
+                    const status = item.returnRefundStatus.toLowerCase();
+                    const isApproved = status.includes('approved') || status.includes('completed') || status.includes('refunded');
+                    const isRejected = status.includes('rejected') || status.includes('denied');
+                    const bgColor = isApproved ? '#E8F5E9' : isRejected ? '#FFEBEE' : '#E3F2FD';
+                    const textColor = isApproved ? '#2E7D32' : isRejected ? '#D32F2F' : '#1E88E5';
+                    return (
+                        <View style={[styles.statusBadge, { backgroundColor: bgColor }]}>
+                            <Text style={[styles.returnStatusText, { color: textColor }]}>Refund: {item.returnRefundStatus}</Text>
+                        </View>
+                    );
+                })()}
             </View>
         </View>
     )

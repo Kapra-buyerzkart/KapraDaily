@@ -53,7 +53,7 @@ const OrderFailedScreen = () => {
                 index: 0,
                 routes: [{
                     name: 'OrderTrackingScreen',
-                    params: { orderId }
+                    params: { orderId, autoScrollToRetry: true }
                 }],
             })
         );
@@ -96,9 +96,12 @@ const OrderFailedScreen = () => {
                             <MaterialCommunityIcons name="close" size={wp('15%')} color="#FF0000" />
                         </View>
                         <View style={styles.statusContainer}>
-                            <Text style={styles.statusText}>Payment Failed</Text>
+                            <Text style={[styles.statusText, { textAlign: 'center' }]}>{'Oops! \nPayment Failed'}</Text>
                             <Text style={styles.statusTextTwo}>
-                                {errorMessage || "Something went wrong with your transaction."}
+                                {"We're unable to process your payment at this time."}
+                            </Text>
+                            <Text style={[styles.statusTextTwo, { marginTop: hp('1%'), fontSize: wp('3%'), color: '#888888' }]}>
+                                {"If any amount has been debited, it will be automatically refunded to your account within the standard processing time."}
                             </Text>
                         </View>
                     </View>

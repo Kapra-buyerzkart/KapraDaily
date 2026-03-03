@@ -1,4 +1,5 @@
 import { View, Text, StyleSheet, Image, TouchableOpacity, Platform } from 'react-native'
+import AntDesign from 'react-native-vector-icons/AntDesign'
 import React from 'react'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { FONTS } from '../styles/typography';
@@ -64,10 +65,14 @@ const MyOrdersProductCard = (props) => {
                         }]}>{itemData.addressType || 'Home'}</Text>
                     </View>
                     <View style={styles.orderTopInnerView}>
-                        <Image style={styles.successIcon} source={require('../assets/images/success.png')} />
+                        {(itemData.orderStatusText || itemData.status || '').toLowerCase() === 'cancelled' ? (
+                            <AntDesign name="closecircle" size={wp('3.5%')} color="#E74C3C" style={{}} />
+                        ) : (
+                            <Image style={styles.successIcon} source={require('../assets/images/success.png')} />
+                        )}
                         <Text style={Platform.OS === 'android' ? [styles.homeText, {
                             top: hp('0.1')
-                        }] : styles.homeText}>{itemData.orderStatusText || itemData.status || getPaymentLabel(itemData.paymentMethod)}</Text>
+                        }, (itemData.orderStatusText || itemData.status || '').toLowerCase() === 'cancelled' && { color: '#E74C3C' }] : [styles.homeText, (itemData.orderStatusText || itemData.status || '').toLowerCase() === 'cancelled' && { color: '#E74C3C' }]}>{itemData.orderStatusText || itemData.status || getPaymentLabel(itemData.paymentMethod)}</Text>
                     </View>
                 </View>
                 <View style={styles.orderMiddleView}>
