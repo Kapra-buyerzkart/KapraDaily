@@ -737,8 +737,8 @@ const styles = StyleSheet.create({
         top: hp('22.5%') // Center of map height (45% / 2)
     },
     markerIcon: {
-        width: wp('5.6%'),
-        height: wp('7%'),
+        width: wp('2.6%'),
+        height: wp('3%'),
         tintColor: '#F25000'
     },
     delboyContainer: {
