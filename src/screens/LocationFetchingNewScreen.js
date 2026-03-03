@@ -519,8 +519,15 @@ const LocationFetchingNewScreen = ({ navigation }) => {
                     <AuthButton
                         FirstColor={'#D80000'}
                         SecondColor={'#FF7148'}
-                        OnPress={() => {
-                            // stopAutoNavigateTimer();
+                        OnPress={async () => {
+                            stopAutoNavigateTimer();
+                            let areaToPass = null;
+                            if (listOfLocations) {
+                                areaToPass = listOfLocations[0];
+                            }
+                            if (areaToPass) {
+                                await editPincode(areaToPass);
+                            }
                             setLocationNotFetched(false);
                             navigation.reset({
                                 index: 0,
@@ -536,7 +543,8 @@ const LocationFetchingNewScreen = ({ navigation }) => {
                                     },
                                 ],
                             });
-                        }}
+                        }
+                        }
                         FSize={14}
                         ButtonText={'Skip'}
                         ButtonWidth={20}
@@ -783,8 +791,16 @@ const LocationFetchingNewScreen = ({ navigation }) => {
                                     <AuthButton
                                         FirstColor={'#D71920'}
                                         SecondColor={'#F97C80'}
-                                        OnPress={() => {
-                                            // stopAutoNavigateTimer();
+                                        OnPress={async () => {
+                                            stopAutoNavigateTimer();
+                                            let areaToPass = null;
+                                            if (listOfLocations) {
+                                                areaToPass = listOfLocations[0];
+                                            }
+                                            if (areaToPass) {
+                                                await editPincode(areaToPass);
+                                            }
+
                                             setLocationSelectionModal(false);
                                             setLocationNotFetched(false);
                                             navigation.reset({
