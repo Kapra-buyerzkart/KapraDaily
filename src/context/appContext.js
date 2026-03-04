@@ -112,17 +112,44 @@ export const AppContextProvider = ({ children }) => {
   //   // setProfile(null);
   // }, []);
 
+  // const logout = async () => {
+  //   await AsyncStorage.clear();
+
+  //   setProfile(prev => {
+  //     if (!prev) return null;
+
+  //     const { pincode, ...rest } = prev;  // 🔥 remove pincode
+  //     return rest;
+  //   });
+
+  //   // setLocationNotFetched(false);
+  // };
+
   const logout = async () => {
-    await AsyncStorage.clear();
+    try {
+      const storedProfile = await AsyncStorage.getItem('profile');
+      const existingProfile = storedProfile ? JSON.parse(storedProfile) : {};
 
-    setProfile(prev => {
-      if (!prev) return null;
+      const updatedProfile = {
+        pincode: existingProfile.pincode ?? null,
+        pinAddress: existingProfile.pinAddress ?? '',
+        guestId: Math.floor(Math.random() * 9000000000) + 1000000000,
+      };
 
-      const { pincode, ...rest } = prev;  // 🔥 remove pincode
-      return rest;
-    });
+      await AsyncStorage.multiRemove([
+        'token',
+        'refreshToken',
+        'userId',
+        'authData'
+      ]);
 
-    // setLocationNotFetched(false);
+      await AsyncStorage.setItem('profile', JSON.stringify(updatedProfile));
+
+      setProfile(updatedProfile);
+
+    } catch (error) {
+      console.log('Logout error:', error);
+    }
   };
 
   const value = useMemo(() => ({
