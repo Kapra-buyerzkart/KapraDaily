@@ -324,6 +324,40 @@ const LocationFetchingNewScreen = ({ navigation }) => {
     };
 
 
+    // const fetchLocation = () => {
+    //     setLoading(true);
+
+    //     const onSuccess = (position) => {
+    //         setRegion({
+    //             latitude: position?.coords?.latitude,
+    //             longitude: position?.coords?.longitude,
+    //             latitudeDelta: 0.008,
+    //             longitudeDelta: 0.008,
+    //         });
+    //         reverseGeocode(position.coords.latitude, position.coords.longitude);
+    //     };
+
+    //     const onFinalError = (error) => {
+    //         console.log('Location fetch final error', error);
+    //         setLoading(false); // Make sure loader is removed on failure
+    //         Toast.show('Failed to fetch location automatically.', Toast.SHORT);
+    //     };
+
+    //     // Try high accuracy first, fallback to low accuracy
+    //     Geolocation.getCurrentPosition(
+    //         onSuccess,
+    //         (error) => {
+    //             console.log('High accuracy failed, trying low accuracy...', error);
+    //             Geolocation.getCurrentPosition(
+    //                 onSuccess,
+    //                 onFinalError,
+    //                 { enableHighAccuracy: false, timeout: 20000, maximumAge: 60000 }
+    //             );
+    //         },
+    //         { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    //     );
+    // };
+
     const fetchLocation = () => {
         setLoading(true);
 
@@ -334,27 +368,37 @@ const LocationFetchingNewScreen = ({ navigation }) => {
                 latitudeDelta: 0.008,
                 longitudeDelta: 0.008,
             });
+
             reverseGeocode(position.coords.latitude, position.coords.longitude);
+            setLoading(false);
         };
 
-        const onFinalError = (error) => {
-            console.log('Location fetch final error', error);
-            setLoading(false); // Make sure loader is removed on failure
+        const onError = (error) => {
+            console.log('Location error', error);
+            setLoading(false);
             Toast.show('Failed to fetch location automatically.', Toast.SHORT);
         };
 
-        // Try high accuracy first, fallback to low accuracy
+        // 1️⃣ Get cached location first (very fast)
         Geolocation.getCurrentPosition(
             onSuccess,
-            (error) => {
-                console.log('High accuracy failed, trying low accuracy...', error);
+            () => {
+                // 2️⃣ If cached fails, use high accuracy
                 Geolocation.getCurrentPosition(
                     onSuccess,
-                    onFinalError,
-                    { enableHighAccuracy: false, timeout: 20000, maximumAge: 60000 }
+                    onError,
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 15000,
+                        maximumAge: 0,
+                    }
                 );
             },
-            { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+            {
+                enableHighAccuracy: false,
+                timeout: 5000,
+                maximumAge: 600000, // allow cached location (10 minutes)
+            }
         );
     };
 
