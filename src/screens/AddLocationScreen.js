@@ -300,9 +300,13 @@ const AddLocationScreen = () => {
                                 setRegion(r => ({ ...r, latitude, longitude }));
                                 reverseGeocode(latitude, longitude);
                             }}
-                            image={require('../assets/images/location_four.png')}
                             title="Delivery location"
-                        />
+                        >
+                            <Image
+                                source={require('../assets/images/location_four.png')}
+                                style={{ width: wp('8%'), height: wp('10%'), resizeMode: 'contain', tintColor: '#F25000' }}
+                            />
+                        </Marker>
                     </MapView>
                     {/* Re-center to current location */}
                     <TouchableOpacity

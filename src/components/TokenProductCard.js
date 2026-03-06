@@ -6,9 +6,13 @@ import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-nat
 import LinearGradient from 'react-native-linear-gradient';
 import { FONTS } from '../styles/typography';
 import CONFIG from '../globals/config';
+import { useCart } from '../context/CartContext';
+import { useWishlist } from '../context/WishlistContext';
 
-const TokenProductCard = ({ item, onPress, onAdd, onToggleWishlist, isInWishlist }) => {
+const TokenProductCard = ({ item, onPress, onAdd, onToggleWishlist, isInWishlist: propIsInWishlist }) => {
     const [imageError, setImageError] = useState(false);
+    const { addToCart, cartItems, updateCartItemQuantity, removeFromCart } = useCart();
+    const { isInWishlist, toggleWishlist } = useWishlist();
 
     const productId = item?.productId || item?.id;
     const name = item?.prName || item?.name || 'Lorem Ipsum is simply dummy textsimply dummy';
@@ -18,7 +22,12 @@ const TokenProductCard = ({ item, onPress, onAdd, onToggleWishlist, isInWishlist
     const weight = item?.weight || '1kg';
     const token = item?.token || '1B Token';
 
-    const liked = isInWishlist ? isInWishlist(productId) : false;
+    const liked = propIsInWishlist ? propIsInWishlist(productId) : isInWishlist(productId);
+
+    // Find quantity in cart
+    const cartItem = cartItems.find(i => String(i.productId || i.id) === String(productId));
+    const quantity = cartItem?.quantity || cartItem?.addedQty || 0;
+    const cartItemId = cartItem?.cartItemId || productId;
 
     const imageSource = useMemo(() => {
         const img = item?.featuredImage || item?.image || item?.img || item?.imageUrl;
@@ -40,13 +49,38 @@ const TokenProductCard = ({ item, onPress, onAdd, onToggleWishlist, isInWishlist
             {/* Top White Card Box */}
             <View style={styles.topCardBox}>
                 <View style={styles.topRow}>
-                    <TouchableOpacity onPress={() => onToggleWishlist && onToggleWishlist(item)} activeOpacity={0.8}>
+                    <TouchableOpacity onPress={() => onToggleWishlist ? onToggleWishlist(item) : toggleWishlist(item)} activeOpacity={0.8}>
                         <FontAwesome name={liked ? "heart" : "heart-o"} size={wp('5.5%')} color={liked ? "#FF0048" : "#979797"} />
                     </TouchableOpacity>
                     <Text style={styles.tokenText}>{token}</Text>
-                    <TouchableOpacity style={styles.plusIconCircle} onPress={onAdd}>
-                        <Entypo name="plus" size={wp('4.5%')} color="#F04B1B" />
-                    </TouchableOpacity>
+
+                    {quantity > 0 ? (
+                        <View style={styles.counterContainer}>
+                            <TouchableOpacity
+                                onPress={() => {
+                                    if (quantity === 1) {
+                                        removeFromCart(cartItemId);
+                                    } else {
+                                        updateCartItemQuantity(cartItemId, quantity - 1);
+                                    }
+                                }}
+                                style={styles.counterButton}
+                            >
+                                <Entypo name="minus" size={wp('3.5%')} color="#F04B1B" />
+                            </TouchableOpacity>
+                            <Text style={styles.quantityText}>{quantity}</Text>
+                            <TouchableOpacity
+                                onPress={() => updateCartItemQuantity(cartItemId, quantity + 1)}
+                                style={styles.counterButton}
+                            >
+                                <Entypo name="plus" size={wp('3.5%')} color="#F04B1B" />
+                            </TouchableOpacity>
+                        </View>
+                    ) : (
+                        <TouchableOpacity style={styles.plusIconCircle} onPress={() => onAdd ? onAdd(item) : addToCart(item)}>
+                            <Entypo name="plus" size={wp('4.5%')} color="#F04B1B" />
+                        </TouchableOpacity>
+                    )}
                 </View>
 
                 <Image
@@ -133,6 +167,27 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
+    counterContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderWidth: 0.7,
+        borderColor: '#F04B1B',
+        borderRadius: 7,
+        paddingHorizontal: wp('1%'),
+        paddingVertical: hp('0.1%'),
+        backgroundColor: '#FFE9E0',
+    },
+    counterButton: {
+        padding: wp('0.5%'),
+    },
+    quantityText: {
+        color: '#F04B1B',
+        fontFamily: FONTS.poppins.semiBold,
+        fontSize: wp('3%'),
+        marginHorizontal: wp('1%'),
+        minWidth: wp('3%'),
+        textAlign: 'center',
+    },
     productImage: {
         width: wp('28%'),
         height: wp('28%'),
@@ -189,8 +244,8 @@ const styles = StyleSheet.create({
         fontFamily: FONTS.outfit.bold,
         fontSize: wp('3.2%'),
         color: '#0CA201',
-        fontWeight:'600',
-        fontFamily:'Poppins-SemiBold'
+        fontWeight: '600',
+        fontFamily: 'Poppins-SemiBold'
     },
     dashedLineContainer: {
         flex: 1,
@@ -213,7 +268,7 @@ const styles = StyleSheet.create({
         lineHeight: hp('2.2%'),
         marginBottom: hp('0.5%'),
         //fontWeight:'600', 
-        fontFamily:'Poppins-SemiBold',
+        fontFamily: 'Poppins-SemiBold',
         minHeight: hp('6.6%'), // ensures alignment for 3 lines
     },
     productWeight: {
