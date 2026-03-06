@@ -1,11 +1,12 @@
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native'
-import React, { useState, useEffect } from 'react'
+import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import EvilIcons from 'react-native-vector-icons/EvilIcons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Entypo from 'react-native-vector-icons/Entypo';
-import FontAwesome from 'react-native-vector-icons/FontAwesome'
-import { FONTS } from '../styles/typography'
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import LinearGradient from 'react-native-linear-gradient';
+import { FONTS } from '../styles/typography';
 import { useNavigation } from '@react-navigation/native';
 
 import CONFIG from '../globals/config';
@@ -26,6 +27,7 @@ const ProductCard = (props) => {
     // API products use productId, local products might use id
     const itemId = item.productId || item.id;
     const isLiked = isInWishlist(itemId);
+    const isOutOfStock = (item.stockQty === 0 || item.stockQty === '0') || item.isAvailable === false;
 
     // Find quantity in cart — convert to string to avoid type mismatch (number vs string)
     const cartItem = cartItems.find(i => String(i.productId || i.id) === String(itemId));
@@ -78,7 +80,7 @@ const ProductCard = (props) => {
                     <TouchableOpacity onPress={() => toggleWishlist(item)}>
                         <FontAwesome
                             name={isLiked ? 'heart' : 'heart-o'}
-                            size={wp('4.5%')}
+                            size={wp('5.5%')}
                             color={isLiked ? '#FF0048' : '#979797'}
                         />
                     </TouchableOpacity>
@@ -108,23 +110,30 @@ const ProductCard = (props) => {
                             <Entypo name="plus" size={wp('3.5%')} color="#F04B1B" />
                         </TouchableOpacity>
                     </View>
+                ) : isOutOfStock ? (
+                    <View style={styles.plusIconDisabled}>
+                        <Entypo name="plus" color="#FFFFFF" size={wp('4%')} />
+                    </View>
                 ) : (
-                    <TouchableOpacity
-                        style={[styles.plusIconView, ((item.stockQty === 0 || item.stockQty === '0') || item.isAvailable === false) && { backgroundColor: '#CCCCCC' }]}
-                        onPress={() => {
-                            if ((item.stockQty === 0 || item.stockQty === '0') || item.isAvailable === false) return;
-                            addToCart(item);
-                        }}
-                        hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
-                        activeOpacity={0.7}
-                        disabled={(item.stockQty === 0 || item.stockQty === '0') || item.isAvailable === false}
+                    <LinearGradient
+                        colors={[ 'rgba(255,255,255,0.85)','rgba(242,80,0,0.55)']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={styles.plusIconGradient}
                     >
-                        <Entypo name={"plus"} color={"#FFFFFF"} size={wp("4%")} />
-                    </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.plusIconInner}
+                            onPress={() => addToCart(item)}
+                            hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+                            activeOpacity={0.8}
+                        >
+                            <Entypo name="plus" color="#F25000" size={wp('6%')} />
+                        </TouchableOpacity>
+                    </LinearGradient>
                 )}
             </View>
             <View style={styles.productCardViewTwo}>
-                {imageLoading && <ShimmerPlaceholder style={[styles.productCardImage, { position: 'absolute' }]} />}
+                {/* {imageLoading && <ShimmerPlaceholder style={[styles.productCardImage, { position: 'absolute' }]} />} */}
                 <Image
                     source={imageSource}
                     style={[styles.productCardImage, { opacity: ((item.stockQty === 0 || item.stockQty === '0') || item.isAvailable === false) ? 0.5 : 1 }]}
@@ -223,10 +232,28 @@ const styles = StyleSheet.create({
         fontSize: wp("2.3%"),
         color: "#5E3568"
     },
-    plusIconView: {
-        backgroundColor: "#F04B1B",
-        padding: wp("1%"),
-        borderRadius: 100
+    plusIconGradient: {
+        width: wp('7%'),
+        height: wp('7%'),
+        borderRadius: 100,
+        borderWidth: 0.5,
+        borderColor:'#F25000',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    plusIconInner: {
+        width: '100%',
+        height: '100%',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    plusIconDisabled: {
+        width: wp('7%'),
+        height: wp('7%'),
+        borderRadius: 100,
+        backgroundColor: '#CCCCCC',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     counterContainer: {
         flexDirection: 'row',
