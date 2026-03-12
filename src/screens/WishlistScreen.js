@@ -9,7 +9,7 @@ import { useWishlist } from '../context/WishlistContext';
 import { useCart } from '../context/CartContext';
 import ConfirmationModal from '../components/ConfirmationModal';
 import { useFocusEffect } from '@react-navigation/native';
-import WishlistProductCard from '../components/WishlistProductCard';
+import TokenProductCard from '../components/TokenProductCard';
 import { LoaderContext } from '../context/loaderContext';
 import { useContext } from 'react';
 import { useNavigation } from '@react-navigation/native';
@@ -37,7 +37,7 @@ export default function WishlistScreen() {
                 if (isLoading) return; // Avoid redundant fetches if already loading
 
                 showLoader(true);
-                await loadWishlist();
+                await loadWishlist(true); // Force fetch to bypass standard caching
                 if (isMounted) {
                     showLoader(false);
                 }
@@ -58,14 +58,46 @@ export default function WishlistScreen() {
             setItemToRemove(null);
         }
     };
+    const renderItem = ({ item }) => {
+        // Map wishlist specific keys to standard keys used by TokenProductCard
+        const mappedItem = {
+            ...item,
+            productId: item.productId,
+            prName: item.productName,
+            featuredImage: item.productImage,
+            unitPrice: item.unitPrice,
+            specialPrice: item.specialPrice,
+            stockQty: item.stockQty,
+            isAvailable: item.isAvailable
+        };
 
-    const renderItem = ({ item }) => (
-        <WishlistProductCard
-            item={item}
-            onRemove={handleRemoveFromWishlist}
-            onAddToCart={addToCart}
-            onPress={() => navigation.navigate('ProductDetailsScreen', { productId: item.productId })}
-        />
+        return (
+            <TokenProductCard
+                item={mappedItem}
+                isThreeColumn={true}
+                onToggleWishlist={() => handleRemoveFromWishlist(item.productId, item.productName)}
+                onPress={() => navigation.navigate('ProductDetailsScreen', { productId: item.productId, product: mappedItem })}
+            />
+        );
+    };
+
+    const renderFooter = () => (
+        <View style={styles.footerContainer}>
+            <Image
+                source={require('../assets/images/wishlistnomore.png')}
+                style={styles.footerImage}
+            />
+            <Text style={styles.footerText}>NO MORE</Text>
+        </View>
+    );
+    const renderNoitem = () => (
+        <View style={styles.footerContainer}>
+            <Image
+                source={require('../assets/images/nowish.png')}
+                style={styles.footerImage}
+            />
+            <Text style={styles.footerText}>{'No Wish \n Items'}</Text>
+        </View>
     );
 
     return (
@@ -103,9 +135,14 @@ export default function WishlistScreen() {
                         data={wishlistItems}
                         keyExtractor={(item) => item.wishlistItemId?.toString() || item.productId?.toString()}
                         renderItem={renderItem}
+                        numColumns={3}
                         showsVerticalScrollIndicator={false}
-                        ListEmptyComponent={!isLoading && <WishListEmptyComponent />}
-                        contentContainerStyle={{ width: wp('100%'), paddingBottom: hp('2%') }}
+                        ListEmptyComponent={!isLoading && renderNoitem}
+                        ListFooterComponent={wishlistItems?.length > 0 && renderFooter}
+                        contentContainerStyle={{
+                            paddingHorizontal: wp('1%'),
+                            paddingBottom: hp('15%'),
+                        }}
                     />
                 )}
             </View>
@@ -163,7 +200,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: "#b6b6b6",
         backgroundColor: "#FFFFFF",
-        alignItems: "center",
+        // alignItems: "center", // Removed to allow grid layout to span correctly
         borderBottomColor: "#FFFFFF",
         paddingTop: hp('1.5%')
     },
@@ -196,5 +233,22 @@ const styles = StyleSheet.create({
         bottom: hp("0.7%"),
         left: 0,
         right: 0,
+    },
+    footerContainer: {
+        alignItems: 'center',
+        marginTop: hp('2%'),
+        paddingBottom: hp('10%'),
+    },
+    footerImage: {
+        width: wp('20%'),
+        height: wp('20%'),
+        resizeMode: 'contain',
+    },
+    footerText: {
+        color: 'rgba(242, 80, 0, 0.3)',
+        fontSize: 26,
+        fontWeight: '900',
+        fontFamily: FONTS.poppins.regular,
+        //  marginTop: hp('1%'),
     }
 })

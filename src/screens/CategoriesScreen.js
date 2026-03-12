@@ -1,13 +1,13 @@
-import { View, Text, TouchableOpacity, FlatList, Image, TextInput, ScrollView, ActivityIndicator } from 'react-native'
+import { View, Text, TouchableOpacity, FlatList, Image, TextInput, ScrollView, ActivityIndicator, ImageBackground } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useState, useEffect, useContext } from 'react'
-import { useRoute } from '@react-navigation/native';
+import { useRoute, useNavigation } from '@react-navigation/native';
 import { StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import Feather from 'react-native-vector-icons/Feather';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import ProductCard from '../components/ProductCard';
+import TokenProductCard from '../components/TokenProductCard';
 import SelectedProducts from '../components/SelectedProducts';
 import LinearGradient from 'react-native-linear-gradient';
 import { FONTS } from '../styles/typography'
@@ -78,6 +78,7 @@ const dummyProducts = [
 
 export default function CategoriesScreen() {
     const route = useRoute();
+    const navigation = useNavigation();
     const { catId } = route.params || {};
     const [selectedId, setSelectedId] = useState(catId?.toString() || "1");
     const [selectedSubCatId, setSelectedSubCatId] = useState(null);
@@ -94,6 +95,7 @@ export default function CategoriesScreen() {
     const { showLoader } = useContext(LoaderContext);
     const { profile, isStoreUnavailable, storeUnavailableData, setStoreUnavailable } = useContext(AppContext);
     const [isStoreUnavailableLocal, setIsStoreUnavailableLocal] = useState(false); // Kept for safety if needed, but will prioritize global
+    const [isSearchVisible, setIsSearchVisible] = useState(false);
     const [isLocationModalVisible, setIsLocationModalVisible] = useState(false);
 
     const [filters, setFilters] = useState({
@@ -235,43 +237,33 @@ export default function CategoriesScreen() {
             <TouchableOpacity
                 onPress={() => setSelectedId(item?.catId?.toString())}
                 activeOpacity={0.8}
-                style={{
-                    marginBottom: hp("1.7%"),
-                    marginLeft: wp("1.7%")
-                }}
+                style={styles.leftMenuItemContainer}
             >
-                {isSelected ? (<LinearGradient
-                    colors={["#FFFFFF", "#FFDB99"]}
-                    start={{ x: 0, y: 1 }}
-                    end={{ x: 0, y: 0 }}
-                    // style={[styles.card, isSelected && styles.activeCard]}
-                    style={styles.activeCard}
-                >
-                    <Image
-                        source={getImageUrl(item.imageUrl)}
-                        style={styles.image}
-                        resizeMode="contain"
-                    />
-
-
-                </LinearGradient>
-                ) : (<View
-                    style={styles.card}
-                >
-                    <Image
-                        source={getImageUrl(item.imageUrl)}
-                        style={styles.image}
-                        resizeMode="contain"
-                    />
-
-                </View>
+                {isSelected ? (
+                    <ImageBackground
+                        source={require('../assets/images/category.png')}
+                        style={styles.activeCard}
+                        imageStyle={{ borderRadius: wp('4%'), opacity: 0.2 }}
+                        resizeMode="cover"
+                    >
+                        <Image
+                            source={getImageUrl(item.imageUrl)}
+                            style={styles.image}
+                            resizeMode="contain"
+                        />
+                    </ImageBackground>
+                ) : (
+                    <View style={styles.card}>
+                        <Image
+                            source={getImageUrl(item.imageUrl)}
+                            style={styles.image}
+                            resizeMode="contain"
+                        />
+                    </View>
                 )}
-                <Text style={isSelected ? styles.title : [styles.title, {
-                    color: "#666666", marginTop: 0
-                }]} numberOfLines={2}>
+                <Text style={isSelected ? styles.activeTitle : styles.inactiveTitle} numberOfLines={2}>
                     {item.catName || item.name}
                 </Text>
-
             </TouchableOpacity>
         );
     };
@@ -280,23 +272,13 @@ export default function CategoriesScreen() {
         const isSelected = item?.catId?.toString() === selectedSubCatId;
 
         return (
-            <>
-                {isSelected ? (<TouchableOpacity onPress={() => setSelectedSubCatId(null)} style={styles.selectedSubCategory}>
-                    <View style={styles.selectedSubCategoryImageView}>
-                        <Image style={styles.selectedSubCategoryImage} source={getImageUrl(item.imageUrl)} />
-                    </View>
-                    <Text style={styles.selectedSubCatText}>{item.catName}</Text>
-                </TouchableOpacity>) : (
-                    <TouchableOpacity onPress={() => setSelectedSubCatId(item?.catId?.toString())} style={[styles.selectedSubCategory, {
-                        justifyContent: "center"
-                    }]}>
-                        <View style={styles.unselectedSubCatImageView}>
-                            <Image style={styles.unselectedSubCatImage} source={getImageUrl(item.imageUrl)} />
-                        </View>
-                        <Text style={styles.unselectedSubCatText}>{item.catName}</Text>
-                    </TouchableOpacity>)}
-                <View style={{ width: wp('1%') }} />
-            </>
+            <TouchableOpacity
+                onPress={() => setSelectedSubCatId(isSelected ? null : item?.catId?.toString())}
+                style={isSelected ? styles.subCatPillActive : styles.subCatPillInactive}
+            >
+                <Image style={styles.subCatPillImage} source={getImageUrl(item.imageUrl)} />
+                <Text style={isSelected ? styles.subCatPillTextActive : styles.subCatPillTextInactive}>{item.catName}</Text>
+            </TouchableOpacity>
         );
     };
     const renderHeader = React.useCallback(() => (
@@ -326,34 +308,41 @@ export default function CategoriesScreen() {
 
     return (
         <SafeAreaView style={styles.mainContainer} edges={['top', 'left', 'right']}>
-            <View style={{
-                flexDirection: "row"
-            }}>
-                <View style={styles.viewOne} />
-                <View style={styles.viewTwo}>
-                    <Text style={styles.categoryHeaderText}>{categoryName}</Text>
-                    <View style={styles.viewThree}>
-                        <View style={styles.searchContainer}>
-                            <Feather name="search" color={"#2D0F0D"} size={wp("5%")} />
-                            <TextInput
-                                style={styles.searchInput}
-                                placeholder="Search product"
-                                placeholderTextColor="#000000"
-                                value={searchText}
-                                onChangeText={setSearchText}
-                            />
-                            {/* <View style={styles.divider} />
-                    <Ionicons name="clipboard-outline" color={"#8F8F8F"} size={wp("6%")} style={styles.clipboardIcon} /> */}
-                        </View>
-                        <TouchableOpacity
-                            style={styles.filterView}
-                            onPress={() => setIsFilterSortModalVisible(true)}
-                        >
-                            <Ionicons name="options-outline" color={"#2D0F0D"} size={wp("5%")} />
-                        </TouchableOpacity>
-                    </View>
+            <View style={styles.newHeaderContainer}>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <TouchableOpacity onPress={() => navigation.goBack()} style={{ paddingRight: wp('2%') }}>
+                        <Ionicons name="chevron-back" size={wp('6%')} color="#000000" />
+                    </TouchableOpacity>
+                    <Text style={styles.newCategoryHeaderText}>{categoryName}</Text>
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <TouchableOpacity onPress={() => setIsSearchVisible(!isSearchVisible)} style={{ marginRight: wp('4%') }}>
+                        <Feather name="search" size={wp('6%')} color="#000000" />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => setIsFilterSortModalVisible(true)}>
+                        <Ionicons name="options-outline" size={wp('6%')} color="#000000" />
+                    </TouchableOpacity>
                 </View>
             </View>
+
+            {isSearchVisible && (
+                <View style={styles.toggleSearchContainer}>
+                    <Feather name="search" color={"#666666"} size={wp("4.5%")} style={{ marginLeft: wp('2%') }} />
+                    <TextInput
+                        style={styles.searchInput}
+                        placeholder="Search product"
+                        placeholderTextColor="#999999"
+                        value={searchText}
+                        onChangeText={setSearchText}
+                        autoFocus={true}
+                    />
+                    {searchText.length > 0 && (
+                        <TouchableOpacity onPress={() => setSearchText('')} style={{ marginRight: wp('2%') }}>
+                            <Ionicons name="close-circle" size={wp('5%')} color="#999999" />
+                        </TouchableOpacity>
+                    )}
+                </View>
+            )}
             <View style={styles.row}>
                 {isStoreUnavailable ? (
                     <StoreUnavailable
@@ -382,7 +371,7 @@ export default function CategoriesScreen() {
                             <FlatList
                                 data={loadingProducts ? [] : productsList}
                                 keyExtractor={(item, index) => (item?.productId || item?.id || index).toString()}
-                                renderItem={({ item }) => <ProductCard item={item} />}
+                                renderItem={({ item }) => <TokenProductCard item={item} onPress={() => navigation.navigate('ProductDetailsScreen', { productId: item.productId || item.id, product: item })} />}
                                 numColumns={2}
                                 showsVerticalScrollIndicator={false}
                                 contentContainerStyle={{
@@ -466,13 +455,6 @@ const styles = StyleSheet.create({
         // paddingBottom: 10
     },
 
-    itemWrapper: {
-        flexDirection: "row",
-        backgroundColor: "#F6F1EF",
-        // height: hp("15%"),
-        // marginBottom: hp("1.8%"),
-    },
-
     activeIndicator: {
         width: wp("1.86%"),
         backgroundColor: "#F25000",
@@ -481,79 +463,46 @@ const styles = StyleSheet.create({
         marginVertical: hp("2%")
     },
 
-    card: {
-        alignItems: "center",
-        width: wp("18.6%"),
-        height: hp("8%"),
-        justifyContent: "center"
-    },
-
-    activeCard: {
-        // backgroundColor: "#FFFFFF",
-        alignItems: "center",
-        borderRadius: 10,
-        borderWidth: 0.2,
-        borderColor: "#FF7B3A",
-        width: wp("18.6%"),
-        height: hp("8%"),
-        justifyContent: "center"
-    },
-
-    topCurve: {
-        position: "absolute",
-        top: -hp("8%"),
-        width: "100%",
-        height: hp("10%"),
-        backgroundColor: "#F6F1EF",
-        // borderBottomLeftRadius: 200,
-        borderBottomRightRadius: wp("7%"),
-    },
-
     bottomCurve: {
         position: "absolute",
         bottom: -hp("8%"),
         width: "100%",
         height: hp("10%"),
         backgroundColor: "#F6F1EF",
-        // borderTopLeftRadius: 200,
         borderTopRightRadius: wp("7%"),
     },
-
-    image: {
-        width: wp("15%"),
-        height: wp("15%"),
-        // marginBottom: hp("1%"),
-        // zIndex: 1,
-    },
-
-    title: {
-        fontSize: wp("3%"),
-        // fontWeight: "700",
-        textAlign: "center",
-        color: "#000000",
-        // lineHeight: 18,
-        // zIndex: 1,
-        fontFamily: FONTS.poppins.medium,
-        marginTop: hp("0.5%")
-    },
-    searchContainer: {
+    newHeaderContainer: {
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: wp('4.65%'),
+        paddingTop: hp('1.5%'),
+        paddingBottom: hp('1%'),
         backgroundColor: '#FFFFFF',
-        borderRadius: wp('1.4%'),
+    },
+    newCategoryHeaderText: {
+        fontFamily: FONTS.poppins.semiBold,
+        fontSize: wp('4.65%'),
+        color: '#000000',
+    },
+    toggleSearchContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#F5F5F5',
+        borderRadius: wp('2.33%'),
         paddingHorizontal: wp('2%'),
-        height: hp('4.5%'),
-        flex: 1,
+        height: hp('5%'),
+        marginHorizontal: wp('4.65%'),
+        marginBottom: hp('1%'),
         borderWidth: 1,
         borderColor: "#E3E3E3",
-        marginRight: wp('2.5%')
     },
     searchInput: {
         flex: 1,
-        fontSize: wp('3.25%'),
-        marginHorizontal: wp('1.5%'),
+        fontSize: wp('3.5%'),
+        marginHorizontal: wp('2%'),
         color: '#000000',
-        fontFamily: FONTS.outfit.light,
+        fontFamily: FONTS.outfit.regular,
     },
     floatingContainer: {
         position: "absolute",
@@ -590,75 +539,93 @@ const styles = StyleSheet.create({
         height: wp("3.25%"),
         width: wp("3.25%")
     },
-    viewOne: {
-        width: wp("21.7%"),
-        backgroundColor: "#FFFFFF"
-    },
-    viewTwo: {
-        backgroundColor: "#FFFFFF",
-        flex: 1,
-        paddingTop: hp("3%"),
-        paddingBottom: hp("0.5%"),
-        borderLeftWidth: 1,
-        borderLeftColor: "#FFF3E8"
-    },
-    viewThree: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        paddingLeft: wp("2.2%"),
-        paddingRight: wp("4%"),
-        marginTop: hp("1.3%")
-    },
     subCatCard: {
         width: wp("16.28%"),
         alignItems: "center"
     },
-    selectedSubCategory: {
-        // alignItems: "center"
-        // backgroundColor: "green",
-        width: wp("18.6%"),
-        alignItems: "center"
+    leftMenuItemContainer: {
+        marginBottom: hp("2%"),
+        alignItems: 'center',
+        width: wp("22%"),
     },
-    selectedSubCategoryImageView: {
-        width: wp("18.6%"),
-        height: hp("8.04%"),
-        borderRadius: 10,
-        backgroundColor: "#FFDB99",
+    card: {
+        alignItems: "center",
+        width: wp("17%"),
+        height: wp("17%"),
         justifyContent: "center",
-        alignItems: "center"
+        borderRadius: wp('4%'),
+        backgroundColor: '#FFFFFF',
+        marginBottom: hp('0.5%'),
+        borderWidth: 1,
+        borderColor: 'transparent'
     },
-    selectedSubCategoryImage: {
-        width: wp("13.95%"),
-        height: wp("13.95%"),
-        borderRadius: 60,
-        resizeMode: "cover"
-    },
-    selectedSubCatText: {
-        color: "#000000",
-        fontFamily: FONTS.lexend.medium,
-        fontSize: wp("2.79%"),
-        marginTop: hp("0.1%"),
-        textAlign: "center"
-    },
-    unselectedSubCatImageView: {
-        width: wp("18.6%"),
-        height: hp("6.5%"),
-        borderRadius: 10,
-        backgroundColor: "#FFFFFF",
+    activeCard: {
+        alignItems: "center",
+        width: wp("17%"),
+        height: wp("17%"),
         justifyContent: "center",
-        alignItems: "center"
+        borderRadius: wp('4%'),
+        borderWidth: 0.7,
+        borderColor: "#F25000",
+        backgroundColor: "#FFEFE5",
+        marginBottom: hp('0.5%')
     },
-    unselectedSubCatImage: {
-        width: wp("11.63%"),
-        height: wp("11.63%"),
-        borderRadius: 60,
-        resizeMode: "cover"
+    image: {
+        width: wp("11%"),
+        height: wp("11%"),
     },
-    unselectedSubCatText: {
+    activeTitle: {
+        fontSize: wp("3%"),
+        textAlign: "center",
+        color: "#F25000",
+        fontFamily: FONTS.poppins.medium,
+        paddingHorizontal: wp('1%')
+    },
+    inactiveTitle: {
+        fontSize: wp("3%"),
+        textAlign: "center",
         color: "#666666",
-        fontFamily: FONTS.lexend.medium,
-        fontSize: wp("2.79%"),
-        textAlign: "center"
+        fontFamily: FONTS.poppins.medium,
+        paddingHorizontal: wp('1%')
+    },
+    subCatPillActive: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: wp('2%'),
+        paddingVertical: hp('0.5%'),
+        borderRadius: wp('8%'),
+        borderWidth: 0.7,
+        borderColor: '#F25000',
+        backgroundColor: '#FFFFFF',
+    },
+    subCatPillInactive: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: wp('2%'),
+        paddingVertical: hp('0.5%'),
+        borderRadius: wp('8%'),
+        borderWidth: 1,
+        borderColor: '#E3E3E3',
+        backgroundColor: '#FFFFFF',
+    },
+    subCatPillImage: {
+        width: wp('8%'),
+        height: wp('8%'),
+        borderRadius: wp('4%'),
+        marginRight: wp('2%'),
+        resizeMode: 'cover',
+    },
+    subCatPillTextActive: {
+        fontFamily: FONTS.poppins.medium,
+        fontSize: wp('3.5%'),
+        color: '#F25000',
+        marginRight: wp('2%')
+    },
+    subCatPillTextInactive: {
+        fontFamily: FONTS.poppins.medium,
+        fontSize: wp('3.5%'),
+        color: '#000000',
+        marginRight: wp('2%')
     },
     emptyContainer: {
         flex: 1,

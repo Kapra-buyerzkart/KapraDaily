@@ -1,6 +1,6 @@
-import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Platform, FlatList, ImageBackground, Linking, BackHandler } from 'react-native'
+import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Platform, FlatList, ImageBackground, Linking, BackHandler, Animated } from 'react-native'
 import LinearGradient from 'react-native-linear-gradient';
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useEffect, useRef } from 'react'
 import { useNavigation, useRoute, CommonActions, useFocusEffect } from '@react-navigation/native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import AntDesign from 'react-native-vector-icons/AntDesign'
@@ -30,6 +30,8 @@ const OrderTrackingScreen = () => {
 
     const scrollViewRef = React.useRef(null);
     const [retryYOffset, setRetryYOffset] = useState(0);
+    const retryPulseAnim = useRef(new Animated.Value(0)).current;
+    const [showRetryHint, setShowRetryHint] = useState(false);
 
     const {
         loading,
@@ -116,27 +118,30 @@ const OrderTrackingScreen = () => {
     useFocusEffect(
         useCallback(() => {
             if (autoScrollToRetry && retryYOffset > 0 && scrollViewRef.current) {
-                // Slight delay to ensure layout is complete before scrolling
                 setTimeout(() => {
                     scrollViewRef.current.scrollTo({
-                        y: retryYOffset - hp('5%'), // Scroll slightly above the button for context
+                        y: retryYOffset - hp('10%'),
                         animated: true
                     });
                 }, 500);
-            }
-        }, [autoScrollToRetry, retryYOffset])
-    );
 
-    useFocusEffect(
-        useCallback(() => {
-            if (autoScrollToRetry && retryYOffset > 0 && scrollViewRef.current) {
-                // Slight delay to ensure layout is complete before scrolling
-                setTimeout(() => {
-                    scrollViewRef.current.scrollTo({
-                        y: retryYOffset - hp('10%'), // Scroll slightly above the button for context
-                        animated: true
-                    });
-                }, 500);
+                // Show hint text and start pulse animation
+                setShowRetryHint(true);
+                Animated.loop(
+                    Animated.sequence([
+                        Animated.timing(retryPulseAnim, { toValue: 1, duration: 800, useNativeDriver: false }),
+                        Animated.timing(retryPulseAnim, { toValue: 0, duration: 800, useNativeDriver: false }),
+                    ])
+                ).start();
+
+                // Stop pulsing after 6 seconds
+                const timer = setTimeout(() => {
+                    retryPulseAnim.stopAnimation();
+                    retryPulseAnim.setValue(0);
+                    setShowRetryHint(false);
+                }, 6000);
+
+                return () => clearTimeout(timer);
             }
         }, [autoScrollToRetry, retryYOffset])
     );
@@ -244,12 +249,21 @@ const OrderTrackingScreen = () => {
         } catch (sdkError) {
             console.error('❌ [RETRY] Error:', sdkError);
             setRetryLoading(false);
-            setStatusModal({
-                visible: true,
-                type: 'error',
-                title: 'Payment Failed',
-                message: sdkError?.description || 'Payment was cancelled or failed. Please try again.'
-            });
+            navigation.dispatch(
+                CommonActions.reset({
+                    index: 0,
+                    routes: [{
+                        name: 'OrderFailedScreen',
+                        params: {
+                            orderId,
+                            orderNumber: displayOrderId,
+                            paymentMethod: paymentMethod || 'online',
+                            totalAmount: grandTotal,
+                            errorMessage: sdkError?.description || 'Payment was cancelled or failed.',
+                        }
+                    }],
+                })
+            );
         }
     };
 
@@ -381,7 +395,7 @@ const OrderTrackingScreen = () => {
                     </TouchableOpacity> */}
                 </View>
             </View>
-            <ScrollView>
+            <ScrollView ref={scrollViewRef}>
                 <View style={{
                     alignItems: 'center',
                     paddingTop: hp('2%')
@@ -792,7 +806,7 @@ const OrderTrackingScreen = () => {
                     </View>
 
                     {/* Retry Button Area */}
-                    <View
+                    {/* <View
                         style={styles.retryContainerWrapper}
                         onLayout={(event) => {
                             const { y } = event.nativeEvent.layout;
@@ -810,7 +824,7 @@ const OrderTrackingScreen = () => {
                                 </LinearGradient>
                             </TouchableOpacity>
                         )}
-                    </View>
+                    </View> */}
 
                     <View style={styles.productsMainContainer}>
                         <View style={styles.productsHeaderView}>
@@ -915,15 +929,34 @@ const OrderTrackingScreen = () => {
                     )}
 
                     {canRetryPayment && !hasOnlinePaid && (
-                        <TouchableOpacity onPress={handleRetryPayment}>
-                            <LinearGradient colors={['#27AE60', '#58D68D']}
-                                start={{ x: 0, y: 0 }}
-                                end={{ x: 1, y: 0 }}
-                                style={styles.cancelButtonGradient}
-                            >
-                                <Text style={styles.cancelButtonText}>Retry Payment</Text>
-                            </LinearGradient>
-                        </TouchableOpacity>
+                        <View
+                            onLayout={(event) => {
+                                const { y } = event.nativeEvent.layout;
+                                setRetryYOffset(y);
+                            }}
+                        >
+                            {/* {showRetryHint && (
+                                <Text style={styles.retryHintText}>👇 Tap below to retry your payment</Text>
+                            )} */}
+                            <TouchableOpacity onPress={handleRetryPayment}>
+                                {/* <Animated.View style={{
+                                    borderRadius: wp('2.33%'),
+                                    borderWidth: autoScrollToRetry ? 2.5 : 0,
+                                    borderColor: retryPulseAnim.interpolate({
+                                        inputRange: [0, 1],
+                                        outputRange: ['rgba(39, 174, 96, 0.3)', 'rgba(39, 174, 96, 1)']
+                                    }),
+                                }}> */}
+                                <LinearGradient colors={['#27AE60', '#58D68D']}
+                                    start={{ x: 0, y: 0 }}
+                                    end={{ x: 1, y: 0 }}
+                                    style={styles.cancelButtonGradient}
+                                >
+                                    <Text style={styles.cancelButtonText}>Retry Payment</Text>
+                                </LinearGradient>
+                                {/* </Animated.View> */}
+                            </TouchableOpacity>
+                        </View>
                     )}
                     {['pending', 'placed', 'accepted', 'packed'].includes(effectiveOrderStatus) && (
                         <TouchableOpacity onPress={() => setShowCancelModal(true)}>
@@ -1480,6 +1513,14 @@ const styles = StyleSheet.create({
         fontFamily: FONTS.poppins.semiBold,
         color: '#FFFFFF',
         fontSize: wp('4.65%')
+    },
+    retryHintText: {
+        fontFamily: FONTS.poppins.medium,
+        fontSize: wp('3.5%'),
+        color: '#27AE60',
+        textAlign: 'center',
+        marginBottom: hp('1%'),
+        marginTop: hp('2%'),
     },
     ratingStarStyle: {
         width: wp('6.28%'),

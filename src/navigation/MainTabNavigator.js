@@ -128,7 +128,7 @@ export default function MainTabNavigator() {
                     ),
 
                     tabBarLabel: () => (
-                        <Text style={styles.iconLabel}>Categories</Text>
+                        <Text style={styles.iconLabel}>Grocery & more</Text>
                     )
                 }}
             />
@@ -199,10 +199,11 @@ const styles = StyleSheet.create({
         resizeMode: "contain"
     },
     iconLabel: {
-        fontSize: wp("2.8%"),
+        fontSize: wp("2.4%"),
         color: "#8E8E8E",
         marginTop: hp("0.2%"),
-        fontFamily: FONTS.inter.regular
+        fontFamily: FONTS.inter.regular,
+        textAlign: 'center',
     },
     KshopeButton: {
         width: wp("28.84%"),

@@ -1,5 +1,7 @@
 import { View, Text, StyleSheet, Image, TouchableOpacity, Platform } from 'react-native'
 import AntDesign from 'react-native-vector-icons/AntDesign'
+import Ionicons from 'react-native-vector-icons/Ionicons'
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'
 import React from 'react'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { FONTS } from '../styles/typography';
@@ -65,14 +67,30 @@ const MyOrdersProductCard = (props) => {
                         }]}>{itemData.addressType || 'Home'}</Text>
                     </View>
                     <View style={styles.orderTopInnerView}>
-                        {(itemData.orderStatusText || itemData.status || '').toLowerCase() === 'cancelled' ? (
-                            <AntDesign name="closecircle" size={wp('3.5%')} color="#E74C3C" style={{}} />
-                        ) : (
-                            <Image style={styles.successIcon} source={require('../assets/images/success.png')} />
-                        )}
-                        <Text style={Platform.OS === 'android' ? [styles.homeText, {
-                            top: hp('0.1')
-                        }, (itemData.orderStatusText || itemData.status || '').toLowerCase() === 'cancelled' && { color: '#E74C3C' }] : [styles.homeText, (itemData.orderStatusText || itemData.status || '').toLowerCase() === 'cancelled' && { color: '#E74C3C' }]}>{itemData.orderStatusText || itemData.status || getPaymentLabel(itemData.paymentMethod)}</Text>
+                        {(() => {
+                            const status = (itemData.orderStatusText || itemData.status || '').toLowerCase();
+                            const iconSize = wp('4%');
+                            if (status.includes('cancel')) {
+                                return <AntDesign name="closecircle" size={iconSize} color="#E74C3C" />;
+                            } else if (status.includes('deliver')) {
+                                return <AntDesign name="checkcircle" size={iconSize} color="#27AE60" />;
+                            } else if (status.includes('pending')) {
+                                return <AntDesign name="infocirlce" size={iconSize} color="#F25000" />;
+                            } else if (status.includes('placed')) {
+                                return <AntDesign name="clockcircle" size={iconSize} color="#F25000" />;
+                            } else if (status.includes('accept')) {
+                                return <AntDesign name="like1" size={iconSize} color="#F25000" />;
+                            } else if (status.includes('pack')) {
+                                return <MaterialCommunityIcons name="package-variant-closed" size={iconSize} color="#F25000" />;
+                            } else if (status.includes('assign') || status.includes('dispatch')) {
+                                return <MaterialCommunityIcons name="motorbike" size={iconSize} color="#F25000" />;
+                            } else {
+                                return <AntDesign name="checkcircle" size={iconSize} color="#F25000" />;
+                            }
+                        })()}
+                        <Text style={[styles.homeText, Platform.OS === 'android' && { top: hp('0.1') },
+                        (itemData.orderStatusText || itemData.status || '').toLowerCase().includes('cancel') && { color: '#E74C3C' },
+                        ]}>{itemData.orderStatusText || itemData.status || getPaymentLabel(itemData.paymentMethod)}</Text>
                     </View>
                 </View>
                 <View style={styles.orderMiddleView}>
@@ -234,7 +252,7 @@ const styles = StyleSheet.create({
     button: {
         width: wp('41%'),
         height: hp('4.3%'),
-        borderRadius: wp('1.86%'),
+        borderRadius: wp('20%'),
         justifyContent: 'center',
         alignItems: 'center'
     },

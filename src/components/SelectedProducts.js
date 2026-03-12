@@ -12,15 +12,12 @@ const SelectedProducts = () => {
     const navigation = useNavigation();
     const { cartItems } = useCart();
 
-    // Don't show if cart is empty
     if (!cartItems || cartItems.length === 0) {
         return null;
     }
 
-    // Get first 3 items for preview
     const previewItems = cartItems.slice(0, 3);
 
-    // Helper to get image source
     const getImageSource = (item) => {
         if (item.featuredImage) {
             return { uri: `${CONFIG.image_base_url}${item.featuredImage}` };

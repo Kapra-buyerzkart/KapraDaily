@@ -7,7 +7,9 @@ import { useNavigation, useRoute } from '@react-navigation/native'
 import useProductSearch from '../hooks/useProductSearch'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppContext } from '../context/appContext';
-import ProductCard from '../components/ProductCard';
+import TokenProductCard from '../components/TokenProductCard';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import FilterSortModal from '../components/FilterSortModal';
 
 // Truncate text to a specific limit with dots
 const truncateText = (text, limit = 7) => {
@@ -31,6 +33,14 @@ const SearchScreen = () => {
     const [currentPincodeId, setCurrentPincodeId] = useState(null);
     const [recentSearches, setRecentSearches] = useState([]);
 
+    // Filter & Sort state
+    const [isFilterSortModalVisible, setIsFilterSortModalVisible] = useState(false);
+    const [filters, setFilters] = useState({
+        sortBy: 'relevance',
+        priceMin: 0,
+        priceMax: 5000
+    });
+
     const {
         searchTerm,
         setSearchTerm,
@@ -39,7 +49,7 @@ const SearchScreen = () => {
         resultCount,
         setCatId,
         isGlobalFallback
-    } = useProductSearch(currentPincodeId, catId);
+    } = useProductSearch(currentPincodeId, catId, filters);
 
     useEffect(() => {
         const fetchPincode = async () => {
@@ -96,7 +106,7 @@ const SearchScreen = () => {
     const renderItem = ({ item }) => {
         return (
             <View style={styles.productWrapper}>
-                <ProductCard item={item} hideWishlist={true} />
+                <TokenProductCard item={item} hideWishlist={false} onPress={() => navigation.navigate('ProductDetailsScreen', { productId: item.productId || item.id, product: item })} />
             </View>
         )
     }
@@ -124,10 +134,15 @@ const SearchScreen = () => {
     return (
         <SafeAreaView style={styles.mainContainer}>
             <View style={styles.headerContainer}>
-                <TouchableOpacity onPress={() => navigation.goBack()}>
-                    <Image style={styles.leftArrowIcon} source={require('../assets/images/left_arrow.png')} />
+                <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                    <TouchableOpacity onPress={() => navigation.goBack()}>
+                        <Image style={styles.leftArrowIcon} source={require('../assets/images/left_arrow.png')} />
+                    </TouchableOpacity>
+                    <Text style={styles.searchText}>{catName ? catName : 'Search'}</Text>
+                </View>
+                <TouchableOpacity onPress={() => setIsFilterSortModalVisible(true)} style={styles.filterButton}>
+                    <Ionicons name="options-outline" size={wp('5.5%')} color="#000000" />
                 </TouchableOpacity>
-                <Text style={styles.searchText}>{catName ? catName : 'Search'}</Text>
             </View>
             <View style={styles.searchContainer}>
                 <Image
@@ -203,6 +218,18 @@ const SearchScreen = () => {
                     />
                 </>
             )}
+
+            <FilterSortModal
+                visible={isFilterSortModalVisible}
+                onClose={() => setIsFilterSortModalVisible(false)}
+                initialSort={filters.sortBy}
+                initialMin={filters.priceMin}
+                initialMax={filters.priceMax}
+                onApply={({ sort, min, max }) => {
+                    setFilters({ sortBy: sort, priceMin: min, priceMax: max });
+                }}
+            />
+
             <LocationModal
                 visible={isLocationModalVisible}
                 onClose={() => setIsLocationModalVisible(false)}
@@ -216,11 +243,12 @@ export default SearchScreen
 const styles = StyleSheet.create({
     mainContainer: {
         flex: 1,
-        backgroundColor: "FFFFFF",
+        backgroundColor: "#FFFFFF",
     },
     headerContainer: {
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'space-between',
         marginTop: hp('1%'),
         paddingHorizontal: wp('4.65%')
     },
@@ -234,6 +262,9 @@ const styles = StyleSheet.create({
         fontFamily: FONTS.poppins.semiBold,
         fontSize: wp('4.65%'),
         marginLeft: wp('8%')
+    },
+    filterButton: {
+        padding: wp('1.5%'),
     },
     searchContainer: {
         backgroundColor: '#DADADA',

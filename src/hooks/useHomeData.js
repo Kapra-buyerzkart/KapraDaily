@@ -28,7 +28,9 @@ const useHomeData = () => {
     const [firstProductBlockTitleImage, setFirstProductBlockTitleImage] = useState(null);
     const [secondProductBlock, setSecondProductBlock] = useState(null);
     const [thirdProductBlock, setThirdProductBlock] = useState(null);
+    const [thirdProductBlockTitleImage, setThirdProductBlockTitleImage] = useState(null);
     const [secondProductBlockTitleImage, setSecondProductBlockTitleImage] = useState(null);
+    const [categoryDiscoveryBackgroundImage, setCategoryDiscoveryBackgroundImage] = useState(null);
     const [bottomShowcaseBanner, setBottomShowcaseBanner] = useState(null);
     const [bottomShowcaseProducts, setBottomShowcaseProducts] = useState([]);
     const [categoryDiscovery, setCategoryDiscovery] = useState(null);
@@ -40,6 +42,7 @@ const useHomeData = () => {
 
     // Main homepage data fetcher, reused for initial load and pull-to-refresh
     const fetchHomepageData = useCallback(async (isRefreshing = false) => {
+        let currentUnavailableData = null;
         try {
             if (isRefreshing) {
                 setRefreshing(true);
@@ -54,7 +57,6 @@ const useHomeData = () => {
             ]);
 
             // Fetch general settings for store unavailable info
-            let currentUnavailableData = null;
             try {
                 const settingsRes = await getGeneralSettingsApi();
                 if (settingsRes && settingsRes.success && settingsRes.data?.items) {
@@ -121,6 +123,8 @@ const useHomeData = () => {
                 setFirstProductBlock(null);
                 setSecondProductBlock(null);
                 setThirdProductBlock(null);
+                setThirdProductBlockTitleImage(null);
+                setCategoryDiscoveryBackgroundImage(null);
                 setBottomShowcaseBanner(null);
                 setBottomShowcaseProducts([]);
             } else {
@@ -128,18 +132,19 @@ const useHomeData = () => {
                 setHomepageData(response);
 
                 if (response?.data) {
-                    if (response.data.banners) {
-                        const allBanners = response.data.banners;
+                    const data = response.data;
+                    const banners = data.banners || data.Banners || [];
 
+                    if (banners.length > 0) {
                         const mapBanner = (banner) => ({
                             ...banner,
-                            uri: { uri: `${CONFIG.image_base_url}${banner.imageUrl}` }
+                            uri: { uri: `${CONFIG.image_base_url}${banner.imageUrl || banner.ImageUrl}` }
                         });
 
-                        const sortByOrder = (a, b) => (a.displayOrder || 0) - (b.displayOrder || 0);
+                        const sortByOrder = (a, b) => (a.displayOrder || a.DisplayOrder || 0) - (b.displayOrder || b.DisplayOrder || 0);
 
                         // Extract and Map Banner Sets
-                        const getBannerSet = (key) => allBanners.filter(b => b.placementKey === key).sort(sortByOrder).map(mapBanner);
+                        const getBannerSet = (key) => banners.filter(b => b.placementKey === key || b.PlacementKey === key).sort(sortByOrder).map(mapBanner);
 
                         setTopBanner(getBannerSet('app_home_top_banner'));
                         setMidBanner(getBannerSet('app_home_mid_banner'));
@@ -149,16 +154,22 @@ const useHomeData = () => {
                         setTopAnnouncementBanner(getBannerSet('app_home_top_announcement_image'));
                         setTopSideBySide(getBannerSet('app_home_top_sidebyside_two'));
 
-                        const firstBlock = allBanners.find(b => b.placementKey === 'app_home_first_productblock_title_image');
+                        const firstBlock = banners.find(b => b.placementKey === 'app_home_first_productblock_title_image' || b.PlacementKey === 'app_home_first_productblock_title_image');
                         setFirstProductBlockTitleImage(firstBlock ? mapBanner(firstBlock) : null);
 
-                        const secondBlock = allBanners.find(b => b.placementKey === 'app_home_second_productblock_title_image');
+                        const secondBlock = banners.find(b => b.placementKey === 'app_home_second_productblock_title_image' || b.PlacementKey === 'app_home_second_productblock_title_image');
                         setSecondProductBlockTitleImage(secondBlock ? mapBanner(secondBlock) : null);
 
-                        const showcaseBg = allBanners.find(b => b.placementKey === 'app_home_bottom_showcase_banner_image');
+                        const thirdBlock = banners.find(b => b.placementKey === 'app_home_third_productblock_title_image' || b.PlacementKey === 'app_home_third_productblock_title_image');
+                        setThirdProductBlockTitleImage(thirdBlock ? mapBanner(thirdBlock) : null);
+
+                        const discBg = banners.find(b => b.placementKey === 'app_home_category_discovery_background_image' || b.PlacementKey === 'app_home_category_discovery_background_image');
+                        setCategoryDiscoveryBackgroundImage(discBg ? mapBanner(discBg) : null);
+
+                        const showcaseBg = banners.find(b => b.placementKey === 'app_home_bottom_showcase_banner_image' || b.PlacementKey === 'app_home_bottom_showcase_banner_image');
                         setBottomShowcaseBanner(showcaseBg ? mapBanner(showcaseBg) : null);
 
-                        const showcaseProducts = allBanners.filter(b => b.placementKey === 'app_home_bottom_showcase_product_image').sort(sortByOrder).map(mapBanner);
+                        const showcaseProducts = banners.filter(b => b.placementKey === 'app_home_bottom_showcase_product_image' || b.PlacementKey === 'app_home_bottom_showcase_product_image').sort(sortByOrder).map(mapBanner);
                         setBottomShowcaseProducts(showcaseProducts);
 
                         // Slider Banners (exclude specifically placed ones)
@@ -172,56 +183,33 @@ const useHomeData = () => {
                             'app_home_top_sidebyside_two',
                             'app_home_first_productblock_title_image',
                             'app_home_second_productblock_title_image',
+                            'app_home_third_productblock_title_image',
+                            'app_home_category_discovery_background_image',
                             'app_home_bottom_showcase_banner_image',
                             'app_home_bottom_showcase_product_image',
                         ];
-                        const sliderBanners = allBanners
-                            .filter(b => !specificPlacementKeys.includes(b.placementKey))
+                        const sliderBanners = banners
+                            .filter(b => !specificPlacementKeys.includes(b.placementKey || b.PlacementKey))
                             .sort(sortByOrder)
                             .map(mapBanner);
                         setBanners(sliderBanners);
                     }
 
-                    if (response.data.featuredCategories) {
-                        setCategories(response.data.featuredCategories);
-                    }
-
-                    if (response.data.firstProductBlock) {
-                        setFirstProductBlock(response.data.firstProductBlock);
-                    }
-
-                    if (response.data.secondProductBlock) {
-                        setSecondProductBlock(response.data.secondProductBlock);
-                    }
-
-                    if (response.data.thirdProductBlock) {
-                        setThirdProductBlock(response.data.thirdProductBlock);
-                    }
-
-                    if (response.data.categoryDiscovery) {
-                        setCategoryDiscovery(response.data.categoryDiscovery);
-                    }
-
-                    if (response.data.bestOffers) {
-                        setBestOffers(response.data.bestOffers);
-                    }
-                    if (response.data.featuredProducts) {
-                        setFeaturedProducts(response.data.featuredProducts);
-                    }
-
-                    if (response.data.featuredProductsTitle) {
-                        setFeaturedProductsTitle(response.data.featuredProductsTitle);
-                    }
-
-                    if (response.data.halfPriceStore) {
-                        setHalfPriceStore(response.data.halfPriceStore);
-                    }
+                    setCategories(data.featuredCategories || data.FeaturedCategories || []);
+                    setFirstProductBlock(data.firstProductBlock || data.FirstProductBlock || null);
+                    setSecondProductBlock(data.secondProductBlock || data.SecondProductBlock || null);
+                    setThirdProductBlock(data.thirdProductBlock || data.ThirdProductBlock || null);
+                    setCategoryDiscovery(data.categoryDiscovery || data.CategoryDiscovery || null);
+                    setBestOffers(data.bestOffers || data.BestOffers || []);
+                    setFeaturedProducts(data.featuredProducts || data.FeaturedProducts || []);
+                    setFeaturedProductsTitle(data.featuredProductsTitle || data.FeaturedProductsTitle || 'Featured Products');
+                    setHalfPriceStore(data.halfPriceStore || data.HalfPriceStore || []);
                 }
             }
         } catch (error) {
             console.error('Error fetching homepage data:', error);
             // Universal fallback for any unexpected error
-            setStoreUnavailable(true, null);
+            setStoreUnavailable(true, currentUnavailableData);
             setHomepageData(null);
             setBanners([]);
             setTopBanner([]);
@@ -229,7 +217,9 @@ const useHomeData = () => {
             setTopAnnouncementBanner([]);
             setCategories([]);
             setCategoryDiscovery(null);
+            setCategoryDiscoveryBackgroundImage(null);
             setFeaturedProducts([]);
+            setThirdProductBlockTitleImage(null);
         } finally {
             if (isRefreshing) setRefreshing(false);
         }
@@ -257,8 +247,10 @@ const useHomeData = () => {
         firstProductBlock,
         secondProductBlock,
         thirdProductBlock,
+        thirdProductBlockTitleImage,
         firstProductBlockTitleImage,
         secondProductBlockTitleImage,
+        categoryDiscoveryBackgroundImage,
         bottomShowcaseBanner,
         bottomShowcaseProducts,
         categoryDiscovery,
@@ -286,8 +278,10 @@ const useHomeData = () => {
         firstProductBlock,
         secondProductBlock,
         thirdProductBlock,
+        thirdProductBlockTitleImage,
         firstProductBlockTitleImage,
         secondProductBlockTitleImage,
+        categoryDiscoveryBackgroundImage,
         bottomShowcaseBanner,
         bottomShowcaseProducts,
         categoryDiscovery,

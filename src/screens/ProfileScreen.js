@@ -96,6 +96,25 @@ export default function ProfileScreen() {
         fetchOffers();
     }, [profile]);
 
+    const GradientUserIcon = ({ size }) => {
+        return (
+            <LinearGradient
+                colors={['#848484', '#606060']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 0, y: 1 }}
+                style={{
+                    width: '100%',
+                    height: '100%',
+                    borderRadius: size / 2,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                }}
+            >
+                <FontAwesome6 name="user-large" size={size * 0.55} color="#D2B200" style={{ marginTop: size * 0.15 }} solid />
+            </LinearGradient>
+        );
+    };
+
     const fetchOffers = async () => {
         try {
             const pincodeAreaId = profile?.pincode || profile?.pincodeAreaId;
@@ -139,150 +158,215 @@ export default function ProfileScreen() {
         <SafeAreaView edges={['top']} style={styles.mainConatiner}>
             {console.log('profilescreen', profile)}
             <ScrollView>
-                <LinearGradient
-                    colors={['#FFE7DB', '#FFFFFF']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 0, y: 1 }}
-                >
-                    <View style={styles.topView}>
-                        <View style={styles.headerView}>
-                            <TouchableOpacity onPress={() => navigation.goBack()}>
-                                <AntDesign
-                                    name={'left'}
-                                    size={wp('6%')}
-                                    color={'#777777'}
-                                />
-                            </TouchableOpacity>
-                            <Text style={styles.profileHeaderText}>Profile</Text>
-                            {/* <TouchableOpacity>
-                                <Image source={require('../assets/images/dots.png')} style={styles.dotsIcon} />
-                            </TouchableOpacity> */}
-                        </View>
-                        <View style={styles.userView}>
-                            <View style={styles.userAvatarContainer}>
-                                {profile?.isPrivileged && (
-                                    <Image source={require('../assets/images/crown.png')} style={styles.profileCrown} />
-                                )}
-                                <View style={styles.userIconBorder}>
-                                    <FontAwesome6 name="user" size={wp('5%')} color="#D2B200" />
+
+                <View style={{}}>
+                    <LinearGradient
+                        colors={['#FFE7DB', '#FFFFFF']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 0, y: 1 }}
+                    >
+                        <View style={styles.topView}>
+
+                            <View style={{}}>
+                                <View style={styles.headerView}>
+                                    <TouchableOpacity onPress={() => navigation.goBack()}>
+                                        <AntDesign
+                                            name={'left'}
+                                            size={wp('6%')}
+                                            color={'#777777'}
+                                        />
+                                    </TouchableOpacity>
+                                    <Text style={styles.profileHeaderText}>Profile</Text>
                                 </View>
-                            </View>
-                            <View style={styles.userNamePhoneView}>
-                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                    <Text style={styles.userNameText}>{profile.custName}</Text>
-                                    <TouchableOpacity onPress={() => navigation.navigate('EditProfileScreen')} style={{ marginLeft: wp('2%') }}>
-                                        <MaterialIcons name="edit" size={wp('4%')} color="#F25000" />
+                                <View style={styles.userView}>
+                                    <View style={styles.userAvatarContainer}>
+                                        <View style={styles.profileIconView}>
+                                            <GradientUserIcon size={wp('10%')} />
+                                        </View>
+                                        {profile?.isPrivileged && (
+                                            <Image source={require('../assets/images/crown.png')} style={styles.profileCrown} />
+                                        )}
+                                    </View>
+                                    <View style={styles.userNamePhoneView}>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                            <Text style={styles.userNameText}>{profile.custName}</Text>
+                                            <TouchableOpacity onPress={() => navigation.navigate('EditProfileScreen')} style={{ marginLeft: wp('2%') }}>
+                                                <MaterialIcons name="edit" size={wp('4%')} color="#F25000" />
+                                            </TouchableOpacity>
+                                        </View>
+                                        <Text style={styles.phoneNumberStyle}>{profile.phoneNo}</Text>
+                                    </View>
+                                    <TouchableOpacity onPress={() => navigation.navigate('BCoinScreen')} style={styles.bcoinContainer}>
+                                        <View style={styles.bcoinIconCircle}>
+                                            <Image style={styles.bcoinImage} source={require('../assets/images/bcoinimg.png')} />
+                                        </View>
+                                        <Text style={styles.bcoinText}>{(profile.totalBCoins).toFixed(2) || '0.00'}</Text>
                                     </TouchableOpacity>
                                 </View>
-                                <Text style={styles.phoneNumberStyle}>{profile.phoneNo}</Text>
                             </View>
-                            <TouchableOpacity onPress={() => navigation.navigate('BCoinScreen')} style={styles.bcoinContainer}>
-                                <Image style={styles.bcoinImage} source={require('../assets/images/rupee.png')} />
-                                <Text style={styles.bcoinText}>{profile.totalBCoins}</Text>
-                            </TouchableOpacity>
+
+
+                            <View style={styles.containerTwo}>
+                                <TouchableOpacity onPress={() => navigation.navigate('SavedAddressScreen')} style={styles.saveAddressContainer}>
+                                    <View style={styles.actionIconView}>
+                                        <MaterialIcons name="location-on" size={wp('8%')} color="#F25000" style={{}} />
+                                    </View>
+                                    <Text style={styles.saveAddressText}>{'Saved \nAddress'}</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity onPress={() => navigation.navigate("MyOrdersScreen")} style={styles.saveAddressContainer}>
+                                    <View style={styles.actionIconView}>
+                                        <MaterialIcons name="shopping-bag" size={wp('8%')} color="#F25000" />
+                                    </View>
+                                    <Text style={styles.saveAddressText}>{'My \nOrders'}</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity onPress={() => navigation.navigate("ReferralScreen")} style={styles.saveAddressContainer}>
+                                    <View style={styles.actionIconView}>
+                                        <Ionicons name="people" size={wp('8%')} color="#F25000" />
+                                    </View>
+                                    <Text style={styles.saveAddressText}>Refer</Text>
+                                </TouchableOpacity>
+                            </View>
                         </View>
-                    </View>
-                </LinearGradient>
-
-                <View style={styles.containerTwo}>
-                    <TouchableOpacity onPress={() => navigation.navigate('SavedAddressScreen')} style={styles.saveAddressContainer}>
-                        <Image style={styles.saveAddressImage} source={require('../assets/images/location_two.png')} />
-                        <Text style={styles.saveAddressText}>Saved Address</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => navigation.navigate("MyOrdersScreen")} style={styles.saveAddressContainer}>
-                        <Image style={styles.saveAddressImage} source={require('../assets/images/order.png')} />
-                        <Text style={styles.saveAddressText}>My Orders</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => navigation.navigate("ReferralScreen")} style={styles.saveAddressContainer}>
-                        <Image style={styles.saveAddressImage} source={require('../assets/images/refer.png')} />
-                        <Text style={styles.saveAddressText}>Refer</Text>
-                    </TouchableOpacity>
+                    </LinearGradient>
                 </View>
                 <View style={styles.containerThree}>
-                    <Text style={styles.offersText}>Offers</Text>
+                    <Text style={styles.sectionHeader}>Offers</Text>
 
-                    <TouchableOpacity onPress={() => openOffersModal('Gift Cards')} style={styles.offerView}>
-                        <Image style={styles.offerImage} source={require('../assets/images/smart_point.png')} />
-                        <Text style={styles.offerText}>Gift Card</Text>
-                        <AntDesign name={"right"} color={'#DADADA'} size={wp('4.4%')} />
+                    <TouchableOpacity onPress={() => openOffersModal('Gift Cards')} style={styles.listItem}>
+                        <LinearGradient
+                            colors={['#FFF5F0', '#FFEBE0']}
+                            style={styles.listIconCircle}
+                        >
+                            <Image style={styles.listIcon} source={require('../assets/images/smart_point.png')} />
+                        </LinearGradient>
+                        <Text style={styles.listItemText}>Smart point</Text>
+                        <AntDesign name={"right"} color={'#F25000'} size={wp('4%')} />
                     </TouchableOpacity>
 
-                    <TouchableOpacity onPress={() => openOffersModal('Coupons')} style={styles.offerView}>
-                        <Image style={styles.offerImage} source={require('../assets/images/coupon.png')} />
-                        <Text style={styles.offerText}>Coupon</Text>
-                        <AntDesign name={"right"} color={'#DADADA'} size={wp('4.4%')} />
+                    <TouchableOpacity onPress={() => openOffersModal('Coupons')} style={styles.listItem}>
+                        <LinearGradient
+                            colors={['#FFF5F0', '#FFEBE0']}
+                            style={styles.listIconCircle}
+                        >
+                            <Image style={styles.listIcon} source={require('../assets/images/coupon.png')} />
+                        </LinearGradient>
+                        <Text style={styles.listItemText}>Coupon</Text>
+                        <AntDesign name={"right"} color={'#F25000'} size={wp('4%')} />
                     </TouchableOpacity>
                 </View>
 
                 <View style={styles.containerThree}>
-                    <Text style={styles.offersText}>My Account</Text>
-                    <TouchableOpacity onPress={() => navigation.navigate('Wishlist')} style={[styles.offerView, { paddingVertical: wp('3%') }]}>
-                        <Ionicons name="heart-outline" color={'#F25000'} size={wp('5.5%')} />
-                        <Text style={styles.offerText}>My Wishlist</Text>
-                        <AntDesign name={"right"} color={'#DADADA'} size={wp('4.4%')} />
+                    <Text style={styles.sectionHeader}>Informations</Text>
+                    <TouchableOpacity style={styles.listItem}>
+                        <LinearGradient
+                            colors={['#FFF5F0', '#FFEBE0']}
+                            style={styles.listIconCircle}
+                        >
+                            <Ionicons name="shield-checkmark-outline" color={'#F25000'} size={wp('5%')} />
+                        </LinearGradient>
+                        <Text style={styles.listItemText}>Privacy Policy</Text>
+                        <AntDesign name={"right"} color={'#F25000'} size={wp('4%')} />
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={() => navigation.navigate('MyOrdersScreen')} style={[styles.offerView, { paddingVertical: wp('3%') }]}>
-                        <Ionicons name="receipt-outline" color={'#F25000'} size={wp('5.5%')} />
-                        <Text style={styles.offerText}>My Orders</Text>
-                        <AntDesign name={"right"} color={'#DADADA'} size={wp('4.4%')} />
+
+                    <TouchableOpacity style={styles.listItem}>
+                        <LinearGradient
+                            colors={['#FFF5F0', '#FFEBE0']}
+                            style={styles.listIconCircle}
+                        >
+                            <Ionicons name="document-text-outline" color={'#F25000'} size={wp('5%')} />
+                        </LinearGradient>
+                        <Text style={styles.listItemText}>Terms Of Use</Text>
+                        <AntDesign name={"right"} color={'#F25000'} size={wp('4%')} />
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={() => navigation.navigate('CartScreen')} style={[styles.offerView, { paddingVertical: wp('3%') }]}>
-                        <Ionicons name="cart-outline" color={'#F25000'} size={wp('5.5%')} />
-                        <Text style={styles.offerText}>My Cart</Text>
-                        <AntDesign name={"right"} color={'#DADADA'} size={wp('4.4%')} />
+
+                    <TouchableOpacity style={styles.listItem}>
+                        <LinearGradient
+                            colors={['#FFF5F0', '#FFEBE0']}
+                            style={styles.listIconCircle}
+                        >
+                            <Ionicons name="information-circle-outline" color={'#F25000'} size={wp('5%')} />
+                        </LinearGradient>
+                        <Text style={styles.listItemText}>About Us</Text>
+                        <AntDesign name={"right"} color={'#F25000'} size={wp('4%')} />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity onPress={() => navigation.navigate('SupportTicketsListScreen')} style={styles.listItem}>
+                        <LinearGradient
+                            colors={['#FFF5F0', '#FFEBE0']}
+                            style={styles.listIconCircle}
+                        >
+                            <Ionicons name="help-circle-outline" color={'#F25000'} size={wp('5.5%')} />
+                        </LinearGradient>
+                        <Text style={styles.listItemText}>Help & Support</Text>
+                        <AntDesign name={"right"} color={'#F25000'} size={wp('4.4%')} />
                     </TouchableOpacity>
                 </View>
 
                 <View style={styles.containerThree}>
-                    <Text style={styles.offersText}>Account Security</Text>
-                    <TouchableOpacity onPress={() => navigation.navigate('UpdateContactScreen', { type: 'phone' })} style={[styles.offerView, { paddingVertical: wp('3%') }]}>
-                        <MaterialIcons name="phone-android" color={'#F25000'} size={wp('5.5%')} />
-                        <Text style={styles.offerText}>Update Phone Number</Text>
-                        <AntDesign name={"right"} color={'#DADADA'} size={wp('4.4%')} />
+                    <Text style={styles.sectionHeader}>My Account</Text>
+                    <TouchableOpacity onPress={() => navigation.navigate('Wishlist')} style={styles.listItem}>
+                        <LinearGradient
+                            colors={['#FFF5F0', '#FFEBE0']}
+                            style={styles.listIconCircle}
+                        >
+                            <Ionicons name="heart-outline" color={'#F25000'} size={wp('5.5%')} />
+                        </LinearGradient>
+                        <Text style={styles.listItemText}>My Wishlist</Text>
+                        <AntDesign name={"right"} color={'#F25000'} size={wp('4.4%')} />
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={() => navigation.navigate('UpdateContactScreen', { type: 'email' })} style={[styles.offerView, { paddingVertical: wp('3%') }]}>
-                        <MaterialIcons name="email" color={'#F25000'} size={wp('5.5%')} />
-                        <Text style={styles.offerText}>Update Email ID</Text>
-                        <AntDesign name={"right"} color={'#DADADA'} size={wp('4.4%')} />
+                    <TouchableOpacity onPress={() => navigation.navigate('MyOrdersScreen')} style={styles.listItem}>
+                        <LinearGradient
+                            colors={['#FFF5F0', '#FFEBE0']}
+                            style={styles.listIconCircle}
+                        >
+                            <Ionicons name="receipt-outline" color={'#F25000'} size={wp('5.5%')} />
+                        </LinearGradient>
+                        <Text style={styles.listItemText}>My Orders</Text>
+                        <AntDesign name={"right"} color={'#F25000'} size={wp('4.4%')} />
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={() => navigation.navigate('ChangePasswordScreen')} style={[styles.offerView, {
-                        paddingVertical: wp('3%')
-                    }]}>
-                        <MaterialIcons name="lock" color={'#F25000'} size={wp('5.5%')} />
-                        <Text style={styles.offerText}>Change Password</Text>
-                        <AntDesign name={"right"} color={'#DADADA'} size={wp('4.4%')} />
+                    <TouchableOpacity onPress={() => navigation.navigate('CartScreen')} style={styles.listItem}>
+                        <LinearGradient
+                            colors={['#FFF5F0', '#FFEBE0']}
+                            style={styles.listIconCircle}
+                        >
+                            <Ionicons name="cart-outline" color={'#F25000'} size={wp('5.5%')} />
+                        </LinearGradient>
+                        <Text style={styles.listItemText}>My Cart</Text>
+                        <AntDesign name={"right"} color={'#F25000'} size={wp('4.4%')} />
                     </TouchableOpacity>
                 </View>
 
-                <View style={[styles.containerThree, { marginTop: hp('1.5%') }]}>
-                    <Text style={styles.offersText}>Informations</Text>
-                    <View style={[styles.offerView, {
-                        paddingVertical: wp('3%')
-                    }]}>
-                        <Ionicons name="shield-checkmark-outline" color={'#F25000'} size={wp('5.5%')} />
-                        <Text style={styles.offerText}>Privacy Policy</Text>
-                        <AntDesign name={"right"} color={'#DADADA'} size={wp('4.4%')} />
-                    </View>
-                    <View style={[styles.offerView, {
-                        paddingVertical: wp('3%')
-                    }]}>
-                        <Ionicons name="document-text-outline" color={'#F25000'} size={wp('5.5%')} />
-                        <Text style={styles.offerText}>Terms Of Use</Text>
-                        <AntDesign name={"right"} color={'#DADADA'} size={wp('4.4%')} />
-                    </View>
-                    <View style={[styles.offerView, {
-                        paddingVertical: wp('3%')
-                    }]}>
-                        <Ionicons name="information-circle-outline" color={'#F25000'} size={wp('5.5%')} />
-                        <Text style={styles.offerText}>About Us</Text>
-                        <AntDesign name={"right"} color={'#DADADA'} size={wp('4.4%')} />
-                    </View>
-                    <TouchableOpacity onPress={() => navigation.navigate('SupportTicketsListScreen')} style={[styles.offerView, {
-                        paddingVertical: wp('3%')
-                    }]}>
-                        <Ionicons name="help-circle-outline" color={'#F25000'} size={wp('5.5%')} />
-                        <Text style={styles.offerText}>Help & Support</Text>
-                        <AntDesign name={"right"} color={'#DADADA'} size={wp('4.4%')} />
+                <View style={styles.containerThree}>
+                    <Text style={styles.sectionHeader}>Account Security</Text>
+                    <TouchableOpacity onPress={() => navigation.navigate('UpdateContactScreen', { type: 'phone' })} style={styles.listItem}>
+                        <LinearGradient
+                            colors={['#FFF5F0', '#FFEBE0']}
+                            style={styles.listIconCircle}
+                        >
+                            <MaterialIcons name="phone-android" color={'#F25000'} size={wp('5.5%')} />
+                        </LinearGradient>
+                        <Text style={styles.listItemText}>Update Phone Number</Text>
+                        <AntDesign name={"right"} color={'#F25000'} size={wp('4.4%')} />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => navigation.navigate('UpdateContactScreen', { type: 'email' })} style={styles.listItem}>
+                        <LinearGradient
+                            colors={['#FFF5F0', '#FFEBE0']}
+                            style={styles.listIconCircle}
+                        >
+                            <MaterialIcons name="email" color={'#F25000'} size={wp('5.5%')} />
+                        </LinearGradient>
+                        <Text style={styles.listItemText}>Update Email ID</Text>
+                        <AntDesign name={"right"} color={'#F25000'} size={wp('4.4%')} />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => navigation.navigate('ChangePasswordScreen')} style={styles.listItem}>
+                        <LinearGradient
+                            colors={['#FFF5F0', '#FFEBE0']}
+                            style={styles.listIconCircle}
+                        >
+                            <MaterialIcons name="lock" color={'#F25000'} size={wp('5.5%')} />
+                        </LinearGradient>
+                        <Text style={styles.listItemText}>Change Password</Text>
+                        <AntDesign name={"right"} color={'#F25000'} size={wp('4.4%')} />
                     </TouchableOpacity>
                 </View>
 
@@ -307,9 +391,8 @@ export default function ProfileScreen() {
                     </View>
                 </View>
 
-                <TouchableOpacity onPress={() => setIsLogoutModalVisible(true)} style={styles.logoutContainer}>
-                    <MaterialIcons name="logout" color={'#FF0000'} size={wp('5%')} style={{ marginRight: wp('2%') }} />
-                    <Text style={styles.logoutText}>Log Out</Text>
+                <TouchableOpacity onPress={() => setIsLogoutModalVisible(true)} style={styles.logoutBtn}>
+                    <Text style={styles.logoutBtnText}>Log Out</Text>
                 </TouchableOpacity>
             </ScrollView >
 
@@ -351,111 +434,146 @@ const styles = StyleSheet.create({
     headerView: {
         // backgroundColor: '#FFEFE7',
         flexDirection: 'row',
-        paddingTop: hp('4%'),
+        paddingTop: hp('1%'),
         alignItems: "center",
         paddingHorizontal: wp('4.65%'),
-        justifyContent: 'space-between'
+        justifyContent: 'space-between',
+        paddingVertical: hp('1%')
+    },
+    topGradient: {
+        borderBottomLeftRadius: wp('10%'),
+        borderBottomRightRadius: wp('10%'),
+        paddingBottom: hp('2%'),
+    },
+    backButton: {
+        width: wp('10%'),
+        height: wp('10%'),
+        justifyContent: 'center',
+    },
+    topView: {
+        // backgroundColor: '#FFE7DB',
+        borderBottomLeftRadius: wp('8%'),
+        borderBottomRightRadius: wp('8%'),
+        marginTop: hp('2%'),
+        borderWidth: 1,
+        borderColor: '#b4b1b140',
+        borderBottomWidth: 1,
+        borderTopWidth: 0,
+        paddingVertical: hp('2%'),
+        //  paddingHorizontal: wp('5%'),
     },
     profileHeaderText: {
         color: '#000000',
-        fontFamily: FONTS.poppins.semiBold,
-        fontSize: wp('5.1%'),
-        flex: 1,
-        marginLeft: wp('4%')
-    },
-    dotsIcon: {
-        width: wp('0.7%'),
-        height: hp("1.6%"),
-    },
-    topView: {
-
-    },
-    userView: {
-        flexDirection: 'row',
-        paddingHorizontal: wp('5%'),
-        justifyContent: 'space-between',
-        marginTop: hp('3%'),
-        alignItems: 'center'
-    },
-    userAvatarContainer: {
-        alignItems: 'center',
-    },
-    userIconBorder: {
-        height: wp('10%'),
-        width: wp('10%'),
-        borderRadius: wp('5%'),
-        borderWidth: 1,
-        borderColor: '#D2B200',
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#FFFFFF',
-    },
-    profileCrown: {
-        width: wp('5%'),
-        height: wp('4%'),
-        resizeMode: 'contain',
-        marginBottom: hp('-0.5%'),
-    },
-    userNamePhoneView: {
+        fontFamily: FONTS.poppins.bold,
+        fontSize: wp('5.5%'),
         flex: 1,
         marginLeft: wp('5%')
     },
+    userView: {
+        flexDirection: 'row',
+        paddingHorizontal: wp('6%'),
+        marginTop: hp('2%'),
+        alignItems: 'center'
+    },
+    userAvatarContainer: {
+        position: 'relative',
+    },
+    profileIconView: {
+        width: wp("12%"),
+        height: wp("12%"),
+        borderRadius: wp("6%"),
+        borderWidth: 1,
+        borderColor: "#D2B200",
+        overflow: "hidden",
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: '#FFFFFF',
+    },
+    profileCrown: {
+        position: 'absolute',
+        //  top: hp('3%'),
+        alignSelf: 'center',
+        width: wp('6%'),
+        height: hp('2%'),
+        resizeMode: 'contain',
+        zIndex: 2,
+    },
+    userNamePhoneView: {
+        flex: 1,
+        marginLeft: wp('4%')
+    },
     userNameText: {
         color: '#000000',
-        fontFamily: FONTS.poppins.medium,
-        fontSize: wp('4.18%')
+        fontFamily: FONTS.poppins.bold,
+        fontSize: wp('4.8%')
     },
     phoneNumberStyle: {
-        fontSize: wp('2.79%'),
-        fontFamily: FONTS.poppins.semiBold,
-        color: '#5C5C5C',
-        // marginTop: hp('0.1%')
+        fontSize: wp('3.2%'),
+        fontFamily: FONTS.poppins.medium,
+        color: '#71717A',
+        marginTop: hp('0.2%')
     },
     bcoinContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: '#DADADA',
-        borderRadius: 10,
-        // width: wp('12%'),
-        height: hp('3%'),
-        justifyContent: "space-between",
-        paddingHorizontal: wp('1.5%')
+        borderColor: '#F25000',
+        borderRadius: 25,
+        height: hp('3.5%'),
+        paddingLeft: wp('0.5%'),
+        paddingRight: wp('3%'),
+        backgroundColor: '#FFFFFF',
+    },
+    bcoinIconCircle: {
+        width: wp('7%'),
+        height: wp('7%'),
+        borderRadius: wp('3.5%'),
+        // backgroundColor: '#F25000',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: wp('2%'),
     },
     bcoinImage: {
-        width: wp('4.65%'),
-        height: wp('4.65%'),
+        width: wp('4.8%'),
+        height: wp('4.8%'),
+        tintColor: '#f25000',
+        //  tintColor: '#FFFFFF',
+        resizeMode: 'contain',
     },
     bcoinText: {
-        fontFamily: FONTS.poppins.regular,
-        fontSize: wp('3.25%'),
-        color: '#000000',
-        marginLeft: wp('2%')
+        fontFamily: FONTS.poppins.bold,
+        fontSize: wp('3.8%'),
+        color: '#F25000',
     },
     containerTwo: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         // backgroundColor: 'red',
         paddingTop: wp('5%'),
-        borderTopLeftRadius: wp('7%'),
-        borderTopRightRadius: wp('7%'),
+        //  borderTopLeftRadius: wp('7%'),
+        //  borderTopRightRadius: wp('7%'),
         marginTop: hp('2%'),
-        borderWidth: 1,
-        borderColor: '#00000040',
-        borderBottomWidth: 0,
+        //  borderWidth: 1,
+        //  borderColor: '#00000040',
+        //   borderBottomWidth: 0,
         paddingHorizontal: wp('5%'),
     },
     saveAddressContainer: {
         // flexDirection: 'row',
         alignItems: 'center',
-        width: wp('27.21%'),
-        height: hp('8.92%'),
-        borderRadius: 10,
+        width: wp('25.21%'),
+        height: hp('9.5%'),
+        borderRadius: 20,
         borderWidth: 1,
         borderColor: '#DADADA',
-        justifyContent: "space-between",
+        justifyContent: "center",
         // paddingLeft: wp('3%'),
-        paddingVertical: hp('0.8%')
+        paddingVertical: hp('0.5%')
+    },
+    actionIconView: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: hp('0.2%'),
     },
     saveAddressImage: {
         height: wp('9.3%'),
@@ -465,34 +583,45 @@ const styles = StyleSheet.create({
     saveAddressText: {
         fontFamily: FONTS.poppins.regular,
         fontSize: wp('3.25%'),
+        // bottom: hp('2%'),
+        textAlign: 'center',
         // marginLeft: wp('2%')
     },
     containerThree: {
         paddingHorizontal: wp('5%'),
         marginTop: hp('2.5%')
     },
-    offersText: {
-        fontFamily: FONTS.poppins.medium,
-        fontSize: wp('4.18%'),
+    sectionHeader: {
+        fontFamily: FONTS.poppins.bold,
+        fontSize: wp('4.8%'),
         color: '#000000',
-        marginBottom: hp('0.5%')
+        marginBottom: hp('1%')
     },
-    offerView: {
+    listItem: {
         flexDirection: 'row',
-        borderWidth: 1,
-        borderColor: '#DADADA',
+        backgroundColor: '#FFFFFF',
         alignItems: 'center',
-        borderRadius: 10,
-        justifyContent: 'space-between',
         padding: wp('2%'),
-        marginBottom: hp('0.8%')
+        marginBottom: hp('1%'),
+        borderRadius: 50,
+        borderWidth: 1,
+        borderColor: '#F0F0F0',
+        justifyContent: 'space-between',
     },
-    offerImage: {
+    listIconCircle: {
+        width: wp('10%'),
+        height: wp('10%'),
+        borderRadius: wp('5%'),
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: wp('3%'),
+    },
+    listIcon: {
         width: wp('5.5%'),
         height: wp('5.5%'),
         resizeMode: 'contain'
     },
-    offerText: {
+    listItemText: {
         flex: 1,
         marginLeft: wp('3%')
     },
@@ -555,22 +684,15 @@ const styles = StyleSheet.create({
         height: hp('4.3%'),
         resizeMode: 'contain'
     },
-    logoutContainer: {
-        width: wp('90.7%'),
-        height: hp('5.4%'),
-        borderWidth: 1,
-        borderColor: '#FF0000',
-        borderRadius: 10,
-        justifyContent: 'center',
-        alignItems: 'center',
-        flexDirection: 'row',
+    logoutBtn: {
+        marginTop: hp('4%'),
+        marginBottom: hp('6%'),
         alignSelf: 'center',
-        marginTop: hp('3%'),
-        marginBottom: hp('2%')
     },
-    logoutText: {
+    logoutBtnText: {
+        fontFamily: FONTS.poppins.bold,
+        fontSize: wp('4%'),
         color: '#FF0000',
-        fontFamily: FONTS.poppins.regular,
-        fontSize: wp('3.25%')
-    }
+        textDecorationLine: 'underline',
+    },
 })

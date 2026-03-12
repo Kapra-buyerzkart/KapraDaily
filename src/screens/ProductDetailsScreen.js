@@ -1,4 +1,4 @@
-import { View, Text, Image, StyleSheet, TouchableOpacity, FlatList, Platform, ScrollView, Animated, ActivityIndicator, Share, Alert } from 'react-native'
+import { View, Text, Image, StyleSheet, TouchableOpacity, FlatList, Platform, ScrollView, Animated, ActivityIndicator, Share, Alert, ImageBackground } from 'react-native'
 import React, { useRef, useState, useEffect, useContext } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen'
@@ -8,33 +8,18 @@ import CONFIG from '../globals/config'
 import FontAwesome from 'react-native-vector-icons/FontAwesome'
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons'
-import ProductCard from '../components/ProductCard'
+import TokenProductCard from '../components/TokenProductCard'
 import SelectedProducts from '../components/SelectedProducts'
 import { useWishlist } from '../context/WishlistContext'
 import { useCart } from '../context/CartContext'
 import { useProductDetails } from '../hooks/useProductDetails'
 import { LoaderContext } from '../context/loaderContext'
 import Entypo from 'react-native-vector-icons/Entypo'
+import Ionicons from 'react-native-vector-icons/Ionicons'
 import LinearGradient from 'react-native-linear-gradient'
 import StoreUnavailable from '../components/StoreUnavailable'
 import LocationModal from '../components/LocationModal'
 import { AppContext } from '../context/appContext'
-
-const images = [
-    require('../assets/images/lays.png'),
-    require('../assets/images/lays2.png'),
-    require('../assets/images/lays3.png'),
-    require('../assets/images/lays4.png'),
-]
-
-const selectedProducts = [
-    { id: "1", image: require('../assets/images/product1.png') },
-    { id: "2", image: require('../assets/images/product2.png') },
-    { id: "3", image: require('../assets/images/product3.png') },
-    { id: "4", image: require('../assets/images/product1.png') },
-    { id: "5", image: require('../assets/images/product2.png') },
-    { id: "6", image: require('../assets/images/product3.png') },
-];
 
 const ProductDetailsScreen = () => {
     const [selectedImage, setSelectedImage] = useState(null)
@@ -75,30 +60,15 @@ const ProductDetailsScreen = () => {
 
     const handleShare = async () => {
         try {
-            const productUrl = `https://kapradaily.com/product/${urlKey || finalProductId}`;
+            const productUrl = `${CONFIG.WEBSITE_URL || 'https://kapradaily.com'}/product/${urlKey || finalProductId}`;
             const message = `Take a look at this product from Kapra Daily.\n${productUrl}`;
 
             const result = await Share.share({
                 message: message,
-                url: productUrl, // iOS specific
-                title: productName // Android specific
+                url: productUrl,
+                title: productName
             });
-
-            if (result.action === Share.sharedAction) {
-                if (result.activityType) {
-                    // shared with activity type of result.activityType
-                } else {
-                    // shared
-                }
-            } else if (result.action === Share.dismissedAction) {
-                // dismissed
-            }
         } catch (error) {
-            showStatus({
-                type: 'error',
-                title: 'Error',
-                message: 'An error occurred while sharing the product.'
-            });
             console.error('Share Error:', error);
         }
     };
@@ -115,7 +85,6 @@ const ProductDetailsScreen = () => {
         setShowDetails(isExpanding)
 
         if (isExpanding) {
-            // Scroll to the end of the content so user can see the last part
             setTimeout(() => {
                 mainScrollViewRef.current?.scrollToEnd({ animated: true });
             }, 300);
@@ -126,6 +95,7 @@ const ProductDetailsScreen = () => {
         inputRange: [0, 1],
         outputRange: [0, hp('40%')],
     })
+
     useEffect(() => {
         if (productImage) {
             setSelectedImage(productImage)
@@ -134,284 +104,334 @@ const ProductDetailsScreen = () => {
         }
     }, [productImage, apiImages])
 
-    // Scroll to top when product ID changes (e.g., similar product clicked)
     useEffect(() => {
         if (finalProductId) {
             mainScrollViewRef.current?.scrollTo({ y: 0, animated: true });
         }
     }, [finalProductId])
 
-    const products = [
-        { id: "1", name: "Tomato", img: require('../assets/images/products/tomato.png'), price: "₹324" },
-        { id: "2", name: "Green Chilli", img: require('../assets/images/products/chilli.png'), price: "₹324" },
-        { id: "3", name: "Tomato", img: require('../assets/images/products/tomato.png'), price: "₹324" },
-        { id: "4", name: "Green Chilli", img: require('../assets/images/products/chilli.png'), price: "₹324" },
-        { id: "5", name: "Tomato", img: require('../assets/images/products/tomato.png'), price: "₹324" },
-    ];
-
     if (loading && !product) {
         return (
             <SafeAreaView edges={['top']} style={styles.mainContainer}>
-                <View style={styles.headerView}>
-                    <TouchableOpacity onPress={() => navigation.goBack()}>
-                        <Image style={styles.leftArrowIcon} source={require('../assets/images/left_arrow.png')} />
+                <View style={styles.loaderHeader}>
+                    <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconCircle}>
+                        <Ionicons name="chevron-back" size={wp('6%')} color="#000" />
                     </TouchableOpacity>
-                    <Text style={styles.headerText}>Product Details</Text>
+                    <Text style={styles.headerTitle}>Product Details</Text>
                 </View>
-                {/* Global loader handles the visual feedback */}
+                <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color="#F25000" />
+                </View>
             </SafeAreaView>
         )
     }
 
-    return (
-        <SafeAreaView edges={['top']} style={styles.mainContainer}>
-            <View style={styles.headerView}>
+    const renderHeader = () => (
+        <View style={styles.floatingHeader}>
+            <View style={styles.headerLeft}>
                 <TouchableOpacity onPress={() => navigation.goBack()}>
-                    <Image style={styles.leftArrowIcon} source={require('../assets/images/left_arrow.png')} />
+                    <Ionicons name="chevron-back" size={wp('6%')} color="#000" />
                 </TouchableOpacity>
-                <Text style={styles.headerText}>Product Details</Text>
+                <Text style={styles.headerTitle}>Product Details</Text>
             </View>
-            {isStoreUnavailable ? (
-                <StoreUnavailable
-                    image={storeUnavailableData.image}
-                    text={storeUnavailableData.text}
-                    onChangeLocation={() => setIsLocationModalVisible(true)}
-                />
-            ) : (
-                <ScrollView
-                    ref={mainScrollViewRef}
-                    contentContainerStyle={{ paddingBottom: hp("9%") }}
-                    showsVerticalScrollIndicator={false}
+            <View style={styles.headerRight}>
+                <TouchableOpacity
+                    style={styles.iconCircle}
+                    onPress={() => product && toggleWishlist(product)}
                 >
-                    <Image style={styles.imageStyle} source={selectedImage || (apiImages && apiImages[0])} />
-                    <View style={styles.thumbnailContainer}>
-                        <FlatList
-                            data={apiImages && apiImages.length > 0 ? apiImages : []}
-                            horizontal
-                            keyExtractor={(_, index) => index.toString()}
-                            showsHorizontalScrollIndicator={false}
-                            contentContainerStyle={styles.thumbnailList}
-                            renderItem={({ item }) => {
-                                const isSelected = selectedImage?.uri === item?.uri
-                                return (
-                                    <TouchableOpacity
-                                        style={[
-                                            styles.thumbnailWrapper,
-                                            isSelected && styles.activeThumbnail,
-                                        ]}
-                                        onPress={() => setSelectedImage(item)}
-                                    >
-                                        <Image
-                                            source={item}
-                                            style={styles.thumbnailImage}
-                                            resizeMode="contain"
-                                        />
-                                    </TouchableOpacity>
-                                )
-                            }}
-                        />
-                    </View>
-                    <View style={styles.detailsContainer}>
-                        <View style={styles.detailsContainerTopView}>
-                            <View style={styles.btokenView}>
-                                <Image style={Platform.OS === 'android' ? [styles.btokenIcon, {
-                                    bottom: hp('0.2%')
-                                }] : styles.btokenIcon} source={require('../assets/images/btoken-icon-three.png')} />
-                                <Text style={styles.btokenText}>{Number(bTokenValue)} Token</Text>
-                            </View>
-                            <View style={styles.heartShareButtonContainer}>
-                                <TouchableOpacity style={{
-                                    marginRight: wp('4%')
-                                }} onPress={() => product && toggleWishlist(product)}>
-                                    <FontAwesome
-                                        name={isLiked ? 'heart' : 'heart-o'}
-                                        size={wp('5%')}
-                                        color={isLiked ? '#FF0048' : '#000000'}
-                                    />
-                                </TouchableOpacity>
-                                <TouchableOpacity onPress={handleShare}>
-                                    <Image style={styles.shareIcon} source={require('../assets/images/share.png')} />
-                                </TouchableOpacity>
-                            </View>
-                        </View>
-                        <Text style={styles.productName}>{productName}</Text>
-                        <Text style={styles.productDescription}>{shortDescription}</Text>
-                        <View style={styles.quantityCategoryContainer}>
-                            <View>
-                                {/* <Text style={styles.quantity}>{product?.sku || 'SKU'}</Text> */}
-                                {/* <Text style={styles.quantityTwo}>{stockQty > 0 ? `${stockQty} in stock` : 'Out of stock'}</Text> */}
-                            </View>
-                            {/* <Text style={styles.category}>{isAvailable ? 'Available' : 'Unavailable'}</Text> */}
-                        </View>
-                        <View style={styles.offerPriceAddButtonContainer}>
-                            <View>
-                                {discountPercentage > 0 && <Text style={styles.offerText}>{discountPercentage}% OFF</Text>}
-                                <View style={styles.priceContainer}>
-                                    <Text style={styles.sellingPrice}>₹{specialPrice}</Text>
-                                    {unitPrice && unitPrice !== specialPrice && (
-                                        <Text style={styles.mrpText}>₹{unitPrice}</Text>
-                                    )}
-                                </View>
-                            </View>
+                    <Ionicons
+                        name={isLiked ? 'heart' : 'heart-outline'}
+                        size={wp('7%')}
+                        color={'#000'}
+                        style={{
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        }}
+                    />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.iconCircle} onPress={handleShare}>
+                    <Ionicons name="share-social" size={wp('6%')} color="#000" />
+                </TouchableOpacity>
+            </View>
+        </View>
+    );
 
-                            <View style={{ alignItems: 'center' }}>
-                                {(() => {
-                                    const cartItem = cartItems.find(i => String(i.productId || i.id) === String(finalProductId));
-                                    const quantity = cartItem ? cartItem.quantity : 0;
-                                    const cartItemId = cartItem?.cartItemId || finalProductId;
-
-                                    if (quantity > 0) {
-                                        return (
-                                            <View style={[styles.quantitySelector, { marginTop: 0 }]}>
-                                                <TouchableOpacity
-                                                    style={styles.qtyButton}
-                                                    onPress={() => {
-                                                        if (quantity === 1) {
-                                                            removeFromCart(cartItemId);
-                                                        } else {
-                                                            updateCartItemQuantity(cartItemId, quantity - 1);
-                                                        }
-                                                    }}
-                                                >
-                                                    <Entypo name="minus" size={wp('4%')} color="#FFF" />
-                                                </TouchableOpacity>
-                                                <Text style={styles.qtyText}>{quantity}</Text>
-                                                <TouchableOpacity
-                                                    style={styles.qtyButton}
-                                                    onPress={() => updateCartItemQuantity(cartItemId, quantity + 1)}
-                                                >
-                                                    <Entypo name="plus" size={wp('4%')} color="#FFF" />
-                                                </TouchableOpacity>
-                                            </View>
-                                        );
-                                    }
-
-                                    return (
-                                        <TouchableOpacity
-                                            style={[styles.addButton, ((isAvailable === false) || stockQty === 0) && { backgroundColor: '#CCCCCC' }]}
-                                            onPress={() => {
-                                                if ((isAvailable === false) || stockQty === 0) return;
-                                                product && addToCart(product);
-                                            }}
-                                            disabled={(isAvailable === false) || stockQty === 0}
-                                        >
-                                            <Text style={styles.addButtonText}>{((isAvailable !== false) && stockQty > 0) ? 'ADD' : 'OUT OF STOCK'}</Text>
-                                        </TouchableOpacity>
-                                    );
-                                })()}
-                                {stockQty > 0 && stockQty < 10 && (
-                                    <Text style={styles.lowStockText}>Only {stockQty} left!</Text>
-                                )}
-                            </View>
-                        </View>
-                        <View style={styles.divider} />
-                        <TouchableOpacity onPress={toggleDetails} style={styles.viewProductDetailsButton}>
-                            <Text style={styles.viewProductDetailsButtonText}>View product details</Text>
-                            <AntDesign
-                                name={showDetails ? 'up' : 'down'}
-                                size={wp('3%')}
-                                color="#000"
-                            />
+    return (
+        <View style={styles.mainContainer}>
+            {isStoreUnavailable ? (
+                <SafeAreaView edges={['top']} style={{ flex: 1 }}>
+                    <View style={styles.standardHeader}>
+                        <TouchableOpacity onPress={() => navigation.goBack()}>
+                            <Ionicons name="chevron-back" size={wp('6%')} color="#000" />
                         </TouchableOpacity>
-                        <Animated.View style={[styles.productDetailsView, {
-                            height: heightInterpolate,
-                            overflow: 'hidden'
-                        }]}>
-                            <View style={{ flex: 1 }}>
-                                <ScrollView
-                                    ref={detailsScrollViewRef}
-                                    showsVerticalScrollIndicator={false}
-                                    nestedScrollEnabled={true}
-                                    onContentSizeChange={(w, h) => {
-                                        if (h > hp('35%')) {
-                                            setShowScrollHint(true);
-                                        }
-                                    }}
-                                    onScroll={(event) => {
-                                        const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
-                                        const isCloseToBottom = layoutMeasurement.height + contentOffset.y >= contentSize.height - 20;
-                                        setShowScrollHint(!isCloseToBottom);
-                                    }}
-                                    scrollEventThrottle={16}
-                                >
-                                    <Text style={styles.productDetailsText}>{productDescription?.replace(/<[^>]*>?/gm, '')}</Text>
-                                    {attributes && attributes.length > 0 && (
-                                        <>
-                                            <Text style={[styles.productsContainerHeader, { marginLeft: 0, marginBottom: hp('1%'), marginTop: hp('2%') }]}>Attributes</Text>
-                                            <View style={styles.specsContainer}>
-                                                {attributes.map((attr, idx) => (
-                                                    <View key={idx} style={[styles.specRow, (idx + (product?.sku ? 1 : 0)) % 2 !== 0 && styles.specRowAlt]}>
-                                                        <Text style={styles.specLabel}>{attr.attrName}</Text>
-                                                        <Text style={styles.specValue}>{attr.attrValue}</Text>
-                                                    </View>
-                                                ))}
-                                            </View>
-                                        </>
-                                    )}
-                                    <View style={{ marginTop: hp('2%') }} />
-                                </ScrollView>
-
-                                {/* Scroll Gradient and Indicator */}
-                                {showScrollHint && showDetails && (
-                                    <>
-                                        <LinearGradient
-                                            colors={['rgba(255,255,255,0)', 'rgba(255,255,255,0.8)', '#FFFFFF']}
-                                            style={styles.fadeGradient}
-                                        />
-                                        <TouchableOpacity onPress={() => detailsScrollViewRef.current?.scrollToEnd({ animated: true })} style={styles.scrollIndicator}>
-                                            <Text style={styles.scrollHintText}>Scroll for more</Text>
-                                            <MaterialIcons name="keyboard-arrow-down" size={wp('4%')} color="#F25000" />
-                                        </TouchableOpacity>
-                                    </>
-                                )}
-                            </View>
-                        </Animated.View>
+                        <Text style={styles.headerTitle}>Product Details</Text>
                     </View>
-                    <View style={styles.productsMainContainerTwo}>
-                        <View style={styles.productsContainerViewOne}>
-                            <Text style={styles.productsContainerHeader}>Similar Products</Text>
-                            {/* {relatedProducts && relatedProducts.length > 0 && (
-                            <TouchableOpacity style={styles.viewAllContainer}>
-                                <Text style={styles.viewAllText}>View All</Text>
-                                <MaterialIcons name={"arrow-forward-ios"} color={"#FF7B3A"} size={wp("3.3%")} style={styles.viewAllRightArrowIcon} />
-                            </TouchableOpacity>
-                        )} */}
-                        </View>
-                        {relatedLoading ? (
-                            <View style={{ paddingVertical: hp('2%'), alignItems: 'center' }}>
-                                <ActivityIndicator size="small" color="#F25000" />
-                            </View>
-                        ) : (
+                    <StoreUnavailable
+                        image={storeUnavailableData.image}
+                        text={storeUnavailableData.text}
+                        onChangeLocation={() => setIsLocationModalVisible(true)}
+                    />
+                </SafeAreaView>
+            ) : (
+                <>
+                    {renderHeader()}
+                    <ScrollView
+                        ref={mainScrollViewRef}
+                        contentContainerStyle={{ paddingBottom: hp("15%") }}
+                        showsVerticalScrollIndicator={false}
+                        bounces={false}
+                    >
+                        <View style={styles.topSection}>
                             <FlatList
-                                horizontal={true}
-                                data={relatedProducts}
-                                keyExtractor={(item, index) => (item.productId || item.id || index).toString()}
-                                renderItem={({ item }) => <ProductCard item={item} />}
+                                data={apiImages && apiImages.length > 0 ? apiImages : [productImage]}
+                                horizontal
+                                pagingEnabled
+                                keyExtractor={(_, index) => index.toString()}
                                 showsHorizontalScrollIndicator={false}
-                                contentContainerStyle={[
-                                    { paddingLeft: wp('4.6%') },
-                                    (!relatedProducts || relatedProducts.length === 0) && { flex: 1, justifyContent: 'center', paddingLeft: 0 }
-                                ]}
-                                ListEmptyComponent={!relatedLoading && (
-                                    <View style={styles.emptyContainer}>
-                                        <Text style={styles.emptyText}>No similar products found</Text>
+                                onScroll={(e) => {
+                                    const x = e.nativeEvent.contentOffset.x;
+                                    const index = Math.round(x / wp('100%'));
+                                    if (apiImages && index < apiImages.length) {
+                                        setSelectedImage(apiImages[index]);
+                                    } else if (!apiImages && index === 0) {
+                                        setSelectedImage(productImage);
+                                    }
+                                }}
+                                renderItem={({ item }) => (
+                                    <View style={styles.mainImageContainer}>
+                                        <ImageBackground
+                                            source={item || productImage || require('../assets/images/categories/dfn.png')}
+                                            style={styles.imageStyle}
+                                            imageStyle={{ resizeMode: 'contain' }}
+                                        />
                                     </View>
                                 )}
                             />
-                        )}
-                    </View>
-                </ScrollView >
+
+                            <View style={styles.paginationContainer}>
+                                {(apiImages && apiImages.length > 1) && apiImages.map((_, index) => {
+                                    const isSelected = selectedImage?.uri === apiImages[index]?.uri;
+                                    return (
+                                        <View
+                                            key={index}
+                                            style={[
+                                                styles.paginationDot,
+                                                isSelected && styles.paginationDotActive
+                                            ]}
+                                        />
+                                    );
+                                })}
+                            </View>
+                        </View>
+
+                        <View style={styles.infoCard}>
+                            <View style={{ borderColor: '#D9D9D9', borderWidth: 0.5, width: wp('90%'), alignSelf: 'center', borderRadius: 30, paddingHorizontal: 20, paddingVertical: 25 }} >
+                                <View style={styles.titleRow}>
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={styles.productName}>{productName}</Text>
+                                        <Text style={styles.productDescription}>{shortDescription}</Text>
+                                        <Text style={styles.weightText}>{product?.unit || '210 g'}</Text>
+                                        {(!isAvailable || stockQty === 0) && (
+                                            <Text style={styles.outOfStockBadge}>Out of Stock</Text>
+                                        )}
+                                    </View>
+                                </View>
+
+                                <View style={styles.tokenBadge}>
+                                    <Image style={styles.tokenIconSmall} source={require('../assets/images/btoken-icon-three.png')} />
+                                    <Text style={styles.tokenBadgeText}>{Number(bTokenValue)} B Token</Text>
+                                </View>
+
+                                <View style={styles.priceSection}>
+                                    <View style={{ flex: 1 }}>
+                                        {discountPercentage > 0 && <Text style={styles.discountText}>{Math.round(discountPercentage)}% OFF</Text>}
+                                        <View style={styles.priceRow}>
+                                            <Text style={styles.currentPrice}>₹{specialPrice}</Text>
+                                            {unitPrice && unitPrice !== specialPrice && (
+                                                <Text style={styles.originalPrice}>₹{unitPrice}</Text>
+                                            )}
+                                        </View>
+                                        <Text style={styles.unitPriceText}>{product?.unitPriceText || '13.9/100g'}</Text>
+                                    </View>
+
+                                    <View style={styles.actionContainer}>
+                                        {(() => {
+                                            const cartItem = cartItems.find(i => String(i.productId || i.id) === String(finalProductId));
+                                            const quantity = cartItem ? cartItem.quantity : 0;
+                                            const cartItemId = cartItem?.cartItemId || finalProductId;
+
+                                            if (quantity > 0) {
+                                                return (
+                                                    <View style={styles.quantitySelector}>
+                                                        <TouchableOpacity
+                                                            onPress={() => quantity === 1 ? removeFromCart(cartItemId) : updateCartItemQuantity(cartItemId, quantity - 1)}
+                                                        >
+                                                            <LinearGradient
+                                                                colors={['#FFFFFF', '#FFD8C4']}
+                                                                start={{ x: 0, y: 0 }}
+                                                                end={{ x: 1, y: 1 }}
+                                                                style={styles.plusIconCircle}
+                                                            >
+                                                                <Entypo name="minus" size={wp('5%')} color="#F25000" />
+                                                            </LinearGradient>
+                                                        </TouchableOpacity>
+                                                        <Text style={styles.qtyValue}>{quantity}</Text>
+                                                        <TouchableOpacity
+                                                            onPress={() => updateCartItemQuantity(cartItemId, quantity + 1)}
+                                                        >
+                                                            <LinearGradient
+                                                                colors={['#FFFFFF', '#FFD8C4']}
+                                                                start={{ x: 0, y: 0 }}
+                                                                end={{ x: 1, y: 1 }}
+                                                                style={styles.plusIconCircle}
+                                                            >
+                                                                <Entypo name="plus" size={wp('5%')} color="#F25000" />
+                                                            </LinearGradient>
+                                                        </TouchableOpacity>
+                                                    </View>
+                                                );
+                                            }
+
+                                            if (!isAvailable || stockQty === 0) {
+                                                return (
+                                                    <View style={[styles.addBtn, styles.disabledBtn]}>
+                                                        <Text style={[styles.addBtnText, { fontSize: wp('3.5%') }]}>OUT OF STOCK</Text>
+                                                    </View>
+                                                );
+                                            }
+
+                                            return (
+                                                <TouchableOpacity
+                                                    style={styles.addBtn}
+                                                    onPress={() => product && addToCart(product)}
+                                                >
+                                                    <LinearGradient
+                                                        colors={['#FFFFFF', '#FFD8C4']}
+                                                        start={{ x: 0, y: 0 }}
+                                                        end={{ x: 1, y: 1 }}
+                                                        style={[styles.plusIconCircle, { marginRight: wp('3%') }]}
+                                                    >
+                                                        <Entypo name="plus" size={wp('5%')} color="#F25000" />
+                                                    </LinearGradient>
+                                                    <Text style={styles.addBtnText}>ADD</Text>
+                                                </TouchableOpacity>
+                                            );
+                                        })()}
+                                    </View>
+                                </View>
+
+                                <LinearGradient
+                                    colors={['rgba(242, 80, 0, 0)', '#FCD3C0', 'rgba(242, 80, 0, 0)']}
+                                    start={{ x: 0, y: 0.5 }}
+                                    end={{ x: 1, y: 0.5 }}
+                                    style={styles.detailsDivider}
+                                />
+                                <View style={styles.divider} />
+                                <TouchableOpacity onPress={toggleDetails} style={styles.viewProductDetailsButton}>
+                                    <Text style={styles.viewProductDetailsButtonText}>View product details</Text>
+                                    <AntDesign
+                                        name={showDetails ? 'up' : 'down'}
+                                        size={wp('3%')}
+                                        color="#f25000"
+                                    />
+
+                                </TouchableOpacity>
+
+                                <Animated.View style={[styles.productDetailsView, {
+                                    height: heightInterpolate,
+                                    overflow: 'hidden'
+                                }]}>
+                                    <View style={{ flex: 1 }}>
+                                        <ScrollView
+                                            ref={detailsScrollViewRef}
+                                            showsVerticalScrollIndicator={false}
+                                            nestedScrollEnabled={true}
+                                            onContentSizeChange={(w, h) => {
+                                                if (h > hp('35%')) {
+                                                    setShowScrollHint(true);
+                                                }
+                                            }}
+                                            onScroll={(event) => {
+                                                const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
+                                                const isCloseToBottom = layoutMeasurement.height + contentOffset.y >= contentSize.height - 20;
+                                                setShowScrollHint(!isCloseToBottom);
+                                            }}
+                                            scrollEventThrottle={16}
+                                        >
+                                            <Text style={styles.productDetailsText}>{productDescription?.replace(/<[^>]*>?/gm, '')}</Text>
+                                            {attributes && attributes.length > 0 && (
+                                                <>
+                                                    <Text style={styles.specsHeader}>Attributes</Text>
+                                                    <View style={styles.specsContainer}>
+                                                        {attributes.map((attr, idx) => (
+                                                            <View key={idx} style={[styles.specRow, idx % 2 !== 0 && styles.specRowAlt]}>
+                                                                <Text style={styles.specLabel}>{attr.attrName}</Text>
+                                                                <Text style={styles.specValue}>{attr.attrValue}</Text>
+                                                            </View>
+                                                        ))}
+                                                    </View>
+                                                </>
+                                            )}
+                                            <View style={{ height: hp('5%') }} />
+                                        </ScrollView>
+
+                                        {showScrollHint && showDetails && (
+                                            <>
+                                                <LinearGradient
+                                                    colors={['rgba(255,255,255,0)', 'rgba(255,255,255,0.8)', '#FFFFFF']}
+                                                    style={styles.fadeGradient}
+                                                />
+                                                <TouchableOpacity onPress={() => detailsScrollViewRef.current?.scrollToEnd({ animated: true })} style={styles.scrollIndicator}>
+                                                    <Text style={styles.scrollHintText}>Scroll for more</Text>
+                                                    <MaterialIcons name="keyboard-arrow-down" size={wp('4%')} color="#F25000" />
+                                                </TouchableOpacity>
+                                            </>
+                                        )}
+                                    </View>
+                                </Animated.View>
+                            </View>
+                        </View>
+
+                        <View style={styles.similarProductsSection}>
+                            <Text style={styles.sectionTitle}>Similar Products</Text>
+                            {relatedLoading ? (
+                                <ActivityIndicator size="small" color="#F25000" style={{ marginVertical: hp('2%') }} />
+                            ) : (
+                                <FlatList
+                                    horizontal
+                                    data={relatedProducts}
+                                    keyExtractor={(item, index) => (item.productId || item.id || index).toString()}
+                                    renderItem={({ item }) => (
+                                        <TokenProductCard
+                                            item={item}
+                                            onPress={() => navigation.push('ProductDetailsScreen', { productId: item.productId || item.id, product: item })}
+                                        />
+                                    )}
+                                    showsHorizontalScrollIndicator={false}
+                                    contentContainerStyle={{ paddingLeft: wp('7%'), paddingRight: wp('7%') }}
+                                    ListEmptyComponent={!relatedLoading && (
+                                        <View style={styles.emptyContainer}>
+                                            <Text style={styles.emptyText}>No similar products found</Text>
+                                        </View>
+                                    )}
+                                />
+                            )}
+                        </View>
+                    </ScrollView>
+                </>
             )}
+
             {cartItems && cartItems.length > 0 && (
-                <View style={styles.floatingContainer}>
+                <View style={styles.floatingCart}>
                     <SelectedProducts selectedProducts={cartItems} />
                 </View>
             )}
+
             <LocationModal
                 visible={isLocationModalVisible}
                 onClose={() => setIsLocationModalVisible(false)}
             />
-        </SafeAreaView >
+        </View>
     )
 }
 
@@ -421,195 +441,257 @@ const styles = StyleSheet.create({
     mainContainer: {
         backgroundColor: '#FFFFFF',
         flex: 1,
-        // paddingHorizontal: wp('4.65%')
     },
-    headerView: {
+    loaderHeader: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingTop: hp('1.5%'),
-        paddingHorizontal: wp('4.65%'),
-        paddingBottom: hp('1%')
+        paddingHorizontal: wp('5%'),
+        paddingTop: hp('2%'),
     },
-    leftArrowIcon: {
-        height: hp('2%'),
-        width: wp('2.32%')
-    },
-    headerText: {
-        fontFamily: FONTS.poppins.semiBold,
-        fontSize: wp('4.65%'),
-        marginLeft: wp('6%')
-    },
-    thumbnailContainer: {
-        height: hp('9%'),   // ✅ controls FlatList height
-        marginTop: hp('2%'),
-        alignSelf: 'center'
-    },
-
-    thumbnailList: {
+    standardHeader: {
+        flexDirection: 'row',
         alignItems: 'center',
-        // gap: wp('3%'),      // optional spacing
+        paddingHorizontal: wp('5%'),
+        paddingVertical: hp('1.5%'),
+        backgroundColor: '#FFF',
     },
-
-    thumbnailWrapper: {
-        width: wp('16.75%'),
-        height: hp('7.72%'),
-        borderRadius: wp('2.32%'),
+    floatingHeader: {
+        position: 'absolute',
+        top: Platform.OS === 'ios' ? hp('6%') : hp('5%'),
+        left: 0,
+        right: 0,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: wp('5%'),
+        zIndex: 10,
+    },
+    headerLeft: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    iconCircle: {
+        width: wp('10%'),
+        height: wp('10%'),
+        borderRadius: wp('3%'),
+        backgroundColor: '#FFFFFF',
         alignItems: 'center',
         justifyContent: 'center',
-        opacity: 0.3,
-        marginRight: wp('1%')
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 5,
+        elevation: 5,
     },
-    activeThumbnail: {
-        borderWidth: 2,
-        borderColor: '#FF6A00',
+    headerTitle: {
+        fontFamily: FONTS.poppins.bold,
+        fontSize: wp('4.8%'),
+        color: '#000',
+        marginLeft: wp('2%'),
+    },
+    headerRight: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: wp('3%'),
+    },
+    headerGradient: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: hp('15%'),
+    },
+    topSection: {
+        height: hp('38%'),
+        width: '100%',
         backgroundColor: '#FFFFFF',
-        opacity: 1
     },
-    thumbnailImage: {
-        width: wp('13.95%'),
-        height: hp('6.44%'),
+    imageBackdrop: {
+        width: '100%',
+        height: '100%',
+        backgroundColor: '#F8F8F8',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    mainImageContainer: {
+        width: wp('100%'),
+        height: hp('40%'),
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingTop: hp('5%'),
     },
     imageStyle: {
-        width: wp('48.14%'),
-        height: hp('22.21%'),
-        resizeMode: 'contain',
+        width: wp('85%'),
+        height: hp('28%'),
+    },
+    paginationContainer: {
+        position: 'absolute',
+        bottom: hp('2%'),
+        flexDirection: 'row',
         alignSelf: 'center',
-        // marginTop: hp('2.5%')
     },
-    detailsContainer: {
-        paddingTop: hp('2%'),
-        // paddingHorizontal: wp('9.3%'),
-        marginTop: hp('1.5%'),
-        backgroundColor: '#FFFFFF',
-        borderRadius: wp('9.3%'),
-        // overflow: 'hidden',
-
-        // iOS shadow
+    paginationDot: {
+        width: wp('4%'),
+        height: wp('4%'),
+        borderRadius: wp('2%'),
+        borderWidth: 2,
+        borderColor: '#FFFFFF',
+        backgroundColor: '#727783',
+        marginHorizontal: wp('1.5%'),
         shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 0, // matches Figma Y = -11
-        },
-        shadowOpacity: 0.3, // 10%
-        shadowRadius: 10,   // Blur = 15
-
-        // Android shadow
-        elevation: 10,
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.3,
+        shadowRadius: 2,
+        elevation: 3,
     },
-    detailsContainerTopView: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        // borderRadius: wp('9.3%')
-        paddingHorizontal: wp('9.3%')
+    paginationDotActive: {
+        backgroundColor: '#F25000',
+        borderColor: '#ffffff',
     },
-    btokenView: {
-        flexDirection: 'row',
-        alignItems: 'center'
-    },
-    btokenIcon: {
-        width: wp('6%'),
-        height: hp('1.5%'),
-        // resizeMode: 'cover'
-    },
-    btokenText: {
-        color: '#5E3568',
-        fontFamily: FONTS.poppins.regular,
-        fontSize: wp('4%'),
-        marginLeft: wp('2%')
-    },
-    heartShareButtonContainer: {
-        flexDirection: 'row',
-        alignItems: 'center'
-    },
-    shareIcon: {
-        height: hp('2.36%'),
-        width: wp('4.65%'),
-        resizeMode: 'contain'
+    infoCard: {
+        // marginTop: -hp('5%'),
+        backgroundColor: '#FFF',
+        // borderTopLeftRadius: wp('12%'),
+        //borderTopRightRadius: wp('12%'),
+        paddingTop: hp('4%'),
+        paddingHorizontal: wp('8%'),
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: -15 },
+        shadowOpacity: 0.08,
+        shadowRadius: 15,
+        elevation: 25,
+        minHeight: hp('40%'),
     },
     productName: {
-        color: '#000000',
-        fontFamily: FONTS.poppins.semiBold,
+        fontFamily: FONTS.poppins.bold,
         fontSize: wp('4.5%'),
-        marginLeft: wp('4.65%'),
-        marginTop: hp('1.8%')
+        color: '#000',
+        lineHeight: hp('4%'),
     },
     productDescription: {
-        color: '#616161',
         fontFamily: FONTS.poppins.regular,
         fontSize: wp('3.5%'),
-        marginLeft: wp('4.65%'),
-        marginTop: hp('0.8%')
+        color: '#777',
+        marginTop: hp('0.3%'),
     },
-    quantity: {
-        color: '#616161',
-        fontSize: wp('3.9%'),
+    weightText: {
         fontFamily: FONTS.poppins.medium,
+        fontSize: wp('4.4%'),
+        color: '#727783',
+        marginTop: hp('1%'),
     },
-    quantityTwo: {
-        color: '#969696',
-        fontFamily: FONTS.poppins.medium,
-        fontSize: wp('2.9%'),
-        marginTop: hp('0.5%')
-    },
-    category: {
-        color: '#000000',
-        fontFamily: FONTS.poppins.regular,
-        fontSize: wp('3.5%'),
-    },
-    quantityCategoryContainer: {
+    tokenBadge: {
         flexDirection: 'row',
-        marginTop: hp('3.5%'),
-        paddingHorizontal: wp('4.65%'),
-        justifyContent: 'space-between',
-        // paddingRight: wp('9.3%')
-    },
-    offerText: {
-        fontSize: wp('2.9%'),
-        color: '#0CA201',
-        fontFamily: FONTS.poppins.semiBold
-    },
-    priceContainer: {
-        flexDirection: 'row',
-        marginTop: hp('0.1%'),
-        alignItems: 'center'
-    },
-    sellingPrice: {
-        color: '#000000',
-        fontFamily: FONTS.poppins.semiBold,
-        fontSize: wp('5%')
-    },
-    mrpText: {
-        fontFamily: FONTS.poppins.semiBold,
-        color: '#616161',
-        fontSize: wp('4.1%'),
-        textDecorationLine: 'line-through',
-        marginLeft: wp('2%')
-    },
-    addButton: {
-        width: wp('33.72%'),
-        height: hp('5.36%'),
-        backgroundColor: '#F25000',
-        borderRadius: wp('2.33%'),
-        justifyContent: 'center',
         alignItems: 'center',
-        marginTop: hp('2%')
+        //  backgroundColor: '#F3E8FF',
+        alignSelf: 'flex-start',
+        // paddingHorizontal: wp('3%'),
+        // paddingVertical: hp('0.6%'),
+        borderRadius: 8,
+        marginTop: hp('2%'),
     },
-    addButtonText: {
-        fontSize: wp('4.1%'),
-        color: '#FFFFFF',
-        fontFamily: FONTS.outfit.bold
+    tokenIconSmall: {
+        width: wp('4%'),
+        height: wp('3%'),
+        resizeMode: 'contain',
     },
-    offerPriceAddButtonContainer: {
+    tokenBadgeText: {
+        fontFamily: FONTS.poppins.regular,
+        fontSize: wp('3.2%'),
+        color: '#5e3568',
+        marginLeft: wp('1.5%'),
+    },
+    priceSection: {
         flexDirection: 'row',
-        marginTop: hp('2.5%'),
-        paddingHorizontal: wp('4.65%'),
+        alignItems: 'flex-end',
         justifyContent: 'space-between',
-        paddingBottom: hp('2.5%')
+        marginTop: hp('3%'),
     },
-    divider: {
-        backgroundColor: '#DADADA',
-        height: 1,
-        marginHorizontal: wp('4.65%'),
+    discountText: {
+        fontFamily: FONTS.poppins.semiBold,
+        fontSize: wp('3.4%'),
+        color: '#0CA201',
+        fontWeight: '600'
+    },
+    priceRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: hp('0.4%'),
+    },
+    currentPrice: {
+        fontFamily: FONTS.poppins.semiBold,
+        fontSize: wp('4.8%'),
+        color: '#000',
+    },
+    originalPrice: {
+        fontFamily: FONTS.poppins.semiBold,
+        fontSize: wp('4.8%'),
+        color: '#727783',
+        textDecorationLine: 'line-through',
+        marginLeft: wp('3%'),
+    },
+    unitPriceText: {
+        fontFamily: FONTS.poppins.medium,
+        fontSize: wp('3.4%'),
+        color: '#969696',
+        marginTop: hp('0.4%'),
+    },
+    actionContainer: {
+        height: hp('6.5%'),
+        justifyContent: 'center',
+    },
+    addBtn: {
+        backgroundColor: '#F25000',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: wp('34%'),
+        height: hp('5.5%'),
+        borderRadius: hp('3%'),
+    },
+    plusIconCircle: {
+        width: wp('8.5%'),
+        height: wp('8.5%'),
+        borderRadius: wp('4.25%'),
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    addBtnText: {
+        color: '#FFF',
+        fontFamily: FONTS.poppins.bold,
+        fontSize: wp('4.8%'),
+    },
+    disabledBtn: {
+        backgroundColor: '#CCC',
+        shadowOpacity: 0,
+        elevation: 0,
+    },
+    outOfStockBadge: {
+        fontFamily: FONTS.poppins.semiBold,
+        fontSize: wp('3.2%'),
+        color: '#FF0000',
+        marginTop: hp('0.5%'),
+    },
+    quantitySelector: {
+        backgroundColor: '#F25000',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        width: wp('34%'),
+        height: hp('5.5%'),
+        borderRadius: hp('3%'),
+        paddingHorizontal: wp('2%'),
+    },
+    qtyValue: {
+        color: '#FFF',
+        fontFamily: FONTS.poppins.bold,
+        fontSize: wp('4.2%'),
+    },
+    detailsDivider: {
+        width: wp('70%'),
+        height: 3,
+        alignSelf: 'center',
+        marginTop: hp('4%'),
     },
     viewProductDetailsButton: {
         flexDirection: 'row',
@@ -618,170 +700,104 @@ const styles = StyleSheet.create({
         marginTop: hp('2%')
     },
     viewProductDetailsButtonText: {
-        fontFamily: FONTS.poppins.regular,
+        fontFamily: FONTS.poppins.semiBold,
         fontSize: wp('3.5%'),
-        color: '#000000',
+        color: '#f25000',
         marginRight: wp('1.5%')
     },
     productDetailsView: {
-        paddingHorizontal: wp('7.65%'),
-        paddingTop: hp('2%'),
-        overflow: 'hidden',
-
-        // borderBottomLeftRadius: 25, borderBottomRightRadius: 25
-        //backgroundColor: 'red'
+        marginTop: hp('1%'),
     },
     productDetailsText: {
         fontFamily: FONTS.poppins.light,
-        fontSize: wp('3.3%'),
-        color: '#616161',
-        lineHeight: hp('2.5%')
+        fontSize: wp('3.6%'),
+        color: '#555',
+        lineHeight: hp('3%'),
     },
-    productsMainContainerTwo: {
-        marginTop: hp("6%"),
-        // paddingLeft: wp("4.6%"),
-        height: hp("29.5%"),
-        // width: wp("100%"),
+    specsHeader: {
+        fontFamily: FONTS.poppins.semiBold,
+        fontSize: wp('4%'),
+        color: '#333',
+        marginTop: hp('3%'),
+        marginBottom: hp('1%'),
     },
-    productsContainerViewOne: {
-        flexDirection: "row",
-        justifyContent: "space-between"
+    specsContainer: {
+        backgroundColor: '#FAFAFA',
+        borderRadius: wp('4%'),
+        padding: wp('2%'),
+        borderWidth: 1,
+        borderColor: '#F0F0F0',
     },
-    productsContainerHeader: {
-        fontFamily: FONTS.outfit.medium,
-        fontSize: wp("4.2%"),
-        marginLeft: wp('4.6%')
+    specRow: {
+        flexDirection: 'row',
+        paddingVertical: hp('1.8%'),
+        paddingHorizontal: wp('4%'),
+        borderBottomWidth: 1,
+        borderBottomColor: '#F0F0F0',
     },
-    viewAllContainer: {
-        flexDirection: "row",
-        alignItems: "center",
-        marginRight: wp("4.6%")
+    specRowAlt: {
+        backgroundColor: '#FFFFFF',
     },
-    viewAllText: {
-        fontFamily: FONTS.outfit.regular,
-        fontSize: wp("3.5%"),
-        color: "#FF7B3A"
+    specLabel: {
+        fontFamily: FONTS.poppins.semiBold,
+        fontSize: wp('3.6%'),
+        color: '#444',
+        width: wp('40%'),
     },
-    viewAllRightArrowIcon: {
-        marginLeft: 5
+    specValue: {
+        fontFamily: FONTS.poppins.regular,
+        fontSize: wp('3.6%'),
+        color: '#777',
+        flex: 1,
     },
-    floatingContainer: {
-        position: "absolute",
-        bottom: hp("0.7%"),
-        left: 0,
-        right: 0,
-        // alignItems: "center",
+    similarProductsSection: {
+        paddingTop: hp('5%'),
+        backgroundColor: '#FFFFFF',
+    },
+    sectionTitle: {
+        fontFamily: FONTS.outfit.bold,
+        fontSize: wp('5%'),
+        color: '#000',
+        paddingHorizontal: wp('8%'),
+        marginBottom: hp('2%'),
+    },
+    emptyContainer: {
+        padding: wp('10%'),
+        alignItems: 'center',
+    },
+    emptyText: {
+        fontFamily: FONTS.poppins.regular,
+        fontSize: wp('3.8%'),
+        color: '#999',
     },
     loadingContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        paddingTop: hp('30%'),
     },
-    quantitySelector: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        width: wp('33.72%'),
-        height: hp('5.36%'),
-        backgroundColor: '#F25000',
-        borderRadius: wp('2.33%'),
-        paddingHorizontal: wp('2%'),
-        marginTop: hp('2%')
-    },
-    qtyButton: {
-        width: wp('8%'),
-        height: wp('8%'),
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    qtyText: {
-        fontFamily: FONTS.poppins.semiBold,
-        fontSize: wp('4%'),
-        color: '#FFFFFF',
-    },
-    loadingText: {
-        fontFamily: FONTS.poppins.regular,
-        fontSize: wp('4%'),
-        color: '#666666',
-        marginTop: hp('2%'),
-    },
-    emptyContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        width: wp('90.7%'),
-        marginTop: hp('2%'),
-    },
-    emptyText: {
-        fontFamily: FONTS.poppins.regular,
-        fontSize: wp('3.5%'),
-        color: '#616161',
-        textAlign: 'center'
-    },
-    lowStockText: {
-        color: '#FF0000',
-        fontFamily: FONTS.poppins.medium,
-        fontSize: wp('3%'),
-        marginTop: hp('0.5%')
-    },
-    specsContainer: {
-        marginTop: hp('2%'),
-        backgroundColor: '#F8F8F8',
-        borderRadius: wp('2%'),
-        padding: wp('2%')
-    },
-    specRow: {
-        flexDirection: 'row',
-        paddingVertical: hp('1.2%'),
-        paddingHorizontal: wp('3%'),
-        alignItems: 'center',
-        borderBottomWidth: 1,
-        borderBottomColor: '#EEEEEE'
-    },
-    specRowAlt: {
-        backgroundColor: '#FFFFFF'
-    },
-    specLabel: {
-        fontFamily: FONTS.poppins.semiBold,
-        fontSize: wp('3.3%'),
-        color: '#333333',
-        width: wp('35%')
-    },
-    specValue: {
-        fontFamily: FONTS.poppins.regular,
-        fontSize: wp('3.3%'),
-        color: '#616161',
-        flex: 1
-    },
-    scrollIndicator: {
+    floatingCart: {
         position: 'absolute',
         bottom: hp('1%'),
-        alignSelf: 'center',
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#FFFFFF',
-        borderRadius: 20,
-        paddingHorizontal: wp('3%'),
-        paddingVertical: hp('0.5%'),
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3
-    },
-    scrollHintText: {
-        fontFamily: FONTS.poppins.medium,
-        fontSize: wp('2.8%'),
-        color: '#F25000',
-        marginRight: wp('1%')
+        left: 0,
+        right: 0,
     },
     fadeGradient: {
         position: 'absolute',
         bottom: 0,
         left: 0,
         right: 0,
-        height: hp('8%'),
-        pointerEvents: 'none'
+        height: hp('10%'),
+    },
+    scrollIndicator: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: hp('2%'),
+    },
+    scrollHintText: {
+        fontFamily: FONTS.poppins.medium,
+        fontSize: wp('3.2%'),
+        color: '#F25000',
+        marginRight: wp('1%'),
     }
-})
+});

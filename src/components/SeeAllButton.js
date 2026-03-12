@@ -15,7 +15,7 @@ const SeeAllButton = ({ onPress, style, label }) => {
         >
             <Text style={styles.text}>{title}</Text>
             <Entypo
-                name="chevron-right"
+                name="controller-play"
                 size={wp('4%')}
                 color="#000000"
                 style={styles.icon}
@@ -46,6 +46,7 @@ const styles = StyleSheet.create({
         fontFamily: FONTS.poppins.semiBold,
         fontSize: wp('4%'),
         color: '#000000',
+        fontWeight: '600',
     },
     icon: {
         marginLeft: wp('1.5%'),

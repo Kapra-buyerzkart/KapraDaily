@@ -3,6 +3,7 @@ import React, { useState, useMemo, useEffect } from 'react'
 import { BlurView } from '@react-native-community/blur'
 import LinearGradient from 'react-native-linear-gradient'
 import FontAwesome from 'react-native-vector-icons/FontAwesome'
+import Entypo from 'react-native-vector-icons/Entypo'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import { FONTS } from '../styles/typography'
 import { useCart } from '../context/CartContext'
@@ -20,7 +21,7 @@ const CartProductCard = (props) => {
     const [isRemovalModalVisible, setIsRemovalModalVisible] = useState(false);
 
     // Update local quantity state when item changes
-    React.useEffect(() => {
+    useEffect(() => {
         setQuantity(item.addedQty || item.quantity || 1);
     }, [item.quantity, item.addedQty]);
 
@@ -32,9 +33,9 @@ const CartProductCard = (props) => {
     const specialPrice = item.specialPrice || item.unitPrice || 0;
     const featuredImage = item.featuredImage || item.productImage || '';
     const isAvailable = item.isAvailable !== false;
+    const weight = item.weight || item.unitValue || '1 pcs';
 
     // Determine if product is sold out
-    // API logic: notAvailableInStore=1 OR unavailable=1 OR insufficientStock=1
     const isSoldOut = !isAvailable || item.unavailable === 1 || item.insufficientStock === 1 || item.notAvailableInStore === 1;
 
     const isLiked = isInWishlist(productId);
@@ -43,6 +44,9 @@ const CartProductCard = (props) => {
     const imageSource = useMemo(() => {
         if (imageError || !featuredImage) {
             return require('../assets/images/categories/dfn.png');
+        }
+        if (typeof featuredImage === 'string' && featuredImage.startsWith('http')) {
+            return { uri: featuredImage };
         }
         return { uri: `${CONFIG.image_base_url}${featuredImage}` };
     }, [featuredImage, imageError]);
@@ -165,6 +169,30 @@ const CartProductCard = (props) => {
                         )}
                     </View>
                 </View>
+
+                {/* Sold Out Overlay */}
+                {isSoldOut && (
+                    <View style={styles.soldOutOverlay}>
+                        {Platform.OS === 'ios' ? (
+                            <BlurView
+                                style={StyleSheet.absoluteFill}
+                                blurType="light"
+                                blurAmount={2}
+                            />
+                        ) : (
+                            <View style={styles.androidBlurFallback} />
+                        )}
+                        <View style={styles.soldOutLabelContainer}>
+                            <LinearGradient
+                                colors={['#FF5252', '#FF1744']}
+                                style={styles.soldOutLabel}
+                            >
+                                <Text style={styles.soldOutLabelText}>Sold Out</Text>
+                            </LinearGradient>
+                            <Text style={styles.soldOutSubText}>Remove to place order</Text>
+                        </View>
+                    </View>
+                )}
             </View>
 
             <TouchableOpacity
@@ -196,9 +224,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginBottom: hp('1%')
     },
-    overlayContainer: {
-        width: wp('83.6%'),
-        height: hp('10.7%'),
+    wishlistIcon: {
         position: 'absolute',
         // left: wp('3.5%'),
         borderRadius: wp('4.65%'),
@@ -275,8 +301,8 @@ const styles = StyleSheet.create({
     productCount: {
         color: '#777777',
         fontSize: wp('2.8%'),
-        fontFamily: FONTS.outfit.light,
-        bottom: hp('0.4%')
+        fontFamily: FONTS.outfit.regular,
+        color: '#9E9E9E',
     },
     productCardInnerViewThree: {
         flexDirection: 'row',

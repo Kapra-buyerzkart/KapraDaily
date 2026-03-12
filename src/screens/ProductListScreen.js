@@ -5,7 +5,7 @@ import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-nat
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import Feather from 'react-native-vector-icons/Feather'
 import { useNavigation, useRoute } from '@react-navigation/native'
-import ProductCard from '../components/ProductCard'
+import TokenProductCard from '../components/TokenProductCard'
 import SelectedProducts from '../components/SelectedProducts'
 import { FONTS } from '../styles/typography'
 import StoreUnavailable from '../components/StoreUnavailable'
@@ -67,7 +67,7 @@ const ProductListScreen = () => {
                     keyExtractor={(item) => (item.productId || item.id || Math.random()).toString()}
                     renderItem={({ item }) => (
                         <View style={styles.productWrapper}>
-                            <ProductCard item={item} />
+                            <TokenProductCard item={item} onPress={() => navigation.navigate('ProductDetailsScreen', { productId: item.productId || item.id, product: item })} />
                         </View>
                     )}
                     numColumns={2}

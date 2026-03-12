@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useCallback, useContext } from 'react';
+import React, { useState, useEffect, useCallback, useContext, useMemo } from 'react';
 import { getProductSuggestionsApi, searchProductsApi } from '../api/productService';
 import { useDebounce } from './useDebounce';
 import { AppContext } from '../context/appContext';
 
-const useProductSearch = (initialPincodeId, initialCatId = null) => {
+const useProductSearch = (initialPincodeId, initialCatId = null, filters = {}) => {
     const { profile } = useContext(AppContext);
     const [searchTerm, setSearchTerm] = useState('');
     const [catId, setCatId] = useState(initialCatId);
@@ -14,6 +14,11 @@ const useProductSearch = (initialPincodeId, initialCatId = null) => {
 
     const activePincodeId = initialPincodeId || profile?.pincode;
     const [error, setError] = useState(null);
+
+    // Extract filter values with defaults
+    const sortBy = filters.sortBy || 'relevance';
+    const priceMin = filters.priceMin ?? 0;
+    const priceMax = filters.priceMax ?? 5000;
 
     // Debounce the search term to avoid excessive API calls
     const debouncedSearchTerm = useDebounce(searchTerm, 500);
@@ -48,6 +53,10 @@ const useProductSearch = (initialPincodeId, initialCatId = null) => {
                         pincodeAreaId: activePincodeId,
                         prName: trimmedTerm,
                         catId: parseInt(catId),
+                        priceMin: priceMin,
+                        priceMax: priceMax,
+                        filterValues: null,
+                        sortBy: sortBy,
                         pageNumber: 1,
                         pageSize: 50
                     };
@@ -100,7 +109,40 @@ const useProductSearch = (initialPincodeId, initialCatId = null) => {
         };
 
         fetchProducts();
-    }, [debouncedSearchTerm, initialPincodeId, catId]);
+    }, [debouncedSearchTerm, initialPincodeId, catId, sortBy, priceMin, priceMax]);
+
+    // Client-side sort for general search (no catId) since getProductSuggestionsApi may not support server-side sorting
+    const sortedSuggestions = useMemo(() => {
+        // Only apply client-side sort when NOT using catId (server handles sort for catId-based search)
+        if (catId || sortBy === 'relevance') return suggestions;
+
+        const sorted = [...suggestions];
+        switch (sortBy) {
+            case 'lowToHigh':
+                return sorted.sort((a, b) => (a.sellingPrice || a.price || 0) - (b.sellingPrice || b.price || 0));
+            case 'highToLow':
+                return sorted.sort((a, b) => (b.sellingPrice || b.price || 0) - (a.sellingPrice || a.price || 0));
+            case 'a-z':
+                return sorted.sort((a, b) => (a.productName || a.name || '').localeCompare(b.productName || b.name || ''));
+            case 'z-a':
+                return sorted.sort((a, b) => (b.productName || b.name || '').localeCompare(a.productName || a.name || ''));
+            case 'latest':
+                return sorted; // Default order from API is usually latest
+            default:
+                return sorted;
+        }
+    }, [suggestions, sortBy, catId]);
+
+    // Client-side price filter for general search
+    const filteredSuggestions = useMemo(() => {
+        if (catId) return sortedSuggestions; // Server handles filtering for catId
+        if (priceMin === 0 && priceMax >= 5000) return sortedSuggestions;
+
+        return sortedSuggestions.filter(item => {
+            const price = item.sellingPrice || item.price || 0;
+            return price >= priceMin && price <= priceMax;
+        });
+    }, [sortedSuggestions, priceMin, priceMax, catId]);
 
     // Function to clear search manually if needed
     const clearSearch = useCallback(() => {
@@ -115,9 +157,9 @@ const useProductSearch = (initialPincodeId, initialCatId = null) => {
         setSearchTerm,
         catId,
         setCatId,
-        suggestions,
+        suggestions: filteredSuggestions,
         loading,
-        resultCount,
+        resultCount: filteredSuggestions.length,
         error,
         isGlobalFallback,
         clearSearch

@@ -97,8 +97,10 @@ export const useCartScreen = () => {
     return {
         // Cart
         cartItems,
+        cartSummary,
         billCalculations,
         loadCart,
+        getCartSummary,
         clearCart,
         cartError,
         navigation,

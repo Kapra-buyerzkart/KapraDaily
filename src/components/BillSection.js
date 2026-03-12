@@ -45,6 +45,7 @@ const BillSection = ({ billCalculations }) => {
                 <BillRow
                     label="Delivery Charge"
                     value={deliveryCharge === 0 ? 'FREE' : `₹${deliveryCharge.toFixed(2)}`}
+                    isGreen={deliveryCharge === 0}
                 />
 
                 {/* Tax */}
