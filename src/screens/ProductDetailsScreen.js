@@ -142,7 +142,7 @@ const ProductDetailsScreen = () => {
                     <Ionicons
                         name={isLiked ? 'heart' : 'heart-outline'}
                         size={wp('7%')}
-                        color={'#000'}
+                        color={'red'}
                         style={{
                             alignItems: 'center',
                             justifyContent: 'center',

@@ -30,4 +30,10 @@ export const FONTS = {
     italiana: {
         regular: 'Italiana-Regular',
     },
+
+    roboto: {
+        regular: 'Roboto-Regular',
+        medium: 'Roboto-Medium',
+        bold: 'Roboto-Bold',
+    }
 };

@@ -371,8 +371,9 @@ export default function CategoriesScreen() {
                             <FlatList
                                 data={loadingProducts ? [] : productsList}
                                 keyExtractor={(item, index) => (item?.productId || item?.id || index).toString()}
-                                renderItem={({ item }) => <TokenProductCard item={item} onPress={() => navigation.navigate('ProductDetailsScreen', { productId: item.productId || item.id, product: item })} />}
-                                numColumns={2}
+                                renderItem={({ item }) => <TokenProductCard isThreeColumn={true} item={item} onPress={() => navigation.navigate('ProductDetailsScreen', { productId: item.productId || item.id, product: item })} />}
+                                numColumns={3}
+                                key={3}
                                 showsVerticalScrollIndicator={false}
                                 contentContainerStyle={{
                                     paddingLeft: wp("2.3%"),

@@ -174,7 +174,7 @@ const BCoinScreen = () => {
 
     return (
         <SafeAreaView style={styles.mainContainer}>
-            <ImageBackground style={styles.backgroundImageStyle} source={require('../assets/images/bcoin_header_image_one.png')}>
+            <ImageBackground style={styles.backgroundImageStyle} source={require('../assets/images/bcoinbg.png')}>
                 <View style={styles.headerContainer}>
                     <TouchableOpacity onPress={() => navigation.goBack()}>
                         <Image style={styles.leftArrowIcon} source={require('../assets/images/left_arrow.png')} />
@@ -182,13 +182,13 @@ const BCoinScreen = () => {
                     <Text style={styles.headerText}>B-Coin and B-token</Text>
                 </View>
                 {/* <Image style={styles.imageStyle} source={require('../assets/images/bcoin_header_image_two.png')} /> */}
-                <FastImage style={styles.bcoinGif} resizeMode={FastImage.resizeMode.contain} source={require('../assets/gifs/bcoin.gif')} />
+                {/* <FastImage style={styles.bcoinGif} resizeMode={FastImage.resizeMode.contain} source={require('../assets/gifs/bcoin.gif')} /> */}
             </ImageBackground>
             <View style={styles.innerContainer}>
                 <>
                     <View>
                         <View style={styles.bcoinContainerOne}>
-                            <Image style={styles.bcoinImage} source={require('../assets/images/bcoin_rupee.png')} />
+                            <Image style={styles.bcoinImage} source={require('../assets/images/bcoinn.png')} />
                             <Text style={styles.bcoinText}>B-Coin</Text>
                             <View style={styles.bcoinInnerView}>
                                 <Text style={styles.availableBalanceHeaderText}>Available Balance</Text>
@@ -210,10 +210,10 @@ const BCoinScreen = () => {
                         </View>
                     </View>
                     <View style={[styles.bcoinContainerOne, {
-                        borderRadius: wp('2.33%'),
+                        borderRadius: wp('5.33%'),
                         marginTop: hp('1.5%')
                     }]}>
-                        <Image style={styles.bcoinImage} source={require('../assets/images/btoken-icon-four.png')} />
+                        <Image style={styles.bcoinImage} source={require('../assets/images/btoken.png')} />
                         <Text style={styles.bcoinText}>B-Token</Text>
                         <View style={styles.bcoinInnerView}>
                             <Text style={styles.availableBalanceHeaderText}>Available Balance</Text>
@@ -254,25 +254,34 @@ const BCoinScreen = () => {
                             }]}>
                                 <Image
                                     style={styles.bcoinImageTwo}
-                                    source={selected === 'bcoin' ? require('../assets/images/bcoin-three.png') : require('../assets/images/btoken-icon-four.png')}
+                                    source={selected === 'bcoin' ? require('../assets/images/bcoinn.png') : require('../assets/images/btoken.png')}
                                 />
                                 <View style={{ flex: 1, marginLeft: wp('3%') }}>
                                     <Text style={styles.bcoinContent}>{item.description}</Text>
-                                    <Text style={[styles.bcoinContent, {
-                                        fontSize: wp('3.25%'),
-                                        marginTop: hp('0.5%')
+                                    {/* <Text style={[styles.bcoinContent, {
+                                        fontSize: wp('3.5%'),
+                                        fontFamily: FONTS.poppins.semiBold,
+                                        marginTop: 2
                                     }]}>
-                                        {item.transactionDate ? new Date(item.transactionDate).toLocaleDateString('en-IN', {
-                                            day: '2-digit',
-                                            month: '2-digit',
-                                            year: 'numeric'
-                                        }) : ''}
-                                    </Text>
+                                        {item.orderId || 'N/A'}
+                                    </Text> */}
+                                    <View style={{ marginTop: hp('0.5%') }}>
+                                        <Text style={[styles.bcoinContent, {
+                                            fontSize: wp('3.1%'),
+                                            color: '#727783'
+                                        }]}>
+                                            {item.transactionDate ? new Date(item.transactionDate).toLocaleDateString('en-IN', {
+                                                day: '2-digit',
+                                                month: '2-digit',
+                                                year: 'numeric'
+                                            }) : ''}
+                                        </Text>
+                                    </View>
                                 </View>
                                 <Text style={[styles.bcoinPriceTextTwo, {
                                     color: item.transactionType === 'credit' ? '#0CA201' : '#FF0000'
                                 }]}>
-                                    {item.transactionType === 'credit' ? '+' : '-'}{item.amount} {selected === 'bcoin' ? 'coins' : 'tokens'}
+                                    {selected === 'bcoin' ? '₹' : ''}{item.amount.toFixed(2)} {selected === 'bcoin' ? '' : 'tokens'}
                                 </Text>
                             </View>
                         ))}
@@ -449,7 +458,8 @@ const styles = StyleSheet.create({
         bottom: hp('1.1%')
     },
     backgroundImageStyle: {
-        height: hp('26%')
+        height: hp('26%'),
+        resizeMode: 'contain'
     },
     innerContainer: {
         backgroundColor: '#FFFFFF',
@@ -460,21 +470,21 @@ const styles = StyleSheet.create({
     },
     bcoinContainerOne: {
         width: wp('90.7%'),
-        height: hp('8.15%'),
+        height: hp('6.15%'),
         flexDirection: 'row',
         alignItems: 'center',
         borderColor: '#DADADA',
         borderWidth: 1,
-        borderTopLeftRadius: wp('2.33%'),
-        borderTopRightRadius: wp('2.33%'),
+        borderTopLeftRadius: wp('6.33%'),
+        borderTopRightRadius: wp('6.33%'),
         justifyContent: 'space-between',
         alignSelf: 'center',
         marginTop: hp('3%'),
         paddingHorizontal: wp('3.25%')
     },
     bcoinImage: {
-        width: wp('10.23%'),
-        height: hp('4.72%'),
+        width: wp('6.23%'),
+        height: hp('3.72%'),
         resizeMode: 'contain',
     },
     bcoinText: {
@@ -502,9 +512,9 @@ const styles = StyleSheet.create({
         borderColor: '#DADADA',
         borderWidth: 1,
         borderTopWidth: 0,
-        borderBottomLeftRadius: wp('2.33%'),
-        borderBottomRightRadius: wp('2.33%'),
-        backgroundColor: '#FED7C4',
+        borderBottomLeftRadius: wp('6.33%'),
+        borderBottomRightRadius: wp('6.33%'),
+        //  backgroundColor: '#FED7C4',
         justifyContent: 'space-between',
         flexDirection: 'row',
         paddingHorizontal: wp('3%')
@@ -563,11 +573,13 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
         borderBottomColor: '#DADADA',
         paddingBottom: hp('1.5%'),
-        marginTop: hp('1.5%')
+        marginTop: hp('1.5%'),
+        paddingVertical: hp('1.5%'),
+        paddingHorizontal: wp('3%')
     },
     bcoinImageTwo: {
-        width: wp('6.98%'),
-        height: wp('6.98%'),
+        width: wp('5.98%'),
+        height: wp('5.98%'),
         resizeMode: 'contain'
     },
     bcoinContent: {
@@ -584,7 +596,7 @@ const styles = StyleSheet.create({
         width: wp('90.7%'),
         height: hp('6.11%'),
         backgroundColor: '#F25000',
-        borderRadius: wp('2.33%'),
+        borderRadius: wp('10.33%'),
         justifyContent: 'center',
         alignItems: 'center',
         alignSelf: 'center'

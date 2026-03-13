@@ -1281,7 +1281,7 @@ const styles = StyleSheet.create({
     },
     paymnetPrice: {
         color: '#0CA201',
-        fontFamily: FONTS.poppins.semiBold,
+        fontFamily: FONTS.inter.semiBold,
         fontSize: wp('4.65%')
     },
     productsContainer: {

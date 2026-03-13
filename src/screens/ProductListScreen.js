@@ -67,10 +67,11 @@ const ProductListScreen = () => {
                     keyExtractor={(item) => (item.productId || item.id || Math.random()).toString()}
                     renderItem={({ item }) => (
                         <View style={styles.productWrapper}>
-                            <TokenProductCard item={item} onPress={() => navigation.navigate('ProductDetailsScreen', { productId: item.productId || item.id, product: item })} />
+                            <TokenProductCard isThreeColumn={true} item={item} onPress={() => navigation.navigate('ProductDetailsScreen', { productId: item.productId || item.id, product: item })} />
                         </View>
                     )}
-                    numColumns={2}
+                    numColumns={3}
+                    key={3} // Added key to force re-render when changing numColumns
                     showsVerticalScrollIndicator={false}
                     contentContainerStyle={styles.listContent}
                     ListEmptyComponent={
@@ -148,7 +149,7 @@ const styles = StyleSheet.create({
         paddingBottom: hp('10%'),
     },
     productWrapper: {
-        flex: 0.5,
+        flex: 1 / 3,
         alignItems: 'center',
     },
     emptyContainer: {

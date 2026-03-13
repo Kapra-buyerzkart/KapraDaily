@@ -106,7 +106,7 @@ const SearchScreen = () => {
     const renderItem = ({ item }) => {
         return (
             <View style={styles.productWrapper}>
-                <TokenProductCard item={item} hideWishlist={false} onPress={() => navigation.navigate('ProductDetailsScreen', { productId: item.productId || item.id, product: item })} />
+                <TokenProductCard isThreeColumn={true} item={item} hideWishlist={false} onPress={() => navigation.navigate('ProductDetailsScreen', { productId: item.productId || item.id, product: item })} />
             </View>
         )
     }
@@ -193,7 +193,8 @@ const SearchScreen = () => {
                         data={loading ? [] : suggestions}
                         keyExtractor={(item, index) => (item.productId || item.id || index).toString()}
                         renderItem={renderItem}
-                        numColumns={2}
+                        numColumns={3}
+                        key={3}
                         showsVerticalScrollIndicator={false}
                         ListHeaderComponent={ListHeader}
                         contentContainerStyle={{
@@ -350,7 +351,7 @@ const styles = StyleSheet.create({
         marginTop: hp('1%')
     },
     productWrapper: {
-        flex: 0.5,
+        flex: 1 / 3,
         alignItems: 'center',
     },
     emptyContainer: {

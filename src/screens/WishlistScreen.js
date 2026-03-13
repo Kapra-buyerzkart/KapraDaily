@@ -75,6 +75,7 @@ export default function WishlistScreen() {
             <TokenProductCard
                 item={mappedItem}
                 isThreeColumn={true}
+                hideToken={true}
                 onToggleWishlist={() => handleRemoveFromWishlist(item.productId, item.productName)}
                 onPress={() => navigation.navigate('ProductDetailsScreen', { productId: item.productId, product: mappedItem })}
             />

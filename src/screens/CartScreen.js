@@ -355,7 +355,7 @@ const CartScreen = () => {
         <View style={styles.section}>
             <View style={styles.sectionHeader}>
                 <Text style={styles.sectionTitle}>Save money</Text>
-                <MaterialCommunityIcons name="ticket-percent-outline" size={wp('4.5%')} color="#000" />
+                <MaterialCommunityIcons name="ticket-percent-outline" size={wp('4.5%')} color="#000" style={{ alignSelf: 'center', top: -3 }} />
             </View>
 
             <View style={styles.offerCardsList}>
@@ -366,24 +366,18 @@ const CartScreen = () => {
                     </View>
                     <View style={styles.offerDetails}>
                         <Text style={styles.offerName}>Coupon</Text>
-                        <View style={{ flexDirection: 'row', justifyContent: 'flex-start' }}>
-                            <Text style={styles.offerSub}>{appliedCouponCode ? "get flat 50 %" : "Apply coupon to save more"}</Text>
-                            {appliedCouponCode && (
-                                <TouchableOpacity style={styles.removeOfferBtn} onPress={() => {/* handle remove */ }}>
-                                    <Text style={styles.removeOfferText}>Remove</Text>
-                                    <AntDesign name="close" size={wp('3%')} color="#FF4D4D" />
-                                </TouchableOpacity>
-                            )}
+                        <View style={{ flexDirection: 'row', justifyContent: 'flex-start', alignItems: 'center' }}>
+                            <Text style={[styles.offerSub, { marginTop: 0, flexShrink: 1 }]}>
+                                {appliedCouponCode ? appliedCouponCode : "View all coupons"}
+                            </Text>
                         </View>
                     </View>
-                    <TouchableOpacity style={styles.applyBtn} onPress={() => setShowCouponModal(true)}>
+                    <TouchableOpacity
+                        style={styles.applyBtn}
+                        onPress={() => appliedCouponCode ? onRejectOffer('2') : setShowCouponModal(true)}
+                    >
                         {appliedCouponCode ? (
-                            <View style={styles.appliedStatusContainer}>
-                                <View style={styles.checkmarkCircle}>
-                                    <Ionicons name="checkmark" size={wp('2.5%')} color="#FFF" />
-                                </View>
-                                <Text style={styles.appliedText}>Applied</Text>
-                            </View>
+                            <Text style={[styles.applyBtnText, { color: '#FF4D4D' }]}>Remove</Text>
                         ) : (
                             <Text style={styles.applyBtnText}>Apply {'>'}</Text>
                         )}
@@ -397,19 +391,19 @@ const CartScreen = () => {
                     </View>
                     <View style={styles.offerDetails}>
                         <Text style={styles.offerName}>Smart point</Text>
-                        <Text style={styles.offerLink}>View all gift card  {'>'}</Text>
+                        <View style={{ flexDirection: 'row', justifyContent: 'flex-start', alignItems: 'center' }}>
+                            <Text style={[styles.offerSub, { marginTop: 0, flexShrink: 1 }]}>
+                                {appliedGiftCardCode ? appliedGiftCardCode : "View all gift card"}
+                            </Text>
+                        </View>
+                        {/* {!appliedGiftCardCode && <Text style={styles.offerLink}>View all gift card  {'>'}</Text>} */}
                     </View>
                     <TouchableOpacity
                         style={styles.applyBtn}
                         onPress={() => appliedGiftCardCode ? onRejectOffer('4') : onApplyOffer('4')}
                     >
                         {appliedGiftCardCode ? (
-                            <View style={styles.appliedStatusContainer}>
-                                <View style={styles.checkmarkCircle}>
-                                    <Ionicons name="checkmark" size={wp('2.5%')} color="#FFF" />
-                                </View>
-                                <Text style={styles.appliedText}>Applied</Text>
-                            </View>
+                            <Text style={[styles.applyBtnText, { color: '#FF4D4D' }]}>Remove</Text>
                         ) : (
                             <Text style={styles.applyBtnText}>Apply {'>'}</Text>
                         )}
@@ -425,19 +419,18 @@ const CartScreen = () => {
                     </View>
                     <View style={styles.offerDetails}>
                         <Text style={styles.offerName}>B-coin</Text>
-                        <Text style={styles.offerSub}>Available B-coin : {profile?.bCoins || 0}</Text>
+                        <View style={{ flexDirection: 'row', justifyContent: 'flex-start', alignItems: 'center' }}>
+                            <Text style={[styles.offerSub, { marginTop: 0, flexShrink: 1 }]}>
+                                Available B-coin : {profile?.totalBCoins || profile?.bCoins || 0}
+                            </Text>
+                        </View>
                     </View>
                     <TouchableOpacity
                         style={styles.applyBtn}
                         onPress={() => billCalculations.bcoinsAppliedValue > 0 ? onRejectOffer('3') : onApplyOffer('3')}
                     >
                         {billCalculations.bcoinsAppliedValue > 0 ? (
-                            <View style={styles.appliedStatusContainer}>
-                                <View style={styles.checkmarkCircle}>
-                                    <Ionicons name="checkmark" size={wp('2.5%')} color="#FFF" />
-                                </View>
-                                <Text style={styles.appliedText}>Applied</Text>
-                            </View>
+                            <Text style={[styles.applyBtnText, { color: '#FF4D4D' }]}>Remove</Text>
                         ) : (
                             <Text style={styles.applyBtnText}>Apply {'>'}</Text>
                         )}
@@ -464,7 +457,7 @@ const CartScreen = () => {
                     </View>
                     <Ionicons
                         name={selectedDeliveryType === 'express' ? "radio-button-on" : "radio-button-off"}
-                        size={wp('5.5%')}
+                        size={wp('4.5%')}
                         color={selectedDeliveryType === 'express' ? "#F25000" : "#CCCCCC"}
                     />
                 </TouchableOpacity>
@@ -487,7 +480,7 @@ const CartScreen = () => {
                     </View>
                     <Ionicons
                         name={selectedDeliveryType === 'slot' ? "radio-button-on" : "radio-button-off"}
-                        size={wp('5.5%')}
+                        size={wp('4.5%')}
                         color={selectedDeliveryType === 'slot' ? "#F25000" : "#CCCCCC"}
                     />
                 </TouchableOpacity>
@@ -511,7 +504,7 @@ const CartScreen = () => {
                                 <View style={styles.optionIconBox}>
                                     <MaterialCommunityIcons
                                         name={isCOD ? "cash" : "cellphone-check"}
-                                        size={wp('5%')}
+                                        size={wp('4.5%')}
                                         color="#F25000"
                                     />
                                 </View>
@@ -522,7 +515,7 @@ const CartScreen = () => {
                                 </View>
                                 <Ionicons
                                     name={isSelected ? "radio-button-on" : "radio-button-off"}
-                                    size={wp('5.5%')}
+                                    size={wp('4.5%')}
                                     color={isSelected ? "#F25000" : "#CCCCCC"}
                                 />
                             </TouchableOpacity>
@@ -778,7 +771,7 @@ const styles = StyleSheet.create({
         color: '#7E57C2',
     },
     section: {
-        marginTop: hp('2.5%'),
+        marginTop: hp('0.5%'),
         paddingHorizontal: wp('5%'),
         borderBottomWidth: 8,
         borderBottomColor: '#F9F9F9',
@@ -789,6 +782,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'flex-start',
         marginBottom: hp('1.5%'),
+        // gap: wp('0.5%'),
     },
     sectionTitle: {
         fontFamily: FONTS.poppins.semiBold,
@@ -897,12 +891,12 @@ const styles = StyleSheet.create({
     scheduleOption: {
         flexDirection: 'row',
         alignItems: 'center',
-        padding: wp('4%'),
+        padding: wp('2%'),
     },
     optionIconBox: {
-        width: wp('9%'),
-        height: wp('9%'),
-        borderRadius: wp('4.5%'),
+        width: wp('7%'),
+        height: wp('7%'),
+        borderRadius: wp('3.5%'),
         backgroundColor: '#FFF5F0',
         justifyContent: 'center',
         alignItems: 'center',

@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ImageBackground, TouchableOpacity, Image, TextInput, FlatList, ScrollView, Dimensions, RefreshControl } from 'react-native'
+import { View, Text, StyleSheet, ImageBackground, TouchableOpacity, Image, TextInput, FlatList, ScrollView, Dimensions, RefreshControl, Platform } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { startTransition, useEffect, useRef, useState, useContext, useCallback, useMemo } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -505,7 +505,7 @@ const HomeScreen = () => {
                     alignItems: 'center',
                 }}
             >
-                <FontAwesome6 name="user-large" size={size * 0.55} color="#D2B200" style={{ marginTop: size * 0.15 }} solid />
+                <Image source={require('../assets/images/profile.png')} style={styles.profileIcon} resizeMode="contain" />
             </LinearGradient>
         );
     };
@@ -739,12 +739,12 @@ const HomeScreen = () => {
                         >
                             <View style={styles.headerViewOne}>
                                 <View>
-                                    <Text style={styles.timeText}>20 min</Text>
+                                    <Text style={styles.timeText}>20  min</Text>
                                     <TouchableOpacity
                                         style={styles.addressView}
                                         onPress={() => setModalVisible(true)}
                                     >
-                                        <Entypo name={"location-pin"} size={wp('3.6%')} color={"#FFFFFF"} style={{ marginRight: wp('1%') }} />
+                                        <Entypo name={"location-pin"} size={wp('4%')} color={"#FFFFFF"} style={{ marginRight: wp('1%') }} />
                                         <Text style={styles.addressText}
                                             numberOfLines={1}
                                             ellipsizeMode="tail"
@@ -799,12 +799,12 @@ const HomeScreen = () => {
                     <View style={[styles.headerMainView, { paddingTop: hp('2%') }]}>
                         <View style={styles.headerViewOne}>
                             <View>
-                                <Text style={styles.timeText}>20 min</Text>
+                                <Text style={styles.timeText}>20  min</Text>
                                 <TouchableOpacity
                                     style={styles.addressView}
                                     onPress={() => setModalVisible(true)}
                                 >
-                                    <Entypo name={"location-pin"} size={wp('3.6%')} color={"#FFFFFF"} style={{ marginRight: wp('1%') }} />
+                                    <Entypo name={"location-pin"} size={wp('4%')} color={"#FFFFFF"} style={{ marginRight: wp('1%') }} />
                                     <Text style={styles.addressText}
                                         numberOfLines={1}
                                         ellipsizeMode="tail"
@@ -962,7 +962,7 @@ const HomeScreen = () => {
                                     )}
                                     showsHorizontalScrollIndicator={false}
                                     contentContainerStyle={{
-                                        paddingLeft: wp('5%'),
+                                        paddingLeft: wp('2%'),
                                         paddingRight: wp('1%'),
                                         paddingTop: hp('2%'),
                                     }}
@@ -1189,7 +1189,7 @@ const HomeScreen = () => {
                                                             navigation.navigate('ProductDetailsScreen', { productId: parseInt(item.linkValue) });
                                                         }
                                                     }}
-                                                    style={{ marginRight: wp('3%') }}
+                                                    style={{ marginRight: wp('1%') }}
                                                 >
                                                     <Image
                                                         source={item.uri}
@@ -1197,7 +1197,7 @@ const HomeScreen = () => {
                                                             width: wp('33%'),
                                                             height: wp('33%'),
                                                             borderRadius: wp('4%'),
-                                                            marginTop: hp('12%'),
+                                                            marginTop: hp('14%'),
                                                         }}
                                                         resizeMode="contain"
                                                     />
@@ -1205,7 +1205,7 @@ const HomeScreen = () => {
                                             )}
                                             showsHorizontalScrollIndicator={false}
                                             contentContainerStyle={{
-                                                paddingHorizontal: wp('4.6%'),
+                                                paddingHorizontal: wp('3.6%'),
                                                 paddingTop: hp('2%'),
                                                 paddingBottom: hp('2.5%'),
 
@@ -1237,7 +1237,7 @@ const HomeScreen = () => {
                                                     showsHorizontalScrollIndicator={false}
                                                     contentContainerStyle={{
                                                         paddingHorizontal: wp('4.6%'),
-                                                        paddingTop: hp('1.5%'),
+                                                        paddingTop: hp('1%'),
                                                         //  height: '100%'
                                                     }}
                                                 >
@@ -1430,6 +1430,15 @@ const styles = StyleSheet.create({
         height: wp('12%'),
         borderRadius: wp('6%'),
     },
+    profileIcon: {
+        width: wp('7%'),
+        height: wp('7%'),
+        borderRadius: wp('3.5%'),
+        position: 'absolute',
+        top: 15,
+        left: 5,
+        alignSelf: 'center'
+    },
     discoveryCategoryText: {
         fontSize: wp('2.8%'),
         fontFamily: FONTS.medium,
@@ -1449,7 +1458,7 @@ const styles = StyleSheet.create({
     },
     headerViewOne: {
         flexDirection: "row",
-        marginTop: hp('4%'),
+        marginTop: hp('2%'),
         marginHorizontal: wp('6.9%'),
         justifyContent: "space-between",
         alignItems: 'center',
@@ -1457,21 +1466,26 @@ const styles = StyleSheet.create({
     timeText: {
         fontFamily: FONTS.poppins.extraBold,
         color: "#FFFFFF",
-        fontSize: wp('6%'),
+        fontSize: wp('5.5%'),
+        top: Platform.OS !== 'ios' ? hp('2%') : hp('0%'),
     },
     addressView: {
         flexDirection: "row",
         alignItems: 'center',
+        top: Platform.OS === 'ios' ? hp('0.5%') : hp('1%'),
     },
     addressText: {
         color: "#FFFFFF",
-        fontSize: wp('3.3%'),
+        fontSize: wp('3%'),
         fontFamily: FONTS.poppins.medium,
         maxWidth: wp('53%'),
+        // top: Platform.OS === 'ios' ? hp('1%') : 0,
+        //  bottom: hp('1%'),
     },
     bcoinContainer: {
         alignItems: 'center',
         width: wp('20%'),
+        top: Platform.OS !== 'ios' ? hp('0.3%') : 0,
         // backgroundColor: 'red',
         //    left: wp('18.9%')
 
@@ -1481,6 +1495,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: wp('3%'),
+        top: Platform.OS !== 'ios' ? hp('1%') : 0,
     },
     bcoinRupee: {
         width: wp('6.5%'),
@@ -1619,11 +1634,17 @@ const styles = StyleSheet.create({
     profileIconMainView: {
         alignItems: "center",
         justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: '#D2B200',
+        borderRadius: wp('5%'),
+        top: Platform.OS !== 'ios' ? hp('0.5%') : 0,
     },
     crownImage: {
         position: 'absolute',
         top: -hp('1.5%'),
         zIndex: 1,
+        left: wp('2.1%'),
+        alignSelf: 'center',
     },
     // headerBannerImage: {
     //     width: "100%",
@@ -1648,7 +1669,7 @@ const styles = StyleSheet.create({
         marginTop: hp("0.2%"),
     },
     featuredProductsText: {
-        fontFamily: FONTS.outfit.bold,
+        fontFamily: FONTS.outfit.medium,
         fontSize: wp("4.5%"),
         color: "#1E1E1E",
         marginLeft: wp("8%"),
@@ -2184,30 +2205,35 @@ const styles = StyleSheet.create({
         width: '90%',
         height: hp('8%'),
         borderRadius: wp('4%'),
-        top: '50%',
+        top: '53%',
         position: 'absolute',
         alignSelf: 'center',
         // marginBottom: hp('1.2%'),
     },
     topShowcaseRow: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
-        bottom: '0.5%',
-        position: 'absolute'
+        justifyContent: 'center',
+        bottom: -hp('3.9%'),
+        position: 'absolute',
+        width: '100%',
+        // backgroundColor: 'red'
     },
     topShowcaseCard: {
-        flex: 1,
-        height: 170,
-        width: 105,
-        top: '10%',
+        //flex: 0.7,
+        // flex: 1,
+        height: wp('52%'),
+        width: wp('48%'),
+        top: Platform.OS === 'ios' ? '10%' : '7%',
         borderRadius: wp('4%'),
         overflow: 'hidden',
+        marginHorizontal: Platform.OS == 'ios' ? -wp('2.5%') : -wp('2.5%'),
+        // marginHorizontal: -wp('5.5%'),
         //  backgroundColor: 'red'
-        // marginRight: wp('2%'),
+        //    / marginRight: wp('2%'),
     },
     topShowcaseCardImage: {
         width: '100%',
-        height: '80%',
+        height: '65%',
     },
     feeImagesRow: {
         flexDirection: 'row',

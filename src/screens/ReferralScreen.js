@@ -17,6 +17,7 @@ const ReferralScreen = () => {
     const { profile, isStoreUnavailable, storeUnavailableData } = useContext(AppContext)
     const [referrals, setReferrals] = useState([])
     const [isLocationModalVisible, setIsLocationModalVisible] = useState(false)
+    const [isInitialLoad, setIsInitialLoad] = useState(true)
 
     useEffect(() => {
         fetchReferralHistory()
@@ -28,27 +29,56 @@ const ReferralScreen = () => {
         try {
             showLoader(true)
             const response = await getReferralHistoryApi()
+            console.log('Referral History Response:', response);
             if (response?.success) {
-                setReferrals(response?.data || [])
+                const referralData = response?.data?.items || [];
+                setReferrals(Array.isArray(referralData) ? referralData : []);
             }
         } catch (error) {
             console.error('Fetch Referral History Error:', error)
         } finally {
             showLoader(false)
+            setIsInitialLoad(false)
         }
     }
 
     const renderItem = ({ item }) => {
+        // Format "2026-03-06T20:00:53" to "06-03-2026"
+        const formatDate = (dateString) => {
+            if (!dateString) return '';
+            const [date] = dateString.split('T');
+            const [year, month, day] = date.split('-');
+            return `${day}-${month}-${year}`;
+        };
+
         return (
             <View style={styles.referralHistoryContainer}>
                 <View style={styles.namePhoneView}>
-                    <Text style={styles.nameText}>{item.fullName || 'User'}</Text>
+                    <Text style={styles.nameText}>{item.custName || 'User'}</Text>
                     <MaskedText value={item.phoneNo || ''} />
                 </View>
-                <Text style={styles.dateText}>{item.date}</Text>
+                <View style={styles.bottomRow}>
+                    <Text style={styles.dateText}>{formatDate(item.createdAt)}</Text>
+                    {item.bTokensEarned > 0 && (
+                        <Text style={styles.earnedText}>Earned: {item.bTokensEarned} Tokens</Text>
+                    )}
+                </View>
             </View>
         )
     }
+
+    const renderEmpty = () => {
+        if (isInitialLoad) return null;
+        return (
+            <View style={styles.emptyContainer}>
+                {/* <Image
+                    source={require('../assets/images/nowish.png')}
+                    style={styles.emptyImage}
+                /> */}
+                <Text style={styles.emptyText}>No Referral History</Text>
+            </View>
+        );
+    };
 
     const MaskedText = ({ value }) => {
         const lastTwo = value.slice(-2);
@@ -114,11 +144,11 @@ const ReferralScreen = () => {
                     }]}>Referral History</Text>
                     <FlatList
                         data={referrals}
-                        keyExtractor={(item, index) => index.toString()}
+                        keyExtractor={(item, index) => `${item.referrerCustId}-${index}`}
                         renderItem={renderItem}
-                        contentContainerStyle={{
-                            alignItems: 'center'
-                        }}
+                        ListEmptyComponent={renderEmpty}
+                        contentContainerStyle={referrals.length === 0 ? styles.emptyListContent : styles.listContent}
+                        showsVerticalScrollIndicator={false}
                     />
                 </>
             )}
@@ -135,7 +165,7 @@ export default ReferralScreen
 const styles = StyleSheet.create({
     mainContainer: {
         flex: 1,
-        backgroundColor: "#FFFFFFF"
+        backgroundColor: "#FFFFFF"
     },
     headerContainer: {
         marginTop: hp('3%'),
@@ -260,10 +290,11 @@ const styles = StyleSheet.create({
         width: wp('91.16%'),
         borderWidth: 1,
         borderColor: '#DADADA',
-        height: hp('6%'),
-        borderRadius: wp('2.33%'),
+        height: hp('6.5%'),
+        borderRadius: wp('10.33%'),
         paddingHorizontal: wp('4%'),
-        justifyContent: 'center'
+        justifyContent: 'center',
+        marginBottom: hp('1.5%')
     },
     namePhoneView: {
         flexDirection: 'row',
@@ -280,5 +311,41 @@ const styles = StyleSheet.create({
         fontFamily: FONTS.poppins.regular,
         fontSize: wp('2.79%'),
         color: '#616161'
+    },
+    bottomRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center'
+    },
+    earnedText: {
+        fontFamily: FONTS.poppins.medium,
+        fontSize: wp('2.8%'),
+        color: '#0CA201'
+    },
+    listContent: {
+        paddingBottom: hp('5%'),
+        alignItems: 'center'
+    },
+    emptyListContent: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingBottom: hp('10%')
+    },
+    emptyContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    emptyImage: {
+        width: wp('40%'),
+        height: wp('40%'),
+        resizeMode: 'contain',
+        opacity: 0.5
+    },
+    emptyText: {
+        fontFamily: FONTS.poppins.medium,
+        fontSize: wp('4%'),
+        color: '#616161',
+        marginTop: hp('2%')
     }
 })

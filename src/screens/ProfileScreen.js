@@ -110,7 +110,7 @@ export default function ProfileScreen() {
                     alignItems: 'center',
                 }}
             >
-                <FontAwesome6 name="user-large" size={size * 0.55} color="#D2B200" style={{ marginTop: size * 0.15 }} solid />
+                <Image source={require('../assets/images/profile.png')} style={styles.profileIcon} resizeMode="contain" />
             </LinearGradient>
         );
     };
@@ -694,5 +694,14 @@ const styles = StyleSheet.create({
         fontSize: wp('4%'),
         color: '#FF0000',
         textDecorationLine: 'underline',
+    },
+    profileIcon: {
+        width: wp('7%'),
+        height: wp('7%'),
+        // borderRadius: wp('3.5%'),
+        // position: 'absolute',
+        // top: 15,
+        // left: 5,
+        alignSelf: 'center'
     },
 })

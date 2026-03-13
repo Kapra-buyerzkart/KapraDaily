@@ -32,7 +32,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         width: wp('90%'),
-        height: hp('6%'),
+        height: hp('4.7%'),
         borderRadius: wp('9%'),
         backgroundColor: '#FFFFFF',
         // Soft orange drop shadow like the design

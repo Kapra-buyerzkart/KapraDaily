@@ -9,7 +9,7 @@ import CONFIG from '../globals/config';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 
-const TokenProductCard = ({ item, onPress, onAdd, onToggleWishlist, isInWishlist: propIsInWishlist, hideWishlist, isThreeColumn }) => {
+const TokenProductCard = ({ item, onPress, onAdd, onToggleWishlist, isInWishlist: propIsInWishlist, hideWishlist, isThreeColumn, hideToken }) => {
 
     const [imageError, setImageError] = useState(false);
 
@@ -20,7 +20,7 @@ const TokenProductCard = ({ item, onPress, onAdd, onToggleWishlist, isInWishlist
     const name = item?.prName || item?.name || 'Lorem Ipsum is simply dummy textsimply dummy';
     const mrp = item?.mrp || item?.unitPrice || '394';
     const price = item?.price || item?.specialPrice || '324';
-    const offer = item?.offer || item?.discountPercentage ? `${Math.round(item?.offer || item?.discountPercentage)}% OFF` : '50% OFF';
+    const offer = item?.offer || item?.discountPercentage || item?.discountPercent ? `${Math.round(item?.offer || item?.discountPercentage || item?.discountPercent)}% OFF` : '50% OFF';
     const weight = item?.weight || '1kg';
     const token = item?.token || '1B Token';
 
@@ -57,102 +57,86 @@ const TokenProductCard = ({ item, onPress, onAdd, onToggleWishlist, isInWishlist
 
             <View style={styles.topCardBox}>
 
-                {/* Top Row */}
                 <View style={styles.topRow}>
 
-                    {!hideWishlist ? (
-                        <TouchableOpacity
-                            activeOpacity={0.8}
-                            onPress={() => onToggleWishlist ? onToggleWishlist(item) : toggleWishlist(item)}
-                        >
-                            <FontAwesome
-                                name={liked ? "heart" : "heart-o"}
-                                size={isThreeColumn ? wp('4.5%') : wp('5.5%')}
-                                color={liked ? "#FF0048" : "#B0B0B0"}
-                                style={styles.heartIcon}
-                            />
-                        </TouchableOpacity>
-                    ) : <View style={{ width: wp('5.5%'), marginStart: 10 }} />}
+                    <View style={styles.topLeftRow}>
+                        {!hideWishlist ? (
+                            <TouchableOpacity
+                                activeOpacity={0.8}
+                                onPress={() => onToggleWishlist ? onToggleWishlist(item) : toggleWishlist(item)}
+                            >
+                                <Image
+                                    source={liked ? require('../assets/images/heart_red.png') : require('../assets/images/hearto.png')}
+                                    style={[styles.heartIcon, { width: isThreeColumn ? wp('4.2%') : wp('5%'), height: isThreeColumn ? wp('4.2%') : wp('5%') }]}
+                                    resizeMode="contain"
+                                />
+                            </TouchableOpacity>
+                        ) : null}
 
-                    {quantity > 0 ? null : <Text style={[styles.tokenText, isThreeColumn && { fontSize: wp('2.2%') }]}>{token}</Text>}
+                        {(!hideToken && quantity === 0) ? <Text style={[styles.tokenText, isThreeColumn && { fontSize: wp('2%') }]}>{token}</Text> : null}
+                    </View>
 
-                    {quantity > 0 ? (
+                </View>
 
-
+                {quantity > 0 ? (
+                    <View style={styles.actionAbsolute}>
                         <LinearGradient
                             colors={['#FFFFFF', '#FFD8C4']}
                             start={{ x: 0, y: 0 }}
                             end={{ x: 1, y: 1 }}
-                            style={[styles.counterContainer, isThreeColumn && { height: hp('3%'), borderRadius: 15 }]}
+                            style={[styles.counterContainer, isThreeColumn && { height: hp('2.8%'), borderRadius: 15 }]}
                         >
-
                             <TouchableOpacity
                                 style={styles.counterBtn}
                                 onPress={() => {
-
                                     if (quantity === 1) {
-
                                         removeFromCart(cartItemId);
-
                                     } else {
-
                                         updateCartItemQuantity(cartItemId, quantity - 1);
-
                                     }
                                 }}
                             >
-                                <Entypo name="minus" size={isThreeColumn ? 16 : 22} color="#F25000" />
+                                <Entypo name="minus" size={isThreeColumn ? 14 : 16} color="#F25000" />
                             </TouchableOpacity>
 
-                            <Text style={[styles.counterQty, isThreeColumn && { fontSize: wp('3.5%') }]}>{quantity}</Text>
+                            <Text style={[styles.counterQty, isThreeColumn && { fontSize: wp('3%') }]}>{quantity}</Text>
 
                             <TouchableOpacity
                                 style={styles.counterBtn}
                                 onPress={() => updateCartItemQuantity(cartItemId, quantity + 1)}
                             >
-                                <Entypo name="plus" size={isThreeColumn ? 16 : 22} color="#F25000" />
+                                <Entypo name="plus" size={isThreeColumn ? 14 : 16} color="#F25000" />
                             </TouchableOpacity>
-
                         </LinearGradient>
-
-
-                    ) : isOutOfStock ? (
-
-                        <View style={[styles.plusIconDisabled, isThreeColumn && { width: wp('7%'), height: wp('7%'), borderRadius: wp('3.5%') }]}>
-                            <Entypo name="plus" size={isThreeColumn ? 16 : 22} color="#FFFFFF" />
+                    </View>
+                ) : isOutOfStock ? (
+                    <View style={styles.actionAbsolute}>
+                        <View style={[styles.plusIconDisabled, isThreeColumn && { width: wp('6%'), height: wp('6%'), borderRadius: wp('3%') }]}>
+                            <Entypo name="plus" size={isThreeColumn ? 14 : 16} color="#FFFFFF" />
                         </View>
-
-                    ) : (
-
-                        <TouchableOpacity
-                            activeOpacity={0.8}
-                            onPress={() => onAdd ? onAdd(item) : addToCart(item)}
+                    </View>
+                ) : (
+                    <TouchableOpacity
+                        activeOpacity={0.8}
+                        onPress={() => onAdd ? onAdd(item) : addToCart(item)}
+                        style={styles.actionAbsolute}
+                    >
+                        <LinearGradient
+                            colors={['#FFFFFF', '#FFD8C4']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                            style={[styles.plusIconCircle, isThreeColumn && { width: wp('6%'), height: wp('6%'), borderRadius: wp('3%') }]}
                         >
-
-                            <LinearGradient
-                                colors={['#FFFFFF', '#FFD8C4']}
-                                start={{ x: 0, y: 0 }}
-                                end={{ x: 1, y: 1 }}
-                                style={[styles.plusIconCircle, isThreeColumn && { width: wp('7%'), height: wp('7%'), borderRadius: wp('3.5%') }]}
-                            >
-
-                                <Entypo name="plus" size={isThreeColumn ? 16 : 22} color="#F25000" />
-
-                            </LinearGradient>
-
-                        </TouchableOpacity>
-
-                    )}
-
-                </View>
+                            <Entypo name="plus" size={isThreeColumn ? 14 : 16} color="#F25000" style={{ alignSelf: 'center' }} />
+                        </LinearGradient>
+                    </TouchableOpacity>
+                )}
 
                 {/* Image Section */}
-
                 <View style={styles.imageContainer}>
-
                     <Image
                         source={imageSource}
-                        style={[styles.productImage, isThreeColumn && { width: wp('22%'), height: hp('10%') }, isOutOfStock && { opacity: 0.5 }]}
+                        style={[styles.productImage, isThreeColumn && { width: wp('22%'), height: wp('20%') }, isOutOfStock && { opacity: 0.5 }]}
                         resizeMode="contain"
                         onError={() => setImageError(true)}
                     />
@@ -161,61 +145,44 @@ const TokenProductCard = ({ item, onPress, onAdd, onToggleWishlist, isInWishlist
                             <Text style={[styles.outOfStockText, isThreeColumn && { fontSize: wp('2.2%') }]}>Out of Stock</Text>
                         </View>
                     )}
-
                 </View>
 
                 {/* Price Section */}
-
                 <View style={styles.priceContainer}>
-
                     <LinearGradient
                         colors={['#FF8A5C', '#F25A2B']}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 0 }}
-                        style={[styles.pricePill, isThreeColumn && { width: wp('11%'), height: hp('2.5%') }]}
+                        style={[styles.pricePill, isThreeColumn && { width: wp('10%'), height: hp('2.2%') }]}
                     >
-
-                        <Text style={[styles.priceText, isThreeColumn && { fontSize: wp('3%') }]}>
+                        <Text style={[styles.priceText, isThreeColumn && { fontSize: wp('2.6%') }]}>
                             ₹{price}
                         </Text>
-
                     </LinearGradient>
 
-                    <Text style={[styles.mrpLabel, isThreeColumn && { fontSize: wp('2.8%') }]}>
-                        MRP <Text style={styles.mrpText}>₹{mrp}</Text>
+                    <Text style={[styles.mrpLabel, isThreeColumn && { fontSize: wp('2.4%') }]}>
+                        ₹<Text style={styles.mrpText}>{mrp}</Text>
                     </Text>
-
                 </View>
 
             </View>
 
             {/* Bottom Section */}
-
             <View style={styles.bottomSection}>
-
                 <View style={styles.offerRow}>
-
-                    <Text style={[styles.offerText, isThreeColumn && { fontSize: wp('2.8%') }]}>
+                    <Text style={[styles.offerText, isThreeColumn && { fontSize: wp('2.6%') }]}>
                         {offer}
                     </Text>
-
                     <View style={styles.dashedLine} />
-
                 </View>
 
                 <Text
-                    numberOfLines={isThreeColumn ? 2 : 3}
+                    numberOfLines={2}
                     style={[styles.productName, isThreeColumn && { fontSize: wp('2.8%'), minHeight: hp('3.5%'), lineHeight: hp('1.8%') }]}
                 >
                     {name}
                 </Text>
-
-                {/* <Text style={styles.productWeight}>
-                    {weight}
-                </Text> */}
-
             </View>
-
         </TouchableOpacity >
 
     );
@@ -227,9 +194,9 @@ export default React.memo(TokenProductCard);
 const styles = StyleSheet.create({
 
     cardContainer: {
-        width: wp('42%'),
+        width: wp('30%'),
         marginVertical: hp('1%'),
-        marginHorizontal: wp('2%'),
+        marginHorizontal: wp('1%'),
     },
     threeColumnContainer: {
         width: wp('29%'),
@@ -238,68 +205,69 @@ const styles = StyleSheet.create({
 
     topCardBox: {
         backgroundColor: '#FFFFFF',
-        borderRadius: 18,
-        // paddingHorizontal: wp('3%'),
-        paddingVertical: hp('1%'),
-        shadowColor: '#F25000',
-        shadowOpacity: 0.15,
-        shadowOffset: { width: 0, height: 6 },
-        shadowRadius: 10,
-        elevation: 8,
+        borderRadius: 12,
+        paddingVertical: hp('0.5%'),
+        shadowColor: '#000',
+        shadowOpacity: 0.1,
+        shadowOffset: { width: 0, height: 2 },
+        shadowRadius: 4,
+        elevation: 3,
         borderWidth: 1,
         borderColor: '#F2F2F2',
     },
     heartIcon: {
-        fontSize: wp('6.5%'),
-        // color: '#B0B0B0',
-        marginStart: 10
+        // height of image is handled inline
+    },
+    topLeftRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginStart: wp('1%'),
     },
     topRow: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
         alignItems: 'center',
+    },
+    actionAbsolute: {
+        position: 'absolute',
+        top: -1,
+        right: -1,
     },
 
     tokenText: {
-        fontSize: wp('2.5%'),
-        color: '#333',
-        fontFamily: FONTS.poppins.medium,
+        fontSize: wp('2.2%'),
+        color: '#9200A8',
+        fontFamily: FONTS.poppins.semiBold,
+        marginLeft: wp('4%'),
     },
 
     plusIconCircle: {
-        width: wp('8.5%'),
-        height: wp('8.5%'),
-        borderRadius: wp('4.25%'),
+        width: wp('6.5%'),
+        height: wp('6.5%'),
+        borderRadius: wp('3.25%'),
         justifyContent: 'center',
-        borderWidth: 0.8,
+        borderWidth: 0.5,
         backgroundColor: '#FFFFFF',
         alignItems: 'center',
-        borderColor: '#FCD3C0',
-        marginEnd: 10,
+        borderColor: '#F25000',
         elevation: 2,
     },
     plusIconDisabled: {
-        width: wp('8.5%'),
-        height: wp('8.5%'),
-        borderRadius: wp('4.25%'),
+        width: wp('6.5%'),
+        height: wp('6.5%'),
+        borderRadius: wp('3.25%'),
         backgroundColor: '#CCCCCC',
         justifyContent: 'center',
         alignItems: 'center',
-        marginEnd: 10,
     },
 
     counterContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        //  width: wp('25%'),
-        height: hp('3.8%'),
+        height: hp('2.8%'),
         borderRadius: 20,
-        //  paddingHorizontal: wp('2%'),
-        borderWidth: 0.2,
+        borderWidth: 0.5,
         borderColor: '#F25000',
-        marginEnd: 10
-        // paddingHorizontal: wp('3.5%'),
     },
 
     counterBtn: {
@@ -309,10 +277,9 @@ const styles = StyleSheet.create({
     },
 
     counterQty: {
-        fontSize: wp('4.2%'),
+        fontSize: wp('3.2%'),
         color: '#F25000',
-        fontFamily: FONTS.poppins.semiBold,
-        marginHorizontal: wp('1%'),
+        fontFamily: FONTS.poppins.bold,
     },
 
     imageContainer: {
@@ -323,7 +290,7 @@ const styles = StyleSheet.create({
 
     imageFrame: {
         width: wp('6%'),
-        height: wp('26%'),
+        height: wp('20%'),
         borderRadius: 18,
         borderWidth: 2,
         // borderColor: '#1B8CFF',
@@ -333,8 +300,9 @@ const styles = StyleSheet.create({
     },
 
     productImage: {
-        width: 134,
-        height: 126,
+        width: wp('24%'),
+        height: wp('24%'),
+        resizeMode: 'contain'
     },
 
     // tokenBadge: {
@@ -355,15 +323,15 @@ const styles = StyleSheet.create({
 
     priceContainer: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
         alignItems: 'center',
-        marginEnd: wp('2%'),
+        marginBottom: hp('0.3%'),
     },
 
     pricePill: {
-        borderRadius: 24,
-        width: wp('15%'),
-        height: hp('3.5%'),
+        borderRadius: 15,
+        width: wp('12%'),
+        height: hp('2.5%'),
+        justifyContent: 'center',
         justifyContent: 'center',
         marginStart: wp('2%'),
         shadowColor: '#F25000',
@@ -375,15 +343,16 @@ const styles = StyleSheet.create({
 
     priceText: {
         color: '#FFF',
-        fontSize: wp('4.2%'),
-        fontFamily: FONTS.poppins.semiBold,
+        fontSize: wp('3.4%'),
+        fontFamily: FONTS.outfit.semiBold,
         alignSelf: 'center',
     },
 
     mrpLabel: {
-        fontSize: wp('3.2%'),
+        fontSize: wp('3.4%'),
         color: '#9B9B9B',
-        fontFamily: FONTS.poppins.medium,
+        marginStart: wp('1%'),
+        fontFamily: FONTS.outfit.medium,
     },
 
     mrpText: {
@@ -391,19 +360,19 @@ const styles = StyleSheet.create({
     },
 
     bottomSection: {
-        marginTop: hp('1.2%'),
+        marginTop: hp('0.8%'),
     },
 
     offerRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: hp('0.6%'),
+        marginBottom: hp('0.1%'),
     },
 
     offerText: {
         color: '#0CA201',
-        fontSize: wp('3.5%'),
-        fontFamily: FONTS.poppins.bold,
+        fontSize: wp('2.5%'),
+        fontFamily: FONTS.poppins.extraBold,
     },
 
     dashedLine: {
@@ -418,7 +387,7 @@ const styles = StyleSheet.create({
         fontSize: wp('3.3%'),
         color: '#1E1E1E',
         lineHeight: hp('2.2%'),
-        fontFamily: FONTS.poppins.medium,
+        fontFamily: FONTS.inter.regular,
         minHeight: hp('5%'),
     },
 

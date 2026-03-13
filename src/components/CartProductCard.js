@@ -104,7 +104,7 @@ const CartProductCard = (props) => {
 
             <View style={styles.productCardInnerView}>
                 <View style={styles.productImageView}>
-                    <TouchableOpacity
+                    {/* <TouchableOpacity
                         style={[styles.heartContainer, { zIndex: 10 }]}
                         onPress={() => toggleWishlist(item)}
                     >
@@ -113,7 +113,7 @@ const CartProductCard = (props) => {
                             size={wp('4%')}
                             color={isLiked ? '#FF0048' : '#979797'}
                         />
-                    </TouchableOpacity>
+                    </TouchableOpacity> */}
 
                     <Image
                         style={styles.productImageStyle}
