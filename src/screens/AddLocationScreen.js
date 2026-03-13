@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { View, Text, StyleSheet, Image, TouchableOpacity, TextInput, Platform, ScrollView, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, ActivityIndicator, PermissionsAndroid } from 'react-native'
 import MapView, { Marker } from 'react-native-maps'
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete'
@@ -23,6 +23,7 @@ const AddLocationScreen = () => {
     const route = useRoute()
     const insets = useSafeAreaInsets()
     const { refreshAddresses } = useAddresses();
+    const isMountedRef = useRef(true);
 
     // Edit mode check
     const editAddress = route.params?.address;
@@ -57,6 +58,12 @@ const AddLocationScreen = () => {
         latitude: Number(editAddress?.latitude) || defaultCoords.latitude,
         longitude: Number(editAddress?.longitude) || defaultCoords.longitude,
     }));
+
+    useEffect(() => {
+        return () => {
+            isMountedRef.current = false;
+        };
+    }, []);
 
     useEffect(() => {
         if (isEditMode && editAddress?.latitude != null && editAddress?.longitude != null) {
@@ -108,20 +115,23 @@ const AddLocationScreen = () => {
         console.log('📍 [GEOLOCATION] Fetching current position...');
 
         const onSuccess = (position) => {
+            if (!isMountedRef.current) return;
             const { latitude, longitude } = position.coords;
             console.log('📍 [GEOLOCATION] Position received:', latitude, longitude);
-            const newRegion = {
-                ...region,
+            setRegion(prev => ({
+                ...prev,
                 latitude,
                 longitude,
-            };
-            setRegion(newRegion);
+            }));
             setMarkerPosition({ latitude, longitude });
-            reverseGeocode(latitude, longitude, !isEditMode);
+            // Don't block initial screen load on network reverse-geocoding.
+            if (!isEditMode) setIsInitialLoading(false);
+            reverseGeocode(latitude, longitude);
             if (showLoader) setIsLoading(false);
         };
 
         const onFinalError = (error) => {
+            if (!isMountedRef.current) return;
             console.warn('📍 [GEOLOCATION] Final Error:', error);
             if (!isEditMode) setIsInitialLoading(false);
             if (showLoader) setIsLoading(false);
@@ -129,18 +139,24 @@ const AddLocationScreen = () => {
             Toast.show(msg, Toast.SHORT);
         };
 
-        // Try high accuracy first, fallback to low accuracy
+        // Fast path: try cached location first (usually instant), then refine with high accuracy.
         Geolocation.getCurrentPosition(
             onSuccess,
-            (error) => {
-                console.warn('📍 [GEOLOCATION] High accuracy failed, trying low accuracy...', error.message);
+            () => {
                 Geolocation.getCurrentPosition(
                     onSuccess,
-                    onFinalError,
-                    { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 }
+                    (error) => {
+                        console.warn('[GEOLOCATION] High accuracy failed, trying low accuracy...', error.message);
+                        Geolocation.getCurrentPosition(
+                            onSuccess,
+                            onFinalError,
+                            { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 }
+                        );
+                    },
+                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
                 );
             },
-            { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+            { enableHighAccuracy: false, timeout: 1000, maximumAge: 600000 }
         );
     };
 
@@ -181,12 +197,13 @@ const AddLocationScreen = () => {
 
     const apiKey = 'AIzaSyDhItv0zoWdQbDh-5jjKLAEjwRDDrFNc1Y';
 
-    const reverseGeocode = async (lat, lng, isInitial = false) => {
+    const reverseGeocode = async (lat, lng) => {
+        if (!isMountedRef.current) return;
         const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`;
 
         try {
             setIsGeocoding(true);
-            const response = await axios.get(url);
+            const response = await axios.get(url, { timeout: 8000 });
             if (response.data.results && response.data.results.length > 0) {
                 const result = response.data.results[0];
                 const address = result.formatted_address;
@@ -211,8 +228,7 @@ const AddLocationScreen = () => {
         } catch (error) {
             console.error('Reverse geocode error', error);
         } finally {
-            setIsGeocoding(false);
-            if (isInitial) setIsInitialLoading(false);
+            if (isMountedRef.current) setIsGeocoding(false);
         }
     };
 
@@ -385,6 +401,12 @@ const AddLocationScreen = () => {
                             }}
                         />
                     </View>
+                    {isGeocoding && !isInitialLoading ? (
+                        <View style={styles.geocodingBanner}>
+                            <ActivityIndicator size="small" color="#F25000" />
+                            <Text style={styles.geocodingText}>Fetching address…</Text>
+                        </View>
+                    ) : null}
                 </View>
 
                 <KeyboardAvoidingView
@@ -624,6 +646,26 @@ const styles = StyleSheet.create({
         marginTop: hp('1.5%'),
         zIndex: 999,
         elevation: 10
+    },
+    geocodingBanner: {
+        width: wp('90.7%'),
+        alignSelf: 'center',
+        marginTop: hp('1%'),
+        backgroundColor: '#FFFFFF',
+        borderRadius: wp('2.32%'),
+        paddingVertical: hp('0.8%'),
+        paddingHorizontal: wp('3%'),
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#DADADA',
+        elevation: 4,
+    },
+    geocodingText: {
+        marginLeft: wp('2%'),
+        color: '#000000',
+        fontFamily: FONTS.poppins.regular,
+        fontSize: wp('3.2%'),
     },
     searchContainer: {
         flexDirection: 'row',
