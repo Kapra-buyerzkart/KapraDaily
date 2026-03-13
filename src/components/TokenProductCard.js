@@ -285,6 +285,7 @@ const styles = StyleSheet.create({
     imageContainer: {
         alignItems: 'center',
         justifyContent: 'center',
+        marginTop: hp('0.5%'),
         // marginVertical: hp('1%'),
     },
 
