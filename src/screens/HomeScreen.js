@@ -860,10 +860,7 @@ const HomeScreen = () => {
                 {topBanner && topBanner.length > 0 && (
                     <ImageBackground
                         source={topBanner[1].uri}
-                        style={{
-                            width: wp('100%'),
-                            height: hp('56%'),
-                        }}
+                        style={styles.topShowcaseContainer}
                         imageStyle={{
                             width: '100%',
                             height: '100%',
@@ -1391,6 +1388,10 @@ const styles = StyleSheet.create({
         resizeMode: 'cover',
         borderRadius: wp('8%'),
     },
+    topShowcaseContainer: {
+        width: wp('100%'),
+        aspectRatio: 0.8,
+    },
     headerBackgroundbg2: {
         width: wp('98%'),
         height: hp('32%'),   // important
@@ -1494,7 +1495,7 @@ const styles = StyleSheet.create({
     headerRightWrapper: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: wp('3%'),
+        gap: wp('1%'),
         top: Platform.OS !== 'ios' ? hp('1%') : 0,
     },
     bcoinRupee: {
@@ -2202,10 +2203,10 @@ const styles = StyleSheet.create({
         marginHorizontal: wp('4.6%'),
     },
     topShowcaseMain: {
-        width: '90%',
-        height: hp('8%'),
-        borderRadius: wp('4%'),
-        top: '53%',
+        width: '91%',
+        aspectRatio: 5,
+        borderRadius: wp('4.65%'),
+        top: '55%',
         position: 'absolute',
         alignSelf: 'center',
         // marginBottom: hp('1.2%'),
@@ -2213,7 +2214,7 @@ const styles = StyleSheet.create({
     topShowcaseRow: {
         flexDirection: 'row',
         justifyContent: 'center',
-        bottom: -hp('3.9%'),
+        bottom: '-7%',
         position: 'absolute',
         width: '100%',
         // backgroundColor: 'red'
