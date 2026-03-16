@@ -146,32 +146,64 @@ export const CartProvider = ({ children }) => {
             console.log('Error saving selectedAddressId', e);
         }
 
-        // We must extract the address synchronously before running state setter, 
-        // calling setAddressConfirmationData inside setAddresses(prev) is a React anti-pattern
         setAddresses(prev => {
             const selectedAddr = prev.find(item => String(item.id) === String(addressId));
             if (selectedAddr) {
-                // Ensure we do this asynchronously (next tick) or outside to avoid infinite renders during setState
-                setTimeout(() => {
+                // Perform validation for the newly selected address
+                (async () => {
                     const pincode = selectedAddr.pin || '';
                     const area = selectedAddr.raw?.areaName || selectedAddr.raw?.pincodeAreaName || selectedAddr.raw?.area_name || 'N/A';
 
-                    // Close the AddressModal if it was open to avoid "multiple Modal" conflict on Native
                     setShowAddressModal(false);
 
-                    // Add a slight delay for modal closing animation before opening the confirmation modal
-                    setTimeout(() => {
-                        setAddressConfirmationData({ pincode, areaName: area });
-                    }, 400);
+                    try {
+                        const res = await getCartSummaryApi(undefined, undefined, cartVersionRef.current, cartIdRef.current, selectedAddr.pincodeAreaId);
+                        console.log('👆 [ADDRESS] Validation Summary:', JSON.stringify(res, null, 2));
 
-                }, 0);
+                        // Small delay to allow AddressModal to close smoothly on Native
+                        setTimeout(() => {
+                            if (res?.success === false && (res?.status === 'STORE_NOT_FOUND' || res?.status === 'STORE_CLOSED_FOR_DELIVERY')) {
+                                setAddressConfirmationData({
+                                    pincode,
+                                    areaName: area,
+                                    isServiceable: false,
+                                    unavailableMessage: res?.message || (res?.status === 'STORE_NOT_FOUND' ? "No store for the selected pincode " : "Store is currently closed for delivery")
+                                });
+                            } else {
+                                setAddressConfirmationData({ pincode, areaName: area, isServiceable: true });
+                                refreshCart(); // Trigger full cart refresh for the new address
+                            }
+                        }, 400);
+                    } catch (err) {
+                        console.error('Validation error in onSelectAddress:', err);
+                        const errorMsg = typeof err === 'string' ? err : (err?.message || err?.Message || "");
+
+                        setTimeout(() => {
+                            if (errorMsg.toLowerCase().includes('no store') ||
+                                errorMsg.toLowerCase().includes('not found') ||
+                                errorMsg.toLowerCase().includes('closed') ||
+                                errorMsg.toLowerCase().includes('pincode area')) {
+                                setAddressConfirmationData({
+                                    pincode,
+                                    areaName: area,
+                                    isServiceable: false,
+                                    unavailableMessage: errorMsg || "Delivery currently not available in this area."
+                                });
+                            } else {
+                                setAddressConfirmationData({ pincode, areaName: area, isServiceable: true });
+                                refreshCart();
+                            }
+                        }, 400);
+                    }
+                })();
             }
             return prev.map(item => ({
                 ...item,
                 selected: String(item.id) === String(addressId)
             }));
         });
-    }, []);
+    }, [refreshCart]);
+    /* Note: getCartSummaryApi is imported at top of file */
 
     const onThreeDotsClicked = useCallback((addressId) => {
         setAddresses(prev =>
@@ -322,6 +354,7 @@ export const CartProvider = ({ children }) => {
                     return { success: true, data: response.data, cartVersion: response.data.cartVersion };
                 } else {
                     const errorMsg = response?.message || 'Failed to fetch summary';
+                    const status = response?.status;
 
                     if (!isAutoReload && errorMsg.toLowerCase().includes('modified')) {
                         console.log('🔄 [SUMMARY] Cart modified error caught. Auto-reloading...');
@@ -333,15 +366,17 @@ export const CartProvider = ({ children }) => {
 
                         setCartSummary(null);
                         setError(null);
-                        return { success: false, error: 'Auto-reloading...', status: response?.status };
+                        return { success: false, error: 'Auto-reloading...', status };
                     }
 
+                    // Special case for serviceability - don't show generic error toast if it's a known non-serviceable status
+                    // but we still set the error state so the BillSection can show it or components can react
                     setCartSummary(null);
                     setError(errorMsg);
                     return {
                         success: false,
                         error: errorMsg,
-                        status: response?.status
+                        status: status
                     };
                 }
             } catch (error) {

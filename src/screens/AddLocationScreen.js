@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { View, Text, StyleSheet, Image, TouchableOpacity, TextInput, Platform, ScrollView, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, ActivityIndicator, PermissionsAndroid } from 'react-native'
 import MapView, { Marker } from 'react-native-maps'
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete'
@@ -23,6 +23,7 @@ const AddLocationScreen = () => {
     const route = useRoute()
     const insets = useSafeAreaInsets()
     const { refreshAddresses } = useAddresses();
+    const isMountedRef = useRef(true);
 
     // Edit mode check
     const editAddress = route.params?.address;
@@ -44,6 +45,8 @@ const AddLocationScreen = () => {
     const [isInitialLoading, setIsInitialLoading] = useState(!isEditMode);
     const [isAreasLoading, setIsAreasLoading] = useState(false);
     const [isGeocoding, setIsGeocoding] = useState(false);
+    const [searchText, setSearchText] = useState('');
+    const googleAutocompleteRef = useRef(null);
 
     const defaultCoords = { latitude: 10.0205, longitude: 76.3052 };
     const [region, setRegion] = useState({
@@ -57,6 +60,12 @@ const AddLocationScreen = () => {
         latitude: Number(editAddress?.latitude) || defaultCoords.latitude,
         longitude: Number(editAddress?.longitude) || defaultCoords.longitude,
     }));
+
+    useEffect(() => {
+        return () => {
+            isMountedRef.current = false;
+        };
+    }, []);
 
     useEffect(() => {
         if (isEditMode && editAddress?.latitude != null && editAddress?.longitude != null) {
@@ -108,20 +117,23 @@ const AddLocationScreen = () => {
         console.log('📍 [GEOLOCATION] Fetching current position...');
 
         const onSuccess = (position) => {
+            if (!isMountedRef.current) return;
             const { latitude, longitude } = position.coords;
             console.log('📍 [GEOLOCATION] Position received:', latitude, longitude);
-            const newRegion = {
-                ...region,
+            setRegion(prev => ({
+                ...prev,
                 latitude,
                 longitude,
-            };
-            setRegion(newRegion);
+            }));
             setMarkerPosition({ latitude, longitude });
-            reverseGeocode(latitude, longitude, !isEditMode);
+            // Don't block initial screen load on network reverse-geocoding.
+            if (!isEditMode) setIsInitialLoading(false);
+            reverseGeocode(latitude, longitude);
             if (showLoader) setIsLoading(false);
         };
 
         const onFinalError = (error) => {
+            if (!isMountedRef.current) return;
             console.warn('📍 [GEOLOCATION] Final Error:', error);
             if (!isEditMode) setIsInitialLoading(false);
             if (showLoader) setIsLoading(false);
@@ -129,18 +141,24 @@ const AddLocationScreen = () => {
             Toast.show(msg, Toast.SHORT);
         };
 
-        // Try high accuracy first, fallback to low accuracy
+        // Fast path: try cached location first (usually instant), then refine with high accuracy.
         Geolocation.getCurrentPosition(
             onSuccess,
-            (error) => {
-                console.warn('📍 [GEOLOCATION] High accuracy failed, trying low accuracy...', error.message);
+            () => {
                 Geolocation.getCurrentPosition(
                     onSuccess,
-                    onFinalError,
-                    { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 }
+                    (error) => {
+                        console.warn('[GEOLOCATION] High accuracy failed, trying low accuracy...', error.message);
+                        Geolocation.getCurrentPosition(
+                            onSuccess,
+                            onFinalError,
+                            { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 }
+                        );
+                    },
+                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
                 );
             },
-            { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+            { enableHighAccuracy: false, timeout: 1000, maximumAge: 600000 }
         );
     };
 
@@ -181,12 +199,13 @@ const AddLocationScreen = () => {
 
     const apiKey = 'AIzaSyDhItv0zoWdQbDh-5jjKLAEjwRDDrFNc1Y';
 
-    const reverseGeocode = async (lat, lng, isInitial = false) => {
+    const reverseGeocode = async (lat, lng) => {
+        if (!isMountedRef.current) return;
         const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`;
 
         try {
             setIsGeocoding(true);
-            const response = await axios.get(url);
+            const response = await axios.get(url, { timeout: 8000 });
             if (response.data.results && response.data.results.length > 0) {
                 const result = response.data.results[0];
                 const address = result.formatted_address;
@@ -211,8 +230,7 @@ const AddLocationScreen = () => {
         } catch (error) {
             console.error('Reverse geocode error', error);
         } finally {
-            setIsGeocoding(false);
-            if (isInitial) setIsInitialLoading(false);
+            if (isMountedRef.current) setIsGeocoding(false);
         }
     };
 
@@ -319,11 +337,32 @@ const AddLocationScreen = () => {
                 <View style={{ zIndex: 1, elevation: 5 }}>
                     <View style={[styles.searchAbsoluteContainer, { zIndex: 999 }]}>
                         <GooglePlacesAutocomplete
+                            ref={googleAutocompleteRef}
                             placeholder="Search Location"
-                            placeholderTextColor="#000000"
+                            textInputProps={{
+                                placeholderTextColor: '#000000',
+                                color: '#000000',
+                                returnKeyType: 'search',
+                                value: searchText,
+                                onChangeText: (text) => setSearchText(text),
+                            }}
+                            renderRightButton={() => (
+                                searchText.length > 0 ? (
+                                    <TouchableOpacity
+                                        onPress={() => {
+                                            setSearchText('');
+                                            googleAutocompleteRef.current?.setAddressText('');
+                                        }}
+                                        style={styles.clearIconContainer}
+                                    >
+                                        <Ionicons name="close-circle" size={wp('5.5%')} color="#CCCCCC" />
+                                    </TouchableOpacity>
+                                ) : null
+                            )}
                             fetchDetails={true}
                             onPress={(data, details = null) => {
                                 if (details) {
+                                    setSearchText(data.description || details.formatted_address || '');
                                     const lat = details.geometry.location.lat;
                                     const lng = details.geometry.location.lng;
                                     setRegion(prev => ({ ...prev, latitude: lat, longitude: lng }));
@@ -381,10 +420,21 @@ const AddLocationScreen = () => {
                                 separator: {
                                     height: 1,
                                     backgroundColor: '#DADADA',
+                                },
+                                loader: {
+                                    flexDirection: 'row',
+                                    justifyContent: 'flex-end',
+                                    height: 20,
                                 }
                             }}
                         />
                     </View>
+                    {isGeocoding && !isInitialLoading ? (
+                        <View style={styles.geocodingBanner}>
+                            <ActivityIndicator size="small" color="#F25000" />
+                            <Text style={styles.geocodingText}>Fetching address…</Text>
+                        </View>
+                    ) : null}
                 </View>
 
                 <KeyboardAvoidingView
@@ -413,7 +463,9 @@ const AddLocationScreen = () => {
                                     top: hp('-1%')
                                 }]} source={require('../assets/images/location_four.png')} />
                                 <View>
-                                    <Text style={styles.fetchingLocation}>{addLine1 || 'Fetching Location...'}</Text>
+                                    <Text style={styles.fetchingLocation}>
+                                        {addLine1 || (isGeocoding || isInitialLoading ? 'Fetching Location...' : 'Address not found')}
+                                    </Text>
                                     <Text style={styles.addressLineText}>{addLine2 || ''}</Text>
                                 </View>
                             </View>
@@ -613,7 +665,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         marginTop: hp('2%'),
-        marginBottom: hp('1%'),
+        //  marginBottom: hp('1%'),
     },
     backButtonContainer: {
         padding: wp('1%'),
@@ -624,6 +676,26 @@ const styles = StyleSheet.create({
         marginTop: hp('1.5%'),
         zIndex: 999,
         elevation: 10
+    },
+    geocodingBanner: {
+        width: wp('90.7%'),
+        alignSelf: 'center',
+        marginTop: hp('1%'),
+        backgroundColor: '#FFFFFF',
+        borderRadius: wp('2.32%'),
+        paddingVertical: hp('0.8%'),
+        paddingHorizontal: wp('3%'),
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#DADADA',
+        elevation: 4,
+    },
+    geocodingText: {
+        marginLeft: wp('2%'),
+        color: '#000000',
+        fontFamily: FONTS.poppins.regular,
+        fontSize: wp('3.2%'),
     },
     searchContainer: {
         flexDirection: 'row',
@@ -717,6 +789,11 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
+    clearIconContainer: {
+        padding: wp('2%'),
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
     reCenterButton: {
         position: 'absolute',
         bottom: hp('2%'),
@@ -751,7 +828,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#FFFAF7',
         flexDirection: "row",
         alignItems: "center",
-        marginTop: hp('3%')
+        marginTop: hp('1.5%')
     },
     addressTypeText: {
         fontFamily: FONTS.poppins.regular,
@@ -775,23 +852,23 @@ const styles = StyleSheet.create({
         fontFamily: FONTS.poppins.regular,
         fontSize: wp('3.72%'),
         alignSelf: 'center',
-        marginTop: hp('3%')
+        marginTop: hp('1%')
     },
     addressTypesContainer: {
         flexDirection: "row",
         justifyContent: 'space-between',
         paddingHorizontal: wp('10%'),
         marginTop: hp('1.1%'),
-        marginBottom: hp('5%')
+        marginBottom: hp('3%')
     },
     addressTypeContainer: {
         flexDirection: "row",
         alignItems: 'center',
         borderWidth: 1,
         borderColor: '#F25000',
-        borderRadius: wp('2.32%'),
-        paddingHorizontal: wp('2.5%'),
-        paddingVertical: hp('0.8%'),
+        borderRadius: wp('2.12%'),
+        paddingHorizontal: wp('2.8%'),
+        paddingVertical: hp('0.2%'),
     },
     addressTypeIcon: {
         width: wp('3.95%'),

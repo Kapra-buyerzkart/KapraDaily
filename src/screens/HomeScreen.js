@@ -36,6 +36,7 @@ import StoreUnavailable from '../components/StoreUnavailable';
 import SeeAllButton from '../components/SeeAllButton';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
+import CoinCountSVG from '../components/CoinCountSVG';
 
 
 const { width } = Dimensions.get("window");
@@ -187,7 +188,7 @@ const ExploreCard = React.memo(({ item }) => {
                     </View>
                 )}
             </View>
-            <Text style={styles.exploreCardName} numberOfLines={2}>{name}</Text>
+            <Text style={styles.exploreCardName} numberOfLines={3}>{name}</Text>
             <View style={styles.exploreCardBottom}>
                 <View>
                     {mrp !== price && <Text style={styles.exploreMrpText}>MRP <Text style={{ textDecorationLine: 'line-through' }}>₹{mrp}</Text></Text>}
@@ -756,15 +757,9 @@ const HomeScreen = () => {
                                 </View>
                                 <View style={styles.headerRightWrapper}>
                                     <TouchableOpacity onPress={() => navigation.navigate("BCoinScreen")} style={styles.bcoinContainer}>
-                                        <Image style={styles.rupeeImageTwo} source={require('../assets/images/premium_rupee.png')} />
-                                        <LinearGradient
-                                            colors={['#FDED94', '#DEC32B']}
-                                            start={{ x: 0, y: 0 }}
-                                            end={{ x: 1, y: 1 }}
-                                            style={styles.badge}
-                                        >
-                                            <Text style={styles.bcoinText}>{dashboardData?.wallet?.bCoins || '0.0'} B</Text>
-                                        </LinearGradient>
+                                        <CoinCountSVG width={wp('14%')} height={hp('5%')} style={styles.tokenSvg} />
+                                        <Text style={styles.tokenText}>{dashboardData?.wallet?.bTokens || '0'} B</Text>
+
                                     </TouchableOpacity>
 
                                     <TouchableOpacity onPress={() => {
@@ -816,15 +811,9 @@ const HomeScreen = () => {
                             </View>
                             <View style={styles.headerRightWrapper}>
                                 <TouchableOpacity onPress={() => navigation.navigate("BCoinScreen")} style={styles.bcoinContainer}>
-                                    <Image style={styles.rupeeImageTwo} source={require('../assets/images/premium_rupee.png')} />
-                                    <LinearGradient
-                                        colors={['#FDED94', '#DEC32B']}
-                                        start={{ x: 0, y: 0 }}
-                                        end={{ x: 1, y: 1 }}
-                                        style={styles.badge}
-                                    >
-                                        <Text style={styles.bcoinText}>{dashboardData?.wallet?.bCoins || '0.0'} B</Text>
-                                    </LinearGradient>
+                                    <CoinCountSVG width={wp('14%')} height={hp('5%')} style={styles.tokenSvg} />
+                                    <Text style={styles.tokenText}>{dashboardData?.wallet?.bTokens || '0'} B</Text>
+
                                 </TouchableOpacity>
 
                                 <TouchableOpacity onPress={() => {
@@ -1474,6 +1463,7 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: 'center',
         top: Platform.OS === 'ios' ? hp('0.5%') : hp('1%'),
+        left: Platform.OS === 'ios' ? wp('0%') : -wp('0.5%'),
     },
     addressText: {
         color: "#FFFFFF",
@@ -1486,17 +1476,13 @@ const styles = StyleSheet.create({
     bcoinContainer: {
         alignItems: 'center',
         width: wp('20%'),
-        top: Platform.OS !== 'ios' ? hp('0.3%') : 0,
-        // backgroundColor: 'red',
-        //    left: wp('18.9%')
-
-        // width: wp('20%'),
+        justifyContent: 'center',
+        top: Platform.OS === 'ios' ? hp('1%') : hp('2%')
     },
     headerRightWrapper: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: wp('1%'),
-        top: Platform.OS !== 'ios' ? hp('1%') : 0,
     },
     bcoinRupee: {
         width: wp('6.5%'),
@@ -1530,6 +1516,23 @@ const styles = StyleSheet.create({
         shadowRadius: 2,
         shadowOffset: { width: 0, height: -1 },
         elevation: 3,
+    },
+    tokenContainer: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: wp('2%'),
+        position: 'relative',
+        top: hp('1%')
+    },
+    tokenSvg: {
+    },
+    tokenText: {
+        position: 'absolute',
+        bottom: Platform.OS === 'ios' ? hp('1%') : hp('0.5%'),
+        fontFamily: FONTS.poppins.bold,
+        fontSize: wp('2.8%'),
+        color: '#000000',
+        textAlign: 'center',
     },
     bcoinText: {
         color: '#000000',
@@ -1638,7 +1641,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#D2B200',
         borderRadius: wp('5%'),
-        top: Platform.OS !== 'ios' ? hp('0.5%') : 0,
+        top: Platform.OS === 'ios' ? hp('0.5%') : hp('1.3%')
     },
     crownImage: {
         position: 'absolute',
@@ -2206,7 +2209,7 @@ const styles = StyleSheet.create({
         width: '91%',
         aspectRatio: 5,
         borderRadius: wp('4.65%'),
-        top: '55%',
+        top: '52.5%',
         position: 'absolute',
         alignSelf: 'center',
         // marginBottom: hp('1.2%'),

@@ -55,32 +55,34 @@ export const useOffers = (deliveryHook, addressHook) => {
     const [appliedGiftCardCode, setAppliedGiftCardCode] = useState(null);
     const isApplyingRef = useRef(false);
 
-    // Fetch available coupons and gift cards on mount
-    useEffect(() => {
-        const fetchRewards = async () => {
-            try {
-                // Background fetch, do not block UI with global loader
-                const [couponsRes, giftCardsRes] = await Promise.all([
-                    getAvailableCouponsApi(),
-                    getAvailableGiftCardsApi()
-                ]);
+    // Fetch available coupons and gift cards
+    const fetchRewards = useCallback(async () => {
+        try {
+            // Background fetch, do not block UI with global loader
+            const [couponsRes, giftCardsRes] = await Promise.all([
+                getAvailableCouponsApi(),
+                getAvailableGiftCardsApi()
+            ]);
 
-                if (couponsRes?.data) {
-                    // Extract items if nested, otherwise use data directly
-                    const coupons = couponsRes.data.items || (Array.isArray(couponsRes.data) ? couponsRes.data : []);
-                    setAvailableCoupons(coupons);
-                }
-                if (giftCardsRes?.data) {
-                    // Extract items if nested, otherwise use data directly
-                    const giftCards = giftCardsRes.data.items || (Array.isArray(giftCardsRes.data) ? giftCardsRes.data : []);
-                    setAvailableGiftCards(giftCards);
-                }
-            } catch (error) {
-                console.error('Error fetching available rewards:', error);
+            if (couponsRes?.data) {
+                // Extract items if nested, otherwise use data directly
+                const coupons = couponsRes.data.items || (Array.isArray(couponsRes.data) ? couponsRes.data : []);
+                setAvailableCoupons(coupons);
             }
-        };
-        fetchRewards();
+            if (giftCardsRes?.data) {
+                // Extract items if nested, otherwise use data directly
+                const giftCards = giftCardsRes.data.items || (Array.isArray(giftCardsRes.data) ? giftCardsRes.data : []);
+                setAvailableGiftCards(giftCards);
+            }
+        } catch (error) {
+            console.error('Error fetching available rewards:', error);
+        }
     }, []);
+
+    // Fetch on mount
+    useEffect(() => {
+        fetchRewards();
+    }, [fetchRewards]);
 
     // Fetch wallet data and update B-Coin offer content
     useEffect(() => {
@@ -127,6 +129,7 @@ export const useOffers = (deliveryHook, addressHook) => {
         if (offerId === '2') {
             setIsGiftCard(false);
             setCouponCode('');
+            fetchRewards(); // refresh coupons before showing modal
             setShowCouponModal(true);
             return;
         }
@@ -147,6 +150,8 @@ export const useOffers = (deliveryHook, addressHook) => {
                 showLoader(false);
                 if (result.success) {
                     updateOfferState(offerId, true);
+                    const selectedAddr = addressHook?.addresses?.find(a => a.selected);
+                    getCartSummary(deliveryHook?.deliveryMode, deliveryHook?.selectedSlot, null, selectedAddr?.pincodeAreaId);
                 } else {
                     Toast.show(result.message || 'Failed to apply B-Coins', Toast.LONG);
                 }
@@ -160,12 +165,13 @@ export const useOffers = (deliveryHook, addressHook) => {
         if (offerId === '4') {
             setIsGiftCard(true);
             setCouponCode('');
+            fetchRewards(); // refresh gift cards before showing modal
             setShowCouponModal(true);
             return;
         }
 
         updateOfferState(offerId, true);
-    }, [offers, applyBCoins, showLoader, updateOfferState]);
+    }, [offers, applyBCoins, showLoader, updateOfferState, fetchRewards]);
 
     const onRejectOffer = useCallback(async (offerId) => {
         if (offerId === '2') {
@@ -197,6 +203,8 @@ export const useOffers = (deliveryHook, addressHook) => {
                 showLoader(false);
                 if (result.success) {
                     updateOfferState(offerId, false);
+                    const selectedAddr = addressHook?.addresses?.find(a => a.selected);
+                    getCartSummary(deliveryHook?.deliveryMode, deliveryHook?.selectedSlot, null, selectedAddr?.pincodeAreaId);
                 } else {
                     Toast.show(result.message || 'Failed to remove B-Coins', Toast.LONG);
                 }

@@ -16,10 +16,23 @@ import { LoaderContext } from '../context/loaderContext'
 import CouponModal from '../components/CouponModal'
 import { getAvailableCouponsApi, getAvailableGiftCardsApi } from '../api/cartService'
 import Toast from 'react-native-simple-toast'
-import { requestProductApi } from '../api/userService'
 import StoreUnavailable from '../components/StoreUnavailable'
 import LocationModal from '../components/LocationModal'
 import ConfirmationModal from '../components/ConfirmationModal'
+import { getWalletDataApi } from '../api/userService'
+import CoinCountSVG from '../components/CoinCountSVG'
+import {
+    LocationIcon,
+    OrderIcon,
+    ReferIcon,
+    SmartPointIcon,
+    PrivacyIcon,
+    TermsIcon,
+    AboutIcon,
+    CouponIcon
+} from '../components/ProfileIcons'
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'
+import DeviceInfo from 'react-native-device-info';
 
 export default function ProfileScreen() {
     const [accessToken, setAccessToken] = useState(null);
@@ -35,6 +48,7 @@ export default function ProfileScreen() {
     const [requestText, setRequestText] = useState('');
     const [isSubmittingRequest, setIsSubmittingRequest] = useState(false);
     const [isLogoutModalVisible, setIsLogoutModalVisible] = useState(false);
+    const [walletData, setWalletData] = useState(null);
 
     const handleRequestProduct = async () => {
         if (!requestText.trim()) return;
@@ -77,7 +91,19 @@ export default function ProfileScreen() {
             // setIsProfileLoaded(true);   // ✅ IMPORTANT
         };
         fetchProfile();
+        fetchWalletData();
     }, []);
+
+    const fetchWalletData = async () => {
+        try {
+            const response = await getWalletDataApi();
+            if (response && response.success) {
+                setWalletData(response.data);
+            }
+        } catch (error) {
+            console.error('Error fetching wallet data:', error);
+        }
+    };
 
     const handleLogout = async () => {
         await logout()
@@ -196,11 +222,9 @@ export default function ProfileScreen() {
                                         </View>
                                         <Text style={styles.phoneNumberStyle}>{profile.phoneNo}</Text>
                                     </View>
-                                    <TouchableOpacity onPress={() => navigation.navigate('BCoinScreen')} style={styles.bcoinContainer}>
-                                        <View style={styles.bcoinIconCircle}>
-                                            <Image style={styles.bcoinImage} source={require('../assets/images/bcoinimg.png')} />
-                                        </View>
-                                        <Text style={styles.bcoinText}>{(profile.totalBCoins).toFixed(2) || '0.00'}</Text>
+                                    <TouchableOpacity onPress={() => navigation.navigate('BCoinScreen')} style={styles.tokenContainer}>
+                                        <CoinCountSVG width={wp('14%')} height={hp('5%')} style={styles.tokenSvg} />
+                                        <Text style={styles.tokenText}>{walletData?.wallet?.bTokens || '0'} B</Text>
                                     </TouchableOpacity>
                                 </View>
                             </View>
@@ -209,19 +233,19 @@ export default function ProfileScreen() {
                             <View style={styles.containerTwo}>
                                 <TouchableOpacity onPress={() => navigation.navigate('SavedAddressScreen')} style={styles.saveAddressContainer}>
                                     <View style={styles.actionIconView}>
-                                        <MaterialIcons name="location-on" size={wp('8%')} color="#F25000" style={{}} />
+                                        <LocationIcon width={wp('5%')} height={wp('5%')} />
                                     </View>
                                     <Text style={styles.saveAddressText}>{'Saved \nAddress'}</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity onPress={() => navigation.navigate("MyOrdersScreen")} style={styles.saveAddressContainer}>
                                     <View style={styles.actionIconView}>
-                                        <MaterialIcons name="shopping-bag" size={wp('8%')} color="#F25000" />
+                                        <OrderIcon width={wp('5%')} height={wp('5%')} />
                                     </View>
                                     <Text style={styles.saveAddressText}>{'My \nOrders'}</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity onPress={() => navigation.navigate("ReferralScreen")} style={styles.saveAddressContainer}>
                                     <View style={styles.actionIconView}>
-                                        <Ionicons name="people" size={wp('8%')} color="#F25000" />
+                                        <ReferIcon width={wp('5%')} height={wp('5%')} />
                                     </View>
                                     <Text style={styles.saveAddressText}>Refer</Text>
                                 </TouchableOpacity>
@@ -229,145 +253,149 @@ export default function ProfileScreen() {
                         </View>
                     </LinearGradient>
                 </View>
-                <View style={styles.containerThree}>
+
+                <View style={styles.sectionsContainer}>
                     <Text style={styles.sectionHeader}>Offers</Text>
+                    <View style={styles.sectionCard}>
+                        <TouchableOpacity onPress={() => openOffersModal('Gift Cards')} style={styles.listItem}>
+                            <View style={styles.listItemLeft}>
+                                <View style={styles.listIconWrapper}>
+                                    <SmartPointIcon width={wp('6%')} height={wp('6%')} />
+                                </View>
+                                <Text style={styles.listItemText}>Smart point</Text>
+                            </View>
+                            <AntDesign name={"right"} color={'#777777'} size={wp('3.5%')} />
+                        </TouchableOpacity>
+                        <View style={styles.divider} />
+                        <TouchableOpacity onPress={() => openOffersModal('Coupons')} style={styles.listItem}>
+                            <View style={styles.listItemLeft}>
+                                <View style={styles.listIconWrapper}>
+                                    <MaterialCommunityIcons name="ticket-percent-outline" color={'#F25000'} size={wp('4%')} />
+                                </View>
+                                <Text style={styles.listItemText}>Coupon</Text>
+                            </View>
+                            <AntDesign name={"right"} color={'#777777'} size={wp('3.5%')} />
+                        </TouchableOpacity>
+                    </View>
 
-                    <TouchableOpacity onPress={() => openOffersModal('Gift Cards')} style={styles.listItem}>
-                        <LinearGradient
-                            colors={['#FFF5F0', '#FFEBE0']}
-                            style={styles.listIconCircle}
-                        >
-                            <Image style={styles.listIcon} source={require('../assets/images/smart_point.png')} />
-                        </LinearGradient>
-                        <Text style={styles.listItemText}>Smart point</Text>
-                        <AntDesign name={"right"} color={'#F25000'} size={wp('4%')} />
-                    </TouchableOpacity>
-
-                    <TouchableOpacity onPress={() => openOffersModal('Coupons')} style={styles.listItem}>
-                        <LinearGradient
-                            colors={['#FFF5F0', '#FFEBE0']}
-                            style={styles.listIconCircle}
-                        >
-                            <Image style={styles.listIcon} source={require('../assets/images/coupon.png')} />
-                        </LinearGradient>
-                        <Text style={styles.listItemText}>Coupon</Text>
-                        <AntDesign name={"right"} color={'#F25000'} size={wp('4%')} />
-                    </TouchableOpacity>
-                </View>
-
-                <View style={styles.containerThree}>
-                    <Text style={styles.sectionHeader}>Informations</Text>
-                    <TouchableOpacity style={styles.listItem}>
-                        <LinearGradient
-                            colors={['#FFF5F0', '#FFEBE0']}
-                            style={styles.listIconCircle}
-                        >
-                            <Ionicons name="shield-checkmark-outline" color={'#F25000'} size={wp('5%')} />
-                        </LinearGradient>
-                        <Text style={styles.listItemText}>Privacy Policy</Text>
-                        <AntDesign name={"right"} color={'#F25000'} size={wp('4%')} />
-                    </TouchableOpacity>
-
-                    <TouchableOpacity style={styles.listItem}>
-                        <LinearGradient
-                            colors={['#FFF5F0', '#FFEBE0']}
-                            style={styles.listIconCircle}
-                        >
-                            <Ionicons name="document-text-outline" color={'#F25000'} size={wp('5%')} />
-                        </LinearGradient>
-                        <Text style={styles.listItemText}>Terms Of Use</Text>
-                        <AntDesign name={"right"} color={'#F25000'} size={wp('4%')} />
-                    </TouchableOpacity>
-
-                    <TouchableOpacity style={styles.listItem}>
-                        <LinearGradient
-                            colors={['#FFF5F0', '#FFEBE0']}
-                            style={styles.listIconCircle}
-                        >
-                            <Ionicons name="information-circle-outline" color={'#F25000'} size={wp('5%')} />
-                        </LinearGradient>
-                        <Text style={styles.listItemText}>About Us</Text>
-                        <AntDesign name={"right"} color={'#F25000'} size={wp('4%')} />
-                    </TouchableOpacity>
-
-                    <TouchableOpacity onPress={() => navigation.navigate('SupportTicketsListScreen')} style={styles.listItem}>
-                        <LinearGradient
-                            colors={['#FFF5F0', '#FFEBE0']}
-                            style={styles.listIconCircle}
-                        >
-                            <Ionicons name="help-circle-outline" color={'#F25000'} size={wp('5.5%')} />
-                        </LinearGradient>
-                        <Text style={styles.listItemText}>Help & Support</Text>
-                        <AntDesign name={"right"} color={'#F25000'} size={wp('4.4%')} />
-                    </TouchableOpacity>
-                </View>
-
-                <View style={styles.containerThree}>
                     <Text style={styles.sectionHeader}>My Account</Text>
-                    <TouchableOpacity onPress={() => navigation.navigate('Wishlist')} style={styles.listItem}>
-                        <LinearGradient
-                            colors={['#FFF5F0', '#FFEBE0']}
-                            style={styles.listIconCircle}
-                        >
-                            <Ionicons name="heart-outline" color={'#F25000'} size={wp('5.5%')} />
-                        </LinearGradient>
-                        <Text style={styles.listItemText}>My Wishlist</Text>
-                        <AntDesign name={"right"} color={'#F25000'} size={wp('4.4%')} />
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => navigation.navigate('MyOrdersScreen')} style={styles.listItem}>
-                        <LinearGradient
-                            colors={['#FFF5F0', '#FFEBE0']}
-                            style={styles.listIconCircle}
-                        >
-                            <Ionicons name="receipt-outline" color={'#F25000'} size={wp('5.5%')} />
-                        </LinearGradient>
-                        <Text style={styles.listItemText}>My Orders</Text>
-                        <AntDesign name={"right"} color={'#F25000'} size={wp('4.4%')} />
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => navigation.navigate('CartScreen')} style={styles.listItem}>
-                        <LinearGradient
-                            colors={['#FFF5F0', '#FFEBE0']}
-                            style={styles.listIconCircle}
-                        >
-                            <Ionicons name="cart-outline" color={'#F25000'} size={wp('5.5%')} />
-                        </LinearGradient>
-                        <Text style={styles.listItemText}>My Cart</Text>
-                        <AntDesign name={"right"} color={'#F25000'} size={wp('4.4%')} />
-                    </TouchableOpacity>
-                </View>
+                    <View style={styles.sectionCard}>
+                        <TouchableOpacity onPress={() => navigation.navigate('Wishlist')} style={styles.listItem}>
+                            <View style={styles.listItemLeft}>
+                                <View style={styles.listIconWrapper}>
+                                    <Ionicons name="heart-outline" color={'#F25000'} size={wp('4%')} />
+                                </View>
+                                <Text style={styles.listItemText}>My Wishlist</Text>
+                            </View>
+                            <AntDesign name={"right"} color={'#777777'} size={wp('3.5%')} />
+                        </TouchableOpacity>
+                        <View style={styles.divider} />
+                        <TouchableOpacity onPress={() => navigation.navigate('MyOrdersScreen')} style={styles.listItem}>
+                            <View style={styles.listItemLeft}>
+                                <View style={styles.listIconWrapper}>
+                                    <Ionicons name="receipt-outline" color={'#F25000'} size={wp('4%')} />
+                                </View>
+                                <Text style={styles.listItemText}>My Orders</Text>
+                            </View>
+                            <AntDesign name={"right"} color={'#777777'} size={wp('3.5%')} />
+                        </TouchableOpacity>
+                        <View style={styles.divider} />
+                        <TouchableOpacity onPress={() => navigation.navigate('CartScreen')} style={styles.listItem}>
+                            <View style={styles.listItemLeft}>
+                                <View style={styles.listIconWrapper}>
+                                    <Ionicons name="cart-outline" color={'#F25000'} size={wp('4%')} />
+                                </View>
+                                <Text style={styles.listItemText}>My Cart</Text>
+                            </View>
+                            <AntDesign name={"right"} color={'#777777'} size={wp('3.5%')} />
+                        </TouchableOpacity>
+                    </View>
 
-                <View style={styles.containerThree}>
                     <Text style={styles.sectionHeader}>Account Security</Text>
-                    <TouchableOpacity onPress={() => navigation.navigate('UpdateContactScreen', { type: 'phone' })} style={styles.listItem}>
-                        <LinearGradient
-                            colors={['#FFF5F0', '#FFEBE0']}
-                            style={styles.listIconCircle}
-                        >
-                            <MaterialIcons name="phone-android" color={'#F25000'} size={wp('5.5%')} />
-                        </LinearGradient>
-                        <Text style={styles.listItemText}>Update Phone Number</Text>
-                        <AntDesign name={"right"} color={'#F25000'} size={wp('4.4%')} />
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => navigation.navigate('UpdateContactScreen', { type: 'email' })} style={styles.listItem}>
-                        <LinearGradient
-                            colors={['#FFF5F0', '#FFEBE0']}
-                            style={styles.listIconCircle}
-                        >
-                            <MaterialIcons name="email" color={'#F25000'} size={wp('5.5%')} />
-                        </LinearGradient>
-                        <Text style={styles.listItemText}>Update Email ID</Text>
-                        <AntDesign name={"right"} color={'#F25000'} size={wp('4.4%')} />
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => navigation.navigate('ChangePasswordScreen')} style={styles.listItem}>
-                        <LinearGradient
-                            colors={['#FFF5F0', '#FFEBE0']}
-                            style={styles.listIconCircle}
-                        >
-                            <MaterialIcons name="lock" color={'#F25000'} size={wp('5.5%')} />
-                        </LinearGradient>
-                        <Text style={styles.listItemText}>Change Password</Text>
-                        <AntDesign name={"right"} color={'#F25000'} size={wp('4.4%')} />
-                    </TouchableOpacity>
+                    <View style={styles.sectionCard}>
+                        <TouchableOpacity onPress={() => navigation.navigate('UpdateContactScreen', { type: 'phone' })} style={styles.listItem}>
+                            <View style={styles.listItemLeft}>
+                                <View style={styles.listIconWrapper}>
+                                    <MaterialCommunityIcons name="phone-outline" color={'#F25000'} size={wp('4%')} />
+                                </View>
+                                <Text style={styles.listItemText}>Update Phone Number</Text>
+                            </View>
+                            <AntDesign name={"right"} color={'#777777'} size={wp('3.5%')} />
+                        </TouchableOpacity>
+                        <View style={styles.divider} />
+                        <TouchableOpacity onPress={() => navigation.navigate('UpdateContactScreen', { type: 'email' })} style={styles.listItem}>
+                            <View style={styles.listItemLeft}>
+                                <View style={styles.listIconWrapper}>
+                                    <MaterialCommunityIcons name="email-outline" color={'#F25000'} size={wp('4%')} />
+                                </View>
+                                <Text style={styles.listItemText}>Update Email ID</Text>
+                            </View>
+                            <AntDesign name={"right"} color={'#777777'} size={wp('3.5%')} />
+                        </TouchableOpacity>
+                        <View style={styles.divider} />
+                        <TouchableOpacity onPress={() => navigation.navigate('ChangePasswordScreen')} style={styles.listItem}>
+                            <View style={styles.listItemLeft}>
+                                <View style={styles.listIconWrapper}>
+                                    <MaterialCommunityIcons name="lock-outline" color={'#F25000'} size={wp('4%')} />
+                                </View>
+                                <Text style={styles.listItemText}>Change Password</Text>
+                            </View>
+                            <AntDesign name={"right"} color={'#777777'} size={wp('3.5%')} />
+                        </TouchableOpacity>
+                    </View>
+
+                    <Text style={styles.sectionHeader}>Informations</Text>
+                    <View style={styles.sectionCard}>
+                        <TouchableOpacity style={styles.listItem}>
+                            <View style={styles.listItemLeft}>
+                                <View style={styles.listIconWrapper}>
+                                    <PrivacyIcon width={wp('6%')} height={wp('6%')} />
+                                </View>
+                                <Text style={styles.listItemText}>Privacy Policy</Text>
+                            </View>
+                            <AntDesign name={"right"} color={'#777777'} size={wp('3.5%')} />
+                        </TouchableOpacity>
+                        <View style={styles.divider} />
+                        <TouchableOpacity style={styles.listItem}>
+                            <View style={styles.listItemLeft}>
+                                <View style={styles.listIconWrapper}>
+                                    <TermsIcon width={wp('6%')} height={wp('6%')} />
+                                </View>
+                                <Text style={styles.listItemText}>Terms Of Use</Text>
+                            </View>
+                            <AntDesign name={"right"} color={'#777777'} size={wp('3.5%')} />
+                        </TouchableOpacity>
+                        <View style={styles.divider} />
+                        <TouchableOpacity style={styles.listItem}>
+                            <View style={styles.listItemLeft}>
+                                <View style={styles.listIconWrapper}>
+                                    <AboutIcon width={wp('6%')} height={wp('6%')} />
+                                </View>
+                                <Text style={styles.listItemText}>About Us</Text>
+                            </View>
+                            <AntDesign name={"right"} color={'#777777'} size={wp('3.5%')} />
+                        </TouchableOpacity>
+                        <View style={styles.divider} />
+                        <TouchableOpacity onPress={() => navigation.navigate('SupportTicketsListScreen')} style={styles.listItem}>
+                            <View style={styles.listItemLeft}>
+                                <View style={styles.listIconWrapper}>
+                                    <Ionicons name="help-circle-outline" color={'#F25000'} size={wp('4%')} />
+                                </View>
+                                <Text style={styles.listItemText}>Help & Support</Text>
+                            </View>
+                            <AntDesign name={"right"} color={'#777777'} size={wp('3.5%')} />
+                        </TouchableOpacity>
+                        <View style={styles.divider} />
+                        <TouchableOpacity onPress={() => setIsLogoutModalVisible(true)} style={styles.listItem}>
+                            <View style={styles.listItemLeft}>
+                                <View style={styles.listIconWrapper}>
+                                    <Ionicons name="log-out-outline" color={'#FF0000'} size={wp('4%')} />
+                                </View>
+                                <Text style={[styles.listItemText, { color: '#FF0000' }]}>Log Out</Text>
+                            </View>
+                            <AntDesign name={"right"} color={'#777777'} size={wp('3.5%')} />
+                        </TouchableOpacity>
+                    </View>
                 </View>
 
                 <View style={styles.sendContainer}>
@@ -391,9 +419,10 @@ export default function ProfileScreen() {
                     </View>
                 </View>
 
-                <TouchableOpacity onPress={() => setIsLogoutModalVisible(true)} style={styles.logoutBtn}>
-                    <Text style={styles.logoutBtnText}>Log Out</Text>
-                </TouchableOpacity>
+                <View style={styles.footerBranding}>
+                    <Image source={require('../assets/images/logo.png')} style={styles.footerLogo} />
+                    <Text style={styles.versionText}>Version {DeviceInfo.getVersion()}</Text>
+                </View>
             </ScrollView >
 
             <CouponModal
@@ -545,6 +574,22 @@ const styles = StyleSheet.create({
         fontSize: wp('3.8%'),
         color: '#F25000',
     },
+    tokenContainer: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: wp('2%'),
+        position: 'relative',
+    },
+    tokenSvg: {
+    },
+    tokenText: {
+        position: 'absolute',
+        bottom: hp('1%'),
+        fontFamily: FONTS.poppins.bold,
+        fontSize: wp('2.8%'),
+        color: '#000000',
+        textAlign: 'center',
+    },
     containerTwo: {
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -561,12 +606,13 @@ const styles = StyleSheet.create({
     saveAddressContainer: {
         // flexDirection: 'row',
         alignItems: 'center',
-        width: wp('25.21%'),
-        height: hp('9.5%'),
+        width: wp('27.21%'),
+        height: hp('11.5%'),
         borderRadius: 20,
         borderWidth: 1,
         borderColor: '#DADADA',
         justifyContent: "center",
+        backgroundColor: '#FFFFFF',
         // paddingLeft: wp('3%'),
         paddingVertical: hp('0.5%')
     },
@@ -583,54 +629,72 @@ const styles = StyleSheet.create({
     saveAddressText: {
         fontFamily: FONTS.poppins.regular,
         fontSize: wp('3.25%'),
-        // bottom: hp('2%'),
         textAlign: 'center',
-        // marginLeft: wp('2%')
-    },
-    containerThree: {
-        paddingHorizontal: wp('5%'),
-        marginTop: hp('2.5%')
     },
     sectionHeader: {
-        fontFamily: FONTS.poppins.bold,
-        fontSize: wp('4.8%'),
+        fontFamily: FONTS.outfit.semiBold,
+        fontSize: wp('4.2%'),
         color: '#000000',
-        marginBottom: hp('1%')
+        marginBottom: hp('1.2%'),
+        marginTop: hp('1%')
+    },
+    sectionsContainer: {
+        paddingHorizontal: wp('5%'),
+        marginTop: hp('2%'),
+    },
+    sectionCard: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 15,
+        borderWidth: 1,
+        borderColor: '#F0F0F0',
+        paddingVertical: hp('0.5%'),
+        marginBottom: hp('0.5%'),
+        // Shadow for premium look
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.1,
+        shadowRadius: 3.84,
+        elevation: 5,
     },
     listItem: {
         flexDirection: 'row',
-        backgroundColor: '#FFFFFF',
         alignItems: 'center',
-        padding: wp('2%'),
-        marginBottom: hp('1%'),
-        borderRadius: 50,
-        borderWidth: 1,
-        borderColor: '#F0F0F0',
+        paddingVertical: hp('1%'),
+        paddingHorizontal: wp('4%'),
         justifyContent: 'space-between',
     },
-    listIconCircle: {
-        width: wp('10%'),
-        height: wp('10%'),
-        borderRadius: wp('5%'),
+    listItemLeft: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    listIconWrapper: {
+        width: wp('6%'),
+        height: wp('6%'),
+        backgroundColor: '#FFE7DB',
+        borderRadius: wp('3%'),
         justifyContent: 'center',
         alignItems: 'center',
-        marginRight: wp('3%'),
-    },
-    listIcon: {
-        width: wp('5.5%'),
-        height: wp('5.5%'),
-        resizeMode: 'contain'
     },
     listItemText: {
-        flex: 1,
-        marginLeft: wp('3%')
+        marginLeft: wp('3%'),
+        fontFamily: FONTS.outfit.regular,
+        fontSize: wp('3.2%'),
+        color: '#333333'
+    },
+    divider: {
+        height: 1,
+        backgroundColor: '#F0F0F0',
+        marginHorizontal: wp('4%'),
     },
     circle: {
         width: wp('4.2%'),
         height: wp('4.2%')
     },
     sendContainer: {
-        borderWidth: 1,
+        // borderWidth: 1,
         borderColor: '#DADADA',
         marginHorizontal: wp('5%'),
         borderRadius: 10,
@@ -643,6 +707,8 @@ const styles = StyleSheet.create({
         fontFamily: FONTS.poppins.regular,
         color: '#000000',
         fontSize: wp('3.72%'),
+        paddingBottom: 10,
+        lineHeight: wp('3.72%') * 1.2,
     },
     sendContainerTextTwo: {
         color: '#7D7D7D',
@@ -653,7 +719,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         borderWidth: 1,
         borderColor: '#DADADA',
-        borderRadius: 10,
+        borderRadius: 50,
         alignItems: "center",
         height: hp('6.3%'),
         marginTop: hp('3%'),
@@ -669,7 +735,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#F25000',
         paddingHorizontal: wp('5%'),
         paddingVertical: hp('0.5%'),
-        borderRadius: 15,
+        borderRadius: 40,
         height: hp('4.3%'),
         justifyContent: 'center',
         alignItems: 'center',
@@ -677,23 +743,12 @@ const styles = StyleSheet.create({
     sendButtonText: {
         color: '#FFFFFF',
         fontFamily: FONTS.poppins.semiBold,
-        fontSize: wp('3.2%'),
+        fontSize: wp('3.5%'),
     },
     sendImage: {
         width: wp('18.6%'),
         height: hp('4.3%'),
         resizeMode: 'contain'
-    },
-    logoutBtn: {
-        marginTop: hp('4%'),
-        marginBottom: hp('6%'),
-        alignSelf: 'center',
-    },
-    logoutBtnText: {
-        fontFamily: FONTS.poppins.bold,
-        fontSize: wp('4%'),
-        color: '#FF0000',
-        textDecorationLine: 'underline',
     },
     profileIcon: {
         width: wp('7%'),
@@ -703,5 +758,22 @@ const styles = StyleSheet.create({
         // top: 15,
         // left: 5,
         alignSelf: 'center'
+    },
+    footerBranding: {
+        alignItems: 'center',
+        marginTop: hp('4%'),
+        marginBottom: hp('6%'),
+    },
+    footerLogo: {
+        width: wp('35%'),
+        height: hp('10%'),
+        resizeMode: 'contain',
+        opacity: 0.9,
+    },
+    versionText: {
+        fontFamily: FONTS.poppins.medium,
+        fontSize: wp('3%'),
+        color: '#A1A1A1',
+        marginTop: hp('0.1%'),
     },
 })

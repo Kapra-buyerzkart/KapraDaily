@@ -20,6 +20,7 @@ const truncateText = (text, limit = 7) => {
 
 import StoreUnavailable from '../components/StoreUnavailable';
 import LocationModal from '../components/LocationModal';
+import SelectedProducts from '../components/SelectedProducts'
 
 const RECENT_SEARCH_KEY = 'recent_searches_list';
 
@@ -47,7 +48,6 @@ const SearchScreen = () => {
         suggestions,
         loading,
         resultCount,
-        setCatId,
         isGlobalFallback
     } = useProductSearch(currentPincodeId, catId, filters);
 
@@ -88,11 +88,7 @@ const SearchScreen = () => {
         }
     };
 
-    useEffect(() => {
-        if (catId) {
-            setCatId(catId);
-        }
-    }, [catId]);
+
 
     // Save search term if results are found
     useEffect(() => {
@@ -202,7 +198,7 @@ const SearchScreen = () => {
                             paddingTop: hp('1%'),
                             paddingBottom: hp('10%')
                         }}
-                        ListEmptyComponent={!loading && (searchTerm.length > 0 || catId) && (
+                        ListEmptyComponent={!loading && suggestions.length === 0 && searchTerm.length > 0 && (
                             <View style={styles.emptyContainer}>
                                 <Image
                                     source={require('../assets/images/noimages/noproductfound.png')}
@@ -211,8 +207,7 @@ const SearchScreen = () => {
                                 <Text style={styles.noResultsText}>
                                     {searchTerm.length > 0
                                         ? `No products found for "${searchTerm}"`
-                                        : `No products found in ${catName || 'this category'}`
-                                    }
+                                        : `No products found in this category`}
                                 </Text>
                             </View>
                         )}
@@ -235,6 +230,10 @@ const SearchScreen = () => {
                 visible={isLocationModalVisible}
                 onClose={() => setIsLocationModalVisible(false)}
             />
+            <View style={styles.floatingContainer}>
+                <SelectedProducts />
+            </View>
+
         </SafeAreaView>
     )
 }
@@ -245,6 +244,13 @@ const styles = StyleSheet.create({
     mainContainer: {
         flex: 1,
         backgroundColor: "#FFFFFF",
+    },
+    floatingContainer: {
+        position: "absolute",
+        bottom: hp("3%"),
+        left: 0,
+        right: 0,
+        alignItems: "center",
     },
     headerContainer: {
         flexDirection: 'row',

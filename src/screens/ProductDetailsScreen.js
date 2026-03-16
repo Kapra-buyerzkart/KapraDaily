@@ -225,12 +225,12 @@ const ProductDetailsScreen = () => {
                         </View>
 
                         <View style={styles.infoCard}>
-                            <View style={{ borderColor: '#D9D9D9', borderWidth: 0.5, width: wp('90%'), alignSelf: 'center', borderRadius: 30, paddingHorizontal: 20, paddingVertical: 25 }} >
+                            <View style={{ borderColor: '#D9D9D9', borderWidth: 0.5, width: wp('92%'), alignSelf: 'center', borderRadius: 30, paddingHorizontal: 20, paddingTop: 25, paddingVertical: 10 }} >
                                 <View style={styles.titleRow}>
                                     <View style={{ flex: 1 }}>
                                         <Text style={styles.productName}>{productName}</Text>
                                         <Text style={styles.productDescription}>{shortDescription}</Text>
-                                        <Text style={styles.weightText}>{product?.unit || '210 g'}</Text>
+                                        {/* <Text style={styles.weightText}>{product?.unit || ''}</Text> */}
                                         {(!isAvailable || stockQty === 0) && (
                                             <Text style={styles.outOfStockBadge}>Out of Stock</Text>
                                         )}
@@ -244,14 +244,14 @@ const ProductDetailsScreen = () => {
 
                                 <View style={styles.priceSection}>
                                     <View style={{ flex: 1 }}>
-                                        {discountPercentage > 0 && <Text style={styles.discountText}>{Math.round(discountPercentage)}% OFF</Text>}
+                                        {discountPercentage > 0 && <Text style={styles.discountText}>{Math.round(discountPercentage) || ((unitPrice - specialPrice) / unitPrice * 100)}% OFF</Text>}
                                         <View style={styles.priceRow}>
                                             <Text style={styles.currentPrice}>₹{specialPrice}</Text>
                                             {unitPrice && unitPrice !== specialPrice && (
                                                 <Text style={styles.originalPrice}>₹{unitPrice}</Text>
                                             )}
                                         </View>
-                                        <Text style={styles.unitPriceText}>{product?.unitPriceText || '13.9/100g'}</Text>
+                                        {/* <Text style={styles.unitPriceText}>{product?.unitPriceText || '13.9/100g'}</Text> */}
                                     </View>
 
                                     <View style={styles.actionContainer}>
@@ -553,25 +553,25 @@ const styles = StyleSheet.create({
         backgroundColor: '#FFF',
         // borderTopLeftRadius: wp('12%'),
         //borderTopRightRadius: wp('12%'),
-        paddingTop: hp('4%'),
+        // paddingTop: hp('4%'),
         paddingHorizontal: wp('8%'),
         shadowColor: "#000",
         shadowOffset: { width: 0, height: -15 },
         shadowOpacity: 0.08,
         shadowRadius: 15,
         elevation: 25,
-        minHeight: hp('40%'),
+        minHeight: hp('32%'),
     },
     productName: {
-        fontFamily: FONTS.poppins.bold,
-        fontSize: wp('4.5%'),
+        fontFamily: FONTS.inter.semiBold,
+        fontSize: wp('4.2%'),
         color: '#000',
-        lineHeight: hp('4%'),
+        lineHeight: hp('3%'),
     },
     productDescription: {
-        fontFamily: FONTS.poppins.regular,
-        fontSize: wp('3.5%'),
-        color: '#777',
+        fontFamily: FONTS.inter.regular,
+        fontSize: wp('3.2%'),
+        color: '#727783',
         marginTop: hp('0.3%'),
     },
     weightText: {
@@ -605,7 +605,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'flex-end',
         justifyContent: 'space-between',
-        marginTop: hp('3%'),
+        //  marginTop: hp('3%'),
     },
     discountText: {
         fontFamily: FONTS.poppins.semiBold,
@@ -619,12 +619,12 @@ const styles = StyleSheet.create({
         marginTop: hp('0.4%'),
     },
     currentPrice: {
-        fontFamily: FONTS.poppins.semiBold,
+        fontFamily: FONTS.inter.semiBold,
         fontSize: wp('4.8%'),
         color: '#000',
     },
     originalPrice: {
-        fontFamily: FONTS.poppins.semiBold,
+        fontFamily: FONTS.inter.semiBold,
         fontSize: wp('4.8%'),
         color: '#727783',
         textDecorationLine: 'line-through',
@@ -691,25 +691,25 @@ const styles = StyleSheet.create({
         width: wp('70%'),
         height: 3,
         alignSelf: 'center',
-        marginTop: hp('4%'),
+        marginTop: hp('2%'),
     },
     viewProductDetailsButton: {
         flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
-        marginTop: hp('2%')
+        marginTop: hp('1%')
     },
     viewProductDetailsButtonText: {
-        fontFamily: FONTS.poppins.semiBold,
+        fontFamily: FONTS.inter.medium,
         fontSize: wp('3.5%'),
         color: '#f25000',
         marginRight: wp('1.5%')
     },
     productDetailsView: {
-        marginTop: hp('1%'),
+        marginTop: hp('0.5%'),
     },
     productDetailsText: {
-        fontFamily: FONTS.poppins.light,
+        fontFamily: FONTS.poppins.medium,
         fontSize: wp('3.6%'),
         color: '#555',
         lineHeight: hp('3%'),
@@ -751,12 +751,12 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     similarProductsSection: {
-        paddingTop: hp('5%'),
+        //  paddingTop: hp('1%'),
         backgroundColor: '#FFFFFF',
     },
     sectionTitle: {
-        fontFamily: FONTS.outfit.bold,
-        fontSize: wp('5%'),
+        fontFamily: FONTS.poppins.medium,
+        fontSize: wp('4.5%'),
         color: '#000',
         paddingHorizontal: wp('8%'),
         marginBottom: hp('2%'),

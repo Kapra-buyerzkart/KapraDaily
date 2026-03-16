@@ -9,6 +9,7 @@ import { LoaderContext } from '../context/loaderContext'
 import { AppContext } from '../context/appContext'
 import StoreUnavailable from '../components/StoreUnavailable'
 import LocationModal from '../components/LocationModal'
+import CONFIG from '../globals/config'
 // import moment from 'moment'
 
 const ReferralScreen = () => {
@@ -55,13 +56,12 @@ const ReferralScreen = () => {
             <View style={styles.referralHistoryContainer}>
                 <View style={styles.namePhoneView}>
                     <Text style={styles.nameText}>{item.custName || 'User'}</Text>
-                    <MaskedText value={item.phoneNo || ''} />
+                    {/* <MaskedText value={item.phoneNo || ''} /> */}
+
                 </View>
                 <View style={styles.bottomRow}>
                     <Text style={styles.dateText}>{formatDate(item.createdAt)}</Text>
-                    {item.bTokensEarned > 0 && (
-                        <Text style={styles.earnedText}>Earned: {item.bTokensEarned} Tokens</Text>
-                    )}
+
                 </View>
             </View>
         )
@@ -93,8 +93,10 @@ const ReferralScreen = () => {
     };
 
     const onShare = async () => {
+
         try {
-            const message = `Hey! Download KapraDaily and get fresh groceries delivered to your doorstep. Join me using my referral code: ${profile?.referalCode || 'WELCOME'} and enjoy exclusive rewards! Download now: https://kapradaily.com`;
+            const shareUrl = `${CONFIG.referalUrl}refer/register?custrefcd=${profile?.referralCode || ''}`;
+            const message = `Hey! Download KapraDaily and get fresh groceries delivered to your doorstep. Join me using my referral code: ${profile?.referalCode || 'WELCOME'} and enjoy exclusive rewards! Download now: ${shareUrl}`;
             await Share.share({
                 message: message,
             });
@@ -131,7 +133,7 @@ const ReferralScreen = () => {
                         <Text style={styles.referralRewardText}>Referral reward you Earned</Text>
                         <View style={styles.bcoinContainerTwo}>
                             <Image style={styles.bcoinImageTwo} source={require('../assets/images/rupee.png')} />
-                            <Text style={styles.bcoinTextTwo}>{profile?.referralEarning || '0.00'}</Text>
+                            <Text style={styles.bcoinTextTwo}>{profile?.referralEarning || referrals[0]?.totalTokensEarned || '0.00'}</Text>
                         </View>
                         <TouchableOpacity style={styles.sendInviteButton} onPress={onShare}>
                             <Image style={styles.sendIcon} source={require('../assets/images/share-icon.png')} />

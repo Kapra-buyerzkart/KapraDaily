@@ -26,7 +26,7 @@ const ConfirmationModal = ({ visible, onClose, onConfirm, title, message, confir
                             style={[styles.button, styles.cancelButton]}
                             onPress={onClose}
                         >
-                            <Text style={styles.cancelButtonText}>{cancelText}</Text>
+                            <Text style={styles.cancelButtonText} numberOfLines={1} adjustsFontSizeToFit>{cancelText}</Text>
                         </TouchableOpacity>
 
                         <TouchableOpacity
@@ -36,7 +36,7 @@ const ConfirmationModal = ({ visible, onClose, onConfirm, title, message, confir
                                 onClose();
                             }}
                         >
-                            <Text style={styles.confirmButtonText}>{confirmText}</Text>
+                            <Text style={styles.confirmButtonText} numberOfLines={1} adjustsFontSizeToFit>{confirmText}</Text>
                         </TouchableOpacity>
                     </View>
                 </View>

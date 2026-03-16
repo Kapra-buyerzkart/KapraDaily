@@ -9,7 +9,7 @@ import CONFIG from '../globals/config';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 
-const TokenProductCard = ({ item, onPress, onAdd, onToggleWishlist, isInWishlist: propIsInWishlist, hideWishlist, isThreeColumn, hideToken }) => {
+const TokenProductCard = ({ item, onPress, onAdd, onToggleWishlist, isInWishlist: propIsInWishlist, hideWishlist, isThreeColumn, hideToken, containerStyle }) => {
 
     const [imageError, setImageError] = useState(false);
 
@@ -53,7 +53,7 @@ const TokenProductCard = ({ item, onPress, onAdd, onToggleWishlist, isInWishlist
 
     return (
 
-        <TouchableOpacity activeOpacity={0.9} style={[styles.cardContainer, isThreeColumn && styles.threeColumnContainer]} onPress={onPress}>
+        <TouchableOpacity activeOpacity={0.9} style={[styles.cardContainer, isThreeColumn && styles.threeColumnContainer, containerStyle]} onPress={onPress}>
 
             <View style={styles.topCardBox}>
 
@@ -88,6 +88,7 @@ const TokenProductCard = ({ item, onPress, onAdd, onToggleWishlist, isInWishlist
                         >
                             <TouchableOpacity
                                 style={styles.counterBtn}
+                                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                                 onPress={() => {
                                     if (quantity === 1) {
                                         removeFromCart(cartItemId);
@@ -96,23 +97,24 @@ const TokenProductCard = ({ item, onPress, onAdd, onToggleWishlist, isInWishlist
                                     }
                                 }}
                             >
-                                <Entypo name="minus" size={isThreeColumn ? 14 : 16} color="#F25000" />
+                                <Entypo name="minus" size={isThreeColumn ? 16 : 22} color="#F25000" />
                             </TouchableOpacity>
 
-                            <Text style={[styles.counterQty, isThreeColumn && { fontSize: wp('3%') }]}>{quantity}</Text>
+                            <Text style={[styles.counterQty, isThreeColumn && { fontSize: wp('3.5%') }]}>{quantity}</Text>
 
                             <TouchableOpacity
                                 style={styles.counterBtn}
+                                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                                 onPress={() => updateCartItemQuantity(cartItemId, quantity + 1)}
                             >
-                                <Entypo name="plus" size={isThreeColumn ? 14 : 16} color="#F25000" />
+                                <Entypo name="plus" size={isThreeColumn ? 16 : 22} color="#F25000" />
                             </TouchableOpacity>
                         </LinearGradient>
                     </View>
                 ) : isOutOfStock ? (
                     <View style={styles.actionAbsolute}>
                         <View style={[styles.plusIconDisabled, isThreeColumn && { width: wp('6%'), height: wp('6%'), borderRadius: wp('3%') }]}>
-                            <Entypo name="plus" size={isThreeColumn ? 14 : 16} color="#FFFFFF" />
+                            <Entypo name="plus" size={isThreeColumn ? 16 : 20} color="#FFFFFF" />
                         </View>
                     </View>
                 ) : (
@@ -125,9 +127,9 @@ const TokenProductCard = ({ item, onPress, onAdd, onToggleWishlist, isInWishlist
                             colors={['#FFFFFF', '#FFD8C4']}
                             start={{ x: 0, y: 0 }}
                             end={{ x: 1, y: 1 }}
-                            style={[styles.plusIconCircle, isThreeColumn && { width: wp('6%'), height: wp('6%'), borderRadius: wp('3%') }]}
+                            style={[styles.plusIconCircle, isThreeColumn && { width: wp('7%'), height: wp('7%'), borderRadius: wp('3.5%') }]}
                         >
-                            <Entypo name="plus" size={isThreeColumn ? 14 : 16} color="#F25000" style={{ alignSelf: 'center' }} />
+                            <Entypo name="plus" size={isThreeColumn ? 16 : 20} color="#F25000" style={{ alignSelf: 'center' }} />
                         </LinearGradient>
                     </TouchableOpacity>
                 )}
@@ -177,7 +179,7 @@ const TokenProductCard = ({ item, onPress, onAdd, onToggleWishlist, isInWishlist
                 </View>
 
                 <Text
-                    numberOfLines={2}
+                    numberOfLines={3}
                     style={[styles.productName, isThreeColumn && { fontSize: wp('2.8%'), minHeight: hp('3.5%'), lineHeight: hp('1.8%') }]}
                 >
                     {name}
@@ -226,11 +228,14 @@ const styles = StyleSheet.create({
     topRow: {
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingRight: wp('7%'), // Make space for the absolute plus icon
     },
     actionAbsolute: {
         position: 'absolute',
-        top: -1,
-        right: -1,
+        top: 0,
+        right: wp('0%'),
+        zIndex: 1,
     },
 
     tokenText: {
@@ -241,9 +246,9 @@ const styles = StyleSheet.create({
     },
 
     plusIconCircle: {
-        width: wp('6.5%'),
-        height: wp('6.5%'),
-        borderRadius: wp('3.25%'),
+        width: wp('7%'),
+        height: wp('7%'),
+        borderRadius: wp('3.5%'),
         justifyContent: 'center',
         borderWidth: 0.5,
         backgroundColor: '#FFFFFF',
@@ -264,20 +269,20 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        height: hp('2.8%'),
-        borderRadius: 20,
+        height: hp('3.6%'),
+        borderRadius: 15,
         borderWidth: 0.5,
         borderColor: '#F25000',
     },
 
     counterBtn: {
-        width: wp('8.5%'),
+        width: wp('9.8%'),
         alignItems: 'center',
         justifyContent: 'center',
     },
 
     counterQty: {
-        fontSize: wp('3.2%'),
+        fontSize: wp('3.5%'),
         color: '#F25000',
         fontFamily: FONTS.poppins.bold,
     },

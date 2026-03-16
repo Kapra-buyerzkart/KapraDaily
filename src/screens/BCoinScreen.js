@@ -99,24 +99,27 @@ const BCoinScreen = () => {
     }
 
     const handleRedeem = async () => {
+        console.log('Redeem clicked. Requested Coins:', requestedCoins, 'Preferred Method:', preferredMethod);
         const redeemAmount = Number(requestedCoins);
+        console.log('Normalized Redeem Amount:', redeemAmount);
 
         if (isNaN(redeemAmount) || redeemAmount <= 0) {
-            showStatus({
-                type: 'error',
-                title: 'Invalid Amount',
-                message: 'Please enter a valid amount of coins to redeem.'
-            });
+            console.log('Invalid amount validation failed');
+            setStatusType('error')
+            setStatusTitle('Invalid Amount')
+            setStatusMessage('Please enter a valid amount of coins to redeem.')
+            setStatusModalVisible(true)
             return;
         }
 
         // Assuming coinsData is walletData.wallet and totalCoins is bCoins
-        if (redeemAmount > (walletData?.wallet?.bCoins || 0)) { // Changed coinsData?.totalCoins to walletData?.wallet?.bCoins
-            showStatus({
-                type: 'error',
-                title: 'Insufficient Balance',
-                message: 'You do not have enough B-Coins.'
-            });
+        console.log('Available B-Coins:', walletData?.wallet?.bCoins);
+        if (redeemAmount > (walletData?.wallet?.bCoins || 0)) {
+            console.log('Insufficient balance validation failed');
+            setStatusType('error')
+            setStatusTitle('Insufficient Balance')
+            setStatusMessage('You do not have enough B-Coins.')
+            setStatusModalVisible(true)
             return;
         }
 
@@ -126,9 +129,14 @@ const BCoinScreen = () => {
                 requestedCoins: Number(requestedCoins),
                 preferredMethod: preferredMethod
             }
+            console.log('Sending Redeem Payload:', payload);
             const response = await redeemBCoinsApi(payload)
+            console.log('Redeem API Response:', response);
 
-            if (!isMounted.current) return
+            if (!isMounted.current) {
+                console.log('Component unmounted, skipping response handling');
+                return
+            }
 
             setShowRedeemModal(false)
 
@@ -136,6 +144,7 @@ const BCoinScreen = () => {
                 if (!isMounted.current) return
 
                 if (response && response.success) {
+                    console.log('Redemption successful');
                     setRequestedCoins('')
                     fetchWalletData() // Refresh data
 
@@ -143,10 +152,15 @@ const BCoinScreen = () => {
                     setStatusTitle('Success')
                     setStatusMessage(response.message || 'Redemption request submitted successfully.')
                 } else {
+                    console.log('Redemption failed or handled error:', response?.status, response?.message);
                     if (response?.status === 'PENDING_REQUEST') {
                         setStatusType('error')
                         setStatusTitle('Request Pending')
                         setStatusMessage(response.message || 'You already have a pending redemption request.')
+                    } else if (response?.status === 'INSUFFICIENT_BALANCE') {
+                        setStatusType('error')
+                        setStatusTitle('Insufficient Balance')
+                        setStatusMessage(response.message || 'You do not have enough B-Coins.')
                     } else {
                         setStatusType('error')
                         setStatusTitle('Error')
@@ -281,7 +295,7 @@ const BCoinScreen = () => {
                                 <Text style={[styles.bcoinPriceTextTwo, {
                                     color: item.transactionType === 'credit' ? '#0CA201' : '#FF0000'
                                 }]}>
-                                    {selected === 'bcoin' ? '₹' : ''}{item.amount.toFixed(2)} {selected === 'bcoin' ? '' : 'tokens'}
+                                    {item.transactionType === 'credit' ? '+' : '-'}{item.amount.toFixed(2)} {selected === 'bcoin' ? 'coins' : 'tokens'}
                                 </Text>
                             </View>
                         ))}

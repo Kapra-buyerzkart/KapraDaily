@@ -23,6 +23,7 @@ import { getPaymentModesApi } from '../api/configService'
 import { createOrderApi, confirmCodApi, getOrderDetailsApi } from '../api/orderService'
 import { createRazorpayOrderApi, verifyRazorpayPaymentApi } from '../api/paymentService'
 import RazorpayCheckout from 'react-native-razorpay'
+import { getCartSummaryApi } from '../api/cartService'
 
 import AddressModal from '../components/AddressModal'
 import AddressConfirmationModal from '../components/AddressConfirmationModal'
@@ -101,6 +102,7 @@ const CartScreen = () => {
     const [statusTitle, setStatusTitle] = useState('');
     const [statusMessage, setStatusMessage] = useState('');
     const [chosenSlot, setChosenSlot] = useState(null);
+    const [isFinalizingOrder, setIsFinalizingOrder] = useState(false);
 
     const scrollViewRef = useRef(null);
     const insets = useSafeAreaInsets();
@@ -156,12 +158,72 @@ const CartScreen = () => {
     };
 
     // --- Order Placement Logic (Migrated from Checkout) ---
+    // --- Order Logic ---
     const handleConfirmOrder = async () => {
         if (!selectedAddress) {
             setShowAddressModal(true);
             return;
         }
 
+        try {
+            showLoader(true);
+            // Perform a final summary sync before showing the confirmation modal
+            // This ensures we have the absolute latest cartVersion and calculation
+            const summaryRes = await getCartSummary(
+                selectedDeliveryType,
+                chosenSlot?.id,
+                null, // Force refresh version if needed
+                selectedAddress.pincodeAreaId
+            );
+
+            showLoader(false);
+
+            const pincode = selectedAddress.pin || '';
+            const area = selectedAddress.raw?.areaName || selectedAddress.raw?.pincodeAreaName || selectedAddress.raw?.area_name || 'N/A';
+
+            if (summaryRes?.success === false && (summaryRes?.status === 'STORE_NOT_FOUND' || summaryRes?.status === 'STORE_CLOSED_FOR_DELIVERY')) {
+                setAddressConfirmationData({
+                    pincode,
+                    areaName: area,
+                    isPlacingOrder: true,
+                    isServiceable: false,
+                    unavailableMessage: summaryRes?.message || (summaryRes?.status === 'STORE_NOT_FOUND' ? "No store for the selected pincode" : "Store is currently closed for delivery")
+                });
+            } else {
+                setAddressConfirmationData({
+                    pincode,
+                    areaName: area,
+                    isPlacingOrder: true,
+                    isServiceable: true
+                });
+            }
+        } catch (error) {
+            showLoader(false);
+            console.error('❌ [ORDER] Validation Error:', error);
+
+            const pincode = selectedAddress.pin || '';
+            const area = selectedAddress.raw?.areaName || selectedAddress.raw?.pincodeAreaName || selectedAddress.raw?.area_name || 'N/A';
+            const errorMsg = typeof error === 'string' ? error : (error?.message || error?.Message || "");
+
+            if (errorMsg.toLowerCase().includes('no store') ||
+                errorMsg.toLowerCase().includes('not found') ||
+                errorMsg.toLowerCase().includes('closed') ||
+                errorMsg.toLowerCase().includes('pincode area')) {
+                setAddressConfirmationData({
+                    pincode,
+                    areaName: area,
+                    isPlacingOrder: true,
+                    isServiceable: false,
+                    unavailableMessage: errorMsg || "Delivery currently not available in this area."
+                });
+            } else {
+                setAddressConfirmationData({ pincode, areaName: area, isPlacingOrder: true, isServiceable: true });
+            }
+        }
+    };
+
+    const submitOrder = async () => {
+        setAddressConfirmationData(null);
         const onlineTerms = ['online', 'prepaid', 'razorpay', 'upi', 'online_test', 'online payment'];
         const isOnlinePayment = onlineTerms.some(term => paymentMethod?.toLowerCase()?.includes(term));
 
@@ -203,11 +265,10 @@ const CartScreen = () => {
                     }
                 }
             } else if (createResponse?.status === 'CART_CONFLICT') {
-                await refreshCart();
                 showLoader(false);
                 setStatusType('error');
-                setStatusTitle('Cart Updated');
-                setStatusMessage('Cart was updated. Please try again.');
+                setStatusTitle('Price/Stock Changed');
+                setStatusMessage('Price or stock of some items has changed, please reload');
                 setStatusModalVisible(true);
             } else {
                 throw new Error(createResponse?.message || 'Failed to create order');
@@ -224,10 +285,16 @@ const CartScreen = () => {
     const handlePaymentFlow = async (orderId, orderNumber) => {
         try {
             const rzpResponse = await createRazorpayOrderApi({ orderId });
-            console.log('💳 [RAZORPAY] Create Razorpay Order Response:', JSON.stringify(rzpResponse, null, 2));
-
             if (rzpResponse?.success && rzpResponse?.data) {
-                const { keyId, razorpayOrderId, amount } = rzpResponse.data;
+                // Robust mapping: API might return keyId or razorpayKeyId
+                const keyId = rzpResponse.data.keyId || rzpResponse.data.razorpayKeyId || rzpResponse.data.razorPayKeyId;
+                const razorpayOrderId = rzpResponse.data.razorpayOrderId || rzpResponse.data.razorPayOrderId;
+                const amount = rzpResponse.data.amount;
+
+                if (!keyId || !razorpayOrderId) {
+                    throw new Error('Incomplete payment details received (Missing Key or Order ID)');
+                }
+
                 const options = {
                     key: keyId,
                     amount: amount,
@@ -235,18 +302,19 @@ const CartScreen = () => {
                     name: "Kapra Daily",
                     description: `Order #${orderNumber}`,
                     order_id: razorpayOrderId,
-                    prefill: { email: profile?.email || '', contact: profile?.phone || selectedAddress?.phone || '' },
+                    prefill: {
+                        email: profile?.email || '',
+                        contact: profile?.phone || profile?.phoneNo || selectedAddress?.phone || selectedAddress?.phoneNo || ''
+                    },
                     theme: { color: "#F25000" }
                 };
 
+                // Increase timeout to ensure loader modality is fully dismissed before SDK opens
                 showLoader(false);
-
-                // Use setTimeout to ensure the loader is dismissed before opening SDK
                 setTimeout(async () => {
                     try {
                         const sdkResponse = await RazorpayCheckout.open(options);
                         showLoader(true);
-
                         const verifyPayload = {
                             orderId,
                             razorpayOrderId: sdkResponse.razorpay_order_id,
@@ -261,22 +329,15 @@ const CartScreen = () => {
 
                         const attemptVerification = async () => {
                             try {
-                                console.log(`🔍 [RAZORPAY] Verification Attempt ${retryCount + 1}...`);
                                 return await verifyRazorpayPaymentApi(verifyPayload);
                             } catch (e) {
-                                console.error(`⚠️ [RAZORPAY] Verification Attempt ${retryCount + 1} Error:`, e);
                                 return null;
                             }
                         };
 
                         verifyResponse = await attemptVerification();
-
-                        while (
-                            (!verifyResponse?.success || verifyResponse?.status === 'pending') &&
-                            retryCount < maxRetries
-                        ) {
+                        while ((!verifyResponse?.success || verifyResponse?.status === 'pending') && retryCount < maxRetries) {
                             retryCount++;
-                            console.log(`🔄 [RAZORPAY] Retrying verification (Count: ${retryCount}) in 3s...`);
                             await new Promise(resolve => setTimeout(resolve, 3000));
                             verifyResponse = await attemptVerification();
                         }
@@ -285,25 +346,32 @@ const CartScreen = () => {
                             await finalizeOrder({ orderId, orderNumber });
                         } else {
                             showLoader(false);
-                            navigation.navigate('OrderPendingScreen', { orderId, orderNumber, razorpayOrderId, razorpayAmount: amount, razorpayKeyId: keyId });
+                            navigation.replace('OrderPendingScreen', { orderId, orderNumber, razorpayOrderId, razorpayAmount: amount, razorpayKeyId: keyId });
                         }
                     } catch (sdkError) {
-                        console.error('⚠️ [RAZORPAY] SDK Error:', sdkError);
                         showLoader(false);
-                        navigation.navigate('OrderFailedScreen', {
-                            orderId,
-                            orderNumber,
-                            paymentMethod: paymentMethod || 'online',
-                            errorMessage: sdkError?.description || sdkError?.message || 'Payment cancelled or failed.'
+                        // Using reset to ensure stack consistency on failure
+                        navigation.reset({
+                            index: 0,
+                            routes: [{
+                                name: 'OrderFailedScreen',
+                                params: {
+                                    orderId,
+                                    orderNumber,
+                                    paymentMethod: paymentMethod || 'online',
+                                    totalItems: cartItems.length,
+                                    totalAmount: billCalculations.toPay,
+                                    errorMessage: sdkError?.description || 'Payment cancelled or failed.'
+                                }
+                            }],
                         });
                         refreshCart();
                     }
-                }, 200);
+                }, 500); // 500ms safe delay
             } else {
                 throw new Error(rzpResponse?.message || 'Payment initiation failed');
             }
         } catch (error) {
-            console.error('❌ [RAZORPAY] Flow Error:', error);
             showLoader(false);
             setStatusType('error');
             setStatusTitle('Payment Error');
@@ -313,17 +381,35 @@ const CartScreen = () => {
     };
 
     const finalizeOrder = async (orderData) => {
-        await clearCart();
-        showLoader(false);
-        navigation.navigate('OrderSuccessScreen', {
-            orderId: orderData.orderId,
-            orderNumber: orderData.orderNumber || orderData.orderId,
-            paymentMethod,
-            totalItems: cartItems.length,
-            totalAmount: billCalculations.toPay,
-            deliveryMode: selectedDeliveryType === 'slot' ? 'slotted' : 'express',
-            address: selectedAddress?.address || '',
-        });
+        // Capture data BEFORE clearing cart
+        const itemsCount = cartItems.length;
+        const totalAmount = billCalculations.toPay;
+        const mode = selectedDeliveryType === 'slot' ? 'slotted' : 'express';
+        const addr = selectedAddress?.address || '';
+
+        try {
+            setIsFinalizingOrder(true);
+            await clearCart();
+        } catch (error) {
+            console.error('⚠️ [ORDER SUCCESS] Error clearing cart:', error);
+        } finally {
+            showLoader(false);
+            navigation.reset({
+                index: 0,
+                routes: [{
+                    name: 'OrderSuccessScreen',
+                    params: {
+                        orderId: orderData.orderId,
+                        orderNumber: orderData.orderNumber || orderData.orderId,
+                        paymentMethod,
+                        totalItems: itemsCount,
+                        totalAmount: totalAmount,
+                        deliveryMode: mode,
+                        address: addr,
+                    }
+                }],
+            });
+        }
     };
 
     // --- Rendring Section Helpers ---
@@ -366,15 +452,25 @@ const CartScreen = () => {
                     </View>
                     <View style={styles.offerDetails}>
                         <Text style={styles.offerName}>Coupon</Text>
-                        <View style={{ flexDirection: 'row', justifyContent: 'flex-start', alignItems: 'center' }}>
-                            <Text style={[styles.offerSub, { marginTop: 0, flexShrink: 1 }]}>
-                                {appliedCouponCode ? appliedCouponCode : "View all coupons"}
-                            </Text>
+                        <View style={{ flexDirection: 'row', justifyContent: 'flex-start', alignItems: 'center', marginTop: hp('0.5%') }}>
+                            {appliedCouponCode ? (
+                                <>
+                                    <View style={styles.appliedCouponTag}>
+                                        <Text style={styles.appliedCouponText}>{appliedCouponCode}</Text>
+                                    </View>
+                                    <MaterialCommunityIcons name="check-circle" size={wp('3%')} color="#0CA201" style={{ marginLeft: wp('1.5%') }} />
+                                    <Text style={styles.appliedBadgeText}>Applied</Text>
+                                </>
+                            ) : (
+                                <Text style={[styles.offerSub, { marginTop: 0, flexShrink: 1 }]}>
+                                    View all coupons {'>'}
+                                </Text>
+                            )}
                         </View>
                     </View>
                     <TouchableOpacity
                         style={styles.applyBtn}
-                        onPress={() => appliedCouponCode ? onRejectOffer('2') : setShowCouponModal(true)}
+                        onPress={() => appliedCouponCode ? onRejectOffer('2') : onApplyOffer('2')}
                     >
                         {appliedCouponCode ? (
                             <Text style={[styles.applyBtnText, { color: '#FF4D4D' }]}>Remove</Text>
@@ -391,12 +487,21 @@ const CartScreen = () => {
                     </View>
                     <View style={styles.offerDetails}>
                         <Text style={styles.offerName}>Smart point</Text>
-                        <View style={{ flexDirection: 'row', justifyContent: 'flex-start', alignItems: 'center' }}>
-                            <Text style={[styles.offerSub, { marginTop: 0, flexShrink: 1 }]}>
-                                {appliedGiftCardCode ? appliedGiftCardCode : "View all gift card"}
-                            </Text>
+                        <View style={{ flexDirection: 'row', justifyContent: 'flex-start', alignItems: 'center', marginTop: hp('0.5%') }}>
+                            {appliedGiftCardCode ? (
+                                <>
+                                    <View style={styles.appliedCouponTag}>
+                                        <Text style={styles.appliedCouponText}>{appliedGiftCardCode}</Text>
+                                    </View>
+                                    <MaterialCommunityIcons name="check-circle" size={wp('3%')} color="#0CA201" style={{ marginLeft: wp('1.5%') }} />
+                                    <Text style={styles.appliedBadgeText}>Applied</Text>
+                                </>
+                            ) : (
+                                <Text style={[styles.offerSub, { marginTop: 0, flexShrink: 1 }]}>
+                                    View all gift cards {'>'}
+                                </Text>
+                            )}
                         </View>
-                        {/* {!appliedGiftCardCode && <Text style={styles.offerLink}>View all gift card  {'>'}</Text>} */}
                     </View>
                     <TouchableOpacity
                         style={styles.applyBtn}
@@ -421,7 +526,7 @@ const CartScreen = () => {
                         <Text style={styles.offerName}>B-coin</Text>
                         <View style={{ flexDirection: 'row', justifyContent: 'flex-start', alignItems: 'center' }}>
                             <Text style={[styles.offerSub, { marginTop: 0, flexShrink: 1 }]}>
-                                Available B-coin : {profile?.totalBCoins || profile?.bCoins || 0}
+                                Available B-coins : {profile?.totalBCoins || profile?.bCoins || 0}
                             </Text>
                         </View>
                     </View>
@@ -488,6 +593,7 @@ const CartScreen = () => {
         </View>
     );
 
+
     const renderPaymentMethods = () => (
         <View style={styles.section}>
             <Text style={styles.sectionTitle}>Payment Method</Text>
@@ -498,8 +604,9 @@ const CartScreen = () => {
                     return (
                         <View key={mode.paymentModeId}>
                             <TouchableOpacity
-                                style={styles.scheduleOption}
+                                style={styles.radioRow}
                                 onPress={() => setPaymentMethod(mode.paymentModeName)}
+                                activeOpacity={0.7}
                             >
                                 <View style={styles.optionIconBox}>
                                     <MaterialCommunityIcons
@@ -527,6 +634,8 @@ const CartScreen = () => {
         </View>
     );
 
+
+
     const renderBottomBar = () => {
         return (
             <View style={styles.footer}>
@@ -544,10 +653,18 @@ const CartScreen = () => {
     };
 
     if (isStoreUnavailable) {
-        return <SafeAreaView style={styles.mainContainer} edges={['top']}><StoreUnavailable data={storeUnavailableData} /></SafeAreaView>;
+        return (
+            <SafeAreaView style={styles.mainContainer} edges={['top']}>
+                <StoreUnavailable
+                    image={storeUnavailableData?.image}
+                    text={storeUnavailableData?.message}
+                    onChangeLocation={() => setShowAddressModal(true)}
+                />
+            </SafeAreaView>
+        );
     }
 
-    if (cartItems.length === 0) {
+    if (cartItems.length === 0 && !isFinalizingOrder) {
         return <SafeAreaView style={styles.mainContainer} edges={['top']}><CartEmptyComponent /></SafeAreaView>;
     }
 
@@ -610,7 +727,12 @@ const CartScreen = () => {
             {/* Modals */}
             <StatusModal
                 visible={statusModalVisible}
-                onClose={() => setStatusModalVisible(false)}
+                onClose={() => {
+                    setStatusModalVisible(false);
+                    if (statusTitle === 'Price/Stock Changed') {
+                        onRefresh();
+                    }
+                }}
                 type={statusType}
                 title={statusTitle}
                 message={statusMessage}
@@ -651,6 +773,26 @@ const CartScreen = () => {
                 onConfirm={() => { clearCart(); setIsClearCartModalVisible(false); }}
                 title="Clear Cart"
                 message="Are you sure you want to remove all items?"
+            />
+            <AddressConfirmationModal
+                visible={!!addressConfirmationData}
+                onClose={() => setAddressConfirmationData(null)}
+                pincode={addressConfirmationData?.pincode}
+                areaName={addressConfirmationData?.areaName}
+                isServiceable={addressConfirmationData?.isServiceable !== false}
+                unavailableMessage={addressConfirmationData?.unavailableMessage}
+                isPlacingOrder={addressConfirmationData?.isPlacingOrder}
+                onConfirm={() => {
+                    if (addressConfirmationData?.isPlacingOrder && addressConfirmationData?.isServiceable) {
+                        submitOrder();
+                    } else {
+                        setAddressConfirmationData(null);
+                    }
+                }}
+                onChangeAddress={() => {
+                    setAddressConfirmationData(null);
+                    setShowAddressModal(true);
+                }}
             />
         </SafeAreaView>
     );
@@ -867,6 +1009,8 @@ const styles = StyleSheet.create({
     appliedStatusContainer: {
         flexDirection: 'row',
         alignItems: 'center',
+        marginTop: hp('0.5%'),
+        marginLeft: wp('2%'),
     },
     checkmarkCircle: {
         width: wp('4.5%'),
@@ -934,6 +1078,12 @@ const styles = StyleSheet.create({
         borderTopWidth: 1,
         borderTopColor: '#F5F5F5',
     },
+    radioRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: hp('1%'),
+        paddingHorizontal: wp('2%'),
+    },
     payUsingLabel: {
         fontFamily: FONTS.poppins.medium,
         fontSize: wp('2.2%'),
@@ -993,5 +1143,28 @@ const styles = StyleSheet.create({
         fontFamily: FONTS.poppins.medium,
         fontSize: wp('3.8%'),
         color: '#000',
-    }
+    },
+    appliedCouponTag: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#FFF5F0',
+        paddingHorizontal: wp('2%'),
+        paddingVertical: hp('0.3%'),
+        borderRadius: 6,
+        borderWidth: 1,
+        borderColor: '#F25000',
+        borderStyle: 'dashed',
+    },
+    appliedCouponText: {
+        fontFamily: FONTS.outfit.medium,
+        fontSize: wp('3%'),
+        color: '#F25000',
+        marginRight: wp('1%'),
+    },
+    appliedBadgeText: {
+        fontFamily: FONTS.poppins.medium,
+        fontSize: wp('2.8%'),
+        color: '#0CA201',
+        marginLeft: wp('0.5%'),
+    },
 });

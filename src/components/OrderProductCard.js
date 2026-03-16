@@ -31,7 +31,7 @@ const OrderProductCard = ({ item, orderStatus, onReturn }) => {
                 onError={() => setImageError(true)}
             />
             <View style={styles.detailsContainer}>
-                <Text style={styles.productName} numberOfLines={2}>{item.productName?.length > 20 ? item.productName.substring(0, 30) + '...' : item.productName}</Text>
+                <Text style={styles.productName} numberOfLines={3}>{item.productName?.length > 20 ? item.productName.substring(0, 30) + '...' : item.productName}</Text>
                 <Text style={styles.quantityText}>Qty: {item.quantity}</Text>
                 <Text style={styles.priceText}>₹{item.lineTotal || item.netAmount || item.price || item.unitPrice * item.quantity}</Text>
 

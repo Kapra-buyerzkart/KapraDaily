@@ -9,6 +9,8 @@ import {
 
 /* -------------------- ERROR HANDLER -------------------- */
 const errorHandler = error => {
+  console.log('❌ [API ERROR]:', error?.response?.data || error?.message || error);
+
   if (error.message === 'Network Error') {
     throw 'Network Error. Ensure you are connected to internet.';
   }
@@ -18,13 +20,15 @@ const errorHandler = error => {
   }
 
   const status = error?.response?.status;
-  const message = error?.response?.data?.Message || error?.response?.data?.message;
+  const message = error?.response?.data?.Message || 
+                  error?.response?.data?.message || 
+                  (error?.response?.data?.errors ? Object.values(error?.response?.data?.errors).flat().join(', ') : null);
 
   if (status === 401) {
     throw { Message: message || 'Unauthorized', status };
   }
 
-  if (typeof message === 'string') {
+  if (typeof message === 'string' && message.length > 0) {
     throw message;
   }
 

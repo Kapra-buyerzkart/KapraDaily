@@ -11,7 +11,10 @@ import { FONTS } from '../styles/typography'
 import StoreUnavailable from '../components/StoreUnavailable'
 import LocationModal from '../components/LocationModal'
 import { AppContext } from '../context/appContext'
-import { useContext } from 'react'
+import { useContext, useEffect } from 'react'
+import useProductSearch from '../hooks/useProductSearch'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import { ActivityIndicator } from 'react-native'
 
 const ProductListScreen = () => {
     const navigation = useNavigation()
@@ -19,12 +22,37 @@ const ProductListScreen = () => {
     const { title, products } = route.params || { title: 'Products', products: [] }
 
     const [searchText, setSearchText] = useState('')
-    const { isStoreUnavailable, storeUnavailableData } = useContext(AppContext)
+    const { profile, isStoreUnavailable, storeUnavailableData } = useContext(AppContext)
     const [isLocationModalVisible, setIsLocationModalVisible] = useState(false)
+    const [pincodeAreaId, setPincodeAreaId] = useState(null)
 
-    const filteredProducts = products.filter(item =>
-        (item.prName || item.name || '').toLowerCase().includes(searchText.toLowerCase())
-    )
+    useEffect(() => {
+        const fetchPincode = async () => {
+            const stored = await AsyncStorage.getItem('pincodeAreaId');
+            if (stored) {
+                setPincodeAreaId(parseInt(stored));
+            } else if (profile?.pincode) {
+                setPincodeAreaId(profile.pincode);
+            }
+        };
+        fetchPincode();
+    }, [profile]);
+
+    // Use global search if there's a search term
+    const {
+        suggestions: searchResults,
+        loading: searchLoading,
+        setSearchTerm,
+        searchTerm: hookSearchTerm
+    } = useProductSearch(pincodeAreaId, null, { sortBy: 'relevance' });
+
+    const handleSearch = (text) => {
+        setSearchText(text)
+        setSearchTerm(text)
+    }
+
+    const displayProducts = searchText.trim().length > 0 ? searchResults : products;
+    const isLoading = searchText.trim().length > 0 && searchLoading;
 
     return (
         <SafeAreaView style={styles.mainContainer} edges={['top', 'left', 'right']}>
@@ -45,10 +73,10 @@ const ProductListScreen = () => {
                         placeholder="Search in this list"
                         placeholderTextColor="#767676"
                         value={searchText}
-                        onChangeText={setSearchText}
+                        onChangeText={handleSearch}
                     />
                     {searchText.length > 0 && (
-                        <TouchableOpacity onPress={() => setSearchText('')}>
+                        <TouchableOpacity onPress={() => handleSearch('')}>
                             <Ionicons name="close-circle" size={wp('5%')} color="#CCCCCC" />
                         </TouchableOpacity>
                     )}
@@ -62,28 +90,36 @@ const ProductListScreen = () => {
                     onChangeLocation={() => setIsLocationModalVisible(true)}
                 />
             ) : (
-                <FlatList
-                    data={filteredProducts}
-                    keyExtractor={(item) => (item.productId || item.id || Math.random()).toString()}
-                    renderItem={({ item }) => (
-                        <View style={styles.productWrapper}>
-                            <TokenProductCard isThreeColumn={true} item={item} onPress={() => navigation.navigate('ProductDetailsScreen', { productId: item.productId || item.id, product: item })} />
+                <>
+                    {isLoading ? (
+                        <View style={styles.loaderContainer}>
+                            <ActivityIndicator size="large" color="#F25000" />
                         </View>
+                    ) : (
+                        <FlatList
+                            data={displayProducts}
+                            keyExtractor={(item) => (item.productId || item.id || Math.random()).toString()}
+                            renderItem={({ item }) => (
+                                <View style={styles.productWrapper}>
+                                    <TokenProductCard isThreeColumn={true} item={item} onPress={() => navigation.navigate('ProductDetailsScreen', { productId: item.productId || item.id, product: item })} />
+                                </View>
+                            )}
+                            numColumns={3}
+                            key={3} // Added key to force re-render when changing numColumns
+                            showsVerticalScrollIndicator={false}
+                            contentContainerStyle={styles.listContent}
+                            ListEmptyComponent={
+                                <View style={styles.emptyContainer}>
+                                    <Image
+                                        source={require('../assets/images/noimages/noproductfound.png')}
+                                        style={styles.emptyImage}
+                                    />
+                                    <Text style={styles.emptyText}>No products found</Text>
+                                </View>
+                            }
+                        />
                     )}
-                    numColumns={3}
-                    key={3} // Added key to force re-render when changing numColumns
-                    showsVerticalScrollIndicator={false}
-                    contentContainerStyle={styles.listContent}
-                    ListEmptyComponent={
-                        <View style={styles.emptyContainer}>
-                            <Image
-                                source={require('../assets/images/noimages/noproductfound.png')}
-                                style={styles.emptyImage}
-                            />
-                            {/* <Text style={styles.emptyText}>No products found</Text> */}
-                        </View>
-                    }
-                />
+                </>
             )}
 
             {/* Floating Selection Bar */}
@@ -167,5 +203,16 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
         alignItems: "center",
+    },
+    loaderContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    emptyText: {
+        fontFamily: FONTS.poppins.medium,
+        fontSize: wp('4%'),
+        color: '#999999',
+        marginTop: hp('2%'),
     },
 })

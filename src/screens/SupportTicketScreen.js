@@ -19,7 +19,7 @@ const SupportTicketScreen = () => {
 
     const [title, setTitle] = useState('')
     const [message, setMessage] = useState('')
-    const [priority, setPriority] = useState('medium')
+    const [priority, setPriority] = useState('normal')
     const [orderNumber, setOrderNumber] = useState(passedOrderNumber || (passedOrderId ? passedOrderId.toString() : ''))
     const [internalOrderId, setInternalOrderId] = useState(passedOrderId || 0)
 
@@ -54,7 +54,7 @@ const SupportTicketScreen = () => {
                 // Reset form
                 setTitle('')
                 setMessage('')
-                setPriority('medium')
+                setPriority('normal')
                 if (!passedOrderId && !passedOrderNumber) {
                     setOrderNumber('')
                     setInternalOrderId(0)
@@ -66,12 +66,12 @@ const SupportTicketScreen = () => {
                 setStatusModalVisible(true)
             }
         } catch (error) {
-            console.error('Create Ticket Error:', error)
+            console.error('Create Ticket Error Details:', error)
             setStatusType('error')
             setStatusTitle('Error')
             const errorMessage = typeof error === 'string'
                 ? error
-                : (error?.message || error?.Message || 'An unexpected error occurred')
+                : (error?.Message || error?.message || error?.response?.data?.Message || error?.response?.data?.message || 'An unexpected error occurred')
             setStatusMessage(errorMessage)
             setStatusModalVisible(true)
         } finally {
@@ -140,14 +140,14 @@ const SupportTicketScreen = () => {
                         <View style={styles.inputContainer}>
                             <Text style={styles.label}>Priority</Text>
                             <View style={styles.priorityContainer}>
-                                {['low', 'medium', 'high'].map((p) => (
+                                {['normal', 'urgent', 'high'].map((p) => (
                                     <TouchableOpacity
                                         key={p}
                                         onPress={() => setPriority(p)}
                                         style={[
                                             styles.priorityButton,
                                             priority === p && styles.priorityButtonActive,
-                                            priority === p && p === 'high' && { backgroundColor: '#EB5757', borderColor: '#EB5757' }
+                                            priority === p && (p === 'high' || p === 'urgent') && { backgroundColor: p === 'high' ? '#EB5757' : '#F2994A', borderColor: p === 'high' ? '#EB5757' : '#F2994A' }
                                         ]}
                                     >
                                         <Text style={[

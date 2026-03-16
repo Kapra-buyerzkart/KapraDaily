@@ -116,7 +116,7 @@ const ProductCard = (props) => {
                     </View>
                 ) : (
                     <LinearGradient
-                        colors={[ 'rgba(255,255,255,0.85)','rgba(242,80,0,0.55)']}
+                        colors={['rgba(255,255,255,0.85)', 'rgba(242,80,0,0.55)']}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 0 }}
                         style={styles.plusIconGradient}
@@ -188,7 +188,7 @@ const ProductCard = (props) => {
             <View style={{
                 // alignSelf: "center"
             }}>
-                <Text style={styles.productNameText} numberOfLines={2}>{name}</Text>
+                <Text style={styles.productNameText} numberOfLines={3}>{name}</Text>
             </View>
         </TouchableOpacity>
     )
@@ -237,7 +237,7 @@ const styles = StyleSheet.create({
         height: wp('7%'),
         borderRadius: 100,
         borderWidth: 0.5,
-        borderColor:'#F25000',
+        borderColor: '#F25000',
         justifyContent: 'center',
         alignItems: 'center',
     },

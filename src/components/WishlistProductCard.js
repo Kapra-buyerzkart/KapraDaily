@@ -40,7 +40,7 @@ const WishlistProductCard = ({ item, onRemove, onAddToCart, onPress }) => {
                 />
             </View>
             <View style={styles.productCardViewTwo}>
-                <Text style={styles.productNameText} numberOfLines={2}>{item.productName}</Text>
+                <Text style={styles.productNameText} numberOfLines={3}>{item.productName}</Text>
                 <Text style={[styles.stockStatusText, { color: isOutOfStock ? '#FF0000' : '#0CA201' }]}>
                     {isOutOfStock ? 'OUT OF STOCK' : 'In Stock'}
                 </Text>

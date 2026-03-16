@@ -43,6 +43,7 @@ const useHomeData = () => {
     // Main homepage data fetcher, reused for initial load and pull-to-refresh
     const fetchHomepageData = useCallback(async (isRefreshing = false) => {
         let currentUnavailableData = null;
+        let currentClosedData = null;
         try {
             if (isRefreshing) {
                 setRefreshing(true);
@@ -63,10 +64,16 @@ const useHomeData = () => {
                     const items = settingsRes.data.items;
                     const imageItem = items.find(i => i.stName === 'store_not_available_image');
                     const textItem = items.find(i => i.stName === 'store_not_available_text');
+                    const closedImageItem = items.find(i => i.stName === 'store_no_delivery_image');
 
                     currentUnavailableData = {
                         image: imageItem ? imageItem.stValue : null,
                         text: textItem ? textItem.stValue : ''
+                    };
+
+                    currentClosedData = {
+                        image: closedImageItem ? closedImageItem.stValue : null,
+                        text: "" // Will be populated from API response message
                     };
                 }
             } catch (settingsError) {
@@ -94,10 +101,13 @@ const useHomeData = () => {
 
             const response = await getHomepageData(areaId, 100);
 
-            // Check for STORE_NOT_FOUND in banners or response
+            // Check for STORE_NOT_FOUND or STORE_CLOSED_FOR_DELIVERY
             let storeNotFound = false;
+            let storeClosed = false;
             if (response?.status === 'STORE_NOT_FOUND' || response?.data?.status === 'STORE_NOT_FOUND') {
                 storeNotFound = true;
+            } else if (response?.status === 'STORE_CLOSED_FOR_DELIVERY' || response?.data?.status === 'STORE_CLOSED_FOR_DELIVERY') {
+                storeClosed = true;
             } else if (response?.data?.banners && Array.isArray(response.data.banners)) {
                 const errorBanner = response.data.banners.find(b => b.status === 'STORE_NOT_FOUND');
                 if (errorBanner) {
@@ -105,8 +115,14 @@ const useHomeData = () => {
                 }
             }
 
-            if (storeNotFound) {
-                setStoreUnavailable(true, currentUnavailableData);
+            if (storeNotFound || storeClosed) {
+                const displayMessage = response?.message || response?.data?.message || (storeClosed ? "Store is currently closed for delivery." : "Service not available in your area yet.");
+                const displayData = storeClosed
+                    ? { ...currentClosedData, text: displayMessage }
+                    : currentUnavailableData;
+
+                setStoreUnavailable(true, displayData);
+                // Clear all home data when store is unavailable
                 setHomepageData(null);
                 setBanners([]);
                 setTopBanner([]);
@@ -130,7 +146,6 @@ const useHomeData = () => {
             } else {
                 setStoreUnavailable(false);
                 setHomepageData(response);
-
                 if (response?.data) {
                     const data = response.data;
                     const banners = data.banners || data.Banners || [];
@@ -208,8 +223,15 @@ const useHomeData = () => {
             }
         } catch (error) {
             console.error('Error fetching homepage data:', error);
-            // Universal fallback for any unexpected error
-            setStoreUnavailable(true, currentUnavailableData);
+            // Distinguish between store closed and general unavailability in catch block
+            const errorMsg = typeof error === 'string' ? error : (error?.message || '');
+            const isClosed = errorMsg.toLowerCase().includes('closed') || errorMsg.toLowerCase().includes('07:00');
+
+            const displayData = isClosed
+                ? { ...currentClosedData, text: errorMsg }
+                : currentUnavailableData;
+
+            setStoreUnavailable(true, displayData);
             setHomepageData(null);
             setBanners([]);
             setTopBanner([]);
