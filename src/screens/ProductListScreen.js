@@ -70,7 +70,7 @@ const ProductListScreen = () => {
                     <Feather name="search" color={"#2D0F0D"} size={wp("5%")} />
                     <TextInput
                         style={styles.searchInput}
-                        placeholder="Search in this list"
+                        placeholder="Search for products..."
                         placeholderTextColor="#767676"
                         value={searchText}
                         onChangeText={handleSearch}

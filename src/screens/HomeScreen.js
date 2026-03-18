@@ -37,6 +37,7 @@ import SeeAllButton from '../components/SeeAllButton';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import CoinCountSVG from '../components/CoinCountSVG';
+import KapraSVG from '../components/KapraSVG';
 
 
 const { width } = Dimensions.get("window");
@@ -231,6 +232,7 @@ const HomeScreen = () => {
     const [modalVisible, setModalVisible] = useState(false);
     const [selectedDiscoveryCategory, setSelectedDiscoveryCategory] = useState(null);
     const [discoveryProducts, setDiscoveryProducts] = useState([]);
+    const [isDiscoveryLoading, setIsDiscoveryLoading] = useState(false);
     const { profile, loadProfile, loadProfileTwo, logout } = useContext(AppContext);
 
 
@@ -328,8 +330,8 @@ const HomeScreen = () => {
     const shouldShowThirdBlock = !!thirdProductBlock && thirdBlockItems.length > 0;
 
     const discoveryCategories = categoryDiscovery?.Categories || categoryDiscovery?.categories || [];
-    const normalizedDiscoveryProducts = categoryDiscovery?.Products || categoryDiscovery?.products || discoveryProducts;
-    const shouldShowCategoryDiscovery = !!categoryDiscovery && normalizedDiscoveryProducts.length > 0;
+    const normalizedDiscoveryProducts = discoveryProducts || [];
+    const shouldShowCategoryDiscovery = !!categoryDiscovery && discoveryCategories.length > 0;
 
     const ProductBlockShimmer = () => (
         <View style={styles.headerBackgroundbg}>
@@ -677,6 +679,7 @@ const HomeScreen = () => {
 
     const handleDiscoveryCategoryPress = async (category) => {
         setSelectedDiscoveryCategory(category);
+        setIsDiscoveryLoading(true);
         try {
             const storedPincodeAreaId = await AsyncStorage.getItem('pincodeAreaId');
             const areaId = storedPincodeAreaId ? parseInt(storedPincodeAreaId) : (profile?.pincode || null);
@@ -692,12 +695,21 @@ const HomeScreen = () => {
         } catch (error) {
             console.error('Failed to fetch category products:', error);
             setDiscoveryProducts([]);
+        } finally {
+            setIsDiscoveryLoading(false);
         }
     };
 
     useEffect(() => {
         if (discoveryCategories && discoveryCategories.length > 0 && !selectedDiscoveryCategory) {
-            handleDiscoveryCategoryPress(discoveryCategories[0]);
+            const initialProducts = categoryDiscovery?.Products || categoryDiscovery?.products || [];
+            if (initialProducts.length > 0) {
+                // If the API already provided products for the first category, use them
+                setSelectedDiscoveryCategory(discoveryCategories[0]);
+                setDiscoveryProducts(initialProducts);
+            } else {
+                handleDiscoveryCategoryPress(discoveryCategories[0]);
+            }
         }
     }, [categoryDiscovery]);
 
@@ -714,84 +726,19 @@ const HomeScreen = () => {
                     onSelect={(item) => console.log(item)}
                 />
             )}
-            <ScrollView
-                style={{ flex: 1 }}
-                contentContainerStyle={{
-                    paddingBottom: hp("0.7%"),
-                    flexGrow: 1
-                }}
-                showsVerticalScrollIndicator={false}
-                refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-                }
-            >
-                {/* Persistent Header Section (Top Section Banner or Fallback) */}
-                {topSectionBanner && topSectionBanner.length > 0 ? (
-                    <TouchableOpacity activeOpacity={0.9} onPress={() => handleBannerPress(topSectionBanner[0])}>
-                        <ImageBackground
-                            source={topSectionBanner[0].uri}
-                            style={{
-                                width: wp('100%'),
-                                height: hp('21%'),
-                            }}
-                            imageStyle={{
-                                resizeMode: 'cover',
-                            }}
-                        >
-                            <View style={styles.headerViewOne}>
-                                <View>
-                                    <Text style={styles.timeText}>20  min</Text>
-                                    <TouchableOpacity
-                                        style={styles.addressView}
-                                        onPress={() => setModalVisible(true)}
-                                    >
-                                        <Entypo name={"location-pin"} size={wp('4%')} color={"#FFFFFF"} style={{ marginRight: wp('1%') }} />
-                                        <Text style={styles.addressText}
-                                            numberOfLines={1}
-                                            ellipsizeMode="tail"
-                                        >
-                                            {profile?.pinAddress || 'Select Location'}
-                                        </Text>
-                                        <Entypo name={"chevron-right"} size={wp('3.6%')} color={"#FFFFFF"} />
-                                    </TouchableOpacity>
-                                </View>
-                                <View style={styles.headerRightWrapper}>
-                                    <TouchableOpacity onPress={() => navigation.navigate("BCoinScreen")} style={styles.bcoinContainer}>
-                                        <CoinCountSVG width={wp('14%')} height={hp('5%')} style={styles.tokenSvg} />
-                                        <Text style={styles.tokenText}>{dashboardData?.wallet?.bTokens || '0'} B</Text>
-
-                                    </TouchableOpacity>
-
-                                    <TouchableOpacity onPress={() => {
-                                        navigation.navigate('ProfileScreen', {
-                                            type: "login"
-                                        })
-                                    }} style={styles.profileIconMainView}>
-                                        <View style={styles.profileIconView}>
-                                            <GradientUserIcon size={wp('10%')} />
-                                        </View>
-                                        {profile?.isPrivileged && (
-                                            <Image source={require('../assets/images/crown.png')} style={[styles.crownImage, { width: wp('5%'), height: hp('1.8%'), zIndex: 2, position: 'absolute', top: - hp('0.1%'), alignSelf: 'center' }]} />
-                                        )}
-                                    </TouchableOpacity>
-                                </View>
-                            </View>
-
-                            <TouchableOpacity
-                                onPress={() => !isStoreUnavailable && navigation.navigate('SearchScreen')}
-                                style={[styles.searchContainer, isStoreUnavailable && { opacity: 0.6 }]}
-                                activeOpacity={isStoreUnavailable ? 1 : 0.7}
-                            >
-                                <Feather name="search" color={"#f25000"} size={wp("6%")} />
-                                <View style={styles.searchProductContainer}>
-                                    <Text style={styles.searchProductText}>Search product</Text>
-                                </View>
-                                <Image style={styles.clipboardIcon} source={require('../assets/images/clip_board.png')} />
-                            </TouchableOpacity>
-                        </ImageBackground>
-                    </TouchableOpacity>
-                ) : (
-                    <View style={[styles.headerMainView, { paddingTop: hp('2%') }]}>
+            {/* Persistent Header Section (Fixed at Top) */}
+            {topSectionBanner && topSectionBanner.length > 0 ? (
+                <TouchableOpacity activeOpacity={0.9} onPress={() => handleBannerPress(topSectionBanner[0])}>
+                    <ImageBackground
+                        source={topSectionBanner[0].uri}
+                        style={{
+                            width: wp('100%'),
+                            height: hp('16%'),
+                        }}
+                        imageStyle={{
+                            resizeMode: 'cover',
+                        }}
+                    >
                         <View style={styles.headerViewOne}>
                             <View>
                                 <Text style={styles.timeText}>20  min</Text>
@@ -813,7 +760,6 @@ const HomeScreen = () => {
                                 <TouchableOpacity onPress={() => navigation.navigate("BCoinScreen")} style={styles.bcoinContainer}>
                                     <CoinCountSVG width={wp('14%')} height={hp('5%')} style={styles.tokenSvg} />
                                     <Text style={styles.tokenText}>{dashboardData?.wallet?.bTokens || '0'} B</Text>
-
                                 </TouchableOpacity>
 
                                 <TouchableOpacity onPress={() => {
@@ -842,8 +788,73 @@ const HomeScreen = () => {
                             </View>
                             <Image style={styles.clipboardIcon} source={require('../assets/images/clip_board.png')} />
                         </TouchableOpacity>
+                    </ImageBackground>
+                </TouchableOpacity>
+            ) : (
+                <View style={[styles.headerMainView, { paddingTop: hp('2%') }]}>
+                    <View style={styles.headerViewOne}>
+                        <View>
+                            <Text style={styles.timeText}>20  min</Text>
+                            <TouchableOpacity
+                                style={styles.addressView}
+                                onPress={() => setModalVisible(true)}
+                            >
+                                <Entypo name={"location-pin"} size={wp('4%')} color={"#FFFFFF"} style={{ marginRight: wp('1%') }} />
+                                <Text style={styles.addressText}
+                                    numberOfLines={1}
+                                    ellipsizeMode="tail"
+                                >
+                                    {profile?.pinAddress || 'Select Location'}
+                                </Text>
+                                <Entypo name={"chevron-right"} size={wp('3.6%')} color={"#FFFFFF"} />
+                            </TouchableOpacity>
+                        </View>
+                        <View style={styles.headerRightWrapper}>
+                            <TouchableOpacity onPress={() => navigation.navigate("BCoinScreen")} style={styles.bcoinContainer}>
+                                <CoinCountSVG width={wp('14%')} height={hp('5%')} style={styles.tokenSvg} />
+                                <Text style={styles.tokenText}>{dashboardData?.wallet?.bTokens || '0'} B</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity onPress={() => {
+                                navigation.navigate('ProfileScreen', {
+                                    type: "login"
+                                })
+                            }} style={styles.profileIconMainView}>
+                                <View style={styles.profileIconView}>
+                                    <GradientUserIcon size={wp('10%')} />
+                                </View>
+                                {profile?.isPrivileged && (
+                                    <Image source={require('../assets/images/crown.png')} style={[styles.crownImage, { width: wp('5%'), height: hp('1.8%'), zIndex: 2, position: 'absolute', top: - hp('0.1%'), alignSelf: 'center' }]} />
+                                )}
+                            </TouchableOpacity>
+                        </View>
                     </View>
-                )}
+
+                    <TouchableOpacity
+                        onPress={() => !isStoreUnavailable && navigation.navigate('SearchScreen')}
+                        style={[styles.searchContainer, isStoreUnavailable && { opacity: 0.6 }]}
+                        activeOpacity={isStoreUnavailable ? 1 : 0.7}
+                    >
+                        <Feather name="search" color={"#f25000"} size={wp("6%")} />
+                        <View style={styles.searchProductContainer}>
+                            <Text style={styles.searchProductText}>Search product</Text>
+                        </View>
+                        <Image style={styles.clipboardIcon} source={require('../assets/images/clip_board.png')} />
+                    </TouchableOpacity>
+                </View>
+            )}
+
+            <ScrollView
+                style={{ flex: 1 }}
+                contentContainerStyle={{
+                    paddingBottom: hp("0.7%"),
+                    flexGrow: 1
+                }}
+                showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                }
+            >
 
                 {/* Main Top Banner Section (Below Header) */}
                 {topBanner && topBanner.length > 0 && (
@@ -1205,7 +1216,7 @@ const HomeScreen = () => {
 
                         {isHomeLoading && !categoryDiscovery ? (
                             <ExploreShimmer />
-                        ) : categoryDiscovery && categoryDiscovery.Categories && categoryDiscovery.Categories.length > 0 && (
+                        ) : shouldShowCategoryDiscovery && (
                             <>
                                 <ImageBackground
                                     source={categoryDiscoveryBackgroundImage ? categoryDiscoveryBackgroundImage.uri : require('../assets/images/homebg.png')}
@@ -1213,7 +1224,7 @@ const HomeScreen = () => {
                                     imageStyle={styles.headerBackgroundbgImage}
                                 >
                                     <View style={styles.headerBackgroundbgContent}>
-                                        {categoryDiscovery && categoryDiscovery.Categories && categoryDiscovery.Categories.length > 0 && (
+                                        {discoveryCategories.length > 0 && (
                                             <>
                                                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginVertical: hp('2%'), marginTop: hp('3%'), paddingHorizontal: wp('5%') }}>
                                                     <Text style={[styles.featuredProductsText, { marginLeft: 0, marginVertical: 0, marginTop: 0 }]}>Explore</Text>
@@ -1227,7 +1238,7 @@ const HomeScreen = () => {
                                                         //  height: '100%'
                                                     }}
                                                 >
-                                                    {categoryDiscovery.Categories.map((item, index) => (
+                                                    {discoveryCategories.map((item, index) => (
                                                         <TouchableOpacity
                                                             key={(item.catId || item.id || index).toString()}
                                                             style={styles.item}
@@ -1262,31 +1273,34 @@ const HomeScreen = () => {
                                             </>
                                         )}
 
-                                        {discoveryProducts.length > 0 && (
-                                            <View style={{}}>
-
-                                                <FlatList
-                                                    horizontal
-                                                    data={discoveryProducts}
-                                                    keyExtractor={(item, index) => (item.productId || item.id || index).toString()}
-                                                    renderItem={({ item }) => (
-
-                                                        <TokenProductCard
-                                                            item={item}
-                                                            onPress={() => navigation.navigate('ProductDetailsScreen', { productId: item.productId || item.id, product: item })}
-                                                        />
-
-                                                    )}
-                                                    showsHorizontalScrollIndicator={false}
-                                                    contentContainerStyle={{
-                                                        paddingHorizontal: wp('4.6%'),
-                                                        paddingTop: hp('2%'),
-                                                        paddingBottom: hp('2.5%'),
-                                                    }}
-                                                />
+                                        {isDiscoveryLoading ? (
+                                            <View style={{ height: hp('30%') }}>
+                                                <ProductBlockShimmer />
                                             </View>
+                                        ) : (
+                                            discoveryProducts.length > 0 && (
+                                                <View style={{}}>
+                                                    <FlatList
+                                                        horizontal
+                                                        data={discoveryProducts}
+                                                        keyExtractor={(item, index) => (item.productId || item.id || index).toString()}
+                                                        renderItem={({ item }) => (
+                                                            <TokenProductCard
+                                                                item={item}
+                                                                onPress={() => navigation.navigate('ProductDetailsScreen', { productId: item.productId || item.id, product: item })}
+                                                            />
+                                                        )}
+                                                        showsHorizontalScrollIndicator={false}
+                                                        contentContainerStyle={{
+                                                            paddingHorizontal: wp('4.6%'),
+                                                            paddingTop: hp('2%'),
+                                                            paddingBottom: hp('2.5%'),
+                                                        }}
+                                                    />
+                                                </View>
+                                            )
                                         )}
-                                        {categoryDiscovery && categoryDiscovery.Categories && categoryDiscovery.Categories.length > 0 && selectedDiscoveryCategory && (
+                                        {shouldShowCategoryDiscovery && selectedDiscoveryCategory && (
                                             <SeeAllButton
                                                 onPress={() => navigation.navigate('SearchScreen', {
                                                     catId: selectedDiscoveryCategory.catId,
@@ -1307,18 +1321,24 @@ const HomeScreen = () => {
 
                     </>
                 )}
+
                 {!isStoreUnavailable &&
-                    <Image
-                        source={require('../assets/images/connect.png')}
-                        style={{
-                            width: wp('90%'),
-                            height: hp('15%'),
-                            resizeMode: 'contain',
-                            alignSelf: 'flex-start',
-                            marginLeft: wp('-10%'), // To not be completely glued to left if centered elsewhere
-                        }}
-                    />}
-                <View style={{ height: hp('5%') }} />
+
+                    <LinearGradient
+                        colors={['#FFFFFF', '#F1F1F1']}
+                        style={styles.footerBranding}
+                    >
+                        <KapraSVG
+                            width={wp('85%')}
+                            height={hp('15%')}
+                            style={{
+                                alignSelf: 'flex-start',
+                                marginLeft: wp('-5%'),
+                            }}
+                        />
+                        <View style={{ height: hp('10%') }} />
+                    </LinearGradient>
+                }
             </ScrollView>
             <View style={styles.floatingContainer}>
                 <SelectedProducts />
@@ -2558,5 +2578,10 @@ const styles = StyleSheet.create({
         height: hp('8%'),
         resizeMode: 'contain',
         marginBottom: hp('1%'),
+    },
+    footerBranding: {
+        alignItems: 'center',
+        paddingVertical: hp('2%'),
+        marginBottom: 0,
     },
 })

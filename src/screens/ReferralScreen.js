@@ -10,6 +10,7 @@ import { AppContext } from '../context/appContext'
 import StoreUnavailable from '../components/StoreUnavailable'
 import LocationModal from '../components/LocationModal'
 import CONFIG from '../globals/config'
+import LinearGradient from 'react-native-linear-gradient'
 // import moment from 'moment'
 
 const ReferralScreen = () => {
@@ -44,7 +45,6 @@ const ReferralScreen = () => {
     }
 
     const renderItem = ({ item }) => {
-        // Format "2026-03-06T20:00:53" to "06-03-2026"
         const formatDate = (dateString) => {
             if (!dateString) return '';
             const [date] = dateString.split('T');
@@ -52,16 +52,23 @@ const ReferralScreen = () => {
             return `${day}-${month}-${year}`;
         };
 
+        const formattedDate = formatDate(item.createdAt);
+
         return (
-            <View style={styles.referralHistoryContainer}>
-                <View style={styles.namePhoneView}>
-                    <Text style={styles.nameText}>{item.custName || 'User'}</Text>
-                    {/* <MaskedText value={item.phoneNo || ''} /> */}
-
+            <View style={[styles.listItem, { height: 'auto', paddingVertical: hp('1.5%') }]}>
+                <View style={styles.listItemLeft}>
+                    <View style={styles.listIconWrapper}>
+                        <View style={styles.userInitialCircle}>
+                            <Text style={styles.userInitialText}>{(item.custName || 'U').charAt(0).toUpperCase()}</Text>
+                        </View>
+                    </View>
+                    <View style={{ marginLeft: wp('3%') }}>
+                        <Text style={styles.listItemText}>{item.custName || 'User'}</Text>
+                    </View>
                 </View>
-                <View style={styles.bottomRow}>
-                    <Text style={styles.dateText}>{formatDate(item.createdAt)}</Text>
-
+                <View style={styles.listItemRight}>
+                    <Text style={styles.registeredLabelMini}>Registered on</Text>
+                    <Text style={styles.dateEndText}>{formattedDate}</Text>
                 </View>
             </View>
         )
@@ -112,10 +119,10 @@ const ReferralScreen = () => {
                     <Image style={styles.leftArrowIcon} source={require('../assets/images/left_arrow.png')} />
                 </TouchableOpacity>
                 <Text style={styles.referralText}>Referral</Text>
-                <View style={styles.bcoinContainer}>
+                {/* <View style={styles.bcoinContainer}>
                     <Image style={styles.bcoinImage} source={require('../assets/images/rupee.png')} />
                     <Text style={styles.bcoinText}>{profile?.totalBCoins || '0.00'}</Text>
-                </View>
+                </View> */}
             </View>
             {isStoreUnavailable ? (
                 <View style={{ marginTop: hp('2%'), flex: 1 }}>
@@ -126,33 +133,41 @@ const ReferralScreen = () => {
                     />
                 </View>
             ) : (
-                <>
-                    <Text style={styles.referEarnText}>Refer and Earn</Text>
-                    <View style={styles.innerContainer}>
-                        <Image style={styles.loudspeakerImageStyle} source={require('../assets/images/loud-speaker.png')} />
-                        <Text style={styles.referralRewardText}>Referral reward you Earned</Text>
-                        <View style={styles.bcoinContainerTwo}>
-                            <Image style={styles.bcoinImageTwo} source={require('../assets/images/rupee.png')} />
-                            <Text style={styles.bcoinTextTwo}>{profile?.referralEarning || referrals[0]?.totalTokensEarned || '0.00'}</Text>
-                        </View>
-                        <TouchableOpacity style={styles.sendInviteButton} onPress={onShare}>
-                            <Image style={styles.sendIcon} source={require('../assets/images/share-icon.png')} />
-                            <Text style={styles.sendInviteText}>Send invite</Text>
-                        </TouchableOpacity>
-                    </View>
-                    <Text style={[styles.referEarnText, {
-                        marginTop: hp('3%'),
-                        marginBottom: hp('1%')
-                    }]}>Referral History</Text>
-                    <FlatList
-                        data={referrals}
-                        keyExtractor={(item, index) => `${item.referrerCustId}-${index}`}
-                        renderItem={renderItem}
-                        ListEmptyComponent={renderEmpty}
-                        contentContainerStyle={referrals.length === 0 ? styles.emptyListContent : styles.listContent}
-                        showsVerticalScrollIndicator={false}
-                    />
-                </>
+                <View style={{ flex: 1 }}>
+
+                    <>
+                        <Text style={styles.referEarnText}>Refer and Earn</Text>
+                        <LinearGradient colors={['#FFFFFF', '#FFE7DB']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={styles.innerContainer}>
+                            <Image style={styles.loudspeakerImageStyle} source={require('../assets/images/loud-speaker.png')} />
+                            <Text style={styles.referralRewardText}>Referral reward you Earned</Text>
+                            <View style={styles.bcoinContainerTwo}>
+                                <Image style={styles.bcoinImageTwo} source={require('../assets/images/rupee.png')} />
+                                <Text style={styles.bcoinTextTwo}>{profile?.referralEarning || referrals[0]?.totalTokensEarned || '0.00'}</Text>
+                            </View>
+                            <TouchableOpacity style={styles.sendInviteButton} onPress={onShare}>
+                                <Image style={styles.sendIcon} source={require('../assets/images/share-icon.png')} />
+                                <Text style={styles.sendInviteText}>Send invite</Text>
+                            </TouchableOpacity>
+                        </LinearGradient>
+                        <Text style={[styles.referEarnText, {
+                            marginTop: hp('3%'),
+                            marginBottom: hp('1%')
+                        }]}>Referral History</Text>
+
+                        <FlatList
+                            data={referrals}
+                            keyExtractor={(item, index) => `${item.referrerCustId}-${index}`}
+                            renderItem={renderItem}
+                            ListEmptyComponent={renderEmpty}
+
+                            ItemSeparatorComponent={() => <View style={styles.divider} />}
+                            ListFooterComponent={() => referrals.length > 0 ? <View style={{ height: hp('2%') }} /> : null}
+                            style={referrals.length > 0 ? styles.historyListCard : null}
+                            contentContainerStyle={referrals.length === 0 ? styles.emptyListContent : styles.listContent}
+                            showsVerticalScrollIndicator={false}
+                        />
+                    </>
+                </View>
             )}
             <LocationModal
                 visible={isLocationModalVisible}
@@ -214,12 +229,12 @@ const styles = StyleSheet.create({
         fontSize: wp('4.19%'),
         color: '#000000',
         alignSelf: 'center',
-        marginTop: hp('4%')
+        marginTop: hp('2%')
     },
     innerContainer: {
         width: wp('91.16%'),
-        height: hp('38.63%'),
-        borderWidth: 1,
+        height: hp('35.63%'),
+        borderWidth: 0.5,
         borderColor: '#DADADA',
         borderRadius: wp('2.33%'),
         alignSelf: 'center',
@@ -228,7 +243,7 @@ const styles = StyleSheet.create({
     },
     loudspeakerImageStyle: {
         width: wp('48.37%'),
-        height: wp('48.37%'),
+        height: wp('40.37%'),
         resizeMode: 'contain'
     },
     referralRewardText: {
@@ -242,7 +257,7 @@ const styles = StyleSheet.create({
         marginTop: hp('1.4%')
     },
     bcoinImageTwo: {
-        width: wp('7.67%%'),
+        width: wp('7.67%'),
         height: wp('7.67%'),
         resizeMode: "contain"
     },
@@ -287,46 +302,76 @@ const styles = StyleSheet.create({
         fontFamily: FONTS.poppins.regular,
         color: '#000000'
     },
-    referralHistoryContainer: {
-        // flexDirection: 'row',
-        width: wp('91.16%'),
-        borderWidth: 1,
-        borderColor: '#DADADA',
-        height: hp('6.5%'),
-        borderRadius: wp('10.33%'),
-        paddingHorizontal: wp('4%'),
-        justifyContent: 'center',
-        marginBottom: hp('1.5%')
+    divider: {
+        height: 1,
+        backgroundColor: '#F2F2F2',
+        marginHorizontal: wp('4%'),
     },
-    namePhoneView: {
+    historyListCard: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 12,
+        marginHorizontal: wp('4%'),
+        marginBottom: hp('1.5%'),
+        shadowColor: '#000',
+        shadowOpacity: 0.05,
+        shadowOffset: { width: 0, height: 2 },
+        shadowRadius: 5,
+        elevation: 2,
+        borderWidth: 1,
+        borderColor: '#F2F2F2',
+    },
+    listItem: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: hp('0.2%'),
+        paddingHorizontal: wp('4%'),
     },
-    nameText: {
-        fontFamily: FONTS.poppins.regular,
-        fontSize: wp('3.25%'),
-        color: '#000000'
-    },
-    dateText: {
-        fontFamily: FONTS.poppins.regular,
-        fontSize: wp('2.79%'),
-        color: '#616161'
-    },
-    bottomRow: {
+    listItemLeft: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center'
+        alignItems: 'center',
     },
-    earnedText: {
+    listItemRight: {
+        alignItems: 'flex-end',
+    },
+    listIconWrapper: {
+        width: wp('10%'),
+        height: wp('10%'),
+        borderRadius: wp('5%'),
+        backgroundColor: '#FFE7DB',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    userInitialCircle: {
+        width: wp('8%'),
+        height: wp('8%'),
+        borderRadius: wp('4%'),
+        backgroundColor: '#F25000',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    userInitialText: {
+        color: '#FFFFFF',
+        fontFamily: FONTS.poppins.bold,
+        fontSize: wp('4%'),
+    },
+    listItemText: {
         fontFamily: FONTS.poppins.medium,
-        fontSize: wp('2.8%'),
-        color: '#0CA201'
+        fontSize: wp('3.8%'),
+        color: '#000000',
+    },
+    registeredLabelMini: {
+        fontFamily: FONTS.poppins.regular,
+        fontSize: wp('2.4%'),
+        color: '#777777',
+        marginBottom: -hp('0.2%'),
+    },
+    dateEndText: {
+        fontFamily: FONTS.poppins.medium,
+        fontSize: wp('3.2%'),
+        color: '#F25000',
     },
     listContent: {
         paddingBottom: hp('5%'),
-        alignItems: 'center'
     },
     emptyListContent: {
         flex: 1,
@@ -337,12 +382,6 @@ const styles = StyleSheet.create({
     emptyContainer: {
         alignItems: 'center',
         justifyContent: 'center',
-    },
-    emptyImage: {
-        width: wp('40%'),
-        height: wp('40%'),
-        resizeMode: 'contain',
-        opacity: 0.5
     },
     emptyText: {
         fontFamily: FONTS.poppins.medium,

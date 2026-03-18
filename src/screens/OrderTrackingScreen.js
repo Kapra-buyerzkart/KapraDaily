@@ -1412,7 +1412,7 @@ const styles = StyleSheet.create({
         bottom: hp('1.5')
     },
     totalText: {
-        fontFamily: FONTS.poppins.semiBold,
+        fontFamily: FONTS.inter.semiBold,
         fontSize: wp('5.11%'),
         color: '#616161'
     },
@@ -1429,7 +1429,7 @@ const styles = StyleSheet.create({
         marginLeft: wp('3%')
     },
     totalPriceText: {
-        fontFamily: FONTS.poppins.semiBold,
+        fontFamily: FONTS.outfit.medium,
         color: '#616161',
         fontSize: wp('5.11%'),
     },

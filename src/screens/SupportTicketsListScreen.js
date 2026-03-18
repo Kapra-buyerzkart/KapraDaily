@@ -72,13 +72,20 @@ const SupportTicketsListScreen = () => {
                     </Text>
                 </View>
             </View>
-            <Text style={styles.ticketTitle} numberOfLines={1}>{item.title}</Text>
-            <Text style={styles.ticketMessage} numberOfLines={2}>{item.message}</Text>
+            <View style={styles.titleRow}>
+                <Text style={styles.ticketTitle} numberOfLines={1}>{item.title}</Text>
+                <View style={styles.viewHistoryContainer}>
+                    <Text style={styles.viewHistoryText}>View Details</Text>
+                    <AntDesign name="right" size={wp('3%')} color="#F25000" />
+                </View>
+            </View>
+            {item?.message && <Text style={styles.ticketMessage} numberOfLines={1}>{item.message}</Text>}
             <View style={styles.cardFooter}>
                 <View style={styles.priorityRow}>
                     <View style={[styles.priorityDot, { backgroundColor: getPriorityColor(item.priority) }]} />
                     <Text style={styles.priorityText}>{item.priority?.charAt(0).toUpperCase() + item.priority?.slice(1)}</Text>
                 </View>
+
                 <Text style={styles.dateText}>{new Date(item.createdOn || item.createdAt).toLocaleDateString()}</Text>
             </View>
         </TouchableOpacity>
@@ -182,11 +189,18 @@ const styles = StyleSheet.create({
         fontFamily: FONTS.poppins.semiBold,
         fontSize: wp('2.8%')
     },
+    titleRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: hp('1%'),
+        gap: wp('2%')
+    },
     ticketTitle: {
-        fontFamily: FONTS.poppins.semiBold,
-        fontSize: wp('4%'),
+        fontFamily: FONTS.poppins.regular,
+        fontSize: wp('3.8%'),
         color: '#000',
-        marginBottom: hp('0.5%')
+        flex: 1
     },
     ticketMessage: {
         fontFamily: FONTS.poppins.regular,
@@ -221,6 +235,20 @@ const styles = StyleSheet.create({
         fontFamily: FONTS.poppins.regular,
         fontSize: wp('3%'),
         color: '#9E9E9E'
+    },
+    viewHistoryContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: wp('1%'),
+        backgroundColor: '#F2500010',
+        paddingHorizontal: wp('2%'),
+        paddingVertical: hp('0.3%'),
+        borderRadius: 4
+    },
+    viewHistoryText: {
+        fontFamily: FONTS.poppins.medium,
+        fontSize: wp('2.8%'),
+        color: '#F25000'
     },
     emptyContainer: {
         alignItems: 'center',

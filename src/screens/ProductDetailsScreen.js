@@ -149,9 +149,9 @@ const ProductDetailsScreen = () => {
                         }}
                     />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.iconCircle} onPress={handleShare}>
+                {/* <TouchableOpacity style={styles.iconCircle} onPress={handleShare}>
                     <Ionicons name="share-social" size={wp('6%')} color="#000" />
-                </TouchableOpacity>
+                </TouchableOpacity> */}
             </View>
         </View>
     );

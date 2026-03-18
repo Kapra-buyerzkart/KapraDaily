@@ -72,37 +72,36 @@ const CartProductCard = (props) => {
 
     return (
         <View style={styles.productCardView}>
-            {isSoldOut && (
-                <View style={styles.overlayContainer} pointerEvents="auto">
-                    {Platform.OS === 'ios' && (
-                        <BlurView
-                            style={StyleSheet.absoluteFill}
-                            blurType="light"
-                            blurAmount={2.5}
-                            reducedTransparencyFallbackColor="rgba(0,0,0,0.4)"
-                        />
-                    )}
-                    <View style={styles.overlayDark} />
-
-                    {Platform.OS === 'android' && (
-                        <View style={styles.androidBlurFallback} />
-                    )}
-
-                    <View style={styles.soldOutContainer}>
-                        <LinearGradient
-                            colors={['#FF0000', '#FF8D8D']}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 0 }}
-                            style={styles.soldOutGradient}
-                        >
-                            <Text style={styles.soldOutText}>Sold Out</Text>
-                        </LinearGradient>
-                        <Text style={styles.removeToPlaceorderText}>Remove to place order</Text>
-                    </View>
-                </View>
-            )}
-
             <View style={styles.productCardInnerView}>
+                {isSoldOut && (
+                    <View style={styles.overlayContainer} pointerEvents="none">
+                        {Platform.OS === 'ios' && (
+                            <BlurView
+                                style={StyleSheet.absoluteFill}
+                                blurType="light"
+                                blurAmount={2.5}
+                                reducedTransparencyFallbackColor="rgba(0,0,0,0.4)"
+                            />
+                        )}
+                        <View style={styles.overlayDark} />
+
+                        {Platform.OS === 'android' && (
+                            <View style={styles.androidBlurFallback} />
+                        )}
+
+                        <View style={styles.soldOutContainer}>
+                            <LinearGradient
+                                colors={['#FF0000', '#FF8D8D']}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 0 }}
+                                style={styles.soldOutGradient}
+                            >
+                                <Text style={styles.soldOutText}>Sold Out</Text>
+                            </LinearGradient>
+                            <Text style={styles.removeToPlaceorderText}>Remove to place order</Text>
+                        </View>
+                    </View>
+                )}
                 <View style={styles.productImageView}>
                     {/* <TouchableOpacity
                         style={[styles.heartContainer, { zIndex: 10 }]}
@@ -169,30 +168,6 @@ const CartProductCard = (props) => {
                         )}
                     </View>
                 </View>
-
-                {/* Sold Out Overlay */}
-                {isSoldOut && (
-                    <View style={styles.soldOutOverlay}>
-                        {Platform.OS === 'ios' ? (
-                            <BlurView
-                                style={StyleSheet.absoluteFill}
-                                blurType="light"
-                                blurAmount={2}
-                            />
-                        ) : (
-                            <View style={styles.androidBlurFallback} />
-                        )}
-                        <View style={styles.soldOutLabelContainer}>
-                            <LinearGradient
-                                colors={['#FF5252', '#FF1744']}
-                                style={styles.soldOutLabel}
-                            >
-                                <Text style={styles.soldOutLabelText}>Sold Out</Text>
-                            </LinearGradient>
-                            <Text style={styles.soldOutSubText}>Remove to place order</Text>
-                        </View>
-                    </View>
-                )}
             </View>
 
             <TouchableOpacity
@@ -231,9 +206,15 @@ const styles = StyleSheet.create({
         overflow: 'hidden', // VERY IMPORTANT
         zIndex: 10,
     },
+    overlayContainer: {
+        ...StyleSheet.absoluteFillObject,
+        zIndex: 10,
+        borderRadius: wp('4.65%'),
+        overflow: 'hidden',
+    },
     overlayDark: {
         ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(0,0,0,0.4)', // #000000 40%
+        backgroundColor: 'rgba(0,0,0,0.4)',
     },
     soldOutContainer: {
         alignItems: 'center',
@@ -246,12 +227,14 @@ const styles = StyleSheet.create({
         borderBottomRightRadius: wp('2.3%'),
         borderBottomLeftRadius: wp('2.3%'),
         justifyContent: 'center',
-        alignItems: 'center'
+        alignItems: 'center',
+        bottom: hp('2.5%')
     },
     soldOutText: {
         fontFamily: FONTS.poppins.bold,
         color: '#FFFFFF',
-        fontSize: wp('4.18%')
+        fontSize: wp('4.18%'),
+        //top: -hp('2.5%')
     },
     removeToPlaceorderText: {
         color: '#FFFFFF',

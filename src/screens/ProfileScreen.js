@@ -19,7 +19,8 @@ import Toast from 'react-native-simple-toast'
 import StoreUnavailable from '../components/StoreUnavailable'
 import LocationModal from '../components/LocationModal'
 import ConfirmationModal from '../components/ConfirmationModal'
-import { getWalletDataApi } from '../api/userService'
+import StatusModal from '../components/StatusModal'
+import { getWalletDataApi, requestProductApi } from '../api/userService'
 import CoinCountSVG from '../components/CoinCountSVG'
 import {
     LocationIcon,
@@ -49,6 +50,12 @@ export default function ProfileScreen() {
     const [isSubmittingRequest, setIsSubmittingRequest] = useState(false);
     const [isLogoutModalVisible, setIsLogoutModalVisible] = useState(false);
     const [walletData, setWalletData] = useState(null);
+    const [statusConfig, setStatusConfig] = useState({
+        visible: false,
+        type: 'success',
+        title: '',
+        message: ''
+    });
 
     const handleRequestProduct = async () => {
         if (!requestText.trim()) return;
@@ -57,14 +64,29 @@ export default function ProfileScreen() {
             setIsSubmittingRequest(true);
             const response = await requestProductApi({ requestdetails: requestText });
             if (response && response.success) {
-                alert('Thank you! Your request has been submitted.');
+                setStatusConfig({
+                    visible: true,
+                    type: 'orange',
+                    title: 'Request Submitted',
+                    message: 'Thank you! Your request has been submitted.'
+                });
                 setRequestText('');
             } else {
-                alert(response?.message || 'Failed to submit request. Please try again.');
+                setStatusConfig({
+                    visible: true,
+                    type: 'error',
+                    title: 'Request Failed',
+                    message: response?.message || 'Failed to submit request. Please try again.'
+                });
             }
         } catch (error) {
             console.error('Request product error:', error);
-            alert('Something went wrong. Please try again.');
+            setStatusConfig({
+                visible: true,
+                type: 'error',
+                title: 'Error',
+                message: 'Something went wrong. Please try again.'
+            });
         } finally {
             setIsSubmittingRequest(false);
         }
@@ -176,7 +198,6 @@ export default function ProfileScreen() {
         }
         // Copy functionality
         Clipboard.setString(code);
-        Toast.show(`Code: ${code} copied to clipboard`, Toast.SHORT);
         setOffersModalVisible(false);
     };
 
@@ -418,9 +439,14 @@ export default function ProfileScreen() {
                         </TouchableOpacity>
                     </View>
                 </View>
-
                 <View style={styles.footerBranding}>
-                    <Image source={require('../assets/images/logo.png')} style={styles.footerLogo} />
+                    {/* <LinearGradient
+                    colors={['#F1F1F1', '#FFFFFF']}
+                    style={styles.footerBranding}
+                > */}
+                    <View style={styles.logoWrapper}>
+                        <Image source={require('../assets/images/logofinal.png')} style={styles.footerLogo} />
+                    </View>
                     <Text style={styles.versionText}>Version {DeviceInfo.getVersion()}</Text>
                 </View>
             </ScrollView >
@@ -450,6 +476,14 @@ export default function ProfileScreen() {
                 message="Are you sure you want to log out?"
                 confirmText="Log Out"
                 cancelText="Cancel"
+            />
+
+            <StatusModal
+                visible={statusConfig.visible}
+                onClose={() => setStatusConfig(prev => ({ ...prev, visible: false }))}
+                type={statusConfig.type}
+                title={statusConfig.title}
+                message={statusConfig.message}
             />
         </SafeAreaView >
     )
@@ -761,14 +795,25 @@ const styles = StyleSheet.create({
     },
     footerBranding: {
         alignItems: 'center',
-        marginTop: hp('4%'),
-        marginBottom: hp('6%'),
+        //  marginTop: hp('4%'),
+        paddingVertical: hp('2%'),
+        // shadowColor: "#000",
+        // shadowOffset: {
+        //     width: 0,
+        //     height: 2,
+        // },
+        // shadowOpacity: 0.1,
+        // shadowRadius: 3,
+        // elevation: 3,
+        marginBottom: hp('4%'),
     },
     footerLogo: {
-        width: wp('35%'),
-        height: hp('10%'),
+        width: wp('28%'),
+        height: hp('6%'),
         resizeMode: 'contain',
-        opacity: 0.9,
+    },
+    logoWrapper: {
+        paddingHorizontal: wp('4%'),
     },
     versionText: {
         fontFamily: FONTS.poppins.medium,

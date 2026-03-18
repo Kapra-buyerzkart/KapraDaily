@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
         marginTop: hp('0.3%')
     },
     priceText: {
-        fontFamily: FONTS.poppins.semiBold,
+        fontFamily: FONTS.outfit.semiBold,
         fontSize: wp('3.8%'),
         color: '#000000',
         marginTop: hp('0.3%')

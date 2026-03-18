@@ -69,23 +69,25 @@ const MyOrdersProductCard = (props) => {
                     <View style={styles.orderTopInnerView}>
                         {(() => {
                             const status = (itemData.orderStatusText || itemData.status || '').toLowerCase();
-                            const iconSize = wp('4%');
+                            const iconStyle = styles.statusIcon;
                             if (status.includes('cancel')) {
-                                return <AntDesign name="closecircle" size={iconSize} color="#E74C3C" />;
-                            } else if (status.includes('deliver')) {
-                                return <AntDesign name="checkcircle" size={iconSize} color="#27AE60" />;
+                                return <AntDesign name="closecircle" size={wp('3%')} color="#E74C3C" />;
+                            } else if (status.includes('deliver') && !status.includes('out')) {
+                                return <AntDesign name="checkcircle" size={wp('3%')} color="#27AE60" />;
+                            } else if (status.includes('out') || status.includes('dispatch')) {
+                                return <Image source={require('../assets/images/order/outfordelivery.png')} style={iconStyle} />;
                             } else if (status.includes('pending')) {
-                                return <AntDesign name="infocirlce" size={iconSize} color="#F25000" />;
+                                return <Image source={require('../assets/images/order/orderpending.png')} style={iconStyle} />;
                             } else if (status.includes('placed')) {
-                                return <AntDesign name="clockcircle" size={iconSize} color="#F25000" />;
+                                return <Image source={require('../assets/images/order/orderplaced.png')} style={iconStyle} />;
                             } else if (status.includes('accept')) {
-                                return <AntDesign name="like1" size={iconSize} color="#F25000" />;
+                                return <Image source={require('../assets/images/order/orderaccepted.png')} style={iconStyle} />;
                             } else if (status.includes('pack')) {
-                                return <MaterialCommunityIcons name="package-variant-closed" size={iconSize} color="#F25000" />;
-                            } else if (status.includes('assign') || status.includes('dispatch')) {
-                                return <MaterialCommunityIcons name="motorbike" size={iconSize} color="#F25000" />;
+                                return <Image source={require('../assets/images/order/orderpacked.png')} style={iconStyle} />;
+                            } else if (status.includes('assign')) {
+                                return <Image source={require('../assets/images/order/outfordelivery.png')} style={iconStyle} />;
                             } else {
-                                return <AntDesign name="checkcircle" size={iconSize} color="#F25000" />;
+                                return <Image source={require('../assets/images/order/orderplaced.png')} style={iconStyle} />;
                             }
                         })()}
                         <Text style={[styles.homeText, Platform.OS === 'android' && { top: hp('0.1') },
@@ -272,5 +274,10 @@ const styles = StyleSheet.create({
     stackContainer: {
         flexDirection: "row",
         alignItems: "center",
+    },
+    statusIcon: {
+        width: wp('3.5%'),
+        height: wp('3.5%'),
+        resizeMode: 'contain',
     },
 })

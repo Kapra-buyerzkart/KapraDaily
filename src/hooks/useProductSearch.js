@@ -47,11 +47,28 @@ const useProductSearch = (initialPincodeId, initialCatId = null, filters = {}) =
 
             try {
                 let response;
-                if (catId) {
-                    // Use searchProductsApi for category-based search
+                const trimmedTerm = debouncedSearchTerm.trim();
+
+                if (trimmedTerm.length > 0) {
+                    // USER typing -> ALWAYS Global Search (per user request to show products from other categories)
+                    console.log('useProductSearch: Searching globally for:', trimmedTerm);
+                    response = await getProductSuggestionsApi(trimmedTerm, activePincodeId);
+
+                    if (response && response.success && Array.isArray(response.data)) {
+                        setSuggestions(response.data);
+                        setResultCount(response.data.length);
+                        // If we have a catId but searched globally, show the fallback notice in SearchScreen
+                        setIsGlobalFallback(!!catId);
+                    } else {
+                        setSuggestions([]);
+                        setResultCount(0);
+                        setIsGlobalFallback(false);
+                    }
+                } else if (catId) {
+                    // Browsing category (no search term) -> Category specific
                     const payload = {
                         pincodeAreaId: activePincodeId,
-                        prName: trimmedTerm,
+                        prName: "",
                         catId: parseInt(catId),
                         priceMin: priceMin,
                         priceMax: priceMax,
@@ -60,43 +77,23 @@ const useProductSearch = (initialPincodeId, initialCatId = null, filters = {}) =
                         pageNumber: 1,
                         pageSize: 50
                     };
-                    console.log('useProductSearch: Fetching with payload:', payload);
+                    console.log('useProductSearch: Browsing category:', catId);
                     response = await searchProductsApi(payload);
 
-                    if (response && response.success && response.data && Array.isArray(response.data.items) && response.data.items.length > 0) {
+                    if (response && response.success && response.data && Array.isArray(response.data.items)) {
                         setSuggestions(response.data.items);
                         setResultCount(response.data.items.length);
                         setIsGlobalFallback(false);
-                    } else if (trimmedTerm.length > 0) {
-                        // FALLBACK: Search globally if category search results are 0
-                        console.log('useProductSearch: No results in category, trying global search...');
-                        const globalResponse = await getProductSuggestionsApi(trimmedTerm, activePincodeId);
-
-                        if (globalResponse && globalResponse.success && Array.isArray(globalResponse.data) && globalResponse.data.length > 0) {
-                            setSuggestions(globalResponse.data);
-                            setResultCount(globalResponse.data.length);
-                            setIsGlobalFallback(true);
-                        } else {
-                            setSuggestions([]);
-                            setResultCount(0);
-                            setIsGlobalFallback(false);
-                        }
                     } else {
                         setSuggestions([]);
                         setResultCount(0);
                         setIsGlobalFallback(false);
                     }
                 } else {
-                    // Use getProductSuggestionsApi for general search suggestions
-                    response = await getProductSuggestionsApi(trimmedTerm, activePincodeId);
-
-                    if (response && response.success && Array.isArray(response.data)) {
-                        setSuggestions(response.data);
-                        setResultCount(response.data.length);
-                    } else {
-                        setSuggestions([]);
-                        setResultCount(0);
-                    }
+                    // Neither search term nor catId
+                    setSuggestions([]);
+                    setResultCount(0);
+                    setIsGlobalFallback(false);
                 }
             } catch (err) {
                 console.error('Error in useProductSearch:', err);

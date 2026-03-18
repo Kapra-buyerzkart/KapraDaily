@@ -448,7 +448,7 @@ const CartScreen = () => {
                 {/* Coupon */}
                 <View style={[styles.offerCard, appliedCouponCode && { borderColor: '#0CA201' }]}>
                     <View style={styles.offerIconBox}>
-                        <MaterialCommunityIcons name="tag-outline" size={wp('4.5%')} color="#F25000" />
+                        <Image source={require('../assets/images/couponcode.png')} style={{ width: wp('3.5%'), height: wp('4.5%'), resizeMode: 'contain', tintColor: '#f25000' }} />
                     </View>
                     <View style={styles.offerDetails}>
                         <Text style={styles.offerName}>Coupon</Text>
@@ -483,7 +483,7 @@ const CartScreen = () => {
                 {/* Smart Point */}
                 <View style={[styles.offerCard, { marginTop: hp('1.5%') }, appliedGiftCardCode && { borderColor: '#0CA201' }]}>
                     <View style={styles.offerIconBox}>
-                        <MaterialCommunityIcons name="gift" size={wp('4.5%')} color="#F25000" />
+                        <Image source={require('../assets/images/smart_point.png')} style={{ width: wp('6%'), height: wp('6%'), resizeMode: 'contain', tintColor: '#f25000' }} />
                     </View>
                     <View style={styles.offerDetails}>
                         <Text style={styles.offerName}>Smart point</Text>
@@ -518,9 +518,9 @@ const CartScreen = () => {
                 {/* B-coin */}
                 <View style={[styles.offerCard, { marginTop: hp('1.5%') }, billCalculations.bcoinsAppliedValue > 0 && { borderColor: '#0CA201' }]}>
                     <View style={styles.offerIconBox}>
-                        <View style={styles.bcoinInnerCircle}>
-                            <MaterialCommunityIcons name="currency-inr" size={wp('4%')} color="#FFF" />
-                        </View>
+                        {/* <View style={styles.bcoinInnerCircle}> */}
+                        <Image source={require('../assets/images/bcoinn.png')} style={{ width: wp('4.23%'), height: hp('4.72%'), resizeMode: 'contain' }} />
+                        {/* </View> */}
                     </View>
                     <View style={styles.offerDetails}>
                         <Text style={styles.offerName}>B-coin</Text>
@@ -555,7 +555,7 @@ const CartScreen = () => {
                     onPress={() => setSelectedDeliveryType('express')}
                 >
                     <View style={styles.optionIconBox}>
-                        <Image source={require('../assets/images/lighting.png')} style={{ width: wp('4.5%'), height: wp('4.5%'), tintColor: '#F25000' }} />
+                        <Image source={require('../assets/images/express.png')} style={{ width: wp('4.5%'), height: wp('5.5%'), resizeMode: 'contain', tintColor: '#F25000' }} />
                     </View>
                     <View style={styles.optionText}>
                         <Text style={[styles.optionTitle, selectedDeliveryType === 'express' && { color: '#F25000' }]}>Express delivery</Text>
@@ -575,7 +575,7 @@ const CartScreen = () => {
                     onPress={() => setShowSlotModal(true)}
                 >
                     <View style={[styles.optionIconBox, {}]}>
-                        <Feather name="clock" size={wp('4.5%')} color="#F25000" />
+                        <Image source={require('../assets/images/schedule.png')} style={{ width: wp('5%'), height: wp('5%'), resizeMode: 'contain', tintColor: '#F25000' }} />
                     </View>
                     <View style={styles.optionText}>
                         <Text style={[styles.optionTitle, selectedDeliveryType === 'slot' && { color: '#F25000' }]}>Schedule delivery</Text>
@@ -863,17 +863,18 @@ const styles = StyleSheet.create({
         marginHorizontal: wp('2%'),
     },
     bannerBox: {
-        width: wp('90%'),
-        height: hp('10%'),
+        width: wp('92%'),
+        height: hp('9%'),
         alignSelf: 'center',
         marginTop: hp('2%'),
         borderRadius: 15,
         overflow: 'hidden',
+        backgroundColor: '#FFF5F0', // Match banner background color
     },
     bannerImg: {
         width: '100%',
         height: '100%',
-        resizeMode: 'cover',
+        resizeMode: 'contain',
     },
     actionRow: {
         alignItems: 'flex-end',
