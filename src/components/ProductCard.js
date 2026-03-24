@@ -10,7 +10,6 @@ import { FONTS } from '../styles/typography';
 import { useNavigation } from '@react-navigation/native';
 
 import CONFIG from '../globals/config';
-import ShimmerPlaceholder from './ShimmerPlaceholder';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 
@@ -36,7 +35,7 @@ const ProductCard = (props) => {
 
     // Helper to resolve image source
     const getImageSource = (img) => {
-        if (!img || imageError) return require('../assets/images/categories/dfn.png'); // Fallback to clock.png on error or empty
+        if (!img || imageError) return require('../assets/images/noimage.png');// Fallback to clock.png on error or empty
         if (typeof img === 'string') {
             // Check if it's already a full URL or needs base URL
             if (img.startsWith('http')) return { uri: img };
@@ -188,7 +187,7 @@ const ProductCard = (props) => {
             <View style={{
                 // alignSelf: "center"
             }}>
-                <Text style={styles.productNameText} numberOfLines={3}>{name}</Text>
+                <Text style={styles.productNameText} numberOfLines={2} ellipsizeMode="tail">{name}</Text>
             </View>
         </TouchableOpacity>
     )
@@ -344,7 +343,8 @@ const styles = StyleSheet.create({
         borderColor: '#FF0000',
         paddingHorizontal: 4,
         paddingVertical: 2,
-        borderRadius: 4
+        borderRadius: 4,
+        marginTop: hp('1.5%')
     }
 })
 

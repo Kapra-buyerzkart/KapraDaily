@@ -91,7 +91,6 @@ export default function CategoriesScreen() {
     const [pageNumber, setPageNumber] = useState(1);
     const [pageSize, setPageSize] = useState(20);
     const [isFilterSortModalVisible, setIsFilterSortModalVisible] = useState(false);
-    const [loadingProducts, setLoadingProducts] = useState(false);
     const { showLoader } = useContext(LoaderContext);
     const { profile, isStoreUnavailable, storeUnavailableData, setStoreUnavailable } = useContext(AppContext);
     const [isStoreUnavailableLocal, setIsStoreUnavailableLocal] = useState(false); // Kept for safety if needed, but will prioritize global
@@ -142,7 +141,7 @@ export default function CategoriesScreen() {
 
     const fetchProducts = async (catId) => {
         try {
-            setLoadingProducts(true);
+            showLoader(true);
             const payload = {
                 pincodeAreaId: pincodeAreaId,
                 prName: debouncedSearchText,
@@ -167,7 +166,7 @@ export default function CategoriesScreen() {
             console.error('Error fetching products:', error);
             setProductsList([]);
         } finally {
-            setLoadingProducts(false);
+            showLoader(false);
         }
     };
 
@@ -297,13 +296,8 @@ export default function CategoriesScreen() {
                     gap: wp('2.5%'),
                 }}
             />
-            {loadingProducts && (
-                <View style={{ alignItems: 'center', marginTop: hp('10%') }}>
-                    <ActivityIndicator size="large" color="#F25000" />
-                </View>
-            )}
         </>
-    ), [subCategoriesList, selectedSubCatId, loadingProducts]);
+    ), [subCategoriesList, selectedSubCatId]);
 
 
     return (
@@ -369,9 +363,9 @@ export default function CategoriesScreen() {
                         {/* RIGHT CONTENT */}
                         <View style={styles.rightContent}>
                             <FlatList
-                                data={loadingProducts ? [] : productsList}
+                                data={productsList}
                                 keyExtractor={(item, index) => (item?.productId || item?.id || index).toString()}
-                                renderItem={({ item }) => <TokenProductCard isThreeColumn={false} item={item} containerStyle={{ width: wp('37.2%'), marginHorizontal: wp('0.4%'), marginVertical: hp('0.8%') }} onPress={() => navigation.navigate('ProductDetailsScreen', { productId: item.productId || item.id, product: item })} />}
+                                renderItem={({ item }) => <TokenProductCard isThreeColumn={false} item={item} containerStyle={{ width: wp('36.5%'), marginHorizontal: wp('0.4%'), marginVertical: hp('0.8%') }} onPress={() => navigation.navigate('ProductDetailsScreen', { productId: item.productId || item.id, product: item })} />}
                                 numColumns={2}
                                 key={2}
                                 showsVerticalScrollIndicator={false}
@@ -383,7 +377,7 @@ export default function CategoriesScreen() {
                                 }}
                                 ListHeaderComponent={renderHeader}
                                 ListEmptyComponent={
-                                    !loadingProducts ? (
+                                    productsList.length === 0 ? (
                                         <View style={styles.emptyContainer}>
                                             <Image
                                                 source={require('../assets/images/noimages/noproductfound.png')}
@@ -452,6 +446,8 @@ const styles = StyleSheet.create({
     },
     rightContent: {
         flex: 1,
+        overflow: 'visible'
+        // marginEnd: wp('2%')
         // backgroundColor: "red",
         // paddingLeft: wp("3.2%")
         // paddingBottom: 10

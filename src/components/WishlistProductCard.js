@@ -7,6 +7,7 @@ import { FONTS } from '../styles/typography';
 import CONFIG from '../globals/config';
 import AppButton from './AppButton';
 import { useCart } from '../context/CartContext';
+import { useCart } from '../context/CartContext';
 
 const WishlistProductCard = ({ item, onRemove, onAddToCart, onPress }) => {
     const [imageError, setImageError] = useState(false);
@@ -18,7 +19,7 @@ const WishlistProductCard = ({ item, onRemove, onAddToCart, onPress }) => {
     const cartItemId = cartItem?.cartItemId || itemId;
 
     const imageSource = imageError || !item.productImage
-        ? require('../assets/images/categories/dfn.png')
+        ? require('../assets/images/noimage.png')
         : { uri: `${CONFIG.image_base_url}${item.productImage}` };
 
     const discountPercentage = item.unitPrice && item.specialPrice
@@ -40,7 +41,7 @@ const WishlistProductCard = ({ item, onRemove, onAddToCart, onPress }) => {
                 />
             </View>
             <View style={styles.productCardViewTwo}>
-                <Text style={styles.productNameText} numberOfLines={3}>{item.productName}</Text>
+                <Text style={styles.productNameText} numberOfLines={2} ellipsizeMode="tail">{item.productName}</Text>
                 <Text style={[styles.stockStatusText, { color: isOutOfStock ? '#FF0000' : '#0CA201' }]}>
                     {isOutOfStock ? 'OUT OF STOCK' : 'In Stock'}
                 </Text>

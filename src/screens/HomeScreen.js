@@ -23,7 +23,6 @@ import { getAccessToken, setTokens } from '../api/tokenService';
 import useHomeData from '../hooks/useHomeData';
 import { getCategoryProducts } from '../api/homeService';
 import CONFIG from '../globals/config';
-import ShimmerPlaceholder from '../components/ShimmerPlaceholder';
 import { getDashboardDataApi, requestProductApi } from '../api/userService';
 import { LoaderContext } from '../context/loaderContext';
 
@@ -38,6 +37,8 @@ import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import CoinCountSVG from '../components/CoinCountSVG';
 import KapraSVG from '../components/KapraSVG';
+import ShimmerPlaceholder from '../components/ShimmerPlaceholder';
+
 
 
 const { width } = Dimensions.get("window");
@@ -466,10 +467,11 @@ const HomeScreen = () => {
     const { showLoader } = useContext(LoaderContext);
 
     useEffect(() => {
-        fetchDashboardData();
+        if (profile?.custId) {
+            fetchDashboardData();
+        }
         console.log('firstProductBlockTitleImage', firstProductBlockTitleImage);
-
-    }, [fetchDashboardData]);
+    }, [fetchDashboardData, profile?.custId]);
 
     // Auto-refresh when location changes
     useEffect(() => {
@@ -859,7 +861,7 @@ const HomeScreen = () => {
                 {/* Main Top Banner Section (Below Header) */}
                 {topBanner && topBanner.length > 0 && (
                     <ImageBackground
-                        source={topBanner[1].uri}
+                        source={topBanner[0]?.uri}
                         style={styles.topShowcaseContainer}
                         imageStyle={{
                             width: '100%',
@@ -961,7 +963,7 @@ const HomeScreen = () => {
                                     contentContainerStyle={{
                                         paddingLeft: wp('2%'),
                                         paddingRight: wp('1%'),
-                                        paddingTop: hp('2%'),
+                                        paddingTop: hp('1%'),
                                     }}
                                 />
 
@@ -975,16 +977,14 @@ const HomeScreen = () => {
                                         }
                                         style={{
                                             alignSelf: 'center',
-                                            marginTop: hp('1%'),
-                                            marginBottom: hp('2%'),
+                                            //  marginTop: hp('1%'),
+                                            // marginBottom: hp('2%'),
                                         }}
                                     />
                                 )}
 
                             </ImageBackground>
                         )}
-
-                        <View style={{ height: hp('2%') }} />
 
                         {midBanner && midBanner.length > 0 && (
                             <View style={{ marginVertical: hp('1%'), marginBottom: hp('2%') }}>
@@ -1042,7 +1042,7 @@ const HomeScreen = () => {
                                         contentContainerStyle={{
                                             paddingLeft: wp('5%'),
                                             paddingRight: wp('1%'),
-                                            paddingTop: hp('2%'),
+                                            paddingTop: hp('1%'),
                                         }}
                                     />
 
@@ -1057,12 +1057,12 @@ const HomeScreen = () => {
                                             style={{
                                                 alignSelf: 'center',
                                                 marginTop: hp('1%'),
-                                                marginBottom: hp('2%'),
+                                                // marginBottom: hp('2%'),
                                             }}
                                         />
                                     )}
                                 </ImageBackground>
-                                <View style={{ height: hp('2%') }} />
+                                {/* <View style={{ height: hp('2%') }} /> */}
                             </>
                         )}
 
@@ -1145,8 +1145,8 @@ const HomeScreen = () => {
                                             showsHorizontalScrollIndicator={false}
                                             contentContainerStyle={{
                                                 paddingHorizontal: wp('4.6%'),
-                                                paddingTop: hp('2%'),
-                                                paddingBottom: hp('2.5%'),
+                                                paddingTop: hp('1%'),
+                                                // paddingBottom: hp('2.5%'),
                                             }}
                                         />
 
@@ -1158,12 +1158,12 @@ const HomeScreen = () => {
                                                         products: thirdBlockItems,
                                                     })
                                                 }
-                                                style={{ alignSelf: 'center', marginBottom: hp('2.5%') }}
+                                                style={{ alignSelf: 'center', }}
                                             />
                                         )}
                                     </View>
                                 </ImageBackground>
-                                <View style={{ height: hp('2%') }} />
+                                <View style={{ height: hp('1%') }} />
                             </>
                         )}
 
@@ -1204,7 +1204,7 @@ const HomeScreen = () => {
                                             contentContainerStyle={{
                                                 paddingHorizontal: wp('3.6%'),
                                                 paddingTop: hp('2%'),
-                                                paddingBottom: hp('2.5%'),
+                                                //paddingBottom: hp('2.5%'),
 
                                             }}
                                         />
@@ -1226,7 +1226,7 @@ const HomeScreen = () => {
                                     <View style={styles.headerBackgroundbgContent}>
                                         {discoveryCategories.length > 0 && (
                                             <>
-                                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginVertical: hp('2%'), marginTop: hp('3%'), paddingHorizontal: wp('5%') }}>
+                                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: hp('2%'), paddingHorizontal: wp('5%') }}>
                                                     <Text style={[styles.featuredProductsText, { marginLeft: 0, marginVertical: 0, marginTop: 0 }]}>Explore</Text>
                                                 </View>
                                                 <ScrollView
@@ -1293,8 +1293,8 @@ const HomeScreen = () => {
                                                         showsHorizontalScrollIndicator={false}
                                                         contentContainerStyle={{
                                                             paddingHorizontal: wp('4.6%'),
-                                                            paddingTop: hp('2%'),
-                                                            paddingBottom: hp('2.5%'),
+                                                            // paddingTop: hp('1%'),
+                                                            //  paddingBottom: hp('2.5%'),
                                                         }}
                                                     />
                                                 </View>
@@ -1308,8 +1308,8 @@ const HomeScreen = () => {
                                                 })}
                                                 style={{
                                                     alignSelf: 'center',
-                                                    marginTop: hp('1%'),
-                                                    marginBottom: hp('2%'),
+                                                    // marginTop: hp('1%'),
+                                                    //marginBottom: hp('2%'),
                                                 }}
                                             />
                                         )}
@@ -1341,7 +1341,7 @@ const HomeScreen = () => {
                 }
             </ScrollView>
             <View style={styles.floatingContainer}>
-                <SelectedProducts />
+                {!isStoreUnavailable && <SelectedProducts />}
             </View>
 
             <StatusModal
@@ -1387,7 +1387,7 @@ const styles = StyleSheet.create({
     },
     headerBackgroundbg: {
         width: wp('100%'),
-        // paddingTop: hp('2%'),
+        marginTop: hp('1%'),
         paddingBottom: hp('3%'),
         borderRadius: wp('8%'),
         overflow: 'hidden',
@@ -1468,7 +1468,7 @@ const styles = StyleSheet.create({
     },
     headerViewOne: {
         flexDirection: "row",
-        marginTop: hp('2%'),
+        marginTop: hp('0.2%'),
         marginHorizontal: wp('6.9%'),
         justifyContent: "space-between",
         alignItems: 'center',
@@ -1587,7 +1587,7 @@ const styles = StyleSheet.create({
         resizeMode: "cover",
     },
     searchContainer: {
-        marginTop: hp('1.7%'),
+        marginTop: hp('2%'),
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: '#FFFFFF',
@@ -1611,16 +1611,16 @@ const styles = StyleSheet.create({
     },
     row: {
         justifyContent: 'space-between',
-        marginBottom: hp('2%'),
+        marginBottom: hp('1%'),
     },
     categoriesContainer: {
         flexDirection: 'row',
         flexWrap: 'wrap',
         justifyContent: 'flex-start',
-        marginTop: hp('0.5%'),
+        // marginTop: hp('0.5%'),
     },
     item: {
-        width: wp('22.7%'),
+        width: wp('22%'),
         alignItems: 'center',
         marginBottom: hp('.5%'),
         //  backgroundColor: 'white',
@@ -1681,13 +1681,13 @@ const styles = StyleSheet.create({
     categoryMainView: {
         // backgroundColor: '#FFFFFF',
         marginHorizontal: wp("4.6%"),
-        marginTop: hp("2%"),
+        marginTop: hp("1.5%"),
         // backgroundColor: 'red'
     },
     categoryHeaderText: {
         fontFamily: FONTS.outfit.regular,
         fontSize: wp("4.2%"),
-        marginBottom: hp("2%")
+        marginBottom: hp("1%")
     },
     productsMainContainer: {
         marginTop: hp("0.2%"),
@@ -1698,12 +1698,13 @@ const styles = StyleSheet.create({
         color: "#1E1E1E",
         marginLeft: wp("8%"),
         marginLeft: wp("5%"),
-        marginTop: hp("0.5%"),
+        marginTop: hp("1%"),
+        marginBottom: hp("1%"),
 
         //  marginVertical: hp("3%"),
     },
     tokenTopDivider: {
-        marginTop: hp('1.5%'),
+        marginTop: hp('1%'),
         marginHorizontal: wp('5%'),
         height: 1,
         backgroundColor: '#D6D6D6',
@@ -1782,7 +1783,7 @@ const styles = StyleSheet.create({
         marginLeft: 5
     },
     productsMainContainerTwo: {
-        marginTop: hp("2.7%"),
+        marginTop: hp("1%"),
         // paddingLeft: wp("4.6%"),
         height: hp("29.5%"),
         // width: wp("100%"),
@@ -1827,12 +1828,12 @@ const styles = StyleSheet.create({
         borderRadius: 30
     },
     offerContainer: {
-        marginTop: hp('2%'),
+        marginTop: hp('1%'),
     },
     offerGradient: {
         width: wp("96%"),
         height: hp("45%"),
-        marginTop: hp('3.5%'),
+        marginTop: hp('1%'),
         // marginHorizontal: wp("1.86%")
         // marginHorizontal: wp("4%"),
         borderRadius: wp("9.3%"),
@@ -1904,7 +1905,7 @@ const styles = StyleSheet.create({
         resizeMode: "contain",
     },
     tellusContainer: {
-        marginTop: hp("2%"),
+        marginTop: hp("1%"),
         height: hp("36.05%"),
         width: wp("90.69%"),
         backgroundColor: "#481300",
@@ -1976,7 +1977,7 @@ const styles = StyleSheet.create({
     kapraLogo: {
         width: wp("64.65%"),
         height: hp("10.73%"),
-        marginTop: hp("2.5%"),
+        marginTop: hp("1%"),
         resizeMode: "contain"
     },
     curvedSectionSvg: {
@@ -2018,8 +2019,8 @@ const styles = StyleSheet.create({
     fruitsHeaderView: {
         flexDirection: "row",
         justifyContent: "space-between",
-        marginTop: hp("3%"),
-        marginBottom: hp("1.5%")
+        marginTop: hp("1%"),
+        marginBottom: hp("1%")
     },
     fruitsHeaderText: {
         fontFamily: FONTS.outfit.medium,
@@ -2113,7 +2114,7 @@ const styles = StyleSheet.create({
     fruitsGradientContainer: {
         width: wp('100%'),
         marginTop: hp('1%'),
-        marginBottom: hp('1.5%'),
+        marginBottom: hp('1%'),
         borderTopLeftRadius: wp('6%'),
         borderTopRightRadius: wp('6%'),
     },
@@ -2250,7 +2251,7 @@ const styles = StyleSheet.create({
         top: Platform.OS === 'ios' ? '10%' : '7%',
         borderRadius: wp('4%'),
         overflow: 'hidden',
-        marginHorizontal: Platform.OS == 'ios' ? -wp('2.5%') : -wp('2.5%'),
+        marginHorizontal: Platform.OS == 'ios' ? -wp('0.5%') : -wp('1%'),
         // marginHorizontal: -wp('5.5%'),
         //  backgroundColor: 'red'
         //    / marginRight: wp('2%'),

@@ -32,8 +32,8 @@ const ConfirmationModal = ({ visible, onClose, onConfirm, title, message, confir
                         <TouchableOpacity
                             style={[styles.button, styles.confirmButton]}
                             onPress={() => {
-                                onConfirm();
                                 onClose();
+                                onConfirm();
                             }}
                         >
                             <Text style={styles.confirmButtonText} numberOfLines={1} adjustsFontSizeToFit>{confirmText}</Text>

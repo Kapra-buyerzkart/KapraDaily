@@ -1,6 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, { createContext, useState, useCallback, useMemo } from 'react';
+import React, { createContext, useState, useCallback, useMemo, useEffect } from 'react';
+import { Platform } from 'react-native';
+import DeviceInfo from 'react-native-device-info';
 import { getProfile } from '../api';
+import { getGeneralSettingsApi, getAppUpdateCheckApi } from '../api/userService';
 
 export const AppContext = createContext();
 
@@ -9,6 +12,30 @@ export const AppContextProvider = ({ children }) => {
   const [locationNotFetched, setLocationNotFetched] = useState(false);
   const [isStoreUnavailable, setIsStoreUnavailable] = useState(false);
   const [storeUnavailableData, setStoreUnavailableData] = useState({ image: null, text: '' });
+  const [generalSettings, setGeneralSettings] = useState({});
+  const [updateInfo, setUpdateInfo] = useState(null);
+  const [isUpdateModalVisible, setIsUpdateModalVisible] = useState(false);
+
+  const checkForUpdates = useCallback(async () => {
+    try {
+      const currentVersion = DeviceInfo.getVersion();
+      const platform = Platform.OS.toUpperCase(); // ANDROID or IOS
+      
+      const response = await getAppUpdateCheckApi(currentVersion, platform);
+      
+      if (response && response.success && response.data) {
+        const remoteVersion = response.data.versionCode;
+        // Simple version comparison (can be refined for semver if needed)
+        if (remoteVersion !== currentVersion) {
+          setUpdateInfo(response.data);
+          setIsUpdateModalVisible(true);
+        }
+      }
+    } catch (error) {
+      // User said: "if error no need to show anything"
+      console.log('App update check failed (silent):', error);
+    }
+  }, []);
 
   const setStoreUnavailable = useCallback((flag, data = null) => {
     setIsStoreUnavailable(prevFlag => {
@@ -27,6 +54,24 @@ export const AppContextProvider = ({ children }) => {
         return { image: null, text: '' };
       });
     }
+  }, []);
+  
+  const loadSettings = useCallback(async () => {
+    try {
+      const response = await getGeneralSettingsApi();
+      if (response && response.success && response.data?.items) {
+        const items = response.data.items;
+        const settingsMap = {};
+        items.forEach(item => {
+          settingsMap[item.stName] = item.stValue;
+        });
+        setGeneralSettings(settingsMap);
+        return settingsMap;
+      }
+    } catch (error) {
+      console.error('Error fetching general settings:', error);
+    }
+    return {};
   }, []);
 
   /* ---------------- LOAD PROFILE FROM API + MERGE ---------------- */
@@ -57,11 +102,14 @@ export const AppContextProvider = ({ children }) => {
           return mergedProfile;
         });
         console.log('profilee', mergedProfile);
+      } else {
+        await loadProfileTwo(); // Fallback to guest profile if API response is not successful
       }
     } catch (error) {
       console.log('Profile fetch error:', error);
+      await loadProfileTwo(); // Fallback to guest profile
     }
-  }, []);
+  }, [loadProfileTwo]);
 
   /* ---------------- LOAD / CREATE GUEST PROFILE ---------------- */
   const loadProfileTwo = useCallback(async () => {
@@ -71,7 +119,7 @@ export const AppContextProvider = ({ children }) => {
     const defaultProfile = {
       guestId: Math.floor(Math.random() * 9000000000) + 1000000000,
       pincode: storedPincodeAreaId ? parseInt(storedPincodeAreaId) : null,
-      pinAddress: 'Kakkanad',
+      pinAddress: null,
     };
 
     const mergedProfile = storedProfile
@@ -106,51 +154,29 @@ export const AppContextProvider = ({ children }) => {
     setProfile(updatedProfile);
   }, []);
 
-  /* ---------------- LOGOUT ---------------- */
-  // const logout = useCallback(async () => {
-  //   await AsyncStorage.clear();
-  //   // setProfile(null);
-  // }, []);
-
-  // const logout = async () => {
-  //   await AsyncStorage.clear();
-
-  //   setProfile(prev => {
-  //     if (!prev) return null;
-
-  //     const { pincode, ...rest } = prev;  // 🔥 remove pincode
-  //     return rest;
-  //   });
-
-  //   // setLocationNotFetched(false);
-  // };
-
   const logout = async () => {
     try {
-      const storedProfile = await AsyncStorage.getItem('profile');
-      const existingProfile = storedProfile ? JSON.parse(storedProfile) : {};
+      // Clear ALL data from local storage
+      await AsyncStorage.clear();
+      console.log('🔒 [LOGOUT] AsyncStorage cleared');
 
-      const updatedProfile = {
-        pincode: existingProfile.pincode ?? null,
-        pinAddress: existingProfile.pinAddress ?? '',
+      // Set a fresh guest profile
+      const freshProfile = {
         guestId: Math.floor(Math.random() * 9000000000) + 1000000000,
       };
 
-      await AsyncStorage.multiRemove([
-        'token',
-        'refreshToken',
-        'userId',
-        'authData'
-      ]);
-
-      await AsyncStorage.setItem('profile', JSON.stringify(updatedProfile));
-
-      setProfile(updatedProfile);
+      await AsyncStorage.setItem('profile', JSON.stringify(freshProfile));
+      setProfile(freshProfile);
 
     } catch (error) {
       console.log('Logout error:', error);
     }
   };
+
+  useEffect(() => {
+    loadSettings();
+    // checkForUpdates(); // Hidden for now
+  }, [loadSettings, checkForUpdates]);
 
   const value = useMemo(() => ({
     logout,
@@ -163,6 +189,10 @@ export const AppContextProvider = ({ children }) => {
     isStoreUnavailable,
     storeUnavailableData,
     setStoreUnavailable,
+    updateInfo,
+    isUpdateModalVisible,
+    setIsUpdateModalVisible,
+    checkForUpdates,
   }), [
     logout,
     loadProfile,
@@ -172,7 +202,12 @@ export const AppContextProvider = ({ children }) => {
     locationNotFetched,
     isStoreUnavailable,
     storeUnavailableData,
-    setStoreUnavailable
+    setStoreUnavailable,
+    generalSettings,
+    loadSettings,
+    updateInfo,
+    isUpdateModalVisible,
+    checkForUpdates,
   ]);
 
   return (

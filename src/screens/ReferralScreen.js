@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react'
-import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList, Share } from 'react-native'
+import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList, Share, Clipboard } from 'react-native'
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'
+import Toast from 'react-native-simple-toast'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import { useNavigation } from '@react-navigation/native'
@@ -10,7 +12,6 @@ import { AppContext } from '../context/appContext'
 import StoreUnavailable from '../components/StoreUnavailable'
 import LocationModal from '../components/LocationModal'
 import CONFIG from '../globals/config'
-import LinearGradient from 'react-native-linear-gradient'
 // import moment from 'moment'
 
 const ReferralScreen = () => {
@@ -112,6 +113,11 @@ const ReferralScreen = () => {
         }
     };
 
+    const copyToClipboard = () => {
+        Clipboard.setString(profile?.referralCode || profile?.referalCode || 'WELCOME');
+        Toast.show('Referral code copied!', Toast.SHORT);
+    };
+
     return (
         <SafeAreaView style={styles.mainContainer}>
             <View style={styles.headerContainer}>
@@ -136,19 +142,29 @@ const ReferralScreen = () => {
                 <View style={{ flex: 1 }}>
 
                     <>
-                        <Text style={styles.referEarnText}>Refer and Earn</Text>
-                        <LinearGradient colors={['#FFFFFF', '#FFE7DB']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={styles.innerContainer}>
-                            <Image style={styles.loudspeakerImageStyle} source={require('../assets/images/loud-speaker.png')} />
-                            <Text style={styles.referralRewardText}>Referral reward you Earned</Text>
-                            <View style={styles.bcoinContainerTwo}>
-                                <Image style={styles.bcoinImageTwo} source={require('../assets/images/rupee.png')} />
-                                <Text style={styles.bcoinTextTwo}>{profile?.referralEarning || referrals[0]?.totalTokensEarned || '0.00'}</Text>
+                        {/* <Text style={styles.referEarnText}>Refer and Earn</Text> */}
+                        <View style={styles.solidPremiumCard}>
+                            <View style={styles.solidHeaderRow}>
+                                <Image style={styles.solidSpeakerIcon} source={require('../assets/images/loud-speaker.png')} />
+                                <View style={styles.solidTitleCol}>
+                                    <Text style={styles.solidReferTitle}>Refer & Earn</Text>
+                                    <Text style={styles.solidSubTitle}>Get rewarded for every friend who shops using your invite.</Text>
+                                </View>
                             </View>
-                            <TouchableOpacity style={styles.sendInviteButton} onPress={onShare}>
-                                <Image style={styles.sendIcon} source={require('../assets/images/share-icon.png')} />
-                                <Text style={styles.sendInviteText}>Send invite</Text>
+
+                            <View style={styles.solidRewardBox}>
+                                <Text style={styles.solidRewardLabel}>Total Rewards Earned</Text>
+                                <View style={styles.solidRewardAmountRow}>
+                                    <Image source={require('../assets/images/bcoinn.png')} style={styles.solidCoinIcon} />
+                                    <Text style={styles.solidRewardValue}>{profile?.referralEarning || referrals[0]?.totalTokensEarned || '0.00'}</Text>
+                                </View>
+                            </View>
+
+                            <TouchableOpacity style={styles.solidInviteBtn} onPress={onShare}>
+                                <MaterialCommunityIcons name="share-variant" size={wp('5%')} color="#FFFFFF" />
+                                <Text style={styles.solidBtnText}>Send Invite</Text>
                             </TouchableOpacity>
-                        </LinearGradient>
+                        </View>
                         <Text style={[styles.referEarnText, {
                             marginTop: hp('3%'),
                             marginBottom: hp('1%')
@@ -162,7 +178,7 @@ const ReferralScreen = () => {
 
                             ItemSeparatorComponent={() => <View style={styles.divider} />}
                             ListFooterComponent={() => referrals.length > 0 ? <View style={{ height: hp('2%') }} /> : null}
-                            style={referrals.length > 0 ? styles.historyListCard : null}
+                            style={referrals.length > 0 ? [styles.historyListCard, { flex: 1 }] : { flex: 1 }}
                             contentContainerStyle={referrals.length === 0 ? styles.emptyListContent : styles.listContent}
                             showsVerticalScrollIndicator={false}
                         />
@@ -224,6 +240,92 @@ const styles = StyleSheet.create({
         color: '#000000',
         marginLeft: wp('2%')
     },
+    headerContentContainer: {
+        paddingBottom: hp('2%'),
+        backgroundColor: '#FFFFFF',
+    },
+    headerRowMinimal: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: wp('4%'),
+        marginTop: hp('1%')
+    },
+    speakerLeftSmall: {
+        width: wp('20%'),
+        height: wp('20%'),
+        resizeMode: 'contain'
+    },
+    headerTextCol: {
+        marginLeft: wp('3%'),
+    },
+    referTitleMain: {
+        fontFamily: FONTS.poppins.bold,
+        fontSize: wp('4.5%'),
+        color: '#000000'
+    },
+    rewardSubText: {
+        fontFamily: FONTS.poppins.regular,
+        fontSize: wp('2.8%'),
+        color: '#666666',
+        marginTop: hp('0.2%')
+    },
+    rewardHighlightBox: {
+        backgroundColor: '#F25000',
+        borderRadius: wp('3%'),
+        paddingVertical: hp('1.5%'),
+        paddingHorizontal: wp('5%'),
+        marginTop: hp('1.5%'),
+        width: wp('85%'),
+        alignSelf: 'center',
+        alignItems: 'center'
+    },
+    earnedLabel: {
+        fontFamily: FONTS.poppins.medium,
+        fontSize: wp('3%'),
+        color: '#FFFFFF',
+        opacity: 0.9
+    },
+    earnedValueContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: hp('0.5%')
+    },
+    rupeeIconBox: {
+        width: wp('4.5%'),
+        height: wp('4.5%'),
+        resizeMode: 'contain',
+        tintColor: '#FFFFFF'
+    },
+    amountHighlight: {
+        fontFamily: FONTS.poppins.bold,
+        fontSize: wp('6%'),
+        color: '#FFFFFF',
+        marginLeft: wp('1%')
+    },
+    refinedInviteBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#FFFFFF',
+        borderRadius: wp('2%'),
+        borderWidth: 1,
+        borderColor: '#F25000',
+        paddingVertical: hp('1%'),
+        paddingHorizontal: wp('4%'),
+        marginTop: hp('2%'),
+        alignSelf: 'center'
+    },
+    shareIconMini: {
+        width: wp('4.1%'),
+        height: wp('4.1%'),
+        resizeMode: 'contain',
+        tintColor: '#F25000'
+    },
+    refinedInviteBtnText: {
+        fontFamily: FONTS.poppins.medium,
+        fontSize: wp('3.5%'),
+        color: '#F25000',
+        marginLeft: wp('2%')
+    },
     referEarnText: {
         fontFamily: FONTS.poppins.medium,
         fontSize: wp('4.19%'),
@@ -233,13 +335,14 @@ const styles = StyleSheet.create({
     },
     innerContainer: {
         width: wp('91.16%'),
-        height: hp('35.63%'),
+        // height: hp('35.63%'),
         borderWidth: 0.5,
         borderColor: '#DADADA',
         borderRadius: wp('2.33%'),
         alignSelf: 'center',
         marginTop: hp('1%'),
-        alignItems: 'center'
+        alignItems: 'center',
+        //  paddingVertical: hp('2%')
     },
     loudspeakerImageStyle: {
         width: wp('48.37%'),
@@ -266,6 +369,172 @@ const styles = StyleSheet.create({
         color: '#F9A833',
         fontFamily: FONTS.poppins.semiBold,
         marginLeft: wp('2%')
+    },
+    modernReferralCard: {
+        //  backgroundColor: '#FFFFFF',
+        borderRadius: wp('5%'),
+        width: wp('88%'),
+        //  marginTop: hp('2%'),
+        paddingVertical: hp('1%'),
+        paddingHorizontal: wp('5%'),
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.12,
+        shadowRadius: 15,
+        elevation: 8,
+        borderWidth: 1,
+        borderColor: '#F0F0F0',
+        alignItems: 'center'
+    },
+    modernRewardSection: {
+        alignItems: 'center',
+        // marginBottom: hp('1.5%')
+    },
+    modernRewardLabel: {
+        fontFamily: FONTS.poppins.medium,
+        fontSize: wp('3%'),
+        color: '#71717A',
+        marginBottom: hp('0.5%')
+    },
+    modernAmountRow: {
+        flexDirection: 'row',
+        alignItems: 'center'
+    },
+    modernCurrency: {
+        fontFamily: FONTS.poppins.bold,
+        fontSize: wp('4%'),
+        color: '#F25000',
+        marginRight: wp('1%')
+    },
+    modernAmount: {
+        fontFamily: FONTS.poppins.bold,
+        fontSize: wp('6%'),
+        color: '#18181B'
+    },
+    modernDivider: {
+        width: '100%',
+        height: 1,
+        backgroundColor: '#F4F4F5',
+        marginVertical: hp('1%')
+    },
+    modernCodeSection: {
+        width: '100%',
+        alignItems: 'center',
+        // marginBottom: hp('3%')
+    },
+    modernCodeLabel: {
+        fontFamily: FONTS.poppins.medium,
+        fontSize: wp('2.9%'),
+        color: '#71717A',
+        marginBottom: hp('1.5%')
+    },
+    modernCodeBox: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        // backgroundColor: '#FFF5F0',
+        borderRadius: wp('3%'),
+        paddingVertical: hp('1%'),
+        paddingHorizontal: wp('8%'),
+        borderWidth: 1,
+        borderColor: '#F2500030',
+        borderStyle: 'dashed'
+    },
+    modernCodeText: {
+        fontFamily: FONTS.poppins.bold,
+        fontSize: wp('5%'),
+        color: '#F25000',
+        letterSpacing: 2,
+        marginRight: wp('3%')
+    },
+    modernTapToCopy: {
+        fontFamily: FONTS.poppins.regular,
+        fontSize: wp('2.8%'),
+        color: '#A1A1AA',
+        marginTop: hp('0.8%'),
+        marginBottom: hp('1%')
+    },
+    modernInviteBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#F25000',
+        borderRadius: wp('10%'),
+        paddingVertical: hp('1.8%'),
+        paddingHorizontal: wp('12%'),
+        width: '100%',
+        justifyContent: 'center',
+        shadowColor: "#F25000",
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.35,
+        shadowRadius: 12,
+        elevation: 8
+    },
+    modernInviteBtnText: {
+        fontFamily: FONTS.poppins.bold,
+        fontSize: wp('4.2%'),
+        color: '#FFFFFF',
+        marginLeft: wp('2.5%')
+    },
+    rewardCard: {
+        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+        borderRadius: wp('4%'),
+        padding: wp('5%'),
+        width: wp('85%'),
+        alignItems: 'center',
+        marginTop: hp('2.5%'),
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.1,
+        shadowRadius: 20,
+        elevation: 10,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.8)',
+    },
+    rewardLabel: {
+        fontFamily: FONTS.poppins.medium,
+        fontSize: wp('3.5%'),
+        color: '#616161',
+        marginBottom: hp('1%')
+    },
+    rewardValueContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: hp('2.5%')
+    },
+    currencySymbol: {
+        fontFamily: FONTS.poppins.bold,
+        fontSize: wp('6%'),
+        color: '#F25000',
+        marginRight: wp('1%')
+    },
+    rewardValue: {
+        fontFamily: FONTS.poppins.bold,
+        fontSize: wp('9%'),
+        color: '#F25000'
+    },
+    inviteButtonNew: {
+        backgroundColor: '#F25000',
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: hp('1.5%'),
+        paddingHorizontal: wp('10%'),
+        borderRadius: wp('12%'),
+        shadowColor: "#F25000",
+        shadowOffset: { width: 0, height: 5 },
+        shadowOpacity: 0.4,
+        shadowRadius: 10,
+        elevation: 8
+    },
+    inviteButtonTextNew: {
+        color: '#FFFFFF',
+        fontFamily: FONTS.poppins.bold,
+        fontSize: wp('4.2%'),
+        marginLeft: wp('2.5%')
+    },
+    shareIconWhite: {
+        width: wp('5%'),
+        height: wp('5%'),
+        resizeMode: 'contain',
+        tintColor: '#FFFFFF'
     },
     sendInviteButton: {
         flexDirection: 'row',
@@ -388,5 +657,120 @@ const styles = StyleSheet.create({
         fontSize: wp('4%'),
         color: '#616161',
         marginTop: hp('2%')
+    },
+    solidPremiumCard: {
+        width: wp('92%'),
+        alignSelf: 'center',
+        marginTop: hp('2%'),
+        backgroundColor: '#FFF2EB', // Very light orange/peach
+        borderRadius: wp('5%'),
+        padding: wp('5%'),
+        borderColor: '#FFD1B3',
+        borderWidth: 1,
+    },
+    solidHeaderRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: hp('2%')
+    },
+    solidSpeakerIcon: {
+        width: wp('15%'),
+        height: wp('15%'),
+        resizeMode: 'contain',
+    },
+    solidTitleCol: {
+        marginLeft: wp('3%'),
+        flex: 1
+    },
+    solidReferTitle: {
+        fontFamily: FONTS.poppins.bold,
+        fontSize: wp('5.5%'),
+        color: '#1A1A1A',
+    },
+    solidSubTitle: {
+        fontFamily: FONTS.poppins.regular,
+        fontSize: wp('3%'),
+        color: '#666666',
+        marginTop: hp('0.5%'),
+    },
+    solidRewardBox: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: wp('3%'),
+        padding: wp('3%'),
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 5,
+        elevation: 2,
+    },
+    solidRewardLabel: {
+        fontFamily: FONTS.poppins.medium,
+        fontSize: wp('3.2%'),
+        color: '#777777',
+        marginBottom: hp('0.5%')
+    },
+    solidRewardAmountRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center'
+    },
+    solidCoinIcon: {
+        width: wp('6%'),
+        height: wp('6%'),
+        resizeMode: 'contain',
+        marginRight: wp('1.5%')
+    },
+    solidRewardValue: {
+        fontFamily: FONTS.poppins.bold,
+        fontSize: wp('7%'),
+        color: '#1A1A1A',
+    },
+    solidCodeRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: hp('2.5%')
+    },
+    solidCodeLabel: {
+        fontFamily: FONTS.poppins.medium,
+        fontSize: wp('3.5%'),
+        color: '#444444',
+    },
+    solidCodeTouch: {
+        backgroundColor: '#FFE1CC',
+        paddingHorizontal: wp('3%'),
+        paddingVertical: hp('0.5%'),
+        borderRadius: wp('2%'),
+        marginLeft: wp('2%'),
+        borderWidth: 1,
+        borderColor: '#FFB880',
+        borderStyle: 'dashed'
+    },
+    solidCodeText: {
+        fontFamily: FONTS.poppins.bold,
+        fontSize: wp('4%'),
+        color: '#F25000',
+        letterSpacing: 1,
+    },
+    solidInviteBtn: {
+        backgroundColor: '#F25000',
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderRadius: wp('10%'),
+        paddingVertical: hp('1.5%'),
+        marginTop: hp('2.5%'),
+        shadowColor: '#F25000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 6,
+        elevation: 5
+    },
+    solidBtnText: {
+        fontFamily: FONTS.poppins.bold,
+        fontSize: wp('4.2%'),
+        color: '#FFFFFF',
+        marginLeft: wp('2%')
     }
-})
+})      

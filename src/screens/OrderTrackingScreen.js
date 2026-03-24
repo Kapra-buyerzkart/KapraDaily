@@ -1220,7 +1220,7 @@ const styles = StyleSheet.create({
         width: wp('99%'),
         minHeight: hp('14%'),
         justifyContent: 'center',
-        marginTop: hp('2%')
+        marginTop: hp('1.5%')
         // alignItems: 'center'
     },
     addressContainer: {
@@ -1264,8 +1264,8 @@ const styles = StyleSheet.create({
         fontSize: wp('3.72%'),
         alignSelf: 'flex-start',
         marginLeft: wp('6%'),
-        marginTop: hp('3%'),
-        marginBottom: hp('0.7%')
+        marginTop: hp('1.5%'),
+        marginBottom: hp('0.5%')
     },
     paymentImage: {
         width: wp('9.3%'),
@@ -1322,7 +1322,7 @@ const styles = StyleSheet.create({
         zIndex: 1
     },
     productsMainContainer: {
-        marginTop: hp('2.5%'),
+        marginTop: hp('1.5%'),
         backgroundColor: '#FFFFFF',
     },
     productsHeaderView: {
@@ -1448,7 +1448,7 @@ const styles = StyleSheet.create({
         shadowRadius: 20,
         elevation: 8,
         paddingHorizontal: wp('5%'),
-        marginTop: hp('2.1%')
+        marginTop: hp('1.5%')
     },
     downloadBillIcon: {
         width: wp('3.72%'),
@@ -1467,7 +1467,7 @@ const styles = StyleSheet.create({
         fontSize: wp('3.72%'),
         alignSelf: 'flex-start',
         marginLeft: wp('6%'),
-        marginTop: hp('3.2%')
+        marginTop: hp('1.5%')
     },
     orderDetailsContainer: {
         width: wp('90.7%'),
@@ -1507,7 +1507,7 @@ const styles = StyleSheet.create({
         borderRadius: wp('2.33%'),
         justifyContent: 'center',
         alignItems: 'center',
-        marginTop: hp('4%')
+        marginTop: hp('2%')
     },
     cancelButtonText: {
         fontFamily: FONTS.poppins.semiBold,
@@ -1600,7 +1600,7 @@ const styles = StyleSheet.create({
         marginLeft: wp('1%')
     },
     dliveryAgentRatingMainContainer: {
-        marginTop: hp('3%')
+        marginTop: hp('1.5%')
     },
     deliveryAgentInnerContainerOne: {
         flexDirection: 'row',

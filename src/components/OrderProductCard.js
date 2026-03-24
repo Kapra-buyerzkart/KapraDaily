@@ -2,15 +2,15 @@ import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native'
 import React, { useState } from 'react'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import { FONTS } from '../styles/typography'
-import CONFIG from '../globals/config'
-import AppButton from './AppButton'
+import CONFIG from '../globals/config';
+import AppButton from './AppButton';
 
 const OrderProductCard = ({ item, orderStatus, onReturn }) => {
     const [imageError, setImageError] = useState(false);
 
     // Helper to resolve image source
     const getImageSource = (img) => {
-        if (!img || imageError) return require('../assets/images/categories/dfn.png');
+        if (!img || imageError) return require('../assets/images/noimage.png');
         if (typeof img === 'string') {
             if (img.startsWith('http')) return { uri: img };
             return { uri: `${CONFIG.image_base_url}${img}` };
@@ -31,7 +31,7 @@ const OrderProductCard = ({ item, orderStatus, onReturn }) => {
                 onError={() => setImageError(true)}
             />
             <View style={styles.detailsContainer}>
-                <Text style={styles.productName} numberOfLines={3}>{item.productName?.length > 20 ? item.productName.substring(0, 30) + '...' : item.productName}</Text>
+                <Text style={styles.productName} numberOfLines={2} ellipsizeMode="tail">{item.productName}</Text>
                 <Text style={styles.quantityText}>Qty: {item.quantity}</Text>
                 <Text style={styles.priceText}>₹{item.lineTotal || item.netAmount || item.price || item.unitPrice * item.quantity}</Text>
 

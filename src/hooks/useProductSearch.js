@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useContext, useMemo } from 're
 import { getProductSuggestionsApi, searchProductsApi } from '../api/productService';
 import { useDebounce } from './useDebounce';
 import { AppContext } from '../context/appContext';
+import { LoaderContext } from '../context/loaderContext';
 
 const useProductSearch = (initialPincodeId, initialCatId = null, filters = {}) => {
     const { profile } = useContext(AppContext);
@@ -14,6 +15,7 @@ const useProductSearch = (initialPincodeId, initialCatId = null, filters = {}) =
 
     const activePincodeId = initialPincodeId || profile?.pincode;
     const [error, setError] = useState(null);
+    const { showLoader } = useContext(LoaderContext);
 
     // Extract filter values with defaults
     const sortBy = filters.sortBy || 'relevance';
@@ -43,6 +45,7 @@ const useProductSearch = (initialPincodeId, initialCatId = null, filters = {}) =
             }
 
             setLoading(true);
+            showLoader(true);
             setError(null);
 
             try {
@@ -102,6 +105,7 @@ const useProductSearch = (initialPincodeId, initialCatId = null, filters = {}) =
                 setResultCount(0);
             } finally {
                 setLoading(false);
+                showLoader(false);
             }
         };
 

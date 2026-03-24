@@ -20,6 +20,7 @@ import LinearGradient from 'react-native-linear-gradient'
 import StoreUnavailable from '../components/StoreUnavailable'
 import LocationModal from '../components/LocationModal'
 import { AppContext } from '../context/appContext'
+import ShimmerPlaceholder from '../components/ShimmerPlaceholder'
 
 const ProductDetailsScreen = () => {
     const [selectedImage, setSelectedImage] = useState(null)
@@ -119,9 +120,46 @@ const ProductDetailsScreen = () => {
                     </TouchableOpacity>
                     <Text style={styles.headerTitle}>Product Details</Text>
                 </View>
-                <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="large" color="#F25000" />
-                </View>
+                <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: hp('5%') }}>
+                    <View style={styles.topSection}>
+                        <View style={styles.mainImageContainer}>
+                            <ShimmerPlaceholder
+                                style={{ width: wp('85%'), height: hp('28%'), borderRadius: 15 }}
+                                width={wp('85%')}
+                            />
+                        </View>
+                    </View>
+
+                    <View style={styles.infoCard}>
+                        <View style={{ borderColor: '#D9D9D9', borderWidth: 0.5, width: wp('92%'), alignSelf: 'center', borderRadius: 30, paddingHorizontal: 20, paddingTop: 25, paddingVertical: 10 }}>
+                            <ShimmerPlaceholder style={{ width: wp('60%'), height: hp('3%'), borderRadius: 4, marginBottom: hp('1%') }} width={wp('60%')} />
+                            <ShimmerPlaceholder style={{ width: wp('40%'), height: hp('2%'), borderRadius: 4, marginBottom: hp('2%') }} width={wp('40%')} />
+
+                            <ShimmerPlaceholder style={{ width: wp('30%'), height: hp('4%'), borderRadius: 8, marginTop: hp('1%'), marginBottom: hp('2%') }} width={wp('30%')} />
+
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                                <View>
+                                    <ShimmerPlaceholder style={{ width: wp('20%'), height: hp('2%'), borderRadius: 4, marginBottom: hp('0.5%') }} width={wp('20%')} />
+                                    <ShimmerPlaceholder style={{ width: wp('35%'), height: hp('4%'), borderRadius: 4 }} width={wp('35%')} />
+                                </View>
+                                <ShimmerPlaceholder style={{ width: wp('34%'), height: hp('5.5%'), borderRadius: hp('3%') }} width={wp('34%')} />
+                            </View>
+
+                            <View style={{ height: 1, backgroundColor: '#EEE', marginVertical: hp('2%'), width: wp('70%'), alignSelf: 'center' }} />
+
+                            <ShimmerPlaceholder style={{ width: wp('40%'), height: hp('2.5%'), borderRadius: 4, alignSelf: 'center' }} width={wp('40%')} />
+                        </View>
+                    </View>
+
+                    <View style={{ marginTop: hp('4%'), paddingHorizontal: wp('8%') }}>
+                        <ShimmerPlaceholder style={{ width: wp('40%'), height: hp('3%'), borderRadius: 4, marginBottom: hp('2%') }} width={wp('40%')} />
+                        <View style={{ flexDirection: 'row', gap: wp('4%') }}>
+                            <ShimmerPlaceholder style={{ width: wp('30%'), height: hp('15%'), borderRadius: 12 }} width={wp('30%')} />
+                            <ShimmerPlaceholder style={{ width: wp('30%'), height: hp('15%'), borderRadius: 12 }} width={wp('30%')} />
+                            <ShimmerPlaceholder style={{ width: wp('30%'), height: hp('15%'), borderRadius: 12 }} width={wp('30%')} />
+                        </View>
+                    </View>
+                </ScrollView>
             </SafeAreaView>
         )
     }
@@ -200,7 +238,7 @@ const ProductDetailsScreen = () => {
                                 renderItem={({ item }) => (
                                     <View style={styles.mainImageContainer}>
                                         <ImageBackground
-                                            source={item || productImage || require('../assets/images/categories/dfn.png')}
+                                            source={item || productImage}
                                             style={styles.imageStyle}
                                             imageStyle={{ resizeMode: 'contain' }}
                                         />
@@ -423,7 +461,7 @@ const ProductDetailsScreen = () => {
 
             {cartItems && cartItems.length > 0 && (
                 <View style={styles.floatingCart}>
-                    <SelectedProducts selectedProducts={cartItems} />
+                    {!isStoreUnavailable && <SelectedProducts selectedProducts={cartItems} />}
                 </View>
             )}
 

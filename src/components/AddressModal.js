@@ -10,7 +10,6 @@ const AddressCard = ({ item, onSelect, onEdit, onThreeDots, onDelete, onCloseThr
     const handlePress = () => {
         if (item.selected) {
             onClose?.();
-            navigation?.navigate("AddLocationScreen", { address: item.raw });
         } else {
             onSelect(item.id);
         }

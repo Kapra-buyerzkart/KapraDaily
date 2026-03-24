@@ -1,26 +1,20 @@
 import React, { useEffect, useRef } from 'react';
-import { View, StyleSheet, Animated } from 'react-native';
+import { View, StyleSheet, Animated, Easing } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
 
-const ShimmerPlaceholder = ({ style, duration = 1500 }) => {
+const ShimmerPlaceholder = ({ style, duration = 1500, width = wp('100%') }) => {
     const animatedValue = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
         const startShimmer = () => {
             Animated.loop(
-                Animated.sequence([
-                    Animated.timing(animatedValue, {
-                        toValue: 1,
-                        duration: duration,
-                        useNativeDriver: true,
-                    }),
-                    Animated.timing(animatedValue, {
-                        toValue: 0,
-                        duration: duration,
-                        useNativeDriver: true,
-                    }),
-                ])
+                Animated.timing(animatedValue, {
+                    toValue: 1,
+                    duration: duration,
+                    easing: Easing.linear,
+                    useNativeDriver: true,
+                })
             ).start();
         };
 
@@ -29,7 +23,7 @@ const ShimmerPlaceholder = ({ style, duration = 1500 }) => {
 
     const translateX = animatedValue.interpolate({
         inputRange: [0, 1],
-        outputRange: [-wp('100%'), wp('100%')],
+        outputRange: [-width, width],
     });
 
     return (
@@ -43,7 +37,7 @@ const ShimmerPlaceholder = ({ style, duration = 1500 }) => {
                 ]}
             >
                 <LinearGradient
-                    colors={['#E0E0E0', '#F5F5F5', '#E0E0E0']}
+                    colors={['#EBEBEB', '#F5F5F5', '#EBEBEB']}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
                     style={styles.gradient}

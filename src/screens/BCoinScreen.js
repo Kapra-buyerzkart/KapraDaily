@@ -33,9 +33,11 @@ const BCoinScreen = () => {
     const [statusMessage, setStatusMessage] = useState('')
 
     const navigation = useNavigation()
-    const { isStoreUnavailable, storeUnavailableData } = useContext(AppContext)
+    const { isStoreUnavailable, storeUnavailableData, profile, generalSettings } = useContext(AppContext)
     const [isLocationModalVisible, setIsLocationModalVisible] = useState(false)
     const isMounted = React.useRef(true)
+
+    const showHistoryNote = generalSettings?.show_temporary_message === '1'
 
     useEffect(() => {
         return () => {
@@ -44,8 +46,10 @@ const BCoinScreen = () => {
     }, [])
 
     useEffect(() => {
-        fetchWalletData()
-    }, [])
+        if (profile?.custId) {
+            fetchWalletData()
+        }
+    }, [profile?.custId])
 
     const fetchWalletData = async () => {
         if (!isMounted.current) return
@@ -234,7 +238,10 @@ const BCoinScreen = () => {
                             <Text style={styles.availableBalanceValueText}>{walletData?.wallet?.bTokens || '0'}</Text>
                         </View>
                     </View>
-                    <Text style={styles.historyHeaderText}>History</Text>
+                    <View style={styles.historyHeaderRow}>
+                        <Text style={styles.historyHeaderText}>History</Text>
+
+                    </View>
                     <View style={styles.bcoinTokenHeaderContainer}>
                         <TouchableOpacity onPress={() => setSelected('bcoin')} style={selected === 'bcoin' ? (
                             [styles.bcoinSingleContainer, {
@@ -293,9 +300,9 @@ const BCoinScreen = () => {
                                     </View>
                                 </View>
                                 <Text style={[styles.bcoinPriceTextTwo, {
-                                    color: item.transactionType === 'credit' ? '#0CA201' : '#FF0000'
+                                    color: item.transactionType === 'credit' || item.transactionType === 'Credit' ? '#0CA201' : '#FF0000'
                                 }]}>
-                                    {item.transactionType === 'credit' ? '+' : '-'}{item.amount.toFixed(2)} {selected === 'bcoin' ? 'coins' : 'tokens'}
+                                    {item.transactionType === 'credit' || item.transactionType === 'Credit' ? '+' : ''}{item.amount.toFixed(2)} {selected === 'bcoin' ? 'coins' : 'tokens'}
                                 </Text>
                             </View>
                         ))}
@@ -305,6 +312,13 @@ const BCoinScreen = () => {
                             </View>
                         )}
                     </ScrollView>
+                    {showHistoryNote && (
+                        <View style={[styles.historyNoteContainer, { marginHorizontal: wp('5%'), marginBottom: hp('1%') }]}>
+                            <Text style={styles.historyNoteText}>
+                                This app displays only the most recent transaction history
+                            </Text>
+                        </View>
+                    )}
                 </>
             </View>
             <TouchableOpacity onPress={() => setShowRedeemModal(true)} style={styles.redeemButton}>
@@ -733,5 +747,25 @@ const styles = StyleSheet.create({
     },
     methodTextActive: {
         color: '#F25000'
-    }
-})
+    },
+    historyHeaderRow: {
+        flexDirection: 'column',
+        alignItems: 'flex-start',
+        marginTop: hp('2%'),
+        marginBottom: hp('1%'),
+    },
+    historyNoteContainer: {
+        backgroundColor: '#FFF5F0',
+        paddingHorizontal: wp('3%'),
+        paddingVertical: hp('0.8%'),
+        borderRadius: wp('2%'),
+        marginTop: hp('0.5%'),
+        borderLeftWidth: 3,
+        borderLeftColor: '#F25000',
+    },
+    historyNoteText: {
+        fontFamily: FONTS.poppins.medium,
+        fontSize: wp('2.8%'),
+        color: '#F25000',
+    },
+});

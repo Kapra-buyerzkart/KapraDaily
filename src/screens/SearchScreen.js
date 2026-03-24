@@ -154,6 +154,11 @@ const SearchScreen = () => {
                     onChangeText={setSearchTerm}
                     autoFocus={true}
                 />
+                {searchTerm.length > 0 && (
+                    <TouchableOpacity onPress={() => setSearchTerm('')} style={{ marginRight: wp('2%') }}>
+                        <Ionicons name="close-circle" size={wp('5%')} color="#CCCCCC" />
+                    </TouchableOpacity>
+                )}
                 <View style={styles.divider} />
                 <Image style={styles.clipboardIcon} source={require('../assets/images/clipboard-two.png')} />
             </View>
@@ -179,11 +184,6 @@ const SearchScreen = () => {
                         </View>
                     )}
 
-                    {loading && (
-                        <View style={styles.centeredLoader}>
-                            <ActivityIndicator size="large" color="#F25000" />
-                        </View>
-                    )}
 
                     <FlatList
                         data={loading ? [] : suggestions}
@@ -198,7 +198,7 @@ const SearchScreen = () => {
                             paddingTop: hp('1%'),
                             paddingBottom: hp('10%')
                         }}
-                        ListEmptyComponent={!loading && suggestions.length === 0 && searchTerm.length > 0 && (
+                        ListEmptyComponent={!loading && suggestions.length === 0 && (searchTerm.length > 0 || catId) && (
                             <View style={styles.emptyContainer}>
                                 <Image
                                     source={require('../assets/images/noimages/noproductfound.png')}

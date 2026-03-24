@@ -54,11 +54,24 @@ const EditProfileScreen = () => {
             return
         }
 
+        const dobValue = dob.trim()
+        if (dobValue) {
+            // Validate YYYY-MM-DD format
+            const dobRegex = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/
+            if (!dobRegex.test(dobValue)) {
+                setStatusType('error')
+                setStatusTitle('Error')
+                setStatusMessage('Date of Birth must be in YYYY-MM-DD format')
+                setStatusModalVisible(true)
+                return
+            }
+        }
+
         try {
             showLoader(true)
             const payload = {
                 fullName: fullName.trim(),
-                dob: dob.trim(),
+                dob: dobValue ? dobValue : null,
                 gender: gender
             }
             const response = await updateProfilePatchApi(payload)

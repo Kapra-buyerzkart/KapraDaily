@@ -124,6 +124,17 @@ const MyOrdersProductCard = (props) => {
                         (itemData.grandTotal ?? itemData.price ?? itemData.totalAmount ?? 0).toFixed(2)}</Text>
                 </View>
                 <View style={[styles.buttonContainer, !itemData.canReorder && { justifyContent: 'center' }]}>
+                    {itemData.canReorder && (
+                        <TouchableOpacity
+                            style={[styles.button, { backgroundColor: '#F25000' }, isStoreUnavailable && { opacity: 0.6 }]}
+                            onPress={() => !isStoreUnavailable && setShowReorderModal(true)}
+                            activeOpacity={isStoreUnavailable ? 1 : 0.7}
+                        >
+                            <Text style={[styles.buttonText, {
+                                color: '#FFFFFF',
+                            }]}>Reorder</Text>
+                        </TouchableOpacity>
+                    )}
                     <TouchableOpacity onPress={() => navigation.navigate('OrderTrackingScreen', {
                         orderId: itemData.orderId || itemData.id,
                         orderNumber: itemData.orderNumber,
@@ -141,21 +152,11 @@ const MyOrdersProductCard = (props) => {
 
                         }]}>Details</Text>
                     </TouchableOpacity>
-                    {itemData.canReorder && (
-                        <TouchableOpacity
-                            style={[styles.button, { backgroundColor: '#F25000' }, isStoreUnavailable && { opacity: 0.6 }]}
-                            onPress={() => !isStoreUnavailable && setShowReorderModal(true)}
-                            activeOpacity={isStoreUnavailable ? 1 : 0.7}
-                        >
-                            <Text style={[styles.buttonText, {
-                                color: '#FFFFFF',
-                            }]}>Reorder</Text>
-                        </TouchableOpacity>
-                    )}
+
                 </View>
             </View>
             <View style={styles.orderBottomView}>
-                <Text style={styles.placedOrderText}>Placed order: {formatDate(itemData.orderDate || itemData.date || itemData.time)}</Text>
+                <Text style={styles.placedOrderText}>Order placed on: {formatDate(itemData.orderDate || itemData.date || itemData.time)}</Text>
             </View>
 
             <ConfirmationModal

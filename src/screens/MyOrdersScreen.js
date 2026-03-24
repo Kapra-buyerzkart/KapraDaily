@@ -17,7 +17,7 @@ const MyOrdersScreen = () => {
     const [orders, setOrders] = React.useState([]);
     const [loading, setLoading] = React.useState(true);
     const { showLoader } = useContext(LoaderContext);
-    const { isStoreUnavailable, storeUnavailableData } = useContext(AppContext);
+    const { isStoreUnavailable, storeUnavailableData, generalSettings } = useContext(AppContext);
     const [isLocationModalVisible, setIsLocationModalVisible] = useState(false);
 
     const fetchOrders = async () => {
@@ -98,6 +98,7 @@ const MyOrdersScreen = () => {
                 alignItems: 'center',
                 flex: 1,
             }}>
+
                 <FlatList
                     data={orders}
                     keyExtractor={(item, index) => (item.id || item.orderId || index).toString()}
@@ -109,6 +110,14 @@ const MyOrdersScreen = () => {
                     }}
                     showsVerticalScrollIndicator={false}
                 />
+
+                {generalSettings?.show_temporary_message === '1' && (
+                    <View style={styles.orderNoteContainer}>
+                        <Text style={styles.orderNoteText}>
+                            Orders placed from 1 April 2025 onward are available in this app.
+                        </Text>
+                    </View>
+                )}
             </View>
             <LocationModal
                 visible={isLocationModalVisible}
@@ -144,5 +153,22 @@ const styles = StyleSheet.create({
         width: wp('21.86%'),
         height: hp('7.86%'),
         resizeMode: 'contain',
-    }
+    },
+    orderNoteContainer: {
+        backgroundColor: '#FFF5F0',
+        paddingHorizontal: wp('4%'),
+        paddingVertical: hp('1%'),
+        borderRadius: wp('2%'),
+        marginTop: hp('1%'),
+        marginBottom: hp('0.5%'),
+        marginHorizontal: wp('4%'),
+        borderLeftWidth: 3,
+        borderLeftColor: '#F25000',
+        alignSelf: 'stretch',
+    },
+    orderNoteText: {
+        fontFamily: FONTS.poppins.medium,
+        fontSize: wp('2.8%'),
+        color: '#F25000',
+    },
 })

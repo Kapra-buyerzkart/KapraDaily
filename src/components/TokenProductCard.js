@@ -22,7 +22,7 @@ const TokenProductCard = ({ item, onPress, onAdd, onToggleWishlist, isInWishlist
     const price = item?.price || item?.specialPrice || '324';
     const offer = item?.offer || item?.discountPercentage || item?.discountPercent ? `${Math.round(item?.offer || item?.discountPercentage || item?.discountPercent)}% OFF` : '50% OFF';
     const weight = item?.weight || '1kg';
-    const token = item?.token || '1B Token';
+    const token = `${item?.bTokenValue || item?.token || item?.btokens || '1'}B Token`;
 
     const liked = propIsInWishlist ? propIsInWishlist(productId) : isInWishlist(productId);
 
@@ -37,7 +37,7 @@ const TokenProductCard = ({ item, onPress, onAdd, onToggleWishlist, isInWishlist
         const img = item?.featuredImage || item?.image || item?.img || item?.imageUrl;
 
         if (!img || imageError) {
-            return require('../assets/images/categories/dfn.png');
+            return require('../assets/images/noimage.png');
         }
 
         if (typeof img === 'string') {
@@ -179,7 +179,8 @@ const TokenProductCard = ({ item, onPress, onAdd, onToggleWishlist, isInWishlist
                 </View>
 
                 <Text
-                    numberOfLines={3}
+                    numberOfLines={2}
+                    ellipsizeMode="tail"
                     style={[styles.productName, isThreeColumn && { fontSize: wp('2.8%'), minHeight: hp('3.5%'), lineHeight: hp('1.8%') }]}
                 >
                     {name}
@@ -242,7 +243,7 @@ const styles = StyleSheet.create({
         fontSize: wp('2.2%'),
         color: '#9200A8',
         fontFamily: FONTS.poppins.semiBold,
-        marginLeft: wp('4%'),
+        marginLeft: wp('2.5%'),
     },
 
     plusIconCircle: {
@@ -424,6 +425,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 4,
         paddingVertical: 2,
         borderRadius: 4,
+        marginTop: hp('1.5%')
     },
 
 });

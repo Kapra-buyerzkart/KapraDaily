@@ -49,6 +49,7 @@ export default function ProfileScreen() {
     const [requestText, setRequestText] = useState('');
     const [isSubmittingRequest, setIsSubmittingRequest] = useState(false);
     const [isLogoutModalVisible, setIsLogoutModalVisible] = useState(false);
+    const [isDeleteAccountModalVisible, setIsDeleteAccountModalVisible] = useState(false);
     const [walletData, setWalletData] = useState(null);
     const [statusConfig, setStatusConfig] = useState({
         visible: false,
@@ -138,6 +139,12 @@ export default function ProfileScreen() {
                 }
             }],
         })
+    }
+
+    const handleDeleteAccount = async () => {
+        setIsDeleteAccountModalVisible(false);
+        await handleLogout();
+        Toast.show('Account deleted successfully', Toast.SHORT);
     }
 
     useEffect(() => {
@@ -235,9 +242,9 @@ export default function ProfileScreen() {
                                         )}
                                     </View>
                                     <View style={styles.userNamePhoneView}>
-                                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                        <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
                                             <Text style={styles.userNameText}>{profile.custName}</Text>
-                                            <TouchableOpacity onPress={() => navigation.navigate('EditProfileScreen')} style={{ marginLeft: wp('2%') }}>
+                                            <TouchableOpacity onPress={() => navigation.navigate('EditProfileScreen')} style={{ marginLeft: wp('2%'), marginTop: hp('0.5%') }}>
                                                 <MaterialIcons name="edit" size={wp('4%')} color="#F25000" />
                                             </TouchableOpacity>
                                         </View>
@@ -416,6 +423,16 @@ export default function ProfileScreen() {
                             </View>
                             <AntDesign name={"right"} color={'#777777'} size={wp('3.5%')} />
                         </TouchableOpacity>
+                        <View style={styles.divider} />
+                        <TouchableOpacity onPress={() => setIsDeleteAccountModalVisible(true)} style={styles.listItem}>
+                            <View style={styles.listItemLeft}>
+                                <View style={styles.listIconWrapper}>
+                                    <MaterialCommunityIcons name="account-remove-outline" color={'#FF0000'} size={wp('4%')} />
+                                </View>
+                                <Text style={[styles.listItemText, { color: '#FF0000' }]}>Delete Account</Text>
+                            </View>
+                            <AntDesign name={"right"} color={'#777777'} size={wp('3.5%')} />
+                        </TouchableOpacity>
                     </View>
                 </View>
 
@@ -475,6 +492,16 @@ export default function ProfileScreen() {
                 title="Log Out"
                 message="Are you sure you want to log out?"
                 confirmText="Log Out"
+                cancelText="Cancel"
+            />
+
+            <ConfirmationModal
+                visible={isDeleteAccountModalVisible}
+                onClose={() => setIsDeleteAccountModalVisible(false)}
+                onConfirm={handleDeleteAccount}
+                title="Delete Account"
+                message="Are you sure you want to delete your account? This action cannot be undone."
+                confirmText="Delete"
                 cancelText="Cancel"
             />
 
@@ -568,7 +595,8 @@ const styles = StyleSheet.create({
     userNameText: {
         color: '#000000',
         fontFamily: FONTS.poppins.bold,
-        fontSize: wp('4.8%')
+        fontSize: wp('4.8%'),
+        flexShrink: 1
     },
     phoneNumberStyle: {
         fontSize: wp('3.2%'),

@@ -1,7 +1,6 @@
 import React, { createContext, useState, useContext, useCallback, useMemo, useRef, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppContext } from './appContext';
-import { Alert } from 'react-native';
 import Toast from 'react-native-simple-toast';
 import { addToCartApi, removeFromCartApi, updateCartItemApi, getCartApi, getCartSummaryApi, clearCartApi, applyCouponApi, removeCouponApi, applyGiftCardApi, removeGiftCardApi, applyBCoinApi, removeBCoinApi } from '../api/cartService';
 import { getAddressListApi, deleteAddressApi } from '../api/addressService';
@@ -14,6 +13,10 @@ export const CartProvider = ({ children }) => {
     const [cartItems, setCartItems] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [cartSummary, setCartSummary] = useState(null);
+    const [isStoreUnavailable, setIsStoreUnavailable] = useState(false);
+    const [storeUnavailableData, setStoreUnavailableData] = useState({ image: null, text: '' });
+    const [serviceabilityTrigger, setServiceabilityTrigger] = useState(false);
+    const [hasAlertedServiceability, setHasAlertedServiceability] = useState(false);
     const [cartId, setCartId] = useState(null);
     const cartIdRef = useRef(null);
     const [error, setError] = useState(null);
@@ -31,6 +34,7 @@ export const CartProvider = ({ children }) => {
     const [cartVersion, setCartVersion] = useState(null); // kept for dependency tracking / re-renders
     const loadRequestRef = useRef(null);
     const summaryRequestRef = useRef(null);
+    const failedPincodesRef = useRef(new Set());
 
     // Helper to update version in both ref and state
     const updateCartVersion = useCallback((newVersion) => {
@@ -38,13 +42,34 @@ export const CartProvider = ({ children }) => {
         setCartVersion(newVersion);
     }, []);
 
-    const { profile } = useContext(AppContext);
+    const { profile, editPincode } = useContext(AppContext);
     const lastPincodeRef = useRef(profile?.pincode);
+    const lastUserIdRef = useRef(profile?.custId || profile?.id || null);
 
     useEffect(() => {
         loadCart();
         fetchAddresses();
     }, []);
+
+    // ─── User Switch Sync: Clear and reload cart when user identity changes ───
+    useEffect(() => {
+        const currentUserId = profile?.custId || profile?.id || null;
+        if (lastUserIdRef.current !== null && currentUserId !== lastUserIdRef.current) {
+            console.log('👤 [CART] User changed, resetting cart:', lastUserIdRef.current, '->', currentUserId);
+            // Immediately clear stale in-memory data from previous user
+            setCartItems([]);
+            setCartSummary(null);
+            setCartId(null);
+            cartIdRef.current = null;
+            updateCartVersion(null);
+            setAddresses([]);
+            setError(null);
+            // Fetch fresh data for the new user
+            loadCart();
+            fetchAddresses();
+        }
+        lastUserIdRef.current = currentUserId;
+    }, [profile?.custId, profile?.id]);
 
     // ─── Location Sync: Refresh cart when pincode changes ───
     useEffect(() => {
@@ -133,8 +158,8 @@ export const CartProvider = ({ children }) => {
 
     // Auto-select address removed
 
-    const onSelectAddress = useCallback(async (addressId) => {
-        console.log('👆 [ADDRESS] Selecting addressId:', addressId);
+    const onSelectAddress = useCallback(async (addressId, showConfirmationPopup = true) => {
+        console.log('👆 [ADDRESS] Selecting addressId:', addressId, 'showConfirmationPopup:', showConfirmationPopup);
         if (!addressId) {
             console.warn('⚠️ [ADDRESS] Attempted to select invalid addressId:', addressId);
             return;
@@ -146,63 +171,81 @@ export const CartProvider = ({ children }) => {
             console.log('Error saving selectedAddressId', e);
         }
 
-        setAddresses(prev => {
-            const selectedAddr = prev.find(item => String(item.id) === String(addressId));
-            if (selectedAddr) {
-                // Perform validation for the newly selected address
-                (async () => {
-                    const pincode = selectedAddr.pin || '';
-                    const area = selectedAddr.raw?.areaName || selectedAddr.raw?.pincodeAreaName || selectedAddr.raw?.area_name || 'N/A';
+        const selectedAddr = addresses.find(item => String(item.id) === String(addressId));
+        if (!selectedAddr) {
+            console.warn('⚠️ [ADDRESS] Selected address not found in local list:', addressId);
+            return;
+        }
 
-                    setShowAddressModal(false);
+        // 1. Update the local address highlights (Pure state update)
+        setHasAlertedServiceability(false); // Reset so new address can show its own alert if bad
+        setAddresses(prev => prev.map(item => ({
+            ...item,
+            selected: String(item.id) === String(addressId)
+        })));
 
-                    try {
-                        const res = await getCartSummaryApi(undefined, undefined, cartVersionRef.current, cartIdRef.current, selectedAddr.pincodeAreaId);
-                        console.log('👆 [ADDRESS] Validation Summary:', JSON.stringify(res, null, 2));
+        // 2. Performance side-effects (Validation or Refresh)
+        if (showConfirmationPopup) {
+            const pincode = selectedAddr.pin || '';
+            const area = selectedAddr.raw?.areaName || selectedAddr.raw?.pincodeAreaName || selectedAddr.raw?.area_name || 'N/A';
 
-                        // Small delay to allow AddressModal to close smoothly on Native
-                        setTimeout(() => {
-                            if (res?.success === false && (res?.status === 'STORE_NOT_FOUND' || res?.status === 'STORE_CLOSED_FOR_DELIVERY')) {
-                                setAddressConfirmationData({
-                                    pincode,
-                                    areaName: area,
-                                    isServiceable: false,
-                                    unavailableMessage: res?.message || (res?.status === 'STORE_NOT_FOUND' ? "No store for the selected pincode " : "Store is currently closed for delivery")
-                                });
-                            } else {
-                                setAddressConfirmationData({ pincode, areaName: area, isServiceable: true });
-                                refreshCart(); // Trigger full cart refresh for the new address
-                            }
-                        }, 400);
-                    } catch (err) {
-                        console.error('Validation error in onSelectAddress:', err);
-                        const errorMsg = typeof err === 'string' ? err : (err?.message || err?.Message || "");
+            setShowAddressModal(false);
 
-                        setTimeout(() => {
-                            if (errorMsg.toLowerCase().includes('no store') ||
-                                errorMsg.toLowerCase().includes('not found') ||
-                                errorMsg.toLowerCase().includes('closed') ||
-                                errorMsg.toLowerCase().includes('pincode area')) {
-                                setAddressConfirmationData({
-                                    pincode,
-                                    areaName: area,
-                                    isServiceable: false,
-                                    unavailableMessage: errorMsg || "Delivery currently not available in this area."
-                                });
-                            } else {
-                                setAddressConfirmationData({ pincode, areaName: area, isServiceable: true });
-                                refreshCart();
-                            }
-                        }, 400);
+            try {
+                // Fetch summary for the NEW pincode to check server-side serviceability
+                let res = await getCartSummaryApi(undefined, undefined, cartVersionRef.current, cartIdRef.current, selectedAddr.pincodeAreaId);
+                console.log('👆 [ADDRESS] Selection Validation Response:', JSON.stringify(res, null, 2));
+
+                // Handle concurrency failure (cart was modified elsewhere)
+                if (res?.success === false && String(res?.message).toLowerCase().includes('modified')) {
+                    console.log('🔄 [ADDRESS] Concurrency failure during validation. Retrying with fresh load...');
+                    const loadRes = await loadCart();
+                    res = await getCartSummaryApi(undefined, undefined, loadRes?.cartVersion, cartIdRef.current, selectedAddr.pincodeAreaId);
+                }
+
+                const isUnserviceable = (res?.success === false || res?.status === 'STORE_NOT_FOUND' || res?.status === 'STORE_CLOSED_FOR_DELIVERY');
+
+                // Small delay to allow AddressModal to close on Native before potentially showing AddressConfirmationModal
+                setTimeout(() => {
+                    if (isUnserviceable) {
+                        const msg = res?.message || "Delivery currently not available in this area.";
+                        setError(msg);
+                        setServiceabilityTrigger(true);
+                        setHasAlertedServiceability(true);
+                        setAddressConfirmationData({
+                            pincode,
+                            areaName: area,
+                            isServiceable: false,
+                            unavailableMessage: msg
+                        });
+                    } else {
+                        setError(null);
+                        setServiceabilityTrigger(false);
+                        setHasAlertedServiceability(false);
+                        setAddressConfirmationData({ pincode, areaName: area, isServiceable: true });
+                        // Trigger full cart items and summary refresh for the new address
+                        refreshCart(selectedAddr.pincodeAreaId);
                     }
-                })();
+                }, 400);
+            } catch (err) {
+                console.error('Validation error in onSelectAddress:', err);
+                const errorMsg = typeof err === 'string' ? err : (err?.message || "");
+                setTimeout(() => {
+                    setError(errorMsg);
+                    setServiceabilityTrigger(true);
+                    setHasAlertedServiceability(true);
+                    setAddressConfirmationData({
+                        pincode,
+                        areaName: area,
+                        isServiceable: false,
+                        unavailableMessage: errorMsg || "Failed to validate address. Please try again."
+                    });
+                }, 400);
             }
-            return prev.map(item => ({
-                ...item,
-                selected: String(item.id) === String(addressId)
-            }));
-        });
-    }, [refreshCart]);
+        } else {
+            refreshCart(selectedAddr.pincodeAreaId);
+        }
+    }, [addresses, refreshCart]);
     /* Note: getCartSummaryApi is imported at top of file */
 
     const onThreeDotsClicked = useCallback((addressId) => {
@@ -274,7 +317,7 @@ export const CartProvider = ({ children }) => {
     }, []);
 
     // ─── loadCart: fetches item list and returns cartVersion (bootstrap only) ───
-    const loadCart = useCallback(async () => {
+    const loadCart = useCallback(async (pincodeAreaIdOverride) => {
         if (loadRequestRef.current) {
             return loadRequestRef.current;
         }
@@ -282,7 +325,7 @@ export const CartProvider = ({ children }) => {
         setIsLoading(true);
         const promise = (async () => {
             try {
-                const response = await getCartApi();
+                const response = await getCartApi(pincodeAreaIdOverride);
                 console.log('🛒 [CART] API Response:', JSON.stringify(response, null, 2));
                 let fetchedCartVersion = null;
                 if (response && response.data) {
@@ -309,10 +352,24 @@ export const CartProvider = ({ children }) => {
                 } else {
                     setCartItems([]);
                 }
+
+                if (response && (response.status === 'STORE_NOT_FOUND' || response.status === 'STORE_CLOSED_FOR_DELIVERY')) {
+                    setError(response.message || 'Store not available for this area');
+                    if (!hasAlertedServiceability) {
+                        setServiceabilityTrigger(true);
+                        setHasAlertedServiceability(true);
+                    }
+                } else {
+                    setError(null);
+                    setServiceabilityTrigger(false);
+                    // Clear failed pincodes on success
+                    failedPincodesRef.current.clear();
+                }
                 return { success: true, cartVersion: fetchedCartVersion };
             } catch (error) {
                 console.error('🛒 [CART] Error loading cart:', error);
                 setCartItems([]);
+                setError(error?.message || error || 'Store not found for this area');
                 return { success: false, error };
             } finally {
                 setIsLoading(false);
@@ -342,7 +399,19 @@ export const CartProvider = ({ children }) => {
 
                 if (response && response.success && response.data) {
                     setCartSummary(response.data);
-                    setError(null);
+
+                    if (response.status === 'STORE_NOT_FOUND' || response.status === 'STORE_CLOSED_FOR_DELIVERY') {
+                        setError(response.message || 'Store not available for this area');
+                        if (!hasAlertedServiceability) {
+                            setServiceabilityTrigger(true);
+                            setHasAlertedServiceability(true);
+                        }
+                    } else {
+                        setError(null);
+                        setServiceabilityTrigger(false);
+                        failedPincodesRef.current.clear();
+                    }
+
                     if (response.data.cartVersion) {
                         updateCartVersion(response.data.cartVersion);
                         console.log('📊 [SUMMARY] Updated cartVersion to:', response.data.cartVersion);
@@ -355,6 +424,18 @@ export const CartProvider = ({ children }) => {
                 } else {
                     const errorMsg = response?.message || 'Failed to fetch summary';
                     const status = response?.status;
+
+                    if (errorMsg.toLowerCase().includes('cart not found') || status === 'CART_NOT_FOUND') {
+                        console.log('🔄 [SUMMARY] Cart not found/expired. Resetting local cart...');
+                        setCartId(null);
+                        cartIdRef.current = null;
+                        updateCartVersion(null);
+                        setCartItems([]);
+                        setCartSummary(null);
+                        // Trigger a fresh load to recover
+                        setTimeout(() => loadCart(), 100);
+                        return { success: false, error: 'Your cart session has expired. Refreshing...', status: 'CART_NOT_FOUND' };
+                    }
 
                     if (!isAutoReload && errorMsg.toLowerCase().includes('modified')) {
                         console.log('🔄 [SUMMARY] Cart modified error caught. Auto-reloading...');
@@ -373,6 +454,17 @@ export const CartProvider = ({ children }) => {
                     // but we still set the error state so the BillSection can show it or components can react
                     setCartSummary(null);
                     setError(errorMsg);
+
+                    if (status === 'STORE_NOT_FOUND' || status === 'STORE_CLOSED_FOR_DELIVERY' ||
+                        errorMsg.toLowerCase().includes('no store') ||
+                        errorMsg.toLowerCase().includes('not found') ||
+                        errorMsg.toLowerCase().includes('closed for delivery')) {
+                        if (!hasAlertedServiceability) {
+                            setServiceabilityTrigger(true);
+                            setHasAlertedServiceability(true);
+                        }
+                    }
+
                     return {
                         success: false,
                         error: errorMsg,
@@ -391,18 +483,28 @@ export const CartProvider = ({ children }) => {
         summaryRequestRef.current = promise;
         return promise;
     }, [updateCartVersion, loadCart]);
+    // ─── refreshCart: re-fetches items and summary ───
+    const refreshCart = useCallback(async (pincodeAreaIdOverride) => {
+        const selectedAddress = addresses.find(a => a.selected);
+        const pincodeAreaId = pincodeAreaIdOverride !== undefined ? pincodeAreaIdOverride : selectedAddress?.pincodeAreaId;
+        await loadCart(pincodeAreaId);
+        await getCartSummary('express', null, null, pincodeAreaId);
+    }, [loadCart, getCartSummary, addresses]);
 
-    // ─── Helper: after any mutation, reload list + recalculate summary ───
-    // Always uses the cartVersion from list API (freshest after mutation)
-    const refreshCart = useCallback(async () => {
-        const loadResult = await loadCart();
-        const listVersion = loadResult?.cartVersion;
-        // Pass the list API version to summary — summary will update the ref
-        await getCartSummary(undefined, undefined, listVersion);
-    }, [loadCart, getCartSummary]);
+    const handleStoreNotFound = useCallback(async () => {
+        if (!serviceabilityTrigger) return;
+        // The trigger informs the screen to show the AddressConfirmationModal
+        console.log('📍 [CART] Serviceability trigger activated');
+    }, [serviceabilityTrigger]);
+
+    useEffect(() => {
+        if (serviceabilityTrigger) {
+            handleStoreNotFound();
+        }
+    }, [serviceabilityTrigger, handleStoreNotFound]);
 
     // ─── addToCart ───
-    const addToCart = useCallback(async (item) => {
+    const addToCart = useCallback(async (item, pincodeAreaIdOverride = null) => {
         const productId = item.productId || item.id;
 
         console.log('➕ [ADD TO CART] Adding product:', {
@@ -440,31 +542,47 @@ export const CartProvider = ({ children }) => {
         };
 
         try {
-            const response = await addToCartApi(productId, 1);
+            const response = await addToCartApi(productId, 1, pincodeAreaIdOverride || profile?.pincode);
             console.log('➕ [ADD TO CART] API Response:', JSON.stringify(response, null, 2));
 
             if (response && response.success === false) {
-                if (response.status === 'INSUFFICIENT_STOCK' || response.message?.includes('stock')) {
-                    Toast.show('Requested qty is not available', Toast.LONG);
-                } else if (!response.message?.toLowerCase().includes('modified')) {
-                    Toast.show(response.message || 'Failed to add to cart', Toast.SHORT);
-                }
                 rollback();
+                const isStoreNotFound = error && (String(error).toLowerCase().includes('store not found') || error?.message?.toLowerCase().includes('store not found'));
+                if (response.status === 'INSUFFICIENT_STOCK' || response.message?.includes('stock')) {
+                    if (!isStoreNotFound) {
+                        Toast.show('Requested qty is not available', Toast.LONG);
+                    }
+                } else if (!response.message?.toLowerCase().includes('modified')) {
+                    if (!isStoreNotFound) {
+                        Toast.show(response.message || 'Failed to add to cart', Toast.SHORT);
+                    }
+                }
                 await refreshCart();
                 return;
             }
 
             // Toast.show('Item added to cart', Toast.SHORT);
-            await refreshCart();
+            await refreshCart(pincodeAreaIdOverride || profile?.pincode);
         } catch (error) {
             console.error('➕ [ADD TO CART] API Error:', error);
+            const errorMsg = typeof error === 'string' ? error : (error?.Message || error?.message || '');
+            const isStoreNotFound = error && (String(error).toLowerCase().includes('store not found') || error?.message?.toLowerCase().includes('store not found'));
+            const isStockError = errorMsg.toLowerCase().includes('stock') || errorMsg.toLowerCase().includes('available');
+
+            if (isStockError && !isStoreNotFound) {
+                Toast.show('Requested qty is not available', Toast.LONG);
+            } else if (errorMsg && !isStoreNotFound) {
+                // Generic error only if not store not found
+                // Toast.show(errorMsg, Toast.SHORT);
+            }
+
             rollback();
-            await refreshCart();
+            await refreshCart(pincodeAreaIdOverride || profile?.pincode);
         }
     }, [refreshCart]);
 
     // ─── removeFromCart ───
-    const removeFromCart = useCallback(async (identifier) => {
+    const removeFromCart = useCallback(async (identifier, pincodeAreaIdOverride = null) => {
         let removedItem = null;
         let cartItemId = identifier;
         const identifierStr = String(identifier);
@@ -498,20 +616,20 @@ export const CartProvider = ({ children }) => {
 
         try {
             const version = cartVersionRef.current;
-            const response = await removeFromCartApi(cartItemId, version, removedItem?.productId || removedItem?.id);
+            const response = await removeFromCartApi(cartItemId, version, removedItem?.productId || removedItem?.id, pincodeAreaIdOverride);
             console.log('Removed from cart API:', response);
-            await refreshCart();
+            await refreshCart(pincodeAreaIdOverride);
         } catch (error) {
             console.error('Error removing from cart API:', error);
             if (removedItem) {
                 setCartItems(prevItems => [...prevItems, removedItem]);
             }
-            await refreshCart();
+            await refreshCart(pincodeAreaIdOverride);
         }
     }, [cartItems, refreshCart]);
 
     // ─── updateCartItemQuantity ───
-    const updateCartItemQuantity = useCallback(async (cartItemId, quantity) => {
+    const updateCartItemQuantity = useCallback(async (cartItemId, quantity, pincodeAreaIdOverride = null) => {
         console.log('🔄 [UPDATE QTY] Updating quantity:', { cartItemId, newQuantity: quantity });
 
         if (quantity <= 0) {
@@ -536,15 +654,17 @@ export const CartProvider = ({ children }) => {
 
         try {
             const version = cartVersionRef.current;
-            const response = await updateCartItemApi(cartItemId, quantity, version);
+            const response = await updateCartItemApi(cartItemId, quantity, version, null, pincodeAreaIdOverride);
             console.log('🔄 [UPDATE QTY] API Response:', JSON.stringify(response, null, 2));
-            await refreshCart();
+            await refreshCart(pincodeAreaIdOverride);
         } catch (error) {
             console.error('🔄 [UPDATE QTY] API Error:', error);
 
             // Handle insufficient stock message from networkUtils throw or direct error object
             const errorMsg = typeof error === 'string' ? error : (error?.Message || error?.message || '');
-            if (errorMsg.toLowerCase().includes('stock') || errorMsg.toLowerCase().includes('available')) {
+            const isStoreNotFound = error && (String(error).toLowerCase().includes('store not found') || error?.message?.toLowerCase().includes('store not found'));
+
+            if ((errorMsg.toLowerCase().includes('stock') || errorMsg.toLowerCase().includes('available')) && !isStoreNotFound) {
                 Toast.show('Requested qty is not available', Toast.LONG);
             }
 
@@ -553,7 +673,7 @@ export const CartProvider = ({ children }) => {
                     String(item.cartItemId || item.productId || item.id) === String(cartItemId) ? { ...item, quantity: oldQuantity } : item
                 )
             );
-            await refreshCart();
+            await refreshCart(pincodeAreaIdOverride);
         }
     }, [removeFromCart, refreshCart]);
 
@@ -784,8 +904,10 @@ export const CartProvider = ({ children }) => {
         addressConfirmationData,
         setAddressConfirmationData,
         showConfirmation,
-        showStatus
-    }), [cartItems, cartCount, cartTotal, cartSummary, isLoading, addToCart, removeFromCart, updateCartItemQuantity, loadCart, getCartSummary, clearCart, applyCoupon, removeCoupon, applyGiftCard, removeGiftCard, applyBCoins, removeBCoins, addresses, isLoadingAddresses, fetchAddresses, onSelectAddress, onThreeDotsClicked, onDeleteClicked, onCloseThreeDots, clearSelectedAddress, showAddressModal, setShowAddressModal, addressConfirmationData, setAddressConfirmationData, showConfirmation, showStatus]);
+        showStatus,
+        serviceabilityTrigger,
+        setServiceabilityTrigger
+    }), [cartItems, cartCount, cartTotal, cartSummary, isLoading, addToCart, removeFromCart, updateCartItemQuantity, loadCart, getCartSummary, clearCart, applyCoupon, removeCoupon, applyGiftCard, removeGiftCard, applyBCoins, removeBCoins, addresses, isLoadingAddresses, fetchAddresses, onSelectAddress, onThreeDotsClicked, onDeleteClicked, onCloseThreeDots, clearSelectedAddress, showAddressModal, setShowAddressModal, addressConfirmationData, setAddressConfirmationData, showConfirmation, showStatus, serviceabilityTrigger, setServiceabilityTrigger]);
 
     return (
         <CartContext.Provider value={value}>

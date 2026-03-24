@@ -15,7 +15,7 @@ const CartProductCard = (props) => {
     const { updateCartItemQuantity, removeFromCart } = useCart();
     const { isInWishlist, toggleWishlist } = useWishlist();
 
-    const { item, disableManage } = props;
+    const { item, disableManage, pincodeAreaIdOverride } = props;
     const [imageError, setImageError] = useState(false);
     const [quantity, setQuantity] = useState(item.addedQty || item.quantity || 1);
     const [isRemovalModalVisible, setIsRemovalModalVisible] = useState(false);
@@ -36,14 +36,14 @@ const CartProductCard = (props) => {
     const weight = item.weight || item.unitValue || '1 pcs';
 
     // Determine if product is sold out
-    const isSoldOut = !isAvailable || item.unavailable === 1 || item.insufficientStock === 1 || item.notAvailableInStore === 1;
+    const isSoldOut = item.unavailable === 1 || item.insufficientStock === 1 || item.notAvailableInStore === 1;
 
     const isLiked = isInWishlist(productId);
 
     // Get image source
     const imageSource = useMemo(() => {
         if (imageError || !featuredImage) {
-            return require('../assets/images/categories/dfn.png');
+            return require('../assets/images/noimage.png');
         }
         if (typeof featuredImage === 'string' && featuredImage.startsWith('http')) {
             return { uri: featuredImage };
@@ -55,7 +55,7 @@ const CartProductCard = (props) => {
     const handleDecrease = () => {
         if (quantity > 1) {
             setQuantity(quantity - 1);
-            updateCartItemQuantity(cartItemId, quantity - 1);
+            updateCartItemQuantity(cartItemId, quantity - 1, pincodeAreaIdOverride);
         } else {
             setIsRemovalModalVisible(true);
         }
@@ -63,7 +63,7 @@ const CartProductCard = (props) => {
 
     const handleIncrease = () => {
         setQuantity(quantity + 1);
-        updateCartItemQuantity(cartItemId, quantity + 1);
+        updateCartItemQuantity(cartItemId, quantity + 1, pincodeAreaIdOverride);
     };
 
     const handleDelete = () => {
@@ -135,7 +135,7 @@ const CartProductCard = (props) => {
                 </View>
 
                 <View style={styles.productCardInnerViewTwo}>
-                    <Text style={styles.productNameText} numberOfLines={3}>{productName}</Text>
+                    <Text style={styles.productNameText} numberOfLines={2} ellipsizeMode="tail">{productName}</Text>
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingRight: wp('2%') }}>
                         <Text style={styles.productCount}>x {quantity} Qty</Text>
 
@@ -180,7 +180,7 @@ const CartProductCard = (props) => {
             <ConfirmationModal
                 visible={isRemovalModalVisible}
                 onClose={() => setIsRemovalModalVisible(false)}
-                onConfirm={() => removeFromCart(cartItemId)}
+                onConfirm={() => removeFromCart(cartItemId, pincodeAreaIdOverride)}
                 title="Remove Item"
                 message={`Are you sure you want to remove "${productName}" from the cart?`}
             />
@@ -228,7 +228,7 @@ const styles = StyleSheet.create({
         borderBottomLeftRadius: wp('2.3%'),
         justifyContent: 'center',
         alignItems: 'center',
-        bottom: hp('2.5%')
+        bottom: hp('2%')
     },
     soldOutText: {
         fontFamily: FONTS.poppins.bold,
@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
     removeToPlaceorderText: {
         color: '#FFFFFF',
         fontFamily: FONTS.poppins.semiBold,
-        fontSize: wp('4.18%'),
+        fontSize: wp('3.18%'),
         marginTop: hp('0.8%')
     },
     productCardInnerView: {

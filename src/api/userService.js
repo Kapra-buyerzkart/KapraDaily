@@ -120,3 +120,15 @@ export const requestProductApi = async (payload) => {
 export const getBCoinValueChangesApi = async () => {
     return get('general/bcoinvaluechanges');
 };
+
+/**
+ * Checks for app updates.
+ * @param {string} versioncode The current version code.
+ * @param {string} platform The platform (ANDROID/IOS).
+ * @param {string} apptype The app type (customer).
+ * @returns {Promise<Object>} The API response.
+ */
+export const getAppUpdateCheckApi = async (versioncode, platform, apptype = 'customer') => {
+    return get('general/appupdatecheck', { params: { versioncode, platform, apptype } });
+};
+

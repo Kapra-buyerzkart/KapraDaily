@@ -91,11 +91,6 @@ const ProductListScreen = () => {
                 />
             ) : (
                 <>
-                    {isLoading ? (
-                        <View style={styles.loaderContainer}>
-                            <ActivityIndicator size="large" color="#F25000" />
-                        </View>
-                    ) : (
                         <FlatList
                             data={displayProducts}
                             keyExtractor={(item) => (item.productId || item.id || Math.random()).toString()}
@@ -118,7 +113,6 @@ const ProductListScreen = () => {
                                 </View>
                             }
                         />
-                    )}
                 </>
             )}
 

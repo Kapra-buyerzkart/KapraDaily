@@ -61,8 +61,8 @@ const getPincodeAreaId = async () => {
 };
 
 
-export const addToCartApi = async (productId, quantity = 1) => {
-    const pincodeAreaId = await getPincodeAreaId();
+export const addToCartApi = async (productId, quantity = 1, pincodeAreaIdOverride = null) => {
+    const pincodeAreaId = pincodeAreaIdOverride || await getPincodeAreaId();
 
     const payload = {
         pincodeAreaId,
@@ -74,8 +74,8 @@ export const addToCartApi = async (productId, quantity = 1) => {
 };
 
 
-export const updateCartItemApi = async (cartItemId, quantity, cartVersion, productId = null) => {
-    const pincodeAreaId = await getPincodeAreaId();
+export const updateCartItemApi = async (cartItemId, quantity, cartVersion, productId = null, pincodeAreaIdOverride = null) => {
+    const pincodeAreaId = pincodeAreaIdOverride || await getPincodeAreaId();
 
     const payload = {
         pincodeAreaId,
@@ -90,8 +90,8 @@ export const updateCartItemApi = async (cartItemId, quantity, cartVersion, produ
 };
 
 
-export const removeFromCartApi = async (cartItemId, cartVersion, productId) => {
-    const pincodeAreaId = await getPincodeAreaId();
+export const removeFromCartApi = async (cartItemId, cartVersion, productId, pincodeAreaIdOverride = null) => {
+    const pincodeAreaId = pincodeAreaIdOverride || await getPincodeAreaId();
 
     const payload = {
         quantity: 0,

@@ -334,35 +334,23 @@ const AddLocationScreen = () => {
                         <Ionicons name="locate" size={wp('6%')} color="#F25000" />
                     </TouchableOpacity>
                 </View>
-                <View style={{ zIndex: 1, elevation: 5 }}>
+                <View style={{ zIndex: 999, elevation: 10 }}>
                     <View style={[styles.searchAbsoluteContainer, { zIndex: 999 }]}>
                         <GooglePlacesAutocomplete
                             ref={googleAutocompleteRef}
+                            onFail={error => Alert.alert('Google Places Error', String(error))}
                             placeholder="Search Location"
                             textInputProps={{
                                 placeholderTextColor: '#000000',
                                 color: '#000000',
-                                returnKeyType: 'search',
-                                value: searchText,
-                                onChangeText: (text) => setSearchText(text),
+                                returnKeyType: 'search'
                             }}
-                            renderRightButton={() => (
-                                searchText.length > 0 ? (
-                                    <TouchableOpacity
-                                        onPress={() => {
-                                            setSearchText('');
-                                            googleAutocompleteRef.current?.setAddressText('');
-                                        }}
-                                        style={styles.clearIconContainer}
-                                    >
-                                        <Ionicons name="close-circle" size={wp('5.5%')} color="#CCCCCC" />
-                                    </TouchableOpacity>
-                                ) : null
-                            )}
                             fetchDetails={true}
                             onPress={(data, details = null) => {
                                 if (details) {
-                                    setSearchText(data.description || details.formatted_address || '');
+                                    const description = data.description || details.formatted_address || '';
+                                    setSearchText(description);
+                                    googleAutocompleteRef.current?.setAddressText(description);
                                     const lat = details.geometry.location.lat;
                                     const lng = details.geometry.location.lng;
                                     setRegion(prev => ({ ...prev, latitude: lat, longitude: lng }));
@@ -376,12 +364,12 @@ const AddLocationScreen = () => {
                                 components: 'country:in',
                             }}
                             styles={{
-                                container: { flex: 1 },
+                                container: { flex: 0 },
                                 textInputContainer: {
-                                    // backgroundColor: '#FFFFFF',
-                                    // borderRadius: wp('2.32%'),
-                                    // borderWidth: 1,
-                                    // borderColor: '#DADADA',
+                                    backgroundColor: '#FFFFFF',
+                                    borderRadius: wp('2.32%'),
+                                    borderWidth: 1,
+                                    borderColor: '#DADADA',
                                     height: hp('5.36%'),
                                     paddingHorizontal: wp('2%'),
                                     flexDirection: 'row',
@@ -441,7 +429,6 @@ const AddLocationScreen = () => {
                     style={{ flex: 1 }}
                     behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 >
-                    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                         <ScrollView
                             style={styles.detailedAddressContainer}
                             contentContainerStyle={{ paddingBottom: hp('10%') }}
@@ -631,7 +618,6 @@ const AddLocationScreen = () => {
                                 </TouchableOpacity>
                             </LinearGradient>
                         </ScrollView>
-                    </TouchableWithoutFeedback>
                 </KeyboardAvoidingView>
             </SafeAreaView>
         </>

@@ -28,7 +28,7 @@ const SelectedProducts = () => {
         if (item.image) {
             return item.image; // Local require() image
         }
-        return require('../assets/images/categories/dfn.png'); // Fallback
+        return require('../assets/images/noimage.png');// Fallback
     };
 
     return (

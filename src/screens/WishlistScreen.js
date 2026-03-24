@@ -88,7 +88,7 @@ export default function WishlistScreen() {
                 source={require('../assets/images/wishlistnomore.png')}
                 style={styles.footerImage}
             />
-            <Text style={styles.footerText}>NO MORE</Text>
+            <Text style={styles.footerText}>NO MORE ITEMS</Text>
         </View>
     );
     const renderNoitem = () => (
@@ -247,7 +247,7 @@ const styles = StyleSheet.create({
     },
     footerText: {
         color: 'rgba(242, 80, 0, 0.3)',
-        fontSize: 26,
+        fontSize: 20,
         fontWeight: '900',
         fontFamily: FONTS.poppins.regular,
         //  marginTop: hp('1%'),

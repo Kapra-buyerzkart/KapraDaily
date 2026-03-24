@@ -436,13 +436,15 @@ const OtpScreen = () => {
                         </View>
 
                         <View style={styles.pwdResendTimeContainer}>
-                            <TouchableOpacity style={type === 'reset' ? {
-                                height: 0
-                            } : undefined} onPress={() => navigation.navigate('LoginPwdScreen', {
-                                phone
-                            })}>
-                                <Text style={styles.usePwdText}>Use password</Text>
-                            </TouchableOpacity>
+                            {type === 'login' ? (
+                                <TouchableOpacity onPress={() => navigation.navigate('LoginPwdScreen', {
+                                    phone
+                                })}>
+                                    <Text style={styles.usePwdText}>Use password</Text>
+                                </TouchableOpacity>
+                            ) : (
+                                <View />
+                            )}
                             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                 {isResendDisabled ? (
                                     <>

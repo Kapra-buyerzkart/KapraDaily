@@ -40,7 +40,7 @@ const SavedAddressScreen = () => {
             if (item.selected) {
                 navigation.navigate("AddLocationScreen", { address: item.raw });
             } else {
-                onSelectAddress(item.id);
+                onSelectAddress(item.id, false);
             }
         };
 

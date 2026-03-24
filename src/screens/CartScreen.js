@@ -11,7 +11,7 @@ import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-nat
 import { FONTS } from '../styles/typography'
 import { useNavigation, useFocusEffect } from '@react-navigation/native'
 import CartProductCard from '../components/CartProductCard'
-import OfferCard from '../components/OfferCard' // We might not need this if we build custom ones
+import OfferCard from '../components/OfferCard'
 import LinearGradient from 'react-native-linear-gradient'
 import { useCartScreen } from '../hooks/useCartScreen'
 import { CartContext } from '../context/CartContext'
@@ -37,7 +37,7 @@ import { AppContext } from '../context/appContext'
 
 const CartScreen = () => {
     const navigation = useNavigation()
-    const { profile, isStoreUnavailable, storeUnavailableData } = useContext(AppContext)
+    const { profile, isStoreUnavailable, storeUnavailableData, generalSettings } = useContext(AppContext)
     const {
         // Cart
         billCalculations,
@@ -88,7 +88,9 @@ const CartScreen = () => {
         onCloseThreeDots,
         addressConfirmationData,
         setAddressConfirmationData,
-        refreshCart
+        refreshCart,
+        serviceabilityTrigger,
+        setServiceabilityTrigger
     } = useContext(CartContext);
 
     const [isClearCartModalVisible, setIsClearCartModalVisible] = useState(false);
@@ -231,7 +233,7 @@ const CartScreen = () => {
             showLoader(true);
             if (!cartSummary?.cartId && !cartItems?.[0]?.cartId) {
                 console.error('❌ [ORDER] No cartId found in summary or items');
-                throw new Error('Cart not found. Please refresh and try again.');
+                throw new Error('Your cart session has expired. We are refreshing it for you.');
             }
 
             const createPayload = {
@@ -373,9 +375,12 @@ const CartScreen = () => {
             }
         } catch (error) {
             showLoader(false);
+            const errorMsg = error.message || String(error);
+            const isSessionExpiry = errorMsg.toLowerCase().includes('expired') || errorMsg.toLowerCase().includes('not found');
+
             setStatusType('error');
-            setStatusTitle('Payment Error');
-            setStatusMessage(error.message || 'Failed to initialize payment');
+            setStatusTitle(isSessionExpiry ? 'Session Expired' : 'Payment Error');
+            setStatusMessage(errorMsg || 'Failed to initialize payment');
             setStatusModalVisible(true);
         }
     };
@@ -637,6 +642,8 @@ const CartScreen = () => {
 
 
     const renderBottomBar = () => {
+        const hasSoldOutItems = cartItems.some(item => item.unavailable === 1 || item.insufficientStock === 1 || item.notAvailableInStore === 1);
+
         return (
             <View style={styles.footer}>
                 <View style={styles.priceContainer}>
@@ -644,25 +651,29 @@ const CartScreen = () => {
                     <Text style={styles.totalPriceText}>₹{billCalculations.toPay?.toFixed(2)}</Text>
                 </View>
 
-                <TouchableOpacity activeOpacity={0.9} style={styles.payBtn} onPress={handleConfirmOrder}>
-                    <Text style={styles.payBtnPrice}>Place Order</Text>
-                    <AntDesign name="caretright" size={wp('3.5%')} color="#FFF" style={{ marginLeft: wp('2%') }} />
+                <TouchableOpacity
+                    activeOpacity={0.9}
+                    style={[styles.payBtn, (hasSoldOutItems || isCartStoreNotFound) && { backgroundColor: '#CCCCCC' }]}
+                    onPress={handleConfirmOrder}
+                    disabled={hasSoldOutItems || isCartStoreNotFound}
+                >
+                    <Text style={styles.payBtnPrice}>
+                        {hasSoldOutItems ? 'Remove Sold Out' : 'Place Order'}
+                    </Text>
+                    {(!hasSoldOutItems && !isCartStoreNotFound) && <AntDesign name="caretright" size={wp('3.5%')} color="#FFF" style={{ marginLeft: wp('2%') }} />}
                 </TouchableOpacity>
             </View>
         );
     };
 
-    if (isStoreUnavailable) {
-        return (
-            <SafeAreaView style={styles.mainContainer} edges={['top']}>
-                <StoreUnavailable
-                    image={storeUnavailableData?.image}
-                    text={storeUnavailableData?.message}
-                    onChangeLocation={() => setShowAddressModal(true)}
-                />
-            </SafeAreaView>
-        );
-    }
+    const isCartStoreNotFound = serviceabilityTrigger || (cartError && (
+        String(cartError).toLowerCase().includes('store not found') ||
+        String(cartError).toLowerCase().includes('closed for delivery') ||
+        String(cartError).toLowerCase().includes('no store') ||
+        String(cartError).toLowerCase().includes('not available')
+    ));
+
+
 
     if (cartItems.length === 0 && !isFinalizingOrder) {
         return <SafeAreaView style={styles.mainContainer} edges={['top']}><CartEmptyComponent /></SafeAreaView>;
@@ -696,7 +707,13 @@ const CartScreen = () => {
 
                 {/* Items */}
                 <View style={styles.productList}>
-                    {cartItems.map((item, idx) => <CartProductCard key={idx} item={item} />)}
+                    {cartItems.map((item, idx) => (
+                        <CartProductCard
+                            key={item.cartItemId || item.productId || idx}
+                            item={item}
+                            pincodeAreaIdOverride={selectedAddress?.pincodeAreaId}
+                        />
+                    ))}
                 </View>
 
                 {/* Summary Row */}
@@ -729,7 +746,7 @@ const CartScreen = () => {
                 visible={statusModalVisible}
                 onClose={() => {
                     setStatusModalVisible(false);
-                    if (statusTitle === 'Price/Stock Changed') {
+                    if (statusTitle === 'Price/Stock Changed' || statusTitle === 'Session Expired') {
                         onRefresh();
                     }
                 }}
@@ -775,22 +792,27 @@ const CartScreen = () => {
                 message="Are you sure you want to remove all items?"
             />
             <AddressConfirmationModal
-                visible={!!addressConfirmationData}
-                onClose={() => setAddressConfirmationData(null)}
-                pincode={addressConfirmationData?.pincode}
-                areaName={addressConfirmationData?.areaName}
-                isServiceable={addressConfirmationData?.isServiceable !== false}
-                unavailableMessage={addressConfirmationData?.unavailableMessage}
+                visible={!!addressConfirmationData || serviceabilityTrigger}
+                onClose={() => {
+                    setAddressConfirmationData(null);
+                    setServiceabilityTrigger(false);
+                }}
+                pincode={addressConfirmationData?.pincode || addresses.find(a => a.selected)?.pin}
+                areaName={addressConfirmationData?.areaName || addresses.find(a => a.selected)?.areaName || addresses.find(a => a.selected)?.raw?.areaName}
+                isServiceable={addressConfirmationData ? addressConfirmationData.isServiceable !== false : false}
+                unavailableMessage={addressConfirmationData?.unavailableMessage || cartError}
                 isPlacingOrder={addressConfirmationData?.isPlacingOrder}
                 onConfirm={() => {
                     if (addressConfirmationData?.isPlacingOrder && addressConfirmationData?.isServiceable) {
                         submitOrder();
                     } else {
                         setAddressConfirmationData(null);
+                        setServiceabilityTrigger(false);
                     }
                 }}
                 onChangeAddress={() => {
                     setAddressConfirmationData(null);
+                    setServiceabilityTrigger(false);
                     setShowAddressModal(true);
                 }}
             />
@@ -1114,7 +1136,7 @@ const styles = StyleSheet.create({
     },
     payBtnPrice: {
         fontFamily: FONTS.poppins.bold,
-        fontSize: wp('4.5%'),
+        fontSize: wp('3.8%'),
         color: '#FFF',
     },
     paymentPicker: {
