@@ -7,10 +7,12 @@ import { useNavigation } from '@react-navigation/native';
 import { FONTS } from '../styles/typography';
 import { useCart } from '../context/CartContext';
 import CONFIG from '../globals/config';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const SelectedProducts = () => {
     const navigation = useNavigation();
     const { cartItems } = useCart();
+    const insets = useSafeAreaInsets();
 
     if (!cartItems || cartItems.length === 0) {
         return null;
@@ -34,7 +36,7 @@ const SelectedProducts = () => {
     return (
         <TouchableOpacity
             onPress={() => navigation.navigate("CartScreen")}
-            style={styles.mainContainer}>
+            style={[styles.mainContainer, { marginBottom: insets.bottom > 0 ? insets.bottom : hp("1%") }]}>
             <LinearGradient colors={["#F25000", "#FF7B3A", "#F25000"]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
@@ -45,6 +47,7 @@ const SelectedProducts = () => {
                         <Image
                             key={item.productId || item.id || index}
                             source={getImageSource(item)}
+                            resizeMode="contain"
                             style={[
                                 styles.productImage,
                                 {
@@ -83,7 +86,7 @@ const styles = StyleSheet.create({
         borderRadius: wp("8%"),
         borderWidth: 1,
         borderColor: "#F25000",
-        // backgroundColor: "#fff",
+        backgroundColor: "#fff",
     },
     gradientStyle: {
         width: wp("49%"),

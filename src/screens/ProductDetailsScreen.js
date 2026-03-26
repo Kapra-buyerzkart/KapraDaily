@@ -285,7 +285,7 @@ const ProductDetailsScreen = () => {
                                         {discountPercentage > 0 && <Text style={styles.discountText}>{Math.round(discountPercentage) || ((unitPrice - specialPrice) / unitPrice * 100)}% OFF</Text>}
                                         <View style={styles.priceRow}>
                                             <Text style={styles.currentPrice}>₹{specialPrice}</Text>
-                                            {unitPrice && unitPrice !== specialPrice && (
+                                            {!!unitPrice && Number(unitPrice) > Number(specialPrice) && (
                                                 <Text style={styles.originalPrice}>₹{unitPrice}</Text>
                                             )}
                                         </View>

@@ -236,9 +236,11 @@ const styles = StyleSheet.create({
         right: 0,
     },
     footerContainer: {
+        width: '100%',
         alignItems: 'center',
         marginTop: hp('2%'),
         paddingBottom: hp('10%'),
+        justifyContent: 'center'
     },
     footerImage: {
         width: wp('20%'),
@@ -250,6 +252,7 @@ const styles = StyleSheet.create({
         fontSize: 20,
         fontWeight: '900',
         fontFamily: FONTS.poppins.regular,
+        textAlign: 'center',
         //  marginTop: hp('1%'),
     }
 })

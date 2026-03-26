@@ -579,51 +579,28 @@ const HomeScreen = () => {
         );
     };
 
-
-    const FruitCard = ({ item }) => {
+    const FruitCard = ({ item, onPress }) => {
         const name = item.name || item.bannerName || "";
-        const nameParts = name.split(" ") || [];
-        const firstLine = nameParts[0] || "";
-        const secondLine = nameParts.slice(1).join(" ");
         const imageSource = item.uri || (item.imageUrl ? { uri: `${CONFIG.image_base_url}${item.imageUrl}` } : require("../assets/images/mango_banner.png"));
         return (
-            <ImageBackground source={imageSource} style={styles.fruitsImageBackground}
-                imageStyle={{
-                    borderRadius: wp("4.65%"),
-                }}>
-                <View style={styles.fruitsImageView}>
+            <TouchableOpacity activeOpacity={0.9} onPress={onPress}>
+                <ImageBackground
+                    source={imageSource}
+                    style={styles.fruitsImageBackground}
+                    imageStyle={{
+                        borderRadius: wp("4.65%"),
+                        resizeMode: "cover",
+                    }}
+                >
+                    {/* <View style={styles.fruitsImageView}> */}
                     {/* <View>
-                        <Text style={styles.fruitsNameText}>{firstLine}{"\n"}{secondLine}</Text>
+                        <Text style={styles.fruitsNameText}>{name}</Text>
                     </View> */}
-                    <View style={{
-                        // backgroundColor: "green",
-                        // alignItems: "flex-start"
-                    }}>
-                        {/* <View>
-                            <Text style={styles.fruitsOfferText}>{item.offer}% OFF</Text>
-                        </View> */}
-                        {/* <View style={styles.fruitsInnerview}>
-                            <View style={styles.fruitsInnerviewTwo}>
-                                <MaterialIcons name={'currency-rupee'} color={'#FFFFFF'} size={wp("5.12%")} style={styles.fruitsRupeeIcon} />
-                                <Text style={styles.fruitsPriceText}>{item.price}</Text>
-                            </View>
-                            <View style={styles.fruitsInnerviewThree}>
-                                <MaterialIcons name={'currency-rupee'} color={'#FFFFFF'} size={wp("2.79%")} style={styles.fruitsRupeeIcon} />
-                                <Text style={styles.fruitsPriceTextTwo}>{item.price}</Text>
-                            </View>
-                        </View> */}
-                    </View>
-                </View>
-                <View style={styles.addButtonContainer}>
-                    <TouchableOpacity
-                        style={styles.addButtonView}
-                    >
-                        <Text style={styles.addText}>ADD</Text>
-                    </TouchableOpacity>
-                </View>
-            </ImageBackground>
-        )
-    }
+                    {/* </View> */}
+                </ImageBackground>
+            </TouchableOpacity>
+        );
+    };
 
     const CurvedSection = ({ children }) => {
         if (!SvgAvailable) return <View style={[styles.curvedSectionView, { backgroundColor: '#FFC7AC' }]}>{children}</View>;
@@ -668,13 +645,25 @@ const HomeScreen = () => {
 
 
     const handleBannerPress = (banner) => {
+        if (!banner) return;
         console.log('Banner Pressed:', banner);
-        if (banner.linkType === 'Product') {
-            navigation.navigate('ProductDetailsScreen', { productId: banner.linkValue });
-        } else if (banner.linkType === 'Category') {
+
+        const linkType = (banner.linkType || banner.LinkType || '').toLowerCase();
+        const linkValue = banner.linkValue || banner.LinkValue;
+        const linkName = banner.linkName || banner.LinkName || banner.bannerName || banner.BannerName || banner.title || '';
+
+        if (linkType === 'product') {
+            navigation.navigate('ProductDetailsScreen', { productId: linkValue });
+        } else if (linkType === 'category') {
+            let actualCatName = '';
+            if (categories && categories.length > 0) {
+                const foundCat = categories.find(c => String(c.catId || c.id) === String(linkValue));
+                if (foundCat) actualCatName = foundCat.catName || foundCat.name;
+            }
+
             navigation.navigate('SearchScreen', {
-                catId: banner.linkValue,
-                catName: banner.linkName || banner.title || 'Category'
+                catId: linkValue,
+                catName: actualCatName || 'Category'
             });
         }
     };
@@ -735,7 +724,8 @@ const HomeScreen = () => {
                         source={topSectionBanner[0].uri}
                         style={{
                             width: wp('100%'),
-                            height: hp('16%'),
+                            paddingTop: hp('0.1%'),
+                            paddingBottom: hp('1%'),
                         }}
                         imageStyle={{
                             resizeMode: 'cover',
@@ -998,6 +988,18 @@ const HomeScreen = () => {
                             </View>
                         )}
 
+                        {/* {midBannerBottom && midBannerBottom.length > 0 && (
+                            <View style={{ marginVertical: hp('1%'), marginBottom: hp('2%') }}>
+                                <PlacementBannerCarousel
+                                    banners={midBannerBottom}
+                                    onBannerPress={handleBannerPress}
+                                    style={{ height: hp('22%') }}
+                                    showDots={false}
+                                    fullWidth={false}
+                                />
+                            </View>
+                        )} */}
+
                         {isHomeLoading && secondBlockItems.length === 0 ? (
                             <ProductBlockShimmer />
                         ) : shouldShowSecondBlock && (
@@ -1078,35 +1080,43 @@ const HomeScreen = () => {
                         {isHomeLoading && fruits.length === 0 ? (
                             <SeasonalFruitsShimmer />
                         ) : fruits?.length > 0 && (
-                            <LinearGradient
-                                colors={['rgba(255, 123, 58, 0.1)', 'rgba(255, 255, 255, 0.1)']}
-                                start={{ x: 0.2, y: 0 }}
-                                end={{ x: 0.8, y: 1 }}
-                                locations={[0.036, 0.354]}
-                                style={styles.fruitsGradientContainer}
-                            >
-                                <View style={styles.fruitsContainer}>
-                                    <View style={styles.fruitsHeaderView}>
-                                        <Text style={styles.fruitsHeaderText}>Seasonal fruits</Text>
-                                        <TouchableOpacity style={styles.viewAllContainer}>
-                                            {/* <Text style={styles.viewAllText}>View All</Text>
-                                            <MaterialIcons name={"arrow-forward-ios"} color={"#FF7B3A"} size={wp("3.3%")} style={styles.viewAllRightArrowIcon} /> */}
-                                        </TouchableOpacity>
-                                    </View>
-                                    <FlatList
-                                        // style={styles.fruitsFlatlist}
-                                        data={fruits}
-                                        keyExtractor={(item, index) => (item.id || item.bannerId || index).toString()}
-                                        horizontal={true}
-                                        renderItem={({ item }) => <FruitCard item={item} />}
-                                        showsHorizontalScrollIndicator={false}
-                                        contentContainerStyle={{
-                                            marginLeft: wp("5%"),
-                                            paddingBottom: hp('2%')
-                                        }}
-                                    />
-                                </View>
-                            </LinearGradient>
+                            <View style={{ marginVertical: hp('0.5%'), marginBottom: hp('0.2%') }}>
+                                <PlacementBannerCarousel
+                                    banners={fruits}
+                                    onBannerPress={handleBannerPress}
+                                    style={{ height: hp('22%') }}
+                                    showDots={false}
+                                    fullWidth={false}
+                                />
+                            </View>
+                            // <LinearGradient
+                            //     colors={['rgba(255, 123, 58, 0.1)', 'rgba(255, 255, 255, 0.1)']}
+                            //     start={{ x: 0.2, y: 0 }}
+                            //     end={{ x: 0.8, y: 1 }}
+                            //     locations={[0.036, 0.354]}
+                            //     style={styles.fruitsGradientContainer}
+                            // >
+                            //     <View style={styles.fruitsContainer}>
+                            //         <View style={styles.fruitsHeaderView}>
+                            //             {/* <Text style={styles.fruitsHeaderText}>{dashboardData?.fruits?.title || "Seasonal Fruits"}</Text> */}
+                            //             <TouchableOpacity style={styles.viewAllContainer}>
+                            //                 {/* <Text style={styles.viewAllText}>View All</Text>
+                            //                 <MaterialIcons name={"arrow-forward-ios"} color={"#FF7B3A"} size={wp("3.3%")} style={styles.viewAllRightArrowIcon} /> */}
+                            //             </TouchableOpacity>
+                            //         </View>
+                            //         <FlatList
+                            //             data={fruits}
+                            //             keyExtractor={(item, index) => (item.id || item.bannerId || index).toString()}
+                            //             horizontal={true}
+                            //             renderItem={({ item }) => <FruitCard item={item} onPress={() => handleBannerPress(item)} />}
+                            //             showsHorizontalScrollIndicator={false}
+                            //             contentContainerStyle={{
+                            //                 paddingHorizontal: wp("5%"),
+                            //                 paddingBottom: hp('2%')
+                            //             }}
+                            //         />
+                            //     </View>
+                            // </LinearGradient>
                         )}
                         {isHomeLoading && thirdBlockItems.length === 0 ? (
                             <ProductBlockShimmer />
@@ -1169,47 +1179,45 @@ const HomeScreen = () => {
 
                         {bottomShowcaseBanner && bottomShowcaseProducts.length > 0 && (
                             <>
-                                <ImageBackground
-                                    source={bottomShowcaseBanner.uri}
-                                    style={styles.headerBackgroundbg2}
-                                    imageStyle={styles.headerBackgroundbgImage2}
-                                >
-                                    <View style={styles.headerBackgroundbgContent}>
-                                        <FlatList
-                                            horizontal
-                                            data={bottomShowcaseProducts}
-                                            keyExtractor={(item, index) => (item.bannerId || item.id || index).toString()}
-                                            renderItem={({ item }) => (
-                                                <TouchableOpacity
-                                                    onPress={() => {
-                                                        if (item.linkType === 'Product' && item.linkValue) {
-                                                            navigation.navigate('ProductDetailsScreen', { productId: parseInt(item.linkValue) });
-                                                        }
-                                                    }}
-                                                    style={{ marginRight: wp('1%') }}
-                                                >
-                                                    <Image
-                                                        source={item.uri}
-                                                        style={{
-                                                            width: wp('33%'),
-                                                            height: wp('33%'),
-                                                            borderRadius: wp('4%'),
-                                                            marginTop: hp('14%'),
-                                                        }}
-                                                        resizeMode="contain"
-                                                    />
-                                                </TouchableOpacity>
-                                            )}
-                                            showsHorizontalScrollIndicator={false}
-                                            contentContainerStyle={{
-                                                paddingHorizontal: wp('3.6%'),
-                                                paddingTop: hp('2%'),
-                                                //paddingBottom: hp('2.5%'),
+                                <TouchableOpacity activeOpacity={0.9} onPress={() => handleBannerPress(bottomShowcaseBanner)}>
+                                    <ImageBackground
+                                        source={bottomShowcaseBanner.uri}
+                                        style={styles.headerBackgroundbg2}
+                                        imageStyle={styles.headerBackgroundbgImage2}
+                                    >
+                                        <View style={styles.headerBackgroundbgContent}>
+                                            <FlatList
+                                                horizontal
+                                                data={bottomShowcaseProducts}
+                                                keyExtractor={(item, index) => (item.bannerId || item.id || index).toString()}
+                                                renderItem={({ item }) => (
+                                                    <TouchableOpacity
+                                                        onPress={() => handleBannerPress(item)}
+                                                        style={{ marginRight: wp('1%') }}
+                                                    >
+                                                        <Image
+                                                            source={item.uri}
+                                                            style={{
+                                                                width: wp('33%'),
+                                                                height: wp('33%'),
+                                                                borderRadius: wp('4%'),
+                                                                marginTop: hp('14%'),
+                                                            }}
+                                                            resizeMode="contain"
+                                                        />
+                                                    </TouchableOpacity>
+                                                )}
+                                                showsHorizontalScrollIndicator={false}
+                                                contentContainerStyle={{
+                                                    paddingHorizontal: wp('3.6%'),
+                                                    paddingTop: hp('2%'),
+                                                    //paddingBottom: hp('2.5%'),
 
-                                            }}
-                                        />
-                                    </View>
-                                </ImageBackground>
+                                                }}
+                                            />
+                                        </View>
+                                    </ImageBackground>
+                                </TouchableOpacity>
                                 <View style={{ height: hp('2%') }} />
                             </>
                         )}
@@ -2032,10 +2040,22 @@ const styles = StyleSheet.create({
         // marginLeft: wp("5%")
     },
     fruitsImageBackground: {
-        width: wp("74.88%"),
+        width: wp("90%"),
         height: hp("19.35%"),
         flexDirection: "row",
-        marginRight: wp("5%")
+        borderRadius: wp("2.6%"),
+        marginRight: wp("4%"),
+        shadowColor: "#000000",
+        shadowOffset: {
+            width: 0,
+            height: 3,
+        },
+        shadowOpacity: 0.18,
+        shadowRadius: 4.5,
+        elevation: 6,
+        backgroundColor: '#FFFFFF',
+        borderRadius: wp('4%'), // Same as carousel BANNER_SPACING
+        //   backgroundColor: '#fff',
     },
     fruitsImageView: {
         justifyContent: "space-between",
@@ -2117,6 +2137,7 @@ const styles = StyleSheet.create({
         marginBottom: hp('1%'),
         borderTopLeftRadius: wp('6%'),
         borderTopRightRadius: wp('6%'),
+        overflow: 'visible',
     },
     floatingContainer: {
         position: "absolute",

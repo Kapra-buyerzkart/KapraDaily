@@ -42,7 +42,6 @@ const LocationFetchingNewScreen = ({ navigation }) => {
     const [dummy, setDummy] = useState(false);
     // const [locationNotFetched, setLocationNotFetched] = useState(false);
     const [appActive, setAppActive] = useState(false);
-    const [askedOnce, setAskedOnce] = useState(false);
     const [manualOverride, setManualOverride] = useState(false);
 
     const [region, setRegion] = useState({
@@ -72,34 +71,29 @@ const LocationFetchingNewScreen = ({ navigation }) => {
 
 
     useEffect(() => {
-        if (Platform.OS === 'android') {
-
-            // Ask permission ONLY if not asked before
-            if (!askedOnce) {
-                setAskedOnce(true);
-                requestLocationPermission();
-            } else {
-                // If permission already asked once → do NOT request again
-                // But DO NOT fetch location if permission is denied
-                PermissionsAndroid.check(
+        const init = async () => {
+            if (Platform.OS === 'android') {
+                const isGranted = await PermissionsAndroid.check(
                     PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
-                ).then(isGranted => {
-                    if (isGranted) {
-                        fetchLocation();
-                    }
-                });
+                );
+
+                if (isGranted) {
+                    fetchLocation();
+                } else {
+                    requestLocationPermission();
+                }
+            } else {
+                fetchLocation();
             }
+            startAutoNavigateTimer();
+        };
 
-        } else {
-            fetchLocation();
-        }
-
-        startAutoNavigateTimer();
+        init();
 
         return () => {
             if (timeoutRef.current) clearTimeout(timeoutRef.current);
         };
-    }, [askedOnce]);
+    }, []);
 
     // useEffect(() => {
     //   const subscription = AppState.addEventListener('change', nextState => {
@@ -373,20 +367,36 @@ const LocationFetchingNewScreen = ({ navigation }) => {
             setLoading(false);
         };
 
-        const onError = (error) => {
-            console.log('Location error', error);
+        const onFinalError = async (error) => {
+            console.log('All location attempts failed', error);
+            // Fallback auto navigation if location fails
+            await editPincode({
+                areaName: "Panampilly Nagar",
+                pincodeAreaId: 262,
+                pincodeId: 32,
+                tags: null
+            });
+            setTimeout(() => {
+                setLocationNotFetched(true);
+                navigation.reset({
+                    index: 0,
+                    routes: [
+                        { name: 'MainTabs', params: { screen: 'Home' } },
+                    ],
+                });
+            }, 2000);
             setLoading(false);
-            Toast.show('Failed to fetch location automatically.', Toast.SHORT);
         };
 
         // 1️⃣ Get cached location first (very fast)
         Geolocation.getCurrentPosition(
             onSuccess,
-            () => {
+            (error) => {
+                console.log('Cached location failed, trying high accuracy...', error);
                 // 2️⃣ If cached fails, use high accuracy
                 Geolocation.getCurrentPosition(
                     onSuccess,
-                    onError,
+                    onFinalError,
                     {
                         enableHighAccuracy: true,
                         timeout: 15000,
@@ -482,6 +492,29 @@ const LocationFetchingNewScreen = ({ navigation }) => {
                     });
                     // }
                 }, 2000);
+            } else {
+                // No areas found for this pincode (guest is outside delivery zone)
+                setShowConfirm(false);
+                await editPincode({
+                    areaName: "Panampilly Nagar",
+                    pincodeAreaId: 262,
+                    pincodeId: 32,
+                    tags: null
+                });
+                setTimeout(() => {
+                    setLocationNotFetched(true);
+                    navigation.reset({
+                        index: 0,
+                        routes: [
+                            {
+                                name: 'MainTabs',
+                                params: {
+                                    screen: 'Home',
+                                },
+                            },
+                        ],
+                    });
+                }, 2000);
             }
         } catch (error) {
             console.log('API error:', error);
@@ -522,9 +555,9 @@ const LocationFetchingNewScreen = ({ navigation }) => {
                 });
                 // }
             }, 2000);
-            Toast.show(
-                "Delivery is not available to your location\nDelivery location changed to Panampally Nagar"
-            );
+            // Toast.show(
+            //     //n "Delivery is not available to your location\nDelivery location changed to Panampally Nagar"
+            // );
         }
     };
 
@@ -566,8 +599,15 @@ const LocationFetchingNewScreen = ({ navigation }) => {
                         OnPress={async () => {
                             stopAutoNavigateTimer();
                             let areaToPass = null;
-                            if (listOfLocations) {
+                            if (listOfLocations && listOfLocations.length > 0) {
                                 areaToPass = listOfLocations[0];
+                            } else {
+                                areaToPass = {
+                                    areaName: "Panampilly Nagar",
+                                    pincodeAreaId: 262,
+                                    pincodeId: 32,
+                                    tags: null
+                                };
                             }
                             if (areaToPass) {
                                 await editPincode(areaToPass);

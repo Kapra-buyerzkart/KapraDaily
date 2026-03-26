@@ -93,10 +93,11 @@ const styles = StyleSheet.create({
     billImageBackground: {
         width: wp('90.7%'),
         alignSelf: 'center',
-        marginTop: hp('2%'),
-        paddingVertical: hp('3.5%'), // Increased vertical padding
-        paddingHorizontal: wp('8%'), // Further increased horizontal padding to avoid cut-off
-        marginBottom: hp('5%'), // Reduced bottom margin
+        marginTop: hp('0.5%'),
+        paddingTop: hp('4%'),
+        paddingBottom: hp('4%'),
+        paddingHorizontal: wp('8%'),
+        marginBottom: hp('0.5%'),
     },
     billImageStyle: {
         resizeMode: 'stretch', // Ensure the background stretches to fit content height
@@ -105,6 +106,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         marginBottom: hp('2%'), // More space below header
+        marginTop: wp('2%'),
         marginLeft: wp('1%'), // Slight nudge for better alignment
     },
     billIcon: {
@@ -116,7 +118,8 @@ const styles = StyleSheet.create({
         fontFamily: FONTS.poppins.semiBold,
         fontSize: wp('4%'),
         color: '#000000',
-        marginLeft: wp('2%')
+        marginLeft: wp('2%'),
+
     },
     billContentContainer: {
         flexDirection: 'row',

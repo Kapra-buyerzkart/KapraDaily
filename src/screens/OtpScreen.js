@@ -23,6 +23,7 @@ import { useCart } from '../context/CartContext';
 import { verifyLoginOtp, sendLoginOtp, sendForgotPwdOtp, verifyForgotPwdOtp, resendOtp, resendLoginOtp, resendForgotPwdOtp, verifyRegisterOtp, registerUser, sendRegisterOtp } from '../api'; // ✅ add sendLoginOtp
 import { setResetToken } from '../api/tokenService';
 import RNOtpVerify from 'react-native-otp-verify';
+import { AppContext } from '../context/appContext';
 
 const ACCESS_TOKEN = 'ACCESS_TOKEN';
 const REFRESH_TOKEN = 'REFRESH_TOKEN';
@@ -54,6 +55,7 @@ const OtpScreen = () => {
     const route = useRoute();
     const { showStatus } = useCart();
     const { phone, type, name, email, password, whatsAppNo, referCode, pincodeAreaId } = route.params || {};
+    const { loadProfile } = React.useContext(AppContext);
 
     const [otp, setOtp] = useState(['', '', '', '', '']);
     const inputRefs = Array.from({ length: 5 }, () => useRef(null));
@@ -191,6 +193,11 @@ const OtpScreen = () => {
 
                 if (custId) {
                     await mergeCustomerIdIntoProfile(custId);
+                }
+
+                // 🔥 Fetch the actual profile from backend so the home screen shows their real saved location!
+                if (loadProfile) {
+                    await loadProfile();
                 }
 
                 navigation.reset({
@@ -414,7 +421,7 @@ const OtpScreen = () => {
                                 source={require('../assets/images/edit_icon.png')}
                             />
                         </TouchableOpacity>
-
+                        <Text style={styles.otpSentText}>OTP has been sent to your phone & email</Text>
                         <Text style={styles.enterNumberText}>Enter OTP</Text>
 
                         <View style={styles.otpContainer}>
@@ -486,7 +493,8 @@ export default OtpScreen;
 const styles = StyleSheet.create({
     mainContainer: { flex: 1, backgroundColor: '#FFFFFF' },
     backgroundImage: {
-        flex: 1,
+        width: wp('100%'),
+        height: hp('55%'),
         alignItems: 'center',
         justifyContent: 'space-between',
         paddingTop: hp('6%'),
@@ -495,13 +503,13 @@ const styles = StyleSheet.create({
     kapraLogo: { width: wp('47%'), height: hp('10%'), resizeMode: 'cover' },
     tagLine: { width: wp('50.7%'), height: hp('16.95%'), resizeMode: 'cover' },
     bottomContainer: {
-        height: hp('32.33%'),
         paddingHorizontal: wp('5.8%'),
         paddingTop: hp('3.5%'),
+        paddingBottom: hp('5%'),
         borderTopLeftRadius: wp('9.3%'),
         borderTopRightRadius: wp('9.3%'),
         backgroundColor: '#FFFFFF',
-        bottom: hp('4%'),
+        marginTop: -hp('5%'),
     },
     headerText: {
         fontFamily: FONTS.poppins.semiBold,
@@ -514,9 +522,10 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginTop: hp('1%'),
         alignSelf: 'center',
-        marginBottom: hp('3%'),
+        marginBottom: hp('1%'),
     },
     phoneNoText: { fontFamily: FONTS.poppins.regular, fontSize: wp('3.72%'), color: '#000000' },
+    otpSentText: { fontFamily: FONTS.poppins.light, fontSize: wp('3.12%'), color: '#616161', alignSelf: 'center', marginBottom: hp('3%'), },
     editIconImage: { width: wp('2.79%'), height: wp('2.79%'), marginLeft: wp('2%') },
     enterNumberText: {
         fontFamily: FONTS.poppins.regular,
@@ -550,7 +559,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         borderRadius: wp('2.33%'),
-        marginTop: hp('4%'),
+        marginTop: hp('3%'),
     },
     continueButtonText: { fontFamily: FONTS.poppins.bold, fontSize: wp('4.18%'), color: '#FFFFFF' },
 });

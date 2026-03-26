@@ -20,6 +20,7 @@ import { CartProvider } from './src/context/CartContext';
 import { WishlistProvider } from './src/context/WishlistContext';
 import { NavigationContainer } from '@react-navigation/native';
 import RootNavigator from './src/navigation/RootNavigator';
+import { navigationRef } from './src/api/NavigationService';
 
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
@@ -83,7 +84,7 @@ function App() {
         <CartProvider>
           <WishlistProvider>
             <LoaderContextProvider>
-              <NavigationContainer>
+              <NavigationContainer ref={navigationRef}>
                 <RootNavigator />
               </NavigationContainer>
             </LoaderContextProvider>

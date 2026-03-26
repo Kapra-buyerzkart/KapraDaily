@@ -885,7 +885,7 @@ const OrderTrackingScreen = () => {
                             <Text style={styles.downloadBillText}>Download the bill</Text>
                         </TouchableOpacity>
                     )}
-                    <Text style={styles.orderDetailsText}>Order Details</Text>
+                    <Text style={[styles.orderDetailsText, !showBillBreakdown && { marginTop: hp('2.5%') }]}>Order Details</Text>
                     <View style={styles.orderDetailsContainer}>
                         <View>
                             <Text style={styles.orderDetailsKeyText}>Order ID</Text>
@@ -1405,11 +1405,11 @@ const styles = StyleSheet.create({
         shadowRadius: 20,
         elevation: 8,
         width: wp('89%'),
-        paddingTop: hp('1.5%'),
+        paddingTop: hp('1.2%'),
         paddingHorizontal: wp('3%'),
         borderBottomLeftRadius: wp('4.65%'),
         borderBottomRightRadius: wp('4.65%'),
-        bottom: hp('1.5')
+        //  marginTop: hp('-0.5%'), // Pull it up slightly to attach to the products container
     },
     totalText: {
         fontFamily: FONTS.inter.semiBold,
@@ -1467,7 +1467,7 @@ const styles = StyleSheet.create({
         fontSize: wp('3.72%'),
         alignSelf: 'flex-start',
         marginLeft: wp('6%'),
-        marginTop: hp('1.5%')
+        marginTop: hp('0.5%')
     },
     orderDetailsContainer: {
         width: wp('90.7%'),
@@ -1481,7 +1481,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 20,
         elevation: 8,
-        marginTop: hp('1.1%'),
+        marginTop: hp('0.5%'),
         paddingLeft: wp('3%'),
         paddingVertical: hp('2%'),
         justifyContent: 'space-between'

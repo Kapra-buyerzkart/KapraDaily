@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, Image, Platform } from 'react-native'
+import { View, Text, StyleSheet, TouchableOpacity, Image, Platform, ActivityIndicator } from 'react-native'
 import React, { useState, useMemo, useEffect } from 'react'
 import { BlurView } from '@react-native-community/blur'
 import LinearGradient from 'react-native-linear-gradient'
@@ -11,11 +11,35 @@ import CONFIG from '../globals/config'
 import { useWishlist } from '../context/WishlistContext'
 import ConfirmationModal from './ConfirmationModal'
 
+
+
 const CartProductCard = (props) => {
-    const { updateCartItemQuantity, removeFromCart } = useCart();
+    const { updateCartItemQuantity, removeFromCart, updatingItems } = useCart();
     const { isInWishlist, toggleWishlist } = useWishlist();
 
     const { item, disableManage, pincodeAreaIdOverride } = props;
+    const {
+        productId,
+        id,
+        prName,
+        name,
+        featuredImage,
+        unitPrice: itemUnitPrice,
+        mrp,
+        specialPrice: itemSpecialPrice,
+        price,
+        stockQty,
+        isAvailable,
+        cartItemId: itemCartItemId
+    } = item;
+
+    const productName = prName || name || 'Product';
+    const cartItemId = itemCartItemId || productId || id;
+    const unitPrice = itemUnitPrice || mrp || 0;
+    const specialPrice = itemSpecialPrice || price || 0;
+    const isSoldOut = (stockQty === 0 || stockQty === '0') || isAvailable === false;
+    const isUpdating = updatingItems.includes(String(cartItemId));
+
     const [imageError, setImageError] = useState(false);
     const [quantity, setQuantity] = useState(item.addedQty || item.quantity || 1);
     const [isRemovalModalVisible, setIsRemovalModalVisible] = useState(false);
@@ -24,21 +48,6 @@ const CartProductCard = (props) => {
     useEffect(() => {
         setQuantity(item.addedQty || item.quantity || 1);
     }, [item.quantity, item.addedQty]);
-
-    // Map API fields
-    const cartItemId = item.cartItemId || item.id;
-    const productId = item.productId || item.id;
-    const productName = item.prName || item.productName || item.name || '';
-    const unitPrice = item.unitPrice || 0;
-    const specialPrice = item.specialPrice || item.unitPrice || 0;
-    const featuredImage = item.featuredImage || item.productImage || '';
-    const isAvailable = item.isAvailable !== false;
-    const weight = item.weight || item.unitValue || '1 pcs';
-
-    // Determine if product is sold out
-    const isSoldOut = item.unavailable === 1 || item.insufficientStock === 1 || item.notAvailableInStore === 1;
-
-    const isLiked = isInWishlist(productId);
 
     // Get image source
     const imageSource = useMemo(() => {
@@ -151,19 +160,27 @@ const CartProductCard = (props) => {
 
                         {!disableManage && (
                             <View style={styles.countContainer}>
-                                <TouchableOpacity
-                                    onPress={handleDecrease}
-                                    disabled={isSoldOut}
-                                >
-                                    <Image style={styles.countButtonStyle} source={require('../assets/images/minus-button.png')} />
-                                </TouchableOpacity>
-                                <Text style={styles.countText}>{quantity}</Text>
-                                <TouchableOpacity
-                                    onPress={handleIncrease}
-                                    disabled={isSoldOut}
-                                >
-                                    <Image style={styles.countButtonStyle} source={require('../assets/images/plus-button.png')} />
-                                </TouchableOpacity>
+                                {isUpdating ? (
+                                    <View style={styles.loaderWrapper}>
+                                        <ActivityIndicator size="small" color="#F25000" />
+                                    </View>
+                                ) : (
+                                    <>
+                                        <TouchableOpacity
+                                            onPress={handleDecrease}
+                                            disabled={isSoldOut}
+                                        >
+                                            <Image style={styles.countButtonStyle} source={require('../assets/images/minus-button.png')} />
+                                        </TouchableOpacity>
+                                        <Text style={styles.countText}>{quantity}</Text>
+                                        <TouchableOpacity
+                                            onPress={handleIncrease}
+                                            disabled={isSoldOut}
+                                        >
+                                            <Image style={styles.countButtonStyle} source={require('../assets/images/plus-button.png')} />
+                                        </TouchableOpacity>
+                                    </>
+                                )}
                             </View>
                         )}
                     </View>
@@ -381,6 +398,12 @@ const styles = StyleSheet.create({
         fontFamily: FONTS.lexend.medium,
         fontSize: wp('2.5%'),
         color: '#5E3568'
+    },
+    loaderWrapper: {
+        width: wp('20%'), // Approx width of the minus + quantity + plus section
+        height: wp('5.6%'),
+        justifyContent: 'center',
+        alignItems: 'center',
     }
 })
 

@@ -20,6 +20,8 @@ export const CartProvider = ({ children }) => {
     const [cartId, setCartId] = useState(null);
     const cartIdRef = useRef(null);
     const [error, setError] = useState(null);
+    const [updatingItems, setUpdatingItems] = useState([]); // [cartItemId1, cartItemId2, ...]
+    const debounceTimersRef = useRef({});
 
     // ─── Addresses State ───
     const [addresses, setAddresses] = useState([]);
@@ -483,12 +485,20 @@ export const CartProvider = ({ children }) => {
         summaryRequestRef.current = promise;
         return promise;
     }, [updateCartVersion, loadCart]);
-    // ─── refreshCart: re-fetches items and summary ───
+
+    // ─── refreshCart: re-fetches items and summary (Parallelized for speed) ───
     const refreshCart = useCallback(async (pincodeAreaIdOverride) => {
         const selectedAddress = addresses.find(a => a.selected);
         const pincodeAreaId = pincodeAreaIdOverride !== undefined ? pincodeAreaIdOverride : selectedAddress?.pincodeAreaId;
-        await loadCart(pincodeAreaId);
-        await getCartSummary('express', null, null, pincodeAreaId);
+
+        console.log('🔄 [CART] Refreshing items and summary in parallel...');
+        // We run these in parallel. NOTE: getCartSummary uses cartVersionRef.current.
+        // If loadCart updates the version, there might be a race.
+        // However, most of the time we just need both to finish.
+        await Promise.all([
+            loadCart(pincodeAreaId),
+            getCartSummary('express', null, null, pincodeAreaId)
+        ]);
     }, [loadCart, getCartSummary, addresses]);
 
     const handleStoreNotFound = useCallback(async () => {
@@ -628,9 +638,10 @@ export const CartProvider = ({ children }) => {
         }
     }, [cartItems, refreshCart]);
 
-    // ─── updateCartItemQuantity ───
+    // ─── updateCartItemQuantity (Debounced per item) ───
     const updateCartItemQuantity = useCallback(async (cartItemId, quantity, pincodeAreaIdOverride = null) => {
-        console.log('🔄 [UPDATE QTY] Updating quantity:', { cartItemId, newQuantity: quantity });
+        const cartItemIdStr = String(cartItemId);
+        console.log('🔄 [UPDATE QTY] Requested:', { cartItemId: cartItemIdStr, newQuantity: quantity });
 
         if (quantity <= 0) {
             console.log('🔄 [UPDATE QTY] Quantity is 0, removing item');
@@ -638,13 +649,11 @@ export const CartProvider = ({ children }) => {
         }
 
         let oldQuantity = 1;
-
+        // 1. Optimistic UI update for quantity text
         setCartItems(prevItems => {
-            const cartItemIdStr = String(cartItemId);
             const updated = prevItems.map(item => {
                 if (String(item.cartItemId || item.productId || item.id) === cartItemIdStr) {
                     oldQuantity = item.quantity || 1;
-                    console.log('🔄 [UPDATE QTY] Found item, updating from', oldQuantity, 'to', quantity);
                     return { ...item, quantity };
                 }
                 return item;
@@ -652,30 +661,50 @@ export const CartProvider = ({ children }) => {
             return updated;
         });
 
-        try {
-            const version = cartVersionRef.current;
-            const response = await updateCartItemApi(cartItemId, quantity, version, null, pincodeAreaIdOverride);
-            console.log('🔄 [UPDATE QTY] API Response:', JSON.stringify(response, null, 2));
-            await refreshCart(pincodeAreaIdOverride);
-        } catch (error) {
-            console.error('🔄 [UPDATE QTY] API Error:', error);
-
-            // Handle insufficient stock message from networkUtils throw or direct error object
-            const errorMsg = typeof error === 'string' ? error : (error?.Message || error?.message || '');
-            const isStoreNotFound = error && (String(error).toLowerCase().includes('store not found') || error?.message?.toLowerCase().includes('store not found'));
-
-            if ((errorMsg.toLowerCase().includes('stock') || errorMsg.toLowerCase().includes('available')) && !isStoreNotFound) {
-                Toast.show('Requested qty is not available', Toast.LONG);
-            }
-
-            setCartItems(prevItems =>
-                prevItems.map(item =>
-                    String(item.cartItemId || item.productId || item.id) === String(cartItemId) ? { ...item, quantity: oldQuantity } : item
-                )
-            );
-            await refreshCart(pincodeAreaIdOverride);
+        // 2. Debounce the API call
+        if (debounceTimersRef.current[cartItemIdStr]) {
+            clearTimeout(debounceTimersRef.current[cartItemIdStr]);
         }
-    }, [removeFromCart, refreshCart]);
+
+        setUpdatingItems(prev => [...prev, cartItemIdStr]);
+
+        debounceTimersRef.current[cartItemIdStr] = setTimeout(async () => {
+            try {
+                const version = cartVersionRef.current;
+                const response = await updateCartItemApi(cartItemId, quantity, version, null, pincodeAreaIdOverride);
+                console.log('🔄 [UPDATE QTY] API Response:', JSON.stringify(response, null, 2));
+
+                if (response && response.success) {
+                    // Update version immediately if returned
+                    if (response.data?.cart?.cartVersion) {
+                        updateCartVersion(response.data.cart.cartVersion);
+                    }
+                    await refreshCart(pincodeAreaIdOverride);
+                } else if (response && response.message) {
+                    throw response.message;
+                }
+            } catch (error) {
+                console.error('🔄 [UPDATE QTY] API Error:', error);
+                const errorMsg = typeof error === 'string' ? error : (error?.Message || error?.message || '');
+                const isStoreNotFound = error && (String(error).toLowerCase().includes('store not found') || error?.message?.toLowerCase().includes('store not found'));
+
+                if ((errorMsg.toLowerCase().includes('stock') || errorMsg.toLowerCase().includes('available')) && !isStoreNotFound) {
+                    Toast.show('Requested qty is not available', Toast.LONG);
+                }
+
+                // Rollback on error
+                setCartItems(prevItems =>
+                    prevItems.map(item =>
+                        String(item.cartItemId || item.productId || item.id) === cartItemIdStr ? { ...item, quantity: oldQuantity } : item
+                    )
+                );
+                await refreshCart(pincodeAreaIdOverride);
+            } finally {
+                setUpdatingItems(prev => prev.filter(id => id !== cartItemIdStr));
+                delete debounceTimersRef.current[cartItemIdStr];
+            }
+        }, 500); // 500ms debounce
+    }, [removeFromCart, refreshCart, updateCartVersion]);
 
     // ─── clearCart ───
     const clearCart = useCallback(async () => {
@@ -889,6 +918,7 @@ export const CartProvider = ({ children }) => {
         removeGiftCard,
         applyBCoins,
         removeBCoins,
+        updatingItems,
 
         // Addresses
         addresses,
@@ -907,7 +937,7 @@ export const CartProvider = ({ children }) => {
         showStatus,
         serviceabilityTrigger,
         setServiceabilityTrigger
-    }), [cartItems, cartCount, cartTotal, cartSummary, isLoading, addToCart, removeFromCart, updateCartItemQuantity, loadCart, getCartSummary, clearCart, applyCoupon, removeCoupon, applyGiftCard, removeGiftCard, applyBCoins, removeBCoins, addresses, isLoadingAddresses, fetchAddresses, onSelectAddress, onThreeDotsClicked, onDeleteClicked, onCloseThreeDots, clearSelectedAddress, showAddressModal, setShowAddressModal, addressConfirmationData, setAddressConfirmationData, showConfirmation, showStatus, serviceabilityTrigger, setServiceabilityTrigger]);
+    }), [cartItems, cartCount, cartTotal, cartSummary, isLoading, error, addToCart, removeFromCart, updateCartItemQuantity, loadCart, getCartSummary, refreshCart, clearCart, applyCoupon, removeCoupon, applyGiftCard, removeGiftCard, applyBCoins, removeBCoins, updatingItems, addresses, isLoadingAddresses, fetchAddresses, onSelectAddress, onThreeDotsClicked, onDeleteClicked, onCloseThreeDots, clearSelectedAddress, showAddressModal, setShowAddressModal, addressConfirmationData, setAddressConfirmationData, showConfirmation, showStatus, serviceabilityTrigger, setServiceabilityTrigger]);
 
     return (
         <CartContext.Provider value={value}>

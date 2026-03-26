@@ -114,7 +114,7 @@ const MyOrdersScreen = () => {
                 {generalSettings?.show_temporary_message === '1' && (
                     <View style={styles.orderNoteContainer}>
                         <Text style={styles.orderNoteText}>
-                            Orders placed from 1 April 2025 onward are available in this app.
+                            Orders placed from 1 April 2025 onward are available.
                         </Text>
                     </View>
                 )}

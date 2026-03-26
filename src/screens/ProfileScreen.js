@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, Touchable, TouchableOpacity, Image, ScrollView, TextInput, Clipboard } from 'react-native'
+import { View, Text, StyleSheet, Touchable, TouchableOpacity, Image, ScrollView, TextInput, Clipboard, Linking } from 'react-native'
 import React, { useContext, useEffect, useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import AntDesign from 'react-native-vector-icons/AntDesign'
@@ -18,9 +18,10 @@ import { getAvailableCouponsApi, getAvailableGiftCardsApi } from '../api/cartSer
 import Toast from 'react-native-simple-toast'
 import StoreUnavailable from '../components/StoreUnavailable'
 import LocationModal from '../components/LocationModal'
+import CONFIG from '../globals/config'
 import ConfirmationModal from '../components/ConfirmationModal'
 import StatusModal from '../components/StatusModal'
-import { getWalletDataApi, requestProductApi } from '../api/userService'
+import { getWalletDataApi, requestProductApi, deleteAccountApi } from '../api/userService'
 import CoinCountSVG from '../components/CoinCountSVG'
 import {
     LocationIcon,
@@ -143,8 +144,32 @@ export default function ProfileScreen() {
 
     const handleDeleteAccount = async () => {
         setIsDeleteAccountModalVisible(false);
-        await handleLogout();
-        Toast.show('Account deleted successfully', Toast.SHORT);
+        showLoader(true);
+        try {
+            const response = await deleteAccountApi();
+            console.log('Delete account response:', response);
+            if (response && response.success) {
+                await handleLogout();
+                Toast.show('Account deleted successfully', Toast.SHORT);
+            } else {
+                setStatusConfig({
+                    visible: true,
+                    type: 'error',
+                    title: 'Deletion Failed',
+                    message: response?.message || 'Failed to delete account. Please try again.'
+                });
+            }
+        } catch (error) {
+            console.error('Delete account error:', error);
+            setStatusConfig({
+                visible: true,
+                type: 'error',
+                title: 'Error',
+                message: 'Something went wrong. Please try again.'
+            });
+        } finally {
+            showLoader(false);
+        }
     }
 
     useEffect(() => {
@@ -410,6 +435,16 @@ export default function ProfileScreen() {
                                     <Ionicons name="help-circle-outline" color={'#F25000'} size={wp('4%')} />
                                 </View>
                                 <Text style={styles.listItemText}>Help & Support</Text>
+                            </View>
+                            <AntDesign name={"right"} color={'#777777'} size={wp('3.5%')} />
+                        </TouchableOpacity>
+                        <View style={styles.divider} />
+                        <TouchableOpacity onPress={() => Linking.openURL(CONFIG.image_base_url)} style={styles.listItem}>
+                            <View style={styles.listItemLeft}>
+                                <View style={styles.listIconWrapper}>
+                                    <Ionicons name="globe-outline" color={'#F25000'} size={wp('4%')} />
+                                </View>
+                                <Text style={styles.listItemText}>KPC Login</Text>
                             </View>
                             <AntDesign name={"right"} color={'#777777'} size={wp('3.5%')} />
                         </TouchableOpacity>

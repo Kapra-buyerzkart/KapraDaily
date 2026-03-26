@@ -1,13 +1,16 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, { createContext, useState, useCallback, useMemo, useEffect } from 'react';
+import React, { createContext, useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { Platform } from 'react-native';
 import DeviceInfo from 'react-native-device-info';
 import { getProfile } from '../api';
 import { getGeneralSettingsApi, getAppUpdateCheckApi } from '../api/userService';
+import { setLogoutHandler, resetNetworkState } from '../api/networkUtils';
+import * as NavigationService from '../api/NavigationService';
 
 export const AppContext = createContext();
 
 export const AppContextProvider = ({ children }) => {
+  const isLoggingOutRef = useRef(false);
   const [profile, setProfile] = useState(null);
   const [locationNotFetched, setLocationNotFetched] = useState(false);
   const [isStoreUnavailable, setIsStoreUnavailable] = useState(false);
@@ -19,14 +22,34 @@ export const AppContextProvider = ({ children }) => {
   const checkForUpdates = useCallback(async () => {
     try {
       const currentVersion = DeviceInfo.getVersion();
+      console.log('currentVersion=======>', currentVersion);
       const platform = Platform.OS.toUpperCase(); // ANDROID or IOS
-      
+
       const response = await getAppUpdateCheckApi(currentVersion, platform);
-      
+
       if (response && response.success && response.data) {
-        const remoteVersion = response.data.versionCode;
-        // Simple version comparison (can be refined for semver if needed)
-        if (remoteVersion !== currentVersion) {
+        const remoteVersion = response.data.versionCode || response.data.version;
+        console.log('remoteVersion=======>', remoteVersion);
+        if (!remoteVersion || !currentVersion) return;
+
+        // Semver version comparison
+        const rParts = remoteVersion.split('.').map(Number);
+        const cParts = currentVersion.split('.').map(Number);
+        let isUpdateRequired = false;
+
+        for (let i = 0; i < Math.max(rParts.length, cParts.length); i++) {
+          const r = rParts[i] || 0;
+          const c = cParts[i] || 0;
+          if (r > c) {
+            isUpdateRequired = true;
+            break;
+          }
+          if (r < c) {
+            break;
+          }
+        }
+
+        if (isUpdateRequired) {
           setUpdateInfo(response.data);
           setIsUpdateModalVisible(true);
         }
@@ -55,7 +78,7 @@ export const AppContextProvider = ({ children }) => {
       });
     }
   }, []);
-  
+
   const loadSettings = useCallback(async () => {
     try {
       const response = await getGeneralSettingsApi();
@@ -154,11 +177,27 @@ export const AppContextProvider = ({ children }) => {
     setProfile(updatedProfile);
   }, []);
 
-  const logout = async () => {
+  const logout = async (isExpired = false) => {
+    if (isLoggingOutRef.current) return;
+    isLoggingOutRef.current = true;
+    setTimeout(() => { isLoggingOutRef.current = false; }, 3000);
+
     try {
+      if (isExpired) {
+        import('react-native-simple-toast').then(Toast => {
+          Toast.default.show('Session expired, please login again.', Toast.default.LONG);
+        });
+      }
+      
+      // Clear network state (queues, isRefreshing flags)
+      resetNetworkState();
+      
       // Clear ALL data from local storage
       await AsyncStorage.clear();
       console.log('🔒 [LOGOUT] AsyncStorage cleared');
+
+      // Navigate to login
+      NavigationService.reset('LoginScreen', { type: 'login' });
 
       // Set a fresh guest profile
       const freshProfile = {
@@ -173,9 +212,14 @@ export const AppContextProvider = ({ children }) => {
     }
   };
 
+
+  useEffect(() => {
+    setLogoutHandler(logout);
+  }, [logout]);
+
   useEffect(() => {
     loadSettings();
-    // checkForUpdates(); // Hidden for now
+    checkForUpdates();
   }, [loadSettings, checkForUpdates]);
 
   const value = useMemo(() => ({
@@ -193,6 +237,8 @@ export const AppContextProvider = ({ children }) => {
     isUpdateModalVisible,
     setIsUpdateModalVisible,
     checkForUpdates,
+    generalSettings,
+    loadSettings,
   }), [
     logout,
     loadProfile,

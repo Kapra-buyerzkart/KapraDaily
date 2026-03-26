@@ -225,6 +225,18 @@ const useHomeData = () => {
             console.error('Error fetching homepage data:', error);
             // Distinguish between store closed and general unavailability in catch block
             const errorMsg = typeof error === 'string' ? error : (error?.message || '');
+            
+            // Ignore auth, network, or generic errors so we don't mistakenly show "Delivery not available"
+            if (
+                errorMsg.toLowerCase().includes('session expired') || 
+                errorMsg.toLowerCase().includes('unauthorized') ||
+                errorMsg.toLowerCase().includes('network error') ||
+                errorMsg.toLowerCase().includes('something went wrong') ||
+                error?.status === 401
+            ) {
+                return;
+            }
+
             const isClosed = errorMsg.toLowerCase().includes('closed') || errorMsg.toLowerCase().includes('07:00');
 
             const displayData = isClosed

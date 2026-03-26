@@ -1,4 +1,4 @@
-import { get, post, patch } from './networkUtils';
+import { get, post, patch, deleteRequest } from './networkUtils';
 
 /**
  * Fetches dashboard summary data including order count, address count, and wallet balances.
@@ -132,3 +132,10 @@ export const getAppUpdateCheckApi = async (versioncode, platform, apptype = 'cus
     return get('general/appupdatecheck', { params: { versioncode, platform, apptype } });
 };
 
+/**
+ * Deletes the current user's account.
+ * @returns {Promise<Object>} The API response.
+ */
+export const deleteAccountApi = async () => {
+    return deleteRequest('me');
+};

@@ -275,6 +275,7 @@ const styles = StyleSheet.create({
     stackContainer: {
         flexDirection: "row",
         alignItems: "center",
+        backgroundColor: '#ffffff'
     },
     statusIcon: {
         width: wp('3.5%'),
