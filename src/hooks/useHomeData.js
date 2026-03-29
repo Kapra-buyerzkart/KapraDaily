@@ -34,6 +34,7 @@ const useHomeData = () => {
     const [bottomShowcaseBanner, setBottomShowcaseBanner] = useState(null);
     const [bottomShowcaseProducts, setBottomShowcaseProducts] = useState([]);
     const [categoryDiscovery, setCategoryDiscovery] = useState(null);
+    const [popupData, setPopupData] = useState(null);
     const [refreshing, setRefreshing] = useState(false);
 
     const { loadWishlist } = useWishlist();
@@ -219,6 +220,14 @@ const useHomeData = () => {
                     setFeaturedProducts(data.featuredProducts || data.FeaturedProducts || []);
                     setFeaturedProductsTitle(data.featuredProductsTitle || data.FeaturedProductsTitle || 'Featured Products');
                     setHalfPriceStore(data.halfPriceStore || data.HalfPriceStore || []);
+                    if (data.popup) {
+                        setPopupData({
+                            ...data.popup,
+                            uri: { uri: `${CONFIG.image_base_url}${data.popup.popupImageUrl}` }
+                        });
+                    } else {
+                        setPopupData(null);
+                    }
                 }
             }
         } catch (error) {
@@ -293,7 +302,9 @@ const useHomeData = () => {
         isStoreUnavailable,
         storeUnavailableData,
         topSectionBanner,
-        topAnnouncementBanner
+        topAnnouncementBanner,
+        popupData,
+        setPopupData
     }), [
         bestOffers,
         featuredProducts,
@@ -324,7 +335,9 @@ const useHomeData = () => {
         isStoreUnavailable,
         storeUnavailableData,
         topSectionBanner,
-        topAnnouncementBanner
+        topAnnouncementBanner,
+        popupData,
+        setPopupData
     ]);
 
     return value;

@@ -21,7 +21,7 @@ import { useNavigation } from '@react-navigation/native';
 import { FONTS } from '../styles/typography'
 import { getAccessToken, setTokens } from '../api/tokenService';
 import useHomeData from '../hooks/useHomeData';
-import { getCategoryProducts } from '../api/homeService';
+import { getCategoryProducts, postPopupSeenApi } from '../api/homeService';
 import CONFIG from '../globals/config';
 import { getDashboardDataApi, requestProductApi } from '../api/userService';
 import { LoaderContext } from '../context/loaderContext';
@@ -38,6 +38,7 @@ import { useWishlist } from '../context/WishlistContext';
 import CoinCountSVG from '../components/CoinCountSVG';
 import KapraSVG from '../components/KapraSVG';
 import ShimmerPlaceholder from '../components/ShimmerPlaceholder';
+import HomePopupModal from '../components/HomePopupModal';
 
 
 
@@ -316,8 +317,19 @@ const HomeScreen = () => {
         topSectionBanner,
         topAnnouncementBanner,
         categoryDiscoveryBackgroundImage,
-        thirdProductBlockTitleImage
+        thirdProductBlockTitleImage,
+        popupData
     } = useHomeData();
+
+    const [isHomePopupVisible, setIsHomePopupVisible] = useState(false);
+    const [hasPopupBeenShown, setHasPopupBeenShown] = useState(false);
+
+    useEffect(() => {
+        if (popupData && popupData.showPopup === 1 && !hasPopupBeenShown) {
+            setIsHomePopupVisible(true);
+            setHasPopupBeenShown(true);
+        }
+    }, [popupData, hasPopupBeenShown]);
 
     const fruits = bottomBanner || [];
 
@@ -709,6 +721,16 @@ const HomeScreen = () => {
         <SafeAreaView
             edges={['top']}
             style={styles.mainContainer}>
+            <HomePopupModal
+                visible={isHomePopupVisible}
+                onClose={() => {
+                    setIsHomePopupVisible(false);
+                    if (popupData?.popupId) {
+                        postPopupSeenApi(popupData.popupId).catch(err => console.error('Popup seen API error:', err));
+                    }
+                }}
+                imageUrl={popupData?.uri}
+            />
             {modalVisible && (
                 <LocationModal
                     visible={modalVisible}
