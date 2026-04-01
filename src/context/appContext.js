@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { Platform } from 'react-native';
 import DeviceInfo from 'react-native-device-info';
+import { OneSignal } from 'react-native-onesignal';
 import { getProfile } from '../api';
 import { getGeneralSettingsApi, getAppUpdateCheckApi } from '../api/userService';
 import { setLogoutHandler, resetNetworkState } from '../api/networkUtils';
@@ -124,6 +125,10 @@ export const AppContextProvider = ({ children }) => {
           if (JSON.stringify(prev) === JSON.stringify(mergedProfile)) return prev;
           return mergedProfile;
         });
+        if (response.data.custId) {
+          console.log('OneSignal Login:', response.data.custId);
+          OneSignal.login(String(response.data.custId));
+        }
         console.log('profilee', mergedProfile);
       } else {
         await loadProfileTwo(); // Fallback to guest profile if API response is not successful
@@ -195,6 +200,9 @@ export const AppContextProvider = ({ children }) => {
       // Clear ALL data from local storage
       await AsyncStorage.clear();
       console.log('🔒 [LOGOUT] AsyncStorage cleared');
+      
+      // OneSignal Logout
+      OneSignal.logout();
 
       // Navigate to login
       NavigationService.reset('LoginScreen', { type: 'login' });

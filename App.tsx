@@ -25,56 +25,40 @@ import { navigationRef } from './src/api/NavigationService';
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
 
-  // const linking = {
-  //   prefixes: ['buyerzkart://', 'https://kapradaily.com'],
-  //   config: {
-  //     initialRouteName: 'MainTabs',
-  //     screens: {
-  //       SingleItemScreen: {
-  //         path: 'product/:UrlKey', // ✅ valid string
-  //         alias: ['SingleItemScreen/:UrlKey'], // ✅ optional aliases
-  //         parse: {
-  //           UrlKey: (key) => `${key}`,
-  //         },
-  //       },
-  //       SearchScreen: {
-  //         path: ['SearchScreen/:Keyword', 'products/:Keyword'],
-  //         parse: {
-  //           Keyword: (kw: string) => decodeURIComponent(kw),
-  //         },
-  //       },
-  //       SingleOrderScreen: {
-  //         path: ['SingleOrderScreen/:orderId', 'account/orderdetails/:orderId'],
-  //         parse: {
-  //           orderId: (id: string) => Number(id),
-  //         },
-  //       },
-  //     },
-  //   },
-  // };
+  const linking: any = {
+    prefixes: ['buyerzkart://', 'https://kapradaily.com'],
+    config: {
+      initialRouteName: 'MainTabs',
+      screens: {
+        SingleItemScreen: {
+          path: 'product/:UrlKey',
+        },
+        SearchScreen: {
+          path: 'products/:Keyword',
+        },
+        SingleOrderScreen: {
+          path: 'account/orderdetails/:orderId',
+        },
+      },
+    },
+  };
 
   useEffect(() => {
     LogBox.ignoreLogs(['Warning: ...'])
 
     // OneSignal setup
     OneSignal.Debug.setLogLevel(6);
-    OneSignal.initialize('d6148736-6459-4778-abec-95105ff68939');
+    OneSignal.initialize('266dbe6c-b4a8-458c-ba84-28f64cac2796');
     OneSignal.Notifications.requestPermission(true);
 
-    // Foreground notification handler
-    // OneSignal.Notifications.addEventListener('foregroundWillDisplay', (event) => {
-    //   event.getNotification();
-    //   event.complete(event.getNotification());
-    // });
-
     // Notification opened handler 
-    // OneSignal.Notifications.addEventListener('opened', (event) => { 
-    //   console.log('Notification opened:', event); 
-    // });
-    // return () => { 
-    //   OneSignal.Notifications.removeEventListener('foregroundWillDisplay'); 
-    //   OneSignal.Notifications.removeEventListener('opened'); 
-    // };
+    OneSignal.Notifications.addEventListener('click', (event: any) => {
+      console.log('OneSignal: notification opened:', event);
+    });
+
+    return () => {
+      OneSignal.Notifications.removeEventListener('click', () => { });
+    };
   }, [])
 
   return (
@@ -84,7 +68,7 @@ function App() {
         <CartProvider>
           <WishlistProvider>
             <LoaderContextProvider>
-              <NavigationContainer ref={navigationRef}>
+              <NavigationContainer ref={navigationRef} linking={linking}>
                 <RootNavigator />
               </NavigationContainer>
             </LoaderContextProvider>

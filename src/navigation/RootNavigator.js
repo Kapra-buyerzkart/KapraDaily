@@ -30,6 +30,7 @@ import ProductListScreen from '../screens/ProductListScreen'
 import SupportTicketScreen from '../screens/SupportTicketScreen'
 import SupportTicketsListScreen from '../screens/SupportTicketsListScreen'
 import TicketDetailsScreen from '../screens/TicketDetailsScreen'
+import NotificationScreen from '../screens/NotificationScreen'
 import AppUpdateModal from '../components/AppUpdateModal';
 
 const Stack = createNativeStackNavigator();
@@ -80,6 +81,7 @@ export default function RootNavigator() {
                 <Stack.Screen name='SupportTicketScreen' component={SupportTicketScreen} />
                 <Stack.Screen name='SupportTicketsListScreen' component={SupportTicketsListScreen} />
                 <Stack.Screen name='TicketDetailsScreen' component={TicketDetailsScreen} />
+                <Stack.Screen name='NotificationScreen' component={NotificationScreen} />
             </Stack.Navigator>
 
             <AppUpdateModal
