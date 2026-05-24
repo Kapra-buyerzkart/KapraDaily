@@ -12,6 +12,7 @@ import {
   SafeAreaProvider,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Navigation from './src/navigation';
 import { OneSignal } from 'react-native-onesignal';
 import { LoaderContextProvider } from './src/context/loaderContext';
@@ -56,42 +57,29 @@ function App() {
   useEffect(() => {
     LogBox.ignoreLogs(['Warning: ...'])
 
-    // OneSignal setup
-    OneSignal.Debug.setLogLevel(6);
-    OneSignal.initialize('d6148736-6459-4778-abec-95105ff68939');
-    OneSignal.Notifications.requestPermission(true);
-
-    // Foreground notification handler
-    // OneSignal.Notifications.addEventListener('foregroundWillDisplay', (event) => {
-    //   event.getNotification();
-    //   event.complete(event.getNotification());
-    // });
-
-    // Notification opened handler 
-    // OneSignal.Notifications.addEventListener('opened', (event) => { 
-    //   console.log('Notification opened:', event); 
-    // });
-    // return () => { 
-    //   OneSignal.Notifications.removeEventListener('foregroundWillDisplay'); 
-    //   OneSignal.Notifications.removeEventListener('opened'); 
-    // };
+    // OneSignal initialization via structured service
+    import('./src/services/OneSignalService').then(({ requestPushPermissionIfNeeded }) => {
+      requestPushPermissionIfNeeded();
+    });
   }, [])
 
   return (
-    <SafeAreaProvider>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor={isDarkMode ? '#000' : '#fff'} />
-      <AppContextProvider>
-        <CartProvider>
-          <WishlistProvider>
-            <LoaderContextProvider>
-              <NavigationContainer ref={navigationRef}>
-                <RootNavigator />
-              </NavigationContainer>
-            </LoaderContextProvider>
-          </WishlistProvider>
-        </CartProvider>
-      </AppContextProvider>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor={isDarkMode ? '#000' : '#fff'} />
+        <AppContextProvider>
+          <CartProvider>
+            <WishlistProvider>
+              <LoaderContextProvider>
+                <NavigationContainer ref={navigationRef}>
+                  <RootNavigator />
+                </NavigationContainer>
+              </LoaderContextProvider>
+            </WishlistProvider>
+          </CartProvider>
+        </AppContextProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
 
