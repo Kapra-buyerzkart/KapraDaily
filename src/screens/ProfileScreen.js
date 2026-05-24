@@ -497,7 +497,7 @@ export default function ProfileScreen() {
                     style={styles.footerBranding}
                 > */}
                     <View style={styles.logoWrapper}>
-                        <Image source={require('../assets/images/logofinal.png')} style={styles.footerLogo} />
+                        <Image source={require('../assets/images/logoo.png')} style={styles.footerLogo} />
                     </View>
                     <Text style={styles.versionText}>Version {DeviceInfo.getVersion()}</Text>
                 </View>

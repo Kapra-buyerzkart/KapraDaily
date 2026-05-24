@@ -9,6 +9,8 @@ import {
     FlatList,
     Image,
     Keyboard,
+    KeyboardAvoidingView,
+    Platform,
 } from 'react-native';
 import DelayInput from 'react-native-debounce-input';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
@@ -67,7 +69,7 @@ const LocationModal = ({
     return (
         <Modal visible={visible} transparent animationType="slide">
             {/* {console.log('areas', areas.data)} */}
-            <View style={styles.overlay}>
+            <KeyboardAvoidingView style={styles.overlay} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
                 <View style={styles.container}>
 
                     {/* Header */}
@@ -119,7 +121,7 @@ const LocationModal = ({
                     />
 
                 </View>
-            </View>
+            </KeyboardAvoidingView>
         </Modal>
     );
 };

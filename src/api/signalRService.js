@@ -12,15 +12,32 @@ class SignalRService {
      * Initializes and starts the SignalR connection.
      * @param {string} hubUrl Optional override for the hub URL.
      */
-    async startConnection(hubUrl = `https://core.kapradaily.com/hubs/order`) {
+    async startConnection(hubUrl) {
         if (this.connection) return;
 
+        // Automatically derive hub URL from config if not provided
+        if (!hubUrl) {
+            const apiBase = CONFIG.base_url || 'https://staging.kapradaily.com/api/v1/';
+            const domain = apiBase.split('/api/v1/')[0];
+            hubUrl = `${domain}/hubs/order`;
+        }
+
+        console.log('📡 [SignalR] Initializing connection to:', hubUrl);
+
         try {
-            const token = await getAccessToken();
+            const initialToken = await getAccessToken();
+            if (!initialToken) {
+                console.warn('📡 [SignalR] Delaying connection: No access token available');
+                return;
+            }
 
             this.connection = new signalR.HubConnectionBuilder()
                 .withUrl(hubUrl, {
-                    accessTokenFactory: () => token,
+                    accessTokenFactory: async () => {
+                        const token = await getAccessToken();
+                        console.log('📡 [SignalR] Token factory provided token:', token ? 'YES' : 'NO');
+                        return token;
+                    },
                 })
                 .withAutomaticReconnect()
                 .configureLogging(signalR.LogLevel.Information)
@@ -51,9 +68,18 @@ class SignalRService {
             await this.connection.start();
             console.log('📡 [SignalR] Connection Started');
         } catch (err) {
-            console.error('📡 [SignalR] Connection Error:', err);
-            // Retry logic
-            setTimeout(() => this.startConnection(hubUrl), 5000);
+            const errorMsg = String(err);
+            console.error('📡 [SignalR] Connection Error:', errorMsg);
+            
+            // If it's an auth error, don't spam retries
+            if (errorMsg.includes('401') || errorMsg.includes('UNAUTHORIZED')) {
+                console.warn('📡 [SignalR] Authentication failed. Stopping automatic retry.');
+                this.connection = null; // Reset so it can be manually re-started on next login/tracking click
+                return;
+            }
+
+            // Other errors get standard retry
+            setTimeout(() => this.startConnection(hubUrl), 10000); // 10s cooldown
         }
     }
 

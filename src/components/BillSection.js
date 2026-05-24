@@ -49,9 +49,9 @@ const BillSection = ({ billCalculations }) => {
                 />
 
                 {/* Tax */}
-                {totalTax > 0 && (
+                {/* {totalTax > 0 && (
                     <BillRow label="Tax" value={`₹${totalTax.toFixed(2)}`} />
-                )}
+                )} */}
 
                 {/* Coupon */}
                 {couponDiscount > 0 && (
@@ -73,7 +73,9 @@ const BillSection = ({ billCalculations }) => {
                     <Text style={styles.billSumText}>To Pay</Text>
                     <Text style={styles.billSumText}>₹{toPay.toFixed(2)}</Text>
                 </View>
-
+                {totalTax > 0 && (
+                    <Text style={[styles.billSumText, { fontSize: wp('3%'), paddingTop: wp('1%') }]}>Inclusive of GST ₹{totalTax.toFixed(2)} </Text>
+                )}
                 {/* Savings */}
                 {totalSavings > 0 && (
                     <View style={{ marginTop: hp('1%') }}>

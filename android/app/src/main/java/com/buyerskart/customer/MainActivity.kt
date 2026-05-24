@@ -1,4 +1,4 @@
-package com.kapradaily
+package com.buyerskart.customer
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate

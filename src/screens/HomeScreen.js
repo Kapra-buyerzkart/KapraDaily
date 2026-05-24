@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ImageBackground, TouchableOpacity, Image, TextInput, FlatList, ScrollView, Dimensions, RefreshControl, Platform } from 'react-native'
+import { View, Text, StyleSheet, ImageBackground, TouchableOpacity, Image, TextInput, FlatList, ScrollView, Dimensions, RefreshControl, Platform, Linking } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { startTransition, useEffect, useRef, useState, useContext, useCallback, useMemo } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -322,14 +322,57 @@ const HomeScreen = () => {
     } = useHomeData();
 
     const [isHomePopupVisible, setIsHomePopupVisible] = useState(false);
-    const [hasPopupBeenShown, setHasPopupBeenShown] = useState(false);
+    const [lastShownPopupId, setLastShownPopupId] = useState(null);
 
     useEffect(() => {
-        if (popupData && popupData.showPopup === 1 && !hasPopupBeenShown) {
+        const canShow = popupData && 
+                        Number(popupData.showPopup) === 1 && 
+                        popupData?.uri?.uri && 
+                        lastShownPopupId !== popupData?.popupId;
+
+        console.log('💎 [POPUP CHECK]', {
+            hasData: !!popupData,
+            popupId: popupData?.popupId,
+            lastShownId: lastShownPopupId,
+            showPopup: popupData?.showPopup,
+            uri: popupData?.uri?.uri,
+            canShow
+        });
+
+        if (canShow) {
             setIsHomePopupVisible(true);
-            setHasPopupBeenShown(true);
+            setLastShownPopupId(popupData?.popupId);
         }
-    }, [popupData, hasPopupBeenShown]);
+    }, [popupData, lastShownPopupId]);
+
+    const handlePopupPress = () => {
+        if (!popupData) return;
+
+        // Mark as seen immediately on interaction
+        if (popupData.popupId) {
+            postPopupSeenApi(popupData.popupId).catch(err => console.error('Popup seen API error on press:', err));
+        }
+
+        const numericProductId = Number(popupData.productId) || 0;
+
+        if (numericProductId > 0) {
+            console.log('🔗 [POPUP] Navigating to product (productId is ' + numericProductId + ')');
+            navigation.navigate('ProductDetailsScreen', { productId: numericProductId });
+            setIsHomePopupVisible(false);
+            return;
+        }
+
+        const finalLink = popupData.popupLink || popupData.popup_link || popupData.Link || popupData.link || popupData.linkValue || popupData.LinkValue;
+        
+        if (finalLink) {
+            console.log('🔗 [POPUP] Opening popupLink:', finalLink);
+            Linking.openURL(finalLink).catch(err => console.error("Couldn't load external page", err));
+        } else {
+            console.log('🔗 [POPUP] No link provided, closing.');
+        }
+
+        setIsHomePopupVisible(false);
+    };
 
     const fruits = bottomBanner || [];
 
@@ -677,6 +720,9 @@ const HomeScreen = () => {
                 catId: linkValue,
                 catName: actualCatName || 'Category'
             });
+        } else if ((linkType === 'external' || linkType === 'url') && linkValue) {
+            console.log('🔗 [BANNER] Opening external link:', linkValue);
+            Linking.openURL(linkValue).catch(err => console.error("Couldn't load external page", err));
         }
     };
 
@@ -717,6 +763,8 @@ const HomeScreen = () => {
     }, [categoryDiscovery]);
 
 
+    console.log('🖼️ [HOME RENDER] isHomePopupVisible:', isHomePopupVisible, 'hasPopupData:', !!popupData, 'isStoreUnavailable:', isStoreUnavailable);
+
     return (
         <SafeAreaView
             edges={['top']}
@@ -730,6 +778,7 @@ const HomeScreen = () => {
                     }
                 }}
                 imageUrl={popupData?.uri}
+                onPress={handlePopupPress}
             />
             {modalVisible && (
                 <LocationModal
@@ -1358,14 +1407,21 @@ const HomeScreen = () => {
                         colors={['#FFFFFF', '#F1F1F1']}
                         style={styles.footerBranding}
                     >
-                        <KapraSVG
+                        <Image source={require('../assets/images/udendeal.png')}
+                            style={{
+                                width: wp('65%'),
+                                height: hp('10%'),
+                                resizeMode: 'contain',
+                                marginLeft: wp('-10%'),
+                            }} />
+                        {/* <KapraSVG
                             width={wp('85%')}
                             height={hp('15%')}
                             style={{
                                 alignSelf: 'flex-start',
                                 marginLeft: wp('-5%'),
                             }}
-                        />
+                        /> */}
                         <View style={{ height: hp('10%') }} />
                     </LinearGradient>
                 }
@@ -2624,7 +2680,7 @@ const styles = StyleSheet.create({
         marginBottom: hp('1%'),
     },
     footerBranding: {
-        alignItems: 'center',
+        alignItems: 'flex-start',
         paddingVertical: hp('2%'),
         marginBottom: 0,
     },

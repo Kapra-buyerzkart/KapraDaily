@@ -181,7 +181,7 @@ const AddLocationScreen = () => {
                     value: area.pincodeAreaId || area.id // Assuming pincodeAreaId or id
                 }));
                 setItems(formattedAreas);
-                if (formattedAreas.length === 1 && !isEditMode) {
+                if (formattedAreas.length > 0 && !isEditMode) {
                     setPincodeAreaId(formattedAreas[0].value);
                 }
             } else {
@@ -436,15 +436,26 @@ const AddLocationScreen = () => {
                             showsVerticalScrollIndicator={false}
                         >
                             <View style={styles.upperDivider} />
+
+                             <View style={styles.dragInfoContainer}>
+                                <Ionicons
+                                    name="information-circle-outline"
+                                    size={16}
+                                    color="red"
+                                />
+                                <Text style={styles.dragInfoText}>
+                                    Press and hold the location marker, then drag it to your exact location
+                                </Text>
+                            </View>
+                            
                             <View style={styles.topView}>
                                 <TouchableOpacity style={styles.backButtonContainer} onPress={() => navigation.goBack()} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
                                     <Image style={styles.leftArrowIcon} source={require('../assets/images/left_arrow.png')} />
                                 </TouchableOpacity>
                                 <Text style={styles.addLocationText}>{isEditMode ? 'Edit location' : 'Add location'}</Text>
-                                {/* <TouchableOpacity onPress={() => navigation.navigate('MainTabs')} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                                    <Image style={styles.homeIcon} source={require('../assets/images/home_two.png')} />
-                            </TouchableOpacity> */}
                             </View>
+
+                           
                             <View style={styles.innerView}>
                                 <Image style={[styles.locationIcon, {
                                     top: hp('-1%')
@@ -751,7 +762,7 @@ const styles = StyleSheet.create({
         flex: 1,
         borderTopLeftRadius: hp('4.3%'),
         borderTopRightRadius: hp('4.3%'),
-        marginTop: hp('35%'), // Give more space for map
+        marginTop: hp('30%'), // Give more space for map
         paddingTop: hp('1%'),
         paddingHorizontal: wp('4.65%'),
     },
@@ -764,6 +775,51 @@ const styles = StyleSheet.create({
     map: {
         flex: 1
     },
+    dragInfoContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        alignSelf: 'center',
+        marginTop: hp('1.5%'),
+        backgroundColor: '#FFF0F0',
+        paddingVertical: hp('0.8%'),
+        paddingHorizontal: wp('2.5%'),
+        borderRadius: wp('2%'),
+        borderWidth: 1,
+        borderColor: '#FFD1D1',
+    },
+    dragInfoText: {
+        fontSize: wp('3.1%'),
+        color: 'red',
+        fontStyle: 'italic',
+        fontFamily: FONTS.poppins.regular,
+        marginLeft: wp('1.5%'),
+        flex: 1,
+    },
+    // dragInfoContainer: {
+    //     position: 'absolute',
+    //     top: hp('13%'),
+    //     left: wp('5.8%'),
+    //     right: wp('5.8%'),
+    //     backgroundColor: '#FFF0F0',
+    //     paddingVertical: hp('1%'),
+    //     paddingHorizontal: wp('3%'),
+    //     borderRadius: wp('2%'),
+    //     flexDirection: 'row',
+    //     alignItems: 'center',
+    //     borderWidth: 1,
+    //     borderColor: 'red',
+    //     elevation: 3,
+    //     shadowColor: '#000',
+    //     shadowOffset: { width: 0, height: 1 },
+    //     shadowOpacity: 0.2,
+    //     shadowRadius: 1.41,
+    // },
+    // dragInfoText: {
+    //     fontFamily: FONTS.poppins.regular,
+    //     fontSize: wp('3%'),
+    //     marginLeft: wp('2%'),
+    //     flex: 1,
+    // },
     fixedMarkerContainer: {
         position: 'absolute',
         top: '50%',

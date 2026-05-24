@@ -43,7 +43,7 @@ export default function LocationFetchingScreen() {
             setLoading(false)
             // Fallback to MainTabs if permission is denied
             setTimeout(() => {
-                navigation.replace('MainTabs')
+                navigation.replace('AuthSuccessScreen')
             }, 1000)
             return
         }
@@ -52,7 +52,7 @@ export default function LocationFetchingScreen() {
         const safetyTimeout = setTimeout(() => {
             console.log('Geolocation safety timeout reached in screen');
             setLoading(false);
-            navigation.replace('MainTabs');
+            navigation.replace('AuthSuccessScreen');
         }, 10000); // 10s absolute safety
 
         Geolocation.getCurrentPosition(
@@ -86,12 +86,12 @@ export default function LocationFetchingScreen() {
 
                     setAddress({ area, locality, state, pincode })
                     setTimeout(() => {
-                        navigation.replace('MainTabs')
+                        navigation.replace('AuthSuccessScreen')
                     }, 3000)
                 } catch (e) {
                     console.log('Geocoding error:', e)
                     // Fallback to MainTabs on error
-                    navigation.replace('MainTabs')
+                    navigation.replace('AuthSuccessScreen')
                 } finally {
                     setLoading(false)
                 }
@@ -101,7 +101,7 @@ export default function LocationFetchingScreen() {
                 console.log('Geolocation error:', error)
                 setLoading(false)
                 // Fallback to MainTabs on error
-                navigation.replace('MainTabs')
+                navigation.replace('AuthSuccessScreen')
             },
             { enableHighAccuracy: true, timeout: 8000, maximumAge: 10000 }
         )

@@ -67,10 +67,16 @@ const errorHandler = error => {
   }
 
   if (typeof message === 'string' && message.length > 0) {
-    throw message;
+    const errorWithMeta = new Error(message);
+    errorWithMeta.data = error?.response?.data;
+    errorWithMeta.status = status;
+    errorWithMeta.response = error?.response;
+    throw errorWithMeta;
   }
 
-  throw 'Something went wrong.';
+  const genericError = new Error('Something went wrong.');
+  genericError.data = error?.response?.data;
+  throw genericError;
 };
 
 /* -------------------- AXIOS INSTANCE -------------------- */

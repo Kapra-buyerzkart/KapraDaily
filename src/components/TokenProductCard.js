@@ -20,7 +20,7 @@ const TokenProductCard = ({ item, onPress, onAdd, onToggleWishlist, isInWishlist
     const name = item?.prName || item?.name || 'Lorem Ipsum is simply dummy textsimply dummy';
     const mrp = item?.mrp || item?.unitPrice || '394';
     const price = item?.price || item?.specialPrice || '324';
-    const offer = item?.offer || item?.discountPercentage || item?.discountPercent ? `${Math.round(item?.offer || item?.discountPercentage || item?.discountPercent)}% OFF` : '50% OFF';
+    const offer = item?.offer || item?.discountPercentage || item?.discountPercent ? `${Math.round(item?.offer || item?.discountPercentage || item?.discountPercent)}% OFF` : '';
     const weight = item?.weight || '1kg';
     const token = `${item?.bTokenValue || item?.token || item?.btokens || '1'}B Token`;
 
@@ -162,9 +162,9 @@ const TokenProductCard = ({ item, onPress, onAdd, onToggleWishlist, isInWishlist
                         </Text>
                     </LinearGradient>
 
-                    <Text style={[styles.mrpLabel, isThreeColumn && { fontSize: wp('2.4%') }]}>
-                        ₹<Text style={styles.mrpText}>{mrp}</Text>
-                    </Text>
+                    {mrp !== price && <Text style={[styles.mrpLabel, isThreeColumn && { fontSize: wp('2.4%') }]}>
+                        ₹<Text style={[styles.mrpText, mrp === price && { textDecorationLine: 'none' }]}>{mrp}</Text>
+                    </Text>}
                 </View>
 
             </View>

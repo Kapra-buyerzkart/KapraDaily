@@ -7,7 +7,7 @@ import { useAddresses } from './useAddresses';
 
 export const useCartScreen = () => {
     const navigation = useNavigation();
-    const { cartItems, loadCart, cartTotal, cartCount, cartSummary, getCartSummary, clearCart, error: cartError } = useCart();
+    const { cartItems, loadCart, cartTotal, cartCount, cartSummary, getCartSummary, refreshCart, clearCart, error: cartError } = useCart();
 
     // ─── Composed hooks ───
     const deliveryHook = useDeliverySlot();
@@ -26,8 +26,8 @@ export const useCartScreen = () => {
             mrpTotal += mrpPrice * quantity;
         });
         const savings = mrpTotal - itemTotal;
-        const deliveryCharge = (itemTotal > 0 && itemTotal < 500) ? 5 : 0;
-        const totalSavings = savings + (deliveryCharge === 0 && itemTotal >= 500 ? 5 : 0);
+        const deliveryCharge = 0;
+        const totalSavings = savings;
         const toPay = itemTotal + deliveryCharge;
         return { mrpTotal, itemTotal, savings, deliveryCharge, couponDiscount: 0, totalSavings, toPay };
     }, [cartItems]);
@@ -62,15 +62,12 @@ export const useCartScreen = () => {
             const initCart = async () => {
                 console.log('🏁 [FOCUS] Initializing Cart Screen...');
                 try {
-                    console.log('🏁 [FOCUS] Fetching fresh addresses...');
+                    // 1. Fetch fresh addresses
                     await addressHook.refreshAddresses();
-
-                    const loadResult = await loadCart();
                     if (!isActive) return;
 
-                    const bootstrapVersion = loadResult?.cartVersion;
-                    // Always try to get summary on focus to ensure fresh totals
-                    await getCartSummary(deliveryHook.deliveryMode, deliveryHook.selectedSlot, bootstrapVersion, selectedAddress?.pincodeAreaId);
+                    // 2. Refresh cart (which now has a stable identity)
+                    await refreshCart();
                 } catch (err) {
                     console.error('❌ [FOCUS] Error during init:', err);
                 } finally {
@@ -85,14 +82,15 @@ export const useCartScreen = () => {
             return () => {
                 isActive = false;
             };
-        }, [loadCart, getCartSummary]) // Removed volatile dependencies
+        }, [refreshCart, addressHook.refreshAddresses])
     );
 
     // Recalculate summary when delivery type/slot OR address changes (after initial load)
     useEffect(() => {
         if (isInitialMount.current) return;
-        getCartSummary(deliveryHook.deliveryMode, deliveryHook.selectedSlot, null, selectedAddress?.pincodeAreaId);
-    }, [deliveryHook.selectedDeliveryType, deliveryHook.selectedSlot, selectedAddress?.id]);
+        refreshCart(selectedAddress?.pincodeAreaId);
+        // refreshCart internally calls loadCart then getCartSummary sequentially
+    }, [deliveryHook.selectedDeliveryType, deliveryHook.selectedSlot, selectedAddress?.id, refreshCart]);
 
     return {
         // Cart

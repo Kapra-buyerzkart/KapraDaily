@@ -180,17 +180,31 @@ const CartScreen = () => {
 
             showLoader(false);
 
+            // ─── Min Cart Value Validation ───
+            const grandTotal = summaryRes?.data?.grandTotal || 0;
+            const minVal = summaryRes?.data?.minCartValue || 0;
+
+            if (summaryRes?.data && summaryRes.data.isEligibleToPlaceOrder === 0 && grandTotal < minVal) {
+                setStatusType('error');
+                setStatusTitle('Minimum Order Value');
+                setStatusMessage(`Minimum cart value required ₹${minVal}. Please add more items.`);
+                setStatusModalVisible(true);
+                return;
+            }
+
             const pincode = selectedAddress.pin || '';
             const area = selectedAddress.raw?.areaName || selectedAddress.raw?.pincodeAreaName || selectedAddress.raw?.area_name || 'N/A';
 
-            if (summaryRes?.success === false && (summaryRes?.status === 'STORE_NOT_FOUND' || summaryRes?.status === 'STORE_CLOSED_FOR_DELIVERY')) {
-                setAddressConfirmationData({
-                    pincode,
-                    areaName: area,
-                    isPlacingOrder: true,
-                    isServiceable: false,
-                    unavailableMessage: summaryRes?.message || (summaryRes?.status === 'STORE_NOT_FOUND' ? "No store for the selected pincode" : "Store is currently closed for delivery")
-                });
+            const isUnserviceable = (
+                summaryRes?.status === 'STORE_NOT_FOUND' || 
+                summaryRes?.status === 'STORE_CLOSED_FOR_DELIVERY' ||
+                String(summaryRes?.message || '').toLowerCase().includes('no store') ||
+                String(summaryRes?.message || '').toLowerCase().includes('not found')
+            );
+
+            if (isUnserviceable) {
+                // Rely on the banner UI; no popup needed
+                return;
             } else {
                 setAddressConfirmationData({
                     pincode,
@@ -225,23 +239,47 @@ const CartScreen = () => {
     };
 
     const submitOrder = async () => {
+        if (isCartStoreNotFound) {
+            console.warn('❌ [ORDER] Blocked: Attempted to submit order while store is not available');
+            return;
+        }
+
         setAddressConfirmationData(null);
         const onlineTerms = ['online', 'prepaid', 'razorpay', 'upi', 'online_test', 'online payment'];
         const isOnlinePayment = onlineTerms.some(term => paymentMethod?.toLowerCase()?.includes(term));
 
         try {
             showLoader(true);
-            if (!cartSummary?.cartId && !cartItems?.[0]?.cartId) {
-                console.error('❌ [ORDER] No cartId found in summary or items');
-                throw new Error('Your cart session has expired. We are refreshing it for you.');
+            
+            let currentCartId = cartSummary?.cartId || cartItems?.[0]?.cartId;
+            let currentCartVersion = cartSummary?.cartVersion;
+
+            if (!currentCartId) {
+                console.log('🔄 [ORDER] No cartId found, attempting auto-refresh...');
+                // Attempt to get a fresh summary which might recover the session
+                const refreshRes = await getCartSummary(
+                    selectedDeliveryType,
+                    chosenSlot?.id,
+                    null,
+                    selectedAddress?.pincodeAreaId
+                );
+                
+                if (refreshRes?.success && refreshRes?.data?.cartId) {
+                    console.log('✅ [ORDER] Session recovered successfully');
+                    currentCartId = refreshRes.data.cartId;
+                    currentCartVersion = refreshRes.data.cartVersion;
+                } else {
+                    console.error('❌ [ORDER] Session recovery failed');
+                    throw new Error('Your cart session has expired. Please try again.');
+                }
             }
 
             const createPayload = {
-                cartId: cartSummary?.cartId || cartItems?.[0]?.cartId,
+                cartId: currentCartId,
                 shippingAddressId: selectedAddress.id,
                 billingAddressId: selectedAddress.id,
                 paymentMethod: isOnlinePayment ? "online" : paymentMethod,
-                ifMatchCartVersion: cartSummary?.cartVersion,
+                ifMatchCartVersion: currentCartVersion,
                 deliverySlotDate: selectedDeliveryType === 'slot'
                     ? (chosenSlot?.date?.includes('T') ? chosenSlot.date.split('T')[0] : chosenSlot?.date)
                     : null,
@@ -379,9 +417,15 @@ const CartScreen = () => {
             const isSessionExpiry = errorMsg.toLowerCase().includes('expired') || errorMsg.toLowerCase().includes('not found');
 
             setStatusType('error');
-            setStatusTitle(isSessionExpiry ? 'Session Expired' : 'Payment Error');
-            setStatusMessage(errorMsg || 'Failed to initialize payment');
+            setStatusTitle(isSessionExpiry ? 'Session Refreshed' : 'Payment Error');
+            setStatusMessage(isSessionExpiry 
+                ? 'Your session was refreshed. Please try placing the order again.' 
+                : (errorMsg || 'Failed to initialize payment')
+            );
             setStatusModalVisible(true);
+            if (isSessionExpiry) {
+                refreshCart();
+            }
         }
     };
 
@@ -643,6 +687,8 @@ const CartScreen = () => {
 
     const renderBottomBar = () => {
         const hasSoldOutItems = cartItems.some(item => item.unavailable === 1 || item.insufficientStock === 1 || item.notAvailableInStore === 1);
+        const isDisabled = isCartStoreNotFound || hasSoldOutItems; // Only hard block for location
+        const isPlaceOrderBlocked = hasSoldOutItems || isCartStoreNotFound;
 
         return (
             <View style={styles.footer}>
@@ -653,25 +699,31 @@ const CartScreen = () => {
 
                 <TouchableOpacity
                     activeOpacity={0.9}
-                    style={[styles.payBtn, (hasSoldOutItems || isCartStoreNotFound) && { backgroundColor: '#CCCCCC' }]}
+                    style={[styles.payBtn, isPlaceOrderBlocked && { backgroundColor: '#CCCCCC', shadowOpacity: 0, elevation: 0 }]}
                     onPress={handleConfirmOrder}
-                    disabled={hasSoldOutItems || isCartStoreNotFound}
+                    disabled={isDisabled}
                 >
                     <Text style={styles.payBtnPrice}>
-                        {hasSoldOutItems ? 'Remove Sold Out' : 'Place Order'}
+                        {isCartStoreNotFound ? 'Unavailable' : (hasSoldOutItems ? 'Remove Sold Out' : 'Place Order')}
                     </Text>
-                    {(!hasSoldOutItems && !isCartStoreNotFound) && <AntDesign name="caretright" size={wp('3.5%')} color="#FFF" style={{ marginLeft: wp('2%') }} />}
+                    {!isPlaceOrderBlocked && <AntDesign name="caretright" size={wp('3.5%')} color="#FFF" style={{ marginLeft: wp('2%') }} />}
                 </TouchableOpacity>
             </View>
         );
     };
 
-    const isCartStoreNotFound = serviceabilityTrigger || (cartError && (
-        String(cartError).toLowerCase().includes('store not found') ||
-        String(cartError).toLowerCase().includes('closed for delivery') ||
-        String(cartError).toLowerCase().includes('no store') ||
-        String(cartError).toLowerCase().includes('not available')
-    ));
+    const isCartStoreNotFound = serviceabilityTrigger || 
+        cartSummary?.status === 'STORE_NOT_FOUND' || 
+        cartSummary?.status === 'STORE_CLOSED_FOR_DELIVERY' ||
+        (cartError && (
+            String(cartError).toLowerCase().includes('store not found') ||
+            String(cartError).toLowerCase().includes('closed for delivery') ||
+            String(cartError).toLowerCase().includes('no store') ||
+            String(cartError).toLowerCase().includes('not available') ||
+            String(cartError).toLowerCase().includes('pincode area') ||
+            String(cartError).toLowerCase().includes('no delivery')
+        )) ||
+        (!!cartError && (!cartSummary || !cartSummary.grandTotal));
 
 
 
@@ -684,6 +736,18 @@ const CartScreen = () => {
             {renderHeader()}
             <View style={styles.dashedHeader} />
             {renderAddressBar()}
+
+            {isCartStoreNotFound && (
+                <View style={styles.storeNotFoundWarning}>
+                    <MaterialIcons name="error-outline" size={wp('4.2%')} color="#D32F2F" />
+                    <Text style={styles.storeNotFoundText}>
+                        {cartError || "Store not found for this pincode. Please select another location."}
+                    </Text>
+                    <TouchableOpacity onPress={() => setShowAddressModal(true)} style={styles.changeLocBtn}>
+                        <Text style={styles.changeLocText}>Change</Text>
+                    </TouchableOpacity>
+                </View>
+            )}
 
             <ScrollView
                 ref={scrollViewRef}
@@ -792,7 +856,7 @@ const CartScreen = () => {
                 message="Are you sure you want to remove all items?"
             />
             <AddressConfirmationModal
-                visible={!!addressConfirmationData || serviceabilityTrigger}
+                visible={!!addressConfirmationData}
                 onClose={() => {
                     setAddressConfirmationData(null);
                     setServiceabilityTrigger(false);
@@ -1100,6 +1164,39 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         borderTopWidth: 1,
         borderTopColor: '#F5F5F5',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: -4 },
+        shadowOpacity: 0.05,
+        shadowRadius: 10,
+        elevation: 10,
+    },
+    storeNotFoundWarning: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#FFF5F5',
+        paddingHorizontal: wp('5%'),
+        paddingVertical: hp('1.2%'),
+        borderBottomWidth: 1,
+        borderBottomColor: '#FFEBEE',
+    },
+    storeNotFoundText: {
+        flex: 1,
+        fontFamily: FONTS.outfit.medium,
+        fontSize: wp('3%'),
+        color: '#D32F2F',
+        marginLeft: wp('2%'),
+    },
+    changeLocBtn: {
+        backgroundColor: '#D32F2F',
+        paddingHorizontal: wp('3%'),
+        paddingVertical: hp('0.5%'),
+        borderRadius: 5,
+        marginLeft: wp('2%'),
+    },
+    changeLocText: {
+        fontFamily: FONTS.poppins.medium,
+        fontSize: wp('2.8%'),
+        color: '#FFF',
     },
     radioRow: {
         flexDirection: 'row',

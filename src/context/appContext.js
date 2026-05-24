@@ -6,6 +6,7 @@ import { getProfile } from '../api';
 import { getGeneralSettingsApi, getAppUpdateCheckApi } from '../api/userService';
 import { setLogoutHandler, resetNetworkState } from '../api/networkUtils';
 import * as NavigationService from '../api/NavigationService';
+import { oneSignalLogin, oneSignalLogout } from '../services/OneSignalService';
 
 export const AppContext = createContext();
 
@@ -196,6 +197,9 @@ export const AppContextProvider = ({ children }) => {
       await AsyncStorage.clear();
       console.log('🔒 [LOGOUT] AsyncStorage cleared');
 
+      // Unlink OneSignal identity and clear badges
+      oneSignalLogout();
+
       // Navigate to login
       NavigationService.reset('LoginScreen', { type: 'login' });
 
@@ -216,6 +220,22 @@ export const AppContextProvider = ({ children }) => {
   useEffect(() => {
     setLogoutHandler(logout);
   }, [logout]);
+
+  /**
+   * Sync Profile with OneSignal External ID
+   */
+  useEffect(() => {
+    if (profile?.custId) {
+      console.log('🔔 [SYNC] Registering OneSignal ExternalId:', profile.custId);
+      oneSignalLogin({
+        externalId: String(profile.custId),
+        tags: {
+          customer_name: profile.custName || '',
+          phone: profile.phoneNo || '',
+        }
+      });
+    }
+  }, [profile?.custId]);
 
   useEffect(() => {
     loadSettings();

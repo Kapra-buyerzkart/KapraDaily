@@ -233,13 +233,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
                     index: 0,
                     routes: [
                         {
-                            name: 'MainTabs',
-                            params: {
-                                screen: 'Home',
-                                // params: {
-                                //     locationNotFetched: false,
-                                // },
-                            },
+                            name: 'AuthSuccessScreen',
                         },
                     ],
                 });
@@ -381,7 +375,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
                 navigation.reset({
                     index: 0,
                     routes: [
-                        { name: 'MainTabs', params: { screen: 'Home' } },
+                        { name: 'AuthSuccessScreen' },
                     ],
                 });
             }, 2000);
@@ -452,13 +446,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
                                 index: 0,
                                 routes: [
                                     {
-                                        name: 'MainTabs',
-                                        params: {
-                                            screen: 'Home',
-                                            // params: {
-                                            //     locationNotFetched: false,
-                                            // },
-                                        },
+                                        name: 'AuthSuccessScreen',
                                     },
                                 ],
                             });
@@ -480,13 +468,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
                         index: 0,
                         routes: [
                             {
-                                name: 'MainTabs',
-                                params: {
-                                    screen: 'Home',
-                                    // params: {
-                                    //     locationNotFetched: false,
-                                    // },
-                                },
+                                name: 'AuthSuccessScreen',
                             },
                         ],
                     });
@@ -507,10 +489,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
                         index: 0,
                         routes: [
                             {
-                                name: 'MainTabs',
-                                params: {
-                                    screen: 'Home',
-                                },
+                                name: 'AuthSuccessScreen',
                             },
                         ],
                     });
@@ -543,13 +522,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
                     index: 0,
                     routes: [
                         {
-                            name: 'MainTabs',
-                            params: {
-                                screen: 'Home',
-                                // params: {
-                                //     locationNotFetched: true,
-                                // },
-                            },
+                            name: 'AuthSuccessScreen',
                         },
                     ],
                 });
@@ -617,13 +590,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
                                 index: 0,
                                 routes: [
                                     {
-                                        name: 'MainTabs',
-                                        params: {
-                                            screen: 'Home',
-                                            // params: {
-                                            //     locationNotFetched: false,
-                                            // },
-                                        },
+                                        name: 'AuthSuccessScreen',
                                     },
                                 ],
                             });
@@ -891,13 +858,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
                                                 index: 0,
                                                 routes: [
                                                     {
-                                                        name: 'MainTabs',
-                                                        params: {
-                                                            screen: 'Home',
-                                                            // params: {
-                                                            //     locationNotFetched: false,
-                                                            // },
-                                                        },
+                                                        name: 'AuthSuccessScreen',
                                                     },
                                                 ],
                                             });
@@ -920,13 +881,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
                                                     index: 0,
                                                     routes: [
                                                         {
-                                                            name: 'MainTabs',
-                                                            params: {
-                                                                screen: 'Home',
-                                                                // params: {
-                                                                //     locationNotFetched: false,
-                                                                // },
-                                                            },
+                                                            name: 'AuthSuccessScreen',
                                                         },
                                                     ],
                                                 });

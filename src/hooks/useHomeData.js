@@ -101,6 +101,7 @@ const useHomeData = () => {
             }
 
             const response = await getHomepageData(areaId, 100);
+            console.log('🏠 [HOME API] Raw Response Data:', JSON.stringify(response, null, 2));
 
             // Check for STORE_NOT_FOUND or STORE_CLOSED_FOR_DELIVERY
             let storeNotFound = false;
@@ -114,6 +115,22 @@ const useHomeData = () => {
                 if (errorBanner) {
                     storeNotFound = true;
                 }
+            }
+
+            // 🎁 PRIORITIZE POPUP EXTRACTION: must happen regardless of store status or success flag
+            // Check all possible nesting locations based on common API patterns: data.popup, popup, details.popup
+            const pObj = response?.data?.popup || response?.popup || response?.details?.popup;
+            
+            if (pObj && (pObj.popupImageUrl || pObj.popupImage) && Number(pObj.showPopup) === 1) {
+                console.log('🎁 [HOME POPUP] Found in response, mapping keys:', { id: pObj.popupId, show: pObj.showPopup });
+                setPopupData({
+                    ...pObj,
+                    uri: { uri: `${CONFIG.image_base_url}${pObj.popupImageUrl || pObj.popupImage}` },
+                    popupLink: pObj.popupLink || pObj.popup_link || pObj.Link || pObj.link
+                });
+            } else {
+                console.log('🎁 [HOME POPUP] No valid popup object found in response paths.');
+                setPopupData(null);
             }
 
             if (storeNotFound || storeClosed) {
@@ -220,20 +237,31 @@ const useHomeData = () => {
                     setFeaturedProducts(data.featuredProducts || data.FeaturedProducts || []);
                     setFeaturedProductsTitle(data.featuredProductsTitle || data.FeaturedProductsTitle || 'Featured Products');
                     setHalfPriceStore(data.halfPriceStore || data.HalfPriceStore || []);
-                    if (data.popup) {
-                        setPopupData({
-                            ...data.popup,
-                            uri: { uri: `${CONFIG.image_base_url}${data.popup.popupImageUrl}` }
-                        });
-                    } else {
-                        setPopupData(null);
-                    }
                 }
             }
         } catch (error) {
             console.error('Error fetching homepage data:', error);
+            
+            // Still try to extract popup from error data
+            // Supports both legacy axios errors and our new rich error object from networkUtils
+            // Explicitly checking data.data.popup and data.popup for the user's snippet
+            const errBody = error?.data || error?.response?.data || error || error?.data?.data;
+             console.error('Error fetching homepage data------->', errBody);
+            
+            const p = errBody?.data?.popup || errBody?.popup || errBody?.details?.popup;
+            console.error('Error fetching homepage data -> Checking for popup in error body:', !!p);
+            
+            if (p && (p.popupImage || p.popupImageUrl) && Number(p.showPopup) === 1) {
+                console.log('🎁 [HOME POPUP] Extracted from error object path:', p.popupId, 'show:', p.showPopup);
+                setPopupData({
+                    ...p,
+                    uri: { uri: `${CONFIG.image_base_url}${p.popupImageUrl || p.popupImage}` },
+                    popupLink: p.popupLink || p.popup_link || p.Link || p.link
+                });
+            }
+            
             // Distinguish between store closed and general unavailability in catch block
-            const errorMsg = typeof error === 'string' ? error : (error?.message || '');
+            const errorMsg = typeof error === 'string' ? error : (error?.message || error?.Message || '');
             
             // Ignore auth, network, or generic errors so we don't mistakenly show "Delivery not available"
             if (

@@ -24,6 +24,7 @@ import { verifyLoginOtp, sendLoginOtp, sendForgotPwdOtp, verifyForgotPwdOtp, res
 import { setResetToken } from '../api/tokenService';
 import RNOtpVerify from 'react-native-otp-verify';
 import { AppContext } from '../context/appContext';
+import { OneSignal } from 'react-native-onesignal';
 
 const ACCESS_TOKEN = 'ACCESS_TOKEN';
 const REFRESH_TOKEN = 'REFRESH_TOKEN';
@@ -193,6 +194,7 @@ const OtpScreen = () => {
 
                 if (custId) {
                     await mergeCustomerIdIntoProfile(custId);
+                    OneSignal.login(custId.toString());
                 }
 
                 // 🔥 Fetch the actual profile from backend so the home screen shows their real saved location!
@@ -202,7 +204,7 @@ const OtpScreen = () => {
 
                 navigation.reset({
                     index: 0,
-                    routes: [{ name: 'MainTabs' }],
+                    routes: [{ name: 'AuthSuccessScreen' }],
                 });
             } else {
                 showStatus({

@@ -4,7 +4,7 @@ import HomeScreen from '../screens/HomeScreen';
 import CategoriesScreen from '../screens/CategoriesScreen';
 import WishlistScreen from '../screens/WishlistScreen';
 import KshopeScreen from '../screens/KshopeScreen';
-import { Image, Platform, StyleSheet, Text, TouchableOpacity, Alert } from 'react-native';
+import { Image, Platform, StyleSheet, Text, TouchableOpacity, Alert, Linking } from 'react-native';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -13,20 +13,40 @@ import { FONTS } from '../styles/typography'
 import { useContext } from 'react';
 import { AppContext } from '../context/appContext';
 import { useCart } from '../context/CartContext';
+import { useNavigation } from '@react-navigation/native';
 import Toast from 'react-native-simple-toast';
 
 const Tab = createBottomTabNavigator();
 
 export default function MainTabNavigator() {
-    const { isStoreUnavailable } = useContext(AppContext);
+    const { isStoreUnavailable, generalSettings } = useContext(AppContext);
     const { showStatus } = useCart();
+    const navigation = useNavigation();
 
     const KshopeButton = ({ onPress }) => {
-        const handleComingSoon = () => {
+        const handleKshopeLink = () => {
             if (isStoreUnavailable) {
                 Toast.show('Store is currently unavailable in your location', Toast.SHORT);
                 return;
             }
+
+            const isKshopeEnabled = generalSettings?.showkshope === '1' || generalSettings?.showkshope === 1;
+
+            if (isKshopeEnabled) {
+                const storeUrl = Platform.OS === 'ios'
+                    ? (generalSettings?.kshope_ios_url || 'https://apps.apple.com/in/app/uden-deal/id6448085736')
+                    : (generalSettings?.kshope_android_url || 'https://play.google.com/store/apps/details?id=com.kshope');
+
+                Linking.openURL(storeUrl).catch(err => {
+                    console.error('Failed to open store URL:', err);
+                    showComingSoon();
+                });
+            } else {
+                showComingSoon();
+            }
+        };
+
+        const showComingSoon = () => {
             showStatus({
                 type: 'orange',
                 title: 'Coming Soon!',
@@ -35,10 +55,10 @@ export default function MainTabNavigator() {
         };
 
         return (
-            <TouchableOpacity style={styles.KshopeButton} onPress={handleComingSoon}>
-                <Image source={require("../assets/images/kshope.png")} style={{
-                    width: wp("19.53%"),
-                    height: hp("3%"),
+            <TouchableOpacity style={styles.KshopeButton} onPress={handleKshopeLink}>
+                <Image source={require("../assets/splashsvg/tab48.png")} style={{
+                    width: wp("15%"),
+                    height: hp("3.6%"),
                     resizeMode: "contain"
                 }} />
             </TouchableOpacity>)
@@ -206,13 +226,15 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     KshopeButton: {
-        width: wp("28.84%"),
-        height: hp("5.26"),
-        backgroundColor: "#990EE2",
-        borderRadius: 16,
+        width: wp("18%"),
+        height: hp("5%"),
+        backgroundColor: "#ffffff",
+        borderColor: "#F25000",
+        borderWidth: 1,
+        borderRadius: 8,
         justifyContent: "center",
         alignItems: "center",
-        marginTop: hp("0.3%")
+        marginTop: hp("0.8%"),left:15
     },
     KshopeButtonText: {
         fontSize: wp("5.3%"),

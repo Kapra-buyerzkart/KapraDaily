@@ -16,7 +16,7 @@ const SplashScreen = ({ navigation }) => {
     return (
         <View style={styles.container}>
             <FastImage
-                source={require('../assets/gifs/splash.gif')}
+                source={require('../assets/images/splash/splash.png')}
                 style={styles.gif}
                 resizeMode={FastImage.resizeMode.contain}
             />

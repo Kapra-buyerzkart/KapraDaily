@@ -21,29 +21,56 @@ const ReferralScreen = () => {
     const [referrals, setReferrals] = useState([])
     const [isLocationModalVisible, setIsLocationModalVisible] = useState(false)
     const [isInitialLoad, setIsInitialLoad] = useState(true)
+    const [pageNumber, setPageNumber] = useState(1);
+    const [hasMoreData, setHasMoreData] = useState(true);
+    const [isFetchingMore, setIsFetchingMore] = useState(false);
+    const pageSize = 20;
 
     useEffect(() => {
-        fetchReferralHistory()
-        console.log('profileelelle', profile);
-
+        fetchReferralHistory(1);
     }, [])
 
-    const fetchReferralHistory = async () => {
+    const fetchReferralHistory = async (page = 1) => {
         try {
-            showLoader(true)
-            const response = await getReferralHistoryApi()
+            if (page === 1) {
+                showLoader(true);
+                setHasMoreData(true);
+            } else {
+                setIsFetchingMore(true);
+            }
+            const response = await getReferralHistoryApi(page, pageSize);
             console.log('Referral History Response:', response);
-            if (response?.success) {
-                const referralData = response?.data?.items || [];
-                setReferrals(Array.isArray(referralData) ? referralData : []);
+            if (response?.success && response?.data?.items) {
+                const referralData = Array.isArray(response.data.items) ? response.data.items : [];
+                if (page === 1) {
+                    setReferrals(referralData);
+                } else {
+                    setReferrals(prev => [...prev, ...referralData]);
+                }
+                setPageNumber(page);
+                if (referralData.length < pageSize) {
+                    setHasMoreData(false);
+                }
+            } else {
+                if (page === 1) setReferrals([]);
+                setHasMoreData(false);
             }
         } catch (error) {
-            console.error('Fetch Referral History Error:', error)
+            console.error('Fetch Referral History Error:', error);
+            if (page === 1) setReferrals([]);
+            setHasMoreData(false);
         } finally {
-            showLoader(false)
-            setIsInitialLoad(false)
+            showLoader(false);
+            setIsFetchingMore(false);
+            setIsInitialLoad(false);
         }
     }
+
+    const handleLoadMore = () => {
+        if (!isFetchingMore && hasMoreData && !isInitialLoad) {
+            fetchReferralHistory(pageNumber + 1);
+        }
+    };
 
     const renderItem = ({ item }) => {
         const formatDate = (dateString) => {
@@ -175,9 +202,15 @@ const ReferralScreen = () => {
                             keyExtractor={(item, index) => `${item.referrerCustId}-${index}`}
                             renderItem={renderItem}
                             ListEmptyComponent={renderEmpty}
-
+                            onEndReached={handleLoadMore}
+                            onEndReachedThreshold={0.5}
                             ItemSeparatorComponent={() => <View style={styles.divider} />}
-                            ListFooterComponent={() => referrals.length > 0 ? <View style={{ height: hp('2%') }} /> : null}
+                            ListFooterComponent={() => (
+                                <>
+                                    {isFetchingMore && <ActivityIndicator size="small" color="#F25000" style={{ paddingVertical: 10 }} />}
+                                    {referrals.length > 0 && !isFetchingMore && <View style={{ height: hp('2%') }} />}
+                                </>
+                            )}
                             style={referrals.length > 0 ? [styles.historyListCard, { flex: 1 }] : { flex: 1 }}
                             contentContainerStyle={referrals.length === 0 ? styles.emptyListContent : styles.listContent}
                             showsVerticalScrollIndicator={false}

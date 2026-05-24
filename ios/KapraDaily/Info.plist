@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-	<string>Kapra Daily</string>
+	<string>Uden Deal</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -95,6 +95,10 @@
 		<string>Inter_18pt-ExtraBold.ttf</string>
 		<string>Inter_18pt-BoldItalic.ttf</string>
 		<string>Inter_28pt-ExtraBold.ttf</string>
+	</array>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
 	</array>
 </dict>
 </plist>

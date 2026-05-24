@@ -25,6 +25,7 @@ export const CartProvider = ({ children }) => {
 
     // ─── Addresses State ───
     const [addresses, setAddresses] = useState([]);
+    const addressesRef = useRef([]);
     const [isLoadingAddresses, setIsLoadingAddresses] = useState(false);
     const [showAddressModal, setShowAddressModal] = useState(false);
     const [addressConfirmationData, setAddressConfirmationData] = useState(null);
@@ -88,6 +89,9 @@ export const CartProvider = ({ children }) => {
     }, []);
 
     const showStatus = useCallback((config) => {
+        if (config && typeof config.message === 'object') {
+            config.message = config.message.message || config.message.Message || String(config.message);
+        }
         setStatusConfig(config);
     }, []);
 
@@ -147,9 +151,11 @@ export const CartProvider = ({ children }) => {
                 }
                 console.log('📍 [ADDRESS] Mapped addresses:', mappedAddresses.length);
                 setAddresses(mappedAddresses);
+                addressesRef.current = mappedAddresses;
             } else {
                 console.log('📍 [ADDRESS] No addresses found in response');
                 setAddresses([]);
+                addressesRef.current = [];
             }
         } catch (error) {
             console.error('Error fetching addresses:', error);
@@ -194,60 +200,39 @@ export const CartProvider = ({ children }) => {
             setShowAddressModal(false);
 
             try {
-                // Fetch summary for the NEW pincode to check server-side serviceability
-                let res = await getCartSummaryApi(undefined, undefined, cartVersionRef.current, cartIdRef.current, selectedAddr.pincodeAreaId);
-                console.log('👆 [ADDRESS] Selection Validation Response:', JSON.stringify(res, null, 2));
+                // 1. First check cart/list status for the NEW pincode
+                const loadRes = await loadCart(selectedAddr.pincodeAreaId);
+                console.log('📍 [ADDRESS] Selection List Response:', JSON.stringify(loadRes, null, 2));
 
-                // Handle concurrency failure (cart was modified elsewhere)
-                if (res?.success === false && String(res?.message).toLowerCase().includes('modified')) {
-                    console.log('🔄 [ADDRESS] Concurrency failure during validation. Retrying with fresh load...');
-                    const loadRes = await loadCart();
-                    res = await getCartSummaryApi(undefined, undefined, loadRes?.cartVersion, cartIdRef.current, selectedAddr.pincodeAreaId);
-                }
+                const isUnserviceable = loadRes?.isUnserviceable;
 
-                const isUnserviceable = (res?.success === false || res?.status === 'STORE_NOT_FOUND' || res?.status === 'STORE_CLOSED_FOR_DELIVERY');
-
-                // Small delay to allow AddressModal to close on Native before potentially showing AddressConfirmationModal
+                // Small delay to allow AddressModal to close on Native before potentially showing any UI updates
                 setTimeout(() => {
                     if (isUnserviceable) {
-                        const msg = res?.message || "Delivery currently not available in this area.";
-                        setError(msg);
-                        setServiceabilityTrigger(true);
+                        // Store not found is already handled by loadCart (it sets error, serviceabilityTrigger etc.)
+                        console.log('📍 [ADDRESS] Store not found detected in list, skipping summary and popup.');
                         setHasAlertedServiceability(true);
-                        setAddressConfirmationData({
-                            pincode,
-                            areaName: area,
-                            isServiceable: false,
-                            unavailableMessage: msg
-                        });
                     } else {
                         setError(null);
                         setServiceabilityTrigger(false);
                         setHasAlertedServiceability(false);
+                        // Only show confirmation if serviceable
                         setAddressConfirmationData({ pincode, areaName: area, isServiceable: true });
-                        // Trigger full cart items and summary refresh for the new address
+                        // Trigger summary refresh for the new address
                         refreshCart(selectedAddr.pincodeAreaId);
                     }
                 }, 400);
             } catch (err) {
                 console.error('Validation error in onSelectAddress:', err);
-                const errorMsg = typeof err === 'string' ? err : (err?.message || "");
                 setTimeout(() => {
-                    setError(errorMsg);
                     setServiceabilityTrigger(true);
                     setHasAlertedServiceability(true);
-                    setAddressConfirmationData({
-                        pincode,
-                        areaName: area,
-                        isServiceable: false,
-                        unavailableMessage: errorMsg || "Failed to validate address. Please try again."
-                    });
                 }, 400);
             }
         } else {
             refreshCart(selectedAddr.pincodeAreaId);
         }
-    }, [addresses, refreshCart]);
+    }, [addresses, refreshCart, loadCart]);
     /* Note: getCartSummaryApi is imported at top of file */
 
     const onThreeDotsClicked = useCallback((addressId) => {
@@ -330,6 +315,8 @@ export const CartProvider = ({ children }) => {
                 const response = await getCartApi(pincodeAreaIdOverride);
                 console.log('🛒 [CART] API Response:', JSON.stringify(response, null, 2));
                 let fetchedCartVersion = null;
+                let normalizedItems = []; // Defined here for function scope
+
                 if (response && response.data) {
                     if (response.data.cart && response.data.cart.cartVersion) {
                         fetchedCartVersion = response.data.cart.cartVersion;
@@ -343,7 +330,7 @@ export const CartProvider = ({ children }) => {
                     if (response.data.items) {
                         const items = Array.isArray(response.data.items) ? response.data.items : [];
                         // Normalize addedQty → quantity so all components can use item.quantity
-                        const normalizedItems = items.map(item => ({
+                        normalizedItems = items.map(item => ({
                             ...item,
                             quantity: item.quantity || item.addedQty || 1,
                         }));
@@ -355,8 +342,16 @@ export const CartProvider = ({ children }) => {
                     setCartItems([]);
                 }
 
-                if (response && (response.status === 'STORE_NOT_FOUND' || response.status === 'STORE_CLOSED_FOR_DELIVERY')) {
-                    setError(response.message || 'Store not available for this area');
+                const isUnserviceable = (
+                    response?.status === 'STORE_NOT_FOUND' || 
+                    response?.status === 'STORE_CLOSED_FOR_DELIVERY' ||
+                    String(response?.message || '').toLowerCase().includes('no store') ||
+                    String(response?.message || '').toLowerCase().includes('not found')
+                );
+
+                if (response && isUnserviceable) {
+                    // Force the exact user-defined error message for unserviceable states
+                    setError('Delivery not available to the selected address.Please select another address.');
                     if (!hasAlertedServiceability) {
                         setServiceabilityTrigger(true);
                         setHasAlertedServiceability(true);
@@ -367,12 +362,20 @@ export const CartProvider = ({ children }) => {
                     // Clear failed pincodes on success
                     failedPincodesRef.current.clear();
                 }
-                return { success: true, cartVersion: fetchedCartVersion };
+                return { 
+                    success: true, 
+                    cartVersion: fetchedCartVersion, 
+                    isUnserviceable,
+                    status: response?.status,
+                    message: response?.message,
+                    items: normalizedItems // Return fresh items
+                };
             } catch (error) {
                 console.error('🛒 [CART] Error loading cart:', error);
                 setCartItems([]);
-                setError(error?.message || error || 'Store not found for this area');
-                return { success: false, error };
+                const errorMsg = error?.message || error || 'Store not found for this area';
+                setError(errorMsg);
+                return { success: false, error: errorMsg, isUnserviceable: true };
             } finally {
                 setIsLoading(false);
                 loadRequestRef.current = null;
@@ -424,8 +427,15 @@ export const CartProvider = ({ children }) => {
                     }
                     return { success: true, data: response.data, cartVersion: response.data.cartVersion };
                 } else {
-                    const errorMsg = response?.message || 'Failed to fetch summary';
                     const status = response?.status;
+                    const isKnownUnserviceableStatus = status === 'STORE_NOT_FOUND' || status === 'STORE_CLOSED_FOR_DELIVERY';
+                    
+                    // Default to generic message unless it's a known serviceability issue
+                    const defaultErrorMsg = isKnownUnserviceableStatus || serviceabilityTrigger
+                        ? 'Delivery not available to the selected address.Please select another address' 
+                        : 'Some items in cart are unavailable.Remove them or change address';
+                    
+                    const errorMsg = response?.message || defaultErrorMsg;
 
                     if (errorMsg.toLowerCase().includes('cart not found') || status === 'CART_NOT_FOUND') {
                         console.log('🔄 [SUMMARY] Cart not found/expired. Resetting local cart...');
@@ -452,15 +462,20 @@ export const CartProvider = ({ children }) => {
                         return { success: false, error: 'Auto-reloading...', status };
                     }
 
-                    // Special case for serviceability - don't show generic error toast if it's a known non-serviceable status
-                    // but we still set the error state so the BillSection can show it or components can react
+                    // Store null summary and set the error
                     setCartSummary(null);
                     setError(errorMsg);
 
-                    if (status === 'STORE_NOT_FOUND' || status === 'STORE_CLOSED_FOR_DELIVERY' ||
-                        errorMsg.toLowerCase().includes('no store') ||
-                        errorMsg.toLowerCase().includes('not found') ||
-                        errorMsg.toLowerCase().includes('closed for delivery')) {
+                    // Only trigger the hard serviceability flag if it's clearly a location issue
+                    const isLiteralUnserviceable = (
+                        isKnownUnserviceableStatus ||
+                        String(errorMsg).toLowerCase().includes('no store') ||
+                        String(errorMsg).toLowerCase().includes('not found') ||
+                        String(errorMsg).toLowerCase().includes('pincode area') ||
+                        String(errorMsg).toLowerCase().includes('closed for delivery')
+                    );
+
+                    if (isLiteralUnserviceable) {
                         if (!hasAlertedServiceability) {
                             setServiceabilityTrigger(true);
                             setHasAlertedServiceability(true);
@@ -488,18 +503,32 @@ export const CartProvider = ({ children }) => {
 
     // ─── refreshCart: re-fetches items and summary (Parallelized for speed) ───
     const refreshCart = useCallback(async (pincodeAreaIdOverride) => {
-        const selectedAddress = addresses.find(a => a.selected);
+        const selectedAddress = addressesRef.current.find(a => a.selected);
         const pincodeAreaId = pincodeAreaIdOverride !== undefined ? pincodeAreaIdOverride : selectedAddress?.pincodeAreaId;
 
-        console.log('🔄 [CART] Refreshing items and summary in parallel...');
-        // We run these in parallel. NOTE: getCartSummary uses cartVersionRef.current.
-        // If loadCart updates the version, there might be a race.
-        // However, most of the time we just need both to finish.
-        await Promise.all([
-            loadCart(pincodeAreaId),
-            getCartSummary('express', null, null, pincodeAreaId)
-        ]);
-    }, [loadCart, getCartSummary, addresses]);
+        console.log('🔄 [CART] Refreshing items and summary sequentially...');
+        const loadRes = await loadCart(pincodeAreaId);
+        
+        // 1. Check direct response instead of stale state
+        const items = loadRes?.items || [];
+
+        // 2. Determine if summary should be skipped
+        const hasInvalidItems = items.some(item => 
+            item.unavailable === 1 || 
+            item.insufficientStock === 1 || 
+            item.notAvailableInStore === 1 ||
+            item.qtyAvailable === 0
+        );
+
+        if (loadRes?.isUnserviceable || hasInvalidItems) {
+            console.log(`🔄 [CART] Skipping summary refresh: ${loadRes?.isUnserviceable ? 'Area unserviceable' : 'Has sold-out items'}.`);
+            setCartSummary(null);
+            return;
+        }
+
+        const version = loadRes?.cartVersion || cartVersionRef.current;
+        await getCartSummary('express', null, version, pincodeAreaId);
+    }, [loadCart, getCartSummary]);
 
     const handleStoreNotFound = useCallback(async () => {
         if (!serviceabilityTrigger) return;
@@ -753,8 +782,8 @@ export const CartProvider = ({ children }) => {
             }
         } catch (error) {
             console.error('Error applying coupon:', error);
-            const msg = error.Message || error.message || 'Failed to apply coupon';
-            if (msg.toLowerCase().includes('modified') || error?.response?.data?.status === 'CART_VERSION_MISMATCH') {
+            const msg = error.message || error.Message || (typeof error === 'string' ? error : 'Failed to apply coupon');
+            if (msg.toLowerCase().includes('modified') || error?.response?.data?.status === 'CART_VERSION_MISMATCH' || error?.data?.status === 'CART_VERSION_MISMATCH') {
                 console.log('🔄 [CART] Auto-refreshing cart due to modified error in applyCoupon catch');
                 await refreshCart();
             }
@@ -796,12 +825,11 @@ export const CartProvider = ({ children }) => {
             }
         } catch (error) {
             console.error('Error applying BCoins:', error);
-            if (error?.response?.data?.status === 'CART_VERSION_MISMATCH') {
+            const msg = error.message || error.Message || (typeof error === 'string' ? error : 'Failed to apply B-Coins');
+            if (error?.response?.data?.status === 'CART_VERSION_MISMATCH' || error?.data?.status === 'CART_VERSION_MISMATCH') {
                 await refreshCart();
             }
-            if (msg?.toLowerCase().includes('modified')) {
-                console.log('🚫 [CART] Suppressing modified Toast:', msg);
-            } else {
+            if (!msg.toLowerCase().includes('modified')) {
                 Toast.show(msg, Toast.LONG);
             }
             return { success: false, message: msg };
@@ -828,12 +856,11 @@ export const CartProvider = ({ children }) => {
             }
         } catch (error) {
             console.error('Error removing BCoins:', error);
-            if (error?.response?.data?.status === 'CART_VERSION_MISMATCH') {
+            const msg = error.message || error.Message || (typeof error === 'string' ? error : 'Failed to remove B-Coins');
+            if (error?.response?.data?.status === 'CART_VERSION_MISMATCH' || error?.data?.status === 'CART_VERSION_MISMATCH') {
                 await refreshCart();
             }
-            if (msg?.toLowerCase().includes('modified')) {
-                console.log('🚫 [CART] Suppressing modified Toast:', msg);
-            } else {
+            if (!msg.toLowerCase().includes('modified')) {
                 Toast.show(msg, Toast.LONG);
             }
             return { success: false, message: msg };

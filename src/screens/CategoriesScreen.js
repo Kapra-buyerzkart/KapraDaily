@@ -86,6 +86,7 @@ export default function CategoriesScreen() {
     const [subCategoriesList, setSubCategoriesList] = useState([]);
     const [productsList, setProductsList] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [isFetchingProducts, setIsFetchingProducts] = useState(false);
     const [searchText, setSearchText] = useState("");
     const [pincodeAreaId, setPincodeAreaId] = useState(null);
     const [pageNumber, setPageNumber] = useState(1);
@@ -104,6 +105,9 @@ export default function CategoriesScreen() {
     });
 
     const debouncedSearchText = useDebounce(searchText, 500);
+
+    const [isFetchingMore, setIsFetchingMore] = useState(false);
+    const [hasMoreData, setHasMoreData] = useState(true);
 
     useEffect(() => {
         const initializeLocationAndSettings = async () => {
@@ -135,13 +139,20 @@ export default function CategoriesScreen() {
         const catIdToFetch = selectedSubCatId || selectedId;
         if (catIdToFetch) {
             console.log('Fetching products for:', catIdToFetch, 'with search:', debouncedSearchText);
-            fetchProducts(catIdToFetch);
+            fetchProducts(catIdToFetch, 1);
         }
     }, [selectedSubCatId, debouncedSearchText, selectedId, filters]);
 
-    const fetchProducts = async (catId) => {
+    const fetchProducts = async (catId, page = 1) => {
         try {
-            showLoader(true);
+            if (page === 1) {
+                setProductsList([]); // Clear previous products immediately to show local loader
+                setIsFetchingProducts(true);
+                setHasMoreData(true);
+            } else {
+                setIsFetchingMore(true);
+            }
+
             const payload = {
                 pincodeAreaId: pincodeAreaId,
                 prName: debouncedSearchText,
@@ -150,23 +161,46 @@ export default function CategoriesScreen() {
                 priceMax: filters.priceMax,
                 filterValues: null,
                 sortBy: filters.sortBy,
-                pageNumber: 1, // Reset to page 1 on new sort/filter
+                pageNumber: page,
                 pageSize: pageSize
             };
             console.log('Fetching Products Payload:', JSON.stringify(payload, null, 2));
             const response = await searchProductsApi(payload);
             console.log('Products Response:', JSON.stringify(response, null, 2));
+            
             if (response && response.success && response.data && response.data.items) {
-                setProductsList(response.data.items);
-                setPageNumber(1);
+                const newProducts = response.data.items;
+                if (page === 1) {
+                    setProductsList(newProducts);
+                } else {
+                    setProductsList(prev => [...prev, ...newProducts]);
+                }
+                
+                setPageNumber(page);
+                // Check if we have more data based on totalCount or item length
+                if (newProducts.length < pageSize) {
+                    setHasMoreData(false);
+                }
             } else {
-                setProductsList([]);
+                if (page === 1) setProductsList([]);
+                setHasMoreData(false);
             }
         } catch (error) {
             console.error('Error fetching products:', error);
-            setProductsList([]);
+            if (page === 1) setProductsList([]);
+            setHasMoreData(false);
         } finally {
-            showLoader(false);
+            if (page === 1) setIsFetchingProducts(false);
+            setIsFetchingMore(false);
+        }
+    };
+
+    const handleLoadMore = () => {
+        if (!isFetchingMore && !isFetchingProducts && hasMoreData && !loading) {
+            const catIdToFetch = selectedSubCatId || selectedId;
+            if (catIdToFetch) {
+                fetchProducts(catIdToFetch, pageNumber + 1);
+            }
         }
     };
 
@@ -376,14 +410,26 @@ export default function CategoriesScreen() {
                                     paddingTop: hp("0.5%")
                                 }}
                                 ListHeaderComponent={renderHeader}
+                                onEndReached={handleLoadMore}
+                                onEndReachedThreshold={0.5}
+                                ListFooterComponent={
+                                    isFetchingMore ? (
+                                        <View style={{ paddingVertical: 20 }}>
+                                            <ActivityIndicator size="small" color="#F25000" />
+                                        </View>
+                                    ) : null
+                                }
                                 ListEmptyComponent={
-                                    productsList.length === 0 ? (
+                                    isFetchingProducts ? (
+                                        <View style={{ marginTop: hp('10%'), alignItems: 'center' }}>
+                                            <ActivityIndicator size="large" color="#F25000" />
+                                        </View>
+                                    ) : productsList.length === 0 && !isFetchingMore && !loading ? (
                                         <View style={styles.emptyContainer}>
                                             <Image
                                                 source={require('../assets/images/noimages/noproductfound.png')}
                                                 style={styles.emptyImage}
                                             />
-                                            {/* <Text style={styles.emptyText}>No products found</Text> */}
                                         </View>
                                     ) : null
                                 }

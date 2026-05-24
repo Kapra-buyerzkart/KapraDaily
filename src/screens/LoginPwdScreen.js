@@ -72,7 +72,7 @@ const LoginPwdScreen = () => {
                 // ✅ Navigate to MainTabs
                 navigation.reset({
                     index: 0,
-                    routes: [{ name: 'MainTabs' }],
+                    routes: [{ name: 'AuthSuccessScreen' }],
                 });
             } else {
                 showStatus({

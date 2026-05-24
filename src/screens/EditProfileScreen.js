@@ -21,6 +21,7 @@ const EditProfileScreen = () => {
     const [fullName, setFullName] = useState(profile?.custName || '')
     const [dob, setDob] = useState(profile?.dob || '')
     const [gender, setGender] = useState(profile?.gender || '')
+    const [skId, setSkId] = useState(profile?.skId || '')
 
     // State for dirty check and modal
     const [hasChanges, setHasChanges] = useState(false)
@@ -33,8 +34,9 @@ const EditProfileScreen = () => {
         const isNameChanged = fullName.trim() !== (profile?.custName || '')
         const isDobChanged = dob.trim() !== (profile?.dob || '')
         const isGenderChanged = gender !== (profile?.gender || '')
-        setHasChanges(isNameChanged || isDobChanged || isGenderChanged)
-    }, [fullName, dob, gender, profile])
+        const isSkIdChanged = skId.trim() !== (profile?.skId || '')
+        setHasChanges(isNameChanged || isDobChanged || isGenderChanged || isSkIdChanged)
+    }, [fullName, dob, gender, skId, profile])
 
     const handleModalClose = () => {
         setStatusModalVisible(false)
@@ -72,7 +74,8 @@ const EditProfileScreen = () => {
             const payload = {
                 fullName: fullName.trim(),
                 dob: dobValue ? dobValue : null,
-                gender: gender
+                gender: gender,
+                skId: skId.trim() || null
             }
             const response = await updateProfilePatchApi(payload)
             if (response?.success) {
@@ -142,6 +145,19 @@ const EditProfileScreen = () => {
                                     style={styles.input}
                                     value={dob}
                                     onChangeText={setDob}
+                                />
+                            </View>
+                        </View>
+
+                        <View style={styles.inputContainer}>
+                            <Text style={styles.label}>SK Id</Text>
+                            <View style={styles.inputWrapper}>
+                                <TextInput
+                                    placeholder="Enter SK Id"
+                                    placeholderTextColor="#DADADA"
+                                    style={styles.input}
+                                    value={skId}
+                                    onChangeText={setSkId}
                                 />
                             </View>
                         </View>

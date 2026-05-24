@@ -1,4 +1,4 @@
-package com.kapradaily
+package com.buyerskart.customer
 
 import android.app.Application
 import com.facebook.react.PackageList

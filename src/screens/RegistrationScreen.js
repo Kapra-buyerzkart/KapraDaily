@@ -7,6 +7,7 @@ import { useNavigation, useRoute } from '@react-navigation/native'
 import { getAreasByPincode, registerUser, sendRegisterOtp } from '../api'
 import { useCart } from '../context/CartContext'
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { OneSignal } from 'react-native-onesignal';
 
 const PINCODE_AREA_MAP = {
     '676519': ['Chungathara', 'Pukkottumanna', 'Manjeri'],
@@ -80,17 +81,29 @@ const RegistrationScreen = () => {
 
     const handleContinue = async () => {
         if (!name || !password) {
-            alert('Please fill all mandatory fields')
+            showStatus({
+                type: 'error',
+                title: 'Missing Fields',
+                message: 'Please fill all mandatory fields'
+            });
             return
         }
 
         if (pincode.length !== 6 || !selectedArea) {
-            alert('Please select a valid area')
+            showStatus({
+                type: 'error',
+                title: 'Invalid Area',
+                message: 'Please select a valid area'
+            });
             return
         }
 
         if (!termsAndConditionsClicked) {
-            alert('Please accept terms and conditions')
+            showStatus({
+                type: 'error',
+                title: 'Terms Required',
+                message: 'Please accept terms and conditions'
+            });
             return
         }
 
@@ -139,11 +152,12 @@ const RegistrationScreen = () => {
                         await setTokens(accessToken, refreshToken);
                         if (custId) {
                             await mergeCustomerIdIntoProfile(custId);
+                            OneSignal.login(custId.toString());
                         }
 
                         navigation.reset({
                             index: 0,
-                            routes: [{ name: 'MainTabs' }],
+                            routes: [{ name: 'AuthSuccessScreen' }],
                         });
                     }
 
@@ -151,14 +165,20 @@ const RegistrationScreen = () => {
             } else {
                 showStatus({
                     type: 'error',
-                    title: 'Error',
-                    message: registerResponse?.message || 'Registration failed'
+                    title: 'Registration Failed',
+                    message: registerResponse?.message || 'Registration failed. Please try again.'
                 });
             }
 
         } catch (error) {
-            console.log('OTP error:', error)
-            alert('Something went wrong. Please try again.')
+            console.log('Registration error:', error)
+            const errorMessage = error?.message || error?.data?.message || error?.data?.Message || 
+                (typeof error === 'string' ? error : 'Something went wrong. Please try again.');
+            showStatus({
+                type: 'error',
+                title: 'Registration Failed',
+                message: errorMessage
+            });
         } finally {
             setLoading(false)
         }
