@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react'
-import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList, Share, Clipboard } from 'react-native'
+import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList, Share, Clipboard, ActivityIndicator } from 'react-native'
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'
 import Toast from 'react-native-simple-toast'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -157,67 +157,58 @@ const ReferralScreen = () => {
                     <Text style={styles.bcoinText}>{profile?.totalBCoins || '0.00'}</Text>
                 </View> */}
             </View>
-            {isStoreUnavailable ? (
-                <View style={{ marginTop: hp('2%'), flex: 1 }}>
-                    <StoreUnavailable
-                        image={storeUnavailableData.image}
-                        text={storeUnavailableData.text}
-                        onChangeLocation={() => setIsLocationModalVisible(true)}
-                    />
-                </View>
-            ) : (
-                <View style={{ flex: 1 }}>
+            <View style={{ flex: 1 }}>
 
-                    <>
-                        {/* <Text style={styles.referEarnText}>Refer and Earn</Text> */}
-                        <View style={styles.solidPremiumCard}>
-                            <View style={styles.solidHeaderRow}>
-                                <Image style={styles.solidSpeakerIcon} source={require('../assets/images/loud-speaker.png')} />
-                                <View style={styles.solidTitleCol}>
-                                    <Text style={styles.solidReferTitle}>Refer & Earn</Text>
-                                    <Text style={styles.solidSubTitle}>Get rewarded for every friend who shops using your invite.</Text>
-                                </View>
+                <>
+                    {/* <Text style={styles.referEarnText}>Refer and Earn</Text> */}
+                    <View style={styles.solidPremiumCard}>
+                        <View style={styles.solidHeaderRow}>
+                            <Image style={styles.solidSpeakerIcon} source={require('../assets/images/loud-speaker.png')} />
+                            <View style={styles.solidTitleCol}>
+                                <Text style={styles.solidReferTitle}>Refer & Earn</Text>
+                                <Text style={styles.solidSubTitle}>Get rewarded for every friend who shops using your invite.</Text>
                             </View>
-
-                            <View style={styles.solidRewardBox}>
-                                <Text style={styles.solidRewardLabel}>Total Rewards Earned</Text>
-                                <View style={styles.solidRewardAmountRow}>
-                                    <Image source={require('../assets/images/bcoinn.png')} style={styles.solidCoinIcon} />
-                                    <Text style={styles.solidRewardValue}>{profile?.referralEarning || referrals[0]?.totalTokensEarned || '0.00'}</Text>
-                                </View>
-                            </View>
-
-                            <TouchableOpacity style={styles.solidInviteBtn} onPress={onShare}>
-                                <MaterialCommunityIcons name="share-variant" size={wp('5%')} color="#FFFFFF" />
-                                <Text style={styles.solidBtnText}>Send Invite</Text>
-                            </TouchableOpacity>
                         </View>
-                        <Text style={[styles.referEarnText, {
-                            marginTop: hp('3%'),
-                            marginBottom: hp('1%')
-                        }]}>Referral History</Text>
 
-                        <FlatList
-                            data={referrals}
-                            keyExtractor={(item, index) => `${item.referrerCustId}-${index}`}
-                            renderItem={renderItem}
-                            ListEmptyComponent={renderEmpty}
-                            onEndReached={handleLoadMore}
-                            onEndReachedThreshold={0.5}
-                            ItemSeparatorComponent={() => <View style={styles.divider} />}
-                            ListFooterComponent={() => (
-                                <>
-                                    {isFetchingMore && <ActivityIndicator size="small" color="#F25000" style={{ paddingVertical: 10 }} />}
-                                    {referrals.length > 0 && !isFetchingMore && <View style={{ height: hp('2%') }} />}
-                                </>
-                            )}
-                            style={referrals.length > 0 ? [styles.historyListCard, { flex: 1 }] : { flex: 1 }}
-                            contentContainerStyle={referrals.length === 0 ? styles.emptyListContent : styles.listContent}
-                            showsVerticalScrollIndicator={false}
-                        />
-                    </>
-                </View>
-            )}
+                        <View style={styles.solidRewardBox}>
+                            <Text style={styles.solidRewardLabel}>Total Rewards Earned</Text>
+                            <View style={styles.solidRewardAmountRow}>
+                                <Image source={require('../assets/images/bcoinn.png')} style={styles.solidCoinIcon} />
+                                <Text style={styles.solidRewardValue}>{profile?.referralEarning || referrals[0]?.totalTokensEarned || '0.00'}</Text>
+                            </View>
+                        </View>
+
+                        <TouchableOpacity style={styles.solidInviteBtn} onPress={onShare}>
+                            <MaterialCommunityIcons name="share-variant" size={wp('5%')} color="#FFFFFF" />
+                            <Text style={styles.solidBtnText}>Send Invite</Text>
+                        </TouchableOpacity>
+                    </View>
+                    <Text style={[styles.referEarnText, {
+                        marginTop: hp('3%'),
+                        marginBottom: hp('1%')
+                    }]}>Referral History</Text>
+
+                    <FlatList
+                        data={referrals}
+                        keyExtractor={(item, index) => `${item.referrerCustId}-${index}`}
+                        renderItem={renderItem}
+                        ListEmptyComponent={renderEmpty}
+                        onEndReached={handleLoadMore}
+                        onEndReachedThreshold={0.5}
+                        ItemSeparatorComponent={() => <View style={styles.divider} />}
+                        ListFooterComponent={() => (
+                            <>
+                                {isFetchingMore && <ActivityIndicator size="small" color="#F25000" style={{ paddingVertical: 10 }} />}
+                                {referrals.length > 0 && !isFetchingMore && <View style={{ height: hp('2%') }} />}
+                            </>
+                        )}
+                        style={referrals.length > 0 ? [styles.historyListCard, { flex: 1 }] : { flex: 1 }}
+                        contentContainerStyle={referrals.length === 0 ? styles.emptyListContent : styles.listContent}
+                        showsVerticalScrollIndicator={false}
+                    />
+                </>
+            </View>
+
             <LocationModal
                 visible={isLocationModalVisible}
                 onClose={() => setIsLocationModalVisible(false)}

@@ -33,6 +33,7 @@ import TicketDetailsScreen from '../screens/TicketDetailsScreen'
 import AppUpdateModal from '../components/AppUpdateModal';
 import AuthSuccessScreen from '../screens/AuthSuccessScreen';
 import KshopeScreen from '../screens/KshopeScreen';
+import CoPartnerDashboardScreen from '../screens/CoPartnerDashboardScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -84,6 +85,7 @@ export default function RootNavigator() {
                 <Stack.Screen name='TicketDetailsScreen' component={TicketDetailsScreen} />
                 <Stack.Screen name='AuthSuccessScreen' component={AuthSuccessScreen} />
                 <Stack.Screen name='KshopeScreen' component={KshopeScreen} />
+                <Stack.Screen name='CoPartnerDashboardScreen' component={CoPartnerDashboardScreen} />
             </Stack.Navigator>
 
             <AppUpdateModal

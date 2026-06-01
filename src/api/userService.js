@@ -139,3 +139,56 @@ export const getAppUpdateCheckApi = async (versioncode, platform, apptype = 'cus
 export const deleteAccountApi = async () => {
     return deleteRequest('me');
 };
+
+/**
+ * Fetches the areas for the co-partner dashboard.
+ * @returns {Promise<Object>} The API response.
+ */
+export const getCoPartnerAreasApi = async () => {
+    return get('me/copartner/areas');
+};
+
+/**
+ * Fetches the co-partner list for a specific area.
+ * @param {string|number} pincodeAreaId The ID of the area.
+ * @returns {Promise<Object>} The API response.
+ */
+export const getCoPartnerListApi = async (pincodeAreaId) => {
+    return get('me/copartner/list', { params: { pincodeAreaId } });
+};
+
+/**
+ * Fetches the co-partner profile summary.
+ * @param {string|number} pincodeAreaId The ID of the area.
+ * @returns {Promise<Object>} The API response.
+ */
+export const getCoPartnerSummaryApi = async (pincodeAreaId) => {
+    return get('me/copartner/summary', { params: { pincodeAreaId } });
+};
+
+/**
+ * Fetches the co-partner customers (registration report).
+ * @param {Object} params { pincodeAreaId, fromDate, toDate }
+ * @returns {Promise<Object>} The API response.
+ */
+export const getCoPartnerCustomersApi = async (params) => {
+    return get('me/copartner/customers', { params });
+};
+
+/**
+ * Fetches the co-partner orders (order report).
+ * @param {Object} params { pincodeAreaId, fromDate, toDate }
+ * @returns {Promise<Object>} The API response.
+ */
+export const getCoPartnerOrdersApi = async (params) => {
+    return get('me/copartner/orders', { params });
+};
+
+/**
+ * Fetches the co-partner payouts (payout report).
+ * @param {Object} params { pincodeAreaId, fromDate, toDate }
+ * @returns {Promise<Object>} The API response.
+ */
+export const getCoPartnerPayoutsApi = async (params) => {
+    return get('me/copartner/payouts', { params });
+};

@@ -362,6 +362,16 @@ export default function ProfileScreen() {
                             </View>
                             <AntDesign name={"right"} color={'#777777'} size={wp('3.5%')} />
                         </TouchableOpacity>
+                        <View style={styles.divider} />
+                        <TouchableOpacity onPress={() => navigation.navigate('CoPartnerDashboardScreen')} style={styles.listItem}>
+                            <View style={styles.listItemLeft}>
+                                <View style={styles.listIconWrapper}>
+                                    <MaterialCommunityIcons name="account-group-outline" color={'#F25000'} size={wp('4%')} />
+                                </View>
+                                <Text style={styles.listItemText}>Co-Partner Dashboard</Text>
+                            </View>
+                            <AntDesign name={"right"} color={'#777777'} size={wp('3.5%')} />
+                        </TouchableOpacity>
                     </View>
 
                     <Text style={styles.sectionHeader}>Account Security</Text>
