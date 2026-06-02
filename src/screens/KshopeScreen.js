@@ -1,29 +1,15 @@
 import React, { useState, useRef, useContext, useCallback, useEffect } from 'react';
-import {
-    View,
-    Text,
-    StyleSheet,
-    ScrollView,
-    TouchableOpacity,
-    Image,
-    TextInput,
-    FlatList,
-    Dimensions,
-    RefreshControl,
-    ImageBackground,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, FlatList, Dimensions, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Feather from 'react-native-vector-icons/Feather';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { FONTS } from '../styles/typography';
 import { AppContext } from '../context/appContext';
 import useHomeData from '../hooks/useHomeData';
 import CONFIG from '../globals/config';
-import SelectedProducts from '../components/SelectedProducts';
 
 const { width } = Dimensions.get('window');
 
@@ -67,7 +53,6 @@ const KshopeScreen = () => {
         try {
             await refreshHomeData();
         } catch (e) {
-            console.error('Refresh error:', e);
         } finally {
             setRefreshing(false);
         }

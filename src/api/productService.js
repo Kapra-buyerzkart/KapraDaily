@@ -29,7 +29,6 @@ export const getProductSuggestionsApi = async (term, pincodeAreaId, limit = 8) =
 
         // Handle specific server errors gracefully
         if (response && response.status === 'SERVER_ERROR') {
-            console.log('Search API returned SERVER_ERROR, treating as no results.');
             return { success: true, data: [] };
         }
 

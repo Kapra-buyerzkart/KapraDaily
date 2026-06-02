@@ -1,5 +1,5 @@
-import { View, Text, StyleSheet, Image, TouchableOpacity, TextInput, Platform, FlatList, ActivityIndicator } from 'react-native'
-import React, { useState, useEffect, useCallback, useContext } from 'react'
+import { View, Text, StyleSheet, Image, TouchableOpacity, TextInput, Platform, FlatList } from 'react-native';
+import { useState, useEffect, useContext } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import { FONTS } from '../styles/typography'
@@ -71,7 +71,6 @@ const SearchScreen = () => {
                 setRecentSearches(JSON.parse(stored));
             }
         } catch (error) {
-            console.error('Error loading recent searches:', error);
         }
     };
 
@@ -84,11 +83,8 @@ const SearchScreen = () => {
             setRecentSearches(updated);
             await AsyncStorage.setItem(RECENT_SEARCH_KEY, JSON.stringify(updated));
         } catch (error) {
-            console.error('Error saving search:', error);
         }
     };
-
-
 
     // Save search term if results are found
     useEffect(() => {
@@ -183,7 +179,6 @@ const SearchScreen = () => {
                             )}
                         </View>
                     )}
-
 
                     <FlatList
                         data={loading ? [] : suggestions}

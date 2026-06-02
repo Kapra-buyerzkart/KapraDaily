@@ -9,7 +9,6 @@ export const getAddressDetailsApi = async (id) => {
 };
 
 export const addAddressApi = async (payload) => {
-    console.log('payloadd', payload);
 
     return await post('me/address', payload);
 };

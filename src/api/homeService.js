@@ -18,7 +18,6 @@ export const getCategoryProducts = async (catId, pincodeAreaId) => {
         }
     };
 
-
     return get('homepage/categoryproducts', config);
 };
 export const postPopupSeenApi = async (popupId) => {

@@ -1,9 +1,7 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, StyleSheet, Dimensions, PermissionsAndroid, Platform, Modal, KeyboardAvoidingView, TouchableOpacity, ScrollView, FlatList, Alert, Linking, AppState, ImageBackground } from 'react-native';
 import Geolocation from '@react-native-community/geolocation';
-import LottieView from 'lottie-react-native';
 import axios from 'axios';
-import MapView from 'react-native-maps';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 import { BlurView } from '@react-native-community/blur';
 
@@ -12,12 +10,10 @@ import { BlurView } from '@react-native-community/blur';
 import { getFontontSize } from '../globals/GroFunctions';
 import { AppContext } from '../context/appContext';
 import { useCart } from '../context/CartContext';
-import { areaListPincodeWise, getAreasByPincode } from '../api';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { check, request, PERMISSIONS, RESULTS, openSettings } from 'react-native-permissions';
 import DeviceInfo from 'react-native-device-info';
 import Toast from 'react-native-simple-toast';
-import { useFocusEffect } from '@react-navigation/native';
 import { Image } from 'react-native';
 import AuthButton from '../components/AuthButton';
 import FastImage from 'react-native-fast-image';
@@ -68,7 +64,6 @@ const LocationFetchingNewScreen = ({ navigation }) => {
         };
         loadManualOverride();
     }, []);
-
 
     useEffect(() => {
         const init = async () => {
@@ -124,10 +119,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
 
             let result = await check(permission);
 
-            // console.log('result', result)
-
-            if (result === RESULTS.DENIED) {
-                result = await request(permission);
+            //
             }
 
             if (result === RESULTS.BLOCKED || result === RESULTS.UNAVAILABLE) {
@@ -158,7 +150,6 @@ const LocationFetchingNewScreen = ({ navigation }) => {
             return true;
 
         } catch (err) {
-            console.log(err);
             return false;
         }
     };
@@ -166,17 +157,11 @@ const LocationFetchingNewScreen = ({ navigation }) => {
     useEffect(() => {
         const subscription = AppState.addEventListener('change', async nextState => {
             if (nextState === 'active' && !manualOverride) {
-                // console.log("222222")
-                const gpsEnabled = await DeviceInfo.isLocationEnabled();
+                //
                 const permission = await PermissionsAndroid.check(
                     PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
                 );
-                // console.log('gpsEnabled', gpsEnabled)
-                // console.log('permission', permission)
-                if (Platform.OS === "ios") {
-                    if (gpsEnabled) {
-                        // console.log("333333")
-                        fetchLocation();
+                //
                     }
                 }
                 if (permission && gpsEnabled) {
@@ -203,15 +188,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
 
     //       // 🔥 Check GPS every time user returns from Settings
     //       const gpsEnabled = await DeviceInfo.isLocationEnabled();
-    //       console.log('gpsEnabled', gpsEnabled)
-    //       if (!gpsEnabled) {
-    //         Alert.alert(
-    //           'GPS is Off',
-    //           'Please enable GPS/location services to continue.',
-    //           [
-    //             { text: 'Open Location Settings', onPress: () => openLocationSettings() }
-    //           ]
-    //         );
+    //
     //         return;
     //       }
 
@@ -222,7 +199,6 @@ const LocationFetchingNewScreen = ({ navigation }) => {
 
     //   return () => subscription.remove();
     // }, []);
-
 
     const startAutoNavigateTimer = () => {
         timeoutRef.current = setTimeout(() => {
@@ -307,10 +283,8 @@ const LocationFetchingNewScreen = ({ navigation }) => {
             fetchLocation();
 
         } catch (err) {
-            console.log(err);
         }
     };
-
 
     // const fetchLocation = () => {
     //     setLoading(true);
@@ -326,7 +300,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
     //     };
 
     //     const onFinalError = (error) => {
-    //         console.log('Location fetch final error', error);
+    //
     //         setLoading(false); // Make sure loader is removed on failure
     //         Toast.show('Failed to fetch location automatically.', Toast.SHORT);
     //     };
@@ -335,7 +309,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
     //     Geolocation.getCurrentPosition(
     //         onSuccess,
     //         (error) => {
-    //             console.log('High accuracy failed, trying low accuracy...', error);
+    //
     //             Geolocation.getCurrentPosition(
     //                 onSuccess,
     //                 onFinalError,
@@ -362,7 +336,6 @@ const LocationFetchingNewScreen = ({ navigation }) => {
         };
 
         const onFinalError = async (error) => {
-            console.log('All location attempts failed', error);
             // Fallback auto navigation if location fails
             await editPincode({
                 areaName: "Panampilly Nagar",
@@ -386,7 +359,6 @@ const LocationFetchingNewScreen = ({ navigation }) => {
         Geolocation.getCurrentPosition(
             onSuccess,
             (error) => {
-                console.log('Cached location failed, trying high accuracy...', error);
                 // 2️⃣ If cached fails, use high accuracy
                 Geolocation.getCurrentPosition(
                     onSuccess,
@@ -413,35 +385,21 @@ const LocationFetchingNewScreen = ({ navigation }) => {
         axios
             .get(url)
             .then((response) => {
-                // console.log("response", response)
-                const address = response.data.results[0].formatted_address;
-                var addressComponent = response.data.results[0];
-                funSetAddComponent(addressComponent);
+                //
                 const postalCode = addressComponent?.address_components.find((component) =>
                     component.types.includes('postal_code')
                 )?.long_name;
-                // console.log('postalCode', postalCode)
-                getLocationPincodeAreas(postalCode);
+                //
                 setTimeout(funSetLoading, 4000);
             })
             .catch((error) => {
-                console.log('Reverse geocode error', error);
             });
     };
 
     const getLocationPincodeAreas = async (postcode) => {
         try {
-            // console.log('postcode', postcode)
-            let area = await getAreasByPincode(postcode);
-            // console.log('area', area)
-            // console.log('profile', profile)
-            if (area?.data?.length > 1) {
-                // console.log("1111111")
-                if (area?.data?.find((obj) => obj?.pincodeAreaId == profile?.pincode)) {
-                    // console.log("2222222")
-                    setTimeout(() => {
-                        if (!userInteractedRef.current) {
-                            setLocationNotFetched(false);
+            //
+            //
                             navigation.reset({
                                 index: 0,
                                 routes: [
@@ -453,13 +411,11 @@ const LocationFetchingNewScreen = ({ navigation }) => {
                         }
                     }, 2000);
                 } else {
-                    // console.log("33333")
-                    setShowConfirm(true);
+                    //
                     setListOfLocations(area?.data);
                 }
             } else if (area?.data?.length == 1) {
-                // console.log("444444444")
-                setShowConfirm(false);
+                //
                 await editPincode(area.data[0]);
                 setTimeout(() => {
                     // if (!userInteractedRef.current) {
@@ -496,7 +452,6 @@ const LocationFetchingNewScreen = ({ navigation }) => {
                 }, 2000);
             }
         } catch (error) {
-            console.log('API error:', error);
             // Do not navigate immediately; let fallback timer handle it
             // setLocationNotFetched(true)
             // navigation.reset({
@@ -558,19 +513,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
 
     return (
         <SafeAreaView style={styles.maninContainer}>
-            {/* {console.log('userInteractedRef', userInteractedRef)} */}
-            <ImageBackground style={styles.backgroundImage} resizeMode="cover" source={require('../assets/images/location-background.png')}>
-                <View
-                    style={[
-                        styles.iconMainCon,
-                        { top: Platform.OS == 'ios' ? windowHeight * 0.01 : windowHeight * 0.03 },
-                    ]}
-                >
-                    <AuthButton
-                        FirstColor={'#D80000'}
-                        SecondColor={'#FF7148'}
-                        OnPress={async () => {
-                            stopAutoNavigateTimer();
+            {/* {
                             let areaToPass = null;
                             if (listOfLocations && listOfLocations.length > 0) {
                                 areaToPass = listOfLocations[0];
@@ -615,7 +558,6 @@ const LocationFetchingNewScreen = ({ navigation }) => {
                         }} />
                     </TouchableOpacity>
                 </View>
-
 
                 <Image resizeMode="contain" source={require('../assets/images/location-fetching-icon.png')} />
                 <View style={styles.innerContainer}>
@@ -1043,11 +985,6 @@ const styles = StyleSheet.create({
         borderRadius: 5
     },
 
-
-
-
-
-
     // Fonts 
     fontStyle1: {
         fontFamily: 'Lexend-Bold',
@@ -1069,10 +1006,6 @@ const styles = StyleSheet.create({
         fontSize: getFontontSize(12),
         color: '#626262',
     },
-
-
-
-
 
     animation: {
         position: 'absolute',

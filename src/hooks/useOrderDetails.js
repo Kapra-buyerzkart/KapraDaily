@@ -47,7 +47,6 @@ export const useOrderDetails = (orderId, initialOrderData = null) => {
                 setOrderStatus(mapOrderStatus(rawStatus));
             }
         } catch (error) {
-            console.error('Error fetching order details:', error);
         } finally {
             setLoading(false);
         }
@@ -62,9 +61,7 @@ export const useOrderDetails = (orderId, initialOrderData = null) => {
                 reason: "Cancelled by Customer",
                 requestedFromDevice: "app"
             };
-            console.log('Cancelling Order:', payload);
             const response = await cancelOrderApi(payload);
-            console.log('Cancel Order Response:', response);
 
             if (response && response.success) {
                 await fetchOrderDetails(orderId);
@@ -75,7 +72,6 @@ export const useOrderDetails = (orderId, initialOrderData = null) => {
                 setShowCancelModal(false); // Close even on failure if it's a known error
             }
         } catch (error) {
-            console.error('Error cancelling order:', error);
             Toast.show("An error occurred while cancelling", Toast.SHORT);
         } finally {
             setLoading(false);
@@ -92,9 +88,7 @@ export const useOrderDetails = (orderId, initialOrderData = null) => {
                 quantity: Number(selectedReturnItem?.quantity || 1),
                 requestReason: reason
             };
-            console.log('Returning Item:', payload);
             const response = await returnOrderItemApi(payload);
-            console.log('Return Item Response:', response);
 
             if (response && response.success) {
                 await fetchOrderDetails(orderId);
@@ -105,7 +99,6 @@ export const useOrderDetails = (orderId, initialOrderData = null) => {
                 setShowReturnModal(false);
             }
         } catch (error) {
-            console.error('Error returning item:', error);
             Toast.show("An error occurred while returning item", Toast.SHORT);
         } finally {
             setLoading(false);
@@ -130,7 +123,6 @@ export const useOrderDetails = (orderId, initialOrderData = null) => {
                 return response || { success: false, message: "Failed to submit rating" };
             }
         } catch (error) {
-            console.error('Error rating delivery agent:', error);
             Toast.show("An error occurred", Toast.SHORT);
             return false;
         } finally {
@@ -155,7 +147,6 @@ export const useOrderDetails = (orderId, initialOrderData = null) => {
                 return response || { success: false, message: "Failed to submit rating" };
             }
         } catch (error) {
-            console.error('Error rating order:', error);
             Toast.show("An error occurred", Toast.SHORT);
             return false;
         } finally {
@@ -223,7 +214,7 @@ export const useOrderDetails = (orderId, initialOrderData = null) => {
             const latestStatus = timeline[timeline.length - 1];
             rawStatus = latestStatus.statusKey || latestStatus.orderStatusKey || rawStatus;
         }
-        console.log('📊 [ORDER STATUS DEBUG] rawStatus:', rawStatus, '→ mapped:', mapOrderStatus(rawStatus), '| header.orderStatusKey:', header.orderStatusKey, '| timeline last:', timeline.length > 0 ? timeline[timeline.length - 1] : 'none');
+, '| header.orderStatusKey:', header.orderStatusKey, '| timeline last:', timeline.length > 0 ? timeline[timeline.length - 1] : 'none');
 
         return {
             orderDetails: header,

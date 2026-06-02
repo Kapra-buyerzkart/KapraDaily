@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native'
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import React, { useState, useEffect, useContext } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
@@ -45,7 +45,6 @@ const TicketDetailsScreen = () => {
                 })
             }
         } catch (error) {
-            console.error('Error fetching ticket details:', error)
             setStatusModal({
                 visible: true,
                 title: 'Error',

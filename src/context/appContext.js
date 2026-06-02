@@ -23,14 +23,12 @@ export const AppContextProvider = ({ children }) => {
   const checkForUpdates = useCallback(async () => {
     try {
       const currentVersion = DeviceInfo.getVersion();
-      console.log('currentVersion=======>', currentVersion);
       const platform = Platform.OS.toUpperCase(); // ANDROID or IOS
 
       const response = await getAppUpdateCheckApi(currentVersion, platform);
 
       if (response && response.success && response.data) {
         const remoteVersion = response.data.versionCode || response.data.version;
-        console.log('remoteVersion=======>', remoteVersion);
         if (!remoteVersion || !currentVersion) return;
 
         // Semver version comparison
@@ -57,7 +55,7 @@ export const AppContextProvider = ({ children }) => {
       }
     } catch (error) {
       // User said: "if error no need to show anything"
-      console.log('App update check failed (silent):', error);
+:', error);
     }
   }, []);
 
@@ -93,7 +91,6 @@ export const AppContextProvider = ({ children }) => {
         return settingsMap;
       }
     } catch (error) {
-      console.error('Error fetching general settings:', error);
     }
     return {};
   }, []);
@@ -125,12 +122,10 @@ export const AppContextProvider = ({ children }) => {
           if (JSON.stringify(prev) === JSON.stringify(mergedProfile)) return prev;
           return mergedProfile;
         });
-        console.log('profilee', mergedProfile);
       } else {
         await loadProfileTwo(); // Fallback to guest profile if API response is not successful
       }
     } catch (error) {
-      console.log('Profile fetch error:', error);
       await loadProfileTwo(); // Fallback to guest profile
     }
   }, [loadProfileTwo]);
@@ -195,7 +190,6 @@ export const AppContextProvider = ({ children }) => {
       
       // Clear ALL data from local storage
       await AsyncStorage.clear();
-      console.log('🔒 [LOGOUT] AsyncStorage cleared');
 
       // Unlink OneSignal identity and clear badges
       oneSignalLogout();
@@ -212,10 +206,8 @@ export const AppContextProvider = ({ children }) => {
       setProfile(freshProfile);
 
     } catch (error) {
-      console.log('Logout error:', error);
     }
   };
-
 
   useEffect(() => {
     setLogoutHandler(logout);
@@ -226,7 +218,6 @@ export const AppContextProvider = ({ children }) => {
    */
   useEffect(() => {
     if (profile?.custId) {
-      console.log('🔔 [SYNC] Registering OneSignal ExternalId:', profile.custId);
       oneSignalLogin({
         externalId: String(profile.custId),
         tags: {

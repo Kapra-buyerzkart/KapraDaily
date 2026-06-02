@@ -1,57 +1,36 @@
-import { View, Text, StyleSheet, ImageBackground, TouchableOpacity, Image, TextInput, FlatList, ScrollView, Dimensions, RefreshControl, Platform, Linking } from 'react-native'
+import { View, Text, StyleSheet, ImageBackground, TouchableOpacity, Image, FlatList, ScrollView, Dimensions, RefreshControl, Platform, Linking } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, { startTransition, useEffect, useRef, useState, useContext, useCallback, useMemo } from 'react'
+import React, { useEffect, useRef, useState, useContext, useCallback } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import Icon from 'react-native-vector-icons/Ionicons';
-import Svg, { Defs, RadialGradient, LinearGradient as SvgLinearGradient, Stop, Path } from 'react-native-svg';
+
+import Svg, { Defs, LinearGradient as SvgLinearGradient, Stop, Path } from 'react-native-svg';
 const SvgAvailable = false; // Forced false for debugging
 import LinearGradient from 'react-native-linear-gradient';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Entypo from 'react-native-vector-icons/Entypo';
 import Feather from 'react-native-vector-icons/Feather';
-import Ionicons from 'react-native-vector-icons/Ionicons';
-import EvilIcons from 'react-native-vector-icons/EvilIcons';
-import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
 
 import TokenProductCard from '../components/TokenProductCard';
 import SelectedProducts from '../components/SelectedProducts';
 import { useNavigation } from '@react-navigation/native';
 import { FONTS } from '../styles/typography'
-import { getAccessToken, setTokens } from '../api/tokenService';
 import useHomeData from '../hooks/useHomeData';
 import { getCategoryProducts, postPopupSeenApi } from '../api/homeService';
 import CONFIG from '../globals/config';
 import { getDashboardDataApi, requestProductApi } from '../api/userService';
 import { LoaderContext } from '../context/loaderContext';
 
-import EmptySection from '../components/EmptySection';
 import { AppContext } from '../context/appContext';
-import LoginScreen from './LoginScreen';
 import LocationModal from '../components/LocationModal';
 import StatusModal from '../components/StatusModal';
 import StoreUnavailable from '../components/StoreUnavailable';
 import SeeAllButton from '../components/SeeAllButton';
 import { useCart } from '../context/CartContext';
-import { useWishlist } from '../context/WishlistContext';
 import CoinCountSVG from '../components/CoinCountSVG';
-import KapraSVG from '../components/KapraSVG';
 import ShimmerPlaceholder from '../components/ShimmerPlaceholder';
 import HomePopupModal from '../components/HomePopupModal';
 
-
-
 const { width } = Dimensions.get("window");
-const BANNER_HEIGHT = (283 / 390) * width;
-// Top hero banner design size ~430x328 → use this to preserve aspect ratio
-const TOP_BANNER_ASPECT_RATIO = 430 / 328;
-const staticBanners = [
-    require("../assets/images/image.png"),
-    require("../assets/images/image.png"),
-    require("../assets/images/image.png"),
-];
-
 const PlacementBannerCarousel = ({ banners, onBannerPress, style, fullWidth = false, showDots = true }) => {
     const [activeIndex, setActiveIndex] = useState(0);
 
@@ -237,14 +216,12 @@ const HomeScreen = () => {
     const [isDiscoveryLoading, setIsDiscoveryLoading] = useState(false);
     const { profile, loadProfile, loadProfileTwo, logout } = useContext(AppContext);
 
-
     useEffect(() => {
         const fetchProfile = async () => {
             try {
                 showLoader(true);
                 await loadProfileTwo();   // or loadProfileTwo() if guest-first
             } catch (error) {
-                console.error('Profile load error:', error);
             } finally {
                 showLoader(false);
                 setIsProfileLoaded(true);
@@ -258,8 +235,6 @@ const HomeScreen = () => {
         if (!isProfileLoaded) return; // ⛔ wait till profile loads
         if (!profile) return;         // ⛔ safety
 
-        console.log("PROFILE CHECK:", profile);
-
         if (!profile.custId) {
             navigation.reset({
                 index: 0,
@@ -272,8 +247,6 @@ const HomeScreen = () => {
             });
         }
     }, [profile, isProfileLoaded]);
-
-    console.log("OOOOPPPPP", profile)
 
     const onScroll = (e) => {
         const offsetX = e.nativeEvent.contentOffset.x;
@@ -325,19 +298,10 @@ const HomeScreen = () => {
     const [lastShownPopupId, setLastShownPopupId] = useState(null);
 
     useEffect(() => {
-        const canShow = popupData && 
-                        Number(popupData.showPopup) === 1 && 
-                        popupData?.uri?.uri && 
-                        lastShownPopupId !== popupData?.popupId;
-
-        console.log('💎 [POPUP CHECK]', {
-            hasData: !!popupData,
-            popupId: popupData?.popupId,
-            lastShownId: lastShownPopupId,
-            showPopup: popupData?.showPopup,
-            uri: popupData?.uri?.uri,
-            canShow
-        });
+        const canShow = popupData &&
+            Number(popupData.showPopup) === 1 &&
+            popupData?.uri?.uri &&
+            lastShownPopupId !== popupData?.popupId;
 
         if (canShow) {
             setIsHomePopupVisible(true);
@@ -350,25 +314,23 @@ const HomeScreen = () => {
 
         // Mark as seen immediately on interaction
         if (popupData.popupId) {
-            postPopupSeenApi(popupData.popupId).catch(err => console.error('Popup seen API error on press:', err));
+            postPopupSeenApi(popupData.popupId).catch(err =>
         }
 
         const numericProductId = Number(popupData.productId) || 0;
 
         if (numericProductId > 0) {
-            console.log('🔗 [POPUP] Navigating to product (productId is ' + numericProductId + ')');
+');
             navigation.navigate('ProductDetailsScreen', { productId: numericProductId });
             setIsHomePopupVisible(false);
             return;
         }
 
         const finalLink = popupData.popupLink || popupData.popup_link || popupData.Link || popupData.link || popupData.linkValue || popupData.LinkValue;
-        
+
         if (finalLink) {
-            console.log('🔗 [POPUP] Opening popupLink:', finalLink);
-            Linking.openURL(finalLink).catch(err => console.error("Couldn't load external page", err));
+            Linking.openURL(finalLink).catch(err =>
         } else {
-            console.log('🔗 [POPUP] No link provided, closing.');
         }
 
         setIsHomePopupVisible(false);
@@ -464,7 +426,6 @@ const HomeScreen = () => {
                 refreshHomeData()
             ]);
         } catch (error) {
-            console.error('Refresh error:', error);
         } finally {
             setRefreshing(false);
         }
@@ -506,7 +467,6 @@ const HomeScreen = () => {
                 });
             }
         } catch (error) {
-            console.error('Request product error:', error);
             setStatusModal({
                 visible: true,
                 type: 'error',
@@ -525,7 +485,6 @@ const HomeScreen = () => {
         if (profile?.custId) {
             fetchDashboardData();
         }
-        console.log('firstProductBlockTitleImage', firstProductBlockTitleImage);
     }, [fetchDashboardData, profile?.custId]);
 
     // Auto-refresh when location changes
@@ -545,7 +504,6 @@ const HomeScreen = () => {
                 setDashboardData(response.data);
             }
         } catch (error) {
-            console.error('Error fetching dashboard data:', error);
         } finally {
             // showLoader(false);
         }
@@ -570,7 +528,6 @@ const HomeScreen = () => {
         );
     };
 
-
     // Helper for category images
     const getCategoryPlaceholder = (name) => {
         const lowerName = name?.toLowerCase() || '';
@@ -584,7 +541,6 @@ const HomeScreen = () => {
         if (lowerName.includes('break') || lowerName.includes('cereal')) return require('../assets/images/categories/tcm.png');
         return require('../assets/images/categories/dfn.png'); // Default fallback
     };
-
 
     const CategoryItem = ({ item }) => {
         const [imageLoading, setImageLoading] = useState(false);
@@ -698,10 +654,8 @@ const HomeScreen = () => {
         );
     }
 
-
     const handleBannerPress = (banner) => {
         if (!banner) return;
-        console.log('Banner Pressed:', banner);
 
         const linkType = (banner.linkType || banner.LinkType || '').toLowerCase();
         const linkValue = banner.linkValue || banner.LinkValue;
@@ -721,8 +675,7 @@ const HomeScreen = () => {
                 catName: actualCatName || 'Category'
             });
         } else if ((linkType === 'external' || linkType === 'url') && linkValue) {
-            console.log('🔗 [BANNER] Opening external link:', linkValue);
-            Linking.openURL(linkValue).catch(err => console.error("Couldn't load external page", err));
+            Linking.openURL(linkValue).catch(err =>
         }
     };
 
@@ -733,7 +686,6 @@ const HomeScreen = () => {
             const storedPincodeAreaId = await AsyncStorage.getItem('pincodeAreaId');
             const areaId = storedPincodeAreaId ? parseInt(storedPincodeAreaId) : (profile?.pincode || null);
             const response = await getCategoryProducts(category.catId, areaId);
-            console.log('Category Selection API Response:', response);
 
             if (response && response.success && response.data) {
                 const products = response.data.items || [];
@@ -742,7 +694,6 @@ const HomeScreen = () => {
                 setDiscoveryProducts([]);
             }
         } catch (error) {
-            console.error('Failed to fetch category products:', error);
             setDiscoveryProducts([]);
         } finally {
             setIsDiscoveryLoading(false);
@@ -762,9 +713,6 @@ const HomeScreen = () => {
         }
     }, [categoryDiscovery]);
 
-
-    console.log('🖼️ [HOME RENDER] isHomePopupVisible:', isHomePopupVisible, 'hasPopupData:', !!popupData, 'isStoreUnavailable:', isStoreUnavailable);
-
     return (
         <SafeAreaView
             edges={['top']}
@@ -774,7 +722,7 @@ const HomeScreen = () => {
                 onClose={() => {
                     setIsHomePopupVisible(false);
                     if (popupData?.popupId) {
-                        postPopupSeenApi(popupData.popupId).catch(err => console.error('Popup seen API error:', err));
+                        postPopupSeenApi(popupData.popupId).catch(err =>
                     }
                 }}
                 imageUrl={popupData?.uri}
@@ -980,7 +928,6 @@ const HomeScreen = () => {
                     />
                 ) : (
                     <>
-
 
                         {isHomeLoading && firstBlockItems.length === 0 ? (
                             <ProductBlockShimmer />

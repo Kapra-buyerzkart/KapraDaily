@@ -1,10 +1,10 @@
 import { View, Text, StyleSheet, ImageBackground, Image, TextInput, TouchableOpacity, KeyboardAvoidingView, ScrollView } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import { useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import { FONTS } from '../styles/typography'
 import { useNavigation, useRoute } from '@react-navigation/native'
-import { getAreasByPincode, registerUser, sendRegisterOtp } from '../api'
+import { getAreasByPincode, sendRegisterOtp } from '../api';
 import { useCart } from '../context/CartContext'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { OneSignal } from 'react-native-onesignal';
@@ -25,8 +25,7 @@ const setTokens = async (accessToken, refreshToken) => {
 };
 
 const mergeCustomerIdIntoProfile = async (custId) => {
-    // console.log('????????', custId)
-    const storedProfile = await AsyncStorage.getItem('profile');
+    //
     const existingProfile = storedProfile ? JSON.parse(storedProfile) : {};
 
     const updatedProfile = {
@@ -34,9 +33,7 @@ const mergeCustomerIdIntoProfile = async (custId) => {
         custId,
     };
 
-    // console.log('updatedProfile', updatedProfile)
-
-    await AsyncStorage.setItem('profile', JSON.stringify(updatedProfile));
+    //
 };
 
 const RegistrationScreen = () => {
@@ -64,28 +61,7 @@ const RegistrationScreen = () => {
         if (value.length === 6) {
             try {
                 const response = await getAreasByPincode(value)
-                // console.log('resss', response)
-
-                // adjust based on your API response structure
-                setAreas(response?.data || [])
-                setSelectedArea(null)
-            } catch (error) {
-                console.log('Error fetching areas:', error)
-                setAreas([])
-            }
-        } else {
-            setAreas([])
-            setSelectedArea(null)
-        }
-    }
-
-    const handleContinue = async () => {
-        if (!name || !password) {
-            showStatus({
-                type: 'error',
-                title: 'Missing Fields',
-                message: 'Please fill all mandatory fields'
-            });
+                //
             return
         }
 
@@ -111,32 +87,8 @@ const RegistrationScreen = () => {
             setLoading(true)
 
             // const response = await sendRegisterOtp(phone)
-            // console.log('OTP response:', response)
-
-            // if (response?.success === true) {
-            //     navigation.navigate('OtpScreen', {
-            //         phone: phone,
-            //         otpType: 'register',
-            //         name: name,
-            //         email: email,
-            //         password: password,
-            //         pincodeAreaId: selectedArea.pincodeAreaId
-
-            //     })
-            // } else {
-            //     alert(response?.message || 'Failed to send OTP')
-            // }
-            const payload = {
-                registerToken,
-                name,
-                email,
-                password,
-                whatsAppNo: '',
-                referCode: '',
-                pincodeAreaId: selectedArea.pincodeAreaId
-            }
-            const registerResponse = await registerUser(payload);
-            // console.log('Register User Response:', registerResponse);
+            //
+            //
             // navigation.reset({
             //     index: 0,
             //     routes: [{ name: 'MainTabs' }],
@@ -171,7 +123,6 @@ const RegistrationScreen = () => {
             }
 
         } catch (error) {
-            console.log('Registration error:', error)
             const errorMessage = error?.message || error?.data?.message || error?.data?.Message || 
                 (typeof error === 'string' ? error : 'Something went wrong. Please try again.');
             showStatus({

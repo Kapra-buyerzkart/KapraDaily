@@ -60,7 +60,6 @@ export const useCartScreen = () => {
             let isActive = true;
 
             const initCart = async () => {
-                console.log('🏁 [FOCUS] Initializing Cart Screen...');
                 try {
                     // 1. Fetch fresh addresses
                     await addressHook.refreshAddresses();
@@ -69,7 +68,6 @@ export const useCartScreen = () => {
                     // 2. Refresh cart (which now has a stable identity)
                     await refreshCart();
                 } catch (err) {
-                    console.error('❌ [FOCUS] Error during init:', err);
                 } finally {
                     if (isActive) {
                         isInitialMount.current = false;

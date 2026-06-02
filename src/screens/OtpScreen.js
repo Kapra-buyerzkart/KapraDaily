@@ -1,18 +1,4 @@
-import {
-    View,
-    Text,
-    StyleSheet,
-    ImageBackground,
-    Image,
-    TextInput,
-    TouchableOpacity,
-    KeyboardAvoidingView,
-    ScrollView,
-    Platform,
-    Alert,
-    ActivityIndicator,
-    Keyboard,
-} from 'react-native';
+import { StyleSheet, Platform, Keyboard } from 'react-native';
 import React, { useRef, useState, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
@@ -20,8 +6,7 @@ import { FONTS } from '../styles/typography';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCart } from '../context/CartContext';
-import { verifyLoginOtp, sendLoginOtp, sendForgotPwdOtp, verifyForgotPwdOtp, resendOtp, resendLoginOtp, resendForgotPwdOtp, verifyRegisterOtp, registerUser, sendRegisterOtp } from '../api'; // ✅ add sendLoginOtp
-import { setResetToken } from '../api/tokenService';
+import { verifyLoginOtp, sendLoginOtp, verifyForgotPwdOtp, resendLoginOtp, resendForgotPwdOtp, verifyRegisterOtp, sendRegisterOtp } from '../api/tokenService';
 import RNOtpVerify from 'react-native-otp-verify';
 import { AppContext } from '../context/appContext';
 import { OneSignal } from 'react-native-onesignal';
@@ -37,8 +22,7 @@ const setTokens = async (accessToken, refreshToken) => {
 };
 
 const mergeCustomerIdIntoProfile = async (custId) => {
-    // console.log('????????', custId)
-    const storedProfile = await AsyncStorage.getItem('profile');
+    //
     const existingProfile = storedProfile ? JSON.parse(storedProfile) : {};
 
     const updatedProfile = {
@@ -46,9 +30,7 @@ const mergeCustomerIdIntoProfile = async (custId) => {
         custId,
     };
 
-    // console.log('updatedProfile', updatedProfile)
-
-    await AsyncStorage.setItem('profile', JSON.stringify(updatedProfile));
+    //
 };
 
 const OtpScreen = () => {
@@ -76,32 +58,24 @@ const OtpScreen = () => {
                 RNOtpVerify.removeListener();
             }
         } catch (error) {
-            console.log('OTP Parse Error:', error);
         }
     };
 
-
     useEffect(() => {
         const sendOtpOnLoad = async () => {
-            // console.log('sendOtpOnLoadtype', type)
-            // console.log('sendOtpOnLoadphone', phone)
-            if (!phone) return;
-
-            try {
-                setLoading(true);
+            //
 
                 if (type === 'login') {
                     await sendLoginOtp(phone);
-                    // console.log('Login OTP sent');
+                    //
                 }
 
                 if (type === 'register') {
                     await sendRegisterOtp(phone);
-                    // console.log('Register OTP sent');
+                    //
                 }
 
             } catch (error) {
-                console.log('Send OTP Error:', error);
                 showStatus({
                     type: 'error',
                     title: 'Error',
@@ -124,7 +98,6 @@ const OtpScreen = () => {
                 await RNOtpVerify.getOtp();
                 RNOtpVerify.addListener(otpHandler);
             } catch (error) {
-                console.log('OTP Auto Fetch Error:', error);
             }
         };
 
@@ -134,7 +107,6 @@ const OtpScreen = () => {
             RNOtpVerify.removeListener();
         };
     }, []);
-
 
     // Countdown effect
     useEffect(() => {
@@ -171,8 +143,7 @@ const OtpScreen = () => {
     };
 
     const handleContinueLogin = async () => {
-        // console.log('enteredOtp', enteredOtp)
-        const enteredOtp = otp.join('');
+        //
         if (enteredOtp.length < 5) {
             showStatus({
                 type: 'error',
@@ -185,12 +156,10 @@ const OtpScreen = () => {
         try {
             setLoading(true)
             const response = await verifyLoginOtp(phone, enteredOtp);
-            // console.log('Verify OTP Response:', response);
+            //
 
             if (response?.success && response?.data) {
-                // console.log("mmmmmmm")
-                const { accessToken, refreshToken, custId } = response.data;
-                await setTokens(accessToken, refreshToken);
+                //
 
                 if (custId) {
                     await mergeCustomerIdIntoProfile(custId);
@@ -214,7 +183,6 @@ const OtpScreen = () => {
                 });
             }
         } catch (error) {
-            console.log('Verify OTP Error:', error);
             showStatus({
                 type: 'error',
                 title: 'Error',
@@ -226,8 +194,7 @@ const OtpScreen = () => {
     };
 
     const handleContinueRegister = async () => {
-        // console.log('enteredOtp', enteredOtp)
-        const enteredOtp = otp.join('');
+        //
         if (enteredOtp.length < 5) {
             showStatus({
                 type: 'error',
@@ -240,7 +207,7 @@ const OtpScreen = () => {
         try {
             setLoading(true)
             const response = await verifyRegisterOtp(phone, enteredOtp);
-            // console.log('Verify OTP Response:', response);
+            //
 
             if (response?.success && response?.data) {
                 const registerToken = response.data.registerToken;
@@ -248,15 +215,8 @@ const OtpScreen = () => {
                     registerToken,
                     phone
                 })
-                // console.log('registerToken', registerToken)
-                // console.log('name', name)
-                // console.log('email', email)
-                // console.log('password', password)
-                // console.log('whatsAppNo', whatsAppNo)
-                // console.log('referCode', referCode)
-                // console.log('pincodeAreaId', pincodeAreaId)
-                // const registerResponse = await registerUser({ registerToken, name, email, password, whatsAppNo, referCode, pincodeAreaId, });
-                // console.log('Register User Response:', registerResponse);
+                //
+                //
                 // navigation.reset({
                 //     index: 0,
                 //     routes: [{ name: 'MainTabs' }],
@@ -296,7 +256,6 @@ const OtpScreen = () => {
                 });
             }
         } catch (error) {
-            console.log('Verify OTP Error:', error);
             showStatus({
                 type: 'error',
                 title: 'Error',
@@ -321,7 +280,7 @@ const OtpScreen = () => {
         try {
             setLoading(true)
             const response = await verifyForgotPwdOtp(phone, enteredOtp);
-            // console.log('Verify OTP Response:', response);
+            //
 
             if (response?.success && response?.data) {
                 // const { accessToken, refreshToken } = response.data;
@@ -342,7 +301,6 @@ const OtpScreen = () => {
                 });
             }
         } catch (error) {
-            console.log('Verify OTP Error:', error);
             showStatus({
                 type: 'error',
                 title: 'Error',
@@ -372,7 +330,6 @@ const OtpScreen = () => {
             setTimer(60);
             setIsResendDisabled(true);
         } catch (error) {
-            console.log('Resend OTP Error:', error);
             showStatus({
                 type: 'error',
                 title: 'Error',
@@ -383,111 +340,9 @@ const OtpScreen = () => {
         }
     };
 
-
     return (
         <SafeAreaView style={styles.mainContainer}>
-            {/* {console.log('type', type)} */}
-            <KeyboardAvoidingView
-                style={{ flex: 1 }}
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            >
-                <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
-                    <ImageBackground
-                        style={styles.backgroundImage}
-                        source={require('../assets/images/login_background_image.jpg')}
-                    >
-                        <Image style={styles.kapraLogo} source={require('../assets/images/kapra_logo.png')} />
-                        <Image style={styles.tagLine} source={require('../assets/images/login_content.png')} />
-                    </ImageBackground>
-
-                    <View style={styles.bottomContainer}>
-                        <Text style={styles.headerText}>{
-                            type === 'login'
-                                ? "Login"
-                                : type === 'reset'
-                                    ? "Forgot Password"
-                                    : "Register"
-                        }</Text>
-
-                        <TouchableOpacity onPress={() => navigation.navigate('LoginScreen', {
-                            type: type
-                        })} style={styles.phoneNoEditContainer}>
-                            <Text style={styles.phoneNoText}>{phone}</Text>
-                            <Image
-                                style={
-                                    Platform.OS === 'android'
-                                        ? [styles.editIconImage, { bottom: hp('0.2%') }]
-                                        : styles.editIconImage
-                                }
-                                tintColor={'#000000'}
-                                source={require('../assets/images/edit_icon.png')}
-                            />
-                        </TouchableOpacity>
-                        <Text style={styles.otpSentText}>OTP has been sent to your phone & email</Text>
-                        <Text style={styles.enterNumberText}>Enter OTP</Text>
-
-                        <View style={styles.otpContainer}>
-                            {otp.map((digit, index) => (
-                                <View style={styles.numberBox} key={index}>
-                                    <TextInput
-                                        ref={inputRefs[index]}
-                                        style={styles.otpInput}
-                                        keyboardType="numeric"
-                                        maxLength={1}
-                                        value={digit}
-                                        textContentType="oneTimeCode"
-                                        autoComplete="sms-otp"
-                                        onChangeText={(text) => handleChange(text, index)}
-                                        onKeyPress={(e) => handleKeyPress(e, index)}
-                                    />
-                                </View>
-                            ))}
-                        </View>
-
-                        <View style={styles.pwdResendTimeContainer}>
-                            {type === 'login' ? (
-                                <TouchableOpacity onPress={() => navigation.navigate('LoginPwdScreen', {
-                                    phone
-                                })}>
-                                    <Text style={styles.usePwdText}>Use password</Text>
-                                </TouchableOpacity>
-                            ) : (
-                                <View />
-                            )}
-                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                {isResendDisabled ? (
-                                    <>
-                                        <Text style={[styles.usePwdText, { color: '#616161' }]}>Resend OTP in </Text>
-                                        <Text style={styles.time}>
-                                            {Math.floor(timer / 60)}:{String(timer % 60).padStart(2, '0')}
-                                        </Text>
-                                    </>
-                                ) : (
-                                    <TouchableOpacity onPress={handleResendOtp}>
-                                        <Text style={[styles.usePwdText, { color: '#F25000' }]}>Resend OTP</Text>
-                                    </TouchableOpacity>
-                                )}
-                            </View>
-                        </View>
-
-                        <TouchableOpacity style={styles.continueButton} onPress={
-                            type === 'login'
-                                ? handleContinueLogin
-                                : type === 'reset'
-                                    ? handleContinueReset
-                                    : handleContinueRegister
-                        }>
-                            {loading ? (
-                                <ActivityIndicator size={'large'} color={"#FFFFFF"} />
-                            ) : (
-                                <Text style={styles.continueButtonText}>Continue</Text>
-                            )}
-                        </TouchableOpacity>
-                    </View>
-                </ScrollView>
-            </KeyboardAvoidingView>
-        </SafeAreaView>
-    );
+            {/* {
 };
 
 export default OtpScreen;

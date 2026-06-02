@@ -1,18 +1,5 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import {
-    View,
-    Text,
-    Modal,
-    TouchableOpacity,
-    StyleSheet,
-    ActivityIndicator,
-    FlatList,
-    Image,
-    Keyboard,
-    KeyboardAvoidingView,
-    Platform,
-} from 'react-native';
-import DelayInput from 'react-native-debounce-input';
+import { View, Text, Modal, TouchableOpacity, StyleSheet, Keyboard, KeyboardAvoidingView } from 'react-native';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { getAreasBySearch } from '../api';
 import { AppContext } from '../context/appContext';
@@ -68,48 +55,7 @@ const LocationModal = ({
 
     return (
         <Modal visible={visible} transparent animationType="slide">
-            {/* {console.log('areas', areas.data)} */}
-            <KeyboardAvoidingView style={styles.overlay} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-                <View style={styles.container}>
-
-                    {/* Header */}
-                    <View style={styles.header}>
-                        <Text style={styles.title}>Change Delivery Location</Text>
-                        <TouchableOpacity onPress={onClose}>
-                            {/* <Text style={styles.close}>✕</Text> */}
-                            <Image style={{
-                                width: wp('4%'),
-                                height: wp('4%')
-                            }} source={require('../assets/images/close_two.png')} />
-                        </TouchableOpacity>
-                    </View>
-
-                    {/* Search */}
-                    <DelayInput
-                        inputRef={inputRef}
-                        value={search}
-                        delayTimeout={500}
-                        minLength={3}
-                        onChangeText={onSearch}
-                        placeholder="Search location (Please enter at least 3 characters)"
-                        style={styles.input}
-                        placeholderTextColor={'black'}
-                        autoFocus={true}
-                    />
-
-                    {/* Loader */}
-                    {loading && <ActivityIndicator color={'#FF7148'} size="small" />}
-
-                    {/* List */}
-                    <FlatList
-                        data={areas.data}
-                        keyExtractor={(_, i) => i.toString()}
-                        keyboardShouldPersistTaps="handled"
-                        renderItem={({ item }) => (
-                            <TouchableOpacity
-                                style={styles.item}
-                                onPress={() => {
-                                    onSelectLocation(item);
+            {/* {
                                     onClose();
                                 }}
                             >

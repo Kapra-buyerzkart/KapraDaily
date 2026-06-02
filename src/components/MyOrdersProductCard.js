@@ -1,8 +1,5 @@
 import { View, Text, StyleSheet, Image, TouchableOpacity, Platform } from 'react-native'
 import AntDesign from 'react-native-vector-icons/AntDesign'
-import Ionicons from 'react-native-vector-icons/Ionicons'
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'
-import React from 'react'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { FONTS } from '../styles/typography';
 import { useNavigation } from '@react-navigation/native';
@@ -174,7 +171,6 @@ const MyOrdersProductCard = (props) => {
                             navigation.navigate('CartScreen');
                         }
                     } catch (e) {
-                        console.error(e);
                     }
                 }}
             />

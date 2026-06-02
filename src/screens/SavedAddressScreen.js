@@ -1,7 +1,6 @@
-import { View, Text, Image, TouchableOpacity, StyleSheet, FlatList, RefreshControl, Alert } from 'react-native'
+import { View, Text, Image, TouchableOpacity, StyleSheet, FlatList, RefreshControl } from 'react-native';
 import React, { useState, useContext } from 'react'
 import { AppContext } from '../context/appContext'
-import StoreUnavailable from '../components/StoreUnavailable'
 import LocationModal from '../components/LocationModal'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'

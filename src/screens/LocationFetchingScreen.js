@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ActivityIndicator, StyleSheet, ImageBackground, Image, Platform, PermissionsAndroid } from 'react-native';
+import { View, Text, StyleSheet, ImageBackground, Image, Platform, PermissionsAndroid } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { PERMISSIONS, RESULTS, check, request } from 'react-native-permissions';
+import { PERMISSIONS, RESULTS, request } from 'react-native-permissions';
 import { FONTS } from '../styles/typography';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import Geocoder from 'react-native-geocoding';
@@ -22,7 +22,6 @@ export default function LocationFetchingScreen() {
         getLocation()
     }, [])
 
-
     const requestPermission = async () => {
         if (Platform.OS === 'android') {
             return await PermissionsAndroid.request(
@@ -34,7 +33,6 @@ export default function LocationFetchingScreen() {
         }
         return true
     }
-
 
     const getLocation = async () => {
         const granted = await requestPermission()
@@ -50,7 +48,6 @@ export default function LocationFetchingScreen() {
 
         // Safety timeout in case Geolocation hangs without calling success/error
         const safetyTimeout = setTimeout(() => {
-            console.log('Geolocation safety timeout reached in screen');
             setLoading(false);
             navigation.replace('AuthSuccessScreen');
         }, 10000); // 10s absolute safety
@@ -89,7 +86,6 @@ export default function LocationFetchingScreen() {
                         navigation.replace('AuthSuccessScreen')
                     }, 3000)
                 } catch (e) {
-                    console.log('Geocoding error:', e)
                     // Fallback to MainTabs on error
                     navigation.replace('AuthSuccessScreen')
                 } finally {
@@ -98,7 +94,6 @@ export default function LocationFetchingScreen() {
             },
             error => {
                 clearTimeout(safetyTimeout);
-                console.log('Geolocation error:', error)
                 setLoading(false)
                 // Fallback to MainTabs on error
                 navigation.replace('AuthSuccessScreen')
@@ -106,7 +101,6 @@ export default function LocationFetchingScreen() {
             { enableHighAccuracy: true, timeout: 8000, maximumAge: 10000 }
         )
     }
-
 
     if (loading) {
         return (

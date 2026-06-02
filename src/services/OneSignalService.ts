@@ -1,10 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {
-  OneSignal,
-  LogLevel,
-  type NotificationClickEvent,
-  type NotificationWillDisplayEvent,
-} from 'react-native-onesignal';
+import { OneSignal, LogLevel } from 'react-native-onesignal';
 import { ONE_SIGNAL_APP_ID, isValidOneSignalAppId } from '../config/oneSignal';
 
 let hasInitialized = false;
@@ -133,23 +128,16 @@ export async function checkOneSignalStatus(): Promise<void> {
         const subId = (OneSignal.User.pushSubscription as any).id;
         const token = (OneSignal.User.pushSubscription as any).token;
 
-        console.log('--- OneSignal Diagnostic (v5) ---');
-        console.log('🔔 Permission Status:', hasPermission);
-        console.log('🔔 User Opted In:', optIn);
-        console.log('🔔 Subscription ID:', subId || 'NOT FOUND');
-        console.log('🔔 Push Token:', token || 'NOT FOUND');
-        console.log('---------------------------');
+---');
 
         if (!optIn && hasPermission) {
-            console.log('🔔 [OneSignalService] User is opted out despite permission. Forcing optIn()...');
+...');
             OneSignal.User.pushSubscription.optIn();
         }
 
         if (!subId && hasPermission && optIn) {
-            console.warn('🔔 [OneSignalService] Registration pending. Checking App ID:', ONE_SIGNAL_APP_ID);
         }
     } catch (e) {
-        console.error('🔔 [OneSignalService] Diagnostic Error:', e);
     }
 }
 
@@ -161,9 +149,7 @@ export function initOneSignal(): void {
   if (!isValidOneSignalAppId(ONE_SIGNAL_APP_ID)) {
     if (__DEV__) {
       // eslint-disable-next-line no-console
-      console.warn(
-        '[OneSignal] Skipping init: set a real ONE_SIGNAL_APP_ID in src/config/oneSignal.ts'
-      );
+
     }
     return;
   }
@@ -180,7 +166,6 @@ export function initOneSignal(): void {
   setTimeout(checkOneSignalStatus, 3000);
 
   OneSignal.User.pushSubscription.addEventListener('change', (event) => {
-    console.log('🔔 [OneSignal] Subscription Changed:', event.current?.id);
     if (desiredExternalId) {
       scheduleEnsureExternalId();
     }
@@ -188,7 +173,6 @@ export function initOneSignal(): void {
 
   OneSignal.Notifications.addEventListener('foregroundWillDisplay', (event: NotificationWillDisplayEvent) => {
     const notification = event.getNotification();
-    console.log('🔔 [OneSignal] Foreground notification received:', notification?.title);
     
     // Increment local badge count
     const incrementBy = parseBadgeCount(notification?.badgeIncrement) || 1;

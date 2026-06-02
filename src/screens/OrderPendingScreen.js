@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, Image, TouchableOpacity, StatusBar, ScrollView, BackHandler } from 'react-native'
+import { View, Text, StyleSheet, TouchableOpacity, StatusBar, ScrollView, BackHandler } from 'react-native';
 import React, { useEffect } from 'react'
 import LinearGradient from 'react-native-linear-gradient'
 import { SafeAreaView } from 'react-native-safe-area-context'

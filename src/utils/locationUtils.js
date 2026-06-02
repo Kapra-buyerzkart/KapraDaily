@@ -2,7 +2,6 @@ import { Platform, PermissionsAndroid } from 'react-native';
 import Geocoder from 'react-native-geocoding';
 import Geolocation from '@react-native-community/geolocation';
 
-
 Geocoder.init('AIzaSyDhItv0zoWdQbDh-5jjKLAEjwRDDrFNc1Y');
 
 export const requestLocationPermission = async () => {

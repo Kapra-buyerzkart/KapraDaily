@@ -15,13 +15,12 @@ export const LoaderContextProvider = ({ children }) => {
     const showLoader = React.useCallback((show) => {
         setLoadingCount(prev => {
             const nextCount = show ? prev + 1 : Math.max(0, prev - 1);
-            console.log(`Loader count: ${prev} -> ${nextCount} (request: ${show})`);
+`);
 
             // Safety: If count goes from 0 to 1, start a global timeout
             if (show && nextCount === 1) {
                 if (timeoutRef.current) clearTimeout(timeoutRef.current);
                 timeoutRef.current = setTimeout(() => {
-                    console.warn('Loader safety timeout reached! Forcing hide.');
                     setLoadingCount(0);
                 }, 15000); // 15s absolute timeout for any operation
             }

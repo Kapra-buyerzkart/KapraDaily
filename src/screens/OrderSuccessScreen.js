@@ -62,12 +62,11 @@ const OrderSuccessScreen = () => {
     const fetchOrderDetails = async () => {
         try {
             const response = await getOrderDetailsApi(orderId)
-            console.log('📦 [ORDER SUCCESS] Details:', JSON.stringify(response, null, 2))
+)
             if (response?.success && response?.data) {
                 setOrderDetails(response.data)
             }
         } catch (error) {
-            console.error('Error fetching order details:', error)
         }
     }
 
@@ -81,7 +80,6 @@ const OrderSuccessScreen = () => {
     const displayAddress = address ? address : addressObj
         ? `${addressObj.addLine1 || ''} ${addressObj.addLine2 || ''}, ${addressObj.landmark || ''}, ${addressObj.district || ''}`.replace(/,\s*,/g, ',').replace(/^,|,$/g, '').trim()
         : '';
-    console.log('aaaaaaaaa', address, orderDetails);
 
     const getPaymentLabel = (method) => {
         if (!method) return 'Cash On Delivery'

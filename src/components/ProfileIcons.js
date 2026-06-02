@@ -1,4 +1,3 @@
-import React from 'react';
 import Svg, { Path, Rect, Circle, G, Defs, LinearGradient, RadialGradient, Stop } from 'react-native-svg';
 
 export const LocationIcon = ({ width = 20, height = 24, color = "#F25000", ...props }) => (

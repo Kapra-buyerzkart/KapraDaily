@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, ImageBackground, Image, TextInput, TouchableOpacity, KeyboardAvoidingView, ScrollView, Platform } from 'react-native'
-import React, { useState, useContext, useEffect } from 'react'
+import { useState, useContext } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import { FONTS } from '../styles/typography'
@@ -66,7 +66,6 @@ const SupportTicketScreen = () => {
                 setStatusModalVisible(true)
             }
         } catch (error) {
-            console.error('Create Ticket Error Details:', error)
             setStatusType('error')
             setStatusTitle('Error')
             const errorMessage = typeof error === 'string'

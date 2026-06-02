@@ -1,8 +1,6 @@
-import React from 'react';
 import { View, StyleSheet, Modal, TouchableOpacity, Image, Dimensions } from 'react-native';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import LottieView from 'lottie-react-native';
 
 const { width } = Dimensions.get('window');
 

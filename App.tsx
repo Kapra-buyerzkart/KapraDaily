@@ -6,14 +6,9 @@
  */
 
 import { useEffect } from 'react';
-import { NewAppScreen } from '@react-native/new-app-screen';
-import { LogBox, StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
-import {
-  SafeAreaProvider,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+import { LogBox, StatusBar, StyleSheet, useColorScheme } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import Navigation from './src/navigation';
 import { OneSignal } from 'react-native-onesignal';
 import { LoaderContextProvider } from './src/context/loaderContext';
 import { AppContextProvider } from './src/context/appContext';
@@ -66,7 +61,7 @@ function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor={isDarkMode ? '#000' : '#fff'} />
+        <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} translucent={true} backgroundColor={isDarkMode ? '#000' : '#fff'} />
         <AppContextProvider>
           <CartProvider>
             <WishlistProvider>

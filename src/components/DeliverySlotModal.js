@@ -26,7 +26,7 @@ const DeliverySlotModal = ({ visible, onClose, onSelectSlot, pincodeAreaId }) =>
         try {
             setLoading(true);
             const response = await getDeliverySlotsApi(pincodeAreaId);
-            console.log('🕐 [SLOTS] Response:', JSON.stringify(response, null, 2));
+);
             if (response?.success && response?.data?.items) {
                 setSlotGroups(response.data.items);
                 setSelectedDay(0);
@@ -35,7 +35,6 @@ const DeliverySlotModal = ({ visible, onClose, onSelectSlot, pincodeAreaId }) =>
                 setSlotGroups([]);
             }
         } catch (error) {
-            console.error('Error fetching delivery slots:', error);
             setSlotGroups([]);
         } finally {
             setLoading(false);

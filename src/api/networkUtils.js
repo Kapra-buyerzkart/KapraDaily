@@ -8,7 +8,6 @@ import {
 } from './tokenService';
 
 let logoutHandler = () => {
-  console.warn('⚠️ [API]: Logout handler called but not registered.');
 };
 
 let isLoggingOut = false;
@@ -36,7 +35,6 @@ const checkAuthApi = (url) => {
 
 /* -------------------- ERROR HANDLER -------------------- */
 const errorHandler = error => {
-  console.log('❌ [API ERROR]:', error?.response?.data || error?.message || error);
 
   if (error.message === 'Network Error') {
     throw 'Network Error. Ensure you are connected to internet.';
@@ -57,7 +55,7 @@ const errorHandler = error => {
 
   // Handle specific database identity conflicts (FK_Carts_Customers)
   if (typeof message === 'string' && (message.includes('FK_Carts_Customers') || (message.includes('conflict') && message.includes('custId')))) {
-    console.log('🔒 [API]: Database identity conflict detected (error), triggering logout.');
+, triggering logout.');
     if (!isLoggingOut) {
       isLoggingOut = true;
       logoutHandler(true);
@@ -95,11 +93,9 @@ axiosInstance.interceptors.request.use(
     const isAuthApi = checkAuthApi(config.url);
 
     const fullUrl = config.baseURL ? `${config.baseURL}${config.url}` : config.url;
-    console.log('API URL 👉', fullUrl, 'isAuthApi 👉', isAuthApi);
 
     if (!isAuthApi) {
       const token = await getAccessToken();
-      console.log('tokentoken', token)
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
@@ -127,7 +123,6 @@ export const resetNetworkState = () => {
   isRefreshing = false;
   isLoggingOut = false;
   failedQueue = [];
-  console.log('🔄 [API]: Network state reset.');
 };
 
 /* -------------------- RESPONSE INTERCEPTOR -------------------- */
@@ -138,7 +133,7 @@ axiosInstance.interceptors.response.use(
     if (data && data.success === false && data.message) {
       const msg = String(data.message);
       if (msg.includes('FK_Carts_Customers') || (msg.includes('conflict') && msg.includes('custId'))) {
-        console.log('🔒 [API]: Database identity conflict detected (success branch), triggering logout.');
+, triggering logout.');
         if (!isLoggingOut) {
           isLoggingOut = true;
           logoutHandler(true);
@@ -162,7 +157,6 @@ axiosInstance.interceptors.response.use(
       const refreshToken = await getRefreshToken();
       if (!refreshToken) {
         const hadAuthHeader = !!originalRequest.headers?.Authorization;
-        console.log('🔒 [API]: No refresh token available. hadAuthHeader:', hadAuthHeader);
         
         // Only yank user to LoginScreen with "Session expired" if they *were* logged in
         if (hadAuthHeader) {
@@ -187,13 +181,12 @@ axiosInstance.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        console.log('🔄 [API]: Attempting token refresh...');
         const res = await axios.post(
           `${CONFIG.base_url}auth/refreshtoken`,
           { refreshToken: refreshToken }
         );
 
-        console.log('🔄 [API]: Refresh response:', JSON.stringify(res.data));
+);
 
         // API returns { success, data: { accessToken, refreshToken } }
         const apiData = res.data?.data || res.data?.Data || res.data;
@@ -201,7 +194,6 @@ axiosInstance.interceptors.response.use(
         const newRefreshToken = apiData?.refreshToken || apiData?.refresh_token;
 
         if (newAccessToken) {
-          console.log('✅ [API]: Token refresh successful, storing new tokens');
           // Store both new access token AND new refresh token
           await setTokens(newAccessToken, newRefreshToken || refreshToken);
           processQueue(null, newAccessToken);
@@ -212,7 +204,6 @@ axiosInstance.interceptors.response.use(
           throw new Error('New access token not found in refresh response');
         }
       } catch (err) {
-        console.log('🔒 [API]: Token refresh failed:', err?.response?.data || err?.message);
         processQueue(err);
         await clearTokens();
         // Both tokens invalid — session expired
@@ -234,12 +225,7 @@ axiosInstance.interceptors.response.use(
 /* -------------------- API METHODS -------------------- */
 export const get = async (url, config) => {
   const res = await axiosInstance.get(url, config);
-  // console.log('res.data', res.data)
-  return res.data;
-};
-
-export const post = async (url, payload, config) => {
-  const res = await axiosInstance.post(url, payload, config);
+  //
   return res.data;
 };
 

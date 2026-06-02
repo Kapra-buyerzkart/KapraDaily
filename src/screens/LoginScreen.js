@@ -1,13 +1,11 @@
-import { View, Text, StyleSheet, ImageBackground, Image, TextInput, TouchableOpacity, KeyboardAvoidingView, ScrollView, Alert, ActivityIndicator } from 'react-native'
+import { View, Text, StyleSheet, ImageBackground, Image, TextInput, TouchableOpacity, KeyboardAvoidingView, ScrollView, Alert } from 'react-native';
 import React, { useState, useContext } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import { FONTS } from '../styles/typography'
 import { useNavigation, useRoute } from '@react-navigation/native'
 import { useCart } from '../context/CartContext'
-import { checkPhone, sendForgotPwdOtp, sendLoginOtp } from '../api'
-import { setTokens } from '../api/tokenService'
-import LoaderComponent from '../components/LoaderComponent'
+import { sendForgotPwdOtp, sendLoginOtp } from '../api';
 import { LoaderContext } from '../context/loaderContext'
 import { validatePhoneNumbers } from '../utils/validation'
 
@@ -25,8 +23,8 @@ const LoginScreen = () => {
     const phoneNumber = '8137956574';
 
     // const handleContinue = async () => {
-    //     console.log(phone);
-    //     console.log('type', type);
+    //
+    //
 
     //     if (phone.length !== 10) {
     //         Alert.alert('Error', 'Please enter a valid mobile number');
@@ -42,8 +40,7 @@ const LoginScreen = () => {
     //         if (type === 'reset') {
     //             response = await sendForgotPwdOtp(phone);
     //         }
-    //         console.log('response', response)
-    //         console.log('OTP Response:', response);
+    //
 
     //         if (response?.success && response?.data) {
     //             navigation.navigate('OtpScreen', {
@@ -53,7 +50,7 @@ const LoginScreen = () => {
     //             Alert.alert('Error', response?.message || 'Failed to send OTP');
     //         }
     //     } catch (error) {
-    //         console.log('OTP Error:', error);
+    //
     //         Alert.alert('Error', error?.Message || error?.message || 'Failed to send OTP');
     //     } finally {
     //         setLoading(false);
@@ -61,9 +58,8 @@ const LoginScreen = () => {
     // };
 
     // const handleContinueLogin = async () => {
-    //     // console.log('Login')
-    //     // console.log(phone);
-    //     // console.log('type', type);
+    //     //
+    //     //
 
     //     if (!validatePhoneNumbers(phone)) {
     //         showStatus({
@@ -78,8 +74,7 @@ const LoginScreen = () => {
     //         setLoading(true);
     //         showLoader(true);
     //         const response = await sendLoginOtp(phone);
-    //         console.log('handleContinueLoginresponse', response)
-    //         // console.log('OTP Response:', response);
+    //
 
     //         if (response?.success && response?.data) {
     //             navigation.navigate('OtpScreen', {
@@ -100,7 +95,7 @@ const LoginScreen = () => {
     //             });
     //         }
     //     } catch (error) {
-    //         console.log('OTP Error:', error);
+    //
     //         showStatus({
     //             type: 'error',
     //             title: 'Error',
@@ -113,9 +108,8 @@ const LoginScreen = () => {
     // };
 
     const handleContinueLogin = async () => {
-        // console.log('Login')
-        // console.log(phone);
-        // console.log('type', type);
+        //
+        //
 
         if (!validatePhoneNumbers(phone)) {
             showStatus({
@@ -130,10 +124,8 @@ const LoginScreen = () => {
             setLoading(true);
             showLoader(true);
             // const response = await sendLoginOtp(phone);
-            // console.log('phonephone', phone)
-            const response = await checkPhone(phone);
-            // console.log('handleContinueLoginresponse', response)
-            // console.log('OTP Response:', response);
+            //
+            //
 
             if (response?.data?.exists === true) {
                 navigation.navigate('OtpScreen', {
@@ -155,7 +147,6 @@ const LoginScreen = () => {
                 });
             }
         } catch (error) {
-            console.log('OTP Error:', error);
             showStatus({
                 type: 'error',
                 title: 'Error',
@@ -168,8 +159,8 @@ const LoginScreen = () => {
     };
 
     const handleContinueRest = async () => {
-        // console.log(phone);
-        // console.log('handleContinueResthandleContinueResttype', type);
+        //
+        //
 
         if (!validatePhoneNumbers(phone)) {
             showStatus({
@@ -190,8 +181,7 @@ const LoginScreen = () => {
             if (type === 'reset') {
                 response = await sendForgotPwdOtp(phone);
             }
-            // console.log('handleContinueRestresponse', response)
-            // console.log('OTP Response:', response);
+            //
 
             if (response?.success && response?.data) {
                 navigation.navigate('OtpScreen', {
@@ -206,7 +196,6 @@ const LoginScreen = () => {
                 });
             }
         } catch (error) {
-            console.log('OTP Error:', error);
             showStatus({
                 type: 'error',
                 title: 'Error',

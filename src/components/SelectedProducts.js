@@ -1,7 +1,6 @@
 import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native'
-import React, { useMemo } from 'react'
+import React from 'react';
 import LinearGradient from 'react-native-linear-gradient'
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { useNavigation } from '@react-navigation/native';
 import { FONTS } from '../styles/typography';

@@ -3,15 +3,12 @@ import React, { useState, useMemo, useEffect } from 'react'
 import { BlurView } from '@react-native-community/blur'
 import LinearGradient from 'react-native-linear-gradient'
 import FontAwesome from 'react-native-vector-icons/FontAwesome'
-import Entypo from 'react-native-vector-icons/Entypo'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import { FONTS } from '../styles/typography'
 import { useCart } from '../context/CartContext'
 import CONFIG from '../globals/config'
 import { useWishlist } from '../context/WishlistContext'
 import ConfirmationModal from './ConfirmationModal'
-
-
 
 const CartProductCard = (props) => {
     const { updateCartItemQuantity, removeFromCart, updatingItems } = useCart();

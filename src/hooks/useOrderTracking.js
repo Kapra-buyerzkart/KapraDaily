@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import signalRService from '../api/signalRService';
 
 /**
@@ -24,7 +24,6 @@ export const useOrderTracking = (orderId, onStatusUpdate, onLocationUpdate) => {
 
             if (updateOrderId && String(updateOrderId) === String(orderId)) {
                 if (type === 'orderUpdate') {
-                    console.log(`📡 [Hook] Order update for ${orderId}:`, data);
                     onStatusUpdate?.(data);
                 }
             }

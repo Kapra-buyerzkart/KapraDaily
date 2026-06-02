@@ -1,7 +1,6 @@
-import { View, Text, StyleSheet, ImageBackground, Image, TextInput, TouchableOpacity, KeyboardAvoidingView, ScrollView, Alert } from 'react-native'
+import { View, Text, StyleSheet, ImageBackground, Image, TextInput, TouchableOpacity, KeyboardAvoidingView, ScrollView } from 'react-native';
 import React, { useState, useContext } from 'react'
 import { AppContext } from '../context/appContext'
-import StoreUnavailable from '../components/StoreUnavailable'
 import LocationModal from '../components/LocationModal'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
@@ -70,7 +69,6 @@ const ChangePasswordScreen = () => {
                 setStatusModalVisible(true)
             }
         } catch (error) {
-            console.error('Change Password Error:', error)
             setStatusType('error')
             setStatusTitle('Error')
             setStatusMessage('An unexpected error occurred')

@@ -23,7 +23,6 @@ const getUserId = async () => {
                     if (token.includes('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzIiwicGhvbmUiOiI4MTM3OTU2NTc0')) {
                         return 3;
                     }
-                    console.warn('atob failed, user might need to login');
                     return 3;
                 }
                 const decoded = JSON.parse(decodedStr);
@@ -33,7 +32,6 @@ const getUserId = async () => {
             }
         }
     } catch (error) {
-        console.error('Error getting userId:', error);
     }
     return 3;
 };
@@ -55,11 +53,9 @@ const getPincodeAreaId = async () => {
             }
         }
     } catch (error) {
-        console.error('Error getting pincodeAreaId:', error);
     }
     return null;
 };
-
 
 export const addToCartApi = async (productId, quantity = 1, pincodeAreaIdOverride = null) => {
     const pincodeAreaId = pincodeAreaIdOverride || await getPincodeAreaId();
@@ -72,7 +68,6 @@ export const addToCartApi = async (productId, quantity = 1, pincodeAreaIdOverrid
 
     return post('cart/add', payload);
 };
-
 
 export const updateCartItemApi = async (cartItemId, quantity, cartVersion, productId = null, pincodeAreaIdOverride = null) => {
     const pincodeAreaId = pincodeAreaIdOverride || await getPincodeAreaId();
@@ -88,7 +83,6 @@ export const updateCartItemApi = async (cartItemId, quantity, cartVersion, produ
 
     return post(`cart/update/${cartItemId}`, payload);
 };
-
 
 export const removeFromCartApi = async (cartItemId, cartVersion, productId, pincodeAreaIdOverride = null) => {
     const pincodeAreaId = pincodeAreaIdOverride || await getPincodeAreaId();
@@ -125,7 +119,6 @@ export const getCartSummaryApi = async (deliveryMode = 'express', deliverySlotId
     return post(`cart/${idToUse}/summary`, payload);
 };
 
-
 export const clearCartApi = async (cartVersion, cartId) => {
     const payload = {
         ...(cartVersion && { ifMatchCartVersion: cartVersion })
@@ -133,7 +126,6 @@ export const clearCartApi = async (cartVersion, cartId) => {
 
     return deleteRequest('cart/clear', payload);
 };
-
 
 export const applyBCoinApi = async (bcoins, cartVersion, cartId) => {
     const userId = await getUserId();
@@ -145,14 +137,12 @@ export const applyBCoinApi = async (bcoins, cartVersion, cartId) => {
     return post(`cart/${idToUse}/applybcoin`, payload);
 };
 
-
 export const removeBCoinApi = async (cartVersion, cartId) => {
     const userId = await getUserId();
     const idToUse = cartId || userId;
     const payload = {
         ifMatchCartVersion: cartVersion
     };
-    console.log('wek32krlk4', payload);
 
     return post(`cart/${idToUse}/removebcoin`, payload);
 };
@@ -166,7 +156,7 @@ export const applyCouponApi = async (couponCode, cartVersion, pincodeAreaId, car
         pincodeAreaId: areaId,
         ifMatchCartVersion: cartVersion
     };
-    console.log('Applying Coupon Payload:', JSON.stringify(payload, null, 2));
+);
     return post(`cart/${idToUse}/applycoupon`, payload);
 };
 
@@ -186,7 +176,6 @@ export const getAvailableCouponsApi = async (pincodeAreaId) => {
     });
 };
 
-
 export const applyGiftCardApi = async (giftCode, cartVersion, pincodeAreaId, cartId) => {
     const userId = await getUserId();
     const idToUse = cartId || userId;
@@ -196,10 +185,9 @@ export const applyGiftCardApi = async (giftCode, cartVersion, pincodeAreaId, car
         pincodeAreaId: areaId,
         ifMatchCartVersion: cartVersion
     };
-    console.log('Applying GiftCard Payload:', JSON.stringify(payload, null, 2));
+);
     return post(`cart/${idToUse}/applygiftcard`, payload);
 };
-
 
 export const removeGiftCardApi = async (cartVersion, cartId) => {
     const userId = await getUserId();

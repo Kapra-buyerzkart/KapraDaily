@@ -25,7 +25,6 @@ const SupportTicketsListScreen = () => {
                 setTickets(response)
             }
         } catch (error) {
-            console.error('Error fetching support tickets:', error)
         } finally {
             showLoader(false)
             setRefreshing(false)

@@ -1,13 +1,9 @@
-import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import LocationFetchingScreen from '../screens/LocationFetchingScreen';
 import CartScreen from '../screens/CartScreen'
 import ProfileScreen from '../screens/ProfileScreen'
 import HomeScreen from '../screens/HomeScreen';
-import ProductDetailsScreen from '../screens/ProductDetailsScreen'
 import MyOrdersScreen from '../screens/MyOrdersScreen'
-import LoginScreen from '../screens/LoginScreen'
-
 const Stack = createNativeStackNavigator();
 
 export default function HomeStack() {

@@ -1,7 +1,6 @@
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
-import EvilIcons from 'react-native-vector-icons/EvilIcons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Entypo from 'react-native-vector-icons/Entypo';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
@@ -46,7 +45,6 @@ const ProductCard = (props) => {
         return img; // For require(...) local images
     };
 
-
     // const { item } = props;
     // Map API fields to UI expected fields or use them directly
     const name = item.prName || item.name || '';
@@ -64,7 +62,7 @@ const ProductCard = (props) => {
         setImageLoading(true);
     }, [item.featuredImage, item.img]);
 
-    // console.log('ProductCard Render', item.id || item.productId);
+    //
 
     return (
         <TouchableOpacity

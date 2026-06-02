@@ -23,14 +23,12 @@ export const useProductDetails = (productId, initialProduct = null) => {
     useEffect(() => {
         const fetchProductData = async () => {
             if (productId) {
-                //  console.log(' nm,./,mnbvnjkml;', getPincodeAreaId());
+                //
                 try {
                     setLoading(true);
                     showLoader(true);
                     setError(null);
                     // const pincodeAreaId = await getPincodeAreaId();
-                    console.log(' nm,./,mnbvnjkml;', pincodeAreaId);
-
 
                     let currentPincodeId = pincodeAreaId || profile?.pincode;
                     if (!currentPincodeId) {
@@ -46,9 +44,6 @@ export const useProductDetails = (productId, initialProduct = null) => {
                         getProductDetails(productId, currentPincodeId),
                         getRelatedProductsApi(productId, currentPincodeId)
                     ]);
-
-                    console.log('Product Details Response:', detailsResponse);
-                    console.log('Related Products Response:', relatedResponse);
 
                     if (detailsResponse?.data) {
                         const productData = detailsResponse.data.product || detailsResponse.data;
@@ -75,7 +70,6 @@ export const useProductDetails = (productId, initialProduct = null) => {
                         setRelatedProducts(relatedResponse.data.items);
                     }
                 } catch (err) {
-                    console.error('Error fetching product data:', err);
                     setError(err);
                 } finally {
                     setLoading(false);

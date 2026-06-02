@@ -14,8 +14,6 @@ import { AppContext } from '../context/appContext'
 import { useContext, useEffect } from 'react'
 import useProductSearch from '../hooks/useProductSearch'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { ActivityIndicator } from 'react-native'
-
 const ProductListScreen = () => {
     const navigation = useNavigation()
     const route = useRoute()

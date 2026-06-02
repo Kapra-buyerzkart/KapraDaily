@@ -1,14 +1,12 @@
 import React, { useState, useContext, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Alert, KeyboardAvoidingView, Platform, Image, ImageBackground } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Image, ImageBackground } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import AntDesign from 'react-native-vector-icons/AntDesign';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { FONTS } from '../styles/typography';
 import { LoaderContext } from '../context/loaderContext';
 import { AppContext } from '../context/appContext';
-import StoreUnavailable from '../components/StoreUnavailable';
 import LocationModal from '../components/LocationModal';
 import { validatePhoneNumbers } from '../utils/validation';
 
@@ -101,7 +99,6 @@ const UpdateContactScreen = () => {
                 setStatusModalVisible(true);
             }
         } catch (error) {
-            console.error('Request OTP Error:', error);
             setStatusType('error');
             setStatusTitle('Error');
             setStatusMessage('Failed to request OTP. Please try again.');
@@ -145,7 +142,6 @@ const UpdateContactScreen = () => {
                 setStatusModalVisible(true);
             }
         } catch (error) {
-            console.error('Verify OTP Error:', error);
             setStatusType('error');
             setStatusTitle('Error');
             setStatusMessage('Invalid OTP or verification failed.');

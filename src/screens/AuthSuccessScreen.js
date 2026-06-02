@@ -30,7 +30,6 @@ const AuthSuccessScreen = ({ navigation }) => {
                 : (generalSettings?.kshope_android_url || 'https://play.google.com/store/apps/details?id=com.kshope');
             
             Linking.openURL(storeUrl).catch(err => {
-                console.error('Failed to open store URL:', err);
                 handleComingSoon();
             });
         } else {

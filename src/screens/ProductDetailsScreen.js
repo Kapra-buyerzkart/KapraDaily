@@ -1,11 +1,10 @@
-import { View, Text, Image, StyleSheet, TouchableOpacity, FlatList, Platform, ScrollView, Animated, ActivityIndicator, Share, Alert, ImageBackground } from 'react-native'
+import { View, Text, Image, StyleSheet, TouchableOpacity, FlatList, Platform, ScrollView, Animated, ActivityIndicator, Share, ImageBackground } from 'react-native';
 import React, { useRef, useState, useEffect, useContext } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen'
 import { FONTS } from '../styles/typography'
 import { useNavigation, useRoute } from '@react-navigation/native'
 import CONFIG from '../globals/config'
-import FontAwesome from 'react-native-vector-icons/FontAwesome'
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons'
 import TokenProductCard from '../components/TokenProductCard'
@@ -13,7 +12,6 @@ import SelectedProducts from '../components/SelectedProducts'
 import { useWishlist } from '../context/WishlistContext'
 import { useCart } from '../context/CartContext'
 import { useProductDetails } from '../hooks/useProductDetails'
-import { LoaderContext } from '../context/loaderContext'
 import Entypo from 'react-native-vector-icons/Entypo'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import LinearGradient from 'react-native-linear-gradient'
@@ -70,7 +68,6 @@ const ProductDetailsScreen = () => {
                 title: productName
             });
         } catch (error) {
-            console.error('Share Error:', error);
         }
     };
 

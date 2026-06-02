@@ -1,38 +1,26 @@
-import { View, Text, StyleSheet, Touchable, TouchableOpacity, Image, ScrollView, TextInput, Clipboard, Linking } from 'react-native'
+import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, TextInput, Clipboard, Linking } from 'react-native';
 import React, { useContext, useEffect, useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons'
-import FontAwesome6 from 'react-native-vector-icons/FontAwesome6'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import LinearGradient from 'react-native-linear-gradient'
 import { useNavigation } from '@react-navigation/native'
 import { FONTS } from '../styles/typography'
-import { getAccessToken } from '../api/tokenService'
 import LoginScreen from './LoginScreen'
 import { AppContext } from '../context/appContext'
 import { LoaderContext } from '../context/loaderContext'
 import CouponModal from '../components/CouponModal'
 import { getAvailableCouponsApi, getAvailableGiftCardsApi } from '../api/cartService'
 import Toast from 'react-native-simple-toast'
-import StoreUnavailable from '../components/StoreUnavailable'
 import LocationModal from '../components/LocationModal'
 import CONFIG from '../globals/config'
 import ConfirmationModal from '../components/ConfirmationModal'
 import StatusModal from '../components/StatusModal'
 import { getWalletDataApi, requestProductApi, deleteAccountApi } from '../api/userService'
 import CoinCountSVG from '../components/CoinCountSVG'
-import {
-    LocationIcon,
-    OrderIcon,
-    ReferIcon,
-    SmartPointIcon,
-    PrivacyIcon,
-    TermsIcon,
-    AboutIcon,
-    CouponIcon
-} from '../components/ProfileIcons'
+import { LocationIcon, OrderIcon, ReferIcon, SmartPointIcon, PrivacyIcon, TermsIcon, AboutIcon } from '../components/ProfileIcons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'
 import DeviceInfo from 'react-native-device-info';
 
@@ -82,7 +70,6 @@ export default function ProfileScreen() {
                 });
             }
         } catch (error) {
-            console.error('Request product error:', error);
             setStatusConfig({
                 visible: true,
                 type: 'error',
@@ -125,7 +112,6 @@ export default function ProfileScreen() {
                 setWalletData(response.data);
             }
         } catch (error) {
-            console.error('Error fetching wallet data:', error);
         }
     };
 
@@ -147,7 +133,6 @@ export default function ProfileScreen() {
         showLoader(true);
         try {
             const response = await deleteAccountApi();
-            console.log('Delete account response:', response);
             if (response && response.success) {
                 await handleLogout();
                 Toast.show('Account deleted successfully', Toast.SHORT);
@@ -160,7 +145,6 @@ export default function ProfileScreen() {
                 });
             }
         } catch (error) {
-            console.error('Delete account error:', error);
             setStatusConfig({
                 visible: true,
                 type: 'error',
@@ -212,7 +196,6 @@ export default function ProfileScreen() {
                 setAvailableGiftCards(giftCards);
             }
         } catch (error) {
-            console.log('Error fetching offers:', error);
         }
     };
 
@@ -281,7 +264,6 @@ export default function ProfileScreen() {
                                     </TouchableOpacity>
                                 </View>
                             </View>
-
 
                             <View style={styles.containerTwo}>
                                 <TouchableOpacity onPress={() => navigation.navigate('SavedAddressScreen')} style={styles.saveAddressContainer}>
