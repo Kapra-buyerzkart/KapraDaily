@@ -5,14 +5,30 @@ import LinearGradient from 'react-native-linear-gradient';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { useNavigation } from '@react-navigation/native';
 import { FONTS } from '../styles/typography';
-import { 
-    getCoPartnerAreasApi, 
-    getCoPartnerListApi, 
+import {
+    getCoPartnerAreasApi,
+    getCoPartnerListApi,
     getCoPartnerSummaryApi,
     getCoPartnerCustomersApi,
     getCoPartnerOrdersApi,
     getCoPartnerPayoutsApi
 } from '../api/userService';
+
+const formatDate = (dateStr) => {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    if (isNaN(d)) return dateStr.split('T')[0];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return `${d.getDate().toString().padStart(2, '0')} ${months[d.getMonth()]}`;
+};
+
+const formatAmount = (val) => {
+    if (val == null) return '';
+    const str = val.toString().replace(/[^0-9.-]+/g, "");
+    const num = parseFloat(str);
+    if (isNaN(num)) return val;
+    return `₹${num.toLocaleString('en-IN')}`;
+};
 
 const CoPartnerDashboardScreen = () => {
     const navigation = useNavigation();
@@ -26,7 +42,7 @@ const CoPartnerDashboardScreen = () => {
         copartners: 5,
         payouts: 5
     });
-    
+
     // States for data
     const [summary, setSummary] = useState(null);
     const [copartners, setCopartners] = useState([]);
@@ -37,6 +53,28 @@ const CoPartnerDashboardScreen = () => {
     // Default dates based on prompt example
     const [fromDate, setFromDate] = useState('2026-03-01');
     const [toDate, setToDate] = useState('2026-05-14');
+
+    // States for custom date range picker selection
+    const [tempFromDate, setTempFromDate] = useState('2026-03-01');
+    const [tempToDate, setTempToDate] = useState('2026-05-14');
+    const [selectingField, setSelectingField] = useState('from'); // 'from' or 'to'
+    const [currentMonth, setCurrentMonth] = useState(new Date('2026-03-01').getMonth());
+    const [currentYear, setCurrentYear] = useState(new Date('2026-03-01').getFullYear());
+
+    const openFilterModal = () => {
+        setTempFromDate(fromDate);
+        setTempToDate(toDate);
+        setSelectingField('from');
+        const start = new Date(fromDate);
+        if (!isNaN(start)) {
+            setCurrentMonth(start.getMonth());
+            setCurrentYear(start.getFullYear());
+        } else {
+            setCurrentMonth(new Date().getMonth());
+            setCurrentYear(new Date().getFullYear());
+        }
+        setIsFilterVisible(true);
+    };
 
     useEffect(() => {
         fetchAreas();
@@ -54,12 +92,12 @@ const CoPartnerDashboardScreen = () => {
             setIsLoading(true);
             setVisibleLimits({ customers: 5, orders: 5, copartners: 5, payouts: 5 });
             const params = { pincodeAreaId: areaId, fromDate, toDate };
-            
+
             const [
-                summaryRes, 
-                listRes, 
-                customersRes, 
-                ordersRes, 
+                summaryRes,
+                listRes,
+                customersRes,
+                ordersRes,
                 payoutsRes
             ] = await Promise.all([
                 getCoPartnerSummaryApi(areaId),
@@ -129,7 +167,7 @@ const CoPartnerDashboardScreen = () => {
             {isLoading && areas.length === 0 ? (
                 <ActivityIndicator size="small" color="#F25000" />
             ) : (
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{flexGrow: 1, justifyContent: 'space-around'}}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1, justifyContent: 'space-around' }}>
                     {areas.map((area, index) => {
                         const areaId = area.pincodeAreaId || area.id;
                         const activeId = activeArea?.pincodeAreaId || activeArea?.id;
@@ -162,12 +200,12 @@ const CoPartnerDashboardScreen = () => {
             >
                 <Text style={styles.mainCardLabel}>Total Area Sales</Text>
                 <Text style={styles.mainCardValue}>{summary?.totalAreaSales || summary?.totalSales || '₹0'}</Text>
-                
+
                 <View style={styles.statsGrid}>
                     {stats.map((item, index) => (
-                        <View key={index} style={[styles.statItem, 
-                            index % 2 === 0 ? styles.statItemLeft : styles.statItemRight,
-                            index < 4 && styles.statItemTopBorder
+                        <View key={index} style={[styles.statItem,
+                        index % 2 === 0 ? styles.statItemLeft : styles.statItemRight,
+                        index < 4 && styles.statItemTopBorder
                         ]}>
                             <View style={styles.statIconWrap}>
                                 <MaterialCommunityIcons name={item.icon} size={wp('6%')} color={item.iconColor} />
@@ -191,9 +229,126 @@ const CoPartnerDashboardScreen = () => {
         } else {
             from.setDate(to.getDate() - days);
         }
-        setToDate(to.toISOString().split('T')[0]);
-        setFromDate(from.toISOString().split('T')[0]);
+        const toStr = to.toISOString().split('T')[0];
+        const fromStr = from.toISOString().split('T')[0];
+        setToDate(toStr);
+        setFromDate(fromStr);
+        setTempFromDate(fromStr);
+        setTempToDate(toStr);
         setIsFilterVisible(false);
+    };
+
+    const handleApplyCustomRange = () => {
+        if (tempFromDate && tempToDate) {
+            setFromDate(tempFromDate);
+            setToDate(tempToDate);
+            setIsFilterVisible(false);
+        }
+    };
+
+    const handlePrevMonth = () => {
+        if (currentMonth === 0) {
+            setCurrentMonth(11);
+            setCurrentYear(prev => prev - 1);
+        } else {
+            setCurrentMonth(prev => prev - 1);
+        }
+    };
+
+    const handleNextMonth = () => {
+        if (currentMonth === 11) {
+            setCurrentMonth(0);
+            setCurrentYear(prev => prev + 1);
+        } else {
+            setCurrentMonth(prev => prev + 1);
+        }
+    };
+
+    const handleDayPress = (dateStr) => {
+        if (!dateStr) return;
+
+        if (!tempFromDate || (tempFromDate && tempToDate)) {
+            setTempFromDate(dateStr);
+            setTempToDate(null);
+            setSelectingField('to');
+        } else {
+            const start = new Date(tempFromDate);
+            const end = new Date(dateStr);
+            if (end < start) {
+                setTempFromDate(dateStr);
+                setTempToDate(null);
+                setSelectingField('to');
+            } else {
+                setTempToDate(dateStr);
+                setSelectingField('from');
+            }
+        }
+    };
+
+    const getDaysInMonth = (month, year) => new Date(year, month + 1, 0).getDate();
+    const getFirstDayOfMonth = (month, year) => new Date(year, month, 1).getDay();
+
+    const generateDays = () => {
+        const daysInMonth = getDaysInMonth(currentMonth, currentYear);
+        const firstDay = getFirstDayOfMonth(currentMonth, currentYear);
+        const daysList = [];
+
+        // Add empty slots for the first week
+        for (let i = 0; i < firstDay; i++) {
+            daysList.push({ key: `empty-${i}`, day: null, dateStr: null });
+        }
+
+        // Add days of the month
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dateStr = `${currentYear}-${(currentMonth + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+            daysList.push({ key: dateStr, day, dateStr });
+        }
+
+        return daysList;
+    };
+
+    const getDayStyle = (dateStr) => {
+        if (!dateStr) return {};
+
+        const isStart = dateStr === tempFromDate;
+        const isEnd = dateStr === tempToDate;
+
+        if (isStart || isEnd) {
+            return styles.calendarDaySelected;
+        }
+
+        if (tempFromDate && tempToDate) {
+            const current = new Date(dateStr);
+            const start = new Date(tempFromDate);
+            const end = new Date(tempToDate);
+            if (current > start && current < end) {
+                return styles.calendarDayInRange;
+            }
+        }
+
+        return {};
+    };
+
+    const getDayTextStyle = (dateStr) => {
+        if (!dateStr) return {};
+
+        const isStart = dateStr === tempFromDate;
+        const isEnd = dateStr === tempToDate;
+
+        if (isStart || isEnd) {
+            return styles.calendarDayTextSelected;
+        }
+
+        if (tempFromDate && tempToDate) {
+            const current = new Date(dateStr);
+            const start = new Date(tempFromDate);
+            const end = new Date(tempToDate);
+            if (current > start && current < end) {
+                return styles.calendarDayTextInRange;
+            }
+        }
+
+        return {};
     };
 
     const renderDateRange = () => (
@@ -202,42 +357,149 @@ const CoPartnerDashboardScreen = () => {
                 <Text style={styles.dateRangeLabel}>DATE RANGE</Text>
                 <Text style={styles.dateRangeValue}>{fromDate} → {toDate}</Text>
             </View>
-            <TouchableOpacity style={styles.filterBtn} onPress={() => setIsFilterVisible(true)}>
+            <TouchableOpacity onPress={openFilterModal}
+                style={styles.filterBtn}>
+                {/* <LinearGradient
+                    colors={['#FF7B3A', '#F25000']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+
+                > */}
                 <Text style={styles.filterBtnText}>Filters</Text>
+                {/* </LinearGradient> */}
             </TouchableOpacity>
         </View>
     );
 
-    const renderFilterModal = () => (
-        <Modal
-            visible={isFilterVisible}
-            transparent={true}
-            animationType="fade"
-            onRequestClose={() => setIsFilterVisible(false)}
-        >
-            <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setIsFilterVisible(false)}>
-                <View style={styles.modalContent}>
-                    <Text style={styles.modalTitle}>Select Date Range</Text>
-                    
-                    <TouchableOpacity style={styles.filterOption} onPress={() => handleDateFilter(7)}>
-                        <Text style={styles.filterOptionText}>Last 7 Days</Text>
+    const renderFilterModal = () => {
+        const daysList = generateDays();
+        const canApply = tempFromDate && tempToDate;
+        const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        const weekdays = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+
+        return (
+            <Modal
+                visible={isFilterVisible}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => setIsFilterVisible(false)}
+            >
+                <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setIsFilterVisible(false)}>
+                    <TouchableOpacity style={styles.modalContentLarge} activeOpacity={1}>
+                        <Text style={styles.modalTitle}>Select Date Range</Text>
+
+                        {/* Presets Row */}
+                        <View style={{ height: hp('6%'), marginBottom: hp('1%') }}>
+                            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.presetsContent}>
+                                <TouchableOpacity style={styles.presetPill} onPress={() => handleDateFilter(7)}>
+                                    <Text style={styles.presetPillText}>Last 7 Days</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity style={styles.presetPill} onPress={() => handleDateFilter(30)}>
+                                    <Text style={styles.presetPillText}>Last 30 Days</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity style={styles.presetPill} onPress={() => handleDateFilter('month')}>
+                                    <Text style={styles.presetPillText}>This Month</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity style={styles.presetPill} onPress={() => handleDateFilter(90)}>
+                                    <Text style={styles.presetPillText}>Last 3 Months</Text>
+                                </TouchableOpacity>
+                            </ScrollView>
+                        </View>
+
+                        {/* Selected Range Display */}
+                        <View style={styles.selectedRangeDisplay}>
+                            <TouchableOpacity
+                                style={[
+                                    styles.rangeDisplayBox,
+                                    selectingField === 'from' && styles.rangeDisplayBoxActive
+                                ]}
+                                onPress={() => setSelectingField('from')}
+                            >
+                                <Text style={styles.rangeDisplayLabel}>START DATE</Text>
+                                <Text style={styles.rangeDisplayValue}>
+                                    {tempFromDate ? formatDate(tempFromDate) : 'Select Start'}
+                                </Text>
+                            </TouchableOpacity>
+
+                            <MaterialCommunityIcons name="arrow-right" size={wp('5%')} color="#888888" style={{ marginHorizontal: wp('2%') }} />
+
+                            <TouchableOpacity
+                                style={[
+                                    styles.rangeDisplayBox,
+                                    selectingField === 'to' && styles.rangeDisplayBoxActive
+                                ]}
+                                onPress={() => setSelectingField('to')}
+                            >
+                                <Text style={styles.rangeDisplayLabel}>END DATE</Text>
+                                <Text style={styles.rangeDisplayValue}>
+                                    {tempToDate ? formatDate(tempToDate) : 'Select End'}
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        {/* Calendar Component */}
+                        <View style={styles.calendarContainer}>
+                            <View style={styles.calendarHeader}>
+                                <TouchableOpacity onPress={handlePrevMonth} style={styles.calendarNavBtn}>
+                                    <MaterialCommunityIcons name="chevron-left" size={wp('6%')} color="#F25000" />
+                                </TouchableOpacity>
+                                <Text style={styles.calendarMonthYear}>
+                                    {months[currentMonth]} {currentYear}
+                                </Text>
+                                <TouchableOpacity onPress={handleNextMonth} style={styles.calendarNavBtn}>
+                                    <MaterialCommunityIcons name="chevron-right" size={wp('6%')} color="#F25000" />
+                                </TouchableOpacity>
+                            </View>
+
+                            {/* Weekdays Row */}
+                            <View style={styles.calendarWeekdays}>
+                                {weekdays.map(day => (
+                                    <Text key={day} style={styles.calendarWeekdayText}>{day}</Text>
+                                ))}
+                            </View>
+
+                            {/* Days Grid */}
+                            <View style={styles.calendarGrid}>
+                                {daysList.map((item, index) => {
+                                    const dayStyle = getDayStyle(item.dateStr);
+                                    const dayTextStyle = getDayTextStyle(item.dateStr);
+                                    return (
+                                        <TouchableOpacity
+                                            key={item.key || index}
+                                            style={[styles.calendarDayCell, dayStyle]}
+                                            onPress={() => item.dateStr && handleDayPress(item.dateStr)}
+                                            disabled={!item.dateStr}
+                                            activeOpacity={0.7}
+                                        >
+                                            {item.day && (
+                                                <Text style={[styles.calendarDayText, dayTextStyle]}>
+                                                    {item.day}
+                                                </Text>
+                                            )}
+                                        </TouchableOpacity>
+                                    );
+                                })}
+                            </View>
+                        </View>
+
+                        {/* Action Buttons */}
+                        <View style={styles.modalActions}>
+                            <TouchableOpacity style={styles.modalCancelBtn} onPress={() => setIsFilterVisible(false)}>
+                                <Text style={styles.modalCancelBtnText}>Cancel</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.modalApplyBtn, !canApply && styles.modalApplyBtnDisabled]}
+                                onPress={handleApplyCustomRange}
+                                disabled={!canApply}
+                            >
+                                <Text style={styles.modalApplyBtnText}>Apply Range</Text>
+                            </TouchableOpacity>
+                        </View>
                     </TouchableOpacity>
-                    
-                    <TouchableOpacity style={styles.filterOption} onPress={() => handleDateFilter(30)}>
-                        <Text style={styles.filterOptionText}>Last 30 Days</Text>
-                    </TouchableOpacity>
-                    
-                    <TouchableOpacity style={styles.filterOption} onPress={() => handleDateFilter('month')}>
-                        <Text style={styles.filterOptionText}>This Month</Text>
-                    </TouchableOpacity>
-                    
-                    <TouchableOpacity style={styles.filterOption} onPress={() => handleDateFilter(90)}>
-                        <Text style={styles.filterOptionText}>Last 3 Months</Text>
-                    </TouchableOpacity>
-                </View>
-            </TouchableOpacity>
-        </Modal>
-    );
+                </TouchableOpacity>
+            </Modal>
+        );
+    };
 
     const handleViewMore = (type) => {
         setVisibleLimits(prev => ({
@@ -247,9 +509,8 @@ const CoPartnerDashboardScreen = () => {
     };
 
     const renderListSection = (title, icon, items, type) => {
-        const limit = visibleLimits[type] || 5;
+        const limit = 5;
         const visibleItems = items.slice(0, limit);
-        const hasMore = items.length > limit;
 
         return (
             <View style={styles.listSection}>
@@ -258,46 +519,46 @@ const CoPartnerDashboardScreen = () => {
                         <MaterialCommunityIcons name={icon} size={wp('5%')} color="#F25000" />
                         <Text style={styles.listTitle}>{title}</Text>
                     </View>
+                    {items.length > 5 && (
+                        <TouchableOpacity style={styles.viewAllBtn} onPress={() => navigation.navigate('CoPartnerListScreen', { title, icon, items, type })}>
+                            <Text style={styles.viewAllText}>View All</Text>
+                        </TouchableOpacity>
+                    )}
                 </View>
 
-            {visibleItems.map((item, index) => (
-                <View key={index} style={styles.listItem}>
-                    <View style={styles.listItemLeft}>
-                        <Text style={styles.itemName}>
-                            {type === 'orders' ? (item.id || item.orderId || `#ORD${index}`) : type === 'payouts' ? (item.type || item.payoutMethod || 'Transfer') : (item.name || item.custName || 'User')}
-                        </Text>
-                        <Text style={styles.itemSub}>
-                            {type === 'orders' ? (item.status || item.orderStatus) : type === 'payouts' ? (item.status || item.payoutStatus) : (item.phone || item.phoneNo || '')}
-                        </Text>
-                    </View>
-                    <View style={styles.listItemRight}>
-                        <Text style={styles.itemStatusValue}>
-                            {type === 'orders' || type === 'payouts' ? (item.amount || `₹${item.totalAmount || 0}`) : type === 'copartners' ? (item.type || item.status || 'Active') : item.status}
-                        </Text>
-                        <Text style={styles.itemDate}>{item.date || item.createdAt?.split('T')[0] || item.orderDate?.split('T')[0] || ''}</Text>
-                    </View>
-                </View>
-            ))}
-            {items.length === 0 && !isLoading && (
-                <View style={{alignItems: 'center', marginTop: hp('1%')}}>
-                    <Text style={{color: '#888', fontSize: wp('3%')}}>No items available</Text>
-                </View>
-            )}
-            {items.length === 0 && isLoading && (
-                <ActivityIndicator size="small" color="#F25000" style={{marginTop: hp('1%')}} />
-            )}
+                {visibleItems.map((item, index) => {
+                    const itemName = type === 'orders' ? (item.id || item.orderId || `#ORD${index}`) : type === 'payouts' ? (item.type || item.payoutMethod || 'Transfer') : (item.name || item.custName || 'User');
+                    const itemSub = type === 'orders' ? (item.status || item.orderStatus) : type === 'payouts' ? (item.status || item.payoutStatus) : (item.phone || item.phoneNo || '');
+                    let itemStatusValue = type === 'copartners' ? (item.type || item.status || 'Active') : item.status || 'New';
+                    if (type === 'orders' || type === 'payouts') {
+                        itemStatusValue = formatAmount(item.amount || item.totalAmount || 0);
+                    }
+                    const rawDate = item.date || item.createdAt || item.orderDate || '';
+                    const itemDate = formatDate(rawDate);
 
-            {hasMore && (
-                <TouchableOpacity 
-                    style={styles.viewMoreBtn}
-                    onPress={() => handleViewMore(type)}
-                >
-                    <Text style={styles.viewMoreText}>View More</Text>
-                    <MaterialCommunityIcons name="chevron-down" size={wp('4%')} color="#F25000" />
-                </TouchableOpacity>
-            )}
-        </View>
-    );
+                    return (
+                        <View key={index} style={styles.listItem}>
+                            <View style={styles.listItemLeft}>
+                                <Text style={styles.itemName}>{itemName}</Text>
+                                <Text style={styles.itemSub}>{itemSub}</Text>
+                            </View>
+                            <View style={styles.listItemRight}>
+                                <Text style={styles.itemStatusValue}>{itemStatusValue}</Text>
+                                <Text style={styles.itemDate}>{itemDate}</Text>
+                            </View>
+                        </View>
+                    );
+                })}
+                {items.length === 0 && !isLoading && (
+                    <View style={{ alignItems: 'center', marginTop: hp('0%'), marginBottom: hp('2%') }}>
+                        <Text style={{ color: '#888', fontSize: wp('3%') }}>No items available</Text>
+                    </View>
+                )}
+                {items.length === 0 && isLoading && (
+                    <ActivityIndicator size="small" color="#F25000" style={{ marginTop: hp('1%') }} />
+                )}
+            </View>
+        );
     };
 
     return (
@@ -383,20 +644,22 @@ const styles = StyleSheet.create({
     },
     mainCard: {
         borderRadius: wp('5%'),
-        paddingTop: hp('3%'),
+        paddingTop: -hp('1%'),
         alignItems: 'center',
         shadowColor: '#F25000',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 5,
         elevation: 5,
-        overflow: 'hidden'
+        overflow: 'hidden',
+        // marginBottom: hp('2%'),
     },
     mainCardLabel: {
         fontFamily: FONTS.poppins.medium,
         fontSize: wp('3.5%'),
         color: '#FFFFFF',
         opacity: 0.9,
+        marginTop: hp('3%')
     },
     mainCardValue: {
         fontFamily: FONTS.poppins.bold,
@@ -418,7 +681,7 @@ const styles = StyleSheet.create({
         width: '50%',
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: hp('2%'),
+        paddingVertical: hp('1.5%'),
         paddingHorizontal: wp('5%'),
     },
     statItemLeft: {
@@ -441,7 +704,7 @@ const styles = StyleSheet.create({
     statLabel: {
         fontFamily: FONTS.poppins.regular,
         fontSize: wp('2.8%'),
-        color: '#666666',
+        color: '#4A3D3D',
     },
     statValue: {
         fontFamily: FONTS.poppins.bold,
@@ -456,11 +719,12 @@ const styles = StyleSheet.create({
         borderRadius: wp('3%'),
         paddingHorizontal: wp('5%'),
         paddingVertical: hp('1.5%'),
-        marginTop: hp('2%'),
+        marginBottom: hp('2%'),
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.05,
         shadowRadius: 2,
+        marginTop: hp('2%'),
         elevation: 2,
     },
     dateRangeLabel: {
@@ -475,26 +739,34 @@ const styles = StyleSheet.create({
         color: '#000000',
     },
     filterBtn: {
-        backgroundColor: '#F25000',
         paddingHorizontal: wp('4%'),
         paddingVertical: hp('0.8%'),
-        borderRadius: wp('5%'),
+        borderRadius: wp('7%'),
+        width: wp('20%'),
+        height: hp('4%'),
+        backgroundColor: '#F25000',
+        alignItems: 'center',
+        justifyContent: 'center',
+        overflow: 'hidden',
     },
     filterBtnText: {
         fontFamily: FONTS.poppins.medium,
         fontSize: wp('3%'),
         color: '#FFFFFF',
+        textAlign: 'center'
     },
     listSection: {
         backgroundColor: '#FFFFFF',
-        borderRadius: wp('4%'),
-        padding: wp('4%'),
-        marginTop: hp('2%'),
+        borderRadius: wp('6%'),
+        paddingHorizontal: wp('5%'),
+        paddingTop: hp('2.5%'),
+        paddingBottom: hp('1%'),
+        marginBottom: hp('2%'),
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 2,
-        elevation: 2,
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.06,
+        shadowRadius: 5,
+        elevation: 3,
     },
     listHeader: {
         flexDirection: 'row',
@@ -512,11 +784,15 @@ const styles = StyleSheet.create({
         color: '#000000',
         marginLeft: wp('2%'),
     },
+    viewAllBtn: {
+        borderBottomWidth: 1.5,
+        borderBottomColor: '#F25000',
+        paddingBottom: hp('0.2%'),
+    },
     viewAllText: {
-        fontFamily: FONTS.poppins.medium,
-        fontSize: wp('3%'),
+        fontFamily: FONTS.poppins.bold,
+        fontSize: wp('3.5%'),
         color: '#F25000',
-        textDecorationLine: 'underline',
     },
     viewMoreBtn: {
         flexDirection: 'row',
@@ -538,11 +814,17 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         paddingVertical: hp('1.5%'),
+        backgroundColor: '#FFFFFF',
         borderWidth: 1,
-        borderColor: '#F5F5F5',
-        borderRadius: wp('3%'),
-        paddingHorizontal: wp('4%'),
-        marginBottom: hp('1%'),
+        borderColor: '#F2F2F2',
+        borderRadius: wp('6%'),
+        paddingHorizontal: wp('5%'),
+        marginBottom: hp('1.5%'),
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 3,
+        elevation: 2,
     },
     listItemLeft: {
         flex: 1,
@@ -550,12 +832,12 @@ const styles = StyleSheet.create({
     itemName: {
         fontFamily: FONTS.poppins.semiBold,
         fontSize: wp('3.5%'),
-        color: '#333333',
+        color: '#181C1E',
     },
     itemSub: {
         fontFamily: FONTS.poppins.regular,
         fontSize: wp('2.8%'),
-        color: '#888888',
+        color: '#4A3D3D',
         marginTop: hp('0.2%'),
     },
     listItemRight: {
@@ -564,44 +846,202 @@ const styles = StyleSheet.create({
     itemStatusValue: {
         fontFamily: FONTS.poppins.semiBold,
         fontSize: wp('3.5%'),
-        color: '#333333',
+        color: '#181C1E',
     },
     itemDate: {
         fontFamily: FONTS.poppins.regular,
         fontSize: wp('2.8%'),
-        color: '#888888',
+        color: '#4A3D3D',
         marginTop: hp('0.2%'),
     },
     modalOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.5)',
+        backgroundColor: 'rgba(0,0,0,0.6)',
         justifyContent: 'center',
         alignItems: 'center',
     },
-    modalContent: {
-        width: wp('80%'),
+    modalContentLarge: {
+        width: wp('90%'),
         backgroundColor: '#FFFFFF',
-        borderRadius: wp('4%'),
+        borderRadius: wp('6%'),
         padding: wp('5%'),
         alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.15,
+        shadowRadius: 15,
+        elevation: 10,
     },
     modalTitle: {
         fontFamily: FONTS.poppins.bold,
         fontSize: wp('4.5%'),
-        color: '#000000',
+        color: '#181C1E',
+        marginBottom: hp('1.5%'),
+    },
+    presetsContent: {
+        alignItems: 'center',
+        paddingHorizontal: wp('2%'),
+    },
+    presetPill: {
+        backgroundColor: '#FFF2EB',
+        paddingHorizontal: wp('4%'),
+        paddingVertical: hp('0.8%'),
+        borderRadius: wp('5%'),
+        marginHorizontal: wp('1.5%'),
+        borderWidth: 1,
+        borderColor: '#FFE0CC',
+    },
+    presetPillText: {
+        fontFamily: FONTS.poppins.medium,
+        fontSize: wp('3.2%'),
+        color: '#F25000',
+    },
+    selectedRangeDisplay: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        width: '100%',
         marginBottom: hp('2%'),
     },
-    filterOption: {
-        width: '100%',
-        paddingVertical: hp('1.5%'),
-        borderBottomWidth: 1,
-        borderBottomColor: '#F0F0F0',
+    rangeDisplayBox: {
+        flex: 1,
+        backgroundColor: '#F9F9F9',
+        borderWidth: 1.5,
+        borderColor: '#EFEFEF',
+        borderRadius: wp('3%'),
+        paddingVertical: hp('1%'),
+        paddingHorizontal: wp('3%'),
         alignItems: 'center',
     },
-    filterOptionText: {
+    rangeDisplayBoxActive: {
+        borderColor: '#F25000',
+        backgroundColor: '#FFF2EB',
+    },
+    rangeDisplayLabel: {
+        fontFamily: FONTS.poppins.regular,
+        fontSize: wp('2.3%'),
+        color: '#888888',
+        marginBottom: hp('0.2%'),
+    },
+    rangeDisplayValue: {
+        fontFamily: FONTS.poppins.bold,
+        fontSize: wp('3.2%'),
+        color: '#181C1E',
+    },
+    calendarContainer: {
+        width: '100%',
+        borderWidth: 1,
+        borderColor: '#F0F0F0',
+        borderRadius: wp('4%'),
+        padding: wp('3%'),
+        backgroundColor: '#FAFAFA',
+        marginBottom: hp('2.5%'),
+    },
+    calendarHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: hp('1.5%'),
+    },
+    calendarNavBtn: {
+        padding: wp('1%'),
+    },
+    calendarMonthYear: {
+        fontFamily: FONTS.poppins.semiBold,
+        fontSize: wp('3.8%'),
+        color: '#181C1E',
+    },
+    calendarWeekdays: {
+        flexDirection: 'row',
+        width: '100%',
+        marginBottom: hp('1%'),
+        borderBottomWidth: 1,
+        borderBottomColor: '#F0F0F0',
+        paddingBottom: hp('0.5%'),
+    },
+    calendarWeekdayText: {
+        width: '14.28%',
+        textAlign: 'center',
         fontFamily: FONTS.poppins.medium,
-        fontSize: wp('3.5%'),
+        fontSize: wp('2.8%'),
+        color: '#888888',
+    },
+    calendarGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        width: '100%',
+    },
+    calendarDayCell: {
+        width: '14.28%',
+        height: wp('9%'),
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginVertical: hp('0.2%'),
+        borderRadius: wp('4.5%'),
+    },
+    calendarDayText: {
+        fontFamily: FONTS.poppins.regular,
+        fontSize: wp('3%'),
+        color: '#181C1E',
+    },
+    calendarDaySelected: {
+        backgroundColor: '#F25000',
+        borderRadius: wp('4.5%'),
+    },
+    calendarDayTextSelected: {
+        color: '#FFFFFF',
+        fontFamily: FONTS.poppins.bold,
+    },
+    calendarDayInRange: {
+        backgroundColor: '#FFE6D5',
+        borderRadius: 0,
+    },
+    calendarDayTextInRange: {
         color: '#F25000',
+        fontFamily: FONTS.poppins.medium,
+    },
+    modalActions: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        width: '100%',
+    },
+    modalCancelBtn: {
+        flex: 1,
+        paddingVertical: hp('1.5%'),
+        marginRight: wp('2%'),
+        borderRadius: wp('6%'),
+        backgroundColor: '#F5F5F5',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    modalCancelBtnText: {
+        fontFamily: FONTS.poppins.semiBold,
+        fontSize: wp('3.5%'),
+        color: '#666666',
+    },
+    modalApplyBtn: {
+        flex: 1.5,
+        paddingVertical: hp('1.5%'),
+        marginLeft: wp('2%'),
+        borderRadius: wp('6%'),
+        backgroundColor: '#F25000',
+        alignItems: 'center',
+        justifyContent: 'center',
+        shadowColor: '#F25000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    modalApplyBtnDisabled: {
+        backgroundColor: '#CCCCCC',
+        shadowOpacity: 0,
+        elevation: 0,
+    },
+    modalApplyBtnText: {
+        fontFamily: FONTS.poppins.semiBold,
+        fontSize: wp('3.5%'),
+        color: '#FFFFFF',
     },
 });
 

@@ -34,6 +34,7 @@ import AppUpdateModal from '../components/AppUpdateModal';
 import AuthSuccessScreen from '../screens/AuthSuccessScreen';
 import KshopeScreen from '../screens/KshopeScreen';
 import CoPartnerDashboardScreen from '../screens/CoPartnerDashboardScreen';
+import CoPartnerListScreen from '../screens/CoPartnerListScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -86,10 +87,11 @@ export default function RootNavigator() {
                 <Stack.Screen name='AuthSuccessScreen' component={AuthSuccessScreen} />
                 <Stack.Screen name='KshopeScreen' component={KshopeScreen} />
                 <Stack.Screen name='CoPartnerDashboardScreen' component={CoPartnerDashboardScreen} />
+                <Stack.Screen name='CoPartnerListScreen' component={CoPartnerListScreen} />
             </Stack.Navigator>
 
             <AppUpdateModal
-                visible={isUpdateModalVisible}
+                visible={!isUpdateModalVisible}
                 updateInfo={updateInfo}
                 onLater={() => setIsUpdateModalVisible(false)}
             />
