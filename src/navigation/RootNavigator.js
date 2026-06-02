@@ -91,7 +91,7 @@ export default function RootNavigator() {
             </Stack.Navigator>
 
             <AppUpdateModal
-                visible={!isUpdateModalVisible}
+                visible={isUpdateModalVisible}
                 updateInfo={updateInfo}
                 onLater={() => setIsUpdateModalVisible(false)}
             />
