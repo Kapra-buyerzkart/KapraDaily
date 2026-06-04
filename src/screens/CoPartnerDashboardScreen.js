@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView, Dimensions, ActivityIndicator, Modal } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView, Dimensions, ActivityIndicator, Modal, Platform, StatusBar, ImageBackground } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
@@ -25,7 +25,7 @@ const formatDate = (dateStr) => {
 const formatAmount = (val) => {
     if (val == null) return '';
     const str = val.toString().replace(/[^0-9.-]+/g, "");
-    const num = parseFloat(str);
+    const num = parseFloat(str)?.toFixed(2);
     if (isNaN(num)) return val;
     return `₹${num.toLocaleString('en-IN')}`;
 };
@@ -50,16 +50,23 @@ const CoPartnerDashboardScreen = () => {
     const [orders, setOrders] = useState([]);
     const [payouts, setPayouts] = useState([]);
 
-    // Default dates based on prompt example
-    const [fromDate, setFromDate] = useState('2026-03-01');
-    const [toDate, setToDate] = useState('2026-05-14');
+    // Dynamic default dates for current month
+    const today = new Date();
+    const defaultYear = today.getFullYear();
+    const defaultMonth = String(today.getMonth() + 1).padStart(2, '0');
+    const defaultDay = String(today.getDate()).padStart(2, '0');
+    const defaultToDate = `${defaultYear}-${defaultMonth}-${defaultDay}`;
+    const defaultFromDate = `${defaultYear}-${defaultMonth}-01`;
+
+    const [fromDate, setFromDate] = useState(defaultFromDate);
+    const [toDate, setToDate] = useState(defaultToDate);
 
     // States for custom date range picker selection
-    const [tempFromDate, setTempFromDate] = useState('2026-03-01');
-    const [tempToDate, setTempToDate] = useState('2026-05-14');
+    const [tempFromDate, setTempFromDate] = useState(defaultFromDate);
+    const [tempToDate, setTempToDate] = useState(defaultToDate);
     const [selectingField, setSelectingField] = useState('from'); // 'from' or 'to'
-    const [currentMonth, setCurrentMonth] = useState(new Date('2026-03-01').getMonth());
-    const [currentYear, setCurrentYear] = useState(new Date('2026-03-01').getFullYear());
+    const [currentMonth, setCurrentMonth] = useState(today.getMonth());
+    const [currentYear, setCurrentYear] = useState(today.getFullYear());
 
     const openFilterModal = () => {
         setTempFromDate(fromDate);
@@ -144,11 +151,11 @@ const CoPartnerDashboardScreen = () => {
 
     const getSummaryStats = () => {
         return [
-            { icon: 'account-multiple', label: 'Referrals', value: summary?.referrals || summary?.totalReferrals || '0', iconColor: '#F25000' },
-            { icon: 'hand-heart', label: 'Occupancy', value: summary?.occupancy || summary?.occupancyPercentage || '0%', iconColor: '#F25000' },
-            { icon: 'account-group', label: 'Customers', value: summary?.customers || summary?.totalCustomers || '0', iconColor: '#F25000' },
-            { icon: 'credit-card', label: 'Credited', value: summary?.credited || summary?.totalCredited || '₹0', iconColor: '#F25000' },
-            { icon: 'trending-up', label: 'Expected', value: summary?.expected || summary?.expectedEarnings || '₹0', iconColor: '#F25000' },
+            { icon: 'account-multiple', label: 'Referrals', value: summary?.totalReferrals ?? summary?.referrals ?? '0', iconColor: '#F25000' },
+            { icon: 'hand-heart', label: 'Occupancy', value: summary?.areaOccupancy != null ? `${summary.areaOccupancy}%` : (summary?.occupancy || summary?.occupancyPercentage || '0%'), iconColor: '#F25000' },
+            { icon: 'account-group', label: 'Customers', value: summary?.totalCustomers ?? summary?.customers ?? '0', iconColor: '#F25000' },
+            { icon: 'credit-card', label: 'Credited', value: summary?.creditedProfit != null ? formatAmount(summary.creditedProfit) : (summary?.credited || summary?.totalCredited || '₹0'), iconColor: '#F25000' },
+            { icon: 'trending-up', label: 'Expected', value: summary?.expectedProfit != null ? formatAmount(summary.expectedProfit) : (summary?.expected || summary?.expectedEarnings || '₹0'), iconColor: '#F25000' },
             { icon: 'package-variant', label: 'Orders', value: summary?.orders || summary?.totalOrders || '0', iconColor: '#F25000' },
         ];
     };
@@ -189,35 +196,32 @@ const CoPartnerDashboardScreen = () => {
         </View>
     );
 
-    const renderMainCard = () => {
+    const renderTopBackground = () => (
+        <ImageBackground source={require('../assets/images/splash/copartnerbg.png')} style={styles.mainCard} resizeMode='cover'>
+            <Text style={styles.mainCardLabel}>Total Area Sales</Text>
+            <Text style={styles.mainCardValue}>₹{summary?.totalAreaSales || summary?.totalSales || '0'}</Text>
+        </ImageBackground>
+    );
+
+    const renderStatsGrid = () => {
         const stats = getSummaryStats();
         return (
-            <LinearGradient
-                colors={['#FF7B3A', '#F25000']}
-                style={styles.mainCard}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-            >
-                <Text style={styles.mainCardLabel}>Total Area Sales</Text>
-                <Text style={styles.mainCardValue}>{summary?.totalAreaSales || summary?.totalSales || '₹0'}</Text>
-
-                <View style={styles.statsGrid}>
-                    {stats.map((item, index) => (
-                        <View key={index} style={[styles.statItem,
-                        index % 2 === 0 ? styles.statItemLeft : styles.statItemRight,
-                        index < 4 && styles.statItemTopBorder
-                        ]}>
-                            <View style={styles.statIconWrap}>
-                                <MaterialCommunityIcons name={item.icon} size={wp('6%')} color={item.iconColor} />
-                            </View>
-                            <View style={styles.statTextWrap}>
-                                <Text style={styles.statLabel}>{item.label}</Text>
-                                <Text style={styles.statValue}>{item.value}</Text>
-                            </View>
+            <View style={styles.statsGrid}>
+                {stats.map((item, index) => (
+                    <View key={index} style={[styles.statItem,
+                    index % 2 === 0 ? styles.statItemLeft : styles.statItemRight,
+                    index < 4 && styles.statItemTopBorder
+                    ]}>
+                        <View style={styles.statIconWrap}>
+                            <MaterialCommunityIcons name={item.icon} size={wp('6%')} color={item.iconColor} />
                         </View>
-                    ))}
-                </View>
-            </LinearGradient>
+                        <View style={styles.statTextWrap}>
+                            <Text style={styles.statLabel}>{item.label}</Text>
+                            <Text style={styles.statValue}>{item.value}</Text>
+                        </View>
+                    </View>
+                ))}
+            </View>
         );
     };
 
@@ -527,54 +531,76 @@ const CoPartnerDashboardScreen = () => {
                 </View>
 
                 {visibleItems.map((item, index) => {
-                    const itemName = type === 'orders' ? (item.id || item.orderId || `#ORD${index}`) : type === 'payouts' ? (item.type || item.payoutMethod || 'Transfer') : (item.name || item.custName || 'User');
-                    const itemSub = type === 'orders' ? (item.status || item.orderStatus) : type === 'payouts' ? (item.status || item.payoutStatus) : (item.phone || item.phoneNo || '');
-                    let itemStatusValue = type === 'copartners' ? (item.type || item.status || 'Active') : item.status || 'New';
+                    const maskPhone = (phone) => {
+                        if (!phone) return '';
+                        const phoneStr = String(phone);
+                        if (phoneStr.length <= 4) return phoneStr;
+                        return phoneStr.slice(0, 2) + '******' + phoneStr.slice(-2);
+                    };
+
+                    const itemName = type === 'orders' ? (item.orderNumber || item.id || item.orderId || `#ORD${index}`) : type === 'payouts' ? (item.payMode || item.type || item.payoutMethod || 'Transfer') : (item.name || item.custName || 'User');
+
+                    let itemSubRaw = type === 'orders' ? (item.orderStatusKey || item.status || item.orderStatus) : type === 'payouts' ? ('Success' || item.status || item.payoutStatus) : (item.phone || item.phoneNo || '');
+                    const itemSub = (type !== 'orders' && type !== 'payouts' && itemSubRaw) ? maskPhone(itemSubRaw) : itemSubRaw;
+
+                    let itemStatusValue = type === 'copartners' ? (item.type || item.status || 'Registered on') : item.status || '';
                     if (type === 'orders' || type === 'payouts') {
-                        itemStatusValue = formatAmount(item.amount || item.totalAmount || 0);
+                        itemStatusValue = formatAmount(item.grandTotal || item.amount || item.totalAmount || 0);
                     }
-                    const rawDate = item.date || item.createdAt || item.orderDate || '';
+                    if (type === 'customers') {
+                        itemStatusValue = formatDate(item.createdDate);
+                    }
+
+                    const rawDate = type === 'payouts' ? item.paidOn : type === 'copartners' ? item.addedOn : (item.orderDate || item.date || item.createdAt || '');
                     const itemDate = formatDate(rawDate);
 
                     return (
                         <View key={index} style={styles.listItem}>
                             <View style={styles.listItemLeft}>
                                 <Text style={styles.itemName}>{itemName}</Text>
-                                <Text style={styles.itemSub}>{itemSub}</Text>
+                                <Text style={[styles.itemSub, type === 'payouts' && { color: 'green' }]}>{itemSub}</Text>
                             </View>
                             <View style={styles.listItemRight}>
-                                <Text style={styles.itemStatusValue}>{itemStatusValue}</Text>
+                                <Text style={[styles.itemStatusValue, type === 'copartners' && styles.itemDate]}>{itemStatusValue}</Text>
                                 <Text style={styles.itemDate}>{itemDate}</Text>
                             </View>
                         </View>
                     );
-                })}
-                {items.length === 0 && !isLoading && (
-                    <View style={{ alignItems: 'center', marginTop: hp('0%'), marginBottom: hp('2%') }}>
-                        <Text style={{ color: '#888', fontSize: wp('3%') }}>No items available</Text>
-                    </View>
-                )}
-                {items.length === 0 && isLoading && (
-                    <ActivityIndicator size="small" color="#F25000" style={{ marginTop: hp('1%') }} />
-                )}
-            </View>
+                })
+                }
+                {
+                    items.length === 0 && !isLoading && (
+                        <View style={{ alignItems: 'center', marginTop: hp('0%'), marginBottom: hp('2%') }}>
+                            <Text style={{ color: '#888', fontSize: wp('3%') }}>No items available</Text>
+                        </View>
+                    )
+                }
+                {
+                    items.length === 0 && isLoading && (
+                        <ActivityIndicator size="small" color="#F25000" style={{ marginTop: hp('1%') }} />
+                    )
+                }
+            </View >
         );
     };
 
     return (
         <SafeAreaView style={styles.container}>
             {renderHeader()}
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-                {renderTabs()}
-                <View style={styles.contentWrap}>
-                    {renderMainCard()}
-                    {renderDateRange()}
-                    {renderListSection('Customers', 'account-multiple', customers, 'customers')}
-                    {renderListSection('Orders', 'cart-outline', orders, 'orders')}
-                    {renderListSection('Co-partners in area', 'handshake-outline', copartners, 'copartners')}
-                    {renderListSection('Payouts', 'wallet-outline', payouts, 'payouts')}
-                </View>
-            </ScrollView>
+            {renderTabs()}
+            {renderTopBackground()}
+            <View style={styles.bottomScrollContainer}>
+                <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+                    {renderStatsGrid()}
+                    <View style={styles.contentWrap}>
+                        {renderDateRange()}
+                        {renderListSection('Customers', 'account-multiple', customers, 'customers')}
+                        {renderListSection('Orders', 'cart-outline', orders, 'orders')}
+                        {renderListSection('Co-partners in area', 'handshake-outline', copartners, 'copartners')}
+                        {renderListSection('Payouts', 'wallet-outline', payouts, 'payouts')}
+                    </View>
+                </ScrollView>
+            </View>
             {renderFilterModal()}
         </SafeAreaView>
     );
@@ -584,6 +610,15 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#FFFFFF',
+        paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+    },
+    bottomScrollContainer: {
+        flex: 1,
+        backgroundColor: '#FFF2EB',
+        borderTopLeftRadius: wp('7%'),
+        borderTopRightRadius: wp('7%'),
+        overflow: 'hidden',
+        marginTop: -hp('2.5%'),
     },
     header: {
         flexDirection: 'row',
@@ -611,13 +646,13 @@ const styles = StyleSheet.create({
         paddingHorizontal: wp('5%'),
         backgroundColor: '#FFFFFF',
         paddingBottom: hp('1.5%'),
-        borderBottomLeftRadius: wp('5%'),
-        borderBottomRightRadius: wp('5%'),
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 3,
-        elevation: 2,
+        borderBottomLeftRadius: wp('7%'),
+        borderBottomRightRadius: wp('7%'),
+        // shadowColor: '#000',
+        // shadowOffset: { width: 0, height: 2 },
+        // shadowOpacity: 0.05,
+        // shadowRadius: 3,
+        // elevation: 10,
         zIndex: 10
     },
     tab: {
@@ -640,17 +675,22 @@ const styles = StyleSheet.create({
     },
     contentWrap: {
         paddingHorizontal: wp('4%'),
-        marginTop: hp('2%'),
+        //  marginTop: hp('2%'),
     },
     mainCard: {
-        borderRadius: wp('5%'),
-        paddingTop: -hp('1%'),
+        width: wp("100%"),
+        height: hp("15%"),
+        // borderTopLeftRadius: wp('5%'),
+        //  borderTopRightRadius: wp('5%'),
+        marginTop: -hp('2.5%'),
+        paddingTop: hp('2%'), // add positive padding so content inside isn't cut off
         alignItems: 'center',
-        shadowColor: '#F25000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 5,
-        elevation: 5,
+        alignSelf: 'center',
+        // //shadowColor: '#F25000',
+        // shadowOffset: { width: 0, height: 4 },
+        // shadowOpacity: 0.3,
+        // shadowRadius: 5,
+        // elevation: 5,
         overflow: 'hidden',
         // marginBottom: hp('2%'),
     },
@@ -659,23 +699,26 @@ const styles = StyleSheet.create({
         fontSize: wp('3.5%'),
         color: '#FFFFFF',
         opacity: 0.9,
-        marginTop: hp('3%')
+        marginTop: hp('2.3%')
     },
     mainCardValue: {
         fontFamily: FONTS.poppins.bold,
         fontSize: wp('8%'),
         color: '#FFFFFF',
-        marginTop: hp('0.5%'),
-        marginBottom: hp('3%'),
+        marginTop: hp('0%'),
+        marginBottom: hp('1%'),
     },
     statsGrid: {
+        marginTop: hp('2%'),
         flexDirection: 'row',
         flexWrap: 'wrap',
         backgroundColor: '#FFFFFF',
-        width: '100%',
+        width: '90%',
+        alignSelf: 'center',
+        //  top: -hp('1%'),
         paddingVertical: hp('1%'),
-        borderTopLeftRadius: wp('5%'),
-        borderTopRightRadius: wp('5%'),
+        borderRadius: wp('5%'),
+        borderRadius: wp('5%'),
     },
     statItem: {
         width: '50%',
@@ -765,8 +808,8 @@ const styles = StyleSheet.create({
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 3 },
         shadowOpacity: 0.06,
-        shadowRadius: 5,
-        elevation: 3,
+        shadowRadius: 2,
+        elevation: 2,
     },
     listHeader: {
         flexDirection: 'row',
@@ -785,12 +828,12 @@ const styles = StyleSheet.create({
         marginLeft: wp('2%'),
     },
     viewAllBtn: {
-        borderBottomWidth: 1.5,
+        borderBottomWidth: 0,
         borderBottomColor: '#F25000',
         paddingBottom: hp('0.2%'),
     },
     viewAllText: {
-        fontFamily: FONTS.poppins.bold,
+        fontFamily: FONTS.poppins.medium,
         fontSize: wp('3.5%'),
         color: '#F25000',
     },
@@ -823,8 +866,8 @@ const styles = StyleSheet.create({
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.05,
-        shadowRadius: 3,
-        elevation: 2,
+        shadowRadius: 2,
+        elevation: 1,
     },
     listItemLeft: {
         flex: 1,

@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react';
-import { View, StyleSheet, Image, ScrollView, Dimensions, TouchableOpacity, Linking, Platform } from 'react-native';
+import { View, StyleSheet, Image, ScrollView, Dimensions, TouchableOpacity, Linking, Platform, ImageBackground } from 'react-native';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { AppContext } from '../context/appContext';
 import ComingSoonModal from '../components/ComingSoonModal';
@@ -25,10 +25,10 @@ const AuthSuccessScreen = ({ navigation }) => {
         const isKshopeEnabled = generalSettings?.showkshope === '1' || generalSettings?.showkshope === 1;
 
         if (isKshopeEnabled) {
-            const storeUrl = Platform.OS === 'ios' 
-                ? (generalSettings?.kshope_ios_url || 'https://apps.apple.com/in/app/uden-deal/id6448085736') 
+            const storeUrl = Platform.OS === 'ios'
+                ? (generalSettings?.kshope_ios_url || 'https://apps.apple.com/in/app/uden-deal/id6448085736')
                 : (generalSettings?.kshope_android_url || 'https://play.google.com/store/apps/details?id=com.kshope');
-            
+
             Linking.openURL(storeUrl).catch(err => {
                 console.error('Failed to open store URL:', err);
                 handleComingSoon();
@@ -39,8 +39,10 @@ const AuthSuccessScreen = ({ navigation }) => {
     };
 
     return (
-        <View style={styles.container}>
+        // <View style={styles.container}>
+        <ImageBackground require source={require('../assets/images/splash/backgroundbg.png')} resizeMode="cover" style={styles.container}>
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+
                 {/* Logo Section */}
                 <View style={styles.logoContainer}>
                     <Image
@@ -55,7 +57,7 @@ const AuthSuccessScreen = ({ navigation }) => {
                     {/* 20 mins deal - Large Card (Kapra) */}
                     <TouchableOpacity activeOpacity={0.9} onPress={handleKapra}>
                         <Image
-                            source={require('../assets/splashsvg/udendeal.png')}
+                            source={require('../assets/images/splash/udendeal.png')}
                             style={styles.largeCard}
                             resizeMode="contain"
                         />
@@ -63,41 +65,51 @@ const AuthSuccessScreen = ({ navigation }) => {
 
                     {/* Small Cards Row */}
                     {/* <View style={styles.row}> */}
-                        {/* 48 hrs deal (K-Shope) */}
-                        <TouchableOpacity activeOpacity={0.9} onPress={handleKshope}>
-                            <Image
-                                source={require('../assets/splashsvg/48hrs.png')}
-                                style={styles.largeCard}
-                                resizeMode="contain"
-                            />
-                        </TouchableOpacity>
+                    {/* 48 hrs deal (K-Shope) */}
+                    <TouchableOpacity activeOpacity={0.9} onPress={handleKshope}>
+                        <Image
+                            source={require('../assets/images/splash/48hrs.png')}
+                            style={styles.largeCard}
+                            resizeMode="contain"
+                        />
+                    </TouchableOpacity>
+                    {/* Small Cards Row */}
+                    <View style={styles.row}>
                         {/* Uden Tickets */}
                         <TouchableOpacity activeOpacity={0.9} onPress={handleComingSoon}>
                             <Image
-                                source={require('../assets/splashsvg/udentickets.png')}
-                                style={styles.largeCard}
+                                source={require('../assets/images/splash/ticket.png')}
+                                style={styles.smallCard}
                                 resizeMode="contain"
                             />
                         </TouchableOpacity>
-                    {/* </View> */}
+                        <TouchableOpacity activeOpacity={0.9} onPress={handleComingSoon}>
+                            <Image
+                                source={require('../assets/images/splash/d2c.png')}
+                                style={styles.smallCard}
+                                resizeMode="contain"
+                            />
+                        </TouchableOpacity>
+                    </View>
                 </View>
             </ScrollView>
 
             {/* Bottom Section (Skyline) */}
-            <View style={styles.bottomSection}>
+            {/* <View style={styles.bottomSection}>
                 <Image
                     source={require('../assets/images/splash/Vancouver.png')}
                     style={styles.skylineImage}
                     resizeMode="stretch"
                 />
-            </View>
+            </View> */}
 
             {/* Custom Coming Soon Popup */}
             <ComingSoonModal
                 visible={isComingSoonVisible}
                 onClose={() => setIsComingSoonVisible(false)}
             />
-        </View>
+        </ImageBackground>
+        // </View>
     );
 };
 
@@ -108,11 +120,11 @@ const styles = StyleSheet.create({
     },
     scrollContent: {
         alignItems: 'center',
-        paddingTop: hp('10%'),
-      //  paddingBottom: hp('15%'), // Increased padding to avoid overlap with skyline
+        paddingTop: hp('5%'),
+        //  paddingBottom: hp('15%'), // Increased padding to avoid overlap with skyline
     },
     logoContainer: {
-        marginBottom: hp('2%'),
+        // marginBottom: hp('2%'),
     },
     logo: {
         width: wp('70%'),
@@ -121,23 +133,23 @@ const styles = StyleSheet.create({
     cardsContainer: {
         width: wp('90%'),
         alignItems: 'center',
-        marginTop: hp('2%'),
+        //  marginTop: hp('2%'),
     },
     largeCard: {
         width: wp('90%'),
-        height: hp('28%'),
-        marginTop: -hp('10%'),
+        height: hp('22%'),
+        //marginTop: -hp('10%'),
     },
     row: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         width: wp('90%'), // Match width of the large card
-        marginTop: -hp('8%'),
+        //  marginTop: -hp('8%'),
     },
     smallCard: {
         width: wp('44.5%'), // Slightly larger to create a small gap in a 90% row
         height: hp('22%'),
-      //  backgroundColor:'red'
+        //  backgroundColor:'red'
     },
     bottomSection: {
         position: 'absolute',

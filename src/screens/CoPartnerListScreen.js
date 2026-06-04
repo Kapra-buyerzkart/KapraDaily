@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, FlatList, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, FlatList, ActivityIndicator, Platform, StatusBar } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -9,13 +9,13 @@ const formatDate = (dateStr) => {
     if (!dateStr) return '';
     const d = new Date(dateStr);
     if (isNaN(d)) return dateStr.split('T')[0];
-    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     return `${d.getDate().toString().padStart(2, '0')} ${months[d.getMonth()]}`;
 };
 
 const formatAmount = (val) => {
     if (val == null) return '';
-    const str = val.toString().replace(/[^0-9.-]+/g,"");
+    const str = val.toString().replace(/[^0-9.-]+/g, "");
     const num = parseFloat(str);
     if (isNaN(num)) return val;
     return `₹${num.toLocaleString('en-IN')}`;
@@ -49,23 +49,37 @@ const CoPartnerListScreen = () => {
     );
 
     const renderItem = ({ item, index }) => {
-        const itemName = type === 'orders' ? (item.id || item.orderId || `#ORD${index}`) : type === 'payouts' ? (item.type || item.payoutMethod || 'Transfer') : (item.name || item.custName || 'User');
-        const itemSub = type === 'orders' ? (item.status || item.orderStatus) : type === 'payouts' ? (item.status || item.payoutStatus) : (item.phone || item.phoneNo || '');
-        let itemStatusValue = type === 'copartners' ? (item.type || item.status || 'Active') : item.status || 'New';
+        const maskPhone = (phone) => {
+            if (!phone) return '';
+            const phoneStr = String(phone);
+            if (phoneStr.length <= 4) return phoneStr;
+            return phoneStr.slice(0, 2) + '******' + phoneStr.slice(-2);
+        };
+
+        const itemName = type === 'orders' ? (item.orderNumber || item.id || item.orderId || `#ORD${index}`) : type === 'payouts' ? (item.payMode || item.type || item.payoutMethod || 'Transfer') : (item.name || item.custName || 'User');
+
+        let itemSubRaw = type === 'orders' ? (item.orderStatusKey || item.status || item.orderStatus) : type === 'payouts' ? ('Success' || item.status || item.payoutStatus) : (item.phone || item.phoneNo || '');
+        const itemSub = (type !== 'orders' && type !== 'payouts' && itemSubRaw) ? maskPhone(itemSubRaw) : itemSubRaw;
+
+        let itemStatusValue = type === 'copartners' ? (item.type || item.status || 'Registered on') : item.status || '';
         if (type === 'orders' || type === 'payouts') {
-            itemStatusValue = formatAmount(item.amount || item.totalAmount || 0);
+            itemStatusValue = formatAmount(item.grandTotal || item.amount || item.totalAmount || 0);
         }
-        const rawDate = item.date || item.createdAt || item.orderDate || '';
+        if (type === 'customers') {
+            itemStatusValue = formatDate(item.createdDate);
+        }
+
+        const rawDate = type === 'payouts' ? item.paidOn : type === 'copartners' ? item.addedOn : (item.orderDate || item.date || item.createdAt || '');
         const itemDate = formatDate(rawDate);
 
         return (
             <View style={styles.listItem}>
                 <View style={styles.listItemLeft}>
                     <Text style={styles.itemName}>{itemName}</Text>
-                    <Text style={styles.itemSub}>{itemSub}</Text>
+                    <Text style={[styles.itemSub, type === 'payouts' && { color: 'green' }]}>{itemSub}</Text>
                 </View>
                 <View style={styles.listItemRight}>
-                    <Text style={styles.itemStatusValue}>{itemStatusValue}</Text>
+                    <Text style={[styles.itemStatusValue, type === 'copartners' && styles.itemDate]}>{itemStatusValue}</Text>
                     <Text style={styles.itemDate}>{itemDate}</Text>
                 </View>
             </View>
@@ -73,7 +87,7 @@ const CoPartnerListScreen = () => {
     };
 
     const renderFooter = () => {
-        if (!hasMore) return <View style={styles.footerWrap}><Text style={styles.footerText}>End of list</Text></View>;
+        if (!hasMore) return <View style={styles.footerWrap}><Text style={styles.footerText}></Text></View>;
         return (
             <View style={styles.footerWrap}>
                 <ActivityIndicator size="small" color="#F25000" />
@@ -103,6 +117,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#FFFFFF',
+        paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
     },
     header: {
         flexDirection: 'row',
