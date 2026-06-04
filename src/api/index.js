@@ -1,6 +1,4 @@
-import { get, post, getNew } from './networkUtils';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import {get, post} from './networkUtils';
 export const loginWithPassword = async (phone, password) => {
   const payload = {
     phone,
@@ -53,8 +51,7 @@ export const verifyForgotPwdOtp = async (phone, otp) => {
 };
 
 export const verifyRegisterOtp = async (phone, otp) => {
-  console.log('PPPPPPPPPPPPP', phone)
-  const payload = {
+const payload = {
     phone,
     otp,
     otpType: 'register',
@@ -113,13 +110,11 @@ export const getProfile = async () => {
 };
 
 export const getAreasByPincode = async (pincode) => {
-  console.log('pincode', pincode)
-  return get(`pincodearea/getbypincode?search=${pincode}`);
+return get(`pincodearea/getbypincode?search=${pincode}`);
 };
 
 export const getAreasBySearch = async (search) => {
-  console.log('search', search);
-  return get(`/pincodearea/search?search=${search}`);
+return get(`/pincodearea/search?search=${search}`);
 };
 
 export const checkPhone = async (phoneNo) => {

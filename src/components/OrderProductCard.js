@@ -1,5 +1,5 @@
-import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native'
-import React, { useState } from 'react'
+import {View, Text, StyleSheet, Image} from 'react-native';
+import {useState} from 'react';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import { FONTS } from '../styles/typography'
 import CONFIG from '../globals/config';

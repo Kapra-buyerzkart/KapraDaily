@@ -1,37 +1,28 @@
-import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Platform, RefreshControl, ViewBase } from 'react-native'
+import {View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, RefreshControl} from 'react-native';
 import React, { useContext, useState, useEffect, useRef } from 'react'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'
 import Ionicons from 'react-native-vector-icons/Ionicons'
-import Entypo from 'react-native-vector-icons/Entypo'
-import Feather from 'react-native-vector-icons/Feather'
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import { FONTS } from '../styles/typography'
 import { useNavigation, useFocusEffect } from '@react-navigation/native'
 import CartProductCard from '../components/CartProductCard'
-import OfferCard from '../components/OfferCard'
-import LinearGradient from 'react-native-linear-gradient'
 import { useCartScreen } from '../hooks/useCartScreen'
 import { CartContext } from '../context/CartContext'
-import AppButton from '../components/AppButton'
 import { LoaderContext } from '../context/loaderContext'
 import ConfirmationModal from '../components/ConfirmationModal'
-import { getDashboardDataApi } from '../api/userService'
 import { getPaymentModesApi } from '../api/configService'
-import { createOrderApi, confirmCodApi, getOrderDetailsApi } from '../api/orderService'
+import {createOrderApi, confirmCodApi} from '../api/orderService';
 import { createRazorpayOrderApi, verifyRazorpayPaymentApi } from '../api/paymentService'
 import RazorpayCheckout from 'react-native-razorpay'
-import { getCartSummaryApi } from '../api/cartService'
-
 import AddressModal from '../components/AddressModal'
 import AddressConfirmationModal from '../components/AddressConfirmationModal'
 import DeliverySlotModal from '../components/DeliverySlotModal'
 import CouponModal from '../components/CouponModal'
 import BillSection from '../components/BillSection'
 import CartEmptyComponent from '../components/CartEmptyComponent'
-import StoreUnavailable from '../components/StoreUnavailable'
 import StatusModal from '../components/StatusModal'
 import { AppContext } from '../context/appContext'
 
@@ -127,8 +118,7 @@ const CartScreen = () => {
                     if (cod) setPaymentMethod(cod.paymentModeName);
                 }
             } catch (err) {
-                console.error('Error fetching payment modes:', err);
-            }
+}
         };
         fetchPaymentModes();
     }, []);
@@ -215,9 +205,7 @@ const CartScreen = () => {
             }
         } catch (error) {
             showLoader(false);
-            console.error('❌ [ORDER] Validation Error:', error);
-
-            const pincode = selectedAddress.pin || '';
+const pincode = selectedAddress.pin || '';
             const area = selectedAddress.raw?.areaName || selectedAddress.raw?.pincodeAreaName || selectedAddress.raw?.area_name || 'N/A';
             const errorMsg = typeof error === 'string' ? error : (error?.message || error?.Message || "");
 
@@ -240,8 +228,7 @@ const CartScreen = () => {
 
     const submitOrder = async () => {
         if (isCartStoreNotFound) {
-            console.warn('❌ [ORDER] Blocked: Attempted to submit order while store is not available');
-            return;
+return;
         }
 
         setAddressConfirmationData(null);
@@ -255,8 +242,7 @@ const CartScreen = () => {
             let currentCartVersion = cartSummary?.cartVersion;
 
             if (!currentCartId) {
-                console.log('🔄 [ORDER] No cartId found, attempting auto-refresh...');
-                // Attempt to get a fresh summary which might recover the session
+// Attempt to get a fresh summary which might recover the session
                 const refreshRes = await getCartSummary(
                     selectedDeliveryType,
                     chosenSlot?.id,
@@ -265,12 +251,10 @@ const CartScreen = () => {
                 );
                 
                 if (refreshRes?.success && refreshRes?.data?.cartId) {
-                    console.log('✅ [ORDER] Session recovered successfully');
-                    currentCartId = refreshRes.data.cartId;
+currentCartId = refreshRes.data.cartId;
                     currentCartVersion = refreshRes.data.cartVersion;
                 } else {
-                    console.error('❌ [ORDER] Session recovery failed');
-                    throw new Error('Your cart session has expired. Please try again.');
+throw new Error('Your cart session has expired. Please try again.');
                 }
             }
 
@@ -440,8 +424,7 @@ const CartScreen = () => {
             setIsFinalizingOrder(true);
             await clearCart();
         } catch (error) {
-            console.error('⚠️ [ORDER SUCCESS] Error clearing cart:', error);
-        } finally {
+} finally {
             showLoader(false);
             navigation.reset({
                 index: 0,

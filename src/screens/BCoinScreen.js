@@ -1,8 +1,6 @@
-import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Alert, RefreshControl, ImageBackground, Modal } from 'react-native'
-import React, { useState, useEffect, useCallback, useContext } from 'react'
-import { useCart } from '../context/CartContext'
+import {View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, ImageBackground, Modal} from 'react-native';
+import React, {useState, useEffect, useContext} from 'react';
 import { AppContext } from '../context/appContext'
-import StoreUnavailable from '../components/StoreUnavailable'
 import LocationModal from '../components/LocationModal'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen'
@@ -60,8 +58,7 @@ const BCoinScreen = () => {
                 setWalletData(response.data)
             }
         } catch (error) {
-            console.error('Error fetching wallet data:', error)
-        } finally {
+} finally {
             if (isMounted.current) setIsLoading(false)
         }
     }
@@ -96,20 +93,15 @@ const BCoinScreen = () => {
                 setBCoinValueHistory(mappedItems.reverse());
             }
         } catch (error) {
-            console.error('Error fetching B-Coin value history:', error)
-        } finally {
+} finally {
             if (isMounted.current) setIsLoadingHistory(false)
         }
     }
 
     const handleRedeem = async () => {
-        console.log('Redeem clicked. Requested Coins:', requestedCoins, 'Preferred Method:', preferredMethod);
-        const redeemAmount = Number(requestedCoins);
-        console.log('Normalized Redeem Amount:', redeemAmount);
-
-        if (isNaN(redeemAmount) || redeemAmount <= 0) {
-            console.log('Invalid amount validation failed');
-            setStatusType('error')
+const redeemAmount = Number(requestedCoins);
+if (isNaN(redeemAmount) || redeemAmount <= 0) {
+setStatusType('error')
             setStatusTitle('Invalid Amount')
             setStatusMessage('Please enter a valid amount of coins to redeem.')
             setStatusModalVisible(true)
@@ -117,10 +109,8 @@ const BCoinScreen = () => {
         }
 
         // Assuming coinsData is walletData.wallet and totalCoins is bCoins
-        console.log('Available B-Coins:', walletData?.wallet?.bCoins);
-        if (redeemAmount > (walletData?.wallet?.bCoins || 0)) {
-            console.log('Insufficient balance validation failed');
-            setStatusType('error')
+if (redeemAmount > (walletData?.wallet?.bCoins || 0)) {
+setStatusType('error')
             setStatusTitle('Insufficient Balance')
             setStatusMessage('You do not have enough B-Coins.')
             setStatusModalVisible(true)
@@ -133,13 +123,9 @@ const BCoinScreen = () => {
                 requestedCoins: Number(requestedCoins),
                 preferredMethod: preferredMethod
             }
-            console.log('Sending Redeem Payload:', payload);
-            const response = await redeemBCoinsApi(payload)
-            console.log('Redeem API Response:', response);
-
-            if (!isMounted.current) {
-                console.log('Component unmounted, skipping response handling');
-                return
+const response = await redeemBCoinsApi(payload)
+if (!isMounted.current) {
+return
             }
 
             setShowRedeemModal(false)
@@ -148,16 +134,14 @@ const BCoinScreen = () => {
                 if (!isMounted.current) return
 
                 if (response && response.success) {
-                    console.log('Redemption successful');
-                    setRequestedCoins('')
+setRequestedCoins('')
                     fetchWalletData() // Refresh data
 
                     setStatusType('success')
                     setStatusTitle('Success')
                     setStatusMessage(response.message || 'Redemption request submitted successfully.')
                 } else {
-                    console.log('Redemption failed or handled error:', response?.status, response?.message);
-                    if (response?.status === 'PENDING_REQUEST') {
+if (response?.status === 'PENDING_REQUEST') {
                         setStatusType('error')
                         setStatusTitle('Request Pending')
                         setStatusMessage(response.message || 'You already have a pending redemption request.')
@@ -174,8 +158,7 @@ const BCoinScreen = () => {
                 setStatusModalVisible(true)
             }, 500)
         } catch (error) {
-            console.error('Redemption error:', error)
-            if (isMounted.current) {
+if (isMounted.current) {
                 setShowRedeemModal(false)
                 setTimeout(() => {
                     if (!isMounted.current) return

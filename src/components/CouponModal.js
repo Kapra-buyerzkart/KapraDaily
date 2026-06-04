@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Image, FlatList, Modal, TextInput, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
+import {View, Text, TouchableOpacity, Image, FlatList, Modal, KeyboardAvoidingView, Platform, StyleSheet} from 'react-native';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { FONTS } from '../styles/typography';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';

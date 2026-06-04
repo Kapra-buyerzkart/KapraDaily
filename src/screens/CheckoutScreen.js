@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Platform, Alert } from 'react-native';
+import {View, Text, StyleSheet, TouchableOpacity, Image, ScrollView} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -10,7 +10,7 @@ import { FONTS } from '../styles/typography';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { LoaderContext } from '../context/loaderContext';
 import { CartContext } from '../context/CartContext';
-import { createOrderApi, confirmCodApi, getOrderDetailsApi, reorderApi } from '../api/orderService';
+import {createOrderApi, confirmCodApi, getOrderDetailsApi} from '../api/orderService';
 import { getPaymentModesApi } from '../api/configService';
 import { createRazorpayOrderApi, verifyRazorpayPaymentApi } from '../api/paymentService';
 import RazorpayCheckout from 'react-native-razorpay';
@@ -77,8 +77,7 @@ const CheckoutScreen = () => {
         // Refresh summary whenever key dependencies change
         if (currentPincodeAreaId) {
             const apiDeliveryMode = deliveryType === 'slot' ? 'slotted' : 'express';
-            console.log('🔄 [CHECKOUT] Syncing summary for area:', currentPincodeAreaId, 'Mode:', apiDeliveryMode);
-            getCartSummary(apiDeliveryMode, selectedSlot, null, currentPincodeAreaId);
+getCartSummary(apiDeliveryMode, selectedSlot, null, currentPincodeAreaId);
         }
     }, [currentSelectedAddress?.id, deliveryType, selectedSlot, pincodeAreaId]);
 
@@ -134,7 +133,7 @@ const CheckoutScreen = () => {
         const fetchPaymentModes = async () => {
             try {
                 const response = await getPaymentModesApi();
-                console.log('💳 [CHECKOUT] Fetched Payment Modes:', JSON.stringify(response?.data, null, 2));
+);
 
                 if (response?.success && response?.data) {
                     let modes = [...response.data];
@@ -147,8 +146,7 @@ const CheckoutScreen = () => {
                     // FOR TESTING: If no online mode is returned by backend, inject one 
                     // so the Razorpay implementation can be tested.
                     if (!hasOnline) {
-                        console.log('💳 [CHECKOUT] Injecting Online mode for testing purposes.');
-                        modes.push({
+modes.push({
                             paymentModeId: 'online_test_mode',
                             paymentModeName: 'Online',
                             description: 'UPI, Cards, Net Banking'
@@ -165,8 +163,7 @@ const CheckoutScreen = () => {
                     }
                 }
             } catch (error) {
-                console.error('Error fetching payment modes:', error);
-            }
+}
         };
         fetchPaymentModes();
     }, []);
@@ -188,8 +185,7 @@ const CheckoutScreen = () => {
 
             if (resumeOrderId) {
                 // Skip creation, go straight to payment logic
-                console.log('🔄 [CHECKOUT] Resuming payment for existing order:', resumeOrderId);
-                // When resuming, we use the provided razorpay details if available
+// When resuming, we use the provided razorpay details if available
                 await handlePaymentFlow(resumeOrderId, resumeOrderId, resumeRazorpayOrderId, resumeRazorpayAmount, resumeRazorpayKeyId);
                 return;
             }
@@ -211,9 +207,9 @@ const CheckoutScreen = () => {
                 pincodeAreaId: pincodeAreaId || currentSelectedAddress?.pincodeAreaId || selectedAddress?.pincodeAreaId
             };
 
-            console.log('📦 [CHECKOUT] Creating Order Payload:', JSON.stringify(createPayload, null, 2));
+);
             const createResponse = await createOrderApi(createPayload);
-            console.log('📦 [CHECKOUT] Create Response:', JSON.stringify(createResponse, null, 2));
+);
             if (createResponse?.success && createResponse?.data?.orderId) {
                 const orderId = createResponse.data.orderId;
                 const orderNumber = createResponse.data.orderNumber || orderId;
@@ -234,8 +230,7 @@ const CheckoutScreen = () => {
                     }
                 }
             } else if (createResponse?.status === 'CART_CONFLICT') {
-                console.log('🔄 [CHECKOUT] Conflict detected, refreshing cart...');
-                await refreshCart();
+await refreshCart();
                 showLoader(false);
                 setStatusType('error');
                 setStatusTitle('Cart Updated');
@@ -249,8 +244,7 @@ const CheckoutScreen = () => {
                 setStatusModalVisible(true);
             }
         } catch (error) {
-            console.error('📦 [CHECKOUT] Order Error:', error);
-            showLoader(false);
+showLoader(false);
             setStatusType('error');
             setStatusTitle('Error');
             setStatusMessage('An unexpected error occurred during checkout');
@@ -265,9 +259,8 @@ const CheckoutScreen = () => {
             let keyId = passedKeyId;
 
             if (!razorpayOrderId || !amount || !keyId) {
-                console.log('💳 [RAZORPAY] Initiating Payment Flow for Order:', orderId);
-                const rzpCreateResponse = await createRazorpayOrderApi({ orderId });
-                console.log('💳 [RAZORPAY] Create Response:', JSON.stringify(rzpCreateResponse, null, 2));
+const rzpCreateResponse = await createRazorpayOrderApi({ orderId });
+);
 
                 if (rzpCreateResponse?.success && rzpCreateResponse?.data) {
                     keyId = rzpCreateResponse.data.keyId;
@@ -316,12 +309,10 @@ const CheckoutScreen = () => {
 
                     const attemptVerification = async () => {
                         try {
-                            console.log(`🔍 [RAZORPAY] Verification Attempt ${retryCount + 1}...`);
-                            const response = await verifyRazorpayPaymentApi(verifyPayload);
+const response = await verifyRazorpayPaymentApi(verifyPayload);
                             return response;
                         } catch (e) {
-                            console.error(`⚠️ [RAZORPAY] Verification Attempt ${retryCount + 1} Error:`, e);
-                            return null;
+return null;
                         }
                     };
 
@@ -333,7 +324,7 @@ const CheckoutScreen = () => {
                         retryCount < maxRetries
                     ) {
                         retryCount++;
-                        console.log(`🔄 [RAZORPAY] Retrying verification (Count: ${retryCount}) in 3s...`);
+in 3s...`);
                         await new Promise(resolve => setTimeout(resolve, 3000));
                         verifyResponse = await attemptVerification();
                     }
@@ -366,14 +357,12 @@ const CheckoutScreen = () => {
                 }
             }, 200);
         } catch (error) {
-            console.error('Payment Flow Error:', error);
-            showLoader(false);
+showLoader(false);
         }
     };
 
     const handleVerificationFailure = async (orderId, orderData, sdkResponse, keyId, amount) => {
-        console.log('⚠️ [RAZORPAY] Verification failed or timed out. Checking order details...');
-        setStatusType('info');
+setStatusType('info');
         setStatusTitle('Verifying Payment...');
         setStatusMessage('Your payment verification is taking longer than expected. Please wait...');
         setStatusModalVisible(true);
@@ -382,9 +371,7 @@ const CheckoutScreen = () => {
         setTimeout(async () => {
             try {
                 const response = await getOrderDetailsApi(orderId);
-                console.log('🔍 [RAZORPAY] Order Details Check:', response?.data?.orderStatusKey);
-
-                if (response?.success && response?.data?.orderStatusKey?.toLowerCase() === 'placed') {
+if (response?.success && response?.data?.orderStatusKey?.toLowerCase() === 'placed') {
                     setStatusModalVisible(false);
                     await finalizeOrder(orderData);
                 } else if (response?.data?.orderStatusKey?.toLowerCase() === 'pending') {
@@ -414,8 +401,7 @@ const CheckoutScreen = () => {
                     refreshCart();
                 }
             } catch (err) {
-                console.error('Error fetching order details for verification fallback:', err);
-                showLoader(false);
+showLoader(false);
                 setStatusType('error');
                 setStatusTitle('Verification Error');
                 setStatusMessage('Something went wrong during final verification.');

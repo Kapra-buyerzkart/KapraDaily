@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView, Dimensions, ActivityIndicator, Modal, Platform, StatusBar, ImageBackground } from 'react-native';
+import {useState, useEffect} from 'react';
+import {View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView, ActivityIndicator, Modal, Platform, StatusBar, ImageBackground} from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
@@ -123,8 +123,7 @@ const CoPartnerDashboardScreen = () => {
             setPayouts(payoutsRes?.success && payoutsRes?.data ? (Array.isArray(payoutsRes.data) ? payoutsRes.data : payoutsRes.data.items || []) : []);
 
         } catch (error) {
-            console.error("Error fetching dashboard data:", error);
-        } finally {
+} finally {
             setIsLoading(false);
         }
     };
@@ -141,8 +140,7 @@ const CoPartnerDashboardScreen = () => {
                 }
             }
         } catch (error) {
-            console.error("Error fetching areas:", error);
-        } finally {
+} finally {
             setIsLoading(false);
         }
     };

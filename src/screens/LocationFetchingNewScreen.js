@@ -1,9 +1,7 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, {useEffect, useState, useRef} from 'react';
 import { View, Text, StyleSheet, Dimensions, PermissionsAndroid, Platform, Modal, KeyboardAvoidingView, TouchableOpacity, ScrollView, FlatList, Alert, Linking, AppState, ImageBackground } from 'react-native';
 import Geolocation from '@react-native-community/geolocation';
-import LottieView from 'lottie-react-native';
 import axios from 'axios';
-import MapView from 'react-native-maps';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 import { BlurView } from '@react-native-community/blur';
 
@@ -12,12 +10,11 @@ import { BlurView } from '@react-native-community/blur';
 import { getFontontSize } from '../globals/GroFunctions';
 import { AppContext } from '../context/appContext';
 import { useCart } from '../context/CartContext';
-import { areaListPincodeWise, getAreasByPincode } from '../api';
+import {getAreasByPincode} from '../api';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { check, request, PERMISSIONS, RESULTS, openSettings } from 'react-native-permissions';
 import DeviceInfo from 'react-native-device-info';
 import Toast from 'react-native-simple-toast';
-import { useFocusEffect } from '@react-navigation/native';
 import { Image } from 'react-native';
 import AuthButton from '../components/AuthButton';
 import FastImage from 'react-native-fast-image';
@@ -158,8 +155,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
             return true;
 
         } catch (err) {
-            console.log(err);
-            return false;
+return false;
         }
     };
 
@@ -307,8 +303,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
             fetchLocation();
 
         } catch (err) {
-            console.log(err);
-        }
+}
     };
 
 
@@ -362,8 +357,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
         };
 
         const onFinalError = async (error) => {
-            console.log('All location attempts failed', error);
-            // Fallback auto navigation if location fails
+// Fallback auto navigation if location fails
             await editPincode({
                 areaName: "Panampilly Nagar",
                 pincodeAreaId: 262,
@@ -386,8 +380,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
         Geolocation.getCurrentPosition(
             onSuccess,
             (error) => {
-                console.log('Cached location failed, trying high accuracy...', error);
-                // 2️⃣ If cached fails, use high accuracy
+// 2️⃣ If cached fails, use high accuracy
                 Geolocation.getCurrentPosition(
                     onSuccess,
                     onFinalError,
@@ -425,8 +418,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
                 setTimeout(funSetLoading, 4000);
             })
             .catch((error) => {
-                console.log('Reverse geocode error', error);
-            });
+});
     };
 
     const getLocationPincodeAreas = async (postcode) => {
@@ -496,8 +488,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
                 }, 2000);
             }
         } catch (error) {
-            console.log('API error:', error);
-            // Do not navigate immediately; let fallback timer handle it
+// Do not navigate immediately; let fallback timer handle it
             // setLocationNotFetched(true)
             // navigation.reset({
             //   index: 0,

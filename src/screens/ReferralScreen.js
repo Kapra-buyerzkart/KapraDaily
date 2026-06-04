@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react'
+import {useState, useEffect, useContext} from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList, Share, Clipboard, ActivityIndicator } from 'react-native'
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'
 import Toast from 'react-native-simple-toast'
@@ -9,7 +9,6 @@ import { FONTS } from '../styles/typography'
 import { getReferralHistoryApi } from '../api/userService'
 import { LoaderContext } from '../context/loaderContext'
 import { AppContext } from '../context/appContext'
-import StoreUnavailable from '../components/StoreUnavailable'
 import LocationModal from '../components/LocationModal'
 import CONFIG from '../globals/config'
 // import moment from 'moment'
@@ -39,8 +38,7 @@ const ReferralScreen = () => {
                 setIsFetchingMore(true);
             }
             const response = await getReferralHistoryApi(page, pageSize);
-            console.log('Referral History Response:', response);
-            if (response?.success && response?.data?.items) {
+if (response?.success && response?.data?.items) {
                 const referralData = Array.isArray(response.data.items) ? response.data.items : [];
                 if (page === 1) {
                     setReferrals(referralData);
@@ -56,8 +54,7 @@ const ReferralScreen = () => {
                 setHasMoreData(false);
             }
         } catch (error) {
-            console.error('Fetch Referral History Error:', error);
-            if (page === 1) setReferrals([]);
+if (page === 1) setReferrals([]);
             setHasMoreData(false);
         } finally {
             showLoader(false);
@@ -136,8 +133,7 @@ const ReferralScreen = () => {
                 message: message,
             });
         } catch (error) {
-            console.error('Error sharing:', error.message);
-        }
+}
     };
 
     const copyToClipboard = () => {

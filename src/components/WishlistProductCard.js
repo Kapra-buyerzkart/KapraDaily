@@ -5,7 +5,6 @@ import Entypo from 'react-native-vector-icons/Entypo';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { FONTS } from '../styles/typography';
 import CONFIG from '../globals/config';
-import AppButton from './AppButton';
 import { useCart } from '../context/CartContext';
 import { useCart } from '../context/CartContext';
 

@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useCallback, useMemo, useRef, useEffect } from 'react';
+import {createContext, useState, useContext, useCallback, useMemo, useRef} from 'react';
 import { addToWishlistApi, removeFromWishlistApi, getWishlistApi } from '../api/wishlistService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -38,8 +38,7 @@ export const WishlistProvider = ({ children }) => {
                     setWishlistItems([]);
                 }
             } catch (error) {
-                console.error('Error loading wishlist:', error);
-                setWishlistItems([]);
+setWishlistItems([]);
             } finally {
                 setIsLoading(false);
                 loadRequestRef.current = null;
@@ -64,8 +63,7 @@ export const WishlistProvider = ({ children }) => {
         try {
             await addToWishlistApi(productId);
         } catch (error) {
-            console.error('Error adding to wishlist API:', error);
-            // Revert on failure
+// Revert on failure
             setWishlistItems(prevItems => prevItems.filter(i => (i.productId || i.id) !== productId));
             loadWishlist(true); // Retry fetch
         }
@@ -82,8 +80,7 @@ export const WishlistProvider = ({ children }) => {
         try {
             await removeFromWishlistApi(itemId);
         } catch (error) {
-            console.error('Error removing from wishlist API:', error);
-            // Revert on failure
+// Revert on failure
             if (removedItem) {
                 setWishlistItems(prevItems => [...prevItems, removedItem]);
             }

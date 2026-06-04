@@ -1,5 +1,5 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native'
-import React, { useState, useEffect, useContext } from 'react'
+import {View, Text, StyleSheet, ScrollView, TouchableOpacity} from 'react-native';
+import {useState, useEffect, useContext} from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import AntDesign from 'react-native-vector-icons/AntDesign'
@@ -45,8 +45,7 @@ const TicketDetailsScreen = () => {
                 })
             }
         } catch (error) {
-            console.error('Error fetching ticket details:', error)
-            setStatusModal({
+setStatusModal({
                 visible: true,
                 title: 'Error',
                 message: 'Something went wrong while fetching ticket details.'

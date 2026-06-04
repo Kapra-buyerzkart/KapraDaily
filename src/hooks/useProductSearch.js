@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useContext, useMemo } from 'react';
+import {useState, useEffect, useCallback, useContext, useMemo} from 'react';
 import { getProductSuggestionsApi, searchProductsApi } from '../api/productService';
 import { useDebounce } from './useDebounce';
 import { AppContext } from '../context/appContext';
@@ -54,8 +54,7 @@ const useProductSearch = (initialPincodeId, initialCatId = null, filters = {}) =
 
                 if (trimmedTerm.length > 0) {
                     // USER typing -> ALWAYS Global Search (per user request to show products from other categories)
-                    console.log('useProductSearch: Searching globally for:', trimmedTerm);
-                    response = await getProductSuggestionsApi(trimmedTerm, activePincodeId);
+response = await getProductSuggestionsApi(trimmedTerm, activePincodeId);
 
                     if (response && response.success && Array.isArray(response.data)) {
                         setSuggestions(response.data);
@@ -80,8 +79,7 @@ const useProductSearch = (initialPincodeId, initialCatId = null, filters = {}) =
                         pageNumber: 1,
                         pageSize: 50
                     };
-                    console.log('useProductSearch: Browsing category:', catId);
-                    response = await searchProductsApi(payload);
+response = await searchProductsApi(payload);
 
                     if (response && response.success && response.data && Array.isArray(response.data.items)) {
                         setSuggestions(response.data.items);
@@ -99,8 +97,7 @@ const useProductSearch = (initialPincodeId, initialCatId = null, filters = {}) =
                     setIsGlobalFallback(false);
                 }
             } catch (err) {
-                console.error('Error in useProductSearch:', err);
-                setError(err);
+setError(err);
                 setSuggestions([]);
                 setResultCount(0);
             } finally {

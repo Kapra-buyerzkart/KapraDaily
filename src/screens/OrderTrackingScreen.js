@@ -1,6 +1,6 @@
-import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Platform, FlatList, ImageBackground, Linking, BackHandler, Animated } from 'react-native'
+import {View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Platform, ImageBackground, Linking, BackHandler, Animated} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import React, { useState, useCallback, useEffect, useRef } from 'react'
+import React, {useState, useCallback, useRef} from 'react';
 import { useNavigation, useRoute, CommonActions, useFocusEffect } from '@react-navigation/native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import AntDesign from 'react-native-vector-icons/AntDesign'
@@ -13,7 +13,6 @@ import ConfirmationModal from '../components/ConfirmationModal'
 import ReturnItemModal from '../components/ReturnItemModal'
 import { useOrderDetails } from '../hooks/useOrderDetails'
 import { useOrderTracking } from '../hooks/useOrderTracking'
-import AppButton from '../components/AppButton'
 import CustomLoader from '../components/CustomLoader'
 import CONFIG from '../globals/config'
 import RatingModal from '../components/RatingModal'
@@ -155,11 +154,8 @@ const OrderTrackingScreen = () => {
     const [retryLoading, setRetryLoading] = useState(false);
 
     const handleRetryPayment = async () => {
-        console.log('✅ [RETRY] Razorpay SDK Success:', razorpayOrderId, razorpayKeyId);
-
-        if (!razorpayOrderId || !razorpayKeyId) {
-            console.log('⚠️ [RETRY] Missing details - razorpayOrderId:', razorpayOrderId, 'razorpayKeyId:', razorpayKeyId);
-            setStatusModal({
+if (!razorpayOrderId || !razorpayKeyId) {
+setStatusModal({
                 visible: true,
                 type: 'error',
                 title: 'Retry Failed',
@@ -183,8 +179,7 @@ const OrderTrackingScreen = () => {
 
         try {
             const sdkResponse = await RazorpayCheckout.open(options);
-            console.log('✅ [RETRY] Razorpay SDK Success:', sdkResponse);
-            setRetryLoading(true);
+setRetryLoading(true);
 
             const verifyPayload = {
                 orderId: orderId,
@@ -200,11 +195,9 @@ const OrderTrackingScreen = () => {
 
             const attemptVerification = async () => {
                 try {
-                    console.log(`🔍 [RETRY] Verification Attempt ${retryCount + 1}...`);
-                    return await verifyRazorpayPaymentApi(verifyPayload);
+return await verifyRazorpayPaymentApi(verifyPayload);
                 } catch (e) {
-                    console.error(`⚠️ [RETRY] Verification Attempt ${retryCount + 1} Error:`, e);
-                    return null;
+return null;
                 }
             };
 
@@ -215,7 +208,7 @@ const OrderTrackingScreen = () => {
                 retryCount < maxRetries
             ) {
                 retryCount++;
-                console.log(`🔄 [RETRY] Retrying verification (Count: ${retryCount}) in 3s...`);
+in 3s...`);
                 await new Promise(resolve => setTimeout(resolve, 3000));
                 verifyResponse = await attemptVerification();
             }
@@ -247,8 +240,7 @@ const OrderTrackingScreen = () => {
                 });
             }
         } catch (sdkError) {
-            console.error('❌ [RETRY] Error:', sdkError);
-            setRetryLoading(false);
+setRetryLoading(false);
             navigation.dispatch(
                 CommonActions.reset({
                     index: 0,
@@ -308,12 +300,10 @@ const OrderTrackingScreen = () => {
     useOrderTracking(
         orderId,
         (statusUpdate) => {
-            console.log('🔄 [UI] Refreshing order details due to SignalR update');
-            refreshOrder?.(true);
+refreshOrder?.(true);
         },
         (locationUpdate) => {
-            console.log('📍 [UI] Driver location updated:', locationUpdate);
-            // Future step: update map markers if applicable
+// Future step: update map markers if applicable
         }
     );
 
@@ -871,10 +861,8 @@ const OrderTrackingScreen = () => {
                                         ? invoiceUrl
                                         : `${CONFIG.image_base_url}${invoiceUrl}`;
 
-                                    console.log('Opening Invoice URL:', fullUrl);
-                                    Linking.openURL(fullUrl).catch(err => {
-                                        console.error("Couldn't load page", err);
-                                        Toast.show("Unable to download invoice at this time", Toast.SHORT);
+Linking.openURL(fullUrl).catch(err => {
+Toast.show("Unable to download invoice at this time", Toast.SHORT);
                                     });
                                 } else {
                                     Toast.show("Invoice not available yet", Toast.SHORT);

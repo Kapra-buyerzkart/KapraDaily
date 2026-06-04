@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from 'react';
+import {useContext, useEffect} from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import LocationFetchingScreen from '../screens/LocationFetchingScreen';
 import LocationFetchingNewScreen from '../screens/LocationFetchingNewScreen';

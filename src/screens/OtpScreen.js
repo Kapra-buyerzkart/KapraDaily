@@ -1,18 +1,4 @@
-import {
-    View,
-    Text,
-    StyleSheet,
-    ImageBackground,
-    Image,
-    TextInput,
-    TouchableOpacity,
-    KeyboardAvoidingView,
-    ScrollView,
-    Platform,
-    Alert,
-    ActivityIndicator,
-    Keyboard,
-} from 'react-native';
+import {View, Text, StyleSheet, ImageBackground, Image, TextInput, TouchableOpacity, KeyboardAvoidingView, ScrollView, Platform, ActivityIndicator, Keyboard} from 'react-native';
 import React, { useRef, useState, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
@@ -76,8 +62,7 @@ const OtpScreen = () => {
                 RNOtpVerify.removeListener();
             }
         } catch (error) {
-            console.log('OTP Parse Error:', error);
-        }
+}
     };
 
 
@@ -101,8 +86,7 @@ const OtpScreen = () => {
                 }
 
             } catch (error) {
-                console.log('Send OTP Error:', error);
-                showStatus({
+showStatus({
                     type: 'error',
                     title: 'Error',
                     message: error?.message || 'Failed to send OTP',
@@ -124,8 +108,7 @@ const OtpScreen = () => {
                 await RNOtpVerify.getOtp();
                 RNOtpVerify.addListener(otpHandler);
             } catch (error) {
-                console.log('OTP Auto Fetch Error:', error);
-            }
+}
         };
 
         startOtpListener();
@@ -214,8 +197,7 @@ const OtpScreen = () => {
                 });
             }
         } catch (error) {
-            console.log('Verify OTP Error:', error);
-            showStatus({
+showStatus({
                 type: 'error',
                 title: 'Error',
                 message: error || 'Failed to verify OTP'
@@ -296,8 +278,7 @@ const OtpScreen = () => {
                 });
             }
         } catch (error) {
-            console.log('Verify OTP Error:', error);
-            showStatus({
+showStatus({
                 type: 'error',
                 title: 'Error',
                 message: error || 'Failed to verify OTP'
@@ -342,8 +323,7 @@ const OtpScreen = () => {
                 });
             }
         } catch (error) {
-            console.log('Verify OTP Error:', error);
-            showStatus({
+showStatus({
                 type: 'error',
                 title: 'Error',
                 message: error || 'Failed to verify OTP'
@@ -372,8 +352,7 @@ const OtpScreen = () => {
             setTimer(60);
             setIsResendDisabled(true);
         } catch (error) {
-            console.log('Resend OTP Error:', error);
-            showStatus({
+showStatus({
                 type: 'error',
                 title: 'Error',
                 message: error?.message || 'Failed to resend OTP'

@@ -1,5 +1,4 @@
-import React from 'react';
-import { View, Text, StyleSheet, Modal, TouchableOpacity, Linking, Image } from 'react-native';
+import {View, Text, StyleSheet, Modal, TouchableOpacity, Linking} from 'react-native';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { FONTS } from '../styles/typography';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';

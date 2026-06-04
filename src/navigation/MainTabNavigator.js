@@ -1,12 +1,10 @@
-import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import HomeScreen from '../screens/HomeScreen';
 import CategoriesScreen from '../screens/CategoriesScreen';
 import WishlistScreen from '../screens/WishlistScreen';
 import KshopeScreen from '../screens/KshopeScreen';
-import { Image, Platform, StyleSheet, Text, TouchableOpacity, Alert, Linking } from 'react-native';
+import {Image, Platform, StyleSheet, Text, TouchableOpacity, Linking} from 'react-native';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
-import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import HomeStack from './HomeStack';
 import { FONTS } from '../styles/typography'
@@ -38,8 +36,7 @@ export default function MainTabNavigator() {
                     : (generalSettings?.kshope_android_url || 'https://play.google.com/store/apps/details?id=com.kshope');
 
                 Linking.openURL(storeUrl).catch(err => {
-                    console.error('Failed to open store URL:', err);
-                    showComingSoon();
+showComingSoon();
                 });
             } else {
                 showComingSoon();

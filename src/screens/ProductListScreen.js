@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, TouchableOpacity, FlatList, TextInput, Image } from 'react-native'
-import React, { useState } from 'react'
+import {useState} from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import Ionicons from 'react-native-vector-icons/Ionicons'
@@ -14,8 +14,6 @@ import { AppContext } from '../context/appContext'
 import { useContext, useEffect } from 'react'
 import useProductSearch from '../hooks/useProductSearch'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { ActivityIndicator } from 'react-native'
-
 const ProductListScreen = () => {
     const navigation = useNavigation()
     const route = useRoute()

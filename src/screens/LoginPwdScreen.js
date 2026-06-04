@@ -1,11 +1,11 @@
-import { View, Text, StyleSheet, ImageBackground, Image, TextInput, TouchableOpacity, KeyboardAvoidingView, ScrollView, Alert, ActivityIndicator } from 'react-native'
-import React, { useState } from 'react'
+import {View, Text, StyleSheet, ImageBackground, Image, TextInput, TouchableOpacity, KeyboardAvoidingView, ScrollView, ActivityIndicator} from 'react-native';
+import {useState} from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import { FONTS } from '../styles/typography'
 import { useNavigation, useRoute } from '@react-navigation/native'
 import { useCart } from '../context/CartContext'
-import { loginWithPassword, sendLoginOtp } from '../api'
+import {loginWithPassword} from '../api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 // import { setTokens } from '../api/tokenService'
 
@@ -20,8 +20,7 @@ const setTokens = async (accessToken, refreshToken) => {
 };
 
 const mergeCustomerIdIntoProfile = async (custId) => {
-    console.log('????????', custId)
-    const storedProfile = await AsyncStorage.getItem('profile');
+const storedProfile = await AsyncStorage.getItem('profile');
     const existingProfile = storedProfile ? JSON.parse(storedProfile) : {};
 
     const updatedProfile = {
@@ -29,9 +28,7 @@ const mergeCustomerIdIntoProfile = async (custId) => {
         custId,
     };
 
-    console.log('updatedProfile', updatedProfile)
-
-    await AsyncStorage.setItem('profile', JSON.stringify(updatedProfile));
+await AsyncStorage.setItem('profile', JSON.stringify(updatedProfile));
 };
 
 const LoginPwdScreen = () => {
@@ -82,8 +79,7 @@ const LoginPwdScreen = () => {
                 });
             }
         } catch (error) {
-            console.log('Login Error:', error);
-            showStatus({
+showStatus({
                 type: 'error',
                 title: 'Error',
                 message: error || 'Failed to login'

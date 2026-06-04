@@ -1,13 +1,11 @@
-import { View, Text, StyleSheet, ImageBackground, Image, TextInput, TouchableOpacity, KeyboardAvoidingView, ScrollView, Alert, ActivityIndicator } from 'react-native'
-import React, { useState, useContext } from 'react'
+import {View, Text, StyleSheet, ImageBackground, Image, TextInput, TouchableOpacity, KeyboardAvoidingView, ScrollView, Alert} from 'react-native';
+import {useState, useContext} from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import { FONTS } from '../styles/typography'
 import { useNavigation, useRoute } from '@react-navigation/native'
 import { useCart } from '../context/CartContext'
 import { checkPhone, sendForgotPwdOtp, sendLoginOtp } from '../api'
-import { setTokens } from '../api/tokenService'
-import LoaderComponent from '../components/LoaderComponent'
 import { LoaderContext } from '../context/loaderContext'
 import { validatePhoneNumbers } from '../utils/validation'
 
@@ -155,8 +153,7 @@ const LoginScreen = () => {
                 });
             }
         } catch (error) {
-            console.log('OTP Error:', error);
-            showStatus({
+showStatus({
                 type: 'error',
                 title: 'Error',
                 message: error?.Message || error?.message || 'Failed to send OTP'
@@ -206,8 +203,7 @@ const LoginScreen = () => {
                 });
             }
         } catch (error) {
-            console.log('OTP Error:', error);
-            showStatus({
+showStatus({
                 type: 'error',
                 title: 'Error',
                 message: error?.Message || error?.message || 'Failed to send OTP'

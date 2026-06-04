@@ -11,18 +11,14 @@ export const useWishlistData = () => {
             setLoading(true);
             setError(null);
             const response = await getWishlistApi();
-            console.log('Wishlist Response:', response);
-
-            if (response && response.data && response.data.items) {
+if (response && response.data && response.data.items) {
                 const items = Array.isArray(response.data.items) ? response.data.items : [];
                 setWishlistItems(items);
-                console.log('Loaded wishlist items:', items.length);
-            } else {
+} else {
                 setWishlistItems([]);
             }
         } catch (err) {
-            console.error('Error loading wishlist:', err);
-            setError(err);
+setError(err);
             setWishlistItems([]);
         } finally {
             setLoading(false);

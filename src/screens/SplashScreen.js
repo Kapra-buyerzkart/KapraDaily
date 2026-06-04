@@ -1,6 +1,6 @@
 // AnimatedSplash.js
-import React, { useEffect } from 'react';
-import { View, Image, StyleSheet } from 'react-native';
+import {useEffect} from 'react';
+import {View, StyleSheet} from 'react-native';
 import FastImage from 'react-native-fast-image';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 

@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Modal, TouchableOpacity, Pressable, Animated, PanResponder, Platform } from 'react-native';
+import {useState, useEffect, useRef} from 'react';
+import {View, Text, StyleSheet, Modal, TouchableOpacity, Pressable, Animated, PanResponder} from 'react-native';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { FONTS } from '../styles/typography';
 import Ionicons from 'react-native-vector-icons/Ionicons';

@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, FlatList, Image, TextInput, ScrollView, ActivityIndicator, ImageBackground } from 'react-native'
+import {View, Text, TouchableOpacity, FlatList, Image, TextInput, ActivityIndicator, ImageBackground} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useState, useEffect, useContext } from 'react'
 import { useRoute, useNavigation } from '@react-navigation/native';
@@ -9,18 +9,15 @@ import Feather from 'react-native-vector-icons/Feather';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import TokenProductCard from '../components/TokenProductCard';
 import SelectedProducts from '../components/SelectedProducts';
-import LinearGradient from 'react-native-linear-gradient';
 import { FONTS } from '../styles/typography'
 import { getCategoriesApi } from '../api/categoryService';
 import { searchProductsApi } from '../api/productService';
 import CONFIG from '../globals/config';
 import FilterSortModal from '../components/FilterSortModal';
-import { useCart } from '../context/CartContext';
 import { LoaderContext } from '../context/loaderContext';
 import { useDebounce } from '../hooks/useDebounce';
 import { AppContext } from '../context/appContext';
 import StoreUnavailable from '../components/StoreUnavailable';
-import { getGeneralSettingsApi } from '../api/userService';
 import LocationModal from '../components/LocationModal';
 
 
@@ -115,8 +112,7 @@ export default function CategoriesScreen() {
                 const storedPincodeAreaId = await AsyncStorage.getItem('pincodeAreaId');
                 setPincodeAreaId(storedPincodeAreaId ? parseInt(storedPincodeAreaId) : (profile?.pincode || null));
             } catch (error) {
-                console.error("Error in initializeLocationAndSettings in CategoriesScreen:", error);
-            }
+}
         };
 
         initializeLocationAndSettings();
@@ -138,8 +134,7 @@ export default function CategoriesScreen() {
     useEffect(() => {
         const catIdToFetch = selectedSubCatId || selectedId;
         if (catIdToFetch) {
-            console.log('Fetching products for:', catIdToFetch, 'with search:', debouncedSearchText);
-            fetchProducts(catIdToFetch, 1);
+fetchProducts(catIdToFetch, 1);
         }
     }, [selectedSubCatId, debouncedSearchText, selectedId, filters]);
 
@@ -164,9 +159,9 @@ export default function CategoriesScreen() {
                 pageNumber: page,
                 pageSize: pageSize
             };
-            console.log('Fetching Products Payload:', JSON.stringify(payload, null, 2));
+);
             const response = await searchProductsApi(payload);
-            console.log('Products Response:', JSON.stringify(response, null, 2));
+);
             
             if (response && response.success && response.data && response.data.items) {
                 const newProducts = response.data.items;
@@ -186,8 +181,7 @@ export default function CategoriesScreen() {
                 setHasMoreData(false);
             }
         } catch (error) {
-            console.error('Error fetching products:', error);
-            if (page === 1) setProductsList([]);
+if (page === 1) setProductsList([]);
             setHasMoreData(false);
         } finally {
             if (page === 1) setIsFetchingProducts(false);
@@ -209,7 +203,7 @@ export default function CategoriesScreen() {
             setLoading(true);
             showLoader(true);
             const response = await getCategoriesApi(1); // Fetch root categories to find 105
-            console.log('Categories Response:', JSON.stringify(response, null, 2));
+);
             if (response && response.success && response.data && response.data.items) {
                 setStoreUnavailable(false);
                 setCategoriesList(response.data.items);
@@ -229,8 +223,7 @@ export default function CategoriesScreen() {
                 setCategoriesList([]);
             }
         } catch (error) {
-            console.error('Error fetching categories:', error);
-        } finally {
+} finally {
             setLoading(false);
             showLoader(false);
         }
@@ -240,7 +233,7 @@ export default function CategoriesScreen() {
         try {
             showLoader(true);
             const response = await getCategoriesApi(parentId);
-            console.log('SubCategories Response:', JSON.stringify(response, null, 2));
+);
             if (response && response.success && response.data && response.data.items) {
                 setSubCategoriesList(response.data.items);
                 setSelectedSubCatId(null);
@@ -248,8 +241,7 @@ export default function CategoriesScreen() {
                 setSubCategoriesList([]);
             }
         } catch (error) {
-            console.error('Error fetching subcategories:', error);
-            setSubCategoriesList([]);
+setSubCategoriesList([]);
         } finally {
             showLoader(false);
         }

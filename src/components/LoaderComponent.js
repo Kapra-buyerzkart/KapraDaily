@@ -1,5 +1,4 @@
 // components/Loader.js
-import React from 'react';
 import { View, ActivityIndicator, StyleSheet, Modal } from 'react-native';
 
 const LoaderComponent = ({ visible }) => {

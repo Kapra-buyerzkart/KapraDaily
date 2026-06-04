@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react'
-import { View, Text, StyleSheet, Image, TouchableOpacity, TextInput, Platform, ScrollView, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, ActivityIndicator, PermissionsAndroid } from 'react-native'
+import {useState, useEffect, useRef} from 'react';
+import {View, Text, StyleSheet, Image, TouchableOpacity, TextInput, Platform, ScrollView, KeyboardAvoidingView, ActivityIndicator, PermissionsAndroid} from 'react-native';
 import MapView, { Marker } from 'react-native-maps'
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -107,20 +107,16 @@ const AddLocationScreen = () => {
             );
             return granted === PermissionsAndroid.RESULTS.GRANTED;
         } catch (err) {
-            console.warn(err);
-            return false;
+return false;
         }
     };
 
     const getCurrentLocation = (showLoader = false) => {
         if (showLoader) setIsLoading(true);
-        console.log('📍 [GEOLOCATION] Fetching current position...');
-
-        const onSuccess = (position) => {
+const onSuccess = (position) => {
             if (!isMountedRef.current) return;
             const { latitude, longitude } = position.coords;
-            console.log('📍 [GEOLOCATION] Position received:', latitude, longitude);
-            setRegion(prev => ({
+setRegion(prev => ({
                 ...prev,
                 latitude,
                 longitude,
@@ -134,8 +130,7 @@ const AddLocationScreen = () => {
 
         const onFinalError = (error) => {
             if (!isMountedRef.current) return;
-            console.warn('📍 [GEOLOCATION] Final Error:', error);
-            if (!isEditMode) setIsInitialLoading(false);
+if (!isEditMode) setIsInitialLoading(false);
             if (showLoader) setIsLoading(false);
             const msg = error.code === 1 ? 'Permission denied' : error.code === 2 ? 'Position unavailable' : error.code === 3 ? 'Timeout' : 'Failed to fetch location';
             Toast.show(msg, Toast.SHORT);
@@ -148,8 +143,7 @@ const AddLocationScreen = () => {
                 Geolocation.getCurrentPosition(
                     onSuccess,
                     (error) => {
-                        console.warn('[GEOLOCATION] High accuracy failed, trying low accuracy...', error.message);
-                        Geolocation.getCurrentPosition(
+Geolocation.getCurrentPosition(
                             onSuccess,
                             onFinalError,
                             { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 }
@@ -190,8 +184,7 @@ const AddLocationScreen = () => {
                 // Toast.show('No areas found for this pincode', Toast.SHORT);
             }
         } catch (error) {
-            console.error('Error fetching areas:', error);
-            setItems([]);
+setItems([]);
         } finally {
             setIsAreasLoading(false);
         }
@@ -228,8 +221,7 @@ const AddLocationScreen = () => {
                 }
             }
         } catch (error) {
-            console.error('Reverse geocode error', error);
-        } finally {
+} finally {
             if (isMountedRef.current) setIsGeocoding(false);
         }
     };
@@ -278,9 +270,7 @@ const AddLocationScreen = () => {
             } else {
                 response = await addAddressApi(payload);
             }
-            console.log('ressssnm=====', response);
-
-            if (response && response.success !== false) {
+if (response && response.success !== false) {
                 Toast.show(isEditMode ? 'Address updated' : 'Address added', Toast.SHORT);
                 await refreshAddresses();
                 navigation.goBack();
@@ -288,8 +278,7 @@ const AddLocationScreen = () => {
                 Toast.show(response?.message || 'Failed to save address', Toast.SHORT);
             }
         } catch (error) {
-            console.error('Error saving address:', error);
-            Toast.show('An error occurred', Toast.SHORT);
+Toast.show('An error occurred', Toast.SHORT);
         } finally {
             setIsLoading(false);
         }

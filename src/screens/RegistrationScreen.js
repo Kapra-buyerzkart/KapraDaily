@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, ImageBackground, Image, TextInput, TouchableOpacity, KeyboardAvoidingView, ScrollView } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import {useState} from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import { FONTS } from '../styles/typography'
@@ -70,8 +70,7 @@ const RegistrationScreen = () => {
                 setAreas(response?.data || [])
                 setSelectedArea(null)
             } catch (error) {
-                console.log('Error fetching areas:', error)
-                setAreas([])
+setAreas([])
             }
         } else {
             setAreas([])
@@ -171,8 +170,7 @@ const RegistrationScreen = () => {
             }
 
         } catch (error) {
-            console.log('Registration error:', error)
-            const errorMessage = error?.message || error?.data?.message || error?.data?.Message || 
+const errorMessage = error?.message || error?.data?.message || error?.data?.Message || 
                 (typeof error === 'string' ? error : 'Something went wrong. Please try again.');
             showStatus({
                 type: 'error',

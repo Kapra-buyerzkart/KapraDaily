@@ -50,8 +50,7 @@ export const useDeliverySlot = () => {
                     }
                 }
             } catch (error) {
-                console.error('Error fetching delivery modes:', error);
-            }
+}
         };
         fetchDeliveryModes();
     }, []);

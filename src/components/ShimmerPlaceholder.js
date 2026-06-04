@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import {useEffect, useRef} from 'react';
 import { View, StyleSheet, Animated, Easing } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { widthPercentageToDP as wp } from 'react-native-responsive-screen';

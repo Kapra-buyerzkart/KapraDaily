@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, { createContext, useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import {createContext, useState, useCallback, useMemo, useEffect, useRef} from 'react';
 import { Platform } from 'react-native';
 import DeviceInfo from 'react-native-device-info';
 import { getProfile } from '../api';
@@ -23,15 +23,13 @@ export const AppContextProvider = ({ children }) => {
   const checkForUpdates = useCallback(async () => {
     try {
       const currentVersion = DeviceInfo.getVersion();
-      console.log('currentVersion=======>', currentVersion);
-      const platform = Platform.OS.toUpperCase(); // ANDROID or IOS
+const platform = Platform.OS.toUpperCase(); // ANDROID or IOS
 
       const response = await getAppUpdateCheckApi(currentVersion, platform);
 
       if (response && response.success && response.data) {
         const remoteVersion = response.data.versionCode || response.data.version;
-        console.log('remoteVersion=======>', remoteVersion);
-        if (!remoteVersion || !currentVersion) return;
+if (!remoteVersion || !currentVersion) return;
 
         // Semver version comparison
         const rParts = remoteVersion.split('.').map(Number);
@@ -57,7 +55,7 @@ export const AppContextProvider = ({ children }) => {
       }
     } catch (error) {
       // User said: "if error no need to show anything"
-      console.log('App update check failed (silent):', error);
+:', error);
     }
   }, []);
 
@@ -93,8 +91,7 @@ export const AppContextProvider = ({ children }) => {
         return settingsMap;
       }
     } catch (error) {
-      console.error('Error fetching general settings:', error);
-    }
+}
     return {};
   }, []);
 
@@ -125,13 +122,11 @@ export const AppContextProvider = ({ children }) => {
           if (JSON.stringify(prev) === JSON.stringify(mergedProfile)) return prev;
           return mergedProfile;
         });
-        console.log('profilee', mergedProfile);
-      } else {
+} else {
         await loadProfileTwo(); // Fallback to guest profile if API response is not successful
       }
     } catch (error) {
-      console.log('Profile fetch error:', error);
-      await loadProfileTwo(); // Fallback to guest profile
+await loadProfileTwo(); // Fallback to guest profile
     }
   }, [loadProfileTwo]);
 
@@ -195,9 +190,7 @@ export const AppContextProvider = ({ children }) => {
       
       // Clear ALL data from local storage
       await AsyncStorage.clear();
-      console.log('🔒 [LOGOUT] AsyncStorage cleared');
-
-      // Unlink OneSignal identity and clear badges
+// Unlink OneSignal identity and clear badges
       oneSignalLogout();
 
       // Navigate to login
@@ -212,8 +205,7 @@ export const AppContextProvider = ({ children }) => {
       setProfile(freshProfile);
 
     } catch (error) {
-      console.log('Logout error:', error);
-    }
+}
   };
 
 
@@ -226,8 +218,7 @@ export const AppContextProvider = ({ children }) => {
    */
   useEffect(() => {
     if (profile?.custId) {
-      console.log('🔔 [SYNC] Registering OneSignal ExternalId:', profile.custId);
-      oneSignalLogin({
+oneSignalLogin({
         externalId: String(profile.custId),
         tags: {
           customer_name: profile.custName || '',

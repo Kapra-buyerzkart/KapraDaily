@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, RefreshControl } from 'react-native'
-import React, { useState, useEffect, useContext } from 'react'
+import {useState, useEffect, useContext} from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import AntDesign from 'react-native-vector-icons/AntDesign'
@@ -25,8 +25,7 @@ const SupportTicketsListScreen = () => {
                 setTickets(response)
             }
         } catch (error) {
-            console.error('Error fetching support tickets:', error)
-        } finally {
+} finally {
             showLoader(false)
             setRefreshing(false)
         }

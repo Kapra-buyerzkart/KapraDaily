@@ -1,11 +1,9 @@
 import { View, Text, StyleSheet, ImageBackground, Image, TextInput, TouchableOpacity, KeyboardAvoidingView, ScrollView, ActivityIndicator } from 'react-native'
-import React, { useState } from 'react'
+import {useState} from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import { FONTS } from '../styles/typography'
 import { resetPassword } from '../api'; // adjust path as needed
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Alert } from 'react-native';
 import { getResetToken } from '../api/tokenService'
 import { useNavigation, useRoute } from '@react-navigation/native'
 import { useCart } from '../context/CartContext'

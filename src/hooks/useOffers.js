@@ -75,8 +75,7 @@ export const useOffers = (deliveryHook, addressHook) => {
                 setAvailableGiftCards(giftCards);
             }
         } catch (error) {
-            console.error('Error fetching available rewards:', error);
-        }
+}
     }, []);
 
     // Fetch on mount
@@ -102,8 +101,7 @@ export const useOffers = (deliveryHook, addressHook) => {
                     ));
                 }
             } catch (error) {
-                console.error('Error fetching wallet data:', error);
-            }
+}
         };
         fetchWalletData();
     }, []);
@@ -223,8 +221,7 @@ export const useOffers = (deliveryHook, addressHook) => {
         if (!codeToApply?.trim()) return;
 
         if (isApplyingRef.current) {
-            console.log('⏳ [OFFERS] Apply already in progress...');
-            return;
+return;
         }
         isApplyingRef.current = true;
         showLoader(true);
@@ -247,8 +244,7 @@ export const useOffers = (deliveryHook, addressHook) => {
             } else {
                 const errorMsg = result.message || (isGiftCard ? 'Failed to apply gift card' : 'Failed to apply coupon');
                 if (errorMsg.toLowerCase().includes('modified')) {
-                    console.log('🚫 [OFFERS] Suppressing modified Toast:', errorMsg);
-                } else {
+} else {
                     Toast.show(errorMsg, Toast.LONG);
                 }
             }

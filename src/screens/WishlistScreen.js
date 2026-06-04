@@ -4,7 +4,6 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import { FONTS } from '../styles/typography'
 import LinearGradient from 'react-native-linear-gradient';
-import WishListEmptyComponent from '../components/WishListEmptyComponent'
 import { useWishlist } from '../context/WishlistContext';
 import { useCart } from '../context/CartContext';
 import ConfirmationModal from '../components/ConfirmationModal';

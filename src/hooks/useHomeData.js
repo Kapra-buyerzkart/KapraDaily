@@ -78,8 +78,7 @@ const useHomeData = () => {
                     };
                 }
             } catch (settingsError) {
-                console.error("Failed to fetch general settings:", settingsError);
-            }
+}
 
             const areaId = storedPincodeAreaId ? parseInt(storedPincodeAreaId) : (profile?.pincode || null);
             if (storedArea) {
@@ -101,7 +100,7 @@ const useHomeData = () => {
             }
 
             const response = await getHomepageData(areaId, 100);
-            console.log('🏠 [HOME API] Raw Response Data:', JSON.stringify(response, null, 2));
+);
 
             // Check for STORE_NOT_FOUND or STORE_CLOSED_FOR_DELIVERY
             let storeNotFound = false;
@@ -122,15 +121,13 @@ const useHomeData = () => {
             const pObj = response?.data?.popup || response?.popup || response?.details?.popup;
             
             if (pObj && (pObj.popupImageUrl || pObj.popupImage) && Number(pObj.showPopup) === 1) {
-                console.log('🎁 [HOME POPUP] Found in response, mapping keys:', { id: pObj.popupId, show: pObj.showPopup });
-                setPopupData({
+setPopupData({
                     ...pObj,
                     uri: { uri: `${CONFIG.image_base_url}${pObj.popupImageUrl || pObj.popupImage}` },
                     popupLink: pObj.popupLink || pObj.popup_link || pObj.Link || pObj.link
                 });
             } else {
-                console.log('🎁 [HOME POPUP] No valid popup object found in response paths.');
-                setPopupData(null);
+setPopupData(null);
             }
 
             if (storeNotFound || storeClosed) {
@@ -240,20 +237,13 @@ const useHomeData = () => {
                 }
             }
         } catch (error) {
-            console.error('Error fetching homepage data:', error);
-            
-            // Still try to extract popup from error data
+// Still try to extract popup from error data
             // Supports both legacy axios errors and our new rich error object from networkUtils
             // Explicitly checking data.data.popup and data.popup for the user's snippet
             const errBody = error?.data || error?.response?.data || error || error?.data?.data;
-             console.error('Error fetching homepage data------->', errBody);
-            
-            const p = errBody?.data?.popup || errBody?.popup || errBody?.details?.popup;
-            console.error('Error fetching homepage data -> Checking for popup in error body:', !!p);
-            
-            if (p && (p.popupImage || p.popupImageUrl) && Number(p.showPopup) === 1) {
-                console.log('🎁 [HOME POPUP] Extracted from error object path:', p.popupId, 'show:', p.showPopup);
-                setPopupData({
+const p = errBody?.data?.popup || errBody?.popup || errBody?.details?.popup;
+if (p && (p.popupImage || p.popupImageUrl) && Number(p.showPopup) === 1) {
+setPopupData({
                     ...p,
                     uri: { uri: `${CONFIG.image_base_url}${p.popupImageUrl || p.popupImage}` },
                     popupLink: p.popupLink || p.popup_link || p.Link || p.link

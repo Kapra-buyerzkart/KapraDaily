@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import Entypo from 'react-native-vector-icons/Entypo';
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import LinearGradient from 'react-native-linear-gradient';
 import { FONTS } from '../styles/typography';

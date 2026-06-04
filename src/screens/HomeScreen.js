@@ -1,32 +1,24 @@
-import { View, Text, StyleSheet, ImageBackground, TouchableOpacity, Image, TextInput, FlatList, ScrollView, Dimensions, RefreshControl, Platform, Linking } from 'react-native'
+import {View, Text, StyleSheet, ImageBackground, TouchableOpacity, Image, FlatList, ScrollView, Dimensions, RefreshControl, Platform, Linking} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, { startTransition, useEffect, useRef, useState, useContext, useCallback, useMemo } from 'react'
+import React, {useEffect, useRef, useState, useContext, useCallback} from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import Icon from 'react-native-vector-icons/Ionicons';
-import Svg, { Defs, RadialGradient, LinearGradient as SvgLinearGradient, Stop, Path } from 'react-native-svg';
+import Svg, {Defs, LinearGradient as SvgLinearGradient, Stop, Path} from 'react-native-svg';
 const SvgAvailable = false; // Forced false for debugging
 import LinearGradient from 'react-native-linear-gradient';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Entypo from 'react-native-vector-icons/Entypo';
 import Feather from 'react-native-vector-icons/Feather';
-import Ionicons from 'react-native-vector-icons/Ionicons';
-import EvilIcons from 'react-native-vector-icons/EvilIcons';
-import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
-
 import TokenProductCard from '../components/TokenProductCard';
 import SelectedProducts from '../components/SelectedProducts';
 import { useNavigation } from '@react-navigation/native';
 import { FONTS } from '../styles/typography'
-import { getAccessToken, setTokens } from '../api/tokenService';
 import useHomeData from '../hooks/useHomeData';
 import { getCategoryProducts, postPopupSeenApi } from '../api/homeService';
 import CONFIG from '../globals/config';
 import { getDashboardDataApi, requestProductApi } from '../api/userService';
 import { LoaderContext } from '../context/loaderContext';
 
-import EmptySection from '../components/EmptySection';
 import { AppContext } from '../context/appContext';
 import LoginScreen from './LoginScreen';
 import LocationModal from '../components/LocationModal';
@@ -34,7 +26,6 @@ import StatusModal from '../components/StatusModal';
 import StoreUnavailable from '../components/StoreUnavailable';
 import SeeAllButton from '../components/SeeAllButton';
 import { useCart } from '../context/CartContext';
-import { useWishlist } from '../context/WishlistContext';
 import CoinCountSVG from '../components/CoinCountSVG';
 import KapraSVG from '../components/KapraSVG';
 import ShimmerPlaceholder from '../components/ShimmerPlaceholder';
@@ -244,8 +235,7 @@ const HomeScreen = () => {
                 showLoader(true);
                 await loadProfileTwo();   // or loadProfileTwo() if guest-first
             } catch (error) {
-                console.error('Profile load error:', error);
-            } finally {
+} finally {
                 showLoader(false);
                 setIsProfileLoaded(true);
             }
@@ -258,9 +248,7 @@ const HomeScreen = () => {
         if (!isProfileLoaded) return; // ⛔ wait till profile loads
         if (!profile) return;         // ⛔ safety
 
-        console.log("PROFILE CHECK:", profile);
-
-        if (!profile.custId) {
+if (!profile.custId) {
             navigation.reset({
                 index: 0,
                 routes: [
@@ -273,9 +261,7 @@ const HomeScreen = () => {
         }
     }, [profile, isProfileLoaded]);
 
-    console.log("OOOOPPPPP", profile)
-
-    const onScroll = (e) => {
+const onScroll = (e) => {
         const offsetX = e.nativeEvent.contentOffset.x;
         const width = e.nativeEvent.layoutMeasurement.width;
 
@@ -330,16 +316,7 @@ const HomeScreen = () => {
             popupData?.uri?.uri &&
             lastShownPopupId !== popupData?.popupId;
 
-        console.log('💎 [POPUP CHECK]', {
-            hasData: !!popupData,
-            popupId: popupData?.popupId,
-            lastShownId: lastShownPopupId,
-            showPopup: popupData?.showPopup,
-            uri: popupData?.uri?.uri,
-            canShow
-        });
-
-        if (canShow) {
+if (canShow) {
             setIsHomePopupVisible(true);
             setLastShownPopupId(popupData?.popupId);
         }
@@ -356,7 +333,7 @@ const HomeScreen = () => {
         const numericProductId = Number(popupData.productId) || 0;
 
         if (numericProductId > 0) {
-            console.log('🔗 [POPUP] Navigating to product (productId is ' + numericProductId + ')');
+');
             navigation.navigate('ProductDetailsScreen', { productId: numericProductId });
             setIsHomePopupVisible(false);
             return;
@@ -365,11 +342,9 @@ const HomeScreen = () => {
         const finalLink = popupData.popupLink || popupData.popup_link || popupData.Link || popupData.link || popupData.linkValue || popupData.LinkValue;
 
         if (finalLink) {
-            console.log('🔗 [POPUP] Opening popupLink:', finalLink);
-            Linking.openURL(finalLink).catch(err => console.error("Couldn't load external page", err));
+Linking.openURL(finalLink).catch(err => console.error("Couldn't load external page", err));
         } else {
-            console.log('🔗 [POPUP] No link provided, closing.');
-        }
+}
 
         setIsHomePopupVisible(false);
     };
@@ -464,8 +439,7 @@ const HomeScreen = () => {
                 refreshHomeData()
             ]);
         } catch (error) {
-            console.error('Refresh error:', error);
-        } finally {
+} finally {
             setRefreshing(false);
         }
     }, [fetchDashboardData, refreshHomeData]);
@@ -506,8 +480,7 @@ const HomeScreen = () => {
                 });
             }
         } catch (error) {
-            console.error('Request product error:', error);
-            setStatusModal({
+setStatusModal({
                 visible: true,
                 type: 'error',
                 title: 'Error',
@@ -525,8 +498,7 @@ const HomeScreen = () => {
         if (profile?.custId) {
             fetchDashboardData();
         }
-        console.log('firstProductBlockTitleImage', firstProductBlockTitleImage);
-    }, [fetchDashboardData, profile?.custId]);
+}, [fetchDashboardData, profile?.custId]);
 
     // Auto-refresh when location changes
     useEffect(() => {
@@ -545,8 +517,7 @@ const HomeScreen = () => {
                 setDashboardData(response.data);
             }
         } catch (error) {
-            console.error('Error fetching dashboard data:', error);
-        } finally {
+} finally {
             // showLoader(false);
         }
     }, []);
@@ -701,9 +672,7 @@ const HomeScreen = () => {
 
     const handleBannerPress = (banner) => {
         if (!banner) return;
-        console.log('Banner Pressed:', banner);
-
-        const linkType = (banner.linkType || banner.LinkType || '').toLowerCase();
+const linkType = (banner.linkType || banner.LinkType || '').toLowerCase();
         const linkValue = banner.linkValue || banner.LinkValue;
         const linkName = banner.linkName || banner.LinkName || banner.bannerName || banner.BannerName || banner.title || '';
 
@@ -721,8 +690,7 @@ const HomeScreen = () => {
                 catName: actualCatName || 'Category'
             });
         } else if ((linkType === 'external' || linkType === 'url') && linkValue) {
-            console.log('🔗 [BANNER] Opening external link:', linkValue);
-            Linking.openURL(linkValue).catch(err => console.error("Couldn't load external page", err));
+Linking.openURL(linkValue).catch(err => console.error("Couldn't load external page", err));
         }
     };
 
@@ -733,17 +701,14 @@ const HomeScreen = () => {
             const storedPincodeAreaId = await AsyncStorage.getItem('pincodeAreaId');
             const areaId = storedPincodeAreaId ? parseInt(storedPincodeAreaId) : (profile?.pincode || null);
             const response = await getCategoryProducts(category.catId, areaId);
-            console.log('Category Selection API Response:', response);
-
-            if (response && response.success && response.data) {
+if (response && response.success && response.data) {
                 const products = response.data.items || [];
                 setDiscoveryProducts(products);
             } else {
                 setDiscoveryProducts([]);
             }
         } catch (error) {
-            console.error('Failed to fetch category products:', error);
-            setDiscoveryProducts([]);
+setDiscoveryProducts([]);
         } finally {
             setIsDiscoveryLoading(false);
         }
@@ -763,9 +728,7 @@ const HomeScreen = () => {
     }, [categoryDiscovery]);
 
 
-    console.log('🖼️ [HOME RENDER] isHomePopupVisible:', isHomePopupVisible, 'hasPopupData:', !!popupData, 'isStoreUnavailable:', isStoreUnavailable);
-
-    return (
+return (
         <SafeAreaView
             edges={['top']}
             style={styles.mainContainer}>

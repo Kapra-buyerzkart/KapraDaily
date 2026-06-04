@@ -23,8 +23,7 @@ const getUserId = async () => {
                     if (token.includes('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzIiwicGhvbmUiOiI4MTM3OTU2NTc0')) {
                         return 3;
                     }
-                    console.warn('atob failed, user might need to login');
-                    return 3;
+return 3;
                 }
                 const decoded = JSON.parse(decodedStr);
                 if (decoded.sub) {
@@ -33,8 +32,7 @@ const getUserId = async () => {
             }
         }
     } catch (error) {
-        console.error('Error getting userId:', error);
-    }
+}
     return 3;
 };
 
@@ -55,8 +53,7 @@ const getPincodeAreaId = async () => {
             }
         }
     } catch (error) {
-        console.error('Error getting pincodeAreaId:', error);
-    }
+}
     return null;
 };
 
@@ -152,9 +149,7 @@ export const removeBCoinApi = async (cartVersion, cartId) => {
     const payload = {
         ifMatchCartVersion: cartVersion
     };
-    console.log('wek32krlk4', payload);
-
-    return post(`cart/${idToUse}/removebcoin`, payload);
+return post(`cart/${idToUse}/removebcoin`, payload);
 };
 
 export const applyCouponApi = async (couponCode, cartVersion, pincodeAreaId, cartId) => {
@@ -166,7 +161,7 @@ export const applyCouponApi = async (couponCode, cartVersion, pincodeAreaId, car
         pincodeAreaId: areaId,
         ifMatchCartVersion: cartVersion
     };
-    console.log('Applying Coupon Payload:', JSON.stringify(payload, null, 2));
+);
     return post(`cart/${idToUse}/applycoupon`, payload);
 };
 
@@ -196,7 +191,7 @@ export const applyGiftCardApi = async (giftCode, cartVersion, pincodeAreaId, car
         pincodeAreaId: areaId,
         ifMatchCartVersion: cartVersion
     };
-    console.log('Applying GiftCard Payload:', JSON.stringify(payload, null, 2));
+);
     return post(`cart/${idToUse}/applygiftcard`, payload);
 };
 

@@ -29,10 +29,7 @@ export const useProductDetails = (productId, initialProduct = null) => {
                     showLoader(true);
                     setError(null);
                     // const pincodeAreaId = await getPincodeAreaId();
-                    console.log(' nm,./,mnbvnjkml;', pincodeAreaId);
-
-
-                    let currentPincodeId = pincodeAreaId || profile?.pincode;
+let currentPincodeId = pincodeAreaId || profile?.pincode;
                     if (!currentPincodeId) {
                         const stored = await AsyncStorage.getItem('pincodeAreaId');
                         if (stored) {
@@ -47,8 +44,7 @@ export const useProductDetails = (productId, initialProduct = null) => {
                         getRelatedProductsApi(productId, currentPincodeId)
                     ]);
 
-                    console.log('Product Details Response:', detailsResponse);
-                    console.log('Related Products Response:', relatedResponse);
+console.log('Related Products Response:', relatedResponse);
 
                     if (detailsResponse?.data) {
                         const productData = detailsResponse.data.product || detailsResponse.data;
@@ -75,8 +71,7 @@ export const useProductDetails = (productId, initialProduct = null) => {
                         setRelatedProducts(relatedResponse.data.items);
                     }
                 } catch (err) {
-                    console.error('Error fetching product data:', err);
-                    setError(err);
+setError(err);
                 } finally {
                     setLoading(false);
                     showLoader(false);

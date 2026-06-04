@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import {useContext, useState} from 'react';
 import { View, StyleSheet, Image, ScrollView, Dimensions, TouchableOpacity, Linking, Platform, ImageBackground } from 'react-native';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { AppContext } from '../context/appContext';
@@ -30,8 +30,7 @@ const AuthSuccessScreen = ({ navigation }) => {
                 : (generalSettings?.kshope_android_url || 'https://play.google.com/store/apps/details?id=com.kshope');
 
             Linking.openURL(storeUrl).catch(err => {
-                console.error('Failed to open store URL:', err);
-                handleComingSoon();
+handleComingSoon();
             });
         } else {
             handleComingSoon();

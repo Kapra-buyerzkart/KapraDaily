@@ -1,7 +1,6 @@
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
-import EvilIcons from 'react-native-vector-icons/EvilIcons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Entypo from 'react-native-vector-icons/Entypo';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
