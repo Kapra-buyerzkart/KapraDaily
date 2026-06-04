@@ -325,10 +325,10 @@ const HomeScreen = () => {
     const [lastShownPopupId, setLastShownPopupId] = useState(null);
 
     useEffect(() => {
-        const canShow = popupData && 
-                        Number(popupData.showPopup) === 1 && 
-                        popupData?.uri?.uri && 
-                        lastShownPopupId !== popupData?.popupId;
+        const canShow = popupData &&
+            Number(popupData.showPopup) === 1 &&
+            popupData?.uri?.uri &&
+            lastShownPopupId !== popupData?.popupId;
 
         console.log('💎 [POPUP CHECK]', {
             hasData: !!popupData,
@@ -363,7 +363,7 @@ const HomeScreen = () => {
         }
 
         const finalLink = popupData.popupLink || popupData.popup_link || popupData.Link || popupData.link || popupData.linkValue || popupData.LinkValue;
-        
+
         if (finalLink) {
             console.log('🔗 [POPUP] Opening popupLink:', finalLink);
             Linking.openURL(finalLink).catch(err => console.error("Couldn't load external page", err));
@@ -857,7 +857,7 @@ const HomeScreen = () => {
                 <View style={[styles.headerMainView, { paddingTop: hp('2%') }]}>
                     <View style={styles.headerViewOne}>
                         <View>
-                            <Text style={styles.timeText}>20  min</Text>
+                            <Text style={styles.timeText}>20 min</Text>
                             <TouchableOpacity
                                 style={styles.addressView}
                                 onPress={() => setModalVisible(true)}
