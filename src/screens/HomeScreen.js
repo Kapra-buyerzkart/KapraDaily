@@ -657,46 +657,46 @@ const HomeScreen = () => {
         );
     };
 
-    const CurvedSection = ({ children }) => {
-        if (!SvgAvailable) return <View style={[styles.curvedSectionView, { backgroundColor: '#FFC7AC' }]}>{children}</View>;
+    //     const CurvedSection = ({ children }) => {
+    //         if (!SvgAvailable) return <View style={[styles.curvedSectionView, { backgroundColor: '#FFC7AC' }]}>{children}</View>;
 
-        const height = hp("29%");     // total height of section
-        const curveDepth = 50; // downward curve depth
+    //         const height = hp("29%");     // total height of section
+    //         const curveDepth = 50; // downward curve depth
 
-        const d = `
-    M 0 0
-    C ${width * 0.25} ${curveDepth},
-      ${width * 0.75} ${curveDepth},
-      ${width} 0
-    L ${width} ${height}
-    L 0 ${height}
-    Z
-  `;
+    //         const d = `
+    //     M 0 0
+    //     C ${width * 0.25} ${curveDepth},
+    //       ${width * 0.75} ${curveDepth},
+    //       ${width} 0
+    //     L ${width} ${height}
+    //     L 0 ${height}
+    //     Z
+    //   `;
 
-        return (
-            <View style={{
-                width,
-                height,
-                position: "relative"
-            }}>
-                {/* Background curved SVG */}
-                <Svg width={width} height={height} style={styles.curvedSectionSvg}>
-                    <Defs>
-                        <SvgLinearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
-                            <Stop offset="0" stopColor="#FFC7AC" />
-                            <Stop offset="1" stopColor="#FFFFFF" />
-                        </SvgLinearGradient>
-                    </Defs>
-                    <Path d={d} fill="url(#grad)" />
-                </Svg>
+    //         return (
+    //             <View style={{
+    //                 width,
+    //                 height,
+    //                 position: "relative"
+    //             }}>
+    //                 {/* Background curved SVG */}
+    //                 <Svg width={width} height={height} style={styles.curvedSectionSvg}>
+    //                     <Defs>
+    //                         <SvgLinearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
+    //                             <Stop offset="0" stopColor="#FFC7AC" />
+    //                             <Stop offset="1" stopColor="#FFFFFF" />
+    //                         </SvgLinearGradient>
+    //                     </Defs>
+    //                     <Path d={d} fill="url(#grad)" />
+    //                 </Svg>
 
-                {/* Content over the curved shape */}
-                <View style={styles.curvedSectionView}>
-                    {children}
-                </View>
-            </View>
-        );
-    }
+    //                 {/* Content over the curved shape */}
+    //                 <View style={styles.curvedSectionView}>
+    //                     {children}
+    //                 </View>
+    //             </View>
+    //         );
+    //     }
 
 
     const handleBannerPress = (banner) => {

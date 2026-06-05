@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView, Dimensions, ActivityIndicator, Modal, Platform, StatusBar, ImageBackground } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, ActivityIndicator, Modal, Platform, StatusBar, ImageBackground } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
@@ -34,7 +35,7 @@ const CoPartnerDashboardScreen = () => {
     const navigation = useNavigation();
     const [areas, setAreas] = useState([]);
     const [activeArea, setActiveArea] = useState(null);
-    const [isLoading, setIsLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     const [isFilterVisible, setIsFilterVisible] = useState(false);
     const [visibleLimits, setVisibleLimits] = useState({
         customers: 5,
@@ -114,6 +115,12 @@ const CoPartnerDashboardScreen = () => {
                 getCoPartnerPayoutsApi(params)
             ]);
 
+            console.log('📊 [CoPartner] summaryRes:', JSON.stringify(summaryRes, null, 2));
+            console.log('📋 [CoPartner] listRes:', JSON.stringify(listRes, null, 2));
+            console.log('👥 [CoPartner] customersRes:', JSON.stringify(customersRes, null, 2));
+            console.log('🛒 [CoPartner] ordersRes:', JSON.stringify(ordersRes, null, 2));
+            console.log('💰 [CoPartner] payoutsRes:', JSON.stringify(payoutsRes, null, 2));
+
             if (summaryRes?.success && summaryRes?.data) setSummary(summaryRes.data);
             else setSummary(null);
 
@@ -133,8 +140,10 @@ const CoPartnerDashboardScreen = () => {
         try {
             setIsLoading(true);
             const response = await getCoPartnerAreasApi();
+            console.log('📍 [CoPartner] areasRes:', JSON.stringify(response, null, 2));
             if (response && response.success && response.data) {
                 const fetchedAreas = Array.isArray(response.data) ? response.data : (response.data.items || []);
+                console.log('📍 [CoPartner] fetchedAreas:', JSON.stringify(fetchedAreas, null, 2));
                 setAreas(fetchedAreas);
                 if (fetchedAreas.length > 0) {
                     setActiveArea(fetchedAreas[0]);
@@ -584,10 +593,40 @@ const CoPartnerDashboardScreen = () => {
         );
     };
 
+    if (isLoading && areas.length === 0) {
+        return (
+            <SafeAreaView style={styles.container}>
+                <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" translucent={false} />
+                {renderHeader()}
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                    <ActivityIndicator size="large" color="#F25000" />
+                </View>
+            </SafeAreaView>
+        );
+    }
+
+    if (!isLoading && areas.length === 0) {
+        return (
+            <SafeAreaView style={styles.container}>
+                <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" translucent={false} />
+                {renderHeader()}
+                <View style={styles.emptyStateContainer}>
+                    <MaterialCommunityIcons name="account-cancel-outline" size={wp('16%')} color="#CCCCCC" />
+                    <Text style={styles.emptyStateTitle}>No Data Found</Text>
+                    <Text style={styles.emptyStateSubtitle}>You aren't a registered Co-Partner.</Text>
+                    <TouchableOpacity style={styles.emptyStateBtn} onPress={() => navigation.goBack()}>
+                        <Text style={styles.emptyStateBtnText}>Go Back</Text>
+                    </TouchableOpacity>
+                </View>
+            </SafeAreaView>
+        );
+    }
+
     return (
         <SafeAreaView style={styles.container}>
+            <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" translucent={false} />
             {renderHeader()}
-            {renderTabs()}
+            {areas?.length > 0 && renderTabs()}
             {renderTopBackground()}
             <View style={styles.bottomScrollContainer}>
                 <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
@@ -610,7 +649,37 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#FFFFFF',
-        paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+    },
+    emptyStateContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: wp('10%'),
+    },
+    emptyStateTitle: {
+        fontFamily: FONTS.poppins.semiBold,
+        fontSize: wp('5%'),
+        color: '#333333',
+        marginTop: hp('2%'),
+    },
+    emptyStateSubtitle: {
+        fontFamily: FONTS.poppins.regular,
+        fontSize: wp('3.5%'),
+        color: '#888888',
+        textAlign: 'center',
+        marginTop: hp('1%'),
+    },
+    emptyStateBtn: {
+        backgroundColor: '#F25000',
+        paddingHorizontal: wp('8%'),
+        paddingVertical: hp('1.5%'),
+        borderRadius: wp('2%'),
+        marginTop: hp('10%'),
+    },
+    emptyStateBtnText: {
+        fontFamily: FONTS.poppins.semiBold,
+        fontSize: wp('3.8%'),
+        color: '#FFFFFF',
     },
     bottomScrollContainer: {
         flex: 1,
