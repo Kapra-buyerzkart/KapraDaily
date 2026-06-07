@@ -157,7 +157,7 @@ const RegistrationScreen = () => {
 
                         navigation.reset({
                             index: 0,
-                            routes: [{ name: 'AuthSuccessScreen' }],
+                            routes: [{ name: 'LocationFetchingNew' }],
                         });
                     }
 

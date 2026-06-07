@@ -12,6 +12,7 @@ import {
     KeyboardAvoidingView,
     Platform,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import DelayInput from 'react-native-debounce-input';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { getAreasBySearch } from '../api';
@@ -63,6 +64,7 @@ const LocationModal = ({
     const onSelectLocation = async (item) => {
         Keyboard.dismiss();
         await editPincode(item);
+        await AsyncStorage.setItem('manualOverride', 'true');
         onClose();
     };
 

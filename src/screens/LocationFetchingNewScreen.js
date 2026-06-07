@@ -22,8 +22,47 @@ import { Image } from 'react-native';
 import AuthButton from '../components/AuthButton';
 import FastImage from 'react-native-fast-image';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getAddressListApi } from '../api/addressService';
 
 // import RNAndroidLocationEnabler from 'react-native-android-location-enabler';
+
+const normalizeString = (str) => {
+    if (!str) return '';
+    return str
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '')
+        .replace(/([tdfpghkz])h/g, '$1')
+        .replace(/(.)\1+/g, '$1');
+};
+
+const isFuzzyMatch = (saved, gps) => {
+    if (!saved || !gps) return false;
+    const sNorm = normalizeString(saved);
+    const gNorm = normalizeString(gps);
+
+    if (sNorm.length < 3) return false;
+
+    // Direct normalized check
+    if (gNorm.includes(sNorm) || sNorm.includes(gNorm)) {
+        return true;
+    }
+
+    // Longest Common Substring check for minor spelling variations
+    let max = 0;
+    const dp = Array(sNorm.length + 1).fill(0).map(() => Array(gNorm.length + 1).fill(0));
+    for (let i = 1; i <= sNorm.length; i++) {
+        for (let j = 1; j <= gNorm.length; j++) {
+            if (sNorm[i - 1] === gNorm[j - 1]) {
+                dp[i][j] = dp[i - 1][j - 1] + 1;
+                if (dp[i][j] > max) max = dp[i][j];
+            } else {
+                dp[i][j] = 0;
+            }
+        }
+    }
+
+    return max >= Math.ceil(sNorm.length * 0.8);
+};
 
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
@@ -56,7 +95,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
     const timeoutRef = useRef(null); // 🕐 Store timer reference
 
     useEffect(() => {
-        const loadManualOverride = async () => {
+        const init = async () => {
             const savedOverride = await AsyncStorage.getItem('manualOverride');
             if (savedOverride === 'true') {
                 setManualOverride(true);
@@ -64,14 +103,21 @@ const LocationFetchingNewScreen = ({ navigation }) => {
                 const savedAddress = await AsyncStorage.getItem('manualAddress');
                 if (savedRegion) setRegion(JSON.parse(savedRegion));
                 if (savedAddress) setAddressComponent(JSON.parse(savedAddress));
+
+                setTimeout(() => {
+                    setLocationNotFetched(false);
+                    navigation.reset({
+                        index: 0,
+                        routes: [
+                            {
+                                name: 'AuthSuccessScreen',
+                            },
+                        ],
+                    });
+                }, 1000);
+                return;
             }
-        };
-        loadManualOverride();
-    }, []);
 
-
-    useEffect(() => {
-        const init = async () => {
             if (Platform.OS === 'android') {
                 const isGranted = await PermissionsAndroid.check(
                     PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
@@ -165,17 +211,18 @@ const LocationFetchingNewScreen = ({ navigation }) => {
 
     useEffect(() => {
         const subscription = AppState.addEventListener('change', async nextState => {
-            if (nextState === 'active' && !manualOverride) {
-                // console.log("222222")
+            if (nextState === 'active') {
+                const savedOverride = await AsyncStorage.getItem('manualOverride');
+                if (savedOverride === 'true') {
+                    return; // Skip auto-fetching since manual override is active
+                }
+
                 const gpsEnabled = await DeviceInfo.isLocationEnabled();
                 const permission = await PermissionsAndroid.check(
                     PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
                 );
-                // console.log('gpsEnabled', gpsEnabled)
-                // console.log('permission', permission)
                 if (Platform.OS === "ios") {
                     if (gpsEnabled) {
-                        // console.log("333333")
                         fetchLocation();
                     }
                 }
@@ -186,7 +233,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
         });
 
         return () => subscription.remove();
-    }, [manualOverride]);
+    }, []);
 
     // useEffect(() => {
     //   const subscription = AppState.addEventListener('change', async nextState => {
@@ -382,26 +429,14 @@ const LocationFetchingNewScreen = ({ navigation }) => {
             setLoading(false);
         };
 
-        // 1️⃣ Get cached location first (very fast)
+        // Get fresh high-accuracy location immediately
         Geolocation.getCurrentPosition(
             onSuccess,
-            (error) => {
-                console.log('Cached location failed, trying high accuracy...', error);
-                // 2️⃣ If cached fails, use high accuracy
-                Geolocation.getCurrentPosition(
-                    onSuccess,
-                    onFinalError,
-                    {
-                        enableHighAccuracy: true,
-                        timeout: 15000,
-                        maximumAge: 0,
-                    }
-                );
-            },
+            onFinalError,
             {
-                enableHighAccuracy: false,
-                timeout: 5000,
-                maximumAge: 600000, // allow cached location (10 minutes)
+                enableHighAccuracy: true,
+                timeout: 15000,
+                maximumAge: 0,
             }
         );
     };
@@ -413,15 +448,25 @@ const LocationFetchingNewScreen = ({ navigation }) => {
         axios
             .get(url)
             .then((response) => {
-                // console.log("response", response)
-                const address = response.data.results[0].formatted_address;
+                const formattedAddress = response.data.results[0]?.formatted_address;
                 var addressComponent = response.data.results[0];
                 funSetAddComponent(addressComponent);
-                const postalCode = addressComponent?.address_components.find((component) =>
-                    component.types.includes('postal_code')
-                )?.long_name;
-                // console.log('postalCode', postalCode)
-                getLocationPincodeAreas(postalCode);
+
+                // Find postal code checking all results (not just results[0])
+                let postalCode = null;
+                if (response.data.results) {
+                    for (const res of response.data.results) {
+                        const pCode = res.address_components?.find((component) =>
+                            component.types.includes('postal_code')
+                        )?.long_name;
+                        if (pCode) {
+                            postalCode = pCode;
+                            break;
+                        }
+                    }
+                }
+
+                getLocationPincodeAreas(postalCode, formattedAddress);
                 setTimeout(funSetLoading, 4000);
             })
             .catch((error) => {
@@ -429,8 +474,67 @@ const LocationFetchingNewScreen = ({ navigation }) => {
             });
     };
 
-    const getLocationPincodeAreas = async (postcode) => {
+    const getLocationPincodeAreas = async (postcode, formattedAddress) => {
         try {
+            // Fetch user's saved addresses to check for a matching pincode
+            let addressList = [];
+            try {
+                const addressRes = await getAddressListApi();
+                addressList = Array.isArray(addressRes?.data)
+                    ? addressRes.data
+                    : addressRes?.data?.items || addressRes?.data || [];
+            } catch (addrErr) {
+                console.log('Error fetching address list in initial check:', addrErr);
+            }
+
+            const matchingAddress = addressList.find((addr) => {
+                // 1. Match by exact pincode
+                const pinMatch = postcode && String(addr.pincode || addr.pin) === String(postcode);
+                if (pinMatch) return true;
+
+                // 2. Dynamic fuzzy match (non-hardcoded) using area details
+                if (formattedAddress) {
+                    if (addr.areaName && isFuzzyMatch(addr.areaName, formattedAddress)) {
+                        return true;
+                    }
+                    if (addr.pincodeAreaName && isFuzzyMatch(addr.pincodeAreaName, formattedAddress)) {
+                        return true;
+                    }
+                    // Fallback to match normalized sublocality in addLine2 (e.g. Thripunithura)
+                    const line2Norm = normalizeString(addr.addLine2);
+                    if (line2Norm.length > 3 && normalizeString(formattedAddress).includes(line2Norm)) {
+                        return true;
+                    }
+                }
+                return false;
+            });
+
+            if (matchingAddress) {
+                console.log('Matching saved address found for GPS postcode:', postcode);
+                const addressId = matchingAddress.custAddressId || matchingAddress.addressId || matchingAddress.id;
+                if (addressId) {
+                    await AsyncStorage.setItem('selectedAddressId', String(addressId));
+                }
+                await editPincode({
+                    pincodeAreaId: matchingAddress.pincodeAreaId,
+                    areaName: matchingAddress.areaName || matchingAddress.pincodeAreaName || matchingAddress.area_name || matchingAddress.addLine2
+                });
+
+                setShowConfirm(false);
+                setTimeout(() => {
+                    setLocationNotFetched(false);
+                    navigation.reset({
+                        index: 0,
+                        routes: [
+                            {
+                                name: 'AuthSuccessScreen',
+                            },
+                        ],
+                    });
+                }, 2000);
+                return;
+            }
+
             // console.log('postcode', postcode)
             let area = await getAreasByPincode(postcode);
             // console.log('area', area)
@@ -736,12 +840,13 @@ const LocationFetchingNewScreen = ({ navigation }) => {
                                     }}
                                     onPress={async (data, details = null) => {
                                         stopAutoNavigateTimer();
-                                        setRegion({
+                                        const newRegion = {
                                             latitude: Number(details.geometry.location.lat),
                                             longitude: Number(details.geometry.location.lng),
                                             latitudeDelta: 0.005,
                                             longitudeDelta: 0.005,
-                                        });
+                                        };
+                                        setRegion(newRegion);
                                         funSetAddComponent(details);
                                         reverseGeocode(
                                             Number(details.geometry.location.lat),
@@ -749,9 +854,9 @@ const LocationFetchingNewScreen = ({ navigation }) => {
                                         );
                                         setLocationSearchModal(false);
                                         setManualOverride(true); // Save to AsyncStorage 
-                                        // await AsyncStorage.setItem('manualOverride', 'true');
-                                        // await AsyncStorage.setItem('manualRegion', JSON.stringify(newRegion));
-                                        // await AsyncStorage.setItem('manualAddress', JSON.stringify(details));
+                                        await AsyncStorage.setItem('manualOverride', 'true');
+                                        await AsyncStorage.setItem('manualRegion', JSON.stringify(newRegion));
+                                        await AsyncStorage.setItem('manualAddress', JSON.stringify(details));
                                     }}
                                     query={{
                                         key: 'AIzaSyDhItv0zoWdQbDh-5jjKLAEjwRDDrFNc1Y',
