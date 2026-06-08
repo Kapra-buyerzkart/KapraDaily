@@ -1,14 +1,10 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { View, Text, StyleSheet, Dimensions, PermissionsAndroid, Platform, Modal, KeyboardAvoidingView, TouchableOpacity, ScrollView, FlatList, Alert, Linking, AppState, ImageBackground } from 'react-native';
 import Geolocation from '@react-native-community/geolocation';
-import LottieView from 'lottie-react-native';
 import axios from 'axios';
-import MapView from 'react-native-maps';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 import { BlurView } from '@react-native-community/blur';
 
-// import showIcon from '../../globals/icons';
-// import colours from '../../globals/colours';
 import { getFontontSize } from '../globals/GroFunctions';
 import { AppContext } from '../context/appContext';
 import { useCart } from '../context/CartContext';
@@ -23,9 +19,6 @@ import AuthButton from '../components/AuthButton';
 import FastImage from 'react-native-fast-image';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getAddressListApi } from '../api/addressService';
-
-// import RNAndroidLocationEnabler from 'react-native-android-location-enabler';
-
 const normalizeString = (str) => {
     if (!str) return '';
     return str
@@ -90,10 +83,8 @@ const LocationFetchingNewScreen = ({ navigation }) => {
         longitudeDelta: 0.008,
     });
 
-    const insets = useSafeAreaInsets();
-    const userInteractedRef = useRef(false); // 🟢 Track user interaction
-    const timeoutRef = useRef(null); // 🕐 Store timer reference
-
+    const userInteractedRef = useRef(false);
+    const timeoutRef = useRef(null);
     useEffect(() => {
         const init = async () => {
             const savedOverride = await AsyncStorage.getItem('manualOverride');
