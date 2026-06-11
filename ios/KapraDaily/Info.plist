@@ -100,5 +100,9 @@
 	<array>
 		<string>remote-notification</string>
 	</array>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>udmv</string>
+	</array>
 </dict>
 </plist>

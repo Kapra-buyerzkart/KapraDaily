@@ -24,7 +24,7 @@ export default function MainTabNavigator() {
     const navigation = useNavigation();
 
     const KshopeButton = ({ onPress }) => {
-        const handleKshopeLink = () => {
+        const handleKshopeLink = async () => {
             if (isStoreUnavailable) {
                 Toast.show('Store is currently unavailable in your location', Toast.SHORT);
                 return;
@@ -33,14 +33,23 @@ export default function MainTabNavigator() {
             const isKshopeEnabled = generalSettings?.showkshope === '1' || generalSettings?.showkshope === 1;
 
             if (isKshopeEnabled) {
-                const storeUrl = Platform.OS === 'ios'
-                    ? (generalSettings?.kshope_ios_url || 'https://apps.apple.com/in/app/uden-deal/id6448085736')
-                    : (generalSettings?.kshope_android_url || 'https://play.google.com/store/apps/details?id=com.kshope');
-
-                Linking.openURL(storeUrl).catch(err => {
-                    console.error('Failed to open store URL:', err);
+                const deepLink = 'udmv://';
+                try {
+                    const canOpen = await Linking.canOpenURL(deepLink);
+                    if (canOpen) {
+                        // Child app is installed — open it directly
+                        await Linking.openURL(deepLink);
+                    } else {
+                        // Child app not installed — go to store
+                        const storeUrl = Platform.OS === 'ios'
+                            ? (generalSettings?.kshope_ios_url || 'https://apps.apple.com/in/app/uden-deal/id6448085736')
+                            : (generalSettings?.kshope_android_url || 'https://play.google.com/store/apps/details?id=com.kshope');
+                        await Linking.openURL(storeUrl);
+                    }
+                } catch (err) {
+                    console.error('Failed to open Kshope:', err);
                     showComingSoon();
-                });
+                }
             } else {
                 showComingSoon();
             }

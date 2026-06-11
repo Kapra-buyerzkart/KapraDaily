@@ -37,4 +37,11 @@
         android:name="com.onesignal.NotificationAccentColor.DEFAULT"
         android:value="FFF25000" />
     </application>
+
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="udmv" />
+        </intent>
+    </queries>
 </manifest>
