@@ -36,7 +36,7 @@ const checkAuthApi = (url) => {
 
 /* -------------------- ERROR HANDLER -------------------- */
 const errorHandler = error => {
-  console.log('❌ [API ERROR]:', error?.response?.data || error?.message || error);
+  console.log(' [API ERROR]:', error?.response?.data || error?.message || error);
 
   if (error.message === 'Network Error') {
     throw 'Network Error. Ensure you are connected to internet.';
@@ -57,7 +57,7 @@ const errorHandler = error => {
 
   // Handle specific database identity conflicts (FK_Carts_Customers)
   if (typeof message === 'string' && (message.includes('FK_Carts_Customers') || (message.includes('conflict') && message.includes('custId')))) {
-    console.log('🔒 [API]: Database identity conflict detected (error), triggering logout.');
+    console.log('[API]: Database identity conflict detected (error), triggering logout.');
     if (!isLoggingOut) {
       isLoggingOut = true;
       logoutHandler(true);
@@ -127,7 +127,7 @@ export const resetNetworkState = () => {
   isRefreshing = false;
   isLoggingOut = false;
   failedQueue = [];
-  console.log('🔄 [API]: Network state reset.');
+  console.log(' [API]: Network state reset.');
 };
 
 /* -------------------- RESPONSE INTERCEPTOR -------------------- */
@@ -138,7 +138,7 @@ axiosInstance.interceptors.response.use(
     if (data && data.success === false && data.message) {
       const msg = String(data.message);
       if (msg.includes('FK_Carts_Customers') || (msg.includes('conflict') && msg.includes('custId'))) {
-        console.log('🔒 [API]: Database identity conflict detected (success branch), triggering logout.');
+        console.log('[API]: Database identity conflict detected (success branch), triggering logout.');
         if (!isLoggingOut) {
           isLoggingOut = true;
           logoutHandler(true);

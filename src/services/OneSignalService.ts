@@ -127,30 +127,30 @@ function scheduleEnsureExternalId(): void {
  * Detailed diagnostic check for OneSignal registration status.
  */
 export async function checkOneSignalStatus(): Promise<void> {
-    try {
-        const hasPermission = await OneSignal.Notifications.getPermissionAsync();
-        const optIn = await OneSignal.User.pushSubscription.getOptedInAsync();
-        const subId = (OneSignal.User.pushSubscription as any).id;
-        const token = (OneSignal.User.pushSubscription as any).token;
+  try {
+    const hasPermission = await OneSignal.Notifications.getPermissionAsync();
+    const optIn = await OneSignal.User.pushSubscription.getOptedInAsync();
+    const subId = (OneSignal.User.pushSubscription as any).id;
+    const token = (OneSignal.User.pushSubscription as any).token;
 
-        console.log('--- OneSignal Diagnostic (v5) ---');
-        console.log('🔔 Permission Status:', hasPermission);
-        console.log('🔔 User Opted In:', optIn);
-        console.log('🔔 Subscription ID:', subId || 'NOT FOUND');
-        console.log('🔔 Push Token:', token || 'NOT FOUND');
-        console.log('---------------------------');
+    console.log('--- OneSignal Diagnostic (v5) ---');
+    console.log('🔔 Permission Status:', hasPermission);
+    console.log('🔔 User Opted In:', optIn);
+    console.log('🔔 Subscription ID:', subId || 'NOT FOUND');
+    console.log('🔔 Push Token:', token || 'NOT FOUND');
+    console.log('---------------------------');
 
-        if (!optIn && hasPermission) {
-            console.log('🔔 [OneSignalService] User is opted out despite permission. Forcing optIn()...');
-            OneSignal.User.pushSubscription.optIn();
-        }
-
-        if (!subId && hasPermission && optIn) {
-            console.warn('🔔 [OneSignalService] Registration pending. Checking App ID:', ONE_SIGNAL_APP_ID);
-        }
-    } catch (e) {
-        console.error('🔔 [OneSignalService] Diagnostic Error:', e);
+    if (!optIn && hasPermission) {
+      console.log('🔔 [OneSignalService] User is opted out despite permission. Forcing optIn()...');
+      OneSignal.User.pushSubscription.optIn();
     }
+
+    if (!subId && hasPermission && optIn) {
+      console.warn('🔔 [OneSignalService] Registration pending. Checking App ID:', ONE_SIGNAL_APP_ID);
+    }
+  } catch (e) {
+    console.error('🔔 [OneSignalService] Diagnostic Error:', e);
+  }
 }
 
 export function initOneSignal(): void {
@@ -189,7 +189,7 @@ export function initOneSignal(): void {
   OneSignal.Notifications.addEventListener('foregroundWillDisplay', (event: NotificationWillDisplayEvent) => {
     const notification = event.getNotification();
     console.log('🔔 [OneSignal] Foreground notification received:', notification?.title);
-    
+
     // Increment local badge count
     const incrementBy = parseBadgeCount(notification?.badgeIncrement) || 1;
     void incrementNotificationBadgeCount(incrementBy);
