@@ -21,6 +21,8 @@ import { validatePhoneNumbers } from '../utils/validation'
 import Geolocation from '@react-native-community/geolocation'
 import CustomLoader from '../components/CustomLoader'
 import Ionicons from 'react-native-vector-icons/Ionicons'
+import { AppContext } from '../context/appContext'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 
 // Height of the map area — pin is centred on this
 const MAP_HEIGHT = hp('45%')
@@ -30,6 +32,7 @@ const AddLocationScreen = () => {
     const route = useRoute()
     const insets = useSafeAreaInsets()
     const { refreshAddresses } = useAddresses()
+    const { editPincode } = React.useContext(AppContext)
     const isMountedRef = useRef(true)
     const mapRef = useRef(null)
     const googleAutocompleteRef = useRef(null)
@@ -262,6 +265,20 @@ const AddLocationScreen = () => {
 
             if (response && response.success !== false) {
                 Toast.show(isEditMode ? 'Address updated' : 'Address added', Toast.SHORT)
+
+                // Update the app's active location to the chosen pincode area
+                const selectedAreaName = items.find(i => i.value === pincodeAreaId)?.label || ''
+                await editPincode({
+                    pincodeAreaId: pincodeAreaId,
+                    areaName: selectedAreaName,
+                })
+
+                // Persist the selected address ID so other screens can use it
+                const savedAddressId = response?.data?.custAddressId || response?.data?.addressId || response?.data?.id
+                if (savedAddressId) {
+                    await AsyncStorage.setItem('selectedAddressId', String(savedAddressId))
+                }
+
                 await refreshAddresses()
                 navigation.goBack()
             } else {

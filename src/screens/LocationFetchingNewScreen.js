@@ -388,6 +388,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
         setLoading(true);
 
         const onSuccess = (position) => {
+            console.log('📍 [LOCATION] GPS success:', position.coords.latitude, position.coords.longitude);
             setRegion({
                 latitude: position?.coords?.latitude,
                 longitude: position?.coords?.longitude,
@@ -395,12 +396,12 @@ const LocationFetchingNewScreen = ({ navigation }) => {
                 longitudeDelta: 0.008,
             });
 
+            // Do NOT setLoading(false) here — let reverseGeocode → getLocationPincodeAreas handle it
             reverseGeocode(position.coords.latitude, position.coords.longitude);
-            setLoading(false);
         };
 
         const onFinalError = async (error) => {
-            console.log('All location attempts failed', error);
+            console.log('📍 [LOCATION] All location attempts failed', error);
             // Fallback auto navigation if location fails
             await editPincode({
                 areaName: "Panampilly Nagar",
@@ -432,37 +433,55 @@ const LocationFetchingNewScreen = ({ navigation }) => {
         );
     };
 
-    const reverseGeocode = (latitude, longitude) => {
+    const reverseGeocode = async (latitude, longitude) => {
         const apiKey = 'AIzaSyDhItv0zoWdQbDh-5jjKLAEjwRDDrFNc1Y';
         const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}`;
 
-        axios
-            .get(url)
-            .then((response) => {
-                const formattedAddress = response.data.results[0]?.formatted_address;
-                var addressComponent = response.data.results[0];
-                funSetAddComponent(addressComponent);
+        try {
+            const response = await axios.get(url, { timeout: 10000 });
+            console.log('📍 [GEOCODE] Response status:', response.data.status);
 
-                // Find postal code checking all results (not just results[0])
-                let postalCode = null;
-                if (response.data.results) {
-                    for (const res of response.data.results) {
-                        const pCode = res.address_components?.find((component) =>
-                            component.types.includes('postal_code')
-                        )?.long_name;
-                        if (pCode) {
-                            postalCode = pCode;
-                            break;
-                        }
+            const formattedAddress = response.data.results[0]?.formatted_address;
+            var addressComponent = response.data.results[0];
+            funSetAddComponent(addressComponent);
+
+            // Find postal code checking all results (not just results[0])
+            let postalCode = null;
+            if (response.data.results) {
+                for (const res of response.data.results) {
+                    const pCode = res.address_components?.find((component) =>
+                        component.types.includes('postal_code')
+                    )?.long_name;
+                    if (pCode) {
+                        postalCode = pCode;
+                        break;
                     }
                 }
+            }
 
-                getLocationPincodeAreas(postalCode, formattedAddress);
-                setTimeout(funSetLoading, 4000);
-            })
-            .catch((error) => {
-                console.log('Reverse geocode error', error);
+            console.log('📍 [GEOCODE] Postal code:', postalCode, '| Address:', formattedAddress);
+
+            // Await the full area-matching flow before clearing loading
+            await getLocationPincodeAreas(postalCode, formattedAddress);
+            setLoading(false);
+        } catch (error) {
+            console.log('📍 [GEOCODE] Reverse geocode error:', error);
+            // Fallback: navigate with default area on geocode failure
+            setLoading(false);
+            await editPincode({
+                areaName: "Panampilly Nagar",
+                pincodeAreaId: 262,
+                pincodeId: 32,
+                tags: null
             });
+            setTimeout(() => {
+                setLocationNotFetched(true);
+                navigation.reset({
+                    index: 0,
+                    routes: [{ name: 'AuthSuccessScreen' }],
+                });
+            }, 2000);
+        }
     };
 
     const getLocationPincodeAreas = async (postcode, formattedAddress) => {
@@ -474,46 +493,81 @@ const LocationFetchingNewScreen = ({ navigation }) => {
                 addressList = Array.isArray(addressRes?.data)
                     ? addressRes.data
                     : addressRes?.data?.items || addressRes?.data || [];
+                console.log('📍 [MATCH] Saved addresses found:', addressList.length);
             } catch (addrErr) {
-                console.log('Error fetching address list in initial check:', addrErr);
+                console.log('📍 [MATCH] Error fetching address list (guest user?):', addrErr);
             }
 
-            const matchingAddress = addressList.find((addr) => {
-                // 1. Match by exact pincode
-                const pinMatch = postcode && String(addr.pincode || addr.pin) === String(postcode);
-                if (pinMatch) return true;
+            // --- Step 1: Try matching against user's saved addresses ---
+            if (addressList.length > 0) {
+                const matchingAddress = addressList.find((addr) => {
+                    // 1. Match by exact pincode
+                    const pinMatch = postcode && String(addr.pincode || addr.pin) === String(postcode);
+                    if (pinMatch) {
+                        console.log('📍 [MATCH] Pincode match found:', addr.pincode, '===', postcode);
+                        return true;
+                    }
 
-                // 2. Dynamic fuzzy match (non-hardcoded) using area details
-                if (formattedAddress) {
-                    if (addr.areaName && isFuzzyMatch(addr.areaName, formattedAddress)) {
-                        return true;
+                    // 2. Dynamic fuzzy match (non-hardcoded) using area details
+                    if (formattedAddress) {
+                        if (addr.areaName && isFuzzyMatch(addr.areaName, formattedAddress)) {
+                            console.log('📍 [MATCH] Fuzzy areaName match:', addr.areaName);
+                            return true;
+                        }
+                        if (addr.pincodeAreaName && isFuzzyMatch(addr.pincodeAreaName, formattedAddress)) {
+                            console.log('📍 [MATCH] Fuzzy pincodeAreaName match:', addr.pincodeAreaName);
+                            return true;
+                        }
+                        // Fallback to match normalized sublocality in addLine2 (e.g. Thripunithura)
+                        const line2Norm = normalizeString(addr.addLine2);
+                        if (line2Norm.length > 3 && normalizeString(formattedAddress).includes(line2Norm)) {
+                            console.log('📍 [MATCH] addLine2 match:', addr.addLine2);
+                            return true;
+                        }
                     }
-                    if (addr.pincodeAreaName && isFuzzyMatch(addr.pincodeAreaName, formattedAddress)) {
-                        return true;
-                    }
-                    // Fallback to match normalized sublocality in addLine2 (e.g. Thripunithura)
-                    const line2Norm = normalizeString(addr.addLine2);
-                    if (line2Norm.length > 3 && normalizeString(formattedAddress).includes(line2Norm)) {
-                        return true;
-                    }
-                }
-                return false;
-            });
-
-            if (matchingAddress) {
-                console.log('Matching saved address found for GPS postcode:', postcode);
-                const addressId = matchingAddress.custAddressId || matchingAddress.addressId || matchingAddress.id;
-                if (addressId) {
-                    await AsyncStorage.setItem('selectedAddressId', String(addressId));
-                }
-                await editPincode({
-                    pincodeAreaId: matchingAddress.pincodeAreaId,
-                    areaName: matchingAddress.areaName || matchingAddress.pincodeAreaName || matchingAddress.area_name || matchingAddress.addLine2
+                    return false;
                 });
 
+                if (matchingAddress) {
+                    console.log('📍 [MATCH] ✅ Matching saved address found! pincodeAreaId:', matchingAddress.pincodeAreaId, 'postcode:', postcode);
+                    const addressId = matchingAddress.custAddressId || matchingAddress.addressId || matchingAddress.id;
+                    if (addressId) {
+                        await AsyncStorage.setItem('selectedAddressId', String(addressId));
+                    }
+                    await editPincode({
+                        pincodeAreaId: matchingAddress.pincodeAreaId,
+                        areaName: matchingAddress.areaName || matchingAddress.pincodeAreaName || matchingAddress.area_name || matchingAddress.addLine2
+                    });
+
+                    setShowConfirm(false);
+                    setTimeout(() => {
+                        setLocationNotFetched(false);
+                        navigation.reset({
+                            index: 0,
+                            routes: [
+                                {
+                                    name: 'AuthSuccessScreen',
+                                },
+                            ],
+                        });
+                    }, 2000);
+                    return;
+                }
+                console.log('📍 [MATCH] No matching saved address found, proceeding to area lookup...');
+            }
+
+            // --- Step 2: Guard against null/empty postcode ---
+            if (!postcode || String(postcode).trim().length === 0) {
+                console.log('📍 [AREAS] ⚠️ Postcode is null/empty — cannot look up areas. Falling back to default.');
                 setShowConfirm(false);
+                await editPincode({
+                    areaName: "Panampilly Nagar",
+                    pincodeAreaId: 262,
+                    pincodeId: 32,
+                    tags: null
+                });
                 setTimeout(() => {
-                    setLocationNotFetched(false);
+                    setLocationNotFetched(true);
                     navigation.reset({
                         index: 0,
                         routes: [
@@ -526,14 +580,16 @@ const LocationFetchingNewScreen = ({ navigation }) => {
                 return;
             }
 
-            // console.log('postcode', postcode)
+            // --- Step 3: Look up areas by postal code ---
+            console.log('📍 [AREAS] Looking up areas for postcode:', postcode);
             let area = await getAreasByPincode(postcode);
-            // console.log('area', area)
-            // console.log('profile', profile)
+            console.log('📍 [AREAS] API response — areas found:', area?.data?.length || 0, 'data:', JSON.stringify(area?.data));
+
             if (area?.data?.length > 1) {
-                // console.log("1111111")
+                // Multiple stores/areas — check if user's current pincodeAreaId is among them
+                console.log('📍 [AREAS] Multiple areas found:', area.data.length, '| Current profile.pincode:', profile?.pincode);
                 if (area?.data?.find((obj) => obj?.pincodeAreaId == profile?.pincode)) {
-                    // console.log("2222222")
+                    console.log('📍 [AREAS] ✅ User already has a matching pincodeAreaId, auto-navigating...');
                     setTimeout(() => {
                         if (!userInteractedRef.current) {
                             setLocationNotFetched(false);
@@ -548,16 +604,15 @@ const LocationFetchingNewScreen = ({ navigation }) => {
                         }
                     }, 2000);
                 } else {
-                    // console.log("33333")
+                    console.log('📍 [AREAS] Showing area picker modal...');
                     setShowConfirm(true);
                     setListOfLocations(area?.data);
                 }
             } else if (area?.data?.length == 1) {
-                // console.log("444444444")
+                console.log('📍 [AREAS] ✅ Single area found, auto-selecting:', area.data[0]?.areaName);
                 setShowConfirm(false);
                 await editPincode(area.data[0]);
                 setTimeout(() => {
-                    // if (!userInteractedRef.current) {
                     setLocationNotFetched(false);
                     navigation.reset({
                         index: 0,
@@ -567,10 +622,10 @@ const LocationFetchingNewScreen = ({ navigation }) => {
                             },
                         ],
                     });
-                    // }
                 }, 2000);
             } else {
-                // No areas found for this pincode (guest is outside delivery zone)
+                // No areas found for this pincode (user is outside delivery zone)
+                console.log('📍 [AREAS] ❌ No areas found for postcode:', postcode, '— falling back to default.');
                 setShowConfirm(false);
                 await editPincode({
                     areaName: "Panampilly Nagar",
@@ -591,27 +646,15 @@ const LocationFetchingNewScreen = ({ navigation }) => {
                 }, 2000);
             }
         } catch (error) {
-            console.log('API error:', error);
-            // Do not navigate immediately; let fallback timer handle it
-            // setLocationNotFetched(true)
-            // navigation.reset({
-            //   index: 0,
-            //   routes: [{
-            //     name: 'GroHomeScreen',
-            //     params: {
-            //       locationNotFetched
-            //     }
-            //   }],
-            // });
+            console.log('📍 [AREAS] ❌ API error:', error);
             setShowConfirm(false);
             await editPincode({
                 areaName: "Panampilly Nagar",
                 pincodeAreaId: 262,
                 pincodeId: 32,
                 tags: null
-            })
+            });
             setTimeout(() => {
-                // if (!userInteractedRef.current) {
                 setLocationNotFetched(true);
                 navigation.reset({
                     index: 0,
@@ -621,11 +664,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
                         },
                     ],
                 });
-                // }
             }, 2000);
-            // Toast.show(
-            //     //n "Delivery is not available to your location\nDelivery location changed to Panampally Nagar"
-            // );
         }
     };
 
