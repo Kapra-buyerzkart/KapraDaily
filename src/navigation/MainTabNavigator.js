@@ -21,37 +21,40 @@ const Tab = createBottomTabNavigator();
 export default function MainTabNavigator() {
     const { isStoreUnavailable, generalSettings } = useContext(AppContext);
     const { showStatus } = useCart();
-    const navigation = useNavigation();
 
     const KshopeButton = ({ onPress }) => {
         const handleKshopeLink = async () => {
+            console.log('[Kshope] Button pressed');
+            console.log('[Kshope] isStoreUnavailable:', isStoreUnavailable);
+
             if (isStoreUnavailable) {
+                console.log('[Kshope] Store unavailable — showing toast');
                 Toast.show('Store is currently unavailable in your location', Toast.SHORT);
                 return;
             }
 
             const isKshopeEnabled = generalSettings?.showkshope === '1' || generalSettings?.showkshope === 1;
+            console.log('[Kshope] showkshope value:', generalSettings?.showkshope, '| isKshopeEnabled:', isKshopeEnabled);
 
             if (isKshopeEnabled) {
                 const deepLink = 'udmv://';
+                const storeUrl = Platform.OS === 'ios'
+                    ? (generalSettings?.kshope_ios_url || 'https://apps.apple.com/in/app/uden-deal/id6448085736')
+                    : (generalSettings?.kshope_android_url || 'https://play.google.com/store/apps/details?id=com.kshope');
+
                 try {
-                    const canOpen = await Linking.canOpenURL(deepLink);
-                    if (canOpen) {
-                        // Child app is installed — open it directly
-                        await Linking.openURL(deepLink);
-                    } else {
-                        // Child app not installed — go to store
-                        const storeUrl = Platform.OS === 'ios'
-                            ? (generalSettings?.kshope_ios_url || 'https://apps.apple.com/in/app/uden-deal/id6448085736')
-                            : (generalSettings?.kshope_android_url || 'https://play.google.com/store/apps/details?id=com.kshope');
+                    console.log('[Kshope] Attempting to open deep link:', deepLink);
+                    await Linking.openURL(deepLink);
+                    console.log('[Kshope] Deep link opened successfully');
+                } catch (deepLinkErr) {
+                    console.warn('[Kshope] Deep link failed, app not installed. Redirecting to store:', storeUrl);
+                    try {
                         await Linking.openURL(storeUrl);
+                    } catch (storeErr) {
+                        console.error('[Kshope] Store URL also failed:', storeErr);
+                        showComingSoon();
                     }
-                } catch (err) {
-                    console.error('Failed to open Kshope:', err);
-                    showComingSoon();
                 }
-            } else {
-                showComingSoon();
             }
         };
 
@@ -78,20 +81,13 @@ export default function MainTabNavigator() {
             initialRouteName='Home'
             screenOptions={{
                 tabBarShowLabel: true,
-
-                // 🔶 icon active color
-                // tabBarActiveTintColor: "#F25000",
                 tabBarActiveTintColor: "#F25000",
-
-                // 🔶 icon inactive color = null (keeps original PNG color)
                 tabBarInactiveTintColor: null,
 
                 tabBarStyle: {
-                    // height: hp("8%") + insets.bottom,
                     height: Platform.OS === "android" ? hp("7%") + insets.bottom : hp("8%"),
                     backgroundColor: "#FFFFFF",
                     paddingTop: hp("0.2%"),
-                    // paddingBottom: hp("1%"),
                     shadowColor: "#000000",
                     shadowOffset: { width: 0, height: 0 },
                     shadowOpacity: 0.25,
@@ -99,14 +95,9 @@ export default function MainTabNavigator() {
                     elevation: 6,
                     paddingRight: wp("11%"),
                 },
-                // tabBarLabelStyle: {
-                //     fontSize: wp("2.8%"),
-                //     color: "#8E8E8E" // 🔶 Keeps label same for active & inactive
-                // }
             }}
         >
 
-            {/* ---------------- HOME ---------------- */}
             <Tab.Screen
                 name="Home"
                 component={HomeStack}
@@ -243,7 +234,7 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         justifyContent: "center",
         alignItems: "center",
-        marginTop: hp("0.8%"),left:15
+        marginTop: hp("0.8%"), left: 15
     },
     KshopeButtonText: {
         fontSize: wp("5.3%"),
