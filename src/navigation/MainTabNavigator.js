@@ -12,46 +12,27 @@ import HomeStack from './HomeStack';
 import { FONTS } from '../styles/typography'
 import { useContext } from 'react';
 import { AppContext } from '../context/appContext';
-import { useCart } from '../context/CartContext';
 import { useNavigation } from '@react-navigation/native';
 import Toast from 'react-native-simple-toast';
 
 const Tab = createBottomTabNavigator();
 
 export default function MainTabNavigator() {
-    const { isStoreUnavailable, generalSettings } = useContext(AppContext);
-    const { showStatus } = useCart();
+    const { isStoreUnavailable } = useContext(AppContext);
     const navigation = useNavigation();
 
     const KshopeButton = ({ onPress }) => {
-        const handleKshopeLink = () => {
-            if (isStoreUnavailable) {
-                Toast.show('Store is currently unavailable in your location', Toast.SHORT);
-                return;
-            }
-
-            const isKshopeEnabled = generalSettings?.showkshope === '1' || generalSettings?.showkshope === 1;
-
-            if (isKshopeEnabled) {
-                const storeUrl = Platform.OS === 'ios'
-                    ? (generalSettings?.kshope_ios_url || 'https://apps.apple.com/in/app/uden-deal/id6448085736')
-                    : (generalSettings?.kshope_android_url || 'https://play.google.com/store/apps/details?id=com.kshope');
-
-                Linking.openURL(storeUrl).catch(err => {
-                    console.error('Failed to open store URL:', err);
-                    showComingSoon();
-                });
+        const handleKshopeLink = async () => {
+            const deepLink = 'udmv://';
+            const canOpen = await Linking.canOpenURL(deepLink);
+            if (canOpen) {
+                Linking.openURL(deepLink);
             } else {
-                showComingSoon();
+                const storeUrl = Platform.OS === 'ios'
+                    ? 'https://apps.apple.com/in/app/uden-deal/id6448085736'
+                    : 'https://play.google.com/store/apps/details?id=com.kshope';
+                Linking.openURL(storeUrl).catch(err => console.error('Failed to open store URL:', err));
             }
-        };
-
-        const showComingSoon = () => {
-            showStatus({
-                type: 'orange',
-                title: 'Coming Soon!',
-                message: "We're working hard to bring you K-shope. Stay tuned for a premium shopping experience!"
-            });
         };
 
         return (

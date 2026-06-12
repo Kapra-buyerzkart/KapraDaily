@@ -8,6 +8,13 @@
     <uses-permission android:name="android.permission.READ_SMS"/>
     <uses-permission android:name="com.google.android.gms.permission.AD_ID"/> -->
 
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="udmv" />
+        </intent>
+    </queries>
+
     <application
       android:name=".MainApplication"
       android:label="@string/app_name"
