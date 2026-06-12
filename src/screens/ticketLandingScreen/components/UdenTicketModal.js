@@ -11,7 +11,10 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { wp, hp } from '../../utils/responsive';
+import { wp, hp } from '../../../utils/responsive';
+import RedeemSuccessModal, {
+  preloadRedeemSuccessAssets,
+} from './RedeemSuccessModal';
 
 const { width, height } = Dimensions.get('window');
 
@@ -35,6 +38,11 @@ const UdenTicketModal = ({ visible, onClose }) => {
   const backdropAnim = useRef(new Animated.Value(0)).current;
   const [quantity, setQuantity] = useState(1);
   const [modalVisible, setModalVisible] = useState(false);
+  const [successVisible, setSuccessVisible] = useState(false);
+
+  useEffect(() => {
+    preloadRedeemSuccessAssets();
+  }, []);
 
   useEffect(() => {
     if (visible) {
@@ -74,109 +82,131 @@ const UdenTicketModal = ({ visible, onClose }) => {
   const increaseQty = () => setQuantity(q => q + 1);
 
   return (
-    <Modal
-      transparent
-      visible={modalVisible}
-      animationType="none"
-      onRequestClose={onClose}
-    >
-      <Animated.View style={[styles.backdrop, { opacity: backdropAnim }]} />
+    <>
+      <Modal
+        transparent
+        visible={modalVisible}
+        animationType="none"
+        onRequestClose={onClose}
+      >
+        <Animated.View style={[styles.backdrop, { opacity: backdropAnim }]} />
 
-      <View style={styles.modalWrapper} pointerEvents="box-none">
-        <Animated.View
-          style={[styles.sheet, { transform: [{ translateY: slideAnim }] }]}
-        >
-          {/* Top perforated edge */}
-
-          <ImageBackground
-            source={require('../../assets/images/movieTicket/ticketbg.png')}
-            style={styles.card}
-            resizeMode="stretch"
+        <View style={styles.modalWrapper} pointerEvents="box-none">
+          <Animated.View
+            style={[styles.sheet, { transform: [{ translateY: slideAnim }] }]}
           >
-            {/* Title */}
-            <Image
-              source={require('../../assets/images/movieTicket/udentcketPurple.png')}
-              style={styles.titleImage}
-              resizeMode="contain"
-            />
-
-            {/* Gift card image */}
-            <Image
-              source={require('../../assets/images/movieTicket/voucher.png')}
-              style={styles.giftCard}
-              resizeMode="cover"
-            />
-
-            {/* Quantity selector */}
-            <View style={styles.qtyRow}>
-              <TouchableOpacity
-                style={styles.qtyBtn}
-                onPress={decreaseQty}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.qtyBtnText}>−</Text>
-              </TouchableOpacity>
-              <Text style={styles.qtyValue}>{quantity}</Text>
-              <TouchableOpacity
-                style={styles.qtyBtn}
-                onPress={increaseQty}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.qtyBtnText}>+</Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* UD-Coin banner */}
             <ImageBackground
-              source={require('../../../assets/icons/wrap.png')}
-              style={styles.coinBanner}
+              source={require('../../../assets/images/movieTicket/ticketbg.png')}
+              style={styles.card}
               resizeMode="stretch"
             >
-              <Text style={styles.coinBannerText}>Use your</Text>
+              {/* Title */}
               <Image
-                source={require('../../assets/icons/singleCoin.png')}
-                style={styles.coinInline}
+                source={require('../../../assets/images/movieTicket/udentcketPurple.png')}
+                style={styles.titleImage}
                 resizeMode="contain"
               />
-              <Text style={styles.coinBannerHighlight}>UD-Coin</Text>
-              <Text style={styles.coinBannerText}>to claim your ticket</Text>
-            </ImageBackground>
 
-            {/* Price row + BUY NOW */}
-            <View style={styles.priceRow}>
-              <View style={styles.priceLeft}>
-                <View style={styles.priceMainRow}>
-                  <Text style={styles.priceCurrent}>₹394</Text>
-                  <Text style={styles.priceStrike}>₹394</Text>
-                </View>
-                <View style={styles.usingRow}>
-                  <Text style={styles.usingText}>Using </Text>
-                  <Image
-                    source={require('../../assets/icons/coins.png')}
-                    style={styles.coinsStack}
-                    resizeMode="contain"
-                  />
-                  <Text style={styles.usingAmount}> 5000</Text>
-                </View>
+              {/* Gift card image */}
+              <Image
+                source={require('../../../assets/images/movieTicket/voucher.png')}
+                style={styles.giftCard}
+                resizeMode="cover"
+              />
+
+              {/* Quantity selector */}
+              <View style={styles.qtyRow}>
+                <TouchableOpacity
+                  style={styles.qtyBtn}
+                  onPress={decreaseQty}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.qtyBtnText}>−</Text>
+                </TouchableOpacity>
+                <Text style={styles.qtyValue}>{quantity}</Text>
+                <TouchableOpacity
+                  style={styles.qtyBtn}
+                  onPress={increaseQty}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.qtyBtnText}>+</Text>
+                </TouchableOpacity>
               </View>
 
-              <TouchableOpacity activeOpacity={0.85} style={styles.buyNowBtn}>
-                <Text style={styles.buyNowText}>BUY NOW</Text>
-              </TouchableOpacity>
-            </View>
-          </ImageBackground>
+              {/* UD-Coin banner */}
+              <ImageBackground
+                source={require('../../../assets/icons/wrap.png')}
+                style={styles.coinBanner}
+                resizeMode="stretch"
+              >
+                <Text style={styles.coinBannerText}>Use your</Text>
+                <Image
+                  source={require('../../../assets/icons/singleCoin.png')}
+                  style={styles.coinInline}
+                  resizeMode="contain"
+                />
+                <Text style={styles.coinBannerHighlight}>UD-Coin</Text>
+                <Text style={styles.coinBannerText}>to claim your ticket</Text>
+              </ImageBackground>
 
-          {/* Close button */}
-          <TouchableOpacity
-            style={styles.closeBtn}
-            onPress={onClose}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.closeBtnText}>✕</Text>
-          </TouchableOpacity>
-        </Animated.View>
-      </View>
-    </Modal>
+              {/* Price row + BUY NOW */}
+              <View style={styles.priceRow}>
+                <View style={styles.priceLeft}>
+                  <View style={styles.priceMainRow}>
+                    <Text style={styles.priceCurrent}>₹394</Text>
+                    <Text style={styles.priceStrike}>₹394</Text>
+                  </View>
+                  <View style={styles.usingRow}>
+                    <Text style={styles.usingText}>Using </Text>
+                    <Image
+                      source={require('../../../assets/icons/coins.png')}
+                      style={styles.coinsStack}
+                      resizeMode="contain"
+                    />
+                    <Text style={styles.usingAmount}> 5000</Text>
+                  </View>
+                </View>
+
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  style={styles.buyNowBtn}
+                  onPress={() => {
+                    onClose();
+                    setSuccessVisible(true);
+                  }}
+                >
+                  <Text style={styles.buyNowText}>BUY NOW</Text>
+                </TouchableOpacity>
+              </View>
+            </ImageBackground>
+
+            {/* Close button */}
+            <TouchableOpacity
+              style={styles.closeBtn}
+              onPress={onClose}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.closeBtnText}>✕</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        </View>
+      </Modal>
+
+      <RedeemSuccessModal
+        visible={successVisible}
+        quantity={quantity}
+        coinsUsed={quantity * 3}
+        amountPaid="₹394"
+        onBack={() => {
+          setSuccessVisible(false);
+          onClose();
+        }}
+        onMyVouchers={() => {
+          setSuccessVisible(false);
+          onClose();
+        }}
+      />
+    </>
   );
 };
 

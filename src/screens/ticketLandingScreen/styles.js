@@ -224,8 +224,10 @@ const styles = StyleSheet.create({
   },
   voucherCard: {
     width: (width - 44) / 2,
-    backgroundColor: '#1A1A2E',
+    backgroundColor: 'black',
     borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#333333',
     overflow: 'hidden',
   },
   voucherCardImage: {

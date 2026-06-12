@@ -15,14 +15,14 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import { wp, hp } from '../../utils/responsive';
+import { wp, hp } from '../../../utils/responsive';
+import RedeemSuccessModal from './RedeemSuccessModal';
 
 const { height } = Dimensions.get('window');
 
-const SNAP_75 = height * 0.25;
 const SNAP_FULL = Platform.OS === 'ios' ? height * 0.05 : 0;
 
-const REDEEM_BOTTOM_OFFSET = SNAP_75;
+const REDEEM_BOTTOM_OFFSET = 0;
 
 const Accordion = ({ title, items }) => {
   const [open, setOpen] = useState(false);
@@ -59,10 +59,10 @@ const VoucherBottomSheet = ({ visible, onClose, voucher }) => {
   const insets = useSafeAreaInsets();
   const [modalVisible, setModalVisible] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [successVisible, setSuccessVisible] = useState(false);
 
   const translateY = useRef(new Animated.Value(height)).current;
   const backdropOpacity = useRef(new Animated.Value(0)).current;
-  const currentSnap = useRef(SNAP_75);
   const onCloseRef = useRef(onClose);
   useEffect(() => {
     onCloseRef.current = onClose;
@@ -71,11 +71,10 @@ const VoucherBottomSheet = ({ visible, onClose, voucher }) => {
   useEffect(() => {
     if (visible) {
       setModalVisible(true);
-      currentSnap.current = SNAP_75;
       translateY.setValue(height);
       Animated.parallel([
         Animated.spring(translateY, {
-          toValue: SNAP_75,
+          toValue: SNAP_FULL,
           tension: 65,
           friction: 11,
           useNativeDriver: true,
@@ -104,37 +103,23 @@ const VoucherBottomSheet = ({ visible, onClose, voucher }) => {
     }
   }, [visible]);
 
-  const snapTo = target => {
-    currentSnap.current = target;
-    Animated.spring(translateY, {
-      toValue: target,
-      tension: 70,
-      friction: 12,
-      useNativeDriver: true,
-    }).start();
-  };
-
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: (_, { dy }) => Math.abs(dy) > 4,
       onPanResponderMove: (_, { dy }) => {
-        const next = Math.max(SNAP_FULL, currentSnap.current + dy);
-        translateY.setValue(next);
+        if (dy > 0) translateY.setValue(SNAP_FULL + dy);
       },
       onPanResponderRelease: (_, { dy, vy }) => {
-        const projected = currentSnap.current + dy;
-        if (vy > 0.8) {
-          if (currentSnap.current === SNAP_FULL) snapTo(SNAP_75);
-          else onCloseRef.current();
-          return;
-        }
-        if (vy < -0.5 || projected < height * 0.15) {
-          snapTo(SNAP_FULL);
-        } else if (projected > height * 0.55) {
+        if (vy > 0.5 || dy > height * 0.25) {
           onCloseRef.current();
         } else {
-          snapTo(projected < height * 0.35 ? SNAP_FULL : SNAP_75);
+          Animated.spring(translateY, {
+            toValue: SNAP_FULL,
+            tension: 70,
+            friction: 12,
+            useNativeDriver: true,
+          }).start();
         }
       },
     }),
@@ -151,19 +136,23 @@ const VoucherBottomSheet = ({ visible, onClose, voucher }) => {
   const safeBottom = insets.bottom > 0 ? insets.bottom : 20;
 
   return (
+    <>
     <Modal
       transparent
       visible={modalVisible}
       animationType="none"
       onRequestClose={onClose}
     >
+      <Animated.View
+        style={[styles.backdropOverlay, { opacity: backdropOpacity }]}
+        pointerEvents="none"
+      />
+
       <Animated.View style={[styles.sheet, { transform: [{ translateY }] }]}>
-        {/* Drag handle */}
         <View style={styles.handleArea} {...panResponder.panHandlers}>
           <View style={styles.handle} />
         </View>
 
-        {/* Scrollable content — paddingBottom clears the floating redeem button */}
         <ScrollView
           style={styles.scroll}
           contentContainerStyle={[
@@ -212,22 +201,37 @@ const VoucherBottomSheet = ({ visible, onClose, voucher }) => {
 
           <Accordion title="Details" items={voucher.details ?? []} />
           <Accordion title="Terms & Conditions" items={voucher.terms ?? []} />
-          <View style={[styles.redeemWrapper]}>
-            <TouchableOpacity style={styles.redeemBtn} activeOpacity={0.85}>
+          <View style={styles.redeemWrapper}>
+            <TouchableOpacity
+              style={styles.redeemBtn}
+              activeOpacity={0.85}
+              onPress={() => setSuccessVisible(true)}
+            >
               <MaterialIcons name="open-in-new" size={20} color="#FFFFFF" />
               <Text style={styles.redeemText}>Redeem Now</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
-
-        {/* Redeem button — absolutely anchored at the visible bottom of the 75% snap */}
       </Animated.View>
+
+      <RedeemSuccessModal
+        visible={successVisible}
+        quantity={1}
+        coinsUsed={0}
+        amountPaid={voucher?.discountTitle ?? ''}
+        onBack={() => setSuccessVisible(false)}
+        onMyVouchers={() => {
+          setSuccessVisible(false);
+          onClose();
+        }}
+      />
     </Modal>
+    </>
   );
 };
 
 const styles = StyleSheet.create({
-  backdrop: {
+  backdropOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.6)',
   },
@@ -268,14 +272,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
     marginBottom: hp(2),
-  },
-  backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   brandLogo: {
     width: 36,
@@ -383,8 +379,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   redeemWrapper: {
-    paddingTop: 12,
-    // paddingHorizontal: 20,
+    paddingTop: 20,
   },
   redeemBtn: {
     backgroundColor: '#5B2BE0',
@@ -392,8 +387,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: hp(1.8),
+    paddingVertical: hp(1.7),
     gap: 8,
+    marginTop: 20,
   },
   redeemText: {
     color: '#FFFFFF',

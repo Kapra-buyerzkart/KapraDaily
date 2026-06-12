@@ -1,0 +1,113 @@
+import { wp } from '../../utils/responsive';
+
+export const CARD_WIDTH = wp(72);
+export const CARD_SPACING = 16;
+export const SNAP_INTERVAL = CARD_WIDTH + CARD_SPACING;
+
+export const ORIGINAL_CARDS = [
+  { id: '1', image: require('../../assets/images/movieTicket/voucher.png') },
+  { id: '2', image: require('../../assets/images/movieTicket/voucher.png') },
+  { id: '3', image: require('../../assets/images/movieTicket/voucher.png') },
+];
+
+export const VOUCHER_DATA = [
+  {
+    id: 'v1',
+    image: require('../../assets/images/movieTicket/coupons.png'),
+    title: 'Bookmyshow',
+    description: 'You have won a ₹100 OFF in any bookmyshow ticket',
+    brand: 'Bookmyshow',
+    brandLogo: require('../../assets/images/movieTicket/BMS.png'),
+    cardImage: require('../../assets/images/movieTicket/coupons.png'),
+    daysLeft: 12,
+    discountTitle: '₹100 OFF',
+    discountSubtitle: 'On any Bookmyshow movie ticket',
+    code: 'BMS100OFF',
+    details: [
+      'Valid on all movie tickets',
+      'Minimum order value ₹200',
+      'One-time use only',
+    ],
+    terms: [
+      'Cannot be combined with other offers',
+      'Valid till 31st July 2026',
+      'Non-transferable voucher',
+    ],
+  },
+  {
+    id: 'v2',
+    image: require('../../assets/images/movieTicket/coupons.png'),
+    title: 'Bookmyshow',
+    description: 'You have won a ₹150 OFF in any bookmyshow ticket',
+    brand: 'Bookmyshow',
+    brandLogo: require('../../assets/images/movieTicket/BMS.png'),
+    cardImage: require('../../assets/images/movieTicket/coupons.png'),
+    daysLeft: 7,
+    discountTitle: '₹150 OFF',
+    discountSubtitle: 'On any Bookmyshow movie ticket',
+    code: 'BMS150OFF',
+    details: [
+      'Valid on all movie tickets',
+      'Minimum order value ₹300',
+      'One-time use only',
+    ],
+    terms: [
+      'Cannot be combined with other offers',
+      'Valid till 15th July 2026',
+      'Non-transferable voucher',
+    ],
+  },
+  {
+    id: 'v3',
+    image: require('../../assets/images/movieTicket/coupons.png'),
+    title: 'Bookmyshow',
+    description: 'You have won a ₹200 OFF in any bookmyshow ticket',
+    brand: 'Bookmyshow',
+    brandLogo: require('../../assets/images/movieTicket/BMS.png'),
+    cardImage: require('../../assets/images/movieTicket/coupons.png'),
+    daysLeft: 20,
+    discountTitle: '₹200 OFF',
+    discountSubtitle: 'On any Bookmyshow movie ticket',
+    code: 'BMS200OFF',
+    details: [
+      'Valid on all movie tickets',
+      'Minimum order value ₹400',
+      'One-time use only',
+    ],
+    terms: [
+      'Cannot be combined with other offers',
+      'Valid till 31st August 2026',
+      'Non-transferable voucher',
+    ],
+  },
+  {
+    id: 'v4',
+    image: require('../../assets/images/movieTicket/coupons.png'),
+    title: 'Bookmyshow',
+    description: 'You have won a ₹50 OFF in any bookmyshow ticket',
+    brand: 'Bookmyshow',
+    brandLogo: require('../../assets/images/movieTicket/BMS.png'),
+    cardImage: require('../../assets/images/movieTicket/coupons.png'),
+    daysLeft: 3,
+    discountTitle: '₹50 OFF',
+    discountSubtitle: 'On any Bookmyshow movie ticket',
+    code: 'BMS50OFF',
+    details: [
+      'Valid on all movie tickets',
+      'No minimum order value',
+      'One-time use only',
+    ],
+    terms: [
+      'Cannot be combined with other offers',
+      'Valid till 30th June 2026',
+      'Non-transferable voucher',
+    ],
+  },
+];
+
+const LOOP_COUNT = 100;
+export const INFINITE_CARDS = Array.from(
+  { length: ORIGINAL_CARDS.length * LOOP_COUNT },
+  (_, i) => ({ ...ORIGINAL_CARDS[i % ORIGINAL_CARDS.length], id: String(i) }),
+);
+export const INITIAL_INDEX = Math.floor(INFINITE_CARDS.length / 2);
