@@ -554,7 +554,7 @@ const styles = StyleSheet.create({
   mainContainer: { flex: 1, backgroundColor: '#FFFFFF' },
   backgroundImage: {
     width: wp('100%'),
-    height: hp('55%'),
+    height: hp('60%'),
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingTop: hp('6%'),
@@ -646,7 +646,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: wp('2.33%'),
-    marginTop: hp('5%'),
+    marginTop: hp('3.5%'),
   },
   continueButtonText: {
     fontFamily: FONTS.poppins.bold,
