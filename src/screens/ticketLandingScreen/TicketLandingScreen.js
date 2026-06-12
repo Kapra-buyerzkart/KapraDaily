@@ -16,6 +16,8 @@ import LinearGradient from 'react-native-linear-gradient';
 import { wp, hp } from '../../utils/responsive';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import styles from './styles';
+import UdenTicketModal from './UdenTicketModal';
+import VoucherBottomSheet from './VoucherBottomSheet';
 
 const { width } = Dimensions.get('window');
 
@@ -32,6 +34,101 @@ const ORIGINAL_CARDS = [
   { id: '3', image: require('../../assets/images/movieTicket/voucher.png') },
 ];
 
+const VOUCHER_DATA = [
+  {
+    id: 'v1',
+    image: require('../../assets/images/movieTicket/coupons.png'),
+    title: 'Bookmyshow',
+    description: 'You have won a ₹100 OFF in any bookmyshow ticket',
+    brand: 'Bookmyshow',
+    brandLogo: require('../../assets/images/movieTicket/coupons.png'),
+    cardImage: require('../../assets/images/movieTicket/coupons.png'),
+    daysLeft: 12,
+    discountTitle: '₹100 OFF',
+    discountSubtitle: 'On any Bookmyshow movie ticket',
+    code: 'BMS100OFF',
+    details: [
+      'Valid on all movie tickets',
+      'Minimum order value ₹200',
+      'One-time use only',
+    ],
+    terms: [
+      'Cannot be combined with other offers',
+      'Valid till 31st July 2026',
+      'Non-transferable voucher',
+    ],
+  },
+  {
+    id: 'v2',
+    image: require('../../assets/images/movieTicket/coupons.png'),
+    title: 'Bookmyshow',
+    description: 'You have won a ₹150 OFF in any bookmyshow ticket',
+    brand: 'Bookmyshow',
+    brandLogo: require('../../assets/images/movieTicket/coupons.png'),
+    cardImage: require('../../assets/images/movieTicket/coupons.png'),
+    daysLeft: 7,
+    discountTitle: '₹150 OFF',
+    discountSubtitle: 'On any Bookmyshow movie ticket',
+    code: 'BMS150OFF',
+    details: [
+      'Valid on all movie tickets',
+      'Minimum order value ₹300',
+      'One-time use only',
+    ],
+    terms: [
+      'Cannot be combined with other offers',
+      'Valid till 15th July 2026',
+      'Non-transferable voucher',
+    ],
+  },
+  {
+    id: 'v3',
+    image: require('../../assets/images/movieTicket/coupons.png'),
+    title: 'Bookmyshow',
+    description: 'You have won a ₹200 OFF in any bookmyshow ticket',
+    brand: 'Bookmyshow',
+    brandLogo: require('../../assets/images/movieTicket/coupons.png'),
+    cardImage: require('../../assets/images/movieTicket/coupons.png'),
+    daysLeft: 20,
+    discountTitle: '₹200 OFF',
+    discountSubtitle: 'On any Bookmyshow movie ticket',
+    code: 'BMS200OFF',
+    details: [
+      'Valid on all movie tickets',
+      'Minimum order value ₹400',
+      'One-time use only',
+    ],
+    terms: [
+      'Cannot be combined with other offers',
+      'Valid till 31st August 2026',
+      'Non-transferable voucher',
+    ],
+  },
+  {
+    id: 'v4',
+    image: require('../../assets/images/movieTicket/coupons.png'),
+    title: 'Bookmyshow',
+    description: 'You have won a ₹50 OFF in any bookmyshow ticket',
+    brand: 'Bookmyshow',
+    brandLogo: require('../../assets/images/movieTicket/coupons.png'),
+    cardImage: require('../../assets/images/movieTicket/coupons.png'),
+    daysLeft: 3,
+    discountTitle: '₹50 OFF',
+    discountSubtitle: 'On any Bookmyshow movie ticket',
+    code: 'BMS50OFF',
+    details: [
+      'Valid on all movie tickets',
+      'No minimum order value',
+      'One-time use only',
+    ],
+    terms: [
+      'Cannot be combined with other offers',
+      'Valid till 30th June 2026',
+      'Non-transferable voucher',
+    ],
+  },
+];
+
 const LOOP_COUNT = 100;
 const INFINITE_CARDS = Array.from(
   { length: ORIGINAL_CARDS.length * LOOP_COUNT },
@@ -41,6 +138,24 @@ const INFINITE_CARDS = Array.from(
   }),
 );
 const INITIAL_INDEX = Math.floor(INFINITE_CARDS.length / 2);
+
+const VoucherCard = ({ item, onPress }) => (
+  <TouchableOpacity
+    style={styles.voucherCard}
+    activeOpacity={0.8}
+    onPress={() => onPress(item)}
+  >
+    <Image
+      source={item.image}
+      style={styles.voucherCardImage}
+      resizeMode="cover"
+    />
+    <View style={styles.voucherCardBody}>
+      <Text style={styles.voucherCardTitle}>{item.title}</Text>
+      <Text style={styles.voucherCardDesc}>{item.description}</Text>
+    </View>
+  </TouchableOpacity>
+);
 
 const AnimatedCard = ({ item, index, scrollX }) => {
   const inputRange = [
@@ -98,7 +213,10 @@ const TicketLandingScreen = ({ navigation }) => {
   const [fadeAnim] = useState(() => new Animated.Value(0));
   const [imageOpacity] = useState(() => new Animated.Value(0));
   const [activeTab, setActiveTab] = useState(0);
+  const tabAnim = useRef(new Animated.Value(1)).current;
   const [activeCardIndex, setActiveCardIndex] = useState(INITIAL_INDEX);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedVoucher, setSelectedVoucher] = useState(null);
   const flatListRef = useRef(null);
   const scrollX = useRef(
     new Animated.Value(INITIAL_INDEX * SNAP_INTERVAL),
@@ -156,6 +274,38 @@ const TicketLandingScreen = ({ navigation }) => {
     ),
     [scrollX],
   );
+
+  const handleTabChange = index => {
+    Animated.parallel([
+      Animated.timing(tabAnim, {
+        toValue: 0,
+        duration: 120,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setActiveTab(index);
+      Animated.parallel([
+        Animated.spring(tabAnim, {
+          toValue: 1,
+          useNativeDriver: true,
+          tension: 80,
+          friction: 10,
+        }),
+      ]).start();
+    });
+  };
+
+  const tabContentStyle = {
+    opacity: tabAnim,
+    transform: [
+      {
+        translateY: tabAnim.interpolate({
+          inputRange: [0, 1],
+          outputRange: [10, 0],
+        }),
+      },
+    ],
+  };
 
   const tabs = ['Tickets', 'My Vouchers'];
 
@@ -219,7 +369,7 @@ const TicketLandingScreen = ({ navigation }) => {
               <TouchableOpacity
                 key={tab}
                 style={styles.tab}
-                onPress={() => setActiveTab(index)}
+                onPress={() => handleTabChange(index)}
                 activeOpacity={0.7}
               >
                 <Text
@@ -236,93 +386,124 @@ const TicketLandingScreen = ({ navigation }) => {
             ))}
           </View>
 
-          {/* ── Card Carousel (infinite) ── */}
-          <Animated.View
-            style={[styles.carouselWrapper, { opacity: fadeAnim }]}
-          >
-            <Animated.FlatList
-              ref={flatListRef}
-              data={INFINITE_CARDS}
-              keyExtractor={item => item.id}
-              renderItem={renderCard}
-              horizontal
-              pagingEnabled={false}
-              snapToInterval={SNAP_INTERVAL}
-              snapToAlignment="center"
-              decelerationRate="fast"
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.carouselList}
-              onMomentumScrollEnd={handleScrollEnd}
-              onScrollEndDrag={handleScrollEnd}
-              getItemLayout={getItemLayout}
-              initialScrollIndex={INITIAL_INDEX}
-              windowSize={5}
-              maxToRenderPerBatch={5}
-              removeClippedSubviews
-              onScroll={Animated.event(
-                [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-                { useNativeDriver: true },
-              )}
-              scrollEventThrottle={16}
-            />
-          </Animated.View>
+          <Animated.View style={tabContentStyle}>
+          {activeTab === 0 ? (
+            <>
+              {/* ── Card Carousel (infinite) ── */}
+              <Animated.View
+                style={[styles.carouselWrapper, { opacity: fadeAnim }]}
+              >
+                <Animated.FlatList
+                  ref={flatListRef}
+                  data={INFINITE_CARDS}
+                  keyExtractor={item => item.id}
+                  renderItem={renderCard}
+                  horizontal
+                  pagingEnabled={false}
+                  snapToInterval={SNAP_INTERVAL}
+                  snapToAlignment="center"
+                  decelerationRate="fast"
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.carouselList}
+                  onMomentumScrollEnd={handleScrollEnd}
+                  onScrollEndDrag={handleScrollEnd}
+                  getItemLayout={getItemLayout}
+                  initialScrollIndex={INITIAL_INDEX}
+                  windowSize={5}
+                  maxToRenderPerBatch={5}
+                  removeClippedSubviews
+                  onScroll={Animated.event(
+                    [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+                    { useNativeDriver: true },
+                  )}
+                  scrollEventThrottle={16}
+                />
+              </Animated.View>
 
-          {/* ── Carousel Arrows ── */}
-          <View
-            style={[
-              styles.arrowContainer,
-              { marginTop: Platform.OS == 'ios' ? hp(14) : hp(17) },
-            ]}
-          >
-            <View style={styles.arrowPill}>
-              <TouchableOpacity
-                style={styles.arrowButton}
-                onPress={handlePrev}
-                activeOpacity={0.6}
+              {/* ── Carousel Arrows ── */}
+              <View
+                style={[
+                  styles.arrowContainer,
+                  { marginTop: Platform.OS == 'ios' ? hp(14) : hp(17) },
+                ]}
               >
-                <MaterialIcons
-                  name="keyboard-arrow-left"
-                  size={28}
-                  color="#FFFFFF"
+                <View style={styles.arrowPill}>
+                  <TouchableOpacity
+                    style={styles.arrowButton}
+                    onPress={handlePrev}
+                    activeOpacity={0.6}
+                  >
+                    <MaterialIcons
+                      name="keyboard-arrow-left"
+                      size={28}
+                      color="#FFFFFF"
+                    />
+                  </TouchableOpacity>
+                  <View style={styles.arrowDivider} />
+                  <TouchableOpacity
+                    style={styles.arrowButton}
+                    onPress={handleNext}
+                    activeOpacity={0.6}
+                  >
+                    <MaterialIcons
+                      name="keyboard-arrow-right"
+                      size={28}
+                      color="#FFFFFF"
+                    />
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* ── Subtract Image Divider ── */}
+              <Image
+                source={require('../../assets/images/movieTicket/Subtract.png')}
+                style={styles.subtractImage}
+                resizeMode="contain"
+              />
+
+              {/* ── Claim Button ── */}
+              <View style={styles.claimWrapper}>
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  onPress={() => setModalVisible(true)}
+                >
+                  <LinearGradient
+                    colors={['#F5D680', '#D4A843', '#C49A38']}
+                    start={{ x: 0.5, y: 0 }}
+                    end={{ x: 0.5, y: 1 }}
+                    style={styles.claimButton}
+                  >
+                    <Text style={styles.claimText}>Claim</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+            </>
+          ) : (
+            /* ── My Vouchers Grid ── */
+            <View style={styles.voucherGrid}>
+              {VOUCHER_DATA.map((item, index) => (
+                <VoucherCard
+                  key={item.id}
+                  item={item}
+                  onPress={voucher => setSelectedVoucher(voucher)}
                 />
-              </TouchableOpacity>
-              <View style={styles.arrowDivider} />
-              <TouchableOpacity
-                style={styles.arrowButton}
-                onPress={handleNext}
-                activeOpacity={0.6}
-              >
-                <MaterialIcons
-                  name="keyboard-arrow-right"
-                  size={28}
-                  color="#FFFFFF"
-                />
-              </TouchableOpacity>
+              ))}
             </View>
-          </View>
-
-          {/* ── Subtract Image Divider ── */}
-          <Image
-            source={require('../../assets/images/movieTicket/Subtract.png')}
-            style={styles.subtractImage}
-            resizeMode="contain"
-          />
-
-          {/* ── Claim Button ── */}
-          <View style={styles.claimWrapper}>
-            <TouchableOpacity activeOpacity={0.8}>
-              <LinearGradient
-                colors={['#F5D680', '#D4A843', '#C49A38']}
-                start={{ x: 0.5, y: 0 }}
-                end={{ x: 0.5, y: 1 }}
-                style={styles.claimButton}
-              >
-                <Text style={styles.claimText}>Claim</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-          </View>
+          )}
+          </Animated.View>
         </ScrollView>
       </AnimatedImageBackground>
+
+      <UdenTicketModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+      />
+
+      <VoucherBottomSheet
+        visible={!!selectedVoucher}
+        voucher={selectedVoucher}
+        onClose={() => setSelectedVoucher(null)}
+      />
     </View>
   );
 };

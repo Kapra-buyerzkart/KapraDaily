@@ -213,6 +213,40 @@ const styles = StyleSheet.create({
     resizeMode: 'cover',
     marginTop: hp(-7.3),
   },
+
+  // ── My Vouchers Grid ──
+  voucherGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: 16,
+    paddingTop: 20,
+    gap: 12,
+  },
+  voucherCard: {
+    width: (width - 44) / 2,
+    backgroundColor: '#1A1A2E',
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  voucherCardImage: {
+    width: '100%',
+    height: 110,
+  },
+  voucherCardBody: {
+    padding: 10,
+  },
+  voucherCardTitle: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontFamily: 'Poppins-Bold',
+    marginBottom: 4,
+  },
+  voucherCardDesc: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 11,
+    fontFamily: 'Poppins-Regular',
+    lineHeight: 16,
+  },
 });
 
 export default styles;
