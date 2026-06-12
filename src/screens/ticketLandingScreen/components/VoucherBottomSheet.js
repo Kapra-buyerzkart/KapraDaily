@@ -11,6 +11,7 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
+  Linking,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -23,6 +24,16 @@ const { height } = Dimensions.get('window');
 const SNAP_FULL = Platform.OS === 'ios' ? height * 0.05 : 0;
 
 const REDEEM_BOTTOM_OFFSET = 0;
+
+const BMS_URL = 'https://in.bookmyshow.com';
+
+const openInChrome = async () => {
+  const chromeAndroid = `intent://${BMS_URL.replace('https://', '')}#Intent;scheme=https;package=com.android.chrome;end`;
+  const chromeIOS = `googlechrome://navigate?url=${encodeURIComponent(BMS_URL)}`;
+  const chromeUrl = Platform.OS === 'ios' ? chromeIOS : chromeAndroid;
+  const canChrome = await Linking.canOpenURL(chromeUrl);
+  Linking.openURL(canChrome ? chromeUrl : BMS_URL);
+};
 
 const Accordion = ({ title, items }) => {
   const [open, setOpen] = useState(false);
@@ -205,7 +216,7 @@ const VoucherBottomSheet = ({ visible, onClose, voucher }) => {
             <TouchableOpacity
               style={styles.redeemBtn}
               activeOpacity={0.85}
-              onPress={() => setSuccessVisible(true)}
+              onPress={() => { setSuccessVisible(true); openInChrome(); }}
             >
               <MaterialIcons name="open-in-new" size={20} color="#FFFFFF" />
               <Text style={styles.redeemText}>Redeem Now</Text>
