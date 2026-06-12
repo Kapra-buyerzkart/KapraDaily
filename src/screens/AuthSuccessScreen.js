@@ -18,23 +18,52 @@ const AuthSuccessScreen = ({ navigation }) => {
     };
 
     const handleComingSoon = () => {
-        setIsComingSoonVisible(true);
     };
 
-    const handleKshope = () => {
+    // const handleKshope = () => {
+    //     const isKshopeEnabled = generalSettings?.showkshope === '1' || generalSettings?.showkshope === 1;
+
+    //     if (isKshopeEnabled) {
+    //         const storeUrl = Platform.OS === 'ios'
+    //             ? (generalSettings?.kshope_ios_url || 'https://apps.apple.com/in/app/uden-deal/id6448085736')
+    //             : (generalSettings?.kshope_android_url || 'https://play.google.com/store/apps/details?id=com.kshope');
+
+    //         Linking.openURL(storeUrl).catch(err => {
+    //             console.error('Failed to open store URL:', err);
+    //             handleComingSoon();
+    //         });
+    //     } else {
+    //         handleComingSoon();
+    //     }
+    // };
+
+    const handleTicketCollection = () => {
+        console.log("ticket collection pressed");
+        navigation.navigate('TicketSplashScreen');
+    };
+    const handleKshope = async () => {
         const isKshopeEnabled = generalSettings?.showkshope === '1' || generalSettings?.showkshope === 1;
+        console.log('[Kshope] showkshope value:', generalSettings?.showkshope, '| isKshopeEnabled:', isKshopeEnabled);
 
         if (isKshopeEnabled) {
+            const deepLink = 'udmv://';
             const storeUrl = Platform.OS === 'ios'
                 ? (generalSettings?.kshope_ios_url || 'https://apps.apple.com/in/app/uden-deal/id6448085736')
                 : (generalSettings?.kshope_android_url || 'https://play.google.com/store/apps/details?id=com.kshope');
 
-            Linking.openURL(storeUrl).catch(err => {
-                console.error('Failed to open store URL:', err);
-                handleComingSoon();
-            });
-        } else {
-            handleComingSoon();
+            try {
+                console.log('[Kshope] Attempting to open deep link:', deepLink);
+                await Linking.openURL(deepLink);
+                console.log('[Kshope] Deep link opened successfully');
+            } catch (deepLinkErr) {
+                console.warn('[Kshope] Deep link failed, app not installed. Redirecting to store:', storeUrl);
+                try {
+                    await Linking.openURL(storeUrl);
+                } catch (storeErr) {
+                    console.error('[Kshope] Store URL also failed:', storeErr);
+                    showComingSoon();
+                }
+            }
         }
     };
 
@@ -76,7 +105,7 @@ const AuthSuccessScreen = ({ navigation }) => {
                     {/* Small Cards Row */}
                     <View style={styles.row}>
                         {/* Uden Tickets */}
-                        <TouchableOpacity activeOpacity={0.9} onPress={handleComingSoon}>
+                        <TouchableOpacity activeOpacity={0.9} onPress={handleTicketCollection}>
                             <Image
                                 source={require('../assets/images/splash/ticket.png')}
                                 style={styles.smallCard}

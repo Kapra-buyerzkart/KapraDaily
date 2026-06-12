@@ -194,8 +194,13 @@ export const AppContextProvider = ({ children }) => {
       resetNetworkState();
       
       // Clear ALL data from local storage
+      // This removes: profile, pincodeAreaId, selectedAddressId,
+      // manualOverride, manualRegion, manualAddress, ACCESS_TOKEN, REFRESH_TOKEN, etc.
       await AsyncStorage.clear();
-      console.log('🔒 [LOGOUT] AsyncStorage cleared');
+      console.log('🔒 [LOGOUT] AsyncStorage cleared (all location data, tokens, profile removed)');
+
+      // Reset in-memory location state so LocationFetchingNewScreen starts fresh
+      setLocationNotFetched(false);
 
       // Unlink OneSignal identity and clear badges
       oneSignalLogout();
@@ -203,7 +208,7 @@ export const AppContextProvider = ({ children }) => {
       // Navigate to login
       NavigationService.reset('LoginScreen', { type: 'login' });
 
-      // Set a fresh guest profile
+      // Set a fresh guest profile (no pincode, no location data)
       const freshProfile = {
         guestId: Math.floor(Math.random() * 9000000000) + 1000000000,
       };
