@@ -69,10 +69,9 @@ const LoginPwdScreen = () => {
                 if (custId) {
                     await mergeCustomerIdIntoProfile(custId);
                 }
-                // ✅ Navigate to MainTabs
                 navigation.reset({
                     index: 0,
-                    routes: [{ name: 'LocationFetchingNew' }],
+                    routes: [{ name: 'AuthSuccessScreen' }],
                 });
             } else {
                 showStatus({

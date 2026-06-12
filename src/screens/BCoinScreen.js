@@ -120,7 +120,7 @@ const BCoinScreen = () => {
         setBCoinValueHistory(mappedItems.reverse());
       }
     } catch (error) {
-      console.error('Error fetching B-Coin value history:', error);
+      console.error('Error fetching UD-coin value history:', error);
     } finally {
       if (isMounted.current) setIsLoadingHistory(false);
     }
@@ -146,12 +146,12 @@ const BCoinScreen = () => {
     }
 
     // Assuming coinsData is walletData.wallet and totalCoins is bCoins
-    console.log('Available B-Coins:', walletData?.wallet?.bCoins);
+    console.log('Available UD-coins:', walletData?.wallet?.bCoins);
     if (redeemAmount > (walletData?.wallet?.bCoins || 0)) {
       console.log('Insufficient balance validation failed');
       setStatusType('error');
       setStatusTitle('Insufficient Balance');
-      setStatusMessage('You do not have enough B-Coins.');
+      setStatusMessage('You do not have enough UD-coins.');
       setStatusModalVisible(true);
       return;
     }
@@ -203,7 +203,7 @@ const BCoinScreen = () => {
             setStatusType('error');
             setStatusTitle('Insufficient Balance');
             setStatusMessage(
-              response.message || 'You do not have enough B-Coins.',
+              response.message || 'You do not have enough UD-coins.',
             );
           } else {
             setStatusType('error');
@@ -245,7 +245,7 @@ const BCoinScreen = () => {
               source={require('../assets/images/left_arrow.png')}
             />
           </TouchableOpacity>
-          <Text style={styles.headerText}>B-Coin and B-token</Text>
+          <Text style={styles.headerText}>UD-coin and UD-token</Text>
         </View>
         {/* <Image style={styles.imageStyle} source={require('../assets/images/bcoin_header_image_two.png')} /> */}
         {/* <FastImage style={styles.bcoinGif} resizeMode={FastImage.resizeMode.contain} source={require('../assets/gifs/bcoin.gif')} /> */}
@@ -258,7 +258,7 @@ const BCoinScreen = () => {
                 style={styles.bcoinImage}
                 source={require('../assets/images/bcoinn.png')}
               />
-              <Text style={styles.bcoinText}>B-Coin</Text>
+              <Text style={styles.bcoinText}>UD-coin</Text>
               <View style={styles.bcoinInnerView}>
                 <Text style={styles.availableBalanceHeaderText}>
                   Available Balance
@@ -270,7 +270,9 @@ const BCoinScreen = () => {
             </View>
             <View style={styles.bcoinContainerTwo}>
               <View style={styles.bcoinInnerViewTwo}>
-                <Text style={styles.bcoinTextTwo}>Today's B-coin value : </Text>
+                <Text style={styles.bcoinTextTwo}>
+                  Today's UD-coin value :{' '}
+                </Text>
                 <Text style={styles.bcoinPriceText}>
                   ₹{walletData?.wallet?.bCoinValue || '0.00'}
                 </Text>
@@ -303,7 +305,7 @@ const BCoinScreen = () => {
               style={styles.bcoinImage}
               source={require('../assets/images/btoken.png')}
             />
-            <Text style={styles.bcoinText}>B-Token</Text>
+            <Text style={styles.bcoinText}>UD-token</Text>
             <View style={styles.bcoinInnerView}>
               <Text style={styles.availableBalanceHeaderText}>
                 Available Balance
@@ -343,7 +345,7 @@ const BCoinScreen = () => {
                     : styles.bcoinSingleText
                 }
               >
-                B-Coin
+                UD-coin
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -372,7 +374,7 @@ const BCoinScreen = () => {
                     : styles.bcoinSingleText
                 }
               >
-                B-Token
+                UD-token
               </Text>
             </TouchableOpacity>
           </View>
@@ -479,7 +481,7 @@ const BCoinScreen = () => {
         onPress={() => setShowRedeemModal(true)}
         style={styles.redeemButton}
       >
-        <Text style={styles.redeemText}>Redeem B-Coin</Text>
+        <Text style={styles.redeemText}>Redeem UD-coin</Text>
       </TouchableOpacity>
       <LocationModal
         visible={isLocationModalVisible}
@@ -489,7 +491,7 @@ const BCoinScreen = () => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
             <View style={styles.modalHeaderContainer}>
-              <Text style={styles.modalHeaderText}>Redeem B-Coin</Text>
+              <Text style={styles.modalHeaderText}>Redeem UD-coin</Text>
               <TouchableOpacity onPress={() => setShowRedeemModal(false)}>
                 <Image
                   style={styles.closeIcon}
@@ -503,7 +505,7 @@ const BCoinScreen = () => {
               </Text>
               <TextInput
                 style={styles.redeemInput}
-                placeholder="Enter requested B-Coin"
+                placeholder="Enter requested UD-coin"
                 placeholderTextColor="#AAAAAA"
                 keyboardType="numeric"
                 value={requestedCoins}
@@ -575,7 +577,7 @@ const BCoinScreen = () => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
             <View style={styles.modalHeaderContainer}>
-              <Text style={styles.modalHeaderText}>B-Coin rate history</Text>
+              <Text style={styles.modalHeaderText}>UD-coin rate history</Text>
               <TouchableOpacity onPress={() => setShowModal(false)}>
                 <Image
                   style={styles.closeIcon}

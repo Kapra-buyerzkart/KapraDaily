@@ -5,7 +5,7 @@ import { get, post, patch, deleteRequest } from './networkUtils';
  * @returns {Promise<Object>} The dashboard data.
  */
 export const getDashboardDataApi = async () => {
-    return get('me/dashboard');
+  return get('me/dashboard');
 };
 
 /**
@@ -13,24 +13,24 @@ export const getDashboardDataApi = async () => {
  * @returns {Promise<Object>} The wallet and history data.
  */
 export const getWalletDataApi = async () => {
-    return get('me/bwallet');
+  return get('me/bwallet');
 };
 
 /**
- * Redeems B-Coins using the specified amount and method.
+ * Redeems UD-coins using the specified amount and method.
  * @param {Object} payload The redemption details (requestedCoins, preferredMethod).
  * @returns {Promise<Object>} The API response.
  */
-export const redeemBCoinsApi = async (payload) => {
-    return post('me/bcoin/redeem', payload);
+export const redeemBCoinsApi = async payload => {
+  return post('me/bcoin/redeem', payload);
 };
 /**
  * Updates the user's profile details.
  * @param {Object} payload The updated profile details (name, email, etc.).
  * @returns {Promise<Object>} The API response.
  */
-export const updateProfileApi = async (payload) => {
-    return post('me/update', payload);
+export const updateProfileApi = async payload => {
+  return post('me/update', payload);
 };
 
 /**
@@ -38,8 +38,8 @@ export const updateProfileApi = async (payload) => {
  * @param {Object} payload The updated profile details (fullName, dob, gender).
  * @returns {Promise<Object>} The API response.
  */
-export const updateProfilePatchApi = async (payload) => {
-    return patch('me', payload);
+export const updateProfilePatchApi = async payload => {
+  return patch('me', payload);
 };
 
 /**
@@ -47,8 +47,8 @@ export const updateProfilePatchApi = async (payload) => {
  * @param {Object} payload The old and new passwords (oldPassword, newPassword, confirmPassword).
  * @returns {Promise<Object>} The API response.
  */
-export const changePasswordApi = async (payload) => {
-    return post('me/changepassword', payload);
+export const changePasswordApi = async payload => {
+  return post('me/changepassword', payload);
 };
 
 /**
@@ -56,8 +56,8 @@ export const changePasswordApi = async (payload) => {
  * @param {Object} payload { newEmail }
  * @returns {Promise<Object>}
  */
-export const requestEmailOtpApi = async (payload) => {
-    return post('me/updateemail/requestotp', payload);
+export const requestEmailOtpApi = async payload => {
+  return post('me/updateemail/requestotp', payload);
 };
 
 /**
@@ -65,8 +65,8 @@ export const requestEmailOtpApi = async (payload) => {
  * @param {Object} payload { newEmail, otp }
  * @returns {Promise<Object>}
  */
-export const verifyEmailOtpApi = async (payload) => {
-    return post('me/updateemail/verifyotp', payload);
+export const verifyEmailOtpApi = async payload => {
+  return post('me/updateemail/verifyotp', payload);
 };
 
 /**
@@ -74,8 +74,8 @@ export const verifyEmailOtpApi = async (payload) => {
  * @param {Object} payload { newPhone }
  * @returns {Promise<Object>}
  */
-export const requestPhoneOtpApi = async (payload) => {
-    return post('me/updatephone/requestotp', payload);
+export const requestPhoneOtpApi = async payload => {
+  return post('me/updatephone/requestotp', payload);
 };
 
 /**
@@ -83,8 +83,8 @@ export const requestPhoneOtpApi = async (payload) => {
  * @param {Object} payload { newPhone, otp }
  * @returns {Promise<Object>}
  */
-export const verifyPhoneOtpApi = async (payload) => {
-    return post('me/updatephone/verifyotp', payload);
+export const verifyPhoneOtpApi = async payload => {
+  return post('me/updatephone/verifyotp', payload);
 };
 
 /**
@@ -94,7 +94,7 @@ export const verifyPhoneOtpApi = async (payload) => {
  * @returns {Promise<Object>} The API response.
  */
 export const getReferralHistoryApi = async (page = 1, pageSize = 20) => {
-    return get(`me/referrals`, { params: { page, pageSize } });
+  return get(`me/referrals`, { params: { page, pageSize } });
 };
 
 /**
@@ -102,23 +102,23 @@ export const getReferralHistoryApi = async (page = 1, pageSize = 20) => {
  * @returns {Promise<Object>} The API response.
  */
 export const getGeneralSettingsApi = async () => {
-    return get('general/settings');
+  return get('general/settings');
 };
 /**
  * Requests a product that is not currently available.
  * @param {Object} payload { requestdetails }
  * @returns {Promise<Object>}
  */
-export const requestProductApi = async (payload) => {
-    return post('me/requestproduct', payload);
+export const requestProductApi = async payload => {
+  return post('me/requestproduct', payload);
 };
 
 /**
- * Fetches the history of B-Coin value changes.
+ * Fetches the history of UD-coin value changes.
  * @returns {Promise<Object>} The API response.
  */
 export const getBCoinValueChangesApi = async () => {
-    return get('general/bcoinvaluechanges');
+  return get('general/bcoinvaluechanges');
 };
 
 /**
@@ -128,8 +128,14 @@ export const getBCoinValueChangesApi = async () => {
  * @param {string} apptype The app type (customer).
  * @returns {Promise<Object>} The API response.
  */
-export const getAppUpdateCheckApi = async (versioncode, platform, apptype = 'customer') => {
-    return get('general/appupdatecheck', { params: { versioncode, platform, apptype } });
+export const getAppUpdateCheckApi = async (
+  versioncode,
+  platform,
+  apptype = 'customer',
+) => {
+  return get('general/appupdatecheck', {
+    params: { versioncode, platform, apptype },
+  });
 };
 
 /**
@@ -137,7 +143,7 @@ export const getAppUpdateCheckApi = async (versioncode, platform, apptype = 'cus
  * @returns {Promise<Object>} The API response.
  */
 export const deleteAccountApi = async () => {
-    return deleteRequest('me');
+  return deleteRequest('me');
 };
 
 /**
@@ -145,7 +151,7 @@ export const deleteAccountApi = async () => {
  * @returns {Promise<Object>} The API response.
  */
 export const getCoPartnerAreasApi = async () => {
-    return get('me/copartner/areas');
+  return get('me/copartner/areas');
 };
 
 /**
@@ -153,8 +159,8 @@ export const getCoPartnerAreasApi = async () => {
  * @param {string|number} pincodeAreaId The ID of the area.
  * @returns {Promise<Object>} The API response.
  */
-export const getCoPartnerListApi = async (pincodeAreaId) => {
-    return get('me/copartner/list', { params: { pincodeAreaId } });
+export const getCoPartnerListApi = async pincodeAreaId => {
+  return get('me/copartner/list', { params: { pincodeAreaId } });
 };
 
 /**
@@ -162,8 +168,8 @@ export const getCoPartnerListApi = async (pincodeAreaId) => {
  * @param {string|number} pincodeAreaId The ID of the area.
  * @returns {Promise<Object>} The API response.
  */
-export const getCoPartnerSummaryApi = async (pincodeAreaId) => {
-    return get('me/copartner/summary', { params: { pincodeAreaId } });
+export const getCoPartnerSummaryApi = async pincodeAreaId => {
+  return get('me/copartner/summary', { params: { pincodeAreaId } });
 };
 
 /**
@@ -171,8 +177,8 @@ export const getCoPartnerSummaryApi = async (pincodeAreaId) => {
  * @param {Object} params { pincodeAreaId, fromDate, toDate }
  * @returns {Promise<Object>} The API response.
  */
-export const getCoPartnerCustomersApi = async (params) => {
-    return get('me/copartner/customers', { params });
+export const getCoPartnerCustomersApi = async params => {
+  return get('me/copartner/customers', { params });
 };
 
 /**
@@ -180,8 +186,8 @@ export const getCoPartnerCustomersApi = async (params) => {
  * @param {Object} params { pincodeAreaId, fromDate, toDate }
  * @returns {Promise<Object>} The API response.
  */
-export const getCoPartnerOrdersApi = async (params) => {
-    return get('me/copartner/orders', { params });
+export const getCoPartnerOrdersApi = async params => {
+  return get('me/copartner/orders', { params });
 };
 
 /**
@@ -189,6 +195,6 @@ export const getCoPartnerOrdersApi = async (params) => {
  * @param {Object} params { pincodeAreaId, fromDate, toDate }
  * @returns {Promise<Object>} The API response.
  */
-export const getCoPartnerPayoutsApi = async (params) => {
-    return get('me/copartner/payouts', { params });
+export const getCoPartnerPayoutsApi = async params => {
+  return get('me/copartner/payouts', { params });
 };

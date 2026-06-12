@@ -1,268 +1,367 @@
-import { View, Text, StyleSheet, ImageBackground, Image, TextInput, TouchableOpacity, KeyboardAvoidingView, ScrollView, Alert, ActivityIndicator } from 'react-native'
-import React, { useState, useContext } from 'react'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
-import { FONTS } from '../styles/typography'
-import { useNavigation, useRoute } from '@react-navigation/native'
-import { useCart } from '../context/CartContext'
-import { checkPhone, sendForgotPwdOtp, sendLoginOtp } from '../api'
-import { setTokens } from '../api/tokenService'
-import LoaderComponent from '../components/LoaderComponent'
-import { LoaderContext } from '../context/loaderContext'
-import { validatePhoneNumbers } from '../utils/validation'
+import {
+  View,
+  Text,
+  StyleSheet,
+  ImageBackground,
+  TextInput,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  ScrollView,
+  Alert,
+  ActivityIndicator,
+  StatusBar,
+  Platform,
+  Animated,
+  Easing,
+} from 'react-native';
+import React, { useState, useContext, useRef, useEffect } from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from 'react-native-responsive-screen';
+import { FONTS } from '../styles/typography';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { useCart } from '../context/CartContext';
+import { checkPhone, sendForgotPwdOtp, sendLoginOtp } from '../api';
+import { setTokens } from '../api/tokenService';
+import LoaderComponent from '../components/LoaderComponent';
+import { LoaderContext } from '../context/loaderContext';
+import { validatePhoneNumbers } from '../utils/validation';
 
 const LoginScreen = () => {
-    const navigation = useNavigation()
-    const route = useRoute()
-    const { showStatus } = useCart()
-    const [phone, setPhone] = useState('');
-    const [password, setPassword] = useState('');
-    const [showPassword, setShowPassword] = useState(true);
-    const [loading, setLoading] = useState(false);
-    const { type } = route.params || {}
-    const { showLoader } = useContext(LoaderContext);
+  const navigation = useNavigation();
+  const route = useRoute();
+  const { showStatus } = useCart();
+  const [phone, setPhone] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const { type } = route.params || {};
+  const { showLoader } = useContext(LoaderContext);
 
-    const phoneNumber = '8137956574';
+  const logoOpacity = useRef(new Animated.Value(0)).current;
+  const logoTranslate = useRef(new Animated.Value(-24)).current;
+  const tagLineOpacity = useRef(new Animated.Value(0)).current;
+  const tagLineTranslate = useRef(new Animated.Value(24)).current;
+  const bottomOpacity = useRef(new Animated.Value(0)).current;
+  const bottomTranslate = useRef(new Animated.Value(20)).current;
 
-    // const handleContinue = async () => {
-    //     console.log(phone);
-    //     console.log('type', type);
+  useEffect(() => {
+    Animated.stagger(180, [
+      Animated.parallel([
+        Animated.timing(logoOpacity, {
+          toValue: 1,
+          duration: 600,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.timing(logoTranslate, {
+          toValue: 0,
+          duration: 600,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+      ]),
+      Animated.parallel([
+        Animated.timing(tagLineOpacity, {
+          toValue: 1,
+          duration: 600,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.timing(tagLineTranslate, {
+          toValue: 0,
+          duration: 600,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+      ]),
+      Animated.parallel([
+        Animated.timing(bottomOpacity, {
+          toValue: 1,
+          duration: 500,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.timing(bottomTranslate, {
+          toValue: 0,
+          duration: 500,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+      ]),
+    ]).start();
+  }, []);
 
-    //     if (phone.length !== 10) {
-    //         Alert.alert('Error', 'Please enter a valid mobile number');
-    //         return;
-    //     }
+  const phoneNumber = '8137956574';
 
-    //     try {
-    //         setLoading(true);
-    //         let response
-    //         if (type === 'login') {
-    //             response = await sendLoginOtp(phone);
-    //         }
-    //         if (type === 'reset') {
-    //             response = await sendForgotPwdOtp(phone);
-    //         }
-    //         console.log('response', response)
-    //         console.log('OTP Response:', response);
+  // const handleContinue = async () => {
+  //     console.log(phone);
+  //     console.log('type', type);
 
-    //         if (response?.success && response?.data) {
-    //             navigation.navigate('OtpScreen', {
-    //                 phone
-    //             });
-    //         } else {
-    //             Alert.alert('Error', response?.message || 'Failed to send OTP');
-    //         }
-    //     } catch (error) {
-    //         console.log('OTP Error:', error);
-    //         Alert.alert('Error', error?.Message || error?.message || 'Failed to send OTP');
-    //     } finally {
-    //         setLoading(false);
-    //     }
-    // };
+  //     if (phone.length !== 10) {
+  //         Alert.alert('Error', 'Please enter a valid mobile number');
+  //         return;
+  //     }
 
-    // const handleContinueLogin = async () => {
-    //     // console.log('Login')
-    //     // console.log(phone);
-    //     // console.log('type', type);
+  //     try {
+  //         setLoading(true);
+  //         let response
+  //         if (type === 'login') {
+  //             response = await sendLoginOtp(phone);
+  //         }
+  //         if (type === 'reset') {
+  //             response = await sendForgotPwdOtp(phone);
+  //         }
+  //         console.log('response', response)
+  //         console.log('OTP Response:', response);
 
-    //     if (!validatePhoneNumbers(phone)) {
-    //         showStatus({
-    //             type: 'error',
-    //             title: 'Error',
-    //             message: 'Please enter a valid mobile number'
-    //         });
-    //         return;
-    //     }
+  //         if (response?.success && response?.data) {
+  //             navigation.navigate('OtpScreen', {
+  //                 phone
+  //             });
+  //         } else {
+  //             Alert.alert('Error', response?.message || 'Failed to send OTP');
+  //         }
+  //     } catch (error) {
+  //         console.log('OTP Error:', error);
+  //         Alert.alert('Error', error?.Message || error?.message || 'Failed to send OTP');
+  //     } finally {
+  //         setLoading(false);
+  //     }
+  // };
 
-    //     try {
-    //         setLoading(true);
-    //         showLoader(true);
-    //         const response = await sendLoginOtp(phone);
-    //         console.log('handleContinueLoginresponse', response)
-    //         // console.log('OTP Response:', response);
+  // const handleContinueLogin = async () => {
+  //     // console.log('Login')
+  //     // console.log(phone);
+  //     // console.log('type', type);
 
-    //         if (response?.success && response?.data) {
-    //             navigation.navigate('OtpScreen', {
-    //                 phone,
-    //                 type: 'login'
-    //             });
-    //         }
-    //         else if (response?.status === 'NOT_REGISTERED') {
-    //             navigation.navigate('RegistraionScreen', {
-    //                 phone
-    //             });
-    //         }
-    //         else {
-    //             showStatus({
-    //                 type: 'error',
-    //                 title: 'Error',
-    //                 message: response?.message || 'Failed to send OTP'
-    //             });
-    //         }
-    //     } catch (error) {
-    //         console.log('OTP Error:', error);
-    //         showStatus({
-    //             type: 'error',
-    //             title: 'Error',
-    //             message: error?.Message || error?.message || 'Failed to send OTP'
-    //         });
-    //     } finally {
-    //         setLoading(false);
-    //         showLoader(false);
-    //     }
-    // };
+  //     if (!validatePhoneNumbers(phone)) {
+  //         showStatus({
+  //             type: 'error',
+  //             title: 'Error',
+  //             message: 'Please enter a valid mobile number'
+  //         });
+  //         return;
+  //     }
 
-    const handleContinueLogin = async () => {
-        // console.log('Login')
-        // console.log(phone);
-        // console.log('type', type);
+  //     try {
+  //         setLoading(true);
+  //         showLoader(true);
+  //         const response = await sendLoginOtp(phone);
+  //         console.log('handleContinueLoginresponse', response)
+  //         // console.log('OTP Response:', response);
 
-        if (!validatePhoneNumbers(phone)) {
-            showStatus({
-                type: 'error',
-                title: 'Error',
-                message: 'Please enter a valid mobile number'
-            });
-            return;
-        }
+  //         if (response?.success && response?.data) {
+  //             navigation.navigate('OtpScreen', {
+  //                 phone,
+  //                 type: 'login'
+  //             });
+  //         }
+  //         else if (response?.status === 'NOT_REGISTERED') {
+  //             navigation.navigate('RegistraionScreen', {
+  //                 phone
+  //             });
+  //         }
+  //         else {
+  //             showStatus({
+  //                 type: 'error',
+  //                 title: 'Error',
+  //                 message: response?.message || 'Failed to send OTP'
+  //             });
+  //         }
+  //     } catch (error) {
+  //         console.log('OTP Error:', error);
+  //         showStatus({
+  //             type: 'error',
+  //             title: 'Error',
+  //             message: error?.Message || error?.message || 'Failed to send OTP'
+  //         });
+  //     } finally {
+  //         setLoading(false);
+  //         showLoader(false);
+  //     }
+  // };
 
-        try {
-            setLoading(true);
-            showLoader(true);
-            // const response = await sendLoginOtp(phone);
-            // console.log('phonephone', phone)
-            const response = await checkPhone(phone);
-            // console.log('handleContinueLoginresponse', response)
-            // console.log('OTP Response:', response);
+  const handleContinueLogin = async () => {
+    // console.log('Login')
+    // console.log(phone);
+    // console.log('type', type);
 
-            if (response?.data?.exists === true) {
-                navigation.navigate('OtpScreen', {
-                    phone,
-                    type: 'login'
-                });
-            }
-            else if (response?.data?.exists === false) {
-                navigation.navigate('OtpScreen', {
-                    phone,
-                    type: 'register'
-                });
-            }
-            else {
-                showStatus({
-                    type: 'error',
-                    title: 'Error',
-                    message: response?.message || 'Failed to send OTP'
-                });
-            }
-        } catch (error) {
-            console.log('OTP Error:', error);
-            showStatus({
-                type: 'error',
-                title: 'Error',
-                message: error?.Message || error?.message || 'Failed to send OTP'
-            });
-        } finally {
-            setLoading(false);
-            showLoader(false);
-        }
-    };
+    if (!validatePhoneNumbers(phone)) {
+      showStatus({
+        type: 'error',
+        title: 'Error',
+        message: 'Please enter a valid mobile number',
+      });
+      return;
+    }
 
-    const handleContinueRest = async () => {
-        // console.log(phone);
-        // console.log('handleContinueResthandleContinueResttype', type);
+    try {
+      setLoading(true);
+      showLoader(true);
+      // const response = await sendLoginOtp(phone);
+      // console.log('phonephone', phone)
+      const response = await checkPhone(phone);
+      console.log('handleContinueLoginresponse', response);
+      console.log('OTP Response:', response);
 
-        if (!validatePhoneNumbers(phone)) {
-            showStatus({
-                type: 'error',
-                title: 'Error',
-                message: 'Please enter a valid mobile number'
-            });
-            return;
-        }
+      if (response?.data?.exists === true) {
+        navigation.navigate('OtpScreen', {
+          phone,
+          type: 'login',
+        });
+      } else if (response?.data?.exists === false) {
+        navigation.navigate('OtpScreen', {
+          phone,
+          type: 'register',
+        });
+      } else {
+        showStatus({
+          type: 'error',
+          title: 'Error',
+          message: response?.message || 'Failed to send OTP',
+        });
+      }
+    } catch (error) {
+      console.log('OTP Error:', error);
+      showStatus({
+        type: 'error',
+        title: 'Error',
+        message: error?.Message || error?.message || 'Failed to send OTP',
+      });
+    } finally {
+      setLoading(false);
+      showLoader(false);
+    }
+  };
 
-        try {
-            setLoading(true);
-            showLoader(true);
-            let response
-            if (type === 'login') {
-                response = await sendForgotPwdOtp(phone);
-            }
-            if (type === 'reset') {
-                response = await sendForgotPwdOtp(phone);
-            }
-            // console.log('handleContinueRestresponse', response)
-            // console.log('OTP Response:', response);
+  const handleContinueRest = async () => {
+    // console.log(phone);
+    // console.log('handleContinueResthandleContinueResttype', type);
 
-            if (response?.success && response?.data) {
-                navigation.navigate('OtpScreen', {
-                    phone,
-                    type: 'reset'
-                });
-            } else {
-                showStatus({
-                    type: 'error',
-                    title: 'Error',
-                    message: response?.message || 'Failed to send OTP'
-                });
-            }
-        } catch (error) {
-            console.log('OTP Error:', error);
-            showStatus({
-                type: 'error',
-                title: 'Error',
-                message: error?.Message || error?.message || 'Failed to send OTP'
-            });
-        } finally {
-            setLoading(false);
-            showLoader(false);
-        }
-    };
+    if (!validatePhoneNumbers(phone)) {
+      showStatus({
+        type: 'error',
+        title: 'Error',
+        message: 'Please enter a valid mobile number',
+      });
+      return;
+    }
 
-    return (
-        <SafeAreaView style={styles.mainContainer}>
-            {/* {console.log('typeLOgondcc', type)} */}
-            <KeyboardAvoidingView
-                style={{ flex: 1 }}
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            // keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+    try {
+      setLoading(true);
+      showLoader(true);
+      let response;
+      if (type === 'login') {
+        response = await sendForgotPwdOtp(phone);
+      }
+      if (type === 'reset') {
+        response = await sendForgotPwdOtp(phone);
+      }
+      // console.log('handleContinueRestresponse', response)
+      // console.log('OTP Response:', response);
+
+      if (response?.success && response?.data) {
+        navigation.navigate('OtpScreen', {
+          phone,
+          type: 'reset',
+        });
+      } else {
+        showStatus({
+          type: 'error',
+          title: 'Error',
+          message: response?.message || 'Failed to send OTP',
+        });
+      }
+    } catch (error) {
+      console.log('OTP Error:', error);
+      showStatus({
+        type: 'error',
+        title: 'Error',
+        message: error?.Message || error?.message || 'Failed to send OTP',
+      });
+    } finally {
+      setLoading(false);
+      showLoader(false);
+    }
+  };
+
+  return (
+    <View style={styles.mainContainer}>
+      <StatusBar translucent barStyle={'light-content'} />
+      {/* {console.log('typeLOgondcc', type)} */}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        // keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+      >
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1 }}
+          keyboardShouldPersistTaps="handled"
+        >
+          <ImageBackground
+            style={styles.backgroundImage}
+            source={require('../assets/images/login_background_image.jpg')}
+          >
+            <Animated.Image
+              style={[
+                styles.kapraLogo,
+                {
+                  opacity: logoOpacity,
+                  transform: [{ translateY: logoTranslate }],
+                },
+              ]}
+              source={require('../assets/images/kapra_logo.png')}
+            />
+            <Animated.Image
+              style={[
+                styles.tagLine,
+                {
+                  opacity: tagLineOpacity,
+                  transform: [{ translateY: tagLineTranslate }],
+                },
+              ]}
+              source={require('../assets/images/login_content.png')}
+            />
+          </ImageBackground>
+          <Animated.View
+            style={[
+              styles.bottomContainer,
+              { transform: [{ translateY: bottomTranslate }] },
+            ]}
+          >
+            <Text style={styles.headerText}>
+              {type === 'reset' ? 'Forgot Password' : 'Login or Sign up'}
+            </Text>
+            <Text style={styles.enterNumberText}>Enter your mobile number</Text>
+
+            <View style={styles.inputWrapper}>
+              <Text style={styles.countryCode}>+91</Text>
+
+              <View style={styles.divider} />
+
+              <TextInput
+                placeholder="9999999999"
+                placeholderTextColor="#c1c1c1"
+                keyboardType="number-pad"
+                style={styles.input}
+                onChangeText={setPhone}
+              />
+            </View>
+            <TouchableOpacity
+              onPress={
+                type === 'login' || type === 'register'
+                  ? handleContinueLogin
+                  : handleContinueRest
+              }
+              style={styles.continueButton}
             >
-                <ScrollView
-                    contentContainerStyle={{ flexGrow: 1 }}
-                    keyboardShouldPersistTaps="handled"
-                >
-                    <ImageBackground style={styles.backgroundImage} source={require('../assets/images/login_background_image.jpg')}>
-                        <Image style={styles.kapraLogo} source={require('../assets/images/kapra_logo.png')} />
-                        <Image style={styles.tagLine} source={require('../assets/images/login_content.png')} />
-                    </ImageBackground>
-                    <View style={styles.bottomContainer}>
-                        <Text style={styles.headerText}>{type === 'reset' ? 'Forgot Password' : 'Login or Sign up'}</Text>
-                        <Text style={styles.enterNumberText}>Enter your mobile number</Text>
-
-                        <View style={styles.inputWrapper}>
-                            <Text style={styles.countryCode}>+91</Text>
-
-                            <View style={styles.divider} />
-
-                            <TextInput
-                                placeholder="9999999999"
-                                placeholderTextColor="#c1c1c1"
-                                keyboardType="number-pad"
-                                style={styles.input}
-                                onChangeText={setPhone}
-                            />
-                        </View>
-                        <TouchableOpacity
-                            onPress={
-                                type === 'login' || type === 'register'
-                                    ? handleContinueLogin
-                                    : handleContinueRest
-                            }
-                            style={styles.continueButton}
-                        >
-                            <Text style={styles.continueButtonText}>Continue</Text>
-                        </TouchableOpacity>
-                    </View>
-                    {/* <View style={styles.bottomContainer}>
+              <Text style={styles.continueButtonText}>Continue</Text>
+            </TouchableOpacity>
+          </Animated.View>
+          {/* <View style={styles.bottomContainer}>
                         <Text style={styles.headerText}>Login or Sign up</Text>
                         <Text style={styles.enterNumberText}>Enter your password</Text>
 
@@ -288,110 +387,110 @@ const LoginScreen = () => {
                             <Text style={styles.continueButtonText}>Continue</Text>
                         </TouchableOpacity>
                     </View> */}
-                </ScrollView>
-            </KeyboardAvoidingView>
-        </SafeAreaView>
-    )
-}
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </View>
+  );
+};
 
-export default LoginScreen
+export default LoginScreen;
 
 const styles = StyleSheet.create({
-    mainContainer: {
-        flex: 1,
-        backgroundColor: '#FFFFFF'
-    },
-    inputWrapper: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        height: hp('5.36%'),
-        borderRadius: wp('2.33%'),
-        borderWidth: 1,
-        borderColor: '#E5E5E5',
-        paddingHorizontal: wp('4.18%'),
-        backgroundColor: '#fff',
-    },
-    countryCode: {
-        fontSize: wp('4.19%'),
-        color: '#000000',
-        marginRight: 12,
-    },
-    divider: {
-        width: 1,
-        height: hp('4%'),
-        backgroundColor: '#E5E5E5',
-        marginRight: wp('4%')
-    },
-    input: {
-        flex: 1,
-        color: '#000',
-        fontSize: wp('4.19%'),
-    },
-    backgroundImage: {
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingTop: hp('6%'),
-        paddingBottom: hp('7.5%')
-    },
-    kapraLogo: {
-        width: wp('47%'),
-        height: hp('10%'),
-        resizeMode: 'cover'
-    },
-    tagLine: {
-        width: wp('50.7%'),
-        height: hp('16.95%'),
-        resizeMode: 'cover',
-    },
-    bottomContainer: {
-        height: hp('30.33%'),
-        paddingHorizontal: wp('5.8%'),
-        paddingTop: hp('3%'),
-        borderTopLeftRadius: wp('9.3%'),
-        borderTopRightRadius: wp('9.3%'),
-        backgroundColor: '#FFFFFF',
-        bottom: hp('4%')
-    },
-    headerText: {
-        fontFamily: FONTS.poppins.semiBold,
-        fontSize: wp('4.65%'),
-        color: '#000000',
-        alignSelf: 'center',
-        marginBottom: hp('3%')
-    },
-    enterNumberText: {
-        fontFamily: FONTS.poppins.regular,
-        fontSize: wp('3.72%'),
-        color: '#616161',
-    },
-    continueButton: {
-        backgroundColor: '#F25000',
-        width: '100%',
-        height: hp('6.11%'),
-        justifyContent: "center",
-        alignItems: 'center',
-        borderRadius: wp('2.33%'),
-        marginTop: hp('5%')
-    },
-    continueButtonText: {
-        fontFamily: FONTS.poppins.bold,
-        fontSize: wp('4.18%'),
-        color: '#FFFFFF'
-    },
-    inputContainer: {
-        marginTop: hp('1.5%')
-    },
-    eyeIcon: {
-        width: wp('4.19%'),
-        height: hp('1.29%'),
-        resizeMode: 'contain'
-    },
-    forgotPwdText: {
-        alignSelf: "flex-end",
-        marginTop: hp('0.5%'),
-        color: '#F25000',
-        fontFamily: FONTS.poppins.medium,
-        fontSize: wp('3.25%')
-    }
-})
+  mainContainer: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: hp('5.36%'),
+    borderRadius: wp('2.33%'),
+    borderWidth: 1,
+    borderColor: '#E5E5E5',
+    paddingHorizontal: wp('4.18%'),
+    backgroundColor: '#fff',
+  },
+  countryCode: {
+    fontSize: wp('4.19%'),
+    color: '#000000',
+    marginRight: 12,
+  },
+  divider: {
+    width: 1,
+    height: hp('4%'),
+    backgroundColor: '#E5E5E5',
+    marginRight: wp('4%'),
+  },
+  input: {
+    flex: 1,
+    color: '#000',
+    fontSize: wp('4.19%'),
+  },
+  backgroundImage: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: hp('6%'),
+    paddingBottom: hp('7.5%'),
+  },
+  kapraLogo: {
+    width: wp('47%'),
+    height: hp('10%'),
+    resizeMode: 'cover',
+  },
+  tagLine: {
+    width: wp('50.7%'),
+    height: hp('16.95%'),
+    resizeMode: 'cover',
+  },
+  bottomContainer: {
+    height: hp('30.33%'),
+    paddingHorizontal: wp('5.8%'),
+    paddingTop: hp('3%'),
+    borderTopLeftRadius: wp('9.3%'),
+    borderTopRightRadius: wp('9.3%'),
+    backgroundColor: '#FFFFFF',
+    bottom: hp('4%'),
+  },
+  headerText: {
+    fontFamily: FONTS.poppins.semiBold,
+    fontSize: wp('4.65%'),
+    color: '#000000',
+    alignSelf: 'center',
+    marginBottom: hp('3%'),
+  },
+  enterNumberText: {
+    fontFamily: FONTS.poppins.regular,
+    fontSize: wp('3.72%'),
+    color: '#616161',
+  },
+  continueButton: {
+    backgroundColor: '#F25000',
+    width: '100%',
+    height: hp('6.11%'),
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: wp('2.33%'),
+    marginTop: hp('5%'),
+  },
+  continueButtonText: {
+    fontFamily: FONTS.poppins.bold,
+    fontSize: wp('4.18%'),
+    color: '#FFFFFF',
+  },
+  inputContainer: {
+    marginTop: hp('1.5%'),
+  },
+  eyeIcon: {
+    width: wp('4.19%'),
+    height: hp('1.29%'),
+    resizeMode: 'contain',
+  },
+  forgotPwdText: {
+    alignSelf: 'flex-end',
+    marginTop: hp('0.5%'),
+    color: '#F25000',
+    fontFamily: FONTS.poppins.medium,
+    fontSize: wp('3.25%'),
+  },
+});

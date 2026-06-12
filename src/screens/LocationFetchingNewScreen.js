@@ -113,6 +113,15 @@ const LocationFetchingNewScreen = ({ navigation }) => {
 
   const userInteractedRef = useRef(false);
   const timeoutRef = useRef(null);
+
+  const navigateAfterLocation = () => {
+    if (profile?.id) {
+      navigation.reset({ index: 0, routes: [{ name: 'AuthSuccessScreen' }] });
+    } else {
+      navigation.reset({ index: 0, routes: [{ name: 'LoginScreen', params: { type: 'login' } }] });
+    }
+  };
+
   useEffect(() => {
     const init = async () => {
       const savedOverride = await AsyncStorage.getItem('manualOverride');
@@ -125,14 +134,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
 
         setTimeout(() => {
           setLocationNotFetched(false);
-          navigation.reset({
-            index: 0,
-            routes: [
-              {
-                name: 'AuthSuccessScreen',
-              },
-            ],
-          });
+          navigateAfterLocation();
         }, 1000);
         return;
       }
@@ -299,14 +301,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
       // Navigate only if user has NOT interacted
       setLocationNotFetched(false);
       if (!userInteractedRef.current && showConfirm) {
-        navigation.reset({
-          index: 0,
-          routes: [
-            {
-              name: 'AuthSuccessScreen',
-            },
-          ],
-        });
+        navigateAfterLocation();
       }
     }, 10000); // 10 seconds
   };
@@ -446,10 +441,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
       });
       setTimeout(() => {
         setLocationNotFetched(true);
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'AuthSuccessScreen' }],
-        });
+        navigateAfterLocation();
       }, 2000);
       setLoading(false);
     };
@@ -510,10 +502,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
       });
       setTimeout(() => {
         setLocationNotFetched(true);
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'AuthSuccessScreen' }],
-        });
+        navigateAfterLocation();
       }, 2000);
     }
   };
@@ -609,14 +598,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
           setShowConfirm(false);
           setTimeout(() => {
             setLocationNotFetched(false);
-            navigation.reset({
-              index: 0,
-              routes: [
-                {
-                  name: 'AuthSuccessScreen',
-                },
-              ],
-            });
+            navigateAfterLocation();
           }, 2000);
           return;
         }
@@ -639,14 +621,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
         });
         setTimeout(() => {
           setLocationNotFetched(true);
-          navigation.reset({
-            index: 0,
-            routes: [
-              {
-                name: 'AuthSuccessScreen',
-              },
-            ],
-          });
+          navigateAfterLocation();
         }, 2000);
         return;
       }
@@ -676,14 +651,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
           setTimeout(() => {
             if (!userInteractedRef.current) {
               setLocationNotFetched(false);
-              navigation.reset({
-                index: 0,
-                routes: [
-                  {
-                    name: 'AuthSuccessScreen',
-                  },
-                ],
-              });
+              navigateAfterLocation();
             }
           }, 2000);
         } else {
@@ -700,14 +668,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
         await editPincode(area.data[0]);
         setTimeout(() => {
           setLocationNotFetched(false);
-          navigation.reset({
-            index: 0,
-            routes: [
-              {
-                name: 'AuthSuccessScreen',
-              },
-            ],
-          });
+          navigateAfterLocation();
         }, 2000);
       } else {
         // No areas found for this pincode (user is outside delivery zone)
@@ -725,14 +686,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
         });
         setTimeout(() => {
           setLocationNotFetched(true);
-          navigation.reset({
-            index: 0,
-            routes: [
-              {
-                name: 'AuthSuccessScreen',
-              },
-            ],
-          });
+          navigateAfterLocation();
         }, 2000);
       }
     } catch (error) {
@@ -746,14 +700,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
       });
       setTimeout(() => {
         setLocationNotFetched(true);
-        navigation.reset({
-          index: 0,
-          routes: [
-            {
-              name: 'AuthSuccessScreen',
-            },
-          ],
-        });
+        navigateAfterLocation();
       }, 2000);
     }
   };
@@ -819,14 +766,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
                 await editPincode(areaToPass);
               }
               setLocationNotFetched(false);
-              navigation.reset({
-                index: 0,
-                routes: [
-                  {
-                    name: 'AuthSuccessScreen',
-                  },
-                ],
-              });
+              navigateAfterLocation();
             }}
             FSize={14}
             ButtonText={'Skip'}
@@ -1129,14 +1069,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
 
                       setLocationSelectionModal(false);
                       setLocationNotFetched(false);
-                      navigation.reset({
-                        index: 0,
-                        routes: [
-                          {
-                            name: 'AuthSuccessScreen',
-                          },
-                        ],
-                      });
+                      navigateAfterLocation();
                     }}
                     ButtonText={'Skip'}
                     ButtonWidth={44}
@@ -1152,14 +1085,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
                         setSelectedLocation(null);
                         setLocationSelectionModal(false);
                         setLocationNotFetched(false);
-                        navigation.reset({
-                          index: 0,
-                          routes: [
-                            {
-                              name: 'AuthSuccessScreen',
-                            },
-                          ],
-                        });
+                        navigateAfterLocation();
                       } else {
                         Alert.alert('Alert', 'Please select an area');
                       }
