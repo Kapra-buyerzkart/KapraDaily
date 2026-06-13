@@ -446,12 +446,28 @@ const LocationFetchingNewScreen = ({ navigation }) => {
       setLoading(false);
     };
 
-    // Get fresh high-accuracy location immediately
-    Geolocation.getCurrentPosition(onSuccess, onFinalError, {
-      enableHighAccuracy: true,
-      timeout: 15000,
-      maximumAge: 0,
-    });
+    // 1️⃣ Cached / coarse location first (WiFi/cell — very fast on cold start)
+    Geolocation.getCurrentPosition(
+      onSuccess,
+      error => {
+        console.log(
+          '📍 [LOCATION] Cached/coarse failed, trying high accuracy...',
+          error,
+        );
+        // 2️⃣ Escalate to high accuracy, but still accept a recent fix
+        //    (maximumAge: 0 forces a brand-new fix that times out indoors/cold-start)
+        Geolocation.getCurrentPosition(onSuccess, onFinalError, {
+          enableHighAccuracy: true,
+          timeout: 20000,
+          maximumAge: 60000,
+        });
+      },
+      {
+        enableHighAccuracy: false,
+        timeout: 5000,
+        maximumAge: 600000, // allow cached location up to 10 minutes old
+      },
+    );
   };
 
   const reverseGeocode = async (latitude, longitude) => {

@@ -86,8 +86,8 @@ android {
         applicationId "com.buyerskart.customer"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 25042
-        versionName "4.1.2"
+        versionCode 25043
+        versionName "4.1.4"
         
         ndk {
             abiFilters "arm64-v8a", "armeabi-v7a"

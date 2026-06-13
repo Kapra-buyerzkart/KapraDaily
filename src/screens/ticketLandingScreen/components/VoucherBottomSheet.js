@@ -28,8 +28,13 @@ const REDEEM_BOTTOM_OFFSET = 0;
 const BMS_URL = 'https://in.bookmyshow.com';
 
 const openInChrome = async () => {
-  const chromeAndroid = `intent://${BMS_URL.replace('https://', '')}#Intent;scheme=https;package=com.android.chrome;end`;
-  const chromeIOS = `googlechrome://navigate?url=${encodeURIComponent(BMS_URL)}`;
+  const chromeAndroid = `intent://${BMS_URL.replace(
+    'https://',
+    '',
+  )}#Intent;scheme=https;package=com.android.chrome;end`;
+  const chromeIOS = `googlechrome://navigate?url=${encodeURIComponent(
+    BMS_URL,
+  )}`;
   const chromeUrl = Platform.OS === 'ios' ? chromeIOS : chromeAndroid;
   const canChrome = await Linking.canOpenURL(chromeUrl);
   Linking.openURL(canChrome ? chromeUrl : BMS_URL);
@@ -148,84 +153,94 @@ const VoucherBottomSheet = ({ visible, onClose, voucher }) => {
 
   return (
     <>
-    <Modal
-      transparent
-      visible={modalVisible}
-      animationType="none"
-      onRequestClose={onClose}
-    >
-      <Animated.View
-        style={[styles.backdropOverlay, { opacity: backdropOpacity }]}
-        pointerEvents="none"
-      />
+      <Modal
+        transparent
+        visible={modalVisible}
+        animationType="none"
+        onRequestClose={onClose}
+      >
+        <Animated.View
+          style={[styles.backdropOverlay, { opacity: backdropOpacity }]}
+          pointerEvents="none"
+        />
 
-      <Animated.View style={[styles.sheet, { transform: [{ translateY }] }]}>
-        <View style={styles.handleArea} {...panResponder.panHandlers}>
-          <View style={styles.handle} />
-        </View>
-
-        <ScrollView
-          style={styles.scroll}
-          contentContainerStyle={[
-            styles.scrollContent,
-            { paddingBottom: REDEEM_BOTTOM_OFFSET + safeBottom + hp(8) },
-          ]}
-          showsVerticalScrollIndicator={false}
-          bounces={false}
-        >
-          <View style={styles.brandRow}>
-            <Image
-              source={voucher.brandLogo}
-              style={styles.brandLogo}
-              resizeMode="contain"
-            />
-            <Text style={styles.brandName}>{voucher.brand}</Text>
+        <Animated.View style={[styles.sheet, { transform: [{ translateY }] }]}>
+          <View style={styles.handleArea} {...panResponder.panHandlers}>
+            <View style={styles.handle} />
           </View>
 
-          <Image
-            source={voucher.cardImage}
-            style={styles.cardImage}
-            resizeMode="cover"
-          />
-
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>{voucher.daysLeft} days left</Text>
-          </View>
-
-          <Text style={styles.discountTitle}>{voucher.discountTitle}</Text>
-          <Text style={styles.discountSubtitle}>
-            {voucher.discountSubtitle}
-          </Text>
-
-          <View style={styles.codeRow}>
-            <Text style={styles.codeText} numberOfLines={1}>
-              {voucher.code}
-            </Text>
-            <TouchableOpacity onPress={handleCopy} activeOpacity={0.7}>
-              <MaterialIcons
-                name={copied ? 'check' : 'content-copy'}
-                size={20}
-                color={copied ? '#5B2BE0' : '#888888'}
+          <ScrollView
+            style={styles.scroll}
+            contentContainerStyle={[
+              styles.scrollContent,
+              { paddingBottom: REDEEM_BOTTOM_OFFSET + safeBottom + hp(8) },
+            ]}
+            showsVerticalScrollIndicator={false}
+            bounces={false}
+          >
+            <View style={styles.brandRow}>
+              <TouchableOpacity
+                onPress={onClose}
+                activeOpacity={0.7}
+                style={styles.backBtn}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <MaterialIcons name="arrow-back" size={24} color="#FFFFFF" />
+              </TouchableOpacity>
+              <Image
+                source={voucher.brandLogo}
+                style={styles.brandLogo}
+                resizeMode="contain"
               />
-            </TouchableOpacity>
-          </View>
+              <Text style={styles.brandName}>{voucher.brand}</Text>
+            </View>
 
-          <Accordion title="Details" items={voucher.details ?? []} />
-          <Accordion title="Terms & Conditions" items={voucher.terms ?? []} />
-          <View style={styles.redeemWrapper}>
-            <TouchableOpacity
-              style={styles.redeemBtn}
-              activeOpacity={0.85}
-              onPress={() => { setSuccessVisible(true); openInChrome(); }}
-            >
-              <MaterialIcons name="open-in-new" size={20} color="#FFFFFF" />
-              <Text style={styles.redeemText}>Redeem Now</Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-      </Animated.View>
+            <Image
+              source={voucher.cardImage}
+              style={styles.cardImage}
+              resizeMode="cover"
+            />
 
-      <RedeemSuccessModal
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>{voucher.daysLeft} days left</Text>
+            </View>
+
+            <Text style={styles.discountTitle}>{voucher.discountTitle}</Text>
+            <Text style={styles.discountSubtitle}>
+              {voucher.discountSubtitle}
+            </Text>
+
+            <View style={styles.codeRow}>
+              <Text style={styles.codeText} numberOfLines={1}>
+                {voucher.code}
+              </Text>
+              <TouchableOpacity onPress={handleCopy} activeOpacity={0.7}>
+                <MaterialIcons
+                  name={copied ? 'check' : 'content-copy'}
+                  size={20}
+                  color={copied ? '#5B2BE0' : '#888888'}
+                />
+              </TouchableOpacity>
+            </View>
+
+            <Accordion title="Details" items={voucher.details ?? []} />
+            <Accordion title="Terms & Conditions" items={voucher.terms ?? []} />
+            <View style={styles.redeemWrapper}>
+              <TouchableOpacity
+                style={styles.redeemBtn}
+                activeOpacity={0.85}
+                onPress={() => {
+                  openInChrome();
+                }}
+              >
+                <MaterialIcons name="open-in-new" size={20} color="#FFFFFF" />
+                <Text style={styles.redeemText}>Redeem Now</Text>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+        </Animated.View>
+
+        {/* <RedeemSuccessModal
         visible={successVisible}
         quantity={1}
         coinsUsed={0}
@@ -235,8 +250,8 @@ const VoucherBottomSheet = ({ visible, onClose, voucher }) => {
           setSuccessVisible(false);
           onClose();
         }}
-      />
-    </Modal>
+      /> */}
+      </Modal>
     </>
   );
 };
@@ -283,6 +298,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
     marginBottom: hp(2),
+  },
+  backBtn: {
+    padding: 2,
   },
   brandLogo: {
     width: 36,

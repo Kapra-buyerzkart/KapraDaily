@@ -39,6 +39,7 @@ import { setResetToken } from '../api/tokenService';
 import RNOtpVerify from 'react-native-otp-verify';
 import { AppContext } from '../context/appContext';
 import { OneSignal } from 'react-native-onesignal';
+import FastImage from 'react-native-fast-image';
 
 const ACCESS_TOKEN = 'ACCESS_TOKEN';
 const REFRESH_TOKEN = 'REFRESH_TOKEN';
@@ -416,12 +417,47 @@ const OtpScreen = () => {
 
   return (
     <View style={styles.mainContainer}>
+      {/* Pre-warm the heavy AuthSuccessScreen images while the user types the
+          OTP, so the next screen renders from cache instead of decoding
+          multi-MB PNGs on mount. Hidden + non-interactive. */}
+      <View style={styles.imagePreloader} pointerEvents="none">
+        <FastImage
+          source={require('../assets/images/splash/backgroundbg.png')}
+          style={styles.preloadBg}
+          resizeMode={FastImage.resizeMode.cover}
+        />
+        <FastImage
+          source={require('../assets/images/splash/header.png')}
+          style={styles.preloadLogo}
+          resizeMode={FastImage.resizeMode.contain}
+        />
+        <FastImage
+          source={require('../assets/images/splash/udendeal.png')}
+          style={styles.preloadLarge}
+          resizeMode={FastImage.resizeMode.contain}
+        />
+        <FastImage
+          source={require('../assets/images/splash/48hrs.png')}
+          style={styles.preloadLarge}
+          resizeMode={FastImage.resizeMode.contain}
+        />
+        <FastImage
+          source={require('../assets/images/splash/ticket.png')}
+          style={styles.preloadSmall}
+          resizeMode={FastImage.resizeMode.contain}
+        />
+        <FastImage
+          source={require('../assets/images/splash/d2c.png')}
+          style={styles.preloadSmall}
+          resizeMode={FastImage.resizeMode.contain}
+        />
+      </View>
       {/* {console.log('type', type)} */}
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <ScrollView
+        <View
           contentContainerStyle={{ flexGrow: 1 }}
           keyboardShouldPersistTaps="handled"
         >
@@ -542,7 +578,7 @@ const OtpScreen = () => {
               )}
             </TouchableOpacity>
           </View>
-        </ScrollView>
+        </View>
       </KeyboardAvoidingView>
     </View>
   );
@@ -552,6 +588,17 @@ export default OtpScreen;
 
 const styles = StyleSheet.create({
   mainContainer: { flex: 1, backgroundColor: '#FFFFFF' },
+  imagePreloader: {
+    position: 'absolute',
+    width: wp('100%'),
+    height: hp('100%'),
+    opacity: 0,
+    zIndex: -1,
+  },
+  preloadBg: { width: wp('100%'), height: hp('100%') },
+  preloadLogo: { width: wp('70%'), height: hp('20%') },
+  preloadLarge: { width: wp('90%'), height: hp('22%') },
+  preloadSmall: { width: wp('44.5%'), height: hp('22%') },
   backgroundImage: {
     width: wp('100%'),
     height: hp('60%'),
