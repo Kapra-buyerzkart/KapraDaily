@@ -179,124 +179,124 @@ const PlacementBannerCarousel = ({
   );
 };
 
-const ExploreCard = React.memo(({ item }) => {
-  const navigation = useNavigation();
-  const { addToCart, cartItems, updateCartItemQuantity, removeFromCart } =
-    useCart();
-  const [imageError, setImageError] = useState(false);
-  const itemId = item.productId || item.id;
-  const cartItem = cartItems.find(
-    i => String(i.productId || i.id) === String(itemId),
-  );
-  const quantity = cartItem?.quantity || cartItem?.addedQty || 0;
-  const cartItemId = cartItem?.cartItemId || itemId;
-  const name = item.prName || item.name || '';
-  const price = item.specialPrice || item.price || '';
-  const mrp = item.unitPrice || item.mrp || '';
-  let offer = item.discountPercentage
-    ? Math.round(item.discountPercentage)
-    : item.offer || 0;
-  if (!offer && mrp && price && mrp > price)
-    offer = Math.round(((mrp - price) / mrp) * 100);
-  const getImg = img => {
-    if (!img || imageError)
-      return require('../assets/images/categories/dfn.png');
-    if (typeof img === 'string') {
-      if (img.startsWith('http')) return { uri: img };
-      return { uri: `${CONFIG.image_base_url}${img}` };
-    }
-    return img;
-  };
-  const imageSource = getImg(item.featuredImage || item.img || item.imageUrl);
-  return (
-    <TouchableOpacity
-      style={styles.exploreCard}
-      onPress={() =>
-        navigation.navigate('ProductDetailsScreen', {
-          productId: itemId,
-          product: item,
-        })
-      }
-      activeOpacity={0.85}
-    >
-      <View style={styles.exploreImageContainer}>
-        {offer > 0 && (
-          <View style={styles.exploreOfferBadge}>
-            <Text style={styles.exploreOfferBadgeText}>{offer}% OFF</Text>
-          </View>
-        )}
-        <Image
-          source={imageSource}
-          style={[
-            styles.exploreCardImage,
-            (item.stockQty === 0 ||
-              item.stockQty === '0' ||
-              item.isAvailable === false) && { opacity: 0.5 },
-          ]}
-          resizeMode="contain"
-          onError={() => setImageError(true)}
-        />
-        {(item.stockQty === 0 ||
-          item.stockQty === '0' ||
-          item.isAvailable === false) && (
-          <View style={styles.exploreOutOfStockOverlay}>
-            <Text style={styles.exploreOutOfStockText}>Out of Stock</Text>
-          </View>
-        )}
-      </View>
-      <Text style={styles.exploreCardName} numberOfLines={3}>
-        {name}
-      </Text>
-      <View style={styles.exploreCardBottom}>
-        <View>
-          {mrp !== price && (
-            <Text style={styles.exploreMrpText}>
-              MRP{' '}
-              <Text style={{ textDecorationLine: 'line-through' }}>₹{mrp}</Text>
-            </Text>
-          )}
-          <Text style={styles.exploreCardPrice}>₹{price}</Text>
-        </View>
-        {quantity > 0 ? (
-          <View style={styles.exploreCounterContainer}>
-            <TouchableOpacity
-              onPress={() =>
-                quantity === 1
-                  ? removeFromCart(cartItemId)
-                  : updateCartItemQuantity(cartItemId, quantity - 1)
-              }
-            >
-              <Entypo name="minus" size={wp('3%')} color="#F04B1B" />
-            </TouchableOpacity>
-            <Text style={styles.exploreQuantityText}>{quantity}</Text>
-            <TouchableOpacity
-              onPress={() => updateCartItemQuantity(cartItemId, quantity + 1)}
-            >
-              <Entypo name="plus" size={wp('3%')} color="#F04B1B" />
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <TouchableOpacity
-            style={[
-              styles.exploreAddBtn,
-              (item.stockQty === 0 ||
-                item.stockQty === '0' ||
-                item.isAvailable === false) && { backgroundColor: '#CCCCCC' },
-            ]}
-            onPress={() => addToCart(item)}
-            disabled={
-              item.stockQty === 0 ||
-              item.stockQty === '0' ||
-              item.isAvailable === false
-            }
-          >
-            <Entypo name="plus" color="#FFFFFF" size={wp('3.5%')} />
-          </TouchableOpacity>
-        )}
-      </View>
-    </TouchableOpacity>
-  );
-});
+// const ExploreCard = React.memo(({ item }) => {
+//   const navigation = useNavigation();
+//   const { addToCart, cartItems, updateCartItemQuantity, removeFromCart } =
+//     useCart();
+//   const [imageError, setImageError] = useState(false);
+//   const itemId = item.productId || item.id;
+//   const cartItem = cartItems.find(
+//     i => String(i.productId || i.id) === String(itemId),
+//   );
+//   const quantity = cartItem?.quantity || cartItem?.addedQty || 0;
+//   const cartItemId = cartItem?.cartItemId || itemId;
+//   const name = item.prName || item.name || '';
+//   const price = item.specialPrice || item.price || '';
+//   const mrp = item.unitPrice || item.mrp || '';
+//   let offer = item.discountPercentage
+//     ? Math.round(item.discountPercentage)
+//     : item.offer || 0;
+//   if (!offer && mrp && price && mrp > price)
+//     offer = Math.round(((mrp - price) / mrp) * 100);
+//   const getImg = img => {
+//     if (!img || imageError)
+//       return require('../assets/images/categories/dfn.png');
+//     if (typeof img === 'string') {
+//       if (img.startsWith('http')) return { uri: img };
+//       return { uri: `${CONFIG.image_base_url}${img}` };
+//     }
+//     return img;
+//   };
+//   const imageSource = getImg(item.featuredImage || item.img || item.imageUrl);
+//   return (
+//     <TouchableOpacity
+//       style={styles.exploreCard}
+//       onPress={() =>
+//         navigation.navigate('ProductDetailsScreen', {
+//           productId: itemId,
+//           product: item,
+//         })
+//       }
+//       activeOpacity={0.85}
+//     >
+//       <View style={styles.exploreImageContainer}>
+//         {offer > 0 && (
+//           <View style={styles.exploreOfferBadge}>
+//             <Text style={styles.exploreOfferBadgeText}>{offer}% OFF</Text>
+//           </View>
+//         )}
+//         <Image
+//           source={imageSource}
+//           style={[
+//             styles.exploreCardImage,
+//             (item.stockQty === 0 ||
+//               item.stockQty === '0' ||
+//               item.isAvailable === false) && { opacity: 0.5 },
+//           ]}
+//           resizeMode="contain"
+//           onError={() => setImageError(true)}
+//         />
+//         {(item.stockQty === 0 ||
+//           item.stockQty === '0' ||
+//           item.isAvailable === false) && (
+//           <View style={styles.exploreOutOfStockOverlay}>
+//             <Text style={styles.exploreOutOfStockText}>Out of Stock</Text>
+//           </View>
+//         )}
+//       </View>
+//       <Text style={styles.exploreCardName} numberOfLines={3}>
+//         {name}
+//       </Text>
+//       <View style={styles.exploreCardBottom}>
+//         <View>
+//           {mrp !== price && (
+//             <Text style={styles.exploreMrpText}>
+//               MRP{' '}
+//               <Text style={{ textDecorationLine: 'line-through' }}>₹{mrp}</Text>
+//             </Text>
+//           )}
+//           <Text style={styles.exploreCardPrice}>₹{price}</Text>
+//         </View>
+//         {quantity > 0 ? (
+//           <View style={styles.exploreCounterContainer}>
+//             <TouchableOpacity
+//               onPress={() =>
+//                 quantity === 1
+//                   ? removeFromCart(cartItemId)
+//                   : updateCartItemQuantity(cartItemId, quantity - 1)
+//               }
+//             >
+//               <Entypo name="minus" size={wp('3%')} color="#F04B1B" />
+//             </TouchableOpacity>
+//             <Text style={styles.exploreQuantityText}>{quantity}</Text>
+//             <TouchableOpacity
+//               onPress={() => updateCartItemQuantity(cartItemId, quantity + 1)}
+//             >
+//               <Entypo name="plus" size={wp('3%')} color="#F04B1B" />
+//             </TouchableOpacity>
+//           </View>
+//         ) : (
+//           <TouchableOpacity
+//             style={[
+//               styles.exploreAddBtn,
+//               (item.stockQty === 0 ||
+//                 item.stockQty === '0' ||
+//                 item.isAvailable === false) && { backgroundColor: '#CCCCCC' },
+//             ]}
+//             onPress={() => addToCart(item)}
+//             disabled={
+//               item.stockQty === 0 ||
+//               item.stockQty === '0' ||
+//               item.isAvailable === false
+//             }
+//           >
+//             <Entypo name="plus" color="#FFFFFF" size={wp('3.5%')} />
+//           </TouchableOpacity>
+//         )}
+//       </View>
+//     </TouchableOpacity>
+//   );
+// });
 
 const HomeScreen = () => {
   const { top } = useSafeAreaInsets();
@@ -364,6 +364,8 @@ const HomeScreen = () => {
   };
 
   const [dashboardData, setDashboardData] = useState(null);
+
+  console.log(dashboardData?.wallet, '=======btoken');
   const [refreshing, setRefreshing] = useState(false);
   const {
     bestOffers,
@@ -998,7 +1000,11 @@ const HomeScreen = () => {
 
   return (
     <View style={styles.mainContainer}>
-      <StatusBar translucent backgroundColor="transparent" />
+      <StatusBar
+        translucent
+        backgroundColor="transparent"
+        barStyle={'light-content'}
+      />
       <HomePopupModal
         visible={isHomePopupVisible}
         onClose={() => {
@@ -1075,7 +1081,7 @@ const HomeScreen = () => {
                     style={styles.tokenSvg}
                   />
                   <Text style={styles.tokenText}>
-                    {dashboardData?.wallet?.bTokens || '0'} B
+                    {dashboardData?.wallet?.bCoins || '0'} B
                   </Text>
                 </TouchableOpacity>
 
@@ -1171,7 +1177,7 @@ const HomeScreen = () => {
                   style={styles.tokenSvg}
                 />
                 <Text style={styles.tokenText}>
-                  {dashboardData?.wallet?.bTokens || '0'} B
+                  {dashboardData?.wallet?.bCoins}
                 </Text>
               </TouchableOpacity>
 

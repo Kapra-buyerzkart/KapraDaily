@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, Image } from 'react-native';
 import styles from '../styles';
 
-const CoinBar = () => (
+const CoinBar = ({ bCoins }) => (
   <View style={styles.coinBar}>
     <Text style={styles.coinBarText}>Use UD-Coins to Book Your Tickets</Text>
     <View style={styles.coinBadge}>
@@ -11,7 +11,7 @@ const CoinBar = () => (
         style={styles.coinIcon}
         resizeMode="contain"
       />
-      <Text style={styles.coinAmount}>10.0 B</Text>
+      <Text style={styles.coinAmount}>{bCoins || 0} B</Text>
     </View>
   </View>
 );

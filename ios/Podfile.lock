@@ -2024,6 +2024,8 @@ PODS:
   - react-native-razorpay (2.3.1):
     - razorpay-pod (= 1.5.0)
     - React
+  - react-native-render-html (6.3.4):
+    - React-Core
   - react-native-safe-area-context (5.6.2):
     - boost
     - DoubleConversion
@@ -3183,6 +3185,7 @@ DEPENDENCIES:
   - react-native-onesignal (from `../node_modules/react-native-onesignal`)
   - react-native-otp-verify (from `../node_modules/react-native-otp-verify`)
   - react-native-razorpay (from `../node_modules/react-native-razorpay`)
+  - react-native-render-html (from `../node_modules/react-native-render-html`)
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
   - react-native-simple-toast (from `../node_modules/react-native-simple-toast`)
   - React-NativeModulesApple (from `../node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios`)
@@ -3341,6 +3344,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-otp-verify"
   react-native-razorpay:
     :path: "../node_modules/react-native-razorpay"
+  react-native-render-html:
+    :path: "../node_modules/react-native-render-html"
   react-native-safe-area-context:
     :path: "../node_modules/react-native-safe-area-context"
   react-native-simple-toast:
@@ -3488,6 +3493,7 @@ SPEC CHECKSUMS:
   react-native-onesignal: b2d0ac4808b0fa0b396459e5e4704b610777518c
   react-native-otp-verify: 6d153f8a8e8392c6a51f9d94c090dc16d7c756b2
   react-native-razorpay: 376ba84b614ef8a22b5701df4ffee10f4c116d14
+  react-native-render-html: 5afc4751f1a98621b3009432ef84c47019dcb2bd
   react-native-safe-area-context: 0a3b034bb63a5b684dd2f5fffd3c90ef6ed41ee8
   react-native-simple-toast: 5c8a7a191a0d99a240532d1a102be075a82a0909
   React-NativeModulesApple: efd0906463c79d9b86197dbcf0d58358dff8c5ed

@@ -132,6 +132,15 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: 14,
   },
+  cardTitle: {
+    position: 'absolute',
+    bottom: 10,
+    left: 10,
+    right: 10,
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontFamily: 'Poppins-Bold',
+  },
   cardPlaceholder: {
     width: '100%',
     height: '100%',
@@ -187,7 +196,7 @@ const styles = StyleSheet.create({
   claimWrapper: {
     alignItems: 'center',
     marginTop: 'auto',
-    paddingTop: 30,
+    paddingTop: hp(10),
     paddingBottom: 30,
   },
   claimButton: {

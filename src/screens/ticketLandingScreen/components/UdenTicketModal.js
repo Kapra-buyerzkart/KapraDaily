@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { getVoucherQuoteApi } from '../../../api/voucherService';
 import {
   Animated,
   Dimensions,
@@ -6,6 +7,7 @@ import {
   ImageBackground,
   Modal,
   Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -15,34 +17,39 @@ import { wp, hp } from '../../../utils/responsive';
 import RedeemSuccessModal, {
   preloadRedeemSuccessAssets,
 } from './RedeemSuccessModal';
+import RenderHtml from 'react-native-render-html';
+import CONFIG from '../../../globals/config';
 
 const { width, height } = Dimensions.get('window');
 
-const DOTS = 18;
-
-const PerforatedEdge = ({ top }) => (
-  <View
-    style={[
-      styles.perforated,
-      top ? styles.perforatedTop : styles.perforatedBottom,
-    ]}
-  >
-    {Array.from({ length: DOTS }).map((_, i) => (
-      <View key={i} style={styles.dot} />
-    ))}
-  </View>
-);
-
-const UdenTicketModal = ({ visible, onClose }) => {
+const UdenTicketModal = ({ visible, onClose, voucher, bCoins = 0 }) => {
   const slideAnim = useRef(new Animated.Value(height)).current;
   const backdropAnim = useRef(new Animated.Value(0)).current;
   const [quantity, setQuantity] = useState(1);
   const [modalVisible, setModalVisible] = useState(false);
   const [successVisible, setSuccessVisible] = useState(false);
+  const [openAccordion, setOpenAccordion] = useState(null);
 
+  const toggleAccordion = key =>
+    setOpenAccordion(prev => (prev === key ? null : key));
+
+  const denomination = voucher?.denomination ?? 0;
+  const maxQty = voucher?.availableCount;
+  const PLACEHOLDER_IMAGE = require('../../../assets/images/movieTicket/voucher.png');
+  const giftCardUri = voucher?.imageUrl
+    ? { uri: CONFIG.image_base_url + voucher.imageUrl }
+    : PLACEHOLDER_IMAGE;
+
+  console.log(denomination, '====');
   useEffect(() => {
     preloadRedeemSuccessAssets();
   }, []);
+
+  useEffect(() => {
+    setQuantity(1);
+  }, [voucher?.voucherId]);
+
+  console.log(voucher, 'voucher ======>');
 
   useEffect(() => {
     if (visible) {
@@ -79,7 +86,16 @@ const UdenTicketModal = ({ visible, onClose }) => {
   }, [visible]);
 
   const decreaseQty = () => setQuantity(q => Math.max(1, q - 1));
-  const increaseQty = () => setQuantity(q => q + 1);
+  const increaseQty = () => setQuantity(q => Math.min(maxQty, q + 1));
+
+  const handleBuyNow = async () => {
+    try {
+      const quote = await getVoucherQuoteApi(voucher?.voucherId, quantity);
+      console.log('voucher quote ====>', quote);
+    } catch (err) {
+      console.log('voucher quote error ====>', err);
+    }
+  };
 
   return (
     <>
@@ -109,7 +125,7 @@ const UdenTicketModal = ({ visible, onClose }) => {
 
               {/* Gift card image */}
               <Image
-                source={require('../../../assets/images/movieTicket/voucher.png')}
+                source={giftCardUri}
                 style={styles.giftCard}
                 resizeMode="cover"
               />
@@ -117,19 +133,41 @@ const UdenTicketModal = ({ visible, onClose }) => {
               {/* Quantity selector */}
               <View style={styles.qtyRow}>
                 <TouchableOpacity
-                  style={styles.qtyBtn}
+                  style={[
+                    styles.qtyBtn,
+                    quantity <= 1 && styles.qtyBtnDisabled,
+                  ]}
                   onPress={decreaseQty}
                   activeOpacity={0.7}
+                  disabled={quantity <= 1}
                 >
-                  <Text style={styles.qtyBtnText}>−</Text>
+                  <Text
+                    style={[
+                      styles.qtyBtnText,
+                      quantity <= 1 && styles.qtyBtnTextDisabled,
+                    ]}
+                  >
+                    −
+                  </Text>
                 </TouchableOpacity>
                 <Text style={styles.qtyValue}>{quantity}</Text>
                 <TouchableOpacity
-                  style={styles.qtyBtn}
+                  style={[
+                    styles.qtyBtn,
+                    quantity >= maxQty && styles.qtyBtnDisabled,
+                  ]}
                   onPress={increaseQty}
                   activeOpacity={0.7}
+                  disabled={quantity >= maxQty}
                 >
-                  <Text style={styles.qtyBtnText}>+</Text>
+                  <Text
+                    style={[
+                      styles.qtyBtnText,
+                      quantity >= maxQty && styles.qtyBtnTextDisabled,
+                    ]}
+                  >
+                    +
+                  </Text>
                 </TouchableOpacity>
               </View>
 
@@ -149,12 +187,70 @@ const UdenTicketModal = ({ visible, onClose }) => {
                 <Text style={styles.coinBannerText}>to claim your ticket</Text>
               </ImageBackground>
 
+              {/* Accordion: Description & Terms */}
+              {(voucher?.shortDescription || voucher?.termsConditions) && (
+                <View style={styles.accordionContainer}>
+                  {voucher?.shortDescription && (
+                    <View style={styles.accordionItem}>
+                      <TouchableOpacity
+                        style={styles.accordionHeader}
+                        onPress={() => toggleAccordion('description')}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={styles.accordionTitle}>Description</Text>
+                        <Text style={styles.accordionArrow}>
+                          {openAccordion === 'description' ? '▲' : '▼'}
+                        </Text>
+                      </TouchableOpacity>
+                      {openAccordion === 'description' && (
+                        <ScrollView
+                          style={styles.accordionContent}
+                          nestedScrollEnabled
+                        >
+                          <RenderHtml
+                            contentWidth={width * 0.78}
+                            source={{ html: voucher.shortDescription }}
+                          />
+                        </ScrollView>
+                      )}
+                    </View>
+                  )}
+                  {voucher?.termsConditions && (
+                    <View style={styles.accordionItem}>
+                      <TouchableOpacity
+                        style={styles.accordionHeader}
+                        onPress={() => toggleAccordion('terms')}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={styles.accordionTitle}>
+                          Terms & Conditions
+                        </Text>
+                        <Text style={styles.accordionArrow}>
+                          {openAccordion === 'terms' ? '▲' : '▼'}
+                        </Text>
+                      </TouchableOpacity>
+                      {openAccordion === 'terms' && (
+                        <ScrollView
+                          style={styles.accordionContent}
+                          nestedScrollEnabled
+                        >
+                          <RenderHtml
+                            contentWidth={width * 0.78}
+                            source={{ html: voucher.termsConditions }}
+                          />
+                        </ScrollView>
+                      )}
+                    </View>
+                  )}
+                </View>
+              )}
+
               {/* Price row + BUY NOW */}
               <View style={styles.priceRow}>
                 <View style={styles.priceLeft}>
                   <View style={styles.priceMainRow}>
-                    <Text style={styles.priceCurrent}>₹394</Text>
-                    <Text style={styles.priceStrike}>₹394</Text>
+                    <Text style={styles.priceCurrent}>₹{denomination}</Text>
+                    <Text style={styles.priceStrike}>₹{denomination}</Text>
                   </View>
                   <View style={styles.usingRow}>
                     <Text style={styles.usingText}>Using </Text>
@@ -163,17 +259,14 @@ const UdenTicketModal = ({ visible, onClose }) => {
                       style={styles.coinsStack}
                       resizeMode="contain"
                     />
-                    <Text style={styles.usingAmount}> 5000</Text>
+                    <Text style={styles.usingAmount}> {bCoins}</Text>
                   </View>
                 </View>
 
                 <TouchableOpacity
                   activeOpacity={0.85}
                   style={styles.buyNowBtn}
-                  onPress={() => {
-                    onClose();
-                    setSuccessVisible(true);
-                  }}
+                  onPress={handleBuyNow}
                 >
                   <Text style={styles.buyNowText}>BUY NOW</Text>
                 </TouchableOpacity>
@@ -219,7 +312,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-end',
     alignItems: 'center',
-    paddingBottom: Platform.OS === 'ios' ? 120 : 50,
+    paddingBottom: Platform.OS === 'ios' ? 120 : 120,
   },
   sheet: {
     width: width * 0.88,
@@ -296,6 +389,13 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins-Medium',
     lineHeight: 24,
   },
+  qtyBtnDisabled: {
+    borderColor: '#CCCCCC',
+    backgroundColor: '#F5F5F5',
+  },
+  qtyBtnTextDisabled: {
+    color: '#BBBBBB',
+  },
   qtyValue: {
     fontSize: 20,
     fontFamily: 'Poppins-Bold',
@@ -329,6 +429,42 @@ const styles = StyleSheet.create({
     color: '#F9A833',
     fontSize: 13,
     fontFamily: 'Poppins-Bold',
+  },
+
+  // Accordion
+  accordionContainer: {
+    marginBottom: hp(1.8),
+    // borderRadius: 8,
+    overflow: 'hidden',
+    borderWidth: 0.2,
+    borderColor: '#E0E0E0',
+  },
+  accordionItem: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#ffffffff',
+  },
+  accordionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: wp(3),
+    paddingVertical: hp(1.2),
+    backgroundColor: '#ffffffff',
+  },
+  accordionTitle: {
+    fontSize: 13,
+    fontFamily: 'Poppins-SemiBold',
+    color: '#333333',
+  },
+  accordionArrow: {
+    fontSize: 10,
+    color: '#000000ff',
+  },
+  accordionContent: {
+    maxHeight: hp(18),
+    paddingHorizontal: wp(3),
+    paddingBottom: hp(1),
+    backgroundColor: '#FFFFFF',
   },
 
   // Price row
@@ -398,7 +534,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(30,30,30,0.92)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: hp(1.5),
+    marginTop: hp(1.9),
     borderWidth: 2,
     borderColor: 'rgba(255,255,255,0.25)',
   },

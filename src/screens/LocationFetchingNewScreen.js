@@ -115,7 +115,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
   const timeoutRef = useRef(null);
 
   const navigateAfterLocation = () => {
-    if (profile?.id) {
+    if (profile?.custId) {
       navigation.reset({ index: 0, routes: [{ name: 'AuthSuccessScreen' }] });
     } else {
       navigation.reset({ index: 0, routes: [{ name: 'LoginScreen', params: { type: 'login' } }] });
