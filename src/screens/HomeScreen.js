@@ -1000,11 +1000,7 @@ const HomeScreen = () => {
 
   return (
     <View style={styles.mainContainer}>
-      <StatusBar
-        translucent
-        backgroundColor="transparent"
-        barStyle={'light-content'}
-      />
+      <StatusBar translucent backgroundColor="transparent" />
       <HomePopupModal
         visible={isHomePopupVisible}
         onClose={() => {

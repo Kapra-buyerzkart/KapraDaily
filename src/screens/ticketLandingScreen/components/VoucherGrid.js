@@ -1,7 +1,16 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  ActivityIndicator,
+} from 'react-native';
 import styles from '../styles';
-import { VOUCHER_DATA } from '../constants';
+import CONFIG from '../../../globals/config';
+
+const toImageSource = value =>
+  typeof value === 'string' ? { uri: CONFIG.image_base_url + value } : value;
 
 const VoucherCard = ({ item, onPress }) => (
   <TouchableOpacity
@@ -10,23 +19,73 @@ const VoucherCard = ({ item, onPress }) => (
     onPress={() => onPress(item)}
   >
     <Image
-      source={item.image}
+      source={toImageSource(item.imageUrl || item.image)}
       style={styles.voucherCardImage}
       resizeMode="cover"
     />
     <View style={styles.voucherCardBody}>
       <Text style={styles.voucherCardTitle}>{item.title}</Text>
-      <Text style={styles.voucherCardDesc}>{item.description}</Text>
+      <Text style={styles.voucherCardDesc}>₹{item.denomination} Voucher</Text>
     </View>
   </TouchableOpacity>
 );
 
-const VoucherGrid = ({ onVoucherPress }) => (
-  <View style={styles.voucherGrid}>
-    {VOUCHER_DATA.map(item => (
-      <VoucherCard key={item.id} item={item} onPress={onVoucherPress} />
-    ))}
-  </View>
-);
+const VoucherGrid = ({ vouchers = [], loading = false, onVoucherPress }) => {
+  if (loading) {
+    return (
+      <View
+        style={[
+          styles.voucherGrid,
+          {
+            justifyContent: 'center',
+            alignItems: 'center',
+            paddingVertical: 40,
+          },
+        ]}
+      >
+        <ActivityIndicator color="#e07f2b" />
+      </View>
+    );
+  }
+
+  console.log(vouchers, 'here is vouchere yaal');
+
+  if (!vouchers.length) {
+    return (
+      <View
+        style={[
+          styles.voucherGrid,
+          {
+            justifyContent: 'center',
+            alignItems: 'center',
+            paddingVertical: 40,
+          },
+        ]}
+      >
+        <Text
+          style={{
+            color: 'rgba(255,255,255,0.4)',
+            fontFamily: 'Poppins-Regular',
+            fontSize: 14,
+          }}
+        >
+          No vouchers yet
+        </Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.voucherGrid}>
+      {vouchers.map((item, index) => (
+        <VoucherCard
+          key={item.purchaseId || item.voucherId || item.id || index}
+          item={item}
+          onPress={onVoucherPress}
+        />
+      ))}
+    </View>
+  );
+};
 
 export default VoucherGrid;

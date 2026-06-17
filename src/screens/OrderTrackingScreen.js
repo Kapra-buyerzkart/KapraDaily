@@ -107,7 +107,6 @@ const OrderTrackingScreen = () => {
     );
 
     const insets = useSafeAreaInsets();
-    const [returnReason, setReturnReason] = useState('');
     const [showBillBreakdown, setShowBillBreakdown] = useState(false);
     const [orderRating, setOrderRating] = useState(0);
     const [agentRating, setAgentRating] = useState(0);

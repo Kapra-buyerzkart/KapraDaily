@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { getVoucherQuoteApi } from '../../../api/voucherService';
+import { useVoucherPayment } from '../../../hooks/useVoucherPayment';
 import {
+  ActivityIndicator,
   Animated,
   Dimensions,
   Image,
@@ -19,22 +20,34 @@ import RedeemSuccessModal, {
 } from './RedeemSuccessModal';
 import RenderHtml from 'react-native-render-html';
 import CONFIG from '../../../globals/config';
+import { getVoucherQuoteApi } from '../../../api/voucherService';
 
 const { width, height } = Dimensions.get('window');
 
-const UdenTicketModal = ({ visible, onClose, voucher, bCoins = 0 }) => {
+const UdenTicketModal = ({
+  visible,
+  onClose,
+  voucher,
+  bCoins = 0,
+  initialQuoteData = null,
+}) => {
   const slideAnim = useRef(new Animated.Value(height)).current;
   const backdropAnim = useRef(new Animated.Value(0)).current;
   const [quantity, setQuantity] = useState(1);
   const [modalVisible, setModalVisible] = useState(false);
-  const [successVisible, setSuccessVisible] = useState(false);
   const [openAccordion, setOpenAccordion] = useState(null);
+  const [quoteData, setQuoteData] = useState(initialQuoteData);
+  const [quoteLoading, setQuoteLoading] = useState(false);
+  const { handleBuyNow, successVisible, paidAmount, resetPayment } =
+    useVoucherPayment();
 
   const toggleAccordion = key =>
     setOpenAccordion(prev => (prev === key ? null : key));
 
   const denomination = voucher?.denomination ?? 0;
   const maxQty = voucher?.availableCount;
+  const isOutOfStock = !maxQty || maxQty <= 0;
+  const coinEligible = quoteData?.coinEligible;
   const PLACEHOLDER_IMAGE = require('../../../assets/images/movieTicket/voucher.png');
   const giftCardUri = voucher?.imageUrl
     ? { uri: CONFIG.image_base_url + voucher.imageUrl }
@@ -47,9 +60,37 @@ const UdenTicketModal = ({ visible, onClose, voucher, bCoins = 0 }) => {
 
   useEffect(() => {
     setQuantity(1);
+    setQuoteData(initialQuoteData);
   }, [voucher?.voucherId]);
 
-  console.log(voucher, 'voucher ======>');
+  useEffect(() => {
+    setQuoteData(initialQuoteData);
+  }, [initialQuoteData]);
+
+  useEffect(() => {
+    if (!visible || !voucher?.voucherId || quantity === 1) return;
+    let cancelled = false;
+    const fetchQuote = async () => {
+      setQuoteLoading(true);
+      try {
+        const res = await getVoucherQuoteApi(
+          voucher.voucherId,
+          quantity,
+          bCoins,
+        );
+        if (!cancelled && res?.success) setQuoteData(res.data);
+      } catch (_) {
+      } finally {
+        if (!cancelled) setQuoteLoading(false);
+      }
+    };
+    fetchQuote();
+    return () => {
+      cancelled = true;
+    };
+  }, [quantity]);
+
+  console.log(voucher, 'voucher is here ==========>');
 
   useEffect(() => {
     if (visible) {
@@ -87,15 +128,7 @@ const UdenTicketModal = ({ visible, onClose, voucher, bCoins = 0 }) => {
 
   const decreaseQty = () => setQuantity(q => Math.max(1, q - 1));
   const increaseQty = () => setQuantity(q => Math.min(maxQty, q + 1));
-
-  const handleBuyNow = async () => {
-    try {
-      const quote = await getVoucherQuoteApi(voucher?.voucherId, quantity);
-      console.log('voucher quote ====>', quote);
-    } catch (err) {
-      console.log('voucher quote error ====>', err);
-    }
-  };
+  console.log(quoteData, 'QuoteData=====>');
 
   return (
     <>
@@ -248,27 +281,60 @@ const UdenTicketModal = ({ visible, onClose, voucher, bCoins = 0 }) => {
               {/* Price row + BUY NOW */}
               <View style={styles.priceRow}>
                 <View style={styles.priceLeft}>
-                  <View style={styles.priceMainRow}>
-                    <Text style={styles.priceCurrent}>₹{denomination}</Text>
-                    <Text style={styles.priceStrike}>₹{denomination}</Text>
-                  </View>
-                  <View style={styles.usingRow}>
-                    <Text style={styles.usingText}>Using </Text>
-                    <Image
-                      source={require('../../../assets/icons/coins.png')}
-                      style={styles.coinsStack}
-                      resizeMode="contain"
-                    />
-                    <Text style={styles.usingAmount}> {bCoins}</Text>
-                  </View>
+                  {quoteLoading ? (
+                    <ActivityIndicator size="small" color="#5B2BE0" />
+                  ) : (
+                    <>
+                      <View style={styles.priceMainRow}>
+                        <Text style={styles.priceCurrent}>
+                          ₹{quoteData ? quoteData.amountPayable : denomination}
+                        </Text>
+                        {quoteData &&
+                          quoteData.amountPayable < quoteData.totalValue && (
+                            <Text style={styles.priceStrike}>
+                              ₹{quoteData.totalValue}
+                            </Text>
+                          )}
+                      </View>
+                      {/* {quoteData && quoteData.coinsApplied > 0 && ( */}
+                      <View style={styles.usingRow}>
+                        <Text style={styles.usingText}>Using </Text>
+                        <Image
+                          source={require('../../../assets/icons/coins.png')}
+                          style={styles.coinsStack}
+                          resizeMode="contain"
+                        />
+                        <Text style={styles.usingAmount}>
+                          {quoteData?.coinsApplied}
+                        </Text>
+                      </View>
+                      {/* )} */}
+                    </>
+                  )}
                 </View>
 
                 <TouchableOpacity
                   activeOpacity={0.85}
-                  style={styles.buyNowBtn}
-                  onPress={handleBuyNow}
+                  style={[
+                    styles.buyNowBtn,
+                    (isOutOfStock || quoteLoading || coinEligible === false) &&
+                      styles.buyNowBtnDisabled,
+                  ]}
+                  onPress={() =>
+                    handleBuyNow({
+                      voucherId: voucher?.voucherId,
+                      quantity,
+                      bCoins,
+                      voucherName: voucher?.name,
+                    })
+                  }
+                  disabled={
+                    isOutOfStock || quoteLoading || coinEligible === false
+                  }
                 >
-                  <Text style={styles.buyNowText}>BUY NOW</Text>
+                  <Text style={styles.buyNowText}>
+                    {isOutOfStock ? 'OUT OF STOCK' : 'BUY NOW'}
+                  </Text>
                 </TouchableOpacity>
               </View>
             </ImageBackground>
@@ -288,14 +354,14 @@ const UdenTicketModal = ({ visible, onClose, voucher, bCoins = 0 }) => {
       <RedeemSuccessModal
         visible={successVisible}
         quantity={quantity}
-        coinsUsed={quantity * 3}
-        amountPaid="₹394"
+        coinsUsed={0}
+        amountPaid={`₹${paidAmount}`}
         onBack={() => {
-          setSuccessVisible(false);
+          resetPayment();
           onClose();
         }}
         onMyVouchers={() => {
-          setSuccessVisible(false);
+          resetPayment();
           onClose();
         }}
       />
@@ -518,6 +584,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: wp(6),
     paddingVertical: hp(1.3),
     borderRadius: 10,
+  },
+  buyNowBtnDisabled: {
+    backgroundColor: '#AAAAAA',
   },
   buyNowText: {
     color: '#FFFFFF',

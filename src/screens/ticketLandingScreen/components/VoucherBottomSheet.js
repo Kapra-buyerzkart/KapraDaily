@@ -18,6 +18,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { wp, hp } from '../../../utils/responsive';
 import RedeemSuccessModal from './RedeemSuccessModal';
+import CONFIG from '../../../globals/config';
 
 const { height } = Dimensions.get('window');
 
@@ -70,6 +71,9 @@ const Accordion = ({ title, items }) => {
     </View>
   );
 };
+
+const toImageSource = value =>
+  typeof value === 'string' ? { uri: CONFIG.image_base_url + value } : value;
 
 const VoucherBottomSheet = ({ visible, onClose, voucher }) => {
   const insets = useSafeAreaInsets();
@@ -142,12 +146,44 @@ const VoucherBottomSheet = ({ visible, onClose, voucher }) => {
   ).current;
 
   const handleCopy = () => {
-    Clipboard.setString(voucher?.code ?? '');
+    Clipboard.setString(voucher?.voucherCode ?? '');
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
   if (!voucher) return null;
+
+  const daysLeft = voucher.codeExpiryDate
+    ? Math.max(
+        0,
+        Math.ceil(
+          (new Date(voucher.codeExpiryDate) - new Date()) /
+            (1000 * 60 * 60 * 24),
+        ),
+      )
+    : 0;
+
+  const formatDate = iso =>
+    new Date(iso).toLocaleDateString('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
+
+  const voucherDetails = [
+    `Denomination: ₹${voucher.denomination}`,
+    `Status: ${voucher.codeStatus}`,
+    `Purchased on: ${formatDate(voucher.purchasedAt)}`,
+    `Valid till: ${formatDate(voucher.codeExpiryDate)}`,
+  ];
+
+  const dummyTerms = [
+    'Cannot be combined with other offers',
+    'Valid only on the partner platform',
+    'Non-transferable voucher',
+    'One-time use only',
+    'Uden Deal is not responsible for voucher misuse',
+  ];
 
   const safeBottom = insets.bottom > 0 ? insets.bottom : 20;
 
@@ -188,31 +224,31 @@ const VoucherBottomSheet = ({ visible, onClose, voucher }) => {
                 <MaterialIcons name="arrow-back" size={24} color="#FFFFFF" />
               </TouchableOpacity>
               <Image
-                source={voucher.brandLogo}
+                source={toImageSource(voucher.imageUrl)}
                 style={styles.brandLogo}
                 resizeMode="contain"
               />
-              <Text style={styles.brandName}>{voucher.brand}</Text>
+              <Text style={styles.brandName}>{voucher.title}</Text>
             </View>
 
             <Image
-              source={voucher.cardImage}
+              source={toImageSource(voucher.imageUrl)}
               style={styles.cardImage}
               resizeMode="cover"
             />
 
             <View style={styles.badge}>
-              <Text style={styles.badgeText}>{voucher.daysLeft} days left</Text>
+              <Text style={styles.badgeText}>{daysLeft} days left</Text>
             </View>
 
-            <Text style={styles.discountTitle}>{voucher.discountTitle}</Text>
+            <Text style={styles.discountTitle}>₹{voucher.denomination}</Text>
             <Text style={styles.discountSubtitle}>
-              {voucher.discountSubtitle}
+              {voucher.title} Gift Voucher
             </Text>
 
             <View style={styles.codeRow}>
               <Text style={styles.codeText} numberOfLines={1}>
-                {voucher.code}
+                {voucher.voucherCode}
               </Text>
               <TouchableOpacity onPress={handleCopy} activeOpacity={0.7}>
                 <MaterialIcons
@@ -223,8 +259,8 @@ const VoucherBottomSheet = ({ visible, onClose, voucher }) => {
               </TouchableOpacity>
             </View>
 
-            <Accordion title="Details" items={voucher.details ?? []} />
-            <Accordion title="Terms & Conditions" items={voucher.terms ?? []} />
+            <Accordion title="Details" items={voucherDetails} />
+            <Accordion title="Terms & Conditions" items={dummyTerms} />
             <View style={styles.redeemWrapper}>
               <TouchableOpacity
                 style={styles.redeemBtn}

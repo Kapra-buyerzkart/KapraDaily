@@ -15,7 +15,12 @@ import CardCarousel from './components/CardCarousel';
 import VoucherGrid from './components/VoucherGrid';
 import UdenTicketModal from './components/UdenTicketModal';
 import VoucherBottomSheet from './components/VoucherBottomSheet';
-import { getVouchersApi, getVoucherByIdApi } from '../../api/voucherService';
+import {
+  getVouchersApi,
+  getVoucherByIdApi,
+  getVoucherQuoteApi,
+  getMyVouchersApi,
+} from '../../api/voucherService';
 import { getDashboardDataApi } from '../../api/userService';
 
 const AnimatedImageBackground =
@@ -31,7 +36,10 @@ const TicketLandingScreen = ({ navigation }) => {
   const [claimedVoucher, setClaimedVoucher] = useState(null);
   const [selectedVoucher, setSelectedVoucher] = useState(null);
   const [carouselVouchers, setCarouselVouchers] = useState([]);
+  const [myVouchers, setMyVouchers] = useState([]);
+  const [myVouchersLoading, setMyVouchersLoading] = useState(false);
   const [bCoins, setBCoins] = useState(0);
+  const [claimedQuoteData, setClaimedQuoteData] = useState(null);
 
   useEffect(() => {
     getVouchersApi().then(res => {
@@ -45,6 +53,20 @@ const TicketLandingScreen = ({ navigation }) => {
       }
     });
   }, []);
+
+  useEffect(() => {
+    if (activeTab === 1) {
+      setMyVouchersLoading(true);
+      getMyVouchersApi()
+        .then(res => {
+          console.log(res, 'ress======response=====>');
+          if (res?.data?.items) {
+            setMyVouchers(res.data.items);
+          }
+        })
+        .finally(() => setMyVouchersLoading(false));
+    }
+  }, [activeTab]);
 
   const handleImageLoad = () => {
     Animated.timing(imageOpacity, {
@@ -61,9 +83,14 @@ const TicketLandingScreen = ({ navigation }) => {
   };
 
   const handleClaim = voucher => {
-    getVoucherByIdApi(voucher?.voucherId).then(res => {
-      if (res?.data) {
-        setClaimedVoucher(res.data);
+    setClaimedQuoteData(null);
+    Promise.all([
+      getVoucherByIdApi(voucher?.voucherId),
+      getVoucherQuoteApi(voucher?.voucherId, 1, bCoins),
+    ]).then(([voucherRes, quoteRes]) => {
+      if (voucherRes?.data) {
+        setClaimedVoucher(voucherRes.data);
+        if (quoteRes?.success) setClaimedQuoteData(quoteRes.data);
         setModalVisible(true);
       }
     });
@@ -123,7 +150,11 @@ const TicketLandingScreen = ({ navigation }) => {
                 vouchers={carouselVouchers}
               />
             ) : (
-              <VoucherGrid onVoucherPress={setSelectedVoucher} />
+              <VoucherGrid
+                vouchers={myVouchers}
+                loading={myVouchersLoading}
+                onVoucherPress={setSelectedVoucher}
+              />
             )}
           </Animated.View>
         </ScrollView>
@@ -133,7 +164,11 @@ const TicketLandingScreen = ({ navigation }) => {
         visible={modalVisible}
         voucher={claimedVoucher}
         bCoins={bCoins}
-        onClose={() => setModalVisible(false)}
+        initialQuoteData={claimedQuoteData}
+        onClose={() => {
+          setModalVisible(false);
+          setClaimedQuoteData(null);
+        }}
       />
       <VoucherBottomSheet
         visible={!!selectedVoucher}
