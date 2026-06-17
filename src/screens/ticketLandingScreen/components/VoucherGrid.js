@@ -79,11 +79,19 @@ const VoucherGrid = ({ vouchers = [], loading = false, onVoucherPress }) => {
     <View style={styles.voucherGrid}>
       {vouchers.map((item, index) => (
         <VoucherCard
-          key={item.purchaseId || item.voucherId || item.id || index}
+          key={item?.purchaseId || item?.voucherId || item?.id || index}
           item={item}
           onPress={onVoucherPress}
         />
       ))}
+
+      {/* {vouchers.map((item, index) => (
+        <VoucherCard
+          key={item?.purchaseId || item?.voucherId || item?.id || index}
+          item={item}
+          onPress={onVoucherPress}
+        />
+      ))} */}
     </View>
   );
 };

@@ -4,8 +4,11 @@ import {
   StatusBar,
   View,
   ImageBackground,
-  ScrollView,
 } from 'react-native';
+import Reanimated, {
+  useSharedValue,
+  useAnimatedScrollHandler,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import styles from './styles';
 import ScreenHeader from './components/ScreenHeader';
@@ -40,6 +43,14 @@ const TicketLandingScreen = ({ navigation }) => {
   const [myVouchersLoading, setMyVouchersLoading] = useState(false);
   const [bCoins, setBCoins] = useState(0);
   const [claimedQuoteData, setClaimedQuoteData] = useState(null);
+
+  const scrollY = useSharedValue(0);
+
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: event => {
+      scrollY.value = event.contentOffset.y;
+    },
+  });
 
   useEffect(() => {
     getVouchersApi().then(res => {
@@ -133,15 +144,17 @@ const TicketLandingScreen = ({ navigation }) => {
         onLoad={handleImageLoad}
         resizeMode="cover"
       >
-        <ScrollView
+        <Reanimated.ScrollView
+          onScroll={scrollHandler}
+          scrollEventThrottle={16}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           bounces={false}
+          stickyHeaderIndices={[2]}
         >
-          <ScreenHeader navigation={navigation} insets={insets} />
-          <CoinBar bCoins={bCoins} />
-          <View style={styles.tabSeparator} />
-          <TabBar activeTab={activeTab} onTabChange={handleTabChange} />
+          <ScreenHeader navigation={navigation} insets={insets} scrollY={scrollY} />
+          <CoinBar bCoins={bCoins} scrollY={scrollY} />
+          <TabBar activeTab={activeTab} onTabChange={handleTabChange} scrollY={scrollY} insets={insets} />
           <Animated.View style={tabContentStyle}>
             {activeTab === 0 ? (
               <CardCarousel
@@ -157,7 +170,7 @@ const TicketLandingScreen = ({ navigation }) => {
               />
             )}
           </Animated.View>
-        </ScrollView>
+        </Reanimated.ScrollView>
       </AnimatedImageBackground>
 
       <UdenTicketModal

@@ -223,6 +223,21 @@ const styles = StyleSheet.create({
     marginTop: hp(-7.3),
   },
 
+  // ── Sticky Tab Container ──
+  tabOuterContainer: {
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  stickyRedGlow: {
+    position: 'absolute',
+    right: -20,
+    top: -10,
+    bottom: -10,
+    width: 100,
+    backgroundColor: '#8B0000',
+    borderRadius: 50,
+  },
+
   // ── My Vouchers Grid ──
   voucherGrid: {
     flexDirection: 'row',
