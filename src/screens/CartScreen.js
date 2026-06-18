@@ -10,12 +10,13 @@ import {
   ViewBase,
 } from 'react-native';
 import React, { useContext, useState, useEffect, useRef } from 'react';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import Entypo from 'react-native-vector-icons/Entypo';
-import Feather from 'react-native-vector-icons/Feather';
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import {
   widthPercentageToDP as wp,
@@ -586,7 +587,7 @@ const CartScreen = () => {
           source={require('../assets/images/lighting.png')}
           style={styles.lightningIcon}
         />
-        <Text style={styles.deliveryTime}>20 mins</Text>
+        <Text style={styles.deliveryTime}>20 mi ns</Text>
       </View>
     </View>
   );
@@ -958,14 +959,14 @@ const CartScreen = () => {
     const isPlaceOrderBlocked = hasSoldOutItems || isCartStoreNotFound;
 
     return (
-      <View style={styles.footer}>
+      <SafeAreaView edges={['bottom']} style={styles.footer}>
+        {' '}
         <View style={styles.priceContainer}>
           <Text style={styles.payUsingLabel}>TOTAL TO PAY</Text>
           <Text style={styles.totalPriceText}>
             ₹{billCalculations.toPay?.toFixed(2)}
           </Text>
         </View>
-
         <TouchableOpacity
           activeOpacity={0.9}
           style={[
@@ -995,7 +996,7 @@ const CartScreen = () => {
             />
           )}
         </TouchableOpacity>
-      </View>
+      </SafeAreaView>
     );
   };
 
@@ -1045,11 +1046,12 @@ const CartScreen = () => {
           </TouchableOpacity>
         </View>
       )}
-
       <ScrollView
         ref={scrollViewRef}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: hp('15%') }}
+        contentContainerStyle={{
+          paddingBottom: hp('15%') + insets.bottom + hp('2%'),
+        }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
@@ -1477,25 +1479,53 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5F5F5',
     marginHorizontal: wp('4%'),
   },
+
   footer: {
     position: 'absolute',
+    left: 0,
+    right: 0,
     bottom: 0,
-    width: wp('100%'),
+
     backgroundColor: '#FFFFFF',
+
     paddingHorizontal: wp('5%'),
-    paddingBottom: hp('3%'),
     paddingTop: hp('1%'),
+
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+
     borderTopWidth: 1,
     borderTopColor: '#F5F5F5',
+
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: -4 },
+    shadowOffset: {
+      width: 0,
+      height: -4,
+    },
     shadowOpacity: 0.05,
     shadowRadius: 10,
     elevation: 10,
   },
+  // footer: {
+  //   position: 'absolute',
+  //   bottom: 0,
+  //   width: wp('100%'),
+  //   backgroundColor: '#FFFFFF',
+  //   paddingHorizontal: wp('5%'),
+  //   paddingBottom: hp('3%'),
+  //   paddingTop: hp('1%'),
+  //   flexDirection: 'row',
+  //   alignItems: 'center',
+  //   justifyContent: 'space-between',
+  //   borderTopWidth: 1,
+  //   borderTopColor: '#F5F5F5',
+  //   shadowColor: '#000',
+  //   shadowOffset: { width: 0, height: -4 },
+  //   shadowOpacity: 0.05,
+  //   shadowRadius: 10,
+  //   elevation: 10,
+  // },
   storeNotFoundWarning: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -7,13 +7,14 @@ import {
     StyleSheet,
     ActivityIndicator,
     FlatList,
-    Image,
     Keyboard,
     KeyboardAvoidingView,
     Platform,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DelayInput from 'react-native-debounce-input';
+import LinearGradient from 'react-native-linear-gradient';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { getAreasBySearch } from '../api';
 import { AppContext } from '../context/appContext';
@@ -75,16 +76,17 @@ const LocationModal = ({
                 <View style={styles.container}>
 
                     {/* Header */}
-                    <View style={styles.header}>
+                    <LinearGradient
+                        colors={['#F25000', '#FF7B3A']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={styles.header}
+                    >
                         <Text style={styles.title}>Change Delivery Location</Text>
                         <TouchableOpacity onPress={onClose}>
-                            {/* <Text style={styles.close}>✕</Text> */}
-                            <Image style={{
-                                width: wp('4%'),
-                                height: wp('4%')
-                            }} source={require('../assets/images/close_two.png')} />
+                            <MaterialIcons name="close" size={wp('5%')} color="#ffffff" />
                         </TouchableOpacity>
-                    </View>
+                    </LinearGradient>
 
                     {/* Search */}
                     <DelayInput
@@ -147,19 +149,14 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         padding: wp('5%'),
-        backgroundColor: '#FF7148',
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
         alignItems: 'center'
     },
     title: {
         fontSize: wp('4.3%'),
-        // fontWeight: '600',
         fontFamily: FONTS.outfit.semiBold,
         color: '#ffffff'
-    },
-    close: {
-        fontSize: wp('5%'),
     },
     input: {
         margin: wp('5%'),

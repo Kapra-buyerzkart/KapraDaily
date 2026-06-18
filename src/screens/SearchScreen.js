@@ -9,8 +9,8 @@ import {
   FlatList,
   ActivityIndicator,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import React, { useState, useEffect, useCallback, useContext } from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
@@ -156,7 +156,7 @@ const SearchScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.mainContainer}>
+    < style={styles.mainContainer}>
       <View style={styles.headerContainer}>
         <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -290,7 +290,7 @@ const SearchScreen = () => {
       <View style={styles.floatingContainer}>
         <SelectedProducts />
       </View>
-    </SafeAreaView>
+    </>
   );
 };
 

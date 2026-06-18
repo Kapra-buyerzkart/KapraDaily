@@ -5,10 +5,8 @@ import {
   ImageBackground,
   TouchableOpacity,
   Image,
-  TextInput,
   FlatList,
   ScrollView,
-  Dimensions,
   RefreshControl,
   Platform,
   Linking,
@@ -178,6 +176,71 @@ const PlacementBannerCarousel = ({
     </View>
   );
 };
+
+// Helper for category images
+const getCategoryPlaceholder = name => {
+  const lowerName = name?.toLowerCase() || '';
+  if (lowerName.includes('fruit') || lowerName.includes('vegetable'))
+    return require('../assets/images/categories/fnv.png');
+  if (
+    lowerName.includes('dairy') ||
+    lowerName.includes('bread') ||
+    lowerName.includes('egg')
+  )
+    return require('../assets/images/categories/cnb.png');
+  if (lowerName.includes('tea') || lowerName.includes('coffee'))
+    return require('../assets/images/categories/deb.png');
+  if (lowerName.includes('dry') || lowerName.includes('nut'))
+    return require('../assets/images/categories/dfn.png');
+  if (lowerName.includes('fish') || lowerName.includes('meat'))
+    return require('../assets/images/categories/fnm.png');
+  if (lowerName.includes('snack'))
+    return require('../assets/images/categories/sdj.png');
+  if (lowerName.includes('drink') || lowerName.includes('juice'))
+    return require('../assets/images/categories/snc.png');
+  if (lowerName.includes('break') || lowerName.includes('cereal'))
+    return require('../assets/images/categories/tcm.png');
+  return require('../assets/images/categories/dfn.png'); // Default fallback
+};
+
+const CategoryItem = React.memo(({ item }) => {
+  const navigation = useNavigation();
+  const [imageError, setImageError] = useState(false);
+
+  let imageSource;
+  if (imageError || (!item.image && !item.imageUrl)) {
+    imageSource = getCategoryPlaceholder(item.catName || item.name);
+  } else if (item.image) {
+    imageSource = item.image;
+  } else {
+    imageSource = { uri: `${CONFIG.image_base_url}${item.imageUrl}` };
+  }
+
+  return (
+    <TouchableOpacity
+      style={styles.item}
+      onPress={() =>
+        navigation.navigate('SearchScreen', {
+          catId: item.catId || item.id,
+          catName: item.catName || item.name,
+        })
+      }
+    >
+      <View style={styles.categoryItemContainer}>
+        <Image
+          source={imageSource}
+          style={styles.image}
+          resizeMode="contain"
+          onError={() => setImageError(true)}
+        />
+      </View>
+
+      <Text style={styles.label} numberOfLines={2}>
+        {item.catName || item.name}
+      </Text>
+    </TouchableOpacity>
+  );
+});
 
 const HomeScreen = () => {
   const { top } = useSafeAreaInsets();
@@ -413,8 +476,6 @@ const HomeScreen = () => {
     }
   }, [profile, isProfileLoaded]);
 
-  console.log('OOOOPPPPP', profile);
-
   const onScroll = e => {
     const offsetX = e.nativeEvent.contentOffset.x;
     const width = e.nativeEvent.layoutMeasurement.width;
@@ -427,7 +488,6 @@ const HomeScreen = () => {
 
   const [dashboardData, setDashboardData] = useState(null);
 
-  console.log(dashboardData?.wallet, '=======btoken');
   const [refreshing, setRefreshing] = useState(false);
   const {
     bestOffers,
@@ -536,12 +596,18 @@ const HomeScreen = () => {
   const fruits = bottomBanner || [];
 
   // Normalized block data helpers (support both camelCase and PascalCase keys)
-  const firstBlockItems =
-    firstProductBlock?.Items || firstProductBlock?.items || [];
-  const secondBlockItems =
-    secondProductBlock?.Items || secondProductBlock?.items || [];
-  const thirdBlockItems =
-    thirdProductBlock?.Items || thirdProductBlock?.items || [];
+  const firstBlockItems = useMemo(
+    () => firstProductBlock?.Items || firstProductBlock?.items || [],
+    [firstProductBlock],
+  );
+  const secondBlockItems = useMemo(
+    () => secondProductBlock?.Items || secondProductBlock?.items || [],
+    [secondProductBlock],
+  );
+  const thirdBlockItems = useMemo(
+    () => thirdProductBlock?.Items || thirdProductBlock?.items || [],
+    [thirdProductBlock],
+  );
 
   const shouldShowFirstBlock =
     !!firstProductBlock && firstBlockItems.length > 0;
@@ -550,8 +616,10 @@ const HomeScreen = () => {
   const shouldShowThirdBlock =
     !!thirdProductBlock && thirdBlockItems.length > 0;
 
-  const discoveryCategories =
-    categoryDiscovery?.Categories || categoryDiscovery?.categories || [];
+  const discoveryCategories = useMemo(
+    () => categoryDiscovery?.Categories || categoryDiscovery?.categories || [],
+    [categoryDiscovery],
+  );
   const normalizedDiscoveryProducts = discoveryProducts || [];
   const shouldShowCategoryDiscovery =
     !!categoryDiscovery && discoveryCategories.length > 0;
@@ -822,84 +890,6 @@ const HomeScreen = () => {
           resizeMode="contain"
         />
       </LinearGradient>
-    );
-  };
-
-  // Helper for category images
-  const getCategoryPlaceholder = name => {
-    const lowerName = name?.toLowerCase() || '';
-    if (lowerName.includes('fruit') || lowerName.includes('vegetable'))
-      return require('../assets/images/categories/fnv.png');
-    if (
-      lowerName.includes('dairy') ||
-      lowerName.includes('bread') ||
-      lowerName.includes('egg')
-    )
-      return require('../assets/images/categories/cnb.png');
-    if (lowerName.includes('tea') || lowerName.includes('coffee'))
-      return require('../assets/images/categories/deb.png');
-    if (lowerName.includes('dry') || lowerName.includes('nut'))
-      return require('../assets/images/categories/dfn.png');
-    if (lowerName.includes('fish') || lowerName.includes('meat'))
-      return require('../assets/images/categories/fnm.png');
-    if (lowerName.includes('snack'))
-      return require('../assets/images/categories/sdj.png');
-    if (lowerName.includes('drink') || lowerName.includes('juice'))
-      return require('../assets/images/categories/snc.png');
-    if (lowerName.includes('break') || lowerName.includes('cereal'))
-      return require('../assets/images/categories/tcm.png');
-    return require('../assets/images/categories/dfn.png'); // Default fallback
-  };
-
-  const CategoryItem = ({ item }) => {
-    const [imageLoading, setImageLoading] = useState(false);
-    const [imageError, setImageError] = useState(false);
-
-    let imageSource;
-    if (imageError || (!item.image && !item.imageUrl)) {
-      imageSource = getCategoryPlaceholder(item.catName || item.name);
-    } else if (item.image) {
-      imageSource = item.image;
-    } else {
-      imageSource = { uri: `${CONFIG.image_base_url}${item.imageUrl}` };
-    }
-
-    return (
-      <TouchableOpacity
-        style={styles.item}
-        onPress={() =>
-          navigation.navigate('SearchScreen', {
-            catId: item.catId || item.id,
-            catName: item.catName || item.name,
-          })
-        }
-      >
-        <View style={styles.categoryItemContainer}>
-          {/* <LinearGradient
-                    colors={['#FF9D61', '#FFFFFF']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.gradientBox}
-                > */}
-
-          <Image
-            source={imageSource}
-            style={styles.image}
-            resizeMode="contain"
-            onLoadStart={() => setImageLoading(true)}
-            onLoadEnd={() => setImageLoading(false)}
-            onError={() => {
-              setImageError(true);
-              setImageLoading(false);
-            }}
-          />
-        </View>
-        {/* </LinearGradient> */}
-
-        <Text style={styles.label} numberOfLines={2}>
-          {item.catName || item.name}
-        </Text>
-      </TouchableOpacity>
     );
   };
 
@@ -1178,8 +1168,8 @@ const HomeScreen = () => {
         <Animated.View
           style={[
             {
-              paddingTop: Platform.OS === 'ios' ? top - 15 : top - 35,
-              paddingBottom: hp('1.4%'),
+              paddingTop: Platform.OS === 'ios' ? top : top - 15,
+              paddingBottom: hp('1%'),
             },
             fallbackHeaderBgStyle,
           ]}
@@ -2067,9 +2057,9 @@ const styles = StyleSheet.create({
   },
   headerViewOne: {
     flexDirection: 'row',
-    mar: hp('0.2%'),
     marginHorizontal: wp('6.9%'),
     justifyContent: 'space-between',
+    paddingTop: Platform.OS === 'ios' ? 0 : 5,
     alignItems: 'center',
     // marginBottom: 20,
   },
@@ -2077,12 +2067,12 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.poppins.extraBold,
     color: '#FFFFFF',
     fontSize: wp('5.5%'),
-    top: Platform.OS !== 'ios' ? hp('2%') : hp('0%'),
+    top: 0,
   },
   addressView: {
     flexDirection: 'row',
     alignItems: 'center',
-    top: Platform.OS === 'ios' ? hp('0.5%') : hp('1%'),
+    top: Platform.OS === 'ios' ? hp('0.5%') : 0,
     left: Platform.OS === 'ios' ? wp('0%') : -wp('0.5%'),
   },
   addressText: {
@@ -2097,7 +2087,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width: wp('20%'),
     justifyContent: 'center',
-    top: Platform.OS === 'ios' ? hp('1%') : hp('2%'),
+    top: Platform.OS === 'ios' ? hp('1%') : 0,
   },
   headerRightWrapper: {
     flexDirection: 'row',
@@ -2259,7 +2249,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#D2B200',
     borderRadius: wp('5%'),
-    top: Platform.OS === 'ios' ? hp('0.5%') : hp('1.3%'),
+    // top: Platform.OS === 'ios' ? hp('0.5%') : hp('1.3%'),
   },
   crownImage: {
     position: 'absolute',
