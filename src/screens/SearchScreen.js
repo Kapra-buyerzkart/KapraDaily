@@ -6,10 +6,16 @@ import {
   TouchableOpacity,
   TextInput,
   Platform,
-  FlatList,
   ActivityIndicator,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated, {
+  useSharedValue,
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  interpolate,
+  Extrapolation,
+} from 'react-native-reanimated';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useState, useEffect, useCallback, useContext } from 'react';
 import {
   widthPercentageToDP as wp,
@@ -113,6 +119,35 @@ const SearchScreen = () => {
     }
   }, [loading, resultCount]);
 
+  // ── Sticky header elevation ─────────────────────────────────────────────
+  // The search bar already sits outside the list (always pinned); this just
+  // fades in a subtle shadow once content scrolls beneath it, signaling the
+  // fixed header is "elevated" above the list. Shadows/elevation render
+  // outside the box model in RN, so this adds zero layout footprint — no
+  // height/margin change, no shift to the content below. UI-thread only.
+  const STICKY_SHADOW_RANGE = 24;
+  const scrollY = useSharedValue(0);
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: event => {
+      scrollY.value = event.contentOffset.y;
+    },
+  });
+  const stickyShadowAnimStyle = useAnimatedStyle(() => {
+    const progress = interpolate(
+      scrollY.value,
+      [0, STICKY_SHADOW_RANGE],
+      [0, 1],
+      Extrapolation.CLAMP,
+    );
+    return {
+      shadowColor: '#000000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowRadius: 4,
+      shadowOpacity: interpolate(progress, [0, 1], [0, 0.12]),
+      elevation: interpolate(progress, [0, 1], [0, 4]),
+    };
+  });
+
   // const { showLoader } = useContext(LoaderContext) // Loader handling moved to hook or local loading state used
 
   const renderItem = ({ item }) => {
@@ -156,7 +191,7 @@ const SearchScreen = () => {
   };
 
   return (
-    < style={styles.mainContainer}>
+    <SafeAreaView style={styles.mainContainer}>
       <View style={styles.headerContainer}>
         <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -174,7 +209,7 @@ const SearchScreen = () => {
           <Ionicons name="options-outline" size={wp('5.5%')} color="#000000" />
         </TouchableOpacity>
       </View>
-      <View style={styles.searchContainer}>
+      <Animated.View style={[styles.searchContainer, stickyShadowAnimStyle]}>
         <Image
           style={
             Platform.OS === 'ios'
@@ -205,7 +240,7 @@ const SearchScreen = () => {
           style={styles.clipboardIcon}
           source={require('../assets/images/clipboard-two.png')}
         />
-      </View>
+      </Animated.View>
       {/* <View style={{ height: hp(2), backgroundColor: '#fefefefe' }} /> */}
 
       {isStoreUnavailable ? (
@@ -236,7 +271,7 @@ const SearchScreen = () => {
             </View>
           )}
 
-          <FlatList
+          <Animated.FlatList
             data={loading ? [] : suggestions}
             keyExtractor={(item, index) =>
               (item.productId || item.id || index).toString()
@@ -244,6 +279,8 @@ const SearchScreen = () => {
             renderItem={renderItem}
             numColumns={3}
             key={3}
+            onScroll={scrollHandler}
+            scrollEventThrottle={16}
             showsVerticalScrollIndicator={false}
             ListHeaderComponent={ListHeader}
             contentContainerStyle={{
@@ -290,7 +327,7 @@ const SearchScreen = () => {
       <View style={styles.floatingContainer}>
         <SelectedProducts />
       </View>
-    </>
+    </SafeAreaView>
   );
 };
 

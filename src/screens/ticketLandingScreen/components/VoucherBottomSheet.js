@@ -37,8 +37,14 @@ const openInChrome = async () => {
     BMS_URL,
   )}`;
   const chromeUrl = Platform.OS === 'ios' ? chromeIOS : chromeAndroid;
-  const canChrome = await Linking.canOpenURL(chromeUrl);
-  Linking.openURL(canChrome ? chromeUrl : BMS_URL);
+  let canChrome = false;
+  try {
+    canChrome = await Linking.canOpenURL(chromeUrl);
+  } catch (e) {
+    // iOS rejects canOpenURL when the scheme isn't in LSApplicationQueriesSchemes
+    canChrome = false;
+  }
+  Linking.openURL(canChrome ? chromeUrl : BMS_URL).catch(() => {});
 };
 
 const Accordion = ({ title, items }) => {

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import HomeScreen from '../screens/HomeScreen';
 import CategoriesScreen from '../screens/CategoriesScreen';
@@ -10,14 +10,11 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  Alert,
-  Linking,
 } from 'react-native';
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
-import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import HomeStack from './HomeStack';
 import { FONTS } from '../styles/typography';
@@ -25,32 +22,23 @@ import { useContext } from 'react';
 import { AppContext } from '../context/appContext';
 import { useNavigation } from '@react-navigation/native';
 import Toast from 'react-native-simple-toast';
+import ServiceSwitcherModal from '../components/ServiceSwitcherModal';
 
 const Tab = createBottomTabNavigator();
 
 export default function MainTabNavigator() {
   const { isStoreUnavailable } = useContext(AppContext);
   const navigation = useNavigation();
+  const [isServiceSwitcherVisible, setIsServiceSwitcherVisible] = useState(false);
 
-  const KshopeButton = ({ onPress }) => {
-    const handleKshopeLink = async () => {
-      const deepLink = 'udmv://';
-      const canOpen = await Linking.canOpenURL(deepLink);
-      if (canOpen) {
-        Linking.openURL(deepLink);
-      } else {
-        const storeUrl =
-          Platform.OS === 'ios'
-            ? 'https://apps.apple.com/in/app/uden-deal/id6448085736'
-            : 'https://play.google.com/store/apps/details?id=com.kshope';
-        Linking.openURL(storeUrl).catch(err =>
-          console.error('Failed to open store URL:', err),
-        );
-      }
-    };
-
+  const KshopeButton = () => {
     return (
-      <TouchableOpacity style={styles.KshopeButton} onPress={handleKshopeLink}>
+      <TouchableOpacity
+        style={styles.KshopeButton}
+        onPress={() => setIsServiceSwitcherVisible(true)}
+        accessibilityRole="button"
+        accessibilityLabel="Choose service"
+      >
         <Image
           source={require('../assets/splashsvg/tab48.png')}
           style={{
@@ -64,130 +52,143 @@ export default function MainTabNavigator() {
   };
   const insets = useSafeAreaInsets();
   return (
-    <Tab.Navigator
-      initialRouteName="Home"
-      screenOptions={{
-        tabBarShowLabel: true,
-        tabBarActiveTintColor: '#F25000',
-        tabBarInactiveTintColor: null,
+    <>
+      <Tab.Navigator
+        initialRouteName="Home"
+        screenOptions={{
+          tabBarShowLabel: true,
+          tabBarActiveTintColor: '#F25000',
+          tabBarInactiveTintColor: null,
 
-        tabBarStyle: {
-          height:
-            Platform.OS === 'android' ? hp('7%') + insets.bottom : hp('8%'),
-          backgroundColor: '#FFFFFF',
-          paddingTop: hp('0.2%'),
-          shadowColor: '#000000',
-          shadowOffset: { width: 0, height: 0 },
-          shadowOpacity: 0.25,
-          shadowRadius: 4,
-          elevation: 6,
-          paddingRight: wp('11%'),
-        },
-      }}
-    >
-      <Tab.Screen
-        name="Home"
-        component={HomeStack}
-        listeners={({ navigation }) => ({
-          tabPress: e => {
-            e.preventDefault();
-            navigation.navigate('Home', {
-              screen: 'HomeScreen',
-            });
+          tabBarStyle: {
+            height:
+              Platform.OS === 'android' ? hp('7%') + insets.bottom : hp('8%'),
+            backgroundColor: '#FFFFFF',
+            paddingTop: hp('0.2%'),
+            shadowColor: '#000000',
+            shadowOffset: { width: 0, height: 0 },
+            shadowOpacity: 0.25,
+            shadowRadius: 4,
+            elevation: 6,
+            paddingRight: wp('11%'),
           },
-        })}
-        options={{
-          headerShown: false,
-
-          tabBarIcon: ({ focused, color }) => (
-            <Image
-              source={require('../assets/images/home.png')}
-              style={[
-                styles.iconImage,
-                { tintColor: focused ? '#F25000' : null },
-              ]}
-            />
-          ),
-
-          tabBarLabel: () => <Text style={styles.iconLabel}>Home</Text>,
         }}
-      />
-
-      <Tab.Screen
-        name="Categories"
-        component={CategoriesScreen}
-        listeners={{
-          tabPress: e => {
-            if (isStoreUnavailable) {
+      >
+        <Tab.Screen
+          name="Home"
+          component={HomeStack}
+          listeners={({ navigation }) => ({
+            tabPress: e => {
               e.preventDefault();
-              Toast.show(
-                'Store is currently unavailable in your location',
-                Toast.SHORT,
-              );
-            }
-          },
-        }}
-        options={{
-          headerShown: false,
+              navigation.navigate('Home', {
+                screen: 'HomeScreen',
+              });
+            },
+          })}
+          options={{
+            headerShown: false,
 
-          tabBarIcon: ({ focused }) => (
-            <Image
-              source={require('../assets/images/grid.png')}
-              style={[
-                styles.iconImage,
-                { tintColor: focused ? '#F25000' : null },
-              ]}
-            />
-          ),
+            tabBarIcon: ({ focused, color }) => (
+              <Image
+                source={require('../assets/images/home.png')}
+                style={[
+                  styles.iconImage,
+                  { tintColor: focused ? '#F25000' : null },
+                ]}
+              />
+            ),
 
-          tabBarLabel: () => (
-            <Text style={styles.iconLabel}>Grocery & more</Text>
-          ),
-        }}
-      />
+            tabBarLabel: () => <Text style={styles.iconLabel}>Home</Text>,
+          }}
+        />
 
-      {/* ---------------- WISHLIST ---------------- */}
-      <Tab.Screen
-        name="Wishlist"
-        component={WishlistScreen}
-        listeners={{
-          tabPress: e => {
-            if (isStoreUnavailable) {
+        <Tab.Screen
+          name="Categories"
+          component={CategoriesScreen}
+          listeners={{
+            tabPress: e => {
+              if (isStoreUnavailable) {
+                e.preventDefault();
+                Toast.show(
+                  'Store is currently unavailable in your location',
+                  Toast.SHORT,
+                );
+              }
+            },
+          }}
+          options={{
+            headerShown: false,
+
+            tabBarIcon: ({ focused }) => (
+              <Image
+                source={require('../assets/images/grid.png')}
+                style={[
+                  styles.iconImage,
+                  { tintColor: focused ? '#F25000' : null },
+                ]}
+              />
+            ),
+
+            tabBarLabel: () => (
+              <Text style={styles.iconLabel}>Grocery & more</Text>
+            ),
+          }}
+        />
+
+        {/* ---------------- WISHLIST ---------------- */}
+        <Tab.Screen
+          name="Wishlist"
+          component={WishlistScreen}
+          listeners={{
+            tabPress: e => {
+              if (isStoreUnavailable) {
+                e.preventDefault();
+                Toast.show(
+                  'Store is currently unavailable in your location',
+                  Toast.SHORT,
+                );
+              }
+            },
+          }}
+          options={{
+            headerShown: false,
+
+            tabBarIcon: ({ focused }) => (
+              <Image
+                source={require('../assets/images/heart.png')}
+                style={{
+                  height: wp('5.4%'),
+                  width: wp('5.4%'),
+                  tintColor: focused ? '#F25000' : null,
+                  resizeMode: 'contain',
+                }}
+              />
+            ),
+
+            tabBarLabel: () => <Text style={styles.iconLabel}>Wishlist</Text>,
+          }}
+        />
+
+        <Tab.Screen
+          name="Kshope"
+          component={KshopeScreen}
+          listeners={{
+            tabPress: e => {
               e.preventDefault();
-              Toast.show(
-                'Store is currently unavailable in your location',
-                Toast.SHORT,
-              );
-            }
-          },
-        }}
-        options={{
-          headerShown: false,
+              setIsServiceSwitcherVisible(true);
+            },
+          }}
+          options={{
+            tabBarButton: props => <KshopeButton />,
+          }}
+        />
+      </Tab.Navigator>
 
-          tabBarIcon: ({ focused }) => (
-            <Image
-              source={require('../assets/images/heart.png')}
-              style={{
-                height: wp('5.4%'),
-                width: wp('5.4%'),
-                tintColor: focused ? '#F25000' : null,
-                resizeMode: 'contain',
-              }}
-            />
-          ),
-
-          tabBarLabel: () => <Text style={styles.iconLabel}>Wishlist</Text>,
-        }}
+      <ServiceSwitcherModal
+        visible={isServiceSwitcherVisible}
+        onClose={() => setIsServiceSwitcherVisible(false)}
       />
-
-      <Tab.Screen
-        name="Kshope"
-        component={KshopeScreen}
-        options={{
-          tabBarButton: props => <KshopeButton onPress={() => {}} />,
-        }}
-      />
-    </Tab.Navigator>
+    </>
   );
 }
 

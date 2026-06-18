@@ -6,12 +6,14 @@ import {
   Dimensions,
   Image,
   ImageBackground,
+  LayoutAnimation,
   Modal,
   Platform,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
+  UIManager,
   View,
 } from 'react-native';
 import { wp, hp } from '../../../utils/responsive';
@@ -24,6 +26,48 @@ import { getVoucherQuoteApi } from '../../../api/voucherService';
 
 const { width, height } = Dimensions.get('window');
 
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+
+const AnimatedButton = ({ style, onPress, disabled, children, onPressIn, onPressOut }) => {
+  const scale = useRef(new Animated.Value(1)).current;
+
+  const handlePressIn = e => {
+    Animated.spring(scale, {
+      toValue: 0.93,
+      useNativeDriver: true,
+      speed: 40,
+    }).start();
+    onPressIn?.(e);
+  };
+
+  const handlePressOut = e => {
+    Animated.spring(scale, {
+      toValue: 1,
+      useNativeDriver: true,
+      speed: 20,
+      bounciness: 8,
+    }).start();
+    onPressOut?.(e);
+  };
+
+  return (
+    <Animated.View style={{ transform: [{ scale }] }}>
+      <TouchableOpacity
+        activeOpacity={0.85}
+        style={style}
+        onPress={onPress}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        disabled={disabled}
+      >
+        {children}
+      </TouchableOpacity>
+    </Animated.View>
+  );
+};
+
 const UdenTicketModal = ({
   visible,
   onClose,
@@ -33,6 +77,10 @@ const UdenTicketModal = ({
 }) => {
   const slideAnim = useRef(new Animated.Value(height)).current;
   const backdropAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.9)).current;
+  const descArrowAnim = useRef(new Animated.Value(0)).current;
+  const termsArrowAnim = useRef(new Animated.Value(0)).current;
+  const reasonAnim = useRef(new Animated.Value(0)).current;
   const [quantity, setQuantity] = useState(1);
   const [modalVisible, setModalVisible] = useState(false);
   const [openAccordion, setOpenAccordion] = useState(null);
@@ -41,8 +89,18 @@ const UdenTicketModal = ({
   const { handleBuyNow, successVisible, paidAmount, resetPayment } =
     useVoucherPayment();
 
-  const toggleAccordion = key =>
+  const arrowAnimFor = key =>
+    key === 'description' ? descArrowAnim : termsArrowAnim;
+
+  const toggleAccordion = key => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    Animated.timing(arrowAnimFor(key), {
+      toValue: openAccordion === key ? 0 : 1,
+      duration: 220,
+      useNativeDriver: true,
+    }).start();
     setOpenAccordion(prev => (prev === key ? null : key));
+  };
 
   const denomination = voucher?.denomination ?? 0;
   const maxQty = voucher?.availableCount;
@@ -102,6 +160,12 @@ const UdenTicketModal = ({
           friction: 11,
           useNativeDriver: true,
         }),
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          tension: 65,
+          friction: 9,
+          useNativeDriver: true,
+        }),
         Animated.timing(backdropAnim, {
           toValue: 1,
           duration: 280,
@@ -113,6 +177,11 @@ const UdenTicketModal = ({
         Animated.timing(slideAnim, {
           toValue: height,
           duration: 260,
+          useNativeDriver: true,
+        }),
+        Animated.timing(scaleAnim, {
+          toValue: 0.9,
+          duration: 220,
           useNativeDriver: true,
         }),
         Animated.timing(backdropAnim, {
@@ -130,6 +199,21 @@ const UdenTicketModal = ({
   const increaseQty = () => setQuantity(q => Math.min(maxQty, q + 1));
   console.log(quoteData, 'QuoteData=====>');
 
+  const disabledReason = isOutOfStock
+    ? 'This voucher is currently out of stock.'
+    : coinEligible === false
+      ? quoteData?.message ||
+        "You don't have enough UD-Coins to redeem this voucher."
+      : null;
+
+  useEffect(() => {
+    Animated.timing(reasonAnim, {
+      toValue: disabledReason ? 1 : 0,
+      duration: 220,
+      useNativeDriver: true,
+    }).start();
+  }, [disabledReason]);
+
   return (
     <>
       <Modal
@@ -142,7 +226,15 @@ const UdenTicketModal = ({
 
         <View style={styles.modalWrapper} pointerEvents="box-none">
           <Animated.View
-            style={[styles.sheet, { transform: [{ translateY: slideAnim }] }]}
+            style={[
+              styles.sheet,
+              {
+                transform: [
+                  { translateY: slideAnim },
+                  { scale: scaleAnim },
+                ],
+              },
+            ]}
           >
             <ImageBackground
               source={require('../../../assets/images/movieTicket/ticketbg.png')}
@@ -165,13 +257,12 @@ const UdenTicketModal = ({
 
               {/* Quantity selector */}
               <View style={styles.qtyRow}>
-                <TouchableOpacity
+                <AnimatedButton
                   style={[
                     styles.qtyBtn,
                     quantity <= 1 && styles.qtyBtnDisabled,
                   ]}
                   onPress={decreaseQty}
-                  activeOpacity={0.7}
                   disabled={quantity <= 1}
                 >
                   <Text
@@ -182,15 +273,14 @@ const UdenTicketModal = ({
                   >
                     −
                   </Text>
-                </TouchableOpacity>
+                </AnimatedButton>
                 <Text style={styles.qtyValue}>{quantity}</Text>
-                <TouchableOpacity
+                <AnimatedButton
                   style={[
                     styles.qtyBtn,
                     quantity >= maxQty && styles.qtyBtnDisabled,
                   ]}
                   onPress={increaseQty}
-                  activeOpacity={0.7}
                   disabled={quantity >= maxQty}
                 >
                   <Text
@@ -201,7 +291,7 @@ const UdenTicketModal = ({
                   >
                     +
                   </Text>
-                </TouchableOpacity>
+                </AnimatedButton>
               </View>
 
               {/* UD-Coin banner */}
@@ -231,9 +321,23 @@ const UdenTicketModal = ({
                         activeOpacity={0.7}
                       >
                         <Text style={styles.accordionTitle}>Description</Text>
-                        <Text style={styles.accordionArrow}>
-                          {openAccordion === 'description' ? '▲' : '▼'}
-                        </Text>
+                        <Animated.Text
+                          style={[
+                            styles.accordionArrow,
+                            {
+                              transform: [
+                                {
+                                  rotate: descArrowAnim.interpolate({
+                                    inputRange: [0, 1],
+                                    outputRange: ['0deg', '180deg'],
+                                  }),
+                                },
+                              ],
+                            },
+                          ]}
+                        >
+                          ▼
+                        </Animated.Text>
                       </TouchableOpacity>
                       {openAccordion === 'description' && (
                         <ScrollView
@@ -258,9 +362,23 @@ const UdenTicketModal = ({
                         <Text style={styles.accordionTitle}>
                           Terms & Conditions
                         </Text>
-                        <Text style={styles.accordionArrow}>
-                          {openAccordion === 'terms' ? '▲' : '▼'}
-                        </Text>
+                        <Animated.Text
+                          style={[
+                            styles.accordionArrow,
+                            {
+                              transform: [
+                                {
+                                  rotate: termsArrowAnim.interpolate({
+                                    inputRange: [0, 1],
+                                    outputRange: ['0deg', '180deg'],
+                                  }),
+                                },
+                              ],
+                            },
+                          ]}
+                        >
+                          ▼
+                        </Animated.Text>
                       </TouchableOpacity>
                       {openAccordion === 'terms' && (
                         <ScrollView
@@ -276,6 +394,31 @@ const UdenTicketModal = ({
                     </View>
                   )}
                 </View>
+              )}
+
+              {/* Why the buy button is disabled */}
+              {disabledReason && (
+                <Animated.View
+                  style={[
+                    styles.disabledReasonBanner,
+                    {
+                      opacity: reasonAnim,
+                      transform: [
+                        {
+                          translateY: reasonAnim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [-6, 0],
+                          }),
+                        },
+                      ],
+                    },
+                  ]}
+                >
+                  <Text style={styles.disabledReasonIcon}>⚠</Text>
+                  <Text style={styles.disabledReasonText}>
+                    {disabledReason}
+                  </Text>
+                </Animated.View>
               )}
 
               {/* Price row + BUY NOW */}
@@ -313,8 +456,7 @@ const UdenTicketModal = ({
                   )}
                 </View>
 
-                <TouchableOpacity
-                  activeOpacity={0.85}
+                <AnimatedButton
                   style={[
                     styles.buyNowBtn,
                     (isOutOfStock || quoteLoading || coinEligible === false) &&
@@ -335,18 +477,14 @@ const UdenTicketModal = ({
                   <Text style={styles.buyNowText}>
                     {isOutOfStock ? 'OUT OF STOCK' : 'BUY NOW'}
                   </Text>
-                </TouchableOpacity>
+                </AnimatedButton>
               </View>
             </ImageBackground>
 
             {/* Close button */}
-            <TouchableOpacity
-              style={styles.closeBtn}
-              onPress={onClose}
-              activeOpacity={0.8}
-            >
+            <AnimatedButton style={styles.closeBtn} onPress={onClose}>
               <Text style={styles.closeBtnText}>✕</Text>
-            </TouchableOpacity>
+            </AnimatedButton>
           </Animated.View>
         </View>
       </Modal>
@@ -376,9 +514,8 @@ const styles = StyleSheet.create({
   },
   modalWrapper: {
     flex: 1,
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
     alignItems: 'center',
-    paddingBottom: Platform.OS === 'ios' ? 120 : 120,
   },
   sheet: {
     width: width * 0.88,
@@ -533,6 +670,30 @@ const styles = StyleSheet.create({
     paddingHorizontal: wp(3),
     paddingBottom: hp(1),
     backgroundColor: '#FFFFFF',
+  },
+
+  // Disabled reason banner
+  disabledReasonBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF3E0',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#F9A833',
+    paddingVertical: hp(0.9),
+    paddingHorizontal: wp(3),
+    marginBottom: hp(1.5),
+    gap: 6,
+  },
+  disabledReasonIcon: {
+    fontSize: 13,
+    color: '#E07F2B',
+  },
+  disabledReasonText: {
+    flex: 1,
+    fontSize: 12,
+    fontFamily: 'Poppins-Medium',
+    color: '#8A5A1E',
   },
 
   // Price row
