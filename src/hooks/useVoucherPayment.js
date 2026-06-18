@@ -1,13 +1,14 @@
 import { useState } from 'react';
-import { Alert } from 'react-native';
 import RazorpayCheckout from 'react-native-razorpay';
 import {
   getVoucherQuoteApi,
   initiateVoucherPurchaseApi,
   verifyVoucherPurchaseApi,
 } from '../api/voucherService';
+import { useCart } from '../context/CartContext';
 
 export const useVoucherPayment = () => {
+  const { showStatus } = useCart();
   const [successVisible, setSuccessVisible] = useState(false);
   const [paidAmount, setPaidAmount] = useState(0);
 
@@ -23,10 +24,11 @@ export const useVoucherPayment = () => {
       });
 
       if (!initiateRes?.success || !initiateRes?.data) {
-        Alert.alert(
-          'Payment Error',
-          initiateRes?.message || 'Failed to initiate payment',
-        );
+        showStatus({
+          type: 'error',
+          title: 'Payment Error',
+          message: initiateRes?.message || 'Failed to initiate payment',
+        });
         return;
       }
 
@@ -57,18 +59,28 @@ export const useVoucherPayment = () => {
       if (verifyRes?.success) {
         setSuccessVisible(true);
       } else {
-        Alert.alert(
-          'Payment Pending',
-          verifyRes?.message ||
+        showStatus({
+          type: 'error',
+          title: 'Payment Pending',
+          message:
+            verifyRes?.message ||
             'Payment verification is pending. Check My Vouchers for status.',
-        );
+        });
       }
     } catch (err) {
-      if (err?.code !== 'PAYMENT_CANCELLED') {
-        Alert.alert(
-          'Payment Failed',
-          err?.description || 'Something went wrong. Please try again.',
-        );
+      if (err?.code === 'PAYMENT_CANCELLED') {
+        showStatus({
+          type: 'error',
+          title: 'Payment Not Completed',
+          message:
+            'You exited before completing the payment. Your UD Coins have not been deducted.',
+        });
+      } else {
+        showStatus({
+          type: 'error',
+          title: 'Payment Failed',
+          message: err?.description || 'Something went wrong. Please try again.',
+        });
       }
     }
   };

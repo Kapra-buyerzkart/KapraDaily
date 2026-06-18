@@ -14,6 +14,17 @@ import {
   Linking,
   StatusBar,
 } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  interpolate,
+  interpolateColor,
+  Extrapolation,
+  withTiming,
+  withSpring,
+} from 'react-native-reanimated';
+import { BlurView } from '@react-native-community/blur';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, {
   startTransition,
@@ -48,20 +59,9 @@ import LocationModal from '../components/LocationModal';
 import StatusModal from '../components/StatusModal';
 import StoreUnavailable from '../components/StoreUnavailable';
 import SeeAllButton from '../components/SeeAllButton';
-import { useCart } from '../context/CartContext';
 import CoinCountSVG from '../components/CoinCountSVG';
 import ShimmerPlaceholder from '../components/ShimmerPlaceholder';
 import HomePopupModal from '../components/HomePopupModal';
-
-const { width } = Dimensions.get('window');
-// const BANNER_HEIGHT = (283 / 390) * width;
-// // Top hero banner design size ~430x328 → use this to preserve aspect ratio
-// const TOP_BANNER_ASPECT_RATIO = 430 / 328;
-// const staticBanners = [
-//     require("../assets/images/image.png"),
-//     require("../assets/images/image.png"),
-//     require("../assets/images/image.png"),
-// ];
 
 const PlacementBannerCarousel = ({
   banners,
@@ -179,130 +179,192 @@ const PlacementBannerCarousel = ({
   );
 };
 
-// const ExploreCard = React.memo(({ item }) => {
-//   const navigation = useNavigation();
-//   const { addToCart, cartItems, updateCartItemQuantity, removeFromCart } =
-//     useCart();
-//   const [imageError, setImageError] = useState(false);
-//   const itemId = item.productId || item.id;
-//   const cartItem = cartItems.find(
-//     i => String(i.productId || i.id) === String(itemId),
-//   );
-//   const quantity = cartItem?.quantity || cartItem?.addedQty || 0;
-//   const cartItemId = cartItem?.cartItemId || itemId;
-//   const name = item.prName || item.name || '';
-//   const price = item.specialPrice || item.price || '';
-//   const mrp = item.unitPrice || item.mrp || '';
-//   let offer = item.discountPercentage
-//     ? Math.round(item.discountPercentage)
-//     : item.offer || 0;
-//   if (!offer && mrp && price && mrp > price)
-//     offer = Math.round(((mrp - price) / mrp) * 100);
-//   const getImg = img => {
-//     if (!img || imageError)
-//       return require('../assets/images/categories/dfn.png');
-//     if (typeof img === 'string') {
-//       if (img.startsWith('http')) return { uri: img };
-//       return { uri: `${CONFIG.image_base_url}${img}` };
-//     }
-//     return img;
-//   };
-//   const imageSource = getImg(item.featuredImage || item.img || item.imageUrl);
-//   return (
-//     <TouchableOpacity
-//       style={styles.exploreCard}
-//       onPress={() =>
-//         navigation.navigate('ProductDetailsScreen', {
-//           productId: itemId,
-//           product: item,
-//         })
-//       }
-//       activeOpacity={0.85}
-//     >
-//       <View style={styles.exploreImageContainer}>
-//         {offer > 0 && (
-//           <View style={styles.exploreOfferBadge}>
-//             <Text style={styles.exploreOfferBadgeText}>{offer}% OFF</Text>
-//           </View>
-//         )}
-//         <Image
-//           source={imageSource}
-//           style={[
-//             styles.exploreCardImage,
-//             (item.stockQty === 0 ||
-//               item.stockQty === '0' ||
-//               item.isAvailable === false) && { opacity: 0.5 },
-//           ]}
-//           resizeMode="contain"
-//           onError={() => setImageError(true)}
-//         />
-//         {(item.stockQty === 0 ||
-//           item.stockQty === '0' ||
-//           item.isAvailable === false) && (
-//           <View style={styles.exploreOutOfStockOverlay}>
-//             <Text style={styles.exploreOutOfStockText}>Out of Stock</Text>
-//           </View>
-//         )}
-//       </View>
-//       <Text style={styles.exploreCardName} numberOfLines={3}>
-//         {name}
-//       </Text>
-//       <View style={styles.exploreCardBottom}>
-//         <View>
-//           {mrp !== price && (
-//             <Text style={styles.exploreMrpText}>
-//               MRP{' '}
-//               <Text style={{ textDecorationLine: 'line-through' }}>₹{mrp}</Text>
-//             </Text>
-//           )}
-//           <Text style={styles.exploreCardPrice}>₹{price}</Text>
-//         </View>
-//         {quantity > 0 ? (
-//           <View style={styles.exploreCounterContainer}>
-//             <TouchableOpacity
-//               onPress={() =>
-//                 quantity === 1
-//                   ? removeFromCart(cartItemId)
-//                   : updateCartItemQuantity(cartItemId, quantity - 1)
-//               }
-//             >
-//               <Entypo name="minus" size={wp('3%')} color="#F04B1B" />
-//             </TouchableOpacity>
-//             <Text style={styles.exploreQuantityText}>{quantity}</Text>
-//             <TouchableOpacity
-//               onPress={() => updateCartItemQuantity(cartItemId, quantity + 1)}
-//             >
-//               <Entypo name="plus" size={wp('3%')} color="#F04B1B" />
-//             </TouchableOpacity>
-//           </View>
-//         ) : (
-//           <TouchableOpacity
-//             style={[
-//               styles.exploreAddBtn,
-//               (item.stockQty === 0 ||
-//                 item.stockQty === '0' ||
-//                 item.isAvailable === false) && { backgroundColor: '#CCCCCC' },
-//             ]}
-//             onPress={() => addToCart(item)}
-//             disabled={
-//               item.stockQty === 0 ||
-//               item.stockQty === '0' ||
-//               item.isAvailable === false
-//             }
-//           >
-//             <Entypo name="plus" color="#FFFFFF" size={wp('3.5%')} />
-//           </TouchableOpacity>
-//         )}
-//       </View>
-//     </TouchableOpacity>
-//   );
-// });
-
 const HomeScreen = () => {
   const { top } = useSafeAreaInsets();
   const BANNER_WIDTH = wp('84.88%');
   const BANNER_SPACING = wp('4.6%');
   const SNAP_INTERVAL = BANNER_WIDTH + BANNER_SPACING;
+
+  // ── Sticky search header animation ──────────────────────────────────────
+  const SCROLL_RANGE = 180;
+  const scrollY = useSharedValue(0);
+  const headerInfoMaxH = useSharedValue(0);
+  const searchPressScale = useSharedValue(1);
+
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: event => {
+      scrollY.value = event.contentOffset.y;
+    },
+  });
+
+  // Collapsible row: height from measured → 0
+  const collapsibleHeaderStyle = useAnimatedStyle(() => {
+    if (headerInfoMaxH.value <= 0) return {};
+    return {
+      height: interpolate(
+        scrollY.value,
+        [0, SCROLL_RANGE],
+        [headerInfoMaxH.value, 0],
+        Extrapolation.CLAMP,
+      ),
+      overflow: 'hidden',
+    };
+  });
+
+  // ETA "20 mins" + location row
+  const etaAnimStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(
+      scrollY.value,
+      [0, SCROLL_RANGE * 0.65],
+      [1, 0],
+      Extrapolation.CLAMP,
+    ),
+    transform: [
+      {
+        translateY: interpolate(
+          scrollY.value,
+          [0, SCROLL_RANGE * 0.65],
+          [0, -40],
+          Extrapolation.CLAMP,
+        ),
+      },
+      {
+        scale: interpolate(
+          scrollY.value,
+          [0, SCROLL_RANGE * 0.65],
+          [1, 0.9],
+          Extrapolation.CLAMP,
+        ),
+      },
+    ],
+  }));
+
+  // Coin badge
+  const coinAnimStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(
+      scrollY.value,
+      [0, SCROLL_RANGE],
+      [1, 0.8],
+      Extrapolation.CLAMP,
+    ),
+    transform: [
+      {
+        translateY: interpolate(
+          scrollY.value,
+          [0, SCROLL_RANGE],
+          [0, -20],
+          Extrapolation.CLAMP,
+        ),
+      },
+      {
+        scale: interpolate(
+          scrollY.value,
+          [0, SCROLL_RANGE],
+          [1, 0.9],
+          Extrapolation.CLAMP,
+        ),
+      },
+    ],
+  }));
+
+  // Profile avatar
+  const profileAnimStyle = useAnimatedStyle(() => ({
+    transform: [
+      {
+        translateY: interpolate(
+          scrollY.value,
+          [0, SCROLL_RANGE],
+          [0, -20],
+          Extrapolation.CLAMP,
+        ),
+      },
+      {
+        scale: interpolate(
+          scrollY.value,
+          [0, SCROLL_RANGE],
+          [1, 0.9],
+          Extrapolation.CLAMP,
+        ),
+      },
+    ],
+  }));
+
+  // Pre-compute responsive values outside the worklet (hp/wp are not worklet functions)
+  const SEARCH_MARGIN_START = hp('2%');
+  const SEARCH_MARGIN_END = hp('0.8%');
+  const SEARCH_HEIGHT_START = hp('5.4%');
+  const SEARCH_HEIGHT_END = hp('4.8%');
+  const SEARCH_RADIUS_START = wp('5.5%');
+  const SEARCH_RADIUS_END = wp('4.5%');
+
+  // Search bar: height / borderRadius / shadow / margin / micro-press scale
+  const searchWrapperAnimStyle = useAnimatedStyle(() => {
+    const progress = interpolate(
+      scrollY.value,
+      [0, SCROLL_RANGE],
+      [0, 1],
+      Extrapolation.CLAMP,
+    );
+    return {
+      marginTop: interpolate(
+        scrollY.value,
+        [0, SCROLL_RANGE],
+        [SEARCH_MARGIN_START, SEARCH_MARGIN_END],
+        Extrapolation.CLAMP,
+      ),
+      height: interpolate(
+        progress,
+        [0, 1],
+        [SEARCH_HEIGHT_START, SEARCH_HEIGHT_END],
+      ),
+      borderRadius: interpolate(
+        progress,
+        [0, 1],
+        [SEARCH_RADIUS_START, SEARCH_RADIUS_END],
+      ),
+      shadowOpacity: interpolate(progress, [0, 1], [0, 0.12]),
+      shadowRadius: interpolate(progress, [0, 1], [0, 8]),
+      elevation: interpolate(progress, [0, 1], [0, 4]),
+      transform: [{ scale: searchPressScale.value }],
+    };
+  });
+
+  // Glass overlay (topSectionBanner case): fades in as dark-green frost
+  const glassOverlayAnimStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(
+      scrollY.value,
+      [0, SCROLL_RANGE],
+      [0, 1],
+      Extrapolation.CLAMP,
+    ),
+  }));
+
+  // Fallback header background color transition (no banner image)
+  const fallbackHeaderBgStyle = useAnimatedStyle(() => ({
+    backgroundColor: interpolateColor(
+      scrollY.value,
+      [0, SCROLL_RANGE],
+      ['#F25000', '#0F413C'],
+    ),
+  }));
+
+  // Bottom border line – only visible once sticky
+  const stickyBorderAnimStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(
+      scrollY.value,
+      [60, SCROLL_RANGE],
+      [0, 1],
+      Extrapolation.CLAMP,
+    ),
+  }));
+
+  const handleSearchPressIn = () => {
+    searchPressScale.value = withTiming(0.98, { duration: 75 });
+  };
+  const handleSearchPressOut = () => {
+    searchPressScale.value = withSpring(1, { damping: 20, stiffness: 200 });
+  };
+  // ────────────────────────────────────────────────────────────────────────
 
   const scrollRef = useRef();
   const [activeIndex, setActiveIndex] = useState(0);
@@ -841,87 +903,12 @@ const HomeScreen = () => {
     );
   };
 
-  const FruitCard = ({ item, onPress }) => {
-    const name = item.name || item.bannerName || '';
-    const imageSource =
-      item.uri ||
-      (item.imageUrl
-        ? { uri: `${CONFIG.image_base_url}${item.imageUrl}` }
-        : require('../assets/images/mango_banner.png'));
-    return (
-      <TouchableOpacity activeOpacity={0.9} onPress={onPress}>
-        <ImageBackground
-          source={imageSource}
-          style={styles.fruitsImageBackground}
-          imageStyle={{
-            borderRadius: wp('4.65%'),
-            resizeMode: 'cover',
-          }}
-        >
-          {/* <View style={styles.fruitsImageView}> */}
-          {/* <View>
-                        <Text style={styles.fruitsNameText}>{name}</Text>
-                    </View> */}
-          {/* </View> */}
-        </ImageBackground>
-      </TouchableOpacity>
-    );
-  };
-
-  //     const CurvedSection = ({ children }) => {
-  //         if (!SvgAvailable) return <View style={[styles.curvedSectionView, { backgroundColor: '#FFC7AC' }]}>{children}</View>;
-
-  //         const height = hp("29%");     // total height of section
-  //         const curveDepth = 50; // downward curve depth
-
-  //         const d = `
-  //     M 0 0
-  //     C ${width * 0.25} ${curveDepth},
-  //       ${width * 0.75} ${curveDepth},
-  //       ${width} 0
-  //     L ${width} ${height}
-  //     L 0 ${height}
-  //     Z
-  //   `;
-
-  //         return (
-  //             <View style={{
-  //                 width,
-  //                 height,
-  //                 position: "relative"
-  //             }}>
-  //                 {/* Background curved SVG */}
-  //                 <Svg width={width} height={height} style={styles.curvedSectionSvg}>
-  //                     <Defs>
-  //                         <SvgLinearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
-  //                             <Stop offset="0" stopColor="#FFC7AC" />
-  //                             <Stop offset="1" stopColor="#FFFFFF" />
-  //                         </SvgLinearGradient>
-  //                     </Defs>
-  //                     <Path d={d} fill="url(#grad)" />
-  //                 </Svg>
-
-  //                 {/* Content over the curved shape */}
-  //                 <View style={styles.curvedSectionView}>
-  //                     {children}
-  //                 </View>
-  //             </View>
-  //         );
-  //     }
-
   const handleBannerPress = banner => {
     if (!banner) return;
     console.log('Banner Pressed:', banner);
 
     const linkType = (banner.linkType || banner.LinkType || '').toLowerCase();
     const linkValue = banner.linkValue || banner.LinkValue;
-    const linkName =
-      banner.linkName ||
-      banner.LinkName ||
-      banner.bannerName ||
-      banner.BannerName ||
-      banner.title ||
-      '';
 
     if (linkType === 'product') {
       navigation.navigate('ProductDetailsScreen', { productId: linkValue });
@@ -989,15 +976,6 @@ const HomeScreen = () => {
     }
   }, [categoryDiscovery]);
 
-  console.log(
-    '🖼️ [HOME RENDER] isHomePopupVisible:',
-    isHomePopupVisible,
-    'hasPopupData:',
-    !!popupData,
-    'isStoreUnavailable:',
-    isStoreUnavailable,
-  );
-
   return (
     <View style={styles.mainContainer}>
       <StatusBar translucent backgroundColor="transparent" />
@@ -1022,7 +1000,7 @@ const HomeScreen = () => {
           onSelect={item => console.log(item)}
         />
       )}
-      {/* Persistent Header Section (Fixed at Top) */}
+      {/* ── Animated sticky header ───────────────────────────────────────── */}
       {topSectionBanner && topSectionBanner.length > 0 ? (
         <TouchableOpacity
           activeOpacity={0.9}
@@ -1035,13 +1013,190 @@ const HomeScreen = () => {
               paddingTop: Platform.OS === 'ios' ? top : top - 15,
               paddingBottom: hp('1%'),
             }}
-            imageStyle={{
-              resizeMode: 'cover',
+            imageStyle={{ resizeMode: 'cover' }}
+          >
+            {/* Frosted glass overlay – fades in on scroll */}
+            <Animated.View
+              pointerEvents="none"
+              style={[StyleSheet.absoluteFill, glassOverlayAnimStyle]}
+            >
+              {Platform.OS === 'ios' && (
+                <BlurView
+                  style={StyleSheet.absoluteFill}
+                  blurType="dark"
+                  blurAmount={6}
+                  reducedTransparencyFallbackColor="rgba(15,65,60,0.92)"
+                />
+              )}
+              <View
+                style={[
+                  StyleSheet.absoluteFill,
+                  { backgroundColor: 'rgba(15,65,60,0.72)' },
+                ]}
+              />
+            </Animated.View>
+
+            {/* Collapsible: ETA + location + coins + profile */}
+            <Animated.View
+              style={collapsibleHeaderStyle}
+              onLayout={e => {
+                const h = e.nativeEvent.layout.height;
+                if (headerInfoMaxH.value <= 0 && h > 0) {
+                  headerInfoMaxH.value = h;
+                }
+              }}
+            >
+              <View style={styles.headerViewOne}>
+                <Animated.View style={etaAnimStyle}>
+                  <Text style={styles.timeText}>20 mins</Text>
+                  <TouchableOpacity
+                    style={styles.addressView}
+                    onPress={() => setModalVisible(true)}
+                  >
+                    <Entypo
+                      name={'location-pin'}
+                      size={wp('4%')}
+                      color={'#FFFFFF'}
+                      style={{ marginRight: wp('1%') }}
+                    />
+                    <Text
+                      style={styles.addressText}
+                      numberOfLines={1}
+                      ellipsizeMode="tail"
+                    >
+                      {profile?.pinAddress || 'Select Location'}
+                    </Text>
+                    <Entypo
+                      name={'chevron-right'}
+                      size={wp('3.6%')}
+                      color={'#FFFFFF'}
+                    />
+                  </TouchableOpacity>
+                </Animated.View>
+                <View style={styles.headerRightWrapper}>
+                  <Animated.View style={coinAnimStyle}>
+                    <TouchableOpacity
+                      onPress={() => navigation.navigate('BCoinScreen')}
+                      style={styles.bcoinContainer}
+                    >
+                      <CoinCountSVG
+                        width={wp('14%')}
+                        height={hp('5%')}
+                        style={styles.tokenSvg}
+                      />
+                      <Text style={styles.tokenText}>
+                        {dashboardData?.wallet?.bCoins || '0'} B
+                      </Text>
+                    </TouchableOpacity>
+                  </Animated.View>
+                  <Animated.View style={profileAnimStyle}>
+                    <TouchableOpacity
+                      onPress={() => {
+                        navigation.navigate('ProfileScreen', { type: 'login' });
+                      }}
+                      style={styles.profileIconMainView}
+                    >
+                      <View style={styles.profileIconView}>
+                        <GradientUserIcon size={wp('10%')} />
+                      </View>
+                      {profile?.isPrivileged && (
+                        <Image
+                          source={require('../assets/images/crown.png')}
+                          style={[
+                            styles.crownImage,
+                            {
+                              width: wp('5%'),
+                              height: hp('1.8%'),
+                              zIndex: 2,
+                              position: 'absolute',
+                              top: -hp('0.1%'),
+                              alignSelf: 'center',
+                            },
+                          ]}
+                        />
+                      )}
+                    </TouchableOpacity>
+                  </Animated.View>
+                </View>
+              </View>
+            </Animated.View>
+
+            {/* Search bar – sticky anchor */}
+            <Animated.View
+              style={[
+                {
+                  backgroundColor: '#FFFFFF',
+                  marginHorizontal: wp('4.7%'),
+                  paddingHorizontal: wp('4%'),
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  overflow: 'hidden',
+                  shadowColor: '#000000',
+                  shadowOffset: { width: 0, height: 3 },
+                },
+                searchWrapperAnimStyle,
+              ]}
+            >
+              <TouchableOpacity
+                onPress={() =>
+                  !isStoreUnavailable && navigation.navigate('SearchScreen')
+                }
+                onPressIn={handleSearchPressIn}
+                onPressOut={handleSearchPressOut}
+                style={[
+                  { flex: 1, flexDirection: 'row', alignItems: 'center' },
+                  isStoreUnavailable && { opacity: 0.6 },
+                ]}
+                activeOpacity={isStoreUnavailable ? 1 : 0.85}
+              >
+                <Feather name="search" color={'#f25000'} size={wp('6%')} />
+                <View style={styles.searchProductContainer}>
+                  <Text style={styles.searchProductText}>Search product</Text>
+                </View>
+                <Image
+                  style={styles.clipboardIcon}
+                  source={require('../assets/images/clip_board.png')}
+                />
+              </TouchableOpacity>
+            </Animated.View>
+
+            {/* Bottom border – appears once sticky */}
+            <Animated.View
+              pointerEvents="none"
+              style={[
+                {
+                  height: 1,
+                  backgroundColor: 'rgba(255,255,255,0.08)',
+                  marginTop: hp('0.5%'),
+                },
+                stickyBorderAnimStyle,
+              ]}
+            />
+          </ImageBackground>
+        </TouchableOpacity>
+      ) : (
+        <Animated.View
+          style={[
+            {
+              paddingTop: Platform.OS === 'ios' ? top - 15 : top - 35,
+              paddingBottom: hp('1.4%'),
+            },
+            fallbackHeaderBgStyle,
+          ]}
+        >
+          {/* Collapsible: ETA + location + coins + profile */}
+          <Animated.View
+            style={collapsibleHeaderStyle}
+            onLayout={e => {
+              const h = e.nativeEvent.layout.height;
+              if (headerInfoMaxH.value <= 0 && h > 0) {
+                headerInfoMaxH.value = h;
+              }
             }}
           >
             <View style={styles.headerViewOne}>
-              <View>
-                <Text style={styles.timeText}>20 min</Text>
+              <Animated.View style={etaAnimStyle}>
+                <Text style={styles.timeText}>20 mins</Text>
                 <TouchableOpacity
                   style={styles.addressView}
                   onPress={() => setModalVisible(true)}
@@ -1065,62 +1220,82 @@ const HomeScreen = () => {
                     color={'#FFFFFF'}
                   />
                 </TouchableOpacity>
-              </View>
+              </Animated.View>
               <View style={styles.headerRightWrapper}>
-                <TouchableOpacity
-                  onPress={() => navigation.navigate('BCoinScreen')}
-                  style={styles.bcoinContainer}
-                >
-                  <CoinCountSVG
-                    width={wp('14%')}
-                    height={hp('5%')}
-                    style={styles.tokenSvg}
-                  />
-                  <Text style={styles.tokenText}>
-                    {dashboardData?.wallet?.bCoins || '0'} B
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  onPress={() => {
-                    navigation.navigate('ProfileScreen', {
-                      type: 'login',
-                    });
-                  }}
-                  style={styles.profileIconMainView}
-                >
-                  <View style={styles.profileIconView}>
-                    <GradientUserIcon size={wp('10%')} />
-                  </View>
-                  {profile?.isPrivileged && (
-                    <Image
-                      source={require('../assets/images/crown.png')}
-                      style={[
-                        styles.crownImage,
-                        {
-                          width: wp('5%'),
-                          height: hp('1.8%'),
-                          zIndex: 2,
-                          position: 'absolute',
-                          top: -hp('0.1%'),
-                          alignSelf: 'center',
-                        },
-                      ]}
+                <Animated.View style={coinAnimStyle}>
+                  <TouchableOpacity
+                    onPress={() => navigation.navigate('BCoinScreen')}
+                    style={styles.bcoinContainer}
+                  >
+                    <CoinCountSVG
+                      width={wp('14%')}
+                      height={hp('5%')}
+                      style={styles.tokenSvg}
                     />
-                  )}
-                </TouchableOpacity>
+                    <Text style={styles.tokenText}>
+                      {dashboardData?.wallet?.bCoins}
+                    </Text>
+                  </TouchableOpacity>
+                </Animated.View>
+                <Animated.View style={profileAnimStyle}>
+                  <TouchableOpacity
+                    onPress={() => {
+                      navigation.navigate('ProfileScreen', { type: 'login' });
+                    }}
+                    style={styles.profileIconMainView}
+                  >
+                    <View style={styles.profileIconView}>
+                      <GradientUserIcon size={wp('10%')} />
+                    </View>
+                    {profile?.isPrivileged && (
+                      <Image
+                        source={require('../assets/images/crown.png')}
+                        style={[
+                          styles.crownImage,
+                          {
+                            width: wp('5%'),
+                            height: hp('1.8%'),
+                            zIndex: 2,
+                            position: 'absolute',
+                            top: -hp('0.1%'),
+                            alignSelf: 'center',
+                          },
+                        ]}
+                      />
+                    )}
+                  </TouchableOpacity>
+                </Animated.View>
               </View>
             </View>
+          </Animated.View>
 
+          {/* Search bar – sticky anchor */}
+          <Animated.View
+            style={[
+              {
+                backgroundColor: '#FFFFFF',
+                marginHorizontal: wp('4.7%'),
+                paddingHorizontal: wp('4%'),
+                flexDirection: 'row',
+                alignItems: 'center',
+                overflow: 'hidden',
+                shadowColor: '#000000',
+                shadowOffset: { width: 0, height: 3 },
+              },
+              searchWrapperAnimStyle,
+            ]}
+          >
             <TouchableOpacity
               onPress={() =>
                 !isStoreUnavailable && navigation.navigate('SearchScreen')
               }
+              onPressIn={handleSearchPressIn}
+              onPressOut={handleSearchPressOut}
               style={[
-                styles.searchContainer,
+                { flex: 1, flexDirection: 'row', alignItems: 'center' },
                 isStoreUnavailable && { opacity: 0.6 },
               ]}
-              activeOpacity={isStoreUnavailable ? 1 : 0.7}
+              activeOpacity={isStoreUnavailable ? 1 : 0.85}
             >
               <Feather name="search" color={'#f25000'} size={wp('6%')} />
               <View style={styles.searchProductContainer}>
@@ -1131,106 +1306,26 @@ const HomeScreen = () => {
                 source={require('../assets/images/clip_board.png')}
               />
             </TouchableOpacity>
-          </ImageBackground>
-        </TouchableOpacity>
-      ) : (
-        <View style={[styles.headerMainView, { paddingTop: hp('2%') }]}>
-          <View style={styles.headerViewOne}>
-            <View>
-              <Text style={styles.timeText}>20 min</Text>
-              <TouchableOpacity
-                style={styles.addressView}
-                onPress={() => setModalVisible(true)}
-              >
-                <Entypo
-                  name={'location-pin'}
-                  size={wp('4%')}
-                  color={'#FFFFFF'}
-                  style={{ marginRight: wp('1%') }}
-                />
-                <Text
-                  style={styles.addressText}
-                  numberOfLines={1}
-                  ellipsizeMode="tail"
-                >
-                  {profile?.pinAddress || 'Select Location'}
-                </Text>
-                <Entypo
-                  name={'chevron-right'}
-                  size={wp('3.6%')}
-                  color={'#FFFFFF'}
-                />
-              </TouchableOpacity>
-            </View>
-            <View style={styles.headerRightWrapper}>
-              <TouchableOpacity
-                onPress={() => navigation.navigate('BCoinScreen')}
-                style={styles.bcoinContainer}
-              >
-                <CoinCountSVG
-                  width={wp('14%')}
-                  height={hp('5%')}
-                  style={styles.tokenSvg}
-                />
-                <Text style={styles.tokenText}>
-                  {dashboardData?.wallet?.bCoins}
-                </Text>
-              </TouchableOpacity>
+          </Animated.View>
 
-              <TouchableOpacity
-                onPress={() => {
-                  navigation.navigate('ProfileScreen', {
-                    type: 'login',
-                  });
-                }}
-                style={styles.profileIconMainView}
-              >
-                <View style={styles.profileIconView}>
-                  <GradientUserIcon size={wp('10%')} />
-                </View>
-                {profile?.isPrivileged && (
-                  <Image
-                    source={require('../assets/images/crown.png')}
-                    style={[
-                      styles.crownImage,
-                      {
-                        width: wp('5%'),
-                        height: hp('1.8%'),
-                        zIndex: 2,
-                        position: 'absolute',
-                        top: -hp('0.1%'),
-                        alignSelf: 'center',
-                      },
-                    ]}
-                  />
-                )}
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          <TouchableOpacity
-            onPress={() =>
-              !isStoreUnavailable && navigation.navigate('SearchScreen')
-            }
+          {/* Bottom border – appears once sticky */}
+          <Animated.View
+            pointerEvents="none"
             style={[
-              styles.searchContainer,
-              isStoreUnavailable && { opacity: 0.6 },
+              {
+                height: 1,
+                backgroundColor: 'rgba(255,255,255,0.08)',
+                marginTop: hp('0.5%'),
+              },
+              stickyBorderAnimStyle,
             ]}
-            activeOpacity={isStoreUnavailable ? 1 : 0.7}
-          >
-            <Feather name="search" color={'#f25000'} size={wp('6%')} />
-            <View style={styles.searchProductContainer}>
-              <Text style={styles.searchProductText}>Search product</Text>
-            </View>
-            <Image
-              style={styles.clipboardIcon}
-              source={require('../assets/images/clip_board.png')}
-            />
-          </TouchableOpacity>
-        </View>
+          />
+        </Animated.View>
       )}
 
-      <ScrollView
+      <Animated.ScrollView
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}
         style={{ flex: 1 }}
         contentContainerStyle={{
           paddingBottom: hp('0.7%'),
@@ -1496,15 +1591,6 @@ const HomeScreen = () => {
               )
             )}
 
-            {/* {bottomBanner && bottomBanner.length > 0 && (
-                            <PlacementBannerCarousel
-                                banners={bottomBanner}
-                                onBannerPress={handleBannerPress}
-                                style={{ marginTop: hp('2%'), marginBottom: 10 }}
-                                showDots={false}
-                            />
-                        )} */}
-
             {isHomeLoading && fruits.length === 0 ? (
               <SeasonalFruitsShimmer />
             ) : (
@@ -1523,34 +1609,6 @@ const HomeScreen = () => {
                     fullWidth={false}
                   />
                 </View>
-                // <LinearGradient
-                //     colors={['rgba(255, 123, 58, 0.1)', 'rgba(255, 255, 255, 0.1)']}
-                //     start={{ x: 0.2, y: 0 }}
-                //     end={{ x: 0.8, y: 1 }}
-                //     locations={[0.036, 0.354]}
-                //     style={styles.fruitsGradientContainer}
-                // >
-                //     <View style={styles.fruitsContainer}>
-                //         <View style={styles.fruitsHeaderView}>
-                //             {/* <Text style={styles.fruitsHeaderText}>{dashboardData?.fruits?.title || "Seasonal Fruits"}</Text> */}
-                //             <TouchableOpacity style={styles.viewAllContainer}>
-                //                 {/* <Text style={styles.viewAllText}>View All</Text>
-                //                 <MaterialIcons name={"arrow-forward-ios"} color={"#FF7B3A"} size={wp("3.3%")} style={styles.viewAllRightArrowIcon} /> */}
-                //             </TouchableOpacity>
-                //         </View>
-                //         <FlatList
-                //             data={fruits}
-                //             keyExtractor={(item, index) => (item.id || item.bannerId || index).toString()}
-                //             horizontal={true}
-                //             renderItem={({ item }) => <FruitCard item={item} onPress={() => handleBannerPress(item)} />}
-                //             showsHorizontalScrollIndicator={false}
-                //             contentContainerStyle={{
-                //                 paddingHorizontal: wp("5%"),
-                //                 paddingBottom: hp('2%')
-                //             }}
-                //         />
-                //     </View>
-                // </LinearGradient>
               )
             )}
             {isHomeLoading && thirdBlockItems.length === 0 ? (
@@ -1880,7 +1938,7 @@ const HomeScreen = () => {
             <View style={{ height: hp('10%') }} />
           </LinearGradient>
         )}
-      </ScrollView>
+      </Animated.ScrollView>
       <View style={styles.floatingContainer}>
         {!isStoreUnavailable && <SelectedProducts />}
       </View>
@@ -2009,10 +2067,11 @@ const styles = StyleSheet.create({
   },
   headerViewOne: {
     flexDirection: 'row',
-    marginTop: hp('0.2%'),
+    mar: hp('0.2%'),
     marginHorizontal: wp('6.9%'),
     justifyContent: 'space-between',
     alignItems: 'center',
+    // marginBottom: 20,
   },
   timeText: {
     fontFamily: FONTS.poppins.extraBold,
@@ -2726,6 +2785,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginLeft: wp('2%'),
     width: wp('65%'),
+    top: Platform.OS == 'ios' ? 0 : 2,
   },
   searchProductText: {
     fontFamily: FONTS.poppins.light,

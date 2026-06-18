@@ -68,7 +68,7 @@ const UdenTicketModal = ({
   }, [initialQuoteData]);
 
   useEffect(() => {
-    if (!visible || !voucher?.voucherId || quantity === 1) return;
+    if (!visible || !voucher?.voucherId) return;
     let cancelled = false;
     const fetchQuote = async () => {
       setQuoteLoading(true);
@@ -88,7 +88,7 @@ const UdenTicketModal = ({
     return () => {
       cancelled = true;
     };
-  }, [quantity]);
+  }, [quantity, voucher?.voucherId, bCoins, visible]);
 
   console.log(voucher, 'voucher is here ==========>');
 
@@ -502,9 +502,11 @@ const styles = StyleSheet.create({
     marginBottom: hp(1.8),
     // borderRadius: 8,
     overflow: 'hidden',
-    borderWidth: 0.2,
-    borderColor: '#E0E0E0',
+    borderWidth: 0.4,
+    borderRadius: 15,
+    borderColor: '#1A1A1A80',
   },
+
   accordionItem: {
     borderBottomWidth: 1,
     borderBottomColor: '#ffffffff',

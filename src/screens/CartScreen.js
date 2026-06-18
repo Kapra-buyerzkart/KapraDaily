@@ -10,10 +10,7 @@ import {
   ViewBase,
 } from 'react-native';
 import React, { useContext, useState, useEffect, useRef } from 'react';
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -192,12 +189,6 @@ const CartScreen = () => {
       setRefreshing(false);
     }
   }, [getCartSummary, fetchAddresses]);
-
-  const scrollToBill = () => {
-    setTimeout(() => {
-      scrollViewRef.current?.scrollToEnd({ animated: true });
-    }, 100);
-  };
 
   // --- Order Placement Logic (Migrated from Checkout) ---
   // --- Order Logic ---
@@ -595,7 +586,7 @@ const CartScreen = () => {
           source={require('../assets/images/lighting.png')}
           style={styles.lightningIcon}
         />
-        <Text style={styles.deliveryTime}>20 min</Text>
+        <Text style={styles.deliveryTime}>20 mins</Text>
       </View>
     </View>
   );
@@ -1023,14 +1014,14 @@ const CartScreen = () => {
 
   if (cartItems.length === 0 && !isFinalizingOrder) {
     return (
-      <SafeAreaView style={styles.mainContainer} edges={['top']}>
+      <View style={[styles.mainContainer, { paddingTop: insets.top }]}>
         <CartEmptyComponent />
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView edges={['top']} style={styles.mainContainer}>
+    <View style={[styles.mainContainer, { paddingTop: insets.top }]}>
       {renderHeader()}
       <View style={styles.dashedHeader} />
       {renderAddressBar()}
@@ -1215,7 +1206,7 @@ const CartScreen = () => {
           setShowAddressModal(true);
         }}
       />
-    </SafeAreaView>
+    </View>
   );
 };
 

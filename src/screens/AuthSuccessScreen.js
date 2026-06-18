@@ -112,7 +112,7 @@ const AuthSuccessScreen = ({ navigation }) => {
 
         {/* Deal Cards Section */}
         <View style={styles.cardsContainer}>
-          {/* 20 mins deal - Large Card (Kapra) */}
+          {/* 20 minss deal - Large Card (Kapra) */}
           <TouchableOpacity activeOpacity={0.9} onPress={handleKapra}>
             <FastImage
               source={require('../assets/images/splash/udendeal.png')}
@@ -121,29 +121,31 @@ const AuthSuccessScreen = ({ navigation }) => {
             />
           </TouchableOpacity>
 
-          <TouchableOpacity activeOpacity={0.9} onPress={handleKshope}>
+          {/* Uden Tickets - Large Card */}
+          <TouchableOpacity
+            activeOpacity={0.9}
+            onPress={handleTicketCollection}
+          >
             <FastImage
-              source={require('../assets/images/splash/48hrs.png')}
+              source={require('../assets/images/splash/Frame 1216249942 1.png')}
               style={styles.largeCard}
               resizeMode={FastImage.resizeMode.contain}
             />
           </TouchableOpacity>
           {/* Small Cards Row */}
           <View style={styles.row}>
-            {/* Uden Tickets */}
-            <TouchableOpacity
-              activeOpacity={0.9}
-              onPress={handleTicketCollection}
-            >
+            {/* D2C */}
+            <TouchableOpacity activeOpacity={0.9} onPress={handleComingSoon}>
               <FastImage
-                source={require('../assets/images/splash/ticket.png')}
+                source={require('../assets/images/splash/Frame 1216249941 1.png')}
                 style={styles.smallCard}
                 resizeMode={FastImage.resizeMode.contain}
               />
             </TouchableOpacity>
-            <TouchableOpacity activeOpacity={0.9} onPress={handleComingSoon}>
+            {/* 48 Hrs Deal */}
+            <TouchableOpacity activeOpacity={0.9} onPress={handleKshope}>
               <FastImage
-                source={require('../assets/images/splash/d2c.png')}
+                source={require('../assets/images/splash/Frame 1216249939 1.png')}
                 style={styles.smallCard}
                 resizeMode={FastImage.resizeMode.contain}
               />
@@ -179,7 +181,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     alignItems: 'center',
     paddingTop: hp('5%'),
-    //  paddingBottom: hp('15%'), // Increased padding to avoid overlap with skyline
+    paddingBottom: hp('8%'),
   },
   logoContainer: {
     // marginBottom: hp('2%'),

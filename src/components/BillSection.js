@@ -134,12 +134,12 @@ export default React.memo(BillSection);
 
 const styles = StyleSheet.create({
   billImageBackground: {
-    width: wp('90.7%'),
+    width: wp('100%'),
     alignSelf: 'center',
     marginTop: hp('0.5%'),
     paddingTop: hp('4%'),
     paddingBottom: hp('4%'),
-    paddingHorizontal: wp('8%'),
+    paddingHorizontal: wp('10%'),
     marginBottom: hp('0.5%'),
   },
   billImageStyle: {

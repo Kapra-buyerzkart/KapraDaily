@@ -60,7 +60,7 @@ const SlotModal = ({
                       source={require('../assets/images/lighting.png')}
                     />
                     <Text style={styles.timeTextTwo}>
-                      {mode.name || '20 min'}
+                      {mode.name || '20 mins'}
                     </Text>
                   </View>
                   <Text style={styles.quickDeliveryText}>

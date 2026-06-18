@@ -499,6 +499,7 @@ const ProductDetailsScreen = () => {
                                   name="minus"
                                   size={wp('5%')}
                                   color="#F25000"
+                                  style={styles.qtyIcon}
                                 />
                               </LinearGradient>
                             </TouchableOpacity>
@@ -518,6 +519,7 @@ const ProductDetailsScreen = () => {
                                   name="plus"
                                   size={wp('5%')}
                                   color="#F25000"
+                                  style={styles.qtyIcon}
                                 />
                               </LinearGradient>
                             </TouchableOpacity>
@@ -959,10 +961,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#F25000',
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
     width: wp('34%'),
     height: hp('5.5%'),
     borderRadius: hp('3%'),
+    paddingLeft: wp('2%'),
   },
   plusIconCircle: {
     width: wp('8.5%'),
@@ -970,6 +973,11 @@ const styles = StyleSheet.create({
     borderRadius: wp('4.25%'),
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  qtyIcon: {
+    // textAlign: 'center',
+    // textAlignVertical: 'center',
+    // includeFontPadding: false,
   },
   addBtnText: {
     color: '#FFF',
