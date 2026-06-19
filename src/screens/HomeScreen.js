@@ -41,6 +41,8 @@ import {
 import LinearGradient from 'react-native-linear-gradient';
 import Entypo from 'react-native-vector-icons/Entypo';
 import Feather from 'react-native-vector-icons/Feather';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import TokenProductCard from '../components/TokenProductCard';
 import SelectedProducts from '../components/SelectedProducts';
@@ -57,7 +59,6 @@ import LocationModal from '../components/LocationModal';
 import StatusModal from '../components/StatusModal';
 import StoreUnavailable from '../components/StoreUnavailable';
 import SeeAllButton from '../components/SeeAllButton';
-import CoinCountSVG from '../components/CoinCountSVG';
 import ShimmerPlaceholder from '../components/ShimmerPlaceholder';
 import HomePopupModal from '../components/HomePopupModal';
 
@@ -241,6 +242,9 @@ const CategoryItem = React.memo(({ item }) => {
     </TouchableOpacity>
   );
 });
+
+const INK = '#1A1A1A';
+const ORANGE = '#FF6A00';
 
 const HomeScreen = () => {
   const { top } = useSafeAreaInsets();
@@ -870,26 +874,20 @@ const HomeScreen = () => {
     }
   }, []);
 
-  const GradientUserIcon = ({ size }) => {
+  const ProfileAvatar = ({ size }) => {
     return (
-      <LinearGradient
-        colors={['#848484', '#606060']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
+      <View
         style={{
           width: '100%',
           height: '100%',
           borderRadius: size / 2,
+          backgroundColor: '#FFFFFF',
           justifyContent: 'center',
           alignItems: 'center',
         }}
       >
-        <Image
-          source={require('../assets/images/profile.png')}
-          style={styles.profileIcon}
-          resizeMode="contain"
-        />
-      </LinearGradient>
+        <Ionicons name="person" size={size * 0.55} color={ORANGE} />
+      </View>
     );
   };
 
@@ -1069,13 +1067,11 @@ const HomeScreen = () => {
                       onPress={() => navigation.navigate('BCoinScreen')}
                       style={styles.bcoinContainer}
                     >
-                      <CoinCountSVG
-                        width={wp('14%')}
-                        height={hp('5%')}
-                        style={styles.tokenSvg}
-                      />
+                      <View style={styles.bcoinBadgeIcon}>
+                        <Text style={styles.bcoinBadgeIconText}>$</Text>
+                      </View>
                       <Text style={styles.tokenText}>
-                        {dashboardData?.wallet?.bCoins || '0'} B
+                        {dashboardData?.wallet?.bCoins || '0'}
                       </Text>
                     </TouchableOpacity>
                   </Animated.View>
@@ -1087,22 +1083,14 @@ const HomeScreen = () => {
                       style={styles.profileIconMainView}
                     >
                       <View style={styles.profileIconView}>
-                        <GradientUserIcon size={wp('10%')} />
+                        <ProfileAvatar size={wp('10%')} />
                       </View>
                       {profile?.isPrivileged && (
-                        <Image
-                          source={require('../assets/images/crown.png')}
-                          style={[
-                            styles.crownImage,
-                            {
-                              width: wp('5%'),
-                              height: hp('1.8%'),
-                              zIndex: 2,
-                              position: 'absolute',
-                              top: -hp('0.1%'),
-                              alignSelf: 'center',
-                            },
-                          ]}
+                        <MaterialCommunityIcons
+                          name="crown"
+                          size={wp('4.2%')}
+                          color="#FFC700"
+                          style={styles.crownImage}
                         />
                       )}
                     </TouchableOpacity>
@@ -1217,13 +1205,11 @@ const HomeScreen = () => {
                     onPress={() => navigation.navigate('BCoinScreen')}
                     style={styles.bcoinContainer}
                   >
-                    <CoinCountSVG
-                      width={wp('14%')}
-                      height={hp('5%')}
-                      style={styles.tokenSvg}
-                    />
+                    <View style={styles.bcoinBadgeIcon}>
+                      <Text style={styles.bcoinBadgeIconText}>B</Text>
+                    </View>
                     <Text style={styles.tokenText}>
-                      {dashboardData?.wallet?.bCoins}
+                      {dashboardData?.wallet?.bCoins || '0'}
                     </Text>
                   </TouchableOpacity>
                 </Animated.View>
@@ -1235,22 +1221,14 @@ const HomeScreen = () => {
                     style={styles.profileIconMainView}
                   >
                     <View style={styles.profileIconView}>
-                      <GradientUserIcon size={wp('10%')} />
+                      <ProfileAvatar size={wp('10%')} />
                     </View>
                     {profile?.isPrivileged && (
-                      <Image
-                        source={require('../assets/images/crown.png')}
-                        style={[
-                          styles.crownImage,
-                          {
-                            width: wp('5%'),
-                            height: hp('1.8%'),
-                            zIndex: 2,
-                            position: 'absolute',
-                            top: -hp('0.1%'),
-                            alignSelf: 'center',
-                          },
-                        ]}
+                      <MaterialCommunityIcons
+                        name="crown"
+                        size={wp('4.2%')}
+                        color="#FFC700"
+                        style={styles.crownImage}
                       />
                     )}
                   </TouchableOpacity>
@@ -2029,15 +2007,6 @@ const styles = StyleSheet.create({
     height: wp('12%'),
     borderRadius: wp('6%'),
   },
-  profileIcon: {
-    width: wp('7%'),
-    height: wp('7%'),
-    borderRadius: wp('3.5%'),
-    position: 'absolute',
-    top: 15,
-    left: 5,
-    alignSelf: 'center',
-  },
   discoveryCategoryText: {
     fontSize: wp('2.8%'),
     fontFamily: FONTS.medium,
@@ -2084,10 +2053,13 @@ const styles = StyleSheet.create({
     //  bottom: hp('1%'),
   },
   bcoinContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
-    width: wp('20%'),
-    justifyContent: 'center',
-    top: Platform.OS === 'ios' ? hp('1%') : 0,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    paddingVertical: hp('0.6%'),
+    paddingHorizontal: wp('2.5%'),
+    gap: wp('1.5%'),
   },
   headerRightWrapper: {
     flexDirection: 'row',
@@ -2134,14 +2106,23 @@ const styles = StyleSheet.create({
     position: 'relative',
     top: hp('1%'),
   },
-  tokenSvg: {},
-  tokenText: {
-    position: 'absolute',
-    bottom: Platform.OS === 'ios' ? hp('1%') : hp('0.5%'),
+  bcoinBadgeIcon: {
+    width: wp('5%'),
+    height: wp('5%'),
+    borderRadius: wp('2.5%'),
+    backgroundColor: ORANGE,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  bcoinBadgeIconText: {
     fontFamily: FONTS.poppins.bold,
     fontSize: wp('2.8%'),
-    color: '#000000',
-    textAlign: 'center',
+    color: '#FFFFFF',
+  },
+  tokenText: {
+    fontFamily: FONTS.poppins.bold,
+    fontSize: wp('3.2%'),
+    color: INK,
   },
   bcoinText: {
     color: '#000000',

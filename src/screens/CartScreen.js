@@ -587,7 +587,7 @@ const CartScreen = () => {
           source={require('../assets/images/lighting.png')}
           style={styles.lightningIcon}
         />
-        <Text style={styles.deliveryTime}>20 mi ns</Text>
+        <Text style={styles.deliveryTime}>20 mins</Text>
       </View>
     </View>
   );

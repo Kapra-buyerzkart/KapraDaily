@@ -26,11 +26,21 @@ import { getVoucherQuoteApi } from '../../../api/voucherService';
 
 const { width, height } = Dimensions.get('window');
 
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+if (
+  Platform.OS === 'android' &&
+  UIManager.setLayoutAnimationEnabledExperimental
+) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
-const AnimatedButton = ({ style, onPress, disabled, children, onPressIn, onPressOut }) => {
+const AnimatedButton = ({
+  style,
+  onPress,
+  disabled,
+  children,
+  onPressIn,
+  onPressOut,
+}) => {
   const scale = useRef(new Animated.Value(1)).current;
 
   const handlePressIn = e => {
@@ -147,7 +157,7 @@ const UdenTicketModal = ({
       cancelled = true;
     };
   }, [quantity, voucher?.voucherId, bCoins, visible]);
-
+  const ORANGE = '#FF6A00';
   console.log(voucher, 'voucher is here ==========>');
 
   useEffect(() => {
@@ -202,9 +212,9 @@ const UdenTicketModal = ({
   const disabledReason = isOutOfStock
     ? 'This voucher is currently out of stock.'
     : coinEligible === false
-      ? quoteData?.message ||
-        "You don't have enough UD-Coins to redeem this voucher."
-      : null;
+    ? quoteData?.message ||
+      "You don't have enough UD-Coins to redeem this voucher."
+    : null;
 
   useEffect(() => {
     Animated.timing(reasonAnim, {
@@ -229,10 +239,7 @@ const UdenTicketModal = ({
             style={[
               styles.sheet,
               {
-                transform: [
-                  { translateY: slideAnim },
-                  { scale: scaleAnim },
-                ],
+                transform: [{ translateY: slideAnim }, { scale: scaleAnim }],
               },
             ]}
           >
@@ -301,11 +308,11 @@ const UdenTicketModal = ({
                 resizeMode="stretch"
               >
                 <Text style={styles.coinBannerText}>Use your</Text>
-                <Image
-                  source={require('../../../assets/icons/singleCoin.png')}
-                  style={styles.coinInline}
-                  resizeMode="contain"
-                />
+
+                <View style={styles.tokenBadgeIcon}>
+                  <Text style={{ color: 'white' }}>$</Text>
+                </View>
+
                 <Text style={styles.coinBannerHighlight}>UD-Coin</Text>
                 <Text style={styles.coinBannerText}>to claim your ticket</Text>
               </ImageBackground>
@@ -442,11 +449,9 @@ const UdenTicketModal = ({
                       {/* {quoteData && quoteData.coinsApplied > 0 && ( */}
                       <View style={styles.usingRow}>
                         <Text style={styles.usingText}>Using </Text>
-                        <Image
-                          source={require('../../../assets/icons/coins.png')}
-                          style={styles.coinsStack}
-                          resizeMode="contain"
-                        />
+                        <View style={styles.tokenBadgeIcon}>
+                          <Text style={{ color: 'white' }}>$</Text>
+                        </View>
                         <Text style={styles.usingAmount}>
                           {quoteData?.coinsApplied}
                         </Text>
@@ -596,6 +601,14 @@ const styles = StyleSheet.create({
     borderColor: '#CCCCCC',
     backgroundColor: '#F5F5F5',
   },
+  tokenBadgeIcon: {
+    width: wp('6%'),
+    height: wp('6%'),
+    borderRadius: wp('3%'),
+    backgroundColor: '#FF6A00',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   qtyBtnTextDisabled: {
     color: '#BBBBBB',
   },
@@ -629,7 +642,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins-Medium',
   },
   coinBannerHighlight: {
-    color: '#F9A833',
+    color: '#FF6A00',
     fontSize: 13,
     fontFamily: 'Poppins-Bold',
   },
@@ -725,11 +738,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 2,
+    gap: 2,
   },
   usingText: {
     fontSize: 13,
     fontFamily: 'Poppins-Regular',
     color: '#555555',
+    // paddingHorizontal: 5,
   },
   coinsStack: {
     width: 22,

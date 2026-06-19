@@ -16,11 +16,11 @@ import AntDesign from 'react-native-vector-icons/AntDesign';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
-import LinearGradient from 'react-native-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { FONTS } from '../styles/typography';
 import { getAccessToken } from '../api/tokenService';
@@ -43,7 +43,6 @@ import {
   requestProductApi,
   deleteAccountApi,
 } from '../api/userService';
-import CoinCountSVG from '../components/CoinCountSVG';
 import {
   LocationIcon,
   OrderIcon,
@@ -54,8 +53,14 @@ import {
   AboutIcon,
   CouponIcon,
 } from '../components/ProfileIcons';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import DeviceInfo from 'react-native-device-info';
+
+const INK = '#1A1A1A';
+const ORANGE = '#FF6A00';
+const GRAY_50 = '#F5F4F0';
+const GRAY_300 = '#D8D6CE';
+const GRAY_500 = '#9A9A92';
+const GRAY_600 = '#6B6B6B';
 
 export default function ProfileScreen() {
   const [accessToken, setAccessToken] = useState(null);
@@ -208,26 +213,20 @@ export default function ProfileScreen() {
     fetchOffers();
   }, [profile]);
 
-  const GradientUserIcon = ({ size }) => {
+  const ProfileAvatar = ({ size }) => {
     return (
-      <LinearGradient
-        colors={['#848484', '#606060']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
+      <View
         style={{
           width: '100%',
           height: '100%',
           borderRadius: size / 2,
+          backgroundColor: INK,
           justifyContent: 'center',
           alignItems: 'center',
         }}
       >
-        <Image
-          source={require('../assets/images/profile.png')}
-          style={styles.profileIcon}
-          resizeMode="contain"
-        />
-      </LinearGradient>
+        <Ionicons name="person" size={size * 0.55} color="#FFFFFF" />
+      </View>
     );
   };
 
@@ -277,107 +276,89 @@ export default function ProfileScreen() {
     <SafeAreaView edges={['top']} style={styles.mainConatiner}>
       {console.log('profilescreen', profile)}
       <ScrollView>
-        <View style={{}}>
-          <LinearGradient
-            colors={['#FFE7DB', '#FFFFFF']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
+        <View style={styles.header}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
           >
-            <View style={styles.topView}>
-              <View style={{}}>
-                <View style={styles.headerView}>
-                  <TouchableOpacity onPress={() => navigation.goBack()}>
-                    <AntDesign
-                      name={'left'}
-                      size={wp('6%')}
-                      color={'#777777'}
-                    />
-                  </TouchableOpacity>
-                  <Text style={styles.profileHeaderText}>Profile</Text>
-                </View>
-                <View style={styles.userView}>
-                  <View style={styles.userAvatarContainer}>
-                    <View style={styles.profileIconView}>
-                      <GradientUserIcon size={wp('10%')} />
-                    </View>
-                    {profile?.isPrivileged && (
-                      <Image
-                        source={require('../assets/images/crown.png')}
-                        style={styles.profileCrown}
-                      />
-                    )}
-                  </View>
-                  <View style={styles.userNamePhoneView}>
-                    <View
-                      style={{ flexDirection: 'row', alignItems: 'flex-start' }}
-                    >
-                      <Text style={styles.userNameText}>
-                        {profile.custName}
-                      </Text>
-                      <TouchableOpacity
-                        onPress={() => navigation.navigate('EditProfileScreen')}
-                        style={{ marginLeft: wp('2%'), marginTop: hp('0.5%') }}
-                      >
-                        <MaterialIcons
-                          name="edit"
-                          size={wp('4%')}
-                          color="#F25000"
-                        />
-                      </TouchableOpacity>
-                    </View>
-                    <Text style={styles.phoneNumberStyle}>
-                      {profile.phoneNo}
-                    </Text>
-                  </View>
-                  <TouchableOpacity
-                    onPress={() => navigation.navigate('BCoinScreen')}
-                    style={styles.tokenContainer}
-                  >
-                    <CoinCountSVG
-                      width={wp('14%')}
-                      height={hp('5%')}
-                      style={styles.tokenSvg}
-                    />
-                    <Text style={styles.tokenText}>
-                      {walletData?.wallet?.bCoins || '0'} B
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
+            <AntDesign name={'arrowleft'} size={wp('4.5%')} color={INK} />
+          </TouchableOpacity>
+          <Text style={styles.profileHeaderText}>Profile</Text>
+        </View>
 
-              <View style={styles.containerTwo}>
+        <View style={styles.profileCard}>
+          <View style={styles.userView}>
+            <View style={styles.userAvatarContainer}>
+              <View style={styles.profileIconView}>
+                <ProfileAvatar size={wp('10%')} />
+              </View>
+              {profile?.isPrivileged && (
+                <MaterialCommunityIcons
+                  name="crown"
+                  size={wp('5%')}
+                  color="#FFC700"
+                  style={styles.profileCrown}
+                />
+              )}
+            </View>
+            <View style={styles.userNamePhoneView}>
+              <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
+                <Text style={styles.userNameText}>{profile.custName}</Text>
                 <TouchableOpacity
-                  onPress={() => navigation.navigate('SavedAddressScreen')}
-                  style={styles.saveAddressContainer}
+                  onPress={() => navigation.navigate('EditProfileScreen')}
+                  style={{ marginLeft: wp('2%'), marginTop: hp('0.5%') }}
                 >
-                  <View style={styles.actionIconView}>
-                    <LocationIcon width={wp('5%')} height={wp('5%')} />
-                  </View>
-                  <Text style={styles.saveAddressText}>
-                    {'Saved \nAddress'}
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => navigation.navigate('MyOrdersScreen')}
-                  style={styles.saveAddressContainer}
-                >
-                  <View style={styles.actionIconView}>
-                    <OrderIcon width={wp('5%')} height={wp('5%')} />
-                  </View>
-                  <Text style={styles.saveAddressText}>{'My \nOrders'}</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => navigation.navigate('ReferralScreen')}
-                  style={styles.saveAddressContainer}
-                >
-                  <View style={styles.actionIconView}>
-                    <ReferIcon width={wp('5%')} height={wp('5%')} />
-                  </View>
-                  <Text style={styles.saveAddressText}>Refer</Text>
+                  <MaterialIcons name="edit" size={wp('4%')} color={ORANGE} />
                 </TouchableOpacity>
               </View>
+              <Text style={styles.phoneNumberStyle}>{profile.phoneNo}</Text>
             </View>
-          </LinearGradient>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('BCoinScreen')}
+              style={styles.tokenContainer}
+            >
+              <View style={styles.tokenBadgeIcon}>
+                <Text style={styles.tokenBadgeIconText}>$</Text>
+              </View>
+              <Text style={styles.tokenText}>
+                {walletData?.wallet?.bCoins || '0'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.containerTwo}>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('SavedAddressScreen')}
+              style={styles.saveAddressContainer}
+            >
+              <View style={styles.actionIconView}>
+                <LocationIcon
+                  width={wp('5%')}
+                  height={wp('5%')}
+                  color="#FFFFFF"
+                />
+              </View>
+              <Text style={styles.saveAddressText}>{'Saved \nAddress'}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('MyOrdersScreen')}
+              style={styles.saveAddressContainer}
+            >
+              <View style={styles.actionIconView}>
+                <OrderIcon width={wp('5%')} height={wp('5%')} color="#FFFFFF" />
+              </View>
+              <Text style={styles.saveAddressText}>{'My \nOrders'}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('ReferralScreen')}
+              style={[styles.saveAddressContainer, styles.saveAddressAccent]}
+            >
+              <View style={styles.actionIconView}>
+                <ReferIcon width={wp('5%')} height={wp('5%')} color="#FFFFFF" />
+              </View>
+              <Text style={styles.saveAddressText}>Refer</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         <View style={styles.sectionsContainer}>
@@ -393,7 +374,7 @@ export default function ProfileScreen() {
                 </View>
                 <Text style={styles.listItemText}>Smart point</Text>
               </View>
-              <AntDesign name={'right'} color={'#777777'} size={wp('3.5%')} />
+              <AntDesign name={'right'} color={GRAY_500} size={wp('3.5%')} />
             </TouchableOpacity>
             <View style={styles.divider} />
             <TouchableOpacity
@@ -402,15 +383,11 @@ export default function ProfileScreen() {
             >
               <View style={styles.listItemLeft}>
                 <View style={styles.listIconWrapper}>
-                  <MaterialCommunityIcons
-                    name="ticket-percent-outline"
-                    color={'#F25000'}
-                    size={wp('4%')}
-                  />
+                  <CouponIcon width={wp('6%')} height={wp('6%')} />
                 </View>
                 <Text style={styles.listItemText}>Coupon</Text>
               </View>
-              <AntDesign name={'right'} color={'#777777'} size={wp('3.5%')} />
+              <AntDesign name={'right'} color={GRAY_500} size={wp('3.5%')} />
             </TouchableOpacity>
           </View>
 
@@ -424,13 +401,13 @@ export default function ProfileScreen() {
                 <View style={styles.listIconWrapper}>
                   <Ionicons
                     name="heart-outline"
-                    color={'#F25000'}
+                    color={ORANGE}
                     size={wp('4%')}
                   />
                 </View>
                 <Text style={styles.listItemText}>My Wishlist</Text>
               </View>
-              <AntDesign name={'right'} color={'#777777'} size={wp('3.5%')} />
+              <AntDesign name={'right'} color={GRAY_500} size={wp('3.5%')} />
             </TouchableOpacity>
             <View style={styles.divider} />
             <TouchableOpacity
@@ -441,13 +418,13 @@ export default function ProfileScreen() {
                 <View style={styles.listIconWrapper}>
                   <Ionicons
                     name="receipt-outline"
-                    color={'#F25000'}
+                    color={ORANGE}
                     size={wp('4%')}
                   />
                 </View>
                 <Text style={styles.listItemText}>My Orders</Text>
               </View>
-              <AntDesign name={'right'} color={'#777777'} size={wp('3.5%')} />
+              <AntDesign name={'right'} color={GRAY_500} size={wp('3.5%')} />
             </TouchableOpacity>
             <View style={styles.divider} />
             <TouchableOpacity
@@ -458,13 +435,13 @@ export default function ProfileScreen() {
                 <View style={styles.listIconWrapper}>
                   <Ionicons
                     name="cart-outline"
-                    color={'#F25000'}
+                    color={ORANGE}
                     size={wp('4%')}
                   />
                 </View>
                 <Text style={styles.listItemText}>My Cart</Text>
               </View>
-              <AntDesign name={'right'} color={'#777777'} size={wp('3.5%')} />
+              <AntDesign name={'right'} color={GRAY_500} size={wp('3.5%')} />
             </TouchableOpacity>
             <View style={styles.divider} />
             <TouchableOpacity
@@ -475,13 +452,30 @@ export default function ProfileScreen() {
                 <View style={styles.listIconWrapper}>
                   <MaterialCommunityIcons
                     name="account-group-outline"
-                    color={'#F25000'}
+                    color={ORANGE}
                     size={wp('4%')}
                   />
                 </View>
                 <Text style={styles.listItemText}>Co-Partner Dashboard</Text>
               </View>
-              <AntDesign name={'right'} color={'#777777'} size={wp('3.5%')} />
+              <AntDesign name={'right'} color={GRAY_500} size={wp('3.5%')} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => navigation.navigate('MyAffilateScreen')}
+              style={styles.listItem}
+            >
+              <View style={styles.listItemLeft}>
+                <View style={styles.listIconWrapper}>
+                  <MaterialCommunityIcons
+                    name="account-group-outline"
+                    color={ORANGE}
+                    size={wp('4%')}
+                  />
+                </View>
+                <Text style={styles.listItemText}>My Affiliates</Text>
+              </View>
+              <AntDesign name={'right'} color={GRAY_500} size={wp('3.5%')} />
             </TouchableOpacity>
           </View>
 
@@ -497,13 +491,13 @@ export default function ProfileScreen() {
                 <View style={styles.listIconWrapper}>
                   <MaterialCommunityIcons
                     name="phone-outline"
-                    color={'#F25000'}
+                    color={ORANGE}
                     size={wp('4%')}
                   />
                 </View>
                 <Text style={styles.listItemText}>Update Phone Number</Text>
               </View>
-              <AntDesign name={'right'} color={'#777777'} size={wp('3.5%')} />
+              <AntDesign name={'right'} color={GRAY_500} size={wp('3.5%')} />
             </TouchableOpacity>
             <View style={styles.divider} />
             <TouchableOpacity
@@ -516,13 +510,13 @@ export default function ProfileScreen() {
                 <View style={styles.listIconWrapper}>
                   <MaterialCommunityIcons
                     name="email-outline"
-                    color={'#F25000'}
+                    color={ORANGE}
                     size={wp('4%')}
                   />
                 </View>
                 <Text style={styles.listItemText}>Update Email ID</Text>
               </View>
-              <AntDesign name={'right'} color={'#777777'} size={wp('3.5%')} />
+              <AntDesign name={'right'} color={GRAY_500} size={wp('3.5%')} />
             </TouchableOpacity>
             <View style={styles.divider} />
             <TouchableOpacity
@@ -533,13 +527,13 @@ export default function ProfileScreen() {
                 <View style={styles.listIconWrapper}>
                   <MaterialCommunityIcons
                     name="lock-outline"
-                    color={'#F25000'}
+                    color={ORANGE}
                     size={wp('4%')}
                   />
                 </View>
                 <Text style={styles.listItemText}>Change Password</Text>
               </View>
-              <AntDesign name={'right'} color={'#777777'} size={wp('3.5%')} />
+              <AntDesign name={'right'} color={GRAY_500} size={wp('3.5%')} />
             </TouchableOpacity>
           </View>
 
@@ -552,7 +546,7 @@ export default function ProfileScreen() {
                 </View>
                 <Text style={styles.listItemText}>Privacy Policy</Text>
               </View>
-              <AntDesign name={'right'} color={'#777777'} size={wp('3.5%')} />
+              <AntDesign name={'right'} color={GRAY_500} size={wp('3.5%')} />
             </TouchableOpacity>
             <View style={styles.divider} />
             <TouchableOpacity style={styles.listItem}>
@@ -562,7 +556,7 @@ export default function ProfileScreen() {
                 </View>
                 <Text style={styles.listItemText}>Terms Of Use</Text>
               </View>
-              <AntDesign name={'right'} color={'#777777'} size={wp('3.5%')} />
+              <AntDesign name={'right'} color={GRAY_500} size={wp('3.5%')} />
             </TouchableOpacity>
             <View style={styles.divider} />
             <TouchableOpacity style={styles.listItem}>
@@ -572,7 +566,7 @@ export default function ProfileScreen() {
                 </View>
                 <Text style={styles.listItemText}>About Us</Text>
               </View>
-              <AntDesign name={'right'} color={'#777777'} size={wp('3.5%')} />
+              <AntDesign name={'right'} color={GRAY_500} size={wp('3.5%')} />
             </TouchableOpacity>
             <View style={styles.divider} />
             <TouchableOpacity
@@ -583,13 +577,13 @@ export default function ProfileScreen() {
                 <View style={styles.listIconWrapper}>
                   <Ionicons
                     name="help-circle-outline"
-                    color={'#F25000'}
+                    color={ORANGE}
                     size={wp('4%')}
                   />
                 </View>
                 <Text style={styles.listItemText}>Help & Support</Text>
               </View>
-              <AntDesign name={'right'} color={'#777777'} size={wp('3.5%')} />
+              <AntDesign name={'right'} color={GRAY_500} size={wp('3.5%')} />
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -600,13 +594,13 @@ export default function ProfileScreen() {
                 <View style={styles.listIconWrapper}>
                   <Ionicons
                     name="headset-outline"
-                    color={'#F25000'}
+                    color={ORANGE}
                     size={wp('4%')}
                   />
                 </View>
                 <Text style={styles.listItemText}>Customer Support</Text>
               </View>
-              <AntDesign name={'right'} color={'#777777'} size={wp('3.5%')} />
+              <AntDesign name={'right'} color={GRAY_500} size={wp('3.5%')} />
             </TouchableOpacity>
             <View style={styles.divider} />
             <TouchableOpacity
@@ -617,13 +611,13 @@ export default function ProfileScreen() {
                 <View style={styles.listIconWrapper}>
                   <Ionicons
                     name="globe-outline"
-                    color={'#F25000'}
+                    color={ORANGE}
                     size={wp('4%')}
                   />
                 </View>
                 <Text style={styles.listItemText}>KPC Login</Text>
               </View>
-              <AntDesign name={'right'} color={'#777777'} size={wp('3.5%')} />
+              <AntDesign name={'right'} color={GRAY_500} size={wp('3.5%')} />
             </TouchableOpacity>
             <View style={styles.divider} />
             <TouchableOpacity
@@ -642,7 +636,7 @@ export default function ProfileScreen() {
                   Log Out
                 </Text>
               </View>
-              <AntDesign name={'right'} color={'#777777'} size={wp('3.5%')} />
+              <AntDesign name={'right'} color={GRAY_500} size={wp('3.5%')} />
             </TouchableOpacity>
             <View style={styles.divider} />
             <TouchableOpacity
@@ -661,7 +655,7 @@ export default function ProfileScreen() {
                   Delete Account
                 </Text>
               </View>
-              <AntDesign name={'right'} color={'#777777'} size={wp('3.5%')} />
+              <AntDesign name={'right'} color={GRAY_500} size={wp('3.5%')} />
             </TouchableOpacity>
           </View>
         </View>
@@ -675,7 +669,7 @@ export default function ProfileScreen() {
           </Text>
           <View style={styles.sendContainerInnerView}>
             <TextInput
-              placeholderTextColor={'#DADADA'}
+              placeholderTextColor={GRAY_300}
               placeholder="eg: biscuit, caske, fruits ..."
               style={styles.sendTextInput}
               value={requestText}
@@ -760,48 +754,37 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFFFFF',
   },
-  headerView: {
-    // backgroundColor: '#FFEFE7',
+  header: {
     flexDirection: 'row',
-    paddingTop: hp('1%'),
     alignItems: 'center',
-    paddingHorizontal: wp('4.65%'),
-    justifyContent: 'space-between',
+    paddingTop: hp('1%'),
+    paddingHorizontal: wp('5%'),
     paddingVertical: hp('1%'),
   },
-  topGradient: {
-    borderBottomLeftRadius: wp('10%'),
-    borderBottomRightRadius: wp('10%'),
-    paddingBottom: hp('2%'),
-  },
   backButton: {
-    width: wp('10%'),
-    height: wp('10%'),
+    width: wp('9%'),
+    height: wp('9%'),
+    borderRadius: wp('4.5%'),
+    alignItems: 'center',
     justifyContent: 'center',
-  },
-  topView: {
-    // backgroundColor: '#FFE7DB',
-    borderBottomLeftRadius: wp('8%'),
-    borderBottomRightRadius: wp('8%'),
-    marginTop: hp('2%'),
-    borderWidth: 1,
-    borderColor: '#b4b1b140',
-    borderBottomWidth: 1,
-    borderTopWidth: 0,
-    paddingVertical: hp('2%'),
-    //  paddingHorizontal: wp('5%'),
+    backgroundColor: GRAY_50,
   },
   profileHeaderText: {
-    color: '#000000',
+    color: INK,
     fontFamily: FONTS.poppins.bold,
-    fontSize: wp('5.5%'),
-    flex: 1,
-    marginLeft: wp('5%'),
+    fontSize: wp('5.2%'),
+    marginLeft: wp('4%'),
+  },
+  profileCard: {
+    backgroundColor: GRAY_50,
+    borderRadius: 20,
+    marginTop: hp('1%'),
+    marginHorizontal: wp('5%'),
+    paddingVertical: hp('2%'),
   },
   userView: {
     flexDirection: 'row',
-    paddingHorizontal: wp('6%'),
-    marginTop: hp('2%'),
+    paddingHorizontal: wp('5%'),
     alignItems: 'center',
   },
   userAvatarContainer: {
@@ -812,7 +795,7 @@ const styles = StyleSheet.create({
     height: wp('12%'),
     borderRadius: wp('6%'),
     borderWidth: 1,
-    borderColor: '#D2B200',
+    borderColor: GRAY_300,
     overflow: 'hidden',
     justifyContent: 'center',
     alignItems: 'center',
@@ -820,11 +803,8 @@ const styles = StyleSheet.create({
   },
   profileCrown: {
     position: 'absolute',
-    //  top: hp('3%'),
     alignSelf: 'center',
-    width: wp('6%'),
-    height: hp('2%'),
-    resizeMode: 'contain',
+    top: -hp('0.2%'),
     zIndex: 2,
   },
   userNamePhoneView: {
@@ -832,7 +812,7 @@ const styles = StyleSheet.create({
     marginLeft: wp('4%'),
   },
   userNameText: {
-    color: '#000000',
+    color: INK,
     fontFamily: FONTS.poppins.bold,
     fontSize: wp('4.8%'),
     flexShrink: 1,
@@ -840,101 +820,70 @@ const styles = StyleSheet.create({
   phoneNumberStyle: {
     fontSize: wp('3.2%'),
     fontFamily: FONTS.poppins.medium,
-    color: '#71717A',
+    color: GRAY_600,
     marginTop: hp('0.2%'),
   },
-  bcoinContainer: {
+  tokenContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#F25000',
-    borderRadius: 25,
-    height: hp('3.5%'),
-    paddingLeft: wp('0.5%'),
-    paddingRight: wp('3%'),
-    backgroundColor: '#FFFFFF',
+    backgroundColor: INK,
+    borderRadius: 20,
+    paddingVertical: hp('0.8%'),
+    paddingHorizontal: wp('3%'),
+    gap: wp('1.5%'),
   },
-  bcoinIconCircle: {
-    width: wp('7%'),
-    height: wp('7%'),
-    borderRadius: wp('3.5%'),
-    // backgroundColor: '#F25000',
+  tokenBadgeIcon: {
+    width: wp('5%'),
+    height: wp('5%'),
+    borderRadius: wp('2.5%'),
+    backgroundColor: ORANGE,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: wp('2%'),
   },
-  bcoinImage: {
-    width: wp('4.8%'),
-    height: wp('4.8%'),
-    tintColor: '#f25000',
-    //  tintColor: '#FFFFFF',
-    resizeMode: 'contain',
-  },
-  bcoinText: {
-    fontFamily: FONTS.poppins.bold,
-    fontSize: wp('3.8%'),
-    color: '#F25000',
-  },
-  tokenContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: wp('2%'),
-    position: 'relative',
-  },
-  tokenSvg: {},
-  tokenText: {
-    position: 'absolute',
-    bottom: hp('1%'),
+  tokenBadgeIconText: {
     fontFamily: FONTS.poppins.bold,
     fontSize: wp('2.8%'),
-    color: '#000000',
-    textAlign: 'center',
+    color: '#FFFFFF',
+  },
+  tokenText: {
+    fontFamily: FONTS.poppins.bold,
+    fontSize: wp('3.4%'),
+    color: '#FFFFFF',
   },
   containerTwo: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    // backgroundColor: 'red',
-    paddingTop: wp('5%'),
-    //  borderTopLeftRadius: wp('7%'),
-    //  borderTopRightRadius: wp('7%'),
+    gap: wp('2.5%'),
     marginTop: hp('2%'),
-    //  borderWidth: 1,
-    //  borderColor: '#00000040',
-    //   borderBottomWidth: 0,
     paddingHorizontal: wp('5%'),
   },
   saveAddressContainer: {
-    // flexDirection: 'row',
+    flex: 1,
     alignItems: 'center',
-    width: wp('27.21%'),
-    height: hp('11.5%'),
-    borderRadius: 20,
-    borderWidth: 0.5,
-    borderColor: '#DADADA',
+    height: hp('10%'),
+    borderRadius: 16,
     justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
-    // paddingLeft: wp('3%'),
+    backgroundColor: INK,
     paddingVertical: hp('0.5%'),
+  },
+  saveAddressAccent: {
+    backgroundColor: ORANGE,
   },
   actionIconView: {
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: hp('0.2%'),
   },
-  saveAddressImage: {
-    height: wp('9.3%'),
-    width: wp('9.3%'),
-    resizeMode: 'contain',
-  },
   saveAddressText: {
     fontFamily: FONTS.poppins.regular,
-    fontSize: wp('3.25%'),
+    fontSize: wp('3.1%'),
+    color: '#FFFFFF',
     textAlign: 'center',
   },
   sectionHeader: {
     fontFamily: FONTS.outfit.semiBold,
     fontSize: wp('4.2%'),
-    color: '#000000',
+    color: INK,
     marginBottom: hp('1.2%'),
     marginTop: hp('1%'),
   },
@@ -944,20 +893,11 @@ const styles = StyleSheet.create({
   },
   sectionCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 15,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#F0F0F0',
+    borderColor: GRAY_300,
     paddingVertical: hp('0.5%'),
     marginBottom: hp('0.5%'),
-    // Shadow for premium look
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 3.4,
-    elevation: 2,
   },
   listItem: {
     flexDirection: 'row',
@@ -973,7 +913,7 @@ const styles = StyleSheet.create({
   listIconWrapper: {
     width: wp('6%'),
     height: wp('6%'),
-    backgroundColor: '#FFE7DB',
+    backgroundColor: GRAY_50,
     borderRadius: wp('3%'),
     justifyContent: 'center',
     alignItems: 'center',
@@ -982,11 +922,11 @@ const styles = StyleSheet.create({
     marginLeft: wp('3%'),
     fontFamily: FONTS.outfit.regular,
     fontSize: wp('3.2%'),
-    color: '#333333',
+    color: INK,
   },
   divider: {
     height: 1,
-    backgroundColor: '#F0F0F0',
+    backgroundColor: GRAY_50,
     marginHorizontal: wp('4%'),
   },
   circle: {
@@ -994,10 +934,9 @@ const styles = StyleSheet.create({
     height: wp('4.2%'),
   },
   sendContainer: {
-    // borderWidth: 1,
-    borderColor: '#DADADA',
+    borderColor: GRAY_300,
     marginHorizontal: wp('5%'),
-    borderRadius: 10,
+    borderRadius: 16,
     alignItems: 'center',
     paddingVertical: wp('3%'),
     marginTop: hp('1.5%'),
@@ -1005,20 +944,20 @@ const styles = StyleSheet.create({
   },
   sendContainerTextOne: {
     fontFamily: FONTS.poppins.regular,
-    color: '#000000',
+    color: INK,
     fontSize: wp('3.72%'),
     paddingBottom: 10,
     lineHeight: wp('3.72%') * 1.2,
   },
   sendContainerTextTwo: {
-    color: '#7D7D7D',
+    color: GRAY_600,
     fontFamily: FONTS.poppins.light,
     fontSize: wp('3.25%'),
   },
   sendContainerInnerView: {
     flexDirection: 'row',
     borderWidth: 1,
-    borderColor: '#DADADA',
+    borderColor: GRAY_300,
     borderRadius: 50,
     alignItems: 'center',
     height: hp('6.3%'),
@@ -1029,10 +968,10 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: FONTS.poppins.light,
     fontSize: wp('3.72%'),
-    color: '#000000',
+    color: INK,
   },
   sendButton: {
-    backgroundColor: '#F25000',
+    backgroundColor: ORANGE,
     paddingHorizontal: wp('5%'),
     paddingVertical: hp('0.5%'),
     borderRadius: 40,
@@ -1050,27 +989,9 @@ const styles = StyleSheet.create({
     height: hp('4.3%'),
     resizeMode: 'contain',
   },
-  profileIcon: {
-    width: wp('7%'),
-    height: wp('7%'),
-    // borderRadius: wp('3.5%'),
-    // position: 'absolute',
-    // top: 15,
-    // left: 5,
-    alignSelf: 'center',
-  },
   footerBranding: {
     alignItems: 'center',
-    //  marginTop: hp('4%'),
     paddingVertical: hp('2%'),
-    // shadowColor: "#000",
-    // shadowOffset: {
-    //     width: 0,
-    //     height: 2,
-    // },
-    // shadowOpacity: 0.1,
-    // shadowRadius: 3,
-    // elevation: 3,
     marginBottom: hp('4%'),
   },
   footerLogo: {
@@ -1084,7 +1005,7 @@ const styles = StyleSheet.create({
   versionText: {
     fontFamily: FONTS.poppins.medium,
     fontSize: wp('3%'),
-    color: '#A1A1A1',
+    color: GRAY_500,
     marginTop: hp('0.1%'),
   },
 });

@@ -1,4 +1,4 @@
-import { StyleSheet, Dimensions } from 'react-native';
+import { StyleSheet, Dimensions, Platform } from 'react-native';
 import { wp, hp } from '../../utils/responsive';
 
 const { width, height } = Dimensions.get('window');
@@ -14,6 +14,18 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingBottom: 40,
+  },
+  tokenBadgeIcon: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    bottom: Platform.OS === 'ios' ? 0 : 2,
+    padding: 4,
+    height: 20,
+    width: 20,
+    justifyContent: 'center',
+    alignSelf: 'center',
+    backgroundColor: '#FF6A00',
+    borderRadius: 50,
   },
 
   // ── Header ──

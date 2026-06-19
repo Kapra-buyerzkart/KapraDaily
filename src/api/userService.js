@@ -104,6 +104,23 @@ export const getReferralHistoryApi = async (page = 1, pageSize = 20) => {
 export const getGeneralSettingsApi = async () => {
   return get('general/settings');
 };
+
+/**
+ * Fetches the referral network levels for the current user.
+ * @returns {Promise<Object>} The API response.
+ */
+export const getReferralNetworkLevelsApi = async () => {
+  return get('referral/network/levels');
+};
+
+/**
+ * Fetches the members of a specific referral network level for the current user.
+ * @param {number} level The level number (1, 2, 3, ...).
+ * @returns {Promise<Object>} The API response.
+ */
+export const getReferralNetworkLevelMembersApi = async level => {
+  return get(`referral/network/levels/${level}/members`);
+};
 /**
  * Requests a product that is not currently available.
  * @param {Object} payload { requestdetails }

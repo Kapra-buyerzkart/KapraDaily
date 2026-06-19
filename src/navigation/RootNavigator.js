@@ -35,6 +35,8 @@ import AuthSuccessScreen from '../screens/AuthSuccessScreen';
 import KshopeScreen from '../screens/KshopeScreen';
 import CoPartnerDashboardScreen from '../screens/CoPartnerDashboardScreen';
 import CoPartnerListScreen from '../screens/CoPartnerListScreen';
+import MyAffilateScreen from '../screens/MyAffilateScreen/MyAffilateScreen';
+import ReferralLevelMembersScreen from '../screens/ReferralLevelMembersScreen/ReferralLevelMembersScreen';
 import TicketSplashScreen from '../screens/ticketScreen/TicketSplashScreen';
 import TicketLandingScreen from '../screens/ticketLandingScreen/TicketLandingScreen';
 
@@ -90,6 +92,8 @@ export default function RootNavigator() {
                 <Stack.Screen name='KshopeScreen' component={KshopeScreen} />
                 <Stack.Screen name='CoPartnerDashboardScreen' component={CoPartnerDashboardScreen} />
                 <Stack.Screen name='CoPartnerListScreen' component={CoPartnerListScreen} />
+                <Stack.Screen name='MyAffilateScreen' component={MyAffilateScreen} />
+                <Stack.Screen name='ReferralLevelMembersScreen' component={ReferralLevelMembersScreen} />
                 <Stack.Screen name='TicketSplashScreen' component={TicketSplashScreen} options={{ contentStyle: { backgroundColor: '#000000' } }} />
                 <Stack.Screen name='TicketLanding' component={TicketLandingScreen} options={{ animation: 'fade', contentStyle: { backgroundColor: '#000000' } }} />
             </Stack.Navigator>

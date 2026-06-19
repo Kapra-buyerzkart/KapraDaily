@@ -62,7 +62,9 @@ const CoinBar = ({ bCoins, scrollY }) => {
     <Reanimated.View>
       <Reanimated.View style={styles.coinBar}>
         <Reanimated.View style={subtitleAnimStyle}>
-          <Text style={styles.coinBarText}>Use UD-Coins to Book Your Tickets</Text>
+          <Text style={styles.coinBarText}>
+            Use UD-Coins to Book Your Tickets
+          </Text>
         </Reanimated.View>
         <Reanimated.View style={[styles.coinBadge, pillAnimStyle]}>
           <Image
@@ -70,7 +72,7 @@ const CoinBar = ({ bCoins, scrollY }) => {
             style={styles.coinIcon}
             resizeMode="contain"
           />
-          <Text style={styles.coinAmount}>{bCoins || 0} B</Text>
+          <Text style={styles.coinAmount}>{bCoins || 0} </Text>
         </Reanimated.View>
       </Reanimated.View>
       <Reanimated.View style={[styles.tabSeparator, separatorAnimStyle]} />
