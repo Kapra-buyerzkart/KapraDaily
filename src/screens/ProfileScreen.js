@@ -339,7 +339,7 @@ export default function ProfileScreen() {
                       style={styles.tokenSvg}
                     />
                     <Text style={styles.tokenText}>
-                      {walletData?.wallet?.bTokens || '0'} B
+                      {walletData?.wallet?.bCoins || '0'} B
                     </Text>
                   </TouchableOpacity>
                 </View>

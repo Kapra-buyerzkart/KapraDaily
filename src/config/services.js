@@ -8,28 +8,9 @@ export const SERVICE_TYPES = {
 
 export const SERVICES = [
   {
-    id: 'quickCommerce',
-    title: 'Quick Commerce',
-    description: 'Groceries & daily essentials',
-    type: SERVICE_TYPES.INTERNAL,
-    route: 'Home',
-    params: { screen: 'HomeScreen' },
-    icon: 'cart-outline',
-    iconColor: '#F25000',
-  },
-  {
-    id: 'movie',
-    title: 'Movie Tickets',
-    description: 'Book movie tickets instantly',
-    type: SERVICE_TYPES.INTERNAL,
-    route: 'TicketSplashScreen',
-    icon: 'film-outline',
-    iconColor: '#5B2BE0',
-  },
-  {
     id: 'partner',
-    title: 'Partner App',
-    description: 'Open external application',
+    title: '48hrs Deals',
+    description: 'Electronics, kitchen Appliances \n & More',
     type: SERVICE_TYPES.EXTERNAL,
     deeplink: 'udmv://',
     storeUrl: {
@@ -38,6 +19,34 @@ export const SERVICES = [
     },
     icon: 'apps-outline',
     iconColor: '#00BCD4',
+    logo: require('../assets/images/modal/48hrDealIcon.png'),
+    titleImage: require('../assets/images/modal/48hrImage.png'),
+  },
+  {
+    id: 'movie',
+    title: 'Movie Tickets',
+    description: 'Movies & Entertainments',
+    type: SERVICE_TYPES.INTERNAL,
+    route: 'TicketSplashScreen',
+    icon: 'film-outline',
+    iconColor: '#5B2BE0',
+    logo: require('../assets/images/modal/movieIcon.png'),
+    titleImage: require('../assets/images/modal/udentcketModal.png'),
+  },
+
+  {
+    id: 'quickCommerce',
+    title: 'D2C',
+    description: 'Groceries & daily essentials',
+    type: SERVICE_TYPES.INTERNAL,
+    route: 'Home',
+    params: { screen: 'HomeScreen' },
+    icon: 'cart-outline',
+    iconColor: '#F25000',
+    logo: require('../assets/images/modal/d2cicon.png'),
+    titleImage: require('../assets/images/modal/D2C.png'),
+    badge: 'Coming Soon',
+    comingSoon: true,
   },
 ];
 

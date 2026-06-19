@@ -13,6 +13,10 @@ export const useVoucherPayment = () => {
   const [paidAmount, setPaidAmount] = useState(0);
 
   const handleBuyNow = async ({ voucherId, quantity, bCoins, voucherName }) => {
+    let purchaseId;
+    let amountPayable;
+    let sdkResponse;
+
     try {
       const quoteRes = await getVoucherQuoteApi(voucherId, quantity, bCoins);
       console.log('getVoucherQuoteApi response:', quoteRes);
@@ -32,8 +36,9 @@ export const useVoucherPayment = () => {
         return;
       }
 
-      const { razorpayKeyId, razorpayOrderId, amountPayable, purchaseId } =
-        initiateRes.data;
+      let razorpayKeyId, razorpayOrderId;
+      ({ razorpayKeyId, razorpayOrderId, amountPayable, purchaseId } =
+        initiateRes.data);
       setPaidAmount(amountPayable);
 
       const options = {
@@ -46,8 +51,29 @@ export const useVoucherPayment = () => {
         theme: { color: '#e07f2bff' },
       };
 
-      const sdkResponse = await RazorpayCheckout.open(options);
+      sdkResponse = await RazorpayCheckout.open(options);
+    } catch (err) {
+      if (err?.code === 'PAYMENT_CANCELLED') {
+        showStatus({
+          type: 'error',
+          title: 'Payment Not Completed',
+          message:
+            'You exited before completing the payment. Your UD Coins have not been deducted.',
+        });
+      } else {
+        showStatus({
+          type: 'error',
+          title: 'Payment Failed',
+          message: err?.description || 'Something went wrong. Please try again.',
+        });
+      }
+      return;
+    }
 
+    // Razorpay reported success here, so the payment itself went through.
+    // Any failure below is a verification/network issue, not a failed
+    // payment - never tell the user the payment failed once we reach this point.
+    try {
       const verifyRes = await verifyVoucherPurchaseApi({
         purchaseId,
         razorpayOrderId: sdkResponse.razorpay_order_id,
@@ -68,20 +94,12 @@ export const useVoucherPayment = () => {
         });
       }
     } catch (err) {
-      if (err?.code === 'PAYMENT_CANCELLED') {
-        showStatus({
-          type: 'error',
-          title: 'Payment Not Completed',
-          message:
-            'You exited before completing the payment. Your UD Coins have not been deducted.',
-        });
-      } else {
-        showStatus({
-          type: 'error',
-          title: 'Payment Failed',
-          message: err?.description || 'Something went wrong. Please try again.',
-        });
-      }
+      showStatus({
+        type: 'error',
+        title: 'Payment Pending',
+        message:
+          'Your payment was received but we could not confirm verification. Check My Vouchers for status.',
+      });
     }
   };
 

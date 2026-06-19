@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState, useCallback, memo } from 'react';
 import {
   View,
   Text,
+  Image,
   StyleSheet,
   Modal,
   TouchableOpacity,
@@ -28,8 +29,13 @@ import {
 } from 'react-native-responsive-screen';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { FONTS } from '../styles/typography';
-import { SERVICES, SERVICE_TYPES, LAST_SELECTED_SERVICE_KEY } from '../config/services';
+import {
+  SERVICES,
+  SERVICE_TYPES,
+  LAST_SELECTED_SERVICE_KEY,
+} from '../config/services';
 import ConfirmationModal from './ConfirmationModal';
+import ComingSoonModal from './ComingSoonModal';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -49,7 +55,9 @@ const ServiceCard = memo(({ service, isActive, onPress }) => {
   };
 
   return (
-    <Animated.View style={cardStyle}>
+    <Animated.View
+      style={[cardStyle, service.comingSoon && styles.cardDisabled]}
+    >
       <Pressable
         onPress={() => onPress(service)}
         onPressIn={onPressIn}
@@ -57,33 +65,52 @@ const ServiceCard = memo(({ service, isActive, onPress }) => {
         style={styles.card}
         accessible
         accessibilityRole="button"
-        accessibilityLabel={`${service.title}. ${service.description}`}
+        accessibilityLabel={`${service.title}. ${service.description}${
+          service.comingSoon ? '. Coming soon' : ''
+        }`}
       >
         <View
-          style={[styles.iconCircle, { backgroundColor: `${service.iconColor}1A` }]}
+          style={[
+            styles.iconCircle,
+            { backgroundColor: `${service.iconColor}1A` },
+          ]}
         >
-          <Ionicons name={service.icon} size={wp('6.5%')} color={service.iconColor} />
+          {service.logo ? (
+            <Image
+              source={service.logo}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
+          ) : (
+            <Ionicons
+              name={service.icon}
+              size={wp('6.5%')}
+              color={service.iconColor}
+            />
+          )}
         </View>
 
         <View style={styles.cardTextWrap}>
           <View style={styles.cardTitleRow}>
-            <Text style={styles.cardTitle}>{service.title}</Text>
+            {service?.titleImage ? (
+              <Image
+                source={service.titleImage}
+                style={styles.titleImage}
+                resizeMode="contain"
+              />
+            ) : (
+              <Text style={styles.cardTitle}>{service.title}</Text>
+            )}
             {service.badge ? (
               <View style={styles.badge}>
                 <Text style={styles.badgeText}>{service.badge}</Text>
-              </View>
-            ) : null}
-            {isActive ? (
-              <View style={styles.activeBadge}>
-                <Ionicons name="checkmark-circle" size={wp('3.2%')} color="#1FA855" />
-                <Text style={styles.activeBadgeText}>Currently Active</Text>
               </View>
             ) : null}
           </View>
           <Text style={styles.cardDescription}>{service.description}</Text>
         </View>
 
-        <Ionicons name="chevron-forward" size={wp('5.5%')} color="#BBBBBB" />
+        <Ionicons name="chevron-forward" size={wp('5.5%')} color="#F25000" />
       </Pressable>
     </Animated.View>
   );
@@ -96,6 +123,7 @@ const ServiceSwitcherModal = ({ visible, onClose }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [activeServiceId, setActiveServiceId] = useState(null);
   const [installConfirmService, setInstallConfirmService] = useState(null);
+  const [comingSoonService, setComingSoonService] = useState(null);
 
   const translateY = useSharedValue(SCREEN_HEIGHT);
   const backdropOpacity = useSharedValue(0);
@@ -106,7 +134,12 @@ const ServiceSwitcherModal = ({ visible, onClose }) => {
     if (pendingActionRef.current) {
       const action = pendingActionRef.current;
       pendingActionRef.current = null;
-      action();
+      // Run after the native Modal has actually torn down its window.
+      // Firing navigation in the same tick as setModalVisible(false) races
+      // the Modal's dismissal with the screen transition on iOS, which can
+      // leave a dead, invisible overlay intercepting touches on the tab bar
+      // once the user navigates back here.
+      requestAnimationFrame(() => requestAnimationFrame(action));
     }
   }, []);
 
@@ -119,14 +152,21 @@ const ServiceSwitcherModal = ({ visible, onClose }) => {
         .catch(() => {});
 
       setModalVisible(true);
-      translateY.value = withTiming(0, { duration: 280, easing: Easing.out(Easing.cubic) });
+      translateY.value = withTiming(0, {
+        duration: 280,
+        easing: Easing.out(Easing.cubic),
+      });
       backdropOpacity.value = withTiming(1, { duration: 250 });
     } else if (modalVisible) {
-      translateY.value = withTiming(SCREEN_HEIGHT, { duration: 220 }, finished => {
-        if (finished) {
-          runOnJS(onCloseAnimationComplete)();
-        }
-      });
+      translateY.value = withTiming(
+        SCREEN_HEIGHT,
+        { duration: 220 },
+        finished => {
+          if (finished) {
+            runOnJS(onCloseAnimationComplete)();
+          }
+        },
+      );
       backdropOpacity.value = withTiming(0, { duration: 200 });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -163,8 +203,15 @@ const ServiceSwitcherModal = ({ visible, onClose }) => {
 
   const handleServicePress = useCallback(
     service => {
+      if (service.comingSoon) {
+        setComingSoonService(service);
+        return;
+      }
+
       setActiveServiceId(service.id);
-      AsyncStorage.setItem(LAST_SELECTED_SERVICE_KEY, service.id).catch(() => {});
+      AsyncStorage.setItem(LAST_SELECTED_SERVICE_KEY, service.id).catch(
+        () => {},
+      );
 
       if (service.type === SERVICE_TYPES.INTERNAL) {
         requestClose(() => {
@@ -185,7 +232,8 @@ const ServiceSwitcherModal = ({ visible, onClose }) => {
     const service = installConfirmService;
     setInstallConfirmService(null);
     if (!service) return;
-    const storeUrl = Platform.OS === 'ios' ? service.storeUrl.ios : service.storeUrl.android;
+    const storeUrl =
+      Platform.OS === 'ios' ? service.storeUrl.ios : service.storeUrl.android;
     Linking.openURL(storeUrl).catch(() => {});
   }, [installConfirmService]);
 
@@ -199,8 +247,14 @@ const ServiceSwitcherModal = ({ visible, onClose }) => {
         onRequestClose={() => requestClose()}
       >
         <View style={StyleSheet.absoluteFill}>
-          <Pressable style={StyleSheet.absoluteFill} onPress={() => requestClose()}>
-            <Animated.View style={[StyleSheet.absoluteFill, backdropStyle]}>
+          <Pressable
+            style={StyleSheet.absoluteFill}
+            onPress={() => requestClose()}
+          >
+            <Animated.View
+              style={[StyleSheet.absoluteFill, backdropStyle]}
+              pointerEvents="none"
+            >
               {Platform.OS === 'ios' ? (
                 <BlurView
                   style={StyleSheet.absoluteFill}
@@ -210,7 +264,10 @@ const ServiceSwitcherModal = ({ visible, onClose }) => {
                 />
               ) : (
                 <View
-                  style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.55)' }]}
+                  style={[
+                    StyleSheet.absoluteFill,
+                    { backgroundColor: 'rgba(0,0,0,0.55)' },
+                  ]}
                 />
               )}
             </Animated.View>
@@ -231,8 +288,9 @@ const ServiceSwitcherModal = ({ visible, onClose }) => {
 
             <View style={styles.headerRow}>
               <View style={styles.headerTextWrap}>
-                <Text style={styles.title} accessibilityRole="header">
-                  Choose Service
+                <Text accessibilityRole="header">
+                  <Text style={styles.title}>Choose </Text>
+                  <Text style={styles.titleAccent}>Shops</Text>
                 </Text>
                 <Text style={styles.subtitle}>
                   Select how you would like to continue
@@ -264,12 +322,19 @@ const ServiceSwitcherModal = ({ visible, onClose }) => {
 
       <ConfirmationModal
         visible={!!installConfirmService}
-        title="Partner App not installed"
+        title="48hrs App not installed"
         message="Would you like to install it?"
         confirmText="Install"
         cancelText="Cancel"
         onClose={() => setInstallConfirmService(null)}
         onConfirm={handleInstallConfirm}
+      />
+
+      <ComingSoonModal
+        visible={!!comingSoonService}
+        onClose={() => setComingSoonService(null)}
+        title={`${comingSoonService?.title ?? ''} Coming Soon!`}
+        message="We're working hard to bring this to you. Stay tuned!"
       />
     </>
   );
@@ -312,8 +377,13 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: FONTS.poppins.bold,
-    fontSize: wp('5%'),
+    fontSize: wp('5.5%'),
     color: '#000000',
+  },
+  titleAccent: {
+    fontFamily: FONTS.poppins.bold,
+    fontSize: wp('5.5%'),
+    color: '#F25000',
   },
   subtitle: {
     fontFamily: FONTS.poppins.regular,
@@ -335,23 +405,31 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FAFAFA',
-    borderRadius: wp('4.5%'),
+    backgroundColor: '#FFFFFF',
+    borderRadius: wp('5.5%'),
     paddingVertical: hp('1.8%'),
     paddingHorizontal: wp('4%'),
     borderWidth: 1,
     borderColor: '#F0F0F0',
   },
+  cardDisabled: {
+    opacity: 0.55,
+  },
   iconCircle: {
-    width: wp('13%'),
-    height: wp('13%'),
+    resizeMode: 'contain',
     borderRadius: wp('6.5%'),
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: wp('3.5%'),
+    marginRight: wp('4.5%'),
+  },
+  logoImage: {
+    width: wp('8%'),
+    height: wp('8%'),
+    // backgroundColor: 'red',
   },
   cardTextWrap: {
     flex: 1,
+    // backgroundColor: 'red',
   },
   cardTitleRow: {
     flexDirection: 'row',
@@ -364,11 +442,16 @@ const styles = StyleSheet.create({
     fontSize: wp('4.1%'),
     color: '#111111',
   },
+  titleImage: {
+    width: wp('28%'),
+    height: hp('2.5%'),
+  },
   cardDescription: {
     fontFamily: FONTS.poppins.regular,
     fontSize: wp('3.2%'),
     color: '#888888',
     marginTop: hp('0.3%'),
+    textAlign: 'left',
   },
   badge: {
     backgroundColor: '#F25000',

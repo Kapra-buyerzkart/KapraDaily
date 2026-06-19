@@ -124,8 +124,16 @@ const LocationFetchingNewScreen = ({ navigation }) => {
 
   useEffect(() => {
     const init = async () => {
+      // Single source of truth for "do we already have a location?":
+      // `pincodeAreaId` is written by every location-picking path in the app
+      // (editPincode in appContext.js, used by both LocationModal and this
+      // screen's own flows), and is wiped by logout()'s AsyncStorage.clear().
+      // `manualOverride` is kept as an additional check to cover the brief
+      // window during an in-progress manual search (see onPress handler
+      // below) before editPincode has had a chance to persist the new pick.
       const savedOverride = await AsyncStorage.getItem('manualOverride');
-      if (savedOverride === 'true') {
+      const storedPincodeAreaId = await AsyncStorage.getItem('pincodeAreaId');
+      if (savedOverride === 'true' || storedPincodeAreaId) {
         setManualOverride(true);
         const savedRegion = await AsyncStorage.getItem('manualRegion');
         const savedAddress = await AsyncStorage.getItem('manualAddress');
@@ -238,8 +246,9 @@ const LocationFetchingNewScreen = ({ navigation }) => {
       async nextState => {
         if (nextState === 'active') {
           const savedOverride = await AsyncStorage.getItem('manualOverride');
-          if (savedOverride === 'true') {
-            return; // Skip auto-fetching since manual override is active
+          const storedPincodeAreaId = await AsyncStorage.getItem('pincodeAreaId');
+          if (savedOverride === 'true' || storedPincodeAreaId) {
+            return; // Skip auto-fetching: a location is already persisted/chosen
           }
 
           const gpsEnabled = await DeviceInfo.isLocationEnabled();

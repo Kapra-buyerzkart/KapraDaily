@@ -29,7 +29,9 @@ const AuthSuccessScreen = ({ navigation }) => {
     });
   };
 
-  const handleComingSoon = () => {};
+  const handleComingSoon = () => {
+    setIsComingSoonVisible(true);
+  };
 
   // const handleKshope = () => {
   //     const isKshopeEnabled = generalSettings?.showkshope === '1' || generalSettings?.showkshope === 1;
@@ -44,7 +46,6 @@ const AuthSuccessScreen = ({ navigation }) => {
   //             handleComingSoon();
   //         });
   //     } else {
-  //         handleComingSoon();
   //     }
   // };
 
@@ -84,7 +85,7 @@ const AuthSuccessScreen = ({ navigation }) => {
           await Linking.openURL(storeUrl);
         } catch (storeErr) {
           console.error('[Kshope] Store URL also failed:', storeErr);
-          showComingSoon();
+          handleComingSoon();
         }
       }
     }

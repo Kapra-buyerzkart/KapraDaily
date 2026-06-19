@@ -4,13 +4,8 @@ import HomeScreen from '../screens/HomeScreen';
 import CategoriesScreen from '../screens/CategoriesScreen';
 import WishlistScreen from '../screens/WishlistScreen';
 import KshopeScreen from '../screens/KshopeScreen';
-import {
-  Image,
-  Platform,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-} from 'react-native';
+import { Image, Platform, StyleSheet, Text } from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
@@ -29,27 +24,9 @@ const Tab = createBottomTabNavigator();
 export default function MainTabNavigator() {
   const { isStoreUnavailable } = useContext(AppContext);
   const navigation = useNavigation();
-  const [isServiceSwitcherVisible, setIsServiceSwitcherVisible] = useState(false);
+  const [isServiceSwitcherVisible, setIsServiceSwitcherVisible] =
+    useState(false);
 
-  const KshopeButton = () => {
-    return (
-      <TouchableOpacity
-        style={styles.KshopeButton}
-        onPress={() => setIsServiceSwitcherVisible(true)}
-        accessibilityRole="button"
-        accessibilityLabel="Choose service"
-      >
-        <Image
-          source={require('../assets/splashsvg/tab48.png')}
-          style={{
-            width: wp('15%'),
-            height: hp('3.6%'),
-            resizeMode: 'contain',
-          }}
-        />
-      </TouchableOpacity>
-    );
-  };
   const insets = useSafeAreaInsets();
   return (
     <>
@@ -70,7 +47,6 @@ export default function MainTabNavigator() {
             shadowOpacity: 0.25,
             shadowRadius: 4,
             elevation: 6,
-            paddingRight: wp('11%'),
           },
         }}
       >
@@ -120,12 +96,10 @@ export default function MainTabNavigator() {
             headerShown: false,
 
             tabBarIcon: ({ focused }) => (
-              <Image
-                source={require('../assets/images/grid.png')}
-                style={[
-                  styles.iconImage,
-                  { tintColor: focused ? '#F25000' : null },
-                ]}
+              <Ionicons
+                name="basket-outline"
+                size={wp('6.12%')}
+                color={focused ? '#F25000' : '#8E8E8E'}
               />
             ),
 
@@ -179,7 +153,19 @@ export default function MainTabNavigator() {
             },
           }}
           options={{
-            tabBarButton: props => <KshopeButton />,
+            headerShown: false,
+
+            tabBarIcon: ({ focused }) => (
+              <Ionicons
+                name="storefront-outline"
+                size={wp('5.12%')}
+                color={focused ? '#F25000' : '#8E8E8E'}
+              />
+            ),
+
+            tabBarLabel: () => (
+              <Text style={styles.iconLabel}>Switch Store</Text>
+            ),
           }}
         />
       </Tab.Navigator>
@@ -216,22 +202,5 @@ const styles = StyleSheet.create({
     marginTop: hp('0.2%'),
     fontFamily: FONTS.inter.regular,
     textAlign: 'center',
-  },
-  KshopeButton: {
-    width: wp('18%'),
-    height: hp('5%'),
-    backgroundColor: '#ffffff',
-    borderColor: '#F25000',
-    borderWidth: 1,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: hp('0.8%'),
-    left: 15,
-  },
-  KshopeButtonText: {
-    fontSize: wp('5.3%'),
-    fontFamily: FONTS.italiana.regular,
-    color: '#000000',
   },
 });
