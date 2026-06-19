@@ -68,7 +68,7 @@ const CoinBar = ({ bCoins, scrollY }) => {
         </Reanimated.View>
         <Reanimated.View style={[styles.coinBadge, pillAnimStyle]}>
           <Image
-            source={require('../../../assets/images/coin.png')}
+            source={require('../../../assets/icons/udcoin.png')}
             style={styles.coinIcon}
             resizeMode="contain"
           />

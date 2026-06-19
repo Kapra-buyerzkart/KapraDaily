@@ -1067,24 +1067,29 @@ const HomeScreen = () => {
                       onPress={() => navigation.navigate('BCoinScreen')}
                       style={styles.bcoinContainer}
                     >
-                      <View style={styles.bcoinBadgeIcon}>
-                        <Text style={styles.bcoinBadgeIconText}>$</Text>
-                      </View>
+                      <Image
+                        source={require('../assets/icons/udcoin.png')}
+                        style={styles.bcoinIcon}
+                      />
                       <Text style={styles.tokenText}>
                         {dashboardData?.wallet?.bCoins || '0'}
                       </Text>
                     </TouchableOpacity>
                   </Animated.View>
                   <Animated.View style={profileAnimStyle}>
-                    <TouchableOpacity
-                      onPress={() => {
-                        navigation.navigate('ProfileScreen', { type: 'login' });
-                      }}
-                      style={styles.profileIconMainView}
-                    >
-                      <View style={styles.profileIconView}>
-                        <ProfileAvatar size={wp('10%')} />
-                      </View>
+                    <View style={{ overflow: 'visible' }}>
+                      <TouchableOpacity
+                        onPress={() => {
+                          navigation.navigate('ProfileScreen', {
+                            type: 'login',
+                          });
+                        }}
+                        style={styles.profileIconMainView}
+                      >
+                        <View style={styles.profileIconView}>
+                          <ProfileAvatar size={wp('10%')} />
+                        </View>
+                      </TouchableOpacity>
                       {profile?.isPrivileged && (
                         <MaterialCommunityIcons
                           name="crown"
@@ -1093,7 +1098,7 @@ const HomeScreen = () => {
                           style={styles.crownImage}
                         />
                       )}
-                    </TouchableOpacity>
+                    </View>
                   </Animated.View>
                 </View>
               </View>
@@ -1205,24 +1210,27 @@ const HomeScreen = () => {
                     onPress={() => navigation.navigate('BCoinScreen')}
                     style={styles.bcoinContainer}
                   >
-                    <View style={styles.bcoinBadgeIcon}>
-                      <Text style={styles.bcoinBadgeIconText}>B</Text>
-                    </View>
+                    <Image
+                      source={require('../assets/icons/udcoin.png')}
+                      style={styles.bcoinIcon}
+                    />
                     <Text style={styles.tokenText}>
                       {dashboardData?.wallet?.bCoins || '0'}
                     </Text>
                   </TouchableOpacity>
                 </Animated.View>
                 <Animated.View style={profileAnimStyle}>
-                  <TouchableOpacity
-                    onPress={() => {
-                      navigation.navigate('ProfileScreen', { type: 'login' });
-                    }}
-                    style={styles.profileIconMainView}
-                  >
-                    <View style={styles.profileIconView}>
-                      <ProfileAvatar size={wp('10%')} />
-                    </View>
+                  <View style={{ overflow: 'visible' }}>
+                    <TouchableOpacity
+                      onPress={() => {
+                        navigation.navigate('ProfileScreen', { type: 'login' });
+                      }}
+                      style={styles.profileIconMainView}
+                    >
+                      <View style={styles.profileIconView}>
+                        <ProfileAvatar size={wp('10%')} />
+                      </View>
+                    </TouchableOpacity>
                     {profile?.isPrivileged && (
                       <MaterialCommunityIcons
                         name="crown"
@@ -1231,7 +1239,7 @@ const HomeScreen = () => {
                         style={styles.crownImage}
                       />
                     )}
-                  </TouchableOpacity>
+                  </View>
                 </Animated.View>
               </View>
             </View>
@@ -2061,6 +2069,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: wp('2.5%'),
     gap: wp('1.5%'),
   },
+  bcoinIcon: {
+    width: wp('5%'),
+    height: wp('5%'),
+    resizeMode: 'contain',
+  },
   headerRightWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -2230,12 +2243,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#D2B200',
     borderRadius: wp('5%'),
+    overflow: 'visible',
     // top: Platform.OS === 'ios' ? hp('0.5%') : hp('1.3%'),
   },
   crownImage: {
     position: 'absolute',
-    top: -hp('1.5%'),
-    zIndex: 1,
+    top: -hp('1.2%'),
+    zIndex: 100000,
     left: wp('2.1%'),
     alignSelf: 'center',
   },

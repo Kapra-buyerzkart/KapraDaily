@@ -317,9 +317,11 @@ export default function ProfileScreen() {
               onPress={() => navigation.navigate('BCoinScreen')}
               style={styles.tokenContainer}
             >
-              <View style={styles.tokenBadgeIcon}>
-                <Text style={styles.tokenBadgeIconText}>$</Text>
-              </View>
+              <Image
+                source={require('../assets/icons/udcoin.png')}
+                style={{ width: wp('5%'), height: wp('5%') }}
+                resizeMode="contain"
+              />
               <Text style={styles.tokenText}>
                 {walletData?.wallet?.bCoins || '0'}
               </Text>

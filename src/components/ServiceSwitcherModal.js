@@ -110,7 +110,7 @@ const ServiceCard = memo(({ service, isActive, onPress }) => {
           <Text style={styles.cardDescription}>{service.description}</Text>
         </View>
 
-        <Ionicons name="chevron-forward" size={wp('5.5%')} color="#F25000" />
+        <Ionicons name="chevron-forward" size={wp('5.5%')} color="gray" />
       </Pressable>
     </Animated.View>
   );
@@ -404,7 +404,7 @@ const styles = StyleSheet.create({
   },
   card: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     backgroundColor: '#FFFFFF',
     borderRadius: wp('5.5%'),
     paddingVertical: hp('1.8%'),
@@ -433,7 +433,7 @@ const styles = StyleSheet.create({
   },
   cardTitleRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     flexWrap: 'wrap',
     gap: wp('2%'),
   },
@@ -445,6 +445,8 @@ const styles = StyleSheet.create({
   titleImage: {
     width: wp('28%'),
     height: hp('2.5%'),
+    right: 25,
+    alignSelf: 'flex-start',
   },
   cardDescription: {
     fontFamily: FONTS.poppins.regular,

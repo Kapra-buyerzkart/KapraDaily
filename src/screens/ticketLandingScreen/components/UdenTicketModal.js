@@ -309,9 +309,11 @@ const UdenTicketModal = ({
               >
                 <Text style={styles.coinBannerText}>Use your</Text>
 
-                <View style={styles.tokenBadgeIcon}>
-                  <Text style={{ color: 'white' }}>$</Text>
-                </View>
+                <Image
+                  source={require('../../../assets/icons/udcoin.png')}
+                  style={{ width: wp('6%'), height: wp('6%') }}
+                  resizeMode="contain"
+                />
 
                 <Text style={styles.coinBannerHighlight}>UD-Coin</Text>
                 <Text style={styles.coinBannerText}>to claim your ticket</Text>
@@ -449,9 +451,11 @@ const UdenTicketModal = ({
                       {/* {quoteData && quoteData.coinsApplied > 0 && ( */}
                       <View style={styles.usingRow}>
                         <Text style={styles.usingText}>Using </Text>
-                        <View style={styles.tokenBadgeIcon}>
-                          <Text style={{ color: 'white' }}>$</Text>
-                        </View>
+                        <Image
+                          source={require('../../../assets/icons/udcoin.png')}
+                          style={{ width: wp('6%'), height: wp('6%') }}
+                          resizeMode="contain"
+                        />
                         <Text style={styles.usingAmount}>
                           {quoteData?.coinsApplied}
                         </Text>
