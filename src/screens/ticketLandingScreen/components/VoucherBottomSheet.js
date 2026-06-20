@@ -17,7 +17,6 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { wp, hp } from '../../../utils/responsive';
-import RedeemSuccessModal from './RedeemSuccessModal';
 import CONFIG from '../../../globals/config';
 
 const { height } = Dimensions.get('window');
@@ -348,6 +347,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 8,
+    resizeMode: 'contain',
   },
   brandName: {
     color: '#FFFFFF',
@@ -358,6 +358,8 @@ const styles = StyleSheet.create({
   cardImage: {
     width: '100%',
     height: hp(22),
+
+    resizeMode: 'contain',
     borderRadius: 14,
     marginBottom: hp(1.5),
   },

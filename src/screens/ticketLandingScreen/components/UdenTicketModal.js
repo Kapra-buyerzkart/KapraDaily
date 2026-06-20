@@ -84,6 +84,7 @@ const UdenTicketModal = ({
   voucher,
   bCoins = 0,
   initialQuoteData = null,
+  onPurchaseSettled,
 }) => {
   const slideAnim = useRef(new Animated.Value(height)).current;
   const backdropAnim = useRef(new Animated.Value(0)).current;
@@ -97,7 +98,11 @@ const UdenTicketModal = ({
   const [quoteData, setQuoteData] = useState(initialQuoteData);
   const [quoteLoading, setQuoteLoading] = useState(false);
   const { handleBuyNow, successVisible, paidAmount, resetPayment } =
-    useVoucherPayment();
+    useVoucherPayment(onPurchaseSettled);
+
+  useEffect(() => {
+    if (successVisible) onClose();
+  }, [successVisible]);
 
   const arrowAnimFor = key =>
     key === 'description' ? descArrowAnim : termsArrowAnim;

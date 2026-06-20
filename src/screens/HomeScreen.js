@@ -41,8 +41,7 @@ import {
 import LinearGradient from 'react-native-linear-gradient';
 import Entypo from 'react-native-vector-icons/Entypo';
 import Feather from 'react-native-vector-icons/Feather';
-import Ionicons from 'react-native-vector-icons/Ionicons';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import ProfileAvatarBadge from '../components/ProfileAvatarBadge';
 
 import TokenProductCard from '../components/TokenProductCard';
 import SelectedProducts from '../components/SelectedProducts';
@@ -874,23 +873,6 @@ const HomeScreen = () => {
     }
   }, []);
 
-  const ProfileAvatar = ({ size }) => {
-    return (
-      <View
-        style={{
-          width: '100%',
-          height: '100%',
-          borderRadius: size / 2,
-          backgroundColor: '#FFFFFF',
-          justifyContent: 'center',
-          alignItems: 'center',
-        }}
-      >
-        <Ionicons name="person" size={size * 0.55} color={ORANGE} />
-      </View>
-    );
-  };
-
   const handleBannerPress = banner => {
     if (!banner) return;
     console.log('Banner Pressed:', banner);
@@ -1084,20 +1066,13 @@ const HomeScreen = () => {
                             type: 'login',
                           });
                         }}
-                        style={styles.profileIconMainView}
+                        activeOpacity={0.85}
                       >
-                        <View style={styles.profileIconView}>
-                          <ProfileAvatar size={wp('10%')} />
-                        </View>
-                      </TouchableOpacity>
-                      {profile?.isPrivileged && (
-                        <MaterialCommunityIcons
-                          name="crown"
-                          size={wp('4.2%')}
-                          color="#FFC700"
-                          style={styles.crownImage}
+                        <ProfileAvatarBadge
+                          size={wp('14%')}
+                          isPrivileged={profile?.isPrivileged}
                         />
-                      )}
+                      </TouchableOpacity>
                     </View>
                   </Animated.View>
                 </View>
@@ -1225,20 +1200,13 @@ const HomeScreen = () => {
                       onPress={() => {
                         navigation.navigate('ProfileScreen', { type: 'login' });
                       }}
-                      style={styles.profileIconMainView}
+                      activeOpacity={0.85}
                     >
-                      <View style={styles.profileIconView}>
-                        <ProfileAvatar size={wp('10%')} />
-                      </View>
-                    </TouchableOpacity>
-                    {profile?.isPrivileged && (
-                      <MaterialCommunityIcons
-                        name="crown"
-                        size={wp('4.2%')}
-                        color="#FFC700"
-                        style={styles.crownImage}
+                      <ProfileAvatarBadge
+                        size={wp('14%')}
+                        isPrivileged={profile?.isPrivileged}
                       />
-                    )}
+                    </TouchableOpacity>
                   </View>
                 </Animated.View>
               </View>
@@ -2149,18 +2117,6 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.poppins.extraBold,
     fontWeight: 'bold',
   },
-  profileIconView: {
-    width: wp('9.8%'),
-    height: wp('9.8%'),
-    borderRadius: wp('4.9%'),
-    // borderColor: "#198FFF",
-    // borderWidth: wp("0.5%"),
-    justifyContent: 'center',
-    alignItems: 'center',
-    // backgroundColor: '#FFFFFF',
-    overflow: 'hidden',
-    // top: hp("-1.0%")
-  },
   bear: {
     position: 'absolute',
     bottom: 0,
@@ -2236,22 +2192,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#190A07',
     fontFamily: FONTS.poppins.medium,
-  },
-  profileIconMainView: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#D2B200',
-    borderRadius: wp('5%'),
-    overflow: 'visible',
-    // top: Platform.OS === 'ios' ? hp('0.5%') : hp('1.3%'),
-  },
-  crownImage: {
-    position: 'absolute',
-    top: -hp('1.2%'),
-    zIndex: 100000,
-    left: wp('2.1%'),
-    alignSelf: 'center',
   },
   // headerBannerImage: {
   //     width: "100%",

@@ -39,14 +39,14 @@ export const SERVICES = [
     title: 'D2C',
     description: 'Groceries & daily essentials',
     type: SERVICE_TYPES.INTERNAL,
-    route: 'Home',
-    params: { screen: 'HomeScreen' },
+    route: 'D2cScreen',
+    // params: { screen: 'HomeScreen' },
     icon: 'cart-outline',
     iconColor: '#F25000',
     logo: require('../assets/images/modal/d2cicon.png'),
     titleImage: require('../assets/images/modal/D2C.png'),
-    badge: 'Coming Soon',
-    comingSoon: true,
+    // badge: 'Coming Soon',
+    comingSoon: false,
   },
 ];
 

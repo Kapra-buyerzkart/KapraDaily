@@ -28,6 +28,7 @@ import LoginScreen from './LoginScreen';
 import { AppContext } from '../context/appContext';
 import { LoaderContext } from '../context/loaderContext';
 import CouponModal from '../components/CouponModal';
+import ProfileAvatarBadge from '../components/ProfileAvatarBadge';
 import {
   getAvailableCouponsApi,
   getAvailableGiftCardsApi,
@@ -57,7 +58,7 @@ import DeviceInfo from 'react-native-device-info';
 
 const INK = '#1A1A1A';
 const ORANGE = '#FF6A00';
-const GRAY_50 = '#F5F4F0';
+const GRAY_50 = '#FFF';
 const GRAY_300 = '#D8D6CE';
 const GRAY_500 = '#9A9A92';
 const GRAY_600 = '#6B6B6B';
@@ -213,23 +214,6 @@ export default function ProfileScreen() {
     fetchOffers();
   }, [profile]);
 
-  const ProfileAvatar = ({ size }) => {
-    return (
-      <View
-        style={{
-          width: '100%',
-          height: '100%',
-          borderRadius: size / 2,
-          backgroundColor: INK,
-          justifyContent: 'center',
-          alignItems: 'center',
-        }}
-      >
-        <Ionicons name="person" size={size * 0.55} color="#FFFFFF" />
-      </View>
-    );
-  };
-
   const fetchOffers = async () => {
     try {
       const pincodeAreaId = profile?.pincode || profile?.pincodeAreaId;
@@ -289,17 +273,10 @@ export default function ProfileScreen() {
         <View style={styles.profileCard}>
           <View style={styles.userView}>
             <View style={styles.userAvatarContainer}>
-              <View style={styles.profileIconView}>
-                <ProfileAvatar size={wp('10%')} />
-              </View>
-              {profile?.isPrivileged && (
-                <MaterialCommunityIcons
-                  name="crown"
-                  size={wp('5%')}
-                  color="#FFC700"
-                  style={styles.profileCrown}
-                />
-              )}
+              <ProfileAvatarBadge
+                size={wp('13%')}
+                isPrivileged={profile?.isPrivileged}
+              />
             </View>
             <View style={styles.userNamePhoneView}>
               <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
@@ -780,6 +757,8 @@ const styles = StyleSheet.create({
   profileCard: {
     backgroundColor: GRAY_50,
     borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#D9D9D9',
     marginTop: hp('1%'),
     marginHorizontal: wp('5%'),
     paddingVertical: hp('2%'),
@@ -791,23 +770,6 @@ const styles = StyleSheet.create({
   },
   userAvatarContainer: {
     position: 'relative',
-  },
-  profileIconView: {
-    width: wp('12%'),
-    height: wp('12%'),
-    borderRadius: wp('6%'),
-    borderWidth: 1,
-    borderColor: GRAY_300,
-    overflow: 'hidden',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-  },
-  profileCrown: {
-    position: 'absolute',
-    alignSelf: 'center',
-    top: -hp('0.2%'),
-    zIndex: 2,
   },
   userNamePhoneView: {
     flex: 1,

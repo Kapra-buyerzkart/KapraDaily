@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   Animated,
   StatusBar,
@@ -52,18 +52,22 @@ const TicketLandingScreen = ({ navigation }) => {
     },
   });
 
-  useEffect(() => {
-    getVouchersApi().then(res => {
-      if (res?.data?.items) {
-        setCarouselVouchers(res.data.items);
-      }
-    });
+  const refreshBCoins = useCallback(() => {
     getDashboardDataApi().then(res => {
       if (res?.data?.wallet?.bCoins !== undefined) {
         setBCoins(res.data.wallet.bCoins);
       }
     });
   }, []);
+
+  useEffect(() => {
+    getVouchersApi().then(res => {
+      if (res?.data?.items) {
+        setCarouselVouchers(res.data.items);
+      }
+    });
+    refreshBCoins();
+  }, [refreshBCoins]);
 
   useEffect(() => {
     if (activeTab === 1) {
@@ -178,6 +182,7 @@ const TicketLandingScreen = ({ navigation }) => {
         voucher={claimedVoucher}
         bCoins={bCoins}
         initialQuoteData={claimedQuoteData}
+        onPurchaseSettled={refreshBCoins}
         onClose={() => {
           setModalVisible(false);
           setClaimedQuoteData(null);

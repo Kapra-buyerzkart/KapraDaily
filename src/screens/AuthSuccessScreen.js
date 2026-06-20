@@ -49,6 +49,10 @@ const AuthSuccessScreen = ({ navigation }) => {
   //     }
   // };
 
+  const handleD2c = () => {
+    navigation.navigate('D2cScreen');
+  };
+
   const handleTicketCollection = () => {
     console.log('ticket collection pressed');
     navigation.navigate('TicketSplashScreen');
@@ -136,7 +140,7 @@ const AuthSuccessScreen = ({ navigation }) => {
           {/* Small Cards Row */}
           <View style={styles.row}>
             {/* D2C */}
-            <TouchableOpacity activeOpacity={0.9} onPress={handleComingSoon}>
+            <TouchableOpacity activeOpacity={0.9} onPress={handleD2c}>
               <FastImage
                 source={require('../assets/images/splash/Frame 1216249941 1.png')}
                 style={styles.smallCard}

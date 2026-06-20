@@ -7,7 +7,7 @@ import {
 } from '../api/voucherService';
 import { useCart } from '../context/CartContext';
 
-export const useVoucherPayment = () => {
+export const useVoucherPayment = (onBalanceChange) => {
   const { showStatus } = useCart();
   const [successVisible, setSuccessVisible] = useState(false);
   const [paidAmount, setPaidAmount] = useState(0);
@@ -16,6 +16,7 @@ export const useVoucherPayment = () => {
     let purchaseId;
     let amountPayable;
     let sdkResponse;
+    let initiated = false;
 
     try {
       const quoteRes = await getVoucherQuoteApi(voucherId, quantity, bCoins);
@@ -35,24 +36,34 @@ export const useVoucherPayment = () => {
         });
         return;
       }
+      initiated = true;
 
       let razorpayKeyId, razorpayOrderId;
       ({ razorpayKeyId, razorpayOrderId, amountPayable, purchaseId } =
         initiateRes.data);
       setPaidAmount(amountPayable);
 
-      const options = {
-        key: razorpayKeyId,
-        amount: amountPayable * 100,
-        currency: 'INR',
-        name: 'Kapra Daily',
-        description: `${voucherName || 'Voucher'} x${quantity}`,
-        order_id: razorpayOrderId,
-        theme: { color: '#e07f2bff' },
-      };
+      if (amountPayable > 0) {
+        const options = {
+          key: razorpayKeyId,
+          amount: amountPayable * 100,
+          currency: 'INR',
+          name: 'Kapra Daily',
+          description: `${voucherName || 'Voucher'} x${quantity}`,
+          order_id: razorpayOrderId,
+          theme: { color: '#e07f2bff' },
+        };
 
-      sdkResponse = await RazorpayCheckout.open(options);
+        sdkResponse = await RazorpayCheckout.open(options);
+      } else {
+        // Fully coin-funded - backend already deducted UD-Coins on
+        // initiate, so there's nothing to collect or verify.
+        setSuccessVisible(true);
+        onBalanceChange?.();
+        return;
+      }
     } catch (err) {
+      console.log('[useVoucherPayment] purchase failed:', err?.response?.data || err);
       if (err?.code === 'PAYMENT_CANCELLED') {
         showStatus({
           type: 'error',
@@ -61,24 +72,26 @@ export const useVoucherPayment = () => {
             'You exited before completing the payment. Your UD Coins have not been deducted.',
         });
       } else {
+        // Never surface raw SDK/backend error text to the user.
         showStatus({
           type: 'error',
           title: 'Payment Failed',
-          message: err?.description || 'Something went wrong. Please try again.',
+          message: 'Something went wrong while processing your payment. Please try again.',
         });
       }
+      if (initiated) onBalanceChange?.();
       return;
     }
 
-    // Razorpay reported success here, so the payment itself went through.
-    // Any failure below is a verification/network issue, not a failed
-    // payment - never tell the user the payment failed once we reach this point.
+    // Payment was confirmed by Razorpay. Any failure below is a
+    // verification/network issue, not a failed payment - never tell the
+    // user the payment failed once we reach this point.
     try {
       const verifyRes = await verifyVoucherPurchaseApi({
         purchaseId,
-        razorpayOrderId: sdkResponse.razorpay_order_id,
-        razorpayPaymentId: sdkResponse.razorpay_payment_id,
-        razorpaySignature: sdkResponse.razorpay_signature,
+        razorpayOrderId: sdkResponse?.razorpay_order_id,
+        razorpayPaymentId: sdkResponse?.razorpay_payment_id,
+        razorpaySignature: sdkResponse?.razorpay_signature,
         amount: amountPayable * 100,
       });
 
@@ -94,12 +107,15 @@ export const useVoucherPayment = () => {
         });
       }
     } catch (err) {
+      console.log('[useVoucherPayment] verification failed:', err?.response?.data || err);
       showStatus({
         type: 'error',
         title: 'Payment Pending',
         message:
           'Your payment was received but we could not confirm verification. Check My Vouchers for status.',
       });
+    } finally {
+      onBalanceChange?.();
     }
   };
 

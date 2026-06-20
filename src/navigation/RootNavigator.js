@@ -39,6 +39,7 @@ import MyAffilateScreen from '../screens/MyAffilateScreen/MyAffilateScreen';
 import ReferralLevelMembersScreen from '../screens/ReferralLevelMembersScreen/ReferralLevelMembersScreen';
 import TicketSplashScreen from '../screens/ticketScreen/TicketSplashScreen';
 import TicketLandingScreen from '../screens/ticketLandingScreen/TicketLandingScreen';
+import D2cScreen from '../screens/D2cScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -96,6 +97,7 @@ export default function RootNavigator() {
                 <Stack.Screen name='ReferralLevelMembersScreen' component={ReferralLevelMembersScreen} />
                 <Stack.Screen name='TicketSplashScreen' component={TicketSplashScreen} options={{ contentStyle: { backgroundColor: '#000000' } }} />
                 <Stack.Screen name='TicketLanding' component={TicketLandingScreen} options={{ animation: 'fade', contentStyle: { backgroundColor: '#000000' } }} />
+                <Stack.Screen name='D2cScreen' component={D2cScreen} />
             </Stack.Navigator>
 
             <AppUpdateModal
