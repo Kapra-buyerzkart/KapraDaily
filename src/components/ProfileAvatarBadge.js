@@ -14,8 +14,9 @@ export default function ProfileAvatarBadge({
   isPrivileged = false,
 }) {
   const badgeSize = size * 0.42;
-  const crownHeadroom = isPrivileged ? badgeSize * 0.62 : 0;
+  const crownHeadroom = badgeSize * 0.62;
   const ringSize = size - crownHeadroom;
+  const ringMarginTop = isPrivileged ? crownHeadroom : crownHeadroom / 2;
   const ringWidth = isPrivileged ? ringSize * 0.09 : ringSize * 0.05;
   const avatarSize = ringSize - ringWidth * 2;
   const Ring = isPrivileged ? LinearGradient : View;
@@ -35,7 +36,7 @@ export default function ProfileAvatarBadge({
           {
             width: ringSize,
             height: ringSize,
-            marginTop: crownHeadroom,
+            marginTop: ringMarginTop,
             borderRadius: ringSize / 2,
             justifyContent: 'center',
             alignItems: 'center',

@@ -156,10 +156,12 @@ export default function MainTabNavigator() {
             headerShown: false,
 
             tabBarIcon: ({ focused }) => (
-              <Ionicons
-                name="storefront-outline"
-                size={wp('5.12%')}
-                color={focused ? '#F25000' : '#8E8E8E'}
+              <Image
+                source={require('../assets/icons/OBJECTS.png')}
+                style={[
+                  styles.iconStoreImage,
+                  { tintColor: focused ? '#F25000' : null },
+                ]}
               />
             ),
 
@@ -194,6 +196,11 @@ const styles = StyleSheet.create({
   iconImage: {
     height: wp('5.12%'),
     width: wp('5.12%'),
+    resizeMode: 'contain',
+  },
+  iconStoreImage: {
+    height: wp('8%'),
+    width: wp('8%'),
     resizeMode: 'contain',
   },
   iconLabel: {

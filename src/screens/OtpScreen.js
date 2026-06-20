@@ -505,7 +505,7 @@ const OtpScreen = () => {
               />
             </TouchableOpacity>
             <Text style={styles.otpSentText}>
-              OTP has been sent to your phone & email
+              OTP has been sent to your phone & WhatsApp
             </Text>
             <Text style={styles.enterNumberText}>Enter OTP</Text>
 

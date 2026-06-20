@@ -2020,7 +2020,7 @@ const styles = StyleSheet.create({
   addressView: {
     flexDirection: 'row',
     alignItems: 'center',
-    top: Platform.OS === 'ios' ? hp('0.5%') : 0,
+    top: Platform.OS === 'ios' ? -hp('0.2%') : -hp('1%'),
     left: Platform.OS === 'ios' ? wp('0%') : -wp('0.5%'),
   },
   addressText: {
