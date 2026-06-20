@@ -7,7 +7,7 @@ import {
 } from '../api/voucherService';
 import { useCart } from '../context/CartContext';
 
-export const useVoucherPayment = (onBalanceChange) => {
+export const useVoucherPayment = onBalanceChange => {
   const { showStatus } = useCart();
   const [successVisible, setSuccessVisible] = useState(false);
   const [paidAmount, setPaidAmount] = useState(0);
@@ -63,7 +63,10 @@ export const useVoucherPayment = (onBalanceChange) => {
         return;
       }
     } catch (err) {
-      console.log('[useVoucherPayment] purchase failed:', err?.response?.data || err);
+      console.log(
+        '[useVoucherPayment] purchase failed:',
+        err?.response?.data || err,
+      );
       if (err?.code === 'PAYMENT_CANCELLED') {
         showStatus({
           type: 'error',
@@ -76,7 +79,8 @@ export const useVoucherPayment = (onBalanceChange) => {
         showStatus({
           type: 'error',
           title: 'Payment Failed',
-          message: 'Something went wrong while processing your payment. Please try again.',
+          message:
+            'Something went wrong while processing your payment. Please try again.',
         });
       }
       if (initiated) onBalanceChange?.();
@@ -107,7 +111,10 @@ export const useVoucherPayment = (onBalanceChange) => {
         });
       }
     } catch (err) {
-      console.log('[useVoucherPayment] verification failed:', err?.response?.data || err);
+      console.log(
+        '[useVoucherPayment] verification failed:',
+        err?.response?.data || err,
+      );
       showStatus({
         type: 'error',
         title: 'Payment Pending',

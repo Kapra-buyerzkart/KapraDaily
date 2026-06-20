@@ -29,9 +29,29 @@ import {
 } from '../api/userService';
 import StatusModal from '../components/StatusModal';
 
+const UD_COIN_TOKEN_INFO = [
+  {
+    title: 'UD-Tokens (The "Earn" Points)',
+    body: 'Think of UD-Tokens as bonus points you collect for helping the community grow.\n\nHow you get them: You earn them when you invite a friend (referral) and also whenever that friend buys something on the platform.\n\nThe Rule: You cannot spend UD-Tokens directly to buy things. The exact number of tokens you get for invites or purchases depends on the latest company policies.',
+  },
+  {
+    title: 'UD-Coins (The "Cash" Points)',
+    body: "UD-Coins are like real money sitting in your digital wallet. They have an actual cash value that can change over time.\n\nHow you get them: When you buy products, they often come with a specific UD-Token value. If you already have UD-Tokens in your account, the platform automatically converts those tokens into UD-Coins up to the product's limit.\n\nHow to spend them: You can use UD-Coins at checkout to get a direct discount on your shopping or to get discounts on movie/event tickets via the Uden Tickets platform.\n\nExample of How It Works:\n\nScenario A (You have enough tokens): You have 100 UD-Tokens. You buy items that offer a total of 30 tokens.\nResult: 30 UD-Tokens are converted. You get 30 UD-Coins, and your token balance drops by 30. (New Balance: 70 UD-Tokens & 30 UD-Coins).\n\nScenario B (You run low on tokens): You only have 20 UD-Tokens. You buy items that offer 30 tokens.\nResult: Since you only have 20 tokens, only 20 can convert. You get 20 UD-Coins, and your UD-Tokens become 0.",
+  },
+  {
+    title: 'UD-Tokens (പോയിന്റുകൾ)',
+    body: 'UD-Tokens എന്നത് നിങ്ങൾ സുഹൃത്തുക്കളെ ഈ പ്ലാറ്റ്‌ഫോമിലേക്ക് കൊണ്ടുവരുമ്പോൾ ലഭിക്കുന്ന ബോണസ് പോയിന്റുകളാണ്.\n\nഎങ്ങനെ ലഭിക്കും: നിങ്ങൾ ഒരു സുഹൃത്തിനെ ഇൻവൈറ്റ് ചെയ്യുമ്പോഴും (Referral), ആ സുഹൃത്ത് ഈ പ്ലാറ്റ്‌ഫോമിൽ നിന്ന് എന്തെങ്കിലും സാധനങ്ങൾ വാങ്ങുമ്പോഴും നിങ്ങൾക്ക് UD-Tokens ലഭിക്കും.\n\nപ്രത്യേകത: കമ്പനിയുടെ തീരുമാനങ്ങൾക്ക് വിധേയമായായിരിക്കും എത്ര ടോക്കൺ ലഭിക്കുമെന്ന് നിശ്ചയിക്കുന്നത്. ഈ ടോക്കണുകൾ ഉപയോഗിച്ച് നിങ്ങൾക്ക് നേരിട്ട് സാധനങ്ങൾ വാങ്ങാൻ കഴിയില്ല.',
+  },
+  {
+    title: 'UD-Coins (പണത്തിന് തുല്യമായ കോയിനുകൾ)',
+    body: 'UD-Coins എന്നാൽ നിങ്ങളുടെ വാലറ്റിലുള്ള യഥാർത്ഥ പണം പോലെയാണ്. ഇതിന് കൃത്യമായ ഒരു മൂല്യമുണ്ട് (ഇത് മാറിക്കൊണ്ടിരിക്കാം).\n\nഎങ്ങനെ ലഭിക്കും: നിങ്ങൾ ഓരോ പ്രൊഡക്റ്റ് വാങ്ങുമ്പോഴും അതിനോടൊപ്പം ചില ടോക്കൺ മൂല്യങ്ങൾ ഉണ്ടാകും. നിങ്ങളുടെ കയ്യിൽ ആവശ്യത്തിന് UD-Tokens ഉണ്ടെങ്കിൽ, അത് UD-Coins ആയി മാറും.\n\nഎങ്ങനെ ഉപയോഗിക്കാം: സാധനങ്ങൾ വാങ്ങുമ്പോൾ ബില്ലിൽ ഡിസ്‌കൗണ്ട് (കിഴിവ്) ലഭിക്കാനായി ഈ കോയിനുകൾ ഉപയോഗിക്കാം. കൂടാതെ Uden Tickets പ്ലാറ്റ്‌ഫോമിൽ നിന്ന് ടിക്കറ്റുകൾ എടുക്കുമ്പോഴും ഡിസ്‌കൗണ്ടിനായി ഇത് ഉപയോഗിക്കാവുന്നതാണ്.\n\nഇത് എങ്ങനെയെന്ന് ഒരു ഉദാഹരണത്തിലൂടെ മനസ്സിലാക്കാം:\n\nഉദാഹരണം 1: നിങ്ങളുടെ കയ്യിൽ 100 UD-Tokens ഉണ്ട്. നിങ്ങൾ വാങ്ങിയ സാധനങ്ങൾക്ക് ആകെ 30 ടോക്കണിന്റെ അർഹതയുണ്ട്.\nബാക്കി വരുന്നത്: നിങ്ങളുടെ 30 ടോക്കണുകൾ കുറയുകയും പകരം 30 UD-Coins നിങ്ങൾക്ക് ലഭിക്കുകയും ചെയ്യും. (ഇപ്പോൾ നിങ്ങളുടെ കയ്യിൽ 70 UD-Tokens-ഉം 30 UD-Coins-ഉം ഉണ്ടാകും).\n\nഉദാഹരണം 2: നിങ്ങളുടെ കയ്യിൽ 20 UD-Tokens മാത്രമേ ഉള്ളൂ. എന്നാൽ നിങ്ങൾ വാങ്ങിയ സാധനങ്ങൾക്ക് 30 ടോക്കൺ ആവശ്യമുണ്ട്.\nബാക്കി വരുന്നത്: നിങ്ങളുടെ കയ്യിൽ 20 ടോക്കൺ ഉള്ളതുകൊണ്ട് 20 UD-Coins മാത്രമേ ലഭിക്കൂ. നിങ്ങളുടെ UD-Token ബാലൻസ് 0 ആയി മാറുകയും ചെയ്യും.',
+  },
+];
+
 const BCoinScreen = () => {
   const [selected, setSelected] = useState('bcoin');
   const [showModal, setShowModal] = useState(false);
+  const [showInfoModal, setShowInfoModal] = useState(false);
   const [walletData, setWalletData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [bCoinValueHistory, setBCoinValueHistory] = useState([]);
@@ -247,6 +267,7 @@ const BCoinScreen = () => {
           </TouchableOpacity>
           <Text style={styles.headerText}>UD-coin and UD-token</Text>
         </View>
+
         {/* <Image style={styles.imageStyle} source={require('../assets/images/bcoin_header_image_two.png')} /> */}
         {/* <FastImage style={styles.bcoinGif} resizeMode={FastImage.resizeMode.contain} source={require('../assets/gifs/bcoin.gif')} /> */}
       </ImageBackground>
@@ -315,6 +336,27 @@ const BCoinScreen = () => {
               </Text>
             </View>
           </View>
+          <TouchableOpacity
+            onPress={() => setShowInfoModal(true)}
+            style={{ paddingTop: 20 }}
+          >
+            <Text
+              style={{
+                textAlign: 'right',
+                textDecorationLine: 'underline',
+                textDecorationColor: '#ff6200ff',
+                textDecorationStyle: 'solid',
+                marginRight: wp('6%'),
+                fontSize: wp('4%'),
+
+                color: '#ff6200ff',
+                fontFamily: FONTS.poppins.regular,
+                fontWeight: '600',
+              }}
+            >
+              Know more
+            </Text>
+          </TouchableOpacity>
           <View style={styles.historyHeaderRow}>
             <Text style={styles.historyHeaderText}>History</Text>
           </View>
@@ -663,6 +705,40 @@ const BCoinScreen = () => {
           </View>
         </View>
       </Modal>
+      <Modal visible={showInfoModal} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeaderContainer}>
+              <Text style={styles.modalHeaderText}>UD-coin & UD-token</Text>
+              <TouchableOpacity onPress={() => setShowInfoModal(false)}>
+                <Image
+                  style={styles.closeIcon}
+                  source={require('../assets/images/close_two.png')}
+                />
+              </TouchableOpacity>
+            </View>
+            <ScrollView
+              style={{ paddingHorizontal: wp('4.65%') }}
+              showsVerticalScrollIndicator={false}
+            >
+              {UD_COIN_TOKEN_INFO.map((section, index) => (
+                <View
+                  key={section.title}
+                  style={{
+                    marginBottom:
+                      index === UD_COIN_TOKEN_INFO.length - 1
+                        ? hp('2%')
+                        : hp('2.5%'),
+                  }}
+                >
+                  <Text style={styles.infoSectionTitle}>{section.title}</Text>
+                  <Text style={styles.infoSectionBody}>{section.body}</Text>
+                </View>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
       <StatusModal
         visible={statusModalVisible}
         onClose={() => setStatusModalVisible(false)}
@@ -988,5 +1064,17 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.poppins.medium,
     fontSize: wp('2.8%'),
     color: '#F25000',
+  },
+  infoSectionTitle: {
+    fontFamily: FONTS.poppins.semiBold,
+    fontSize: wp('4.18%'),
+    color: '#000000',
+    marginBottom: hp('0.8%'),
+  },
+  infoSectionBody: {
+    fontFamily: FONTS.poppins.regular,
+    fontSize: wp('3.5%'),
+    color: '#616161',
+    lineHeight: hp('2.4%'),
   },
 });

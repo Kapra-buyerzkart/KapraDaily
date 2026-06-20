@@ -1,5 +1,5 @@
 import React from 'react';
-import Svg, { Path, Rect, Circle, G, Defs, LinearGradient, RadialGradient, Stop } from 'react-native-svg';
+import Svg, { Path, Rect } from 'react-native-svg';
 
 export const LocationIcon = ({ width = 20, height = 24, color = "#FF6A00", ...props }) => (
     <Svg width={width} height={height} viewBox="0 0 20 24" fill="none" {...props}>
@@ -52,29 +52,10 @@ export const AboutIcon = ({ width = 30, height = 30, ...props }) => (
     </Svg>
 );
 
-export const CouponIcon = ({ width = 59, height = 33, ...props }) => (
-    <Svg width={width} height={height} viewBox="0 0 59 33" fill="none" {...props}>
-        <Circle cx="29.0884" cy="16" r="15.5" fill="url(#paint0_linear_598_4698)" />
-        <Circle cx="29.0884" cy="16" r="15.5" stroke="url(#paint1_radial_598_4698)" />
-        <Circle cx="29.0884" cy="16" r="15.5" stroke="black" strokeOpacity="0.1" />
-        <G opacity="0.8">
-            <Path d="M24.4517 15.1646C29.6167 15.1646 33.8038 13.9459 33.8038 12.4425C33.8038 10.9392 29.6167 9.72046 24.4517 9.72046C19.2867 9.72046 15.0996 10.9392 15.0996 12.4425C15.0996 13.9459 19.2867 15.1646 24.4517 15.1646Z" fill="#FFBA33" />
-            <Path d="M24.452 14.8421C29.0049 14.8421 32.6957 13.7678 32.6957 12.4426C32.6957 11.1175 29.0049 10.0432 24.452 10.0432C19.8991 10.0432 16.2083 11.1175 16.2083 12.4426C16.2083 13.7678 19.8991 14.8421 24.452 14.8421Z" fill="#F9A833" />
-            <Path d="M19.0638 14.1393C15.8443 13.2022 15.8443 11.683 19.0638 10.7461C20.6173 10.2939 22.6368 10.0605 24.6724 10.0448C22.4898 10.028 20.2886 10.2611 18.6228 10.7461C15.4034 11.6831 15.4034 13.2022 18.6228 14.1393C20.2886 14.6242 22.4898 14.8574 24.6726 14.8406C22.6369 14.8248 20.6175 14.5915 19.0638 14.1393Z" fill="#DB8000" />
-            <Path d="M29.8399 10.7461C33.0593 11.6831 33.0593 13.2022 29.8399 14.1393C28.2863 14.5915 26.2668 14.8248 24.2311 14.8406C26.4137 14.8574 28.6149 14.6242 30.2807 14.1393C33.5 13.2022 33.5 11.683 30.2807 10.7461C28.6149 10.2611 26.4136 10.028 24.231 10.0448C26.2668 10.0605 28.2863 10.2939 29.8399 10.7461Z" fill="#FFF352" />
-        </G>
-        {/* Simplified paths omitted for brevity as this is likely coincount again */}
-        <Defs>
-            <LinearGradient id="paint0_linear_598_4698" x1="29.0884" y1="1" x2="29.0884" y2="31" gradientUnits="userSpaceOnUse">
-                <Stop stopColor="black" />
-                <Stop offset="0.384615" stopColor="#8A8A8A" />
-                <Stop offset="0.576923" stopColor="#FFBA33" />
-                <Stop offset="0.660275" stopColor="#FFBA33" stopOpacity="0" />
-            </LinearGradient>
-            <RadialGradient id="paint1_radial_598_4698" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(29.0884 16) rotate(90) scale(15 16.1979)">
-                <Stop stopColor="#FDED94" />
-                <Stop offset="1" stopColor="#DEC32B" />
-            </RadialGradient>
-        </Defs>
+export const CouponIcon = ({ width = 30, height = 30, ...props }) => (
+    <Svg width={width} height={height} viewBox="0 0 30 30" fill="none" {...props}>
+        <Rect width="30" height="30" rx="15" fill="#FF6A00" />
+        <Rect width="30" height="30" rx="15" fill="white" fillOpacity="0.9" />
+        <Path fillRule="evenodd" clipRule="evenodd" d="M9 10C7.89543 10 7 10.8954 7 12V13.0095C8.04339 13.2474 8.81818 14.1788 8.81818 15.3C8.81818 16.4212 8.04339 17.3526 7 17.5905V18.6C7 19.7046 7.89543 20.6 9 20.6H21C22.1046 20.6 23 19.7046 23 18.6V17.5905C21.9566 17.3526 21.1818 16.4212 21.1818 15.3C21.1818 14.1788 21.9566 13.2474 23 13.0095V12C23 10.8954 22.1046 10 21 10H9ZM16.5 12.6C16.8314 12.6 17.1 12.8686 17.1 13.2V13.8C17.1 14.1314 16.8314 14.4 16.5 14.4C16.1686 14.4 15.9 14.1314 15.9 13.8V13.2C15.9 12.8686 16.1686 12.6 16.5 12.6ZM17.1 16.2C17.1 15.8686 16.8314 15.6 16.5 15.6C16.1686 15.6 15.9 15.8686 15.9 16.2V16.8C15.9 17.1314 16.1686 17.4 16.5 17.4C16.8314 17.4 17.1 17.1314 17.1 16.8V16.2ZM17.1 18.6C17.1 18.2686 16.8314 18 16.5 18C16.1686 18 15.9 18.2686 15.9 18.6V19.2C15.9 19.5314 16.1686 19.8 16.5 19.8C16.8314 19.8 17.1 19.5314 17.1 19.2V18.6Z" fill="#FF6A00" />
     </Svg>
 );

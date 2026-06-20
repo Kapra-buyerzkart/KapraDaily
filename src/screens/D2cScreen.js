@@ -35,7 +35,7 @@ const D2cScreen = ({ navigation }) => {
       <ScrollView
         contentContainerStyle={[
           styles.scrollContent,
-          { paddingTop: insets.top + hp('8%') },
+          { paddingTop: insets.top + hp('10%') },
         ]}
         showsVerticalScrollIndicator={false}
       >

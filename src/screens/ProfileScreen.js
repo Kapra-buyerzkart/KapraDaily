@@ -364,7 +364,7 @@ export default function ProfileScreen() {
                 <View style={styles.listIconWrapper}>
                   <CouponIcon width={wp('6%')} height={wp('6%')} />
                 </View>
-                <Text style={styles.listItemText}>Coupon</Text>
+                <Text style={styles.listItemText}>Coupons</Text>
               </View>
               <AntDesign name={'right'} color={GRAY_500} size={wp('3.5%')} />
             </TouchableOpacity>

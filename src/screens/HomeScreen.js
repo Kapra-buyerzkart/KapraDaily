@@ -250,6 +250,9 @@ const HomeScreen = () => {
   const BANNER_WIDTH = wp('84.88%');
   const BANNER_SPACING = wp('4.6%');
   const SNAP_INTERVAL = BANNER_WIDTH + BANNER_SPACING;
+  // Cap the avatar at a phone-sized max so it doesn't balloon on wider screens
+  // (wp() scales linearly with device width, with no upper bound otherwise).
+  const PROFILE_AVATAR_SIZE = Math.min(wp('14%'), 56);
 
   // ── Sticky search header animation ──────────────────────────────────────
   const SCROLL_RANGE = 180;
@@ -980,7 +983,7 @@ const HomeScreen = () => {
             source={topSectionBanner[0].uri}
             style={{
               width: wp('100%'),
-              paddingTop: Platform.OS === 'ios' ? top : top - 15,
+              paddingTop: top,
               paddingBottom: hp('1%'),
             }}
             imageStyle={{ resizeMode: 'cover' }}
@@ -1069,7 +1072,7 @@ const HomeScreen = () => {
                         activeOpacity={0.85}
                       >
                         <ProfileAvatarBadge
-                          size={wp('14%')}
+                          size={PROFILE_AVATAR_SIZE}
                           isPrivileged={profile?.isPrivileged}
                         />
                       </TouchableOpacity>
@@ -1136,7 +1139,7 @@ const HomeScreen = () => {
         <Animated.View
           style={[
             {
-              paddingTop: Platform.OS === 'ios' ? top : top - 15,
+              paddingTop: top,
               paddingBottom: hp('1%'),
             },
             fallbackHeaderBgStyle,
@@ -1203,7 +1206,7 @@ const HomeScreen = () => {
                       activeOpacity={0.85}
                     >
                       <ProfileAvatarBadge
-                        size={wp('14%')}
+                        size={PROFILE_AVATAR_SIZE}
                         isPrivileged={profile?.isPrivileged}
                       />
                     </TouchableOpacity>

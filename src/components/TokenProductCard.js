@@ -45,7 +45,7 @@ const TokenProductCard = ({
   const weight = item?.weight || '1kg';
   const token = `${
     item?.bTokenValue || item?.token || item?.btokens || '1'
-  }B Token`;
+  } UD Token`;
 
   const liked = propIsInWishlist
     ? propIsInWishlist(productId)

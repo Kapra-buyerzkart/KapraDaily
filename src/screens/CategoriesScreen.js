@@ -494,24 +494,29 @@ export default function CategoriesScreen() {
   return (
     <SafeAreaView style={styles.mainContainer} edges={['top', 'left', 'right']}>
       <View style={styles.newHeaderContainer}>
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
           <TouchableOpacity
             onPress={() => navigation.goBack()}
-            style={{ paddingRight: wp('2%') }}
+            style={styles.headerIconButton}
           >
-            <Ionicons name="chevron-back" size={wp('6%')} color="#000000" />
+            <Ionicons name="chevron-back" size={wp('5.5%')} color="#0F0F0F" />
           </TouchableOpacity>
-          <Text style={styles.newCategoryHeaderText}>{categoryName}</Text>
+          <Text style={styles.newCategoryHeaderText} numberOfLines={1}>
+            {categoryName}
+          </Text>
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <TouchableOpacity
             onPress={() => setIsSearchVisible(!isSearchVisible)}
-            style={{ marginRight: wp('4%') }}
+            style={[styles.headerIconButton, { marginRight: wp('2.5%') }]}
           >
-            <Feather name="search" size={wp('6%')} color="#000000" />
+            <Feather name="search" size={wp('5%')} color="#0F0F0F" />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => setIsFilterSortModalVisible(true)}>
-            <Ionicons name="options-outline" size={wp('6%')} color="#000000" />
+          <TouchableOpacity
+            onPress={() => setIsFilterSortModalVisible(true)}
+            style={styles.headerIconButton}
+          >
+            <Ionicons name="options-outline" size={wp('5%')} color="#0F0F0F" />
           </TouchableOpacity>
         </View>
       </View>
@@ -606,7 +611,7 @@ export default function CategoriesScreen() {
                 ListFooterComponent={
                   isFetchingMore ? (
                     <View style={{ paddingVertical: 20 }}>
-                      <ActivityIndicator size="small" color="#F25000" />
+                      <ActivityIndicator size="small" color="#FF6B00" />
                     </View>
                   ) : null
                 }
@@ -615,7 +620,7 @@ export default function CategoriesScreen() {
                     <View
                       style={{ marginTop: hp('10%'), alignItems: 'center' }}
                     >
-                      <ActivityIndicator size="large" color="#F25000" />
+                      <ActivityIndicator size="large" color="#FF6B00" />
                     </View>
                   ) : productsList.length === 0 &&
                     !isFetchingMore &&
@@ -679,10 +684,8 @@ const styles = StyleSheet.create({
   },
   leftMenu: {
     width: wp('22%'),
-    // paddingVertical: hp("1%"),
-    // backgroundColor: "yellow",
     borderRightWidth: 1,
-    borderColor: '#FFF3E8',
+    borderColor: '#ECECEC',
   },
   rightContent: {
     flex: 1,
@@ -713,33 +716,43 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: wp('4.65%'),
-    paddingTop: hp('1.5%'),
-    paddingBottom: hp('1%'),
+    paddingHorizontal: wp('6%'),
+    paddingTop: hp('1.8%'),
+    paddingBottom: hp('1.4%'),
     backgroundColor: '#FFFFFF',
   },
+  headerIconButton: {
+    width: wp('9.5%'),
+    height: wp('9.5%'),
+    borderRadius: wp('4.75%'),
+    backgroundColor: '#F7F7F8',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: wp('2.5%'),
+  },
   newCategoryHeaderText: {
-    fontFamily: FONTS.poppins.semiBold,
-    fontSize: wp('4.65%'),
-    color: '#000000',
+    fontFamily: FONTS.poppins.bold,
+    fontSize: wp('5.5%'),
+    color: '#0F0F0F',
+    flexShrink: 1,
   },
   toggleSearchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F5F5F5',
-    borderRadius: wp('2.33%'),
-    paddingHorizontal: wp('2%'),
-    height: hp('5%'),
-    marginHorizontal: wp('4.65%'),
-    marginBottom: hp('1%'),
+    backgroundColor: '#F7F7F8',
+    borderRadius: wp('5%'),
+    paddingHorizontal: wp('3%'),
+    height: hp('5.5%'),
+    marginHorizontal: wp('6%'),
+    marginBottom: hp('1.2%'),
     borderWidth: 1,
-    borderColor: '#E3E3E3',
+    borderColor: '#ECECEC',
   },
   searchInput: {
     flex: 1,
     fontSize: wp('3.5%'),
     marginHorizontal: wp('2%'),
-    color: '#000000',
+    color: '#0F0F0F',
     fontFamily: FONTS.outfit.regular,
   },
   floatingContainer: {
@@ -791,22 +804,27 @@ const styles = StyleSheet.create({
     width: wp('17%'),
     height: wp('17%'),
     justifyContent: 'center',
-    borderRadius: wp('4%'),
-    backgroundColor: '#FFFFFF',
+    borderRadius: wp('4.5%'),
+    backgroundColor: '#F7F7F8',
     marginBottom: hp('0.5%'),
     borderWidth: 1,
-    borderColor: 'transparent',
+    borderColor: '#ECECEC',
   },
   activeCard: {
     alignItems: 'center',
     width: wp('17%'),
     height: wp('17%'),
     justifyContent: 'center',
-    borderRadius: wp('4%'),
-    borderWidth: 0.7,
-    borderColor: '#F25000',
-    backgroundColor: '#FFEFE5',
+    borderRadius: wp('4.5%'),
+    borderWidth: 1.2,
+    borderColor: '#FF6B00',
+    backgroundColor: '#FFF1E8',
     marginBottom: hp('0.5%'),
+    shadowColor: '#FF6B00',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 3,
   },
   image: {
     width: wp('11%'),
@@ -815,36 +833,36 @@ const styles = StyleSheet.create({
   activeTitle: {
     fontSize: wp('3%'),
     textAlign: 'center',
-    color: '#F25000',
-    fontFamily: FONTS.poppins.medium,
+    color: '#FF6B00',
+    fontFamily: FONTS.poppins.semiBold,
     paddingHorizontal: wp('1%'),
   },
   inactiveTitle: {
     fontSize: wp('3%'),
     textAlign: 'center',
-    color: '#666666',
+    color: '#6B7280',
     fontFamily: FONTS.poppins.medium,
     paddingHorizontal: wp('1%'),
   },
   subCatPillActive: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: wp('2%'),
-    paddingVertical: hp('0.5%'),
+    paddingHorizontal: wp('2.5%'),
+    paddingVertical: hp('0.6%'),
     borderRadius: wp('8%'),
-    borderWidth: 0.7,
-    borderColor: '#F25000',
-    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#FF6B00',
+    backgroundColor: '#FFF1E8',
   },
   subCatPillInactive: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: wp('2%'),
-    paddingVertical: hp('0.5%'),
+    paddingHorizontal: wp('2.5%'),
+    paddingVertical: hp('0.6%'),
     borderRadius: wp('8%'),
     borderWidth: 1,
-    borderColor: '#E3E3E3',
-    backgroundColor: '#FFFFFF',
+    borderColor: '#ECECEC',
+    backgroundColor: '#F7F7F8',
   },
   subCatPillImage: {
     width: wp('8%'),
@@ -854,15 +872,15 @@ const styles = StyleSheet.create({
     resizeMode: 'cover',
   },
   subCatPillTextActive: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.poppins.semiBold,
     fontSize: wp('3.5%'),
-    color: '#F25000',
+    color: '#FF6B00',
     marginRight: wp('2%'),
   },
   subCatPillTextInactive: {
     fontFamily: FONTS.poppins.medium,
     fontSize: wp('3.5%'),
-    color: '#000000',
+    color: '#6B7280',
     marginRight: wp('2%'),
   },
   emptyContainer: {

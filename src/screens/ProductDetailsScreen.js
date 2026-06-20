@@ -443,7 +443,7 @@ const ProductDetailsScreen = () => {
                     source={require('../assets/images/btoken-icon-three.png')}
                   />
                   <Text style={styles.tokenBadgeText}>
-                    {Number(bTokenValue)} B Token
+                    {Number(bTokenValue)} UD Token
                   </Text>
                 </View>
 

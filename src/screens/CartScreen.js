@@ -1092,7 +1092,7 @@ const CartScreen = () => {
               source={require('../assets/images/btoken-icon.png')}
               style={{ width: wp('4%'), height: wp('4%') }}
             />
-            <Text style={styles.tokenSumText}>{totalCartBTokens} B Token</Text>
+            <Text style={styles.tokenSumText}>{totalCartBTokens} UD Token</Text>
           </View>
         </View>
 

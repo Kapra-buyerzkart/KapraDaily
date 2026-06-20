@@ -14,10 +14,6 @@ export default function ProfileAvatarBadge({
   isPrivileged = false,
 }) {
   const badgeSize = size * 0.42;
-  // Keep the component's total footprint fixed at `size` regardless of
-  // privilege — ancestors (e.g. the animated sticky header) measure this
-  // box once and clip anything that grows past it later. The badge gets its
-  // room by shrinking the ring slightly, not by growing the container.
   const crownHeadroom = isPrivileged ? badgeSize * 0.62 : 0;
   const ringSize = size - crownHeadroom;
   const ringWidth = isPrivileged ? ringSize * 0.09 : ringSize * 0.05;

@@ -14,12 +14,20 @@ import {
   Linking,
   View,
 } from 'react-native';
+import RenderHtml from 'react-native-render-html';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { wp, hp } from '../../../utils/responsive';
 import CONFIG from '../../../globals/config';
 
-const { height } = Dimensions.get('window');
+const { height, width } = Dimensions.get('window');
+
+const htmlBaseStyle = {
+  color: 'rgba(255,255,255,0.6)',
+  fontSize: 13,
+  fontFamily: 'Poppins-Regular',
+  lineHeight: 20,
+};
 
 const SNAP_FULL = Platform.OS === 'ios' ? height * 0.05 : 0;
 
@@ -46,7 +54,7 @@ const openInChrome = async () => {
   Linking.openURL(canChrome ? chromeUrl : BMS_URL).catch(() => {});
 };
 
-const Accordion = ({ title, items }) => {
+const Accordion = ({ title, items, html }) => {
   const [open, setOpen] = useState(false);
   return (
     <View style={styles.accordion}>
@@ -65,12 +73,20 @@ const Accordion = ({ title, items }) => {
       <View style={styles.divider} />
       {open && (
         <View style={styles.accordionBody}>
-          {items.map((item, i) => (
-            <View key={i} style={styles.accordionRow}>
-              <Text style={styles.bullet}>•</Text>
-              <Text style={styles.accordionText}>{item}</Text>
-            </View>
-          ))}
+          {html ? (
+            <RenderHtml
+              contentWidth={width * 0.9}
+              source={{ html }}
+              baseStyle={htmlBaseStyle}
+            />
+          ) : (
+            items.map((item, i) => (
+              <View key={i} style={styles.accordionRow}>
+                <Text style={styles.bullet}>•</Text>
+                <Text style={styles.accordionText}>{item}</Text>
+              </View>
+            ))
+          )}
         </View>
       )}
     </View>
@@ -182,14 +198,6 @@ const VoucherBottomSheet = ({ visible, onClose, voucher }) => {
     `Valid till: ${formatDate(voucher.codeExpiryDate)}`,
   ];
 
-  const dummyTerms = [
-    'Cannot be combined with other offers',
-    'Valid only on the partner platform',
-    'Non-transferable voucher',
-    'One-time use only',
-    'Uden Deal is not responsible for voucher misuse',
-  ];
-
   const safeBottom = insets.bottom > 0 ? insets.bottom : 20;
 
   return (
@@ -265,7 +273,18 @@ const VoucherBottomSheet = ({ visible, onClose, voucher }) => {
             </View>
 
             <Accordion title="Details" items={voucherDetails} />
-            <Accordion title="Terms & Conditions" items={dummyTerms} />
+            {voucher.shortDescription && (
+              <Accordion title="Description" html={voucher.shortDescription} />
+            )}
+            {voucher.howToUse && (
+              <Accordion title="How to Redeem" html={voucher.howToUse} />
+            )}
+            {voucher.termsConditions && (
+              <Accordion
+                title="Terms & Conditions"
+                html={voucher.termsConditions}
+              />
+            )}
             <View style={styles.redeemWrapper}>
               <TouchableOpacity
                 style={styles.redeemBtn}
