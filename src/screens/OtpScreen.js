@@ -40,6 +40,8 @@ import RNOtpVerify from 'react-native-otp-verify';
 import { AppContext } from '../context/appContext';
 import { OneSignal } from 'react-native-onesignal';
 import FastImage from 'react-native-fast-image';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import HelpSupportModal from '../components/HelpSupportModal';
 
 const ACCESS_TOKEN = 'ACCESS_TOKEN';
 const REFRESH_TOKEN = 'REFRESH_TOKEN';
@@ -88,6 +90,7 @@ const OtpScreen = () => {
   const [timer, setTimer] = useState(60); // 1 minute
   const [isResendDisabled, setIsResendDisabled] = useState(true);
   const [loading, setLoading] = useState(false);
+  const helpSheetRef = useRef(null);
 
   const otpHandler = message => {
     try {
@@ -417,6 +420,22 @@ const OtpScreen = () => {
 
   return (
     <View style={styles.mainContainer}>
+      <SafeAreaView style={styles.helpButtonSafeArea}>
+        <TouchableOpacity
+          style={styles.helpButton}
+          onPress={() => helpSheetRef.current?.open()}
+        >
+          <MaterialIcons
+            name="help-outline"
+            size={wp('5%')}
+            color="#FFFFFF"
+          />
+          <Text style={styles.helpButtonText}>Help</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
+
+      <HelpSupportModal ref={helpSheetRef} />
+
       {/* Pre-warm the heavy AuthSuccessScreen images while the user types the
           OTP, so the next screen renders from cache instead of decoding
           multi-MB PNGs on mount. Hidden + non-interactive. */}
@@ -589,6 +608,28 @@ export default OtpScreen;
 
 const styles = StyleSheet.create({
   mainContainer: { flex: 1, backgroundColor: '#FFFFFF' },
+  helpButtonSafeArea: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    zIndex: 10,
+  },
+  helpButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    paddingHorizontal: wp('3%'),
+    paddingVertical: hp('0.8%'),
+    borderRadius: wp('5%'),
+    marginTop: hp('1.5%'),
+    marginRight: wp('4%'),
+    gap: wp('1.2%'),
+  },
+  helpButtonText: {
+    fontFamily: FONTS.poppins.medium,
+    fontSize: wp('3.25%'),
+    color: '#FFFFFF',
+  },
   imagePreloader: {
     position: 'absolute',
     width: wp('100%'),

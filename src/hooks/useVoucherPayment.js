@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useContext } from 'react';
 import RazorpayCheckout from 'react-native-razorpay';
 import {
   getVoucherQuoteApi,
@@ -6,9 +6,11 @@ import {
   verifyVoucherPurchaseApi,
 } from '../api/voucherService';
 import { useCart } from '../context/CartContext';
+import { AppContext } from '../context/appContext';
 
 export const useVoucherPayment = onBalanceChange => {
   const { showStatus } = useCart();
+  const { profile } = useContext(AppContext);
   const [successVisible, setSuccessVisible] = useState(false);
   const [paidAmount, setPaidAmount] = useState(0);
 
@@ -51,7 +53,11 @@ export const useVoucherPayment = onBalanceChange => {
           name: 'Kapra Daily',
           description: `${voucherName || 'Voucher'} x${quantity}`,
           order_id: razorpayOrderId,
-          theme: { color: '#e07f2bff' },
+          prefill: {
+            email: profile?.email || '',
+            contact: profile?.phone || profile?.phoneNo || '',
+          },
+          theme: { color: '#5500ffff' },
         };
 
         sdkResponse = await RazorpayCheckout.open(options);

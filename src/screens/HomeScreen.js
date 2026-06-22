@@ -22,7 +22,6 @@ import Animated, {
   withTiming,
   withSpring,
 } from 'react-native-reanimated';
-import { BlurView } from '@react-native-community/blur';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, {
   startTransition,
@@ -413,7 +412,7 @@ const HomeScreen = () => {
     backgroundColor: interpolateColor(
       scrollY.value,
       [0, SCROLL_RANGE],
-      ['#F25000', '#0F413C'],
+      ['#F25000', '#FFFFFF'],
     ),
   }));
 
@@ -988,26 +987,15 @@ const HomeScreen = () => {
             }}
             imageStyle={{ resizeMode: 'cover' }}
           >
-            {/* Frosted glass overlay – fades in on scroll */}
+            {/* White overlay – fades in on scroll */}
             <Animated.View
               pointerEvents="none"
-              style={[StyleSheet.absoluteFill, glassOverlayAnimStyle]}
-            >
-              {Platform.OS === 'ios' && (
-                <BlurView
-                  style={StyleSheet.absoluteFill}
-                  blurType="dark"
-                  blurAmount={6}
-                  reducedTransparencyFallbackColor="rgba(15,65,60,0.92)"
-                />
-              )}
-              <View
-                style={[
-                  StyleSheet.absoluteFill,
-                  { backgroundColor: 'rgba(15,65,60,0.72)' },
-                ]}
-              />
-            </Animated.View>
+              style={[
+                StyleSheet.absoluteFill,
+                { backgroundColor: '#FFFFFF' },
+                glassOverlayAnimStyle,
+              ]}
+            />
 
             {/* Collapsible: ETA + location + coins + profile */}
             <Animated.View
@@ -1127,7 +1115,7 @@ const HomeScreen = () => {
               style={[
                 {
                   height: 1,
-                  backgroundColor: 'rgba(255,255,255,0.08)',
+                  backgroundColor: 'rgba(0,0,0,0.08)',
                   marginTop: hp('0.5%'),
                 },
                 stickyBorderAnimStyle,

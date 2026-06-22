@@ -58,8 +58,13 @@ import { AppContext } from '../context/appContext';
 
 const CartScreen = () => {
   const navigation = useNavigation();
-  const { profile, isStoreUnavailable, storeUnavailableData, generalSettings } =
-    useContext(AppContext);
+  const {
+    profile,
+    isStoreUnavailable,
+    storeUnavailableData,
+    generalSettings,
+    loadProfile,
+  } = useContext(AppContext);
   const {
     // Cart
     billCalculations,
@@ -117,7 +122,7 @@ const CartScreen = () => {
 
   const [isClearCartModalVisible, setIsClearCartModalVisible] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState('cod');
+  const [paymentMethod, setPaymentMethod] = useState('online');
   const [paymentModes, setPaymentModes] = useState([]);
 
   // Status Modal State
@@ -155,10 +160,12 @@ const CartScreen = () => {
             });
           }
           setPaymentModes(modes);
-          const cod = modes.find(
-            m => m.paymentModeName?.toUpperCase() === 'COD',
+          const online = modes.find(m =>
+            ['online', 'razorpay', 'upi'].includes(
+              m.paymentModeName?.toLowerCase(),
+            ),
           );
-          if (cod) setPaymentMethod(cod.paymentModeName);
+          if (online) setPaymentMethod(online.paymentModeName);
         }
       } catch (err) {
         console.error('Error fetching payment modes:', err);
@@ -167,11 +174,12 @@ const CartScreen = () => {
     fetchPaymentModes();
   }, []);
 
-  // Refresh addresses whenever the screen gains focus
+  // Refresh addresses and UD-coin balance whenever the screen gains focus
   useFocusEffect(
     React.useCallback(() => {
       fetchAddresses();
-    }, [fetchAddresses]),
+      loadProfile();
+    }, [fetchAddresses, loadProfile]),
   );
 
   // Calculate total UD-tokens
@@ -185,11 +193,11 @@ const CartScreen = () => {
   const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
     try {
-      await Promise.all([getCartSummary(), fetchAddresses()]);
+      await Promise.all([getCartSummary(), fetchAddresses(), loadProfile()]);
     } finally {
       setRefreshing(false);
     }
-  }, [getCartSummary, fetchAddresses]);
+  }, [getCartSummary, fetchAddresses, loadProfile]);
 
   // --- Order Placement Logic (Migrated from Checkout) ---
   // --- Order Logic ---

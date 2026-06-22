@@ -13,6 +13,7 @@ import {
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import Navigation from './src/navigation';
 import { OneSignal } from 'react-native-onesignal';
 import { LoaderContextProvider } from './src/context/loaderContext';
@@ -22,6 +23,7 @@ import { WishlistProvider } from './src/context/WishlistContext';
 import { NavigationContainer } from '@react-navigation/native';
 import RootNavigator from './src/navigation/RootNavigator';
 import { navigationRef } from './src/api/NavigationService';
+import ModalProvider from './src/components/modal/ModalProvider';
 
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
@@ -67,17 +69,23 @@ function App() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor={isDarkMode ? '#000' : '#fff'} />
-        <AppContextProvider>
-          <CartProvider>
-            <WishlistProvider>
-              <LoaderContextProvider>
-                <NavigationContainer ref={navigationRef}>
-                  <RootNavigator />
-                </NavigationContainer>
-              </LoaderContextProvider>
-            </WishlistProvider>
-          </CartProvider>
-        </AppContextProvider>
+        <BottomSheetModalProvider>
+          {/* Portal host for CustomModal — mounted once here so any modal
+              opened anywhere in the tree renders above the whole app. */}
+          <ModalProvider>
+            <AppContextProvider>
+              <CartProvider>
+                <WishlistProvider>
+                  <LoaderContextProvider>
+                    <NavigationContainer ref={navigationRef}>
+                      <RootNavigator />
+                    </NavigationContainer>
+                  </LoaderContextProvider>
+                </WishlistProvider>
+              </CartProvider>
+            </AppContextProvider>
+          </ModalProvider>
+        </BottomSheetModalProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

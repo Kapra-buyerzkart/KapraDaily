@@ -50,7 +50,7 @@ const VoucherGrid = ({ vouchers = [], loading = false, onVoucherPress }) => {
 
   console.log(vouchers, 'here is vouchere yaal');
 
-  if (!vouchers.length) {
+  if (!vouchers?.length) {
     return (
       <View
         style={[

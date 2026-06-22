@@ -22,7 +22,6 @@ import Feather from 'react-native-vector-icons/Feather';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import TokenProductCard from '../components/TokenProductCard';
 import SelectedProducts from '../components/SelectedProducts';
-import LinearGradient from 'react-native-linear-gradient';
 import { FONTS } from '../styles/typography';
 import { getCategoriesApi } from '../api/categoryService';
 import { searchProductsApi } from '../api/productService';
