@@ -42,7 +42,7 @@ export const splashStyles = StyleSheet.create({
     tagline: {
         fontSize: wp('4%'),
         color: '#A78BFA',
-        fontFamily: 'Poppins-Medium',
+        fontFamily: 'Gilroy-Medium',
         marginTop: hp('1%'),
         letterSpacing: 2,
     },

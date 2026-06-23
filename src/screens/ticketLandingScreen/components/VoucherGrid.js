@@ -65,7 +65,7 @@ const VoucherGrid = ({ vouchers = [], loading = false, onVoucherPress }) => {
         <Text
           style={{
             color: 'rgba(255,255,255,0.4)',
-            fontFamily: 'Poppins-Regular',
+            fontFamily: 'Gilroy-Regular',
             fontSize: 14,
           }}
         >

@@ -31,7 +31,8 @@ const checkAuthApi = (url) => {
     url.includes('auth/resendotp') ||
     url.includes('auth/register') ||
     url.includes('auth/refreshtoken') ||
-    url.includes('auth/resetpassword');
+    url.includes('auth/resetpassword') ||
+    url.includes('auth/send-login-otp-email');
 };
 
 /* -------------------- ERROR HANDLER -------------------- */

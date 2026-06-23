@@ -3,10 +3,15 @@ import {
   Text,
   StyleSheet,
   Image,
-  FlatList,
   TouchableOpacity,
 } from 'react-native';
 import React, { useState } from 'react';
+import Animated, {
+  useSharedValue,
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  withTiming,
+} from 'react-native-reanimated';
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
@@ -38,6 +43,27 @@ export default function WishlistScreen() {
 
   const [confirmationVisible, setConfirmationVisible] = useState(false);
   const [itemToRemove, setItemToRemove] = useState(null);
+
+  // ── Floating cart show/hide on scroll direction ─────────────────────────
+  const lastScrollY = useSharedValue(0);
+  const cartTranslateY = useSharedValue(0);
+
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: event => {
+      const y = event.contentOffset.y;
+      const diff = y - lastScrollY.value;
+      if (y <= 10 || diff < -5) {
+        cartTranslateY.value = withTiming(0, { duration: 200 });
+      } else if (diff > 5) {
+        cartTranslateY.value = withTiming(150, { duration: 200 });
+      }
+      lastScrollY.value = y;
+    },
+  });
+
+  const cartAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: cartTranslateY.value }],
+  }));
 
   // Refresh wishlist when screen is focused
   useFocusEffect(
@@ -158,7 +184,7 @@ export default function WishlistScreen() {
             onChangeLocation={() => setIsLocationModalVisible(true)}
           />
         ) : (
-          <FlatList
+          <Animated.FlatList
             data={wishlistItems}
             keyExtractor={item =>
               item.wishlistItemId?.toString() || item.productId?.toString()
@@ -166,6 +192,8 @@ export default function WishlistScreen() {
             renderItem={renderItem}
             numColumns={3}
             showsVerticalScrollIndicator={false}
+            onScroll={scrollHandler}
+            scrollEventThrottle={16}
             ListEmptyComponent={!isLoading && renderNoitem}
             ListFooterComponent={wishlistItems?.length > 0 && renderFooter}
             contentContainerStyle={{
@@ -177,9 +205,9 @@ export default function WishlistScreen() {
       </View>
 
       {cartItems && cartItems.length > 0 && (
-        <View style={styles.floatingContainer}>
+        <Animated.View style={[styles.floatingContainer, cartAnimatedStyle]}>
           <SelectedProducts selectedProducts={cartItems} />
-        </View>
+        </Animated.View>
       )}
 
       <ConfirmationModal

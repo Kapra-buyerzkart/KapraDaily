@@ -25,7 +25,7 @@ const { height, width } = Dimensions.get('window');
 const htmlBaseStyle = {
   color: 'rgba(255,255,255,0.6)',
   fontSize: 13,
-  fontFamily: 'Poppins-Regular',
+  fontFamily: 'Gilroy-Regular',
   lineHeight: 20,
 };
 
@@ -371,7 +371,7 @@ const styles = StyleSheet.create({
   brandName: {
     color: '#FFFFFF',
     fontSize: 17,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Gilroy-Bold',
   },
 
   cardImage: {
@@ -394,19 +394,19 @@ const styles = StyleSheet.create({
   badgeText: {
     color: '#FFFFFF',
     fontSize: 12,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Gilroy-Medium',
   },
 
   discountTitle: {
     color: '#FFFFFF',
     fontSize: 30,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Gilroy-Bold',
     marginBottom: 4,
   },
   discountSubtitle: {
     color: 'rgba(255,255,255,0.6)',
     fontSize: 14,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'Gilroy-Regular',
     marginBottom: hp(2),
   },
 
@@ -425,7 +425,7 @@ const styles = StyleSheet.create({
   codeText: {
     color: 'rgba(255,255,255,0.8)',
     fontSize: 13,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Gilroy-Medium',
     letterSpacing: 0.5,
     flex: 1,
     marginRight: 8,
@@ -443,7 +443,7 @@ const styles = StyleSheet.create({
   accordionTitle: {
     color: '#FFFFFF',
     fontSize: 15,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Gilroy-Medium',
   },
   divider: {
     height: 1,
@@ -466,7 +466,7 @@ const styles = StyleSheet.create({
   accordionText: {
     color: 'rgba(255,255,255,0.6)',
     fontSize: 13,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'Gilroy-Regular',
     lineHeight: 20,
     flex: 1,
   },
@@ -486,7 +486,7 @@ const styles = StyleSheet.create({
   redeemText: {
     color: '#FFFFFF',
     fontSize: 16,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Gilroy-Bold',
   },
 });
 

@@ -369,7 +369,7 @@ const styles = StyleSheet.create({
     color: '#0CA201',
   },
   productNameText: {
-    // fontFamily: "Outfit-Light",
+    // fontFamily: "Gilroy-Light",
     fontFamily: FONTS.outfit.light,
     fontSize: wp('3.25%'),
     color: '#000000',

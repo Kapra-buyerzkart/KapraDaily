@@ -14,6 +14,7 @@ import Animated, {
   useAnimatedStyle,
   interpolate,
   Extrapolation,
+  withTiming,
 } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useState, useEffect, useCallback, useContext } from 'react';
@@ -127,11 +128,28 @@ const SearchScreen = () => {
   // height/margin change, no shift to the content below. UI-thread only.
   const STICKY_SHADOW_RANGE = 24;
   const scrollY = useSharedValue(0);
+
+  // ── Floating cart show/hide on scroll direction ─────────────────────────
+  const lastScrollY = useSharedValue(0);
+  const cartTranslateY = useSharedValue(0);
+
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: event => {
-      scrollY.value = event.contentOffset.y;
+      const y = event.contentOffset.y;
+      const diff = y - lastScrollY.value;
+      if (y <= 10 || diff < -5) {
+        cartTranslateY.value = withTiming(0, { duration: 200 });
+      } else if (diff > 5) {
+        cartTranslateY.value = withTiming(150, { duration: 200 });
+      }
+      lastScrollY.value = y;
+      scrollY.value = y;
     },
   });
+
+  const cartAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: cartTranslateY.value }],
+  }));
   const stickyShadowAnimStyle = useAnimatedStyle(() => {
     const progress = interpolate(
       scrollY.value,
@@ -324,9 +342,9 @@ const SearchScreen = () => {
         visible={isLocationModalVisible}
         onClose={() => setIsLocationModalVisible(false)}
       />
-      <View style={styles.floatingContainer}>
+      <Animated.View style={[styles.floatingContainer, cartAnimatedStyle]}>
         <SelectedProducts />
-      </View>
+      </Animated.View>
     </SafeAreaView>
   );
 };
@@ -389,7 +407,7 @@ const styles = StyleSheet.create({
     color: '#000000',
     marginLeft: wp('2%'),
     flex: 1,
-    top: 2,
+    top: Platform.OS == 'ios' ? 1.5 : 1,
   },
   divider: {
     height: hp('2.65%'),

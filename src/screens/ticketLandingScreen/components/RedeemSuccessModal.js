@@ -208,7 +208,7 @@ const styles = StyleSheet.create({
 
   successText: {
     fontSize: 30,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Gilroy-Bold',
     color: '#6E34C0',
     textAlign: 'center',
     letterSpacing: 4,
@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
   },
   subtitleText: {
     fontSize: 13,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'Gilroy-Regular',
     color: 'rgba(255,255,255,0.65)',
     textAlign: 'center',
     lineHeight: 20,
@@ -244,12 +244,12 @@ const styles = StyleSheet.create({
   },
   rowLabel: {
     fontSize: 13,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'Gilroy-Regular',
     color: 'rgba(255,255,255,0.5)',
   },
   rowValue: {
     fontSize: 13,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Gilroy-Medium',
     color: 'rgba(255,255,255,0.9)',
   },
   statusRow: {
@@ -273,7 +273,7 @@ const styles = StyleSheet.create({
   },
   statusValue: {
     color: '#7B5CE6',
-    fontFamily: 'Poppins-SemiBold',
+    fontFamily: 'Gilroy-Bold',
   },
 
   btnRow: {
@@ -290,7 +290,7 @@ const styles = StyleSheet.create({
   },
   backBtnText: {
     fontSize: 14,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Gilroy-Medium',
     color: '#555555',
   },
   vouchersBtn: {
@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
   },
   vouchersBtnText: {
     fontSize: 14,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Gilroy-Bold',
     color: '#FFFFFF',
   },
 });

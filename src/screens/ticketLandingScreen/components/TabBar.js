@@ -9,14 +9,12 @@ import Reanimated, {
   withTiming,
   Extrapolation,
 } from 'react-native-reanimated';
-import { BlurView } from '@react-native-community/blur';
 import styles from '../styles';
 
 const TABS = ['Tickets', 'My Vouchers'];
 const STICKY_START = 80;
 const STICKY_END = 130;
 
-// Each tab is its own component so hooks aren't called inside .map()
 const AnimatedTab = ({ label, isActive, onPress, indicatorAnimStyle }) => {
   const scale = useSharedValue(1);
   const activeProgress = useSharedValue(isActive ? 1 : 0);
@@ -37,7 +35,7 @@ const AnimatedTab = ({ label, isActive, onPress, indicatorAnimStyle }) => {
       ['rgba(255,255,255,0.45)', '#FFFFFF'],
     ),
     fontSize: 16,
-    fontFamily: isActive ? 'Poppins-Bold' : 'Poppins-Medium',
+    fontFamily: isActive ? 'Gilroy-Bold' : 'Gilroy-Medium',
   }));
 
   const handlePress = () => {

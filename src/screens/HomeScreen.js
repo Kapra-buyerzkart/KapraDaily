@@ -59,6 +59,7 @@ import StoreUnavailable from '../components/StoreUnavailable';
 import SeeAllButton from '../components/SeeAllButton';
 import ShimmerPlaceholder from '../components/ShimmerPlaceholder';
 import HomePopupModal from '../components/HomePopupModal';
+import RotatingPlaceholder from '../components/RotatingPlaceholder';
 
 const PlacementBannerCarousel = ({
   banners,
@@ -74,7 +75,6 @@ const PlacementBannerCarousel = ({
   const BANNER_WIDTH = fullWidth ? wp('100%') : wp('85%');
   const BANNER_SPACING = fullWidth ? 0 : wp('4%');
   const SNAP_INTERVAL = BANNER_WIDTH + BANNER_SPACING;
-  // const bannerHeight = fullWidth ? BANNER_WIDTH / TOP_BANNER_ASPECT_RATIO : BANNER_HEIGHT;
 
   const onScroll = e => {
     const offsetX = e.nativeEvent.contentOffset.x;
@@ -244,6 +244,8 @@ const CategoryItem = React.memo(({ item }) => {
 const INK = '#1A1A1A';
 const ORANGE = '#FF6A00';
 
+const SEARCH_EXAMPLES = ['Basmati Rice', 'Milk', 'Sunflower Oil', 'Books'];
+
 const HomeScreen = () => {
   const { top } = useSafeAreaInsets();
   const BANNER_WIDTH = wp('84.88%');
@@ -259,11 +261,27 @@ const HomeScreen = () => {
   const headerInfoMaxH = useSharedValue(0);
   const searchPressScale = useSharedValue(1);
 
+  // ── Floating cart show/hide on scroll direction ─────────────────────────
+  const lastScrollY = useSharedValue(0);
+  const cartTranslateY = useSharedValue(0);
+
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: event => {
-      scrollY.value = event.contentOffset.y;
+      const y = event.contentOffset.y;
+      const diff = y - lastScrollY.value;
+      if (y <= 10 || diff < -5) {
+        cartTranslateY.value = withTiming(0, { duration: 200 });
+      } else if (diff > 5) {
+        cartTranslateY.value = withTiming(150, { duration: 200 });
+      }
+      lastScrollY.value = y;
+      scrollY.value = y;
     },
   });
+
+  const cartAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: cartTranslateY.value }],
+  }));
 
   // Collapsible row: height from measured → 0
   const collapsibleHeaderStyle = useAnimatedStyle(() => {
@@ -1098,13 +1116,20 @@ const HomeScreen = () => {
                 ]}
                 activeOpacity={isStoreUnavailable ? 1 : 0.85}
               >
-                <Feather name="search" color={'#f25000'} size={wp('6%')} />
+                <Feather name="search" color={'black'} size={wp('6%')} />
                 <View style={styles.searchProductContainer}>
-                  <Text style={styles.searchProductText}>Search product</Text>
+                  <RotatingPlaceholder
+                    examples={SEARCH_EXAMPLES}
+                    prefix='Search for "'
+                    suffix='"'
+                    style={styles.searchProductText}
+                  />
                 </View>
-                <Image
+                <Feather
+                  name="clipboard"
+                  color={'black'}
+                  size={wp('5%')}
                   style={styles.clipboardIcon}
-                  source={require('../assets/images/clip_board.png')}
                 />
               </TouchableOpacity>
             </Animated.View>
@@ -1232,13 +1257,20 @@ const HomeScreen = () => {
               ]}
               activeOpacity={isStoreUnavailable ? 1 : 0.85}
             >
-              <Feather name="search" color={'#f25000'} size={wp('6%')} />
+              <Feather name="search" color={'black'} size={wp('6%')} />
               <View style={styles.searchProductContainer}>
-                <Text style={styles.searchProductText}>Search product</Text>
+                <RotatingPlaceholder
+                  examples={SEARCH_EXAMPLES}
+                  prefix='Search for "'
+                  suffix='"'
+                  style={styles.searchProductText}
+                />
               </View>
-              <Image
+              <Feather
+                name="clipboard"
+                color={'black'}
+                size={wp('5%')}
                 style={styles.clipboardIcon}
-                source={require('../assets/images/clip_board.png')}
               />
             </TouchableOpacity>
           </Animated.View>
@@ -1874,9 +1906,9 @@ const HomeScreen = () => {
           </LinearGradient>
         )}
       </Animated.ScrollView>
-      <View style={styles.floatingContainer}>
+      <Animated.View style={[styles.floatingContainer, cartAnimatedStyle]}>
         {!isStoreUnavailable && <SelectedProducts />}
-      </View>
+      </Animated.View>
 
       <StatusModal
         visible={statusModal.visible}
@@ -2163,9 +2195,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   categoryItemContainer: {
-    borderColor: '#f25000',
+    borderColor: '#F3F4F6',
     borderRadius: 15,
-    borderWidth: 0.3,
+    borderWidth: 1,
     // opacity:0.8
   },
   categoryItemContainerActive: {
@@ -2234,9 +2266,6 @@ const styles = StyleSheet.create({
     // backgroundColor: "yellow"
   },
   clipboardIcon: {
-    width: wp('5%'),
-    height: hp('3%'),
-    resizeMode: 'contain',
     marginLeft: wp('4%'),
   },
   // headerBannerView: {
@@ -2695,13 +2724,14 @@ const styles = StyleSheet.create({
     bottom: hp('-0.4%'),
   },
   searchProductContainer: {
-    borderRightWidth: 1,
+    // borderRightWidth: 1,
     borderRightColor: '#8F8F8F',
     height: hp('3.65%'),
     justifyContent: 'center',
     marginLeft: wp('2%'),
     width: wp('65%'),
     top: Platform.OS == 'ios' ? 0 : 2,
+    overflow: 'hidden',
   },
   searchProductText: {
     fontFamily: FONTS.poppins.light,

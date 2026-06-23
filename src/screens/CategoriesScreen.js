@@ -9,6 +9,12 @@ import {
   ActivityIndicator,
   ImageBackground,
 } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  withTiming,
+} from 'react-native-reanimated';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useState, useEffect, useContext } from 'react';
 import { useRoute, useNavigation } from '@react-navigation/native';
@@ -179,6 +185,27 @@ export default function CategoriesScreen() {
   const [subCategoriesList, setSubCategoriesList] = useState([]);
   const [productsList, setProductsList] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // ── Floating cart show/hide on scroll direction ─────────────────────────
+  const lastScrollY = useSharedValue(0);
+  const cartTranslateY = useSharedValue(0);
+
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: event => {
+      const y = event.contentOffset.y;
+      const diff = y - lastScrollY.value;
+      if (y <= 10 || diff < -5) {
+        cartTranslateY.value = withTiming(0, { duration: 200 });
+      } else if (diff > 5) {
+        cartTranslateY.value = withTiming(150, { duration: 200 });
+      }
+      lastScrollY.value = y;
+    },
+  });
+
+  const cartAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: cartTranslateY.value }],
+  }));
   const [isFetchingProducts, setIsFetchingProducts] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [pincodeAreaId, setPincodeAreaId] = useState(null);
@@ -573,7 +600,7 @@ export default function CategoriesScreen() {
 
             {/* RIGHT CONTENT */}
             <View style={styles.rightContent}>
-              <FlatList
+              <Animated.FlatList
                 data={productsList}
                 keyExtractor={(item, index) =>
                   (item?.productId || item?.id || index).toString()
@@ -598,6 +625,8 @@ export default function CategoriesScreen() {
                 numColumns={2}
                 key={2}
                 showsVerticalScrollIndicator={false}
+                onScroll={scrollHandler}
+                scrollEventThrottle={16}
                 contentContainerStyle={{
                   paddingLeft: wp('1%'),
                   paddingRight: wp('1%'),
@@ -637,9 +666,9 @@ export default function CategoriesScreen() {
           </>
         )}
       </View>
-      <View style={styles.floatingContainer}>
+      <Animated.View style={[styles.floatingContainer, cartAnimatedStyle]}>
         <SelectedProducts selectedProducts={selectedProducts} />
-      </View>
+      </Animated.View>
       <FilterSortModal
         visible={isFilterSortModalVisible}
         onClose={() => setIsFilterSortModalVisible(false)}
@@ -738,11 +767,11 @@ const styles = StyleSheet.create({
   toggleSearchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F7F7F8',
-    borderRadius: wp('5%'),
+    backgroundColor: '#ffffffff',
+    borderRadius: wp('2%'),
     paddingHorizontal: wp('3%'),
     height: hp('5.5%'),
-    marginHorizontal: wp('6%'),
+    marginHorizontal: wp('3%'),
     marginBottom: hp('1.2%'),
     borderWidth: 1,
     borderColor: '#ECECEC',

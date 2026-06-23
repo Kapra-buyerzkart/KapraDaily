@@ -1236,7 +1236,7 @@ const styles = StyleSheet.create({
     placeholderTextColor: '#626262',
     returnKeyType: 'search',
     color: '#000000',
-    fontFamily: 'Lexend-SemiBold',
+    fontFamily: 'Gilroy-Bold',
     backgroundColor: '#F5F5F5',
   },
   searchTextIn: {
@@ -1244,7 +1244,7 @@ const styles = StyleSheet.create({
       height: windowHeight * (6 / 100),
       width: windowWidth * (90 / 100),
       color: '#626262',
-      fontFamily: 'Lexend-SemiBold',
+      fontFamily: 'Gilroy-Bold',
       fontSize: getFontontSize(13),
     },
     listView: {
@@ -1271,22 +1271,22 @@ const styles = StyleSheet.create({
 
   // Fonts
   fontStyle1: {
-    fontFamily: 'Lexend-Bold',
+    fontFamily: 'Gilroy-Bold',
     fontSize: getFontontSize(18),
     color: '#ffffff',
   },
   fontStyle2: {
-    fontFamily: 'Lexend-Medium',
+    fontFamily: 'Gilroy-Medium',
     fontSize: getFontontSize(16),
     color: '#F04B1B',
   },
   fontStyle3: {
-    fontFamily: 'Lexend-Regular',
+    fontFamily: 'Gilroy-Regular',
     fontSize: getFontontSize(15),
     color: '#525252',
   },
   fontStyle5: {
-    fontFamily: 'Lexend-Regular',
+    fontFamily: 'Gilroy-Regular',
     fontSize: getFontontSize(12),
     color: '#626262',
   },
@@ -1341,12 +1341,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerFont: {
-    fontFamily: 'Montserrat-BoldItalic',
+    fontFamily: 'Gilroy-Bold',
     fontSize: getFontontSize(18),
     color: '#ffffff',
   },
   fontStyle4: {
-    fontFamily: 'Lexend-SemiBold',
+    fontFamily: 'Gilroy-Bold',
     fontSize: getFontontSize(14),
     color: '#44B74B',
     textDecorationLine: 'underline',
@@ -1365,14 +1365,14 @@ const styles = StyleSheet.create({
   },
   yourlocationText: {
     color: '#F25000',
-    fontFamily: 'Poppins-ExtraBold',
+    fontFamily: 'Gilroy-Heavy',
     fontSize: getFontontSize(15),
     marginTop: windowHeight * (3.2 / 100),
     marginBottom: windowHeight * (1 / 100),
   },
   addressText: {
     color: '#4D4D4D',
-    fontFamily: 'Poppins-Light',
+    fontFamily: 'Gilroy-Light',
     fontSize: getFontontSize(14),
   },
   loaderContainer: {

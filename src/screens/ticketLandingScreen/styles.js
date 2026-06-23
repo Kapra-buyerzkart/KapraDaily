@@ -66,7 +66,7 @@ const styles = StyleSheet.create({
   coinBarText: {
     color: '#FFFFFF',
     fontSize: 14,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Gilroy-Medium',
   },
   coinBadge: {
     flexDirection: 'row',
@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
   coinAmount: {
     color: '#FFFFFF',
     fontSize: 14,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Gilroy-Bold',
   },
 
   // ── Tabs ──
@@ -109,12 +109,12 @@ const styles = StyleSheet.create({
   tabTextActive: {
     color: '#FFFFFF',
     fontSize: 16,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Gilroy-Bold',
   },
   tabTextInactive: {
     color: 'rgba(255,255,255,0.45)',
     fontSize: 16,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Gilroy-Medium',
   },
   tabDot: {
     width: 6,
@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
     right: 10,
     color: '#FFFFFF',
     fontSize: 14,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Gilroy-Bold',
   },
   cardPlaceholder: {
     width: '100%',
@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
   cardPlaceholderText: {
     color: 'rgba(255,255,255,0.3)',
     fontSize: 13,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Gilroy-Medium',
   },
 
   // ── Carousel Arrows ──
@@ -201,7 +201,7 @@ const styles = StyleSheet.create({
   arrowText: {
     color: '#FFFFFF',
     fontSize: 20,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Gilroy-Medium',
   },
 
   // ── Claim Button ──
@@ -226,7 +226,7 @@ const styles = StyleSheet.create({
   claimText: {
     color: '#000000',
     fontSize: 18,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Gilroy-Bold',
     letterSpacing: 0.5,
   },
   subtractImage: {
@@ -276,13 +276,13 @@ const styles = StyleSheet.create({
   voucherCardTitle: {
     color: '#FFFFFF',
     fontSize: 14,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Gilroy-Bold',
     marginBottom: 4,
   },
   voucherCardDesc: {
     color: 'rgba(255,255,255,0.6)',
     fontSize: 11,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'Gilroy-Regular',
     lineHeight: 16,
   },
 });

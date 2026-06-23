@@ -98,9 +98,9 @@ const styles = StyleSheet.create({
         // shadowRadius: 3,
     },
     buttonText: {
-        fontFamily: 'Montserrat-BoldItalic',
+        fontFamily: 'Gilroy-Bold',
     },
     buttonText1: {
-        fontFamily: 'Lexend-SemiBold',
+        fontFamily: 'Gilroy-Bold',
     },
 });

@@ -26,25 +26,26 @@ import { useCart } from '../context/CartContext';
 import {
   verifyLoginOtp,
   sendLoginOtp,
-  sendForgotPwdOtp,
   verifyForgotPwdOtp,
-  resendOtp,
   resendLoginOtp,
   resendForgotPwdOtp,
   verifyRegisterOtp,
-  registerUser,
   sendRegisterOtp,
-} from '../api'; // ✅ add sendLoginOtp
-import { setResetToken } from '../api/tokenService';
+} from '../api';
 import RNOtpVerify from 'react-native-otp-verify';
 import { AppContext } from '../context/appContext';
 import { OneSignal } from 'react-native-onesignal';
 import FastImage from 'react-native-fast-image';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import HelpSupportModal from '../components/HelpSupportModal';
+import EmailOtpBottomSheet from '../components/EmailOtpBottomSheet';
 
 const ACCESS_TOKEN = 'ACCESS_TOKEN';
 const REFRESH_TOKEN = 'REFRESH_TOKEN';
+
+// Number of times the user must tap "Resend OTP" before the email OTP
+// fallback link is offered. Configurable in one place.
+const EMAIL_OTP_FALLBACK_RESEND_THRESHOLD = 1;
 
 const setTokens = async (accessToken, refreshToken) => {
   await AsyncStorage.multiSet([
@@ -72,25 +73,18 @@ const OtpScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { showStatus } = useCart();
-  const {
-    phone,
-    type,
-    name,
-    email,
-    password,
-    whatsAppNo,
-    referCode,
-    pincodeAreaId,
-  } = route.params || {};
+  const { phone, type } = route.params || {};
   const { loadProfile } = React.useContext(AppContext);
 
   const [otp, setOtp] = useState(['', '', '', '', '']);
   const inputRefs = Array.from({ length: 5 }, () => useRef(null));
 
-  const [timer, setTimer] = useState(60); // 1 minute
+  const [timer, setTimer] = useState(30); // 1 minute
   const [isResendDisabled, setIsResendDisabled] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [resendCount, setResendCount] = useState(0);
   const helpSheetRef = useRef(null);
+  const emailOtpSheetRef = useRef(null);
 
   const otpHandler = message => {
     try {
@@ -204,7 +198,6 @@ const OtpScreen = () => {
   };
 
   const handleContinueLogin = async () => {
-    // console.log('enteredOtp', enteredOtp)
     const enteredOtp = otp.join('');
     if (enteredOtp.length < 5) {
       showStatus({
@@ -404,8 +397,11 @@ const OtpScreen = () => {
       });
       setOtp(['', '', '', '', '']); // clear inputs
       inputRefs[0].current?.focus();
-      setTimer(60);
+      setTimer(30);
       setIsResendDisabled(true);
+      // Track how many times the user has asked for a resend so we can
+      // surface the "Send OTP to Email" fallback after enough attempts.
+      setResendCount(prev => prev + 1);
     } catch (error) {
       console.log('Resend OTP Error:', error);
       showStatus({
@@ -418,6 +414,34 @@ const OtpScreen = () => {
     }
   };
 
+  // Opens the email OTP fallback bottom sheet. Memoized since it's passed
+  // down as an onPress handler.
+  const handleOpenEmailOtpSheet = React.useCallback(() => {
+    emailOtpSheetRef.current?.open();
+  }, []);
+
+  // Fired by EmailOtpBottomSheet once the email OTP has actually been sent.
+  // Verification still goes through the unchanged handleContinueLogin /
+  // verifyLoginOtp flow below — this only confirms delivery.
+  const handleEmailOtpSuccess = React.useCallback(() => {
+    showStatus({
+      type: 'success',
+      title: 'Success',
+      message: 'OTP has been sent to your email.',
+    });
+  }, [showStatus]);
+
+  const handleEmailOtpError = React.useCallback(
+    message => {
+      showStatus({
+        type: 'error',
+        title: 'Error',
+        message: message || 'Failed to send OTP to email',
+      });
+    },
+    [showStatus],
+  );
+
   return (
     <View style={styles.mainContainer}>
       <SafeAreaView style={styles.helpButtonSafeArea}>
@@ -425,16 +449,19 @@ const OtpScreen = () => {
           style={styles.helpButton}
           onPress={() => helpSheetRef.current?.open()}
         >
-          <MaterialIcons
-            name="help-outline"
-            size={wp('5%')}
-            color="#FFFFFF"
-          />
+          <MaterialIcons name="help-outline" size={wp('5%')} color="#FFFFFF" />
           <Text style={styles.helpButtonText}>Help</Text>
         </TouchableOpacity>
       </SafeAreaView>
 
       <HelpSupportModal ref={helpSheetRef} />
+
+      <EmailOtpBottomSheet
+        ref={emailOtpSheetRef}
+        phone={phone}
+        onSuccess={handleEmailOtpSuccess}
+        onError={handleEmailOtpError}
+      />
 
       {/* Pre-warm the heavy AuthSuccessScreen images while the user types the
           OTP, so the next screen renders from cache instead of decoding
@@ -580,6 +607,25 @@ const OtpScreen = () => {
                 )}
               </View>
             </View>
+
+            {/* Email OTP fallback: only offered for the login flow, and only
+                once the user has resent the SMS OTP at least
+                EMAIL_OTP_FALLBACK_RESEND_THRESHOLD times. */}
+            {type === 'login' &&
+              resendCount >= EMAIL_OTP_FALLBACK_RESEND_THRESHOLD && (
+                <TouchableOpacity
+                  style={styles.emailFallbackContainer}
+                  onPress={handleOpenEmailOtpSheet}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Text style={styles.emailFallbackText}>
+                    Didn't receive OTP?{' '}
+                    <Text style={styles.emailFallbackLink}>
+                      Send OTP to Email
+                    </Text>
+                  </Text>
+                </TouchableOpacity>
+              )}
 
             <TouchableOpacity
               style={styles.continueButton}
@@ -727,6 +773,22 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.poppins.medium,
     fontSize: wp('3.25%'),
     color: '#616161',
+  },
+  emailFallbackContainer: {
+    alignSelf: 'center',
+    marginTop: hp('1.8%'),
+    paddingVertical: hp('0.5%'),
+    paddingHorizontal: wp('2%'),
+  },
+  emailFallbackText: {
+    fontFamily: FONTS.poppins.regular,
+    fontSize: wp('3.25%'),
+    color: '#616161',
+    textAlign: 'center',
+  },
+  emailFallbackLink: {
+    fontFamily: FONTS.poppins.medium,
+    color: '#F25000',
   },
   continueButton: {
     backgroundColor: '#F25000',

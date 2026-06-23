@@ -100,6 +100,19 @@ export const resendLoginOtp = async phone => {
   return post('auth/resendotp', payload);
 };
 
+// Fallback delivery channel for the login OTP. The backend still issues an
+// otpType: 'login' OTP that is verified through the existing verifyLoginOtp
+// (auth/verifyotp) flow — this only changes where the OTP is delivered.
+export const sendLoginOtpToEmail = async ({ phone, email }) => {
+  const payload = {
+    phone,
+    email,
+    otpType: 'login',
+    loggedInFromDevice: 'app',
+  };
+  return post('auth/send-login-otp-email', payload);
+};
+
 export const resendForgotPwdOtp = async phone => {
   const payload = {
     phone,

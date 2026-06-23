@@ -603,7 +603,7 @@ const styles = StyleSheet.create({
   qtyBtnText: {
     fontSize: 20,
     color: '#333333',
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Gilroy-Medium',
     lineHeight: 24,
   },
   qtyBtnDisabled: {
@@ -623,7 +623,7 @@ const styles = StyleSheet.create({
   },
   qtyValue: {
     fontSize: 20,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Gilroy-Bold',
     color: '#111111',
     minWidth: 28,
     textAlign: 'center',
@@ -648,12 +648,12 @@ const styles = StyleSheet.create({
   coinBannerText: {
     color: '#000000',
     fontSize: 13,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Gilroy-Medium',
   },
   coinBannerHighlight: {
     color: '#FF6A00',
     fontSize: 13,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Gilroy-Bold',
   },
 
   // Accordion
@@ -680,7 +680,7 @@ const styles = StyleSheet.create({
   },
   accordionTitle: {
     fontSize: 13,
-    fontFamily: 'Poppins-SemiBold',
+    fontFamily: 'Gilroy-Bold',
     color: '#333333',
   },
   accordionArrow: {
@@ -714,7 +714,7 @@ const styles = StyleSheet.create({
   disabledReasonText: {
     flex: 1,
     fontSize: 12,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Gilroy-Medium',
     color: '#8A5A1E',
   },
 
@@ -734,12 +734,12 @@ const styles = StyleSheet.create({
   },
   priceCurrent: {
     fontSize: 22,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Gilroy-Bold',
     color: '#111111',
   },
   priceStrike: {
     fontSize: 14,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Gilroy-Medium',
     color: '#999999',
     textDecorationLine: 'line-through',
   },
@@ -751,7 +751,7 @@ const styles = StyleSheet.create({
   },
   usingText: {
     fontSize: 13,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'Gilroy-Regular',
     color: '#555555',
     // paddingHorizontal: 5,
   },
@@ -761,7 +761,7 @@ const styles = StyleSheet.create({
   },
   usingAmount: {
     fontSize: 13,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Gilroy-Medium',
     color: '#333333',
   },
 
@@ -778,7 +778,7 @@ const styles = StyleSheet.create({
   buyNowText: {
     color: '#FFFFFF',
     fontSize: 15,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Gilroy-Bold',
     letterSpacing: 0.5,
   },
 
@@ -797,7 +797,7 @@ const styles = StyleSheet.create({
   closeBtnText: {
     color: '#FFFFFF',
     fontSize: 18,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Gilroy-Medium',
   },
 });
 
