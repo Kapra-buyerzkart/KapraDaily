@@ -13,7 +13,9 @@ import Animated, {
   useSharedValue,
   useAnimatedScrollHandler,
   useAnimatedStyle,
-  withTiming,
+  interpolate,
+  Extrapolation,
+  clamp,
 } from 'react-native-reanimated';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useState, useEffect, useContext } from 'react';
@@ -40,6 +42,12 @@ import { AppContext } from '../context/appContext';
 import StoreUnavailable from '../components/StoreUnavailable';
 import { getGeneralSettingsApi } from '../api/userService';
 import LocationModal from '../components/LocationModal';
+import useTabBarAnimation from '../hooks/useTabBarAnimation';
+import {
+  tabBarVisibility,
+  getTabBarClearance,
+} from '../animations/tabBarVisibility';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const categories = [
   {
@@ -178,6 +186,7 @@ const dummyProducts = [
 export default function CategoriesScreen() {
   const route = useRoute();
   const navigation = useNavigation();
+  const { bottom } = useSafeAreaInsets();
   const { catId } = route.params || {};
   const [selectedId, setSelectedId] = useState(catId?.toString() || '1');
   const [selectedSubCatId, setSelectedSubCatId] = useState(null);
@@ -187,25 +196,41 @@ export default function CategoriesScreen() {
   const [loading, setLoading] = useState(true);
 
   // ── Floating cart show/hide on scroll direction ─────────────────────────
-  const lastScrollY = useSharedValue(0);
-  const cartTranslateY = useSharedValue(0);
+  // Rides the same `tabBarVisibility` progress the tab bar animates on
+  // (instead of a separate fixed-distance translate) so the cart bar hides
+  // fully off-screen and reappears in lockstep, right above the tab bar.
+  const cartHeight = useSharedValue(hp('7%'));
+  const floatingBottomOffset = hp('0.7%') + getTabBarClearance(bottom);
+
+  // Drives the global, UI-thread-only tab bar visibility (see
+  // src/animations/tabBarVisibility.js). CategoriesScreen is one of only
+  // two screens allowed to control it (the other is HomeScreen).
+  const { onScrollWorklet } = useTabBarAnimation();
 
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: event => {
-      const y = event.contentOffset.y;
-      const diff = y - lastScrollY.value;
-      if (y <= 10 || diff < -5) {
-        cartTranslateY.value = withTiming(0, { duration: 200 });
-      } else if (diff > 5) {
-        cartTranslateY.value = withTiming(150, { duration: 200 });
-      }
-      lastScrollY.value = y;
+      // UI THREAD: drives the shared `tabBarVisibility` progress that both
+      // the tab bar and the cart bar below animate on — no second scroll
+      // listener attached to the FlatList, no JS thread hop.
+      onScrollWorklet(event.contentOffset.y);
     },
   });
 
-  const cartAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: cartTranslateY.value }],
-  }));
+  const cartAnimatedStyle = useAnimatedStyle(() => {
+    const progress = clamp(tabBarVisibility.value, 0, 1);
+    return {
+      transform: [
+        {
+          translateY: interpolate(
+            progress,
+            [0, 1],
+            [floatingBottomOffset + cartHeight.value + 20, 0],
+            Extrapolation.CLAMP,
+          ),
+        },
+      ],
+    };
+  });
   const [isFetchingProducts, setIsFetchingProducts] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [pincodeAreaId, setPincodeAreaId] = useState(null);
@@ -630,7 +655,11 @@ export default function CategoriesScreen() {
                 contentContainerStyle={{
                   paddingLeft: wp('1%'),
                   paddingRight: wp('1%'),
-                  paddingBottom: hp('8.5%'),
+                  // The custom AnimatedTabBar floats over the content
+                  // (position: absolute) instead of reserving its own flex
+                  // space, so this padding keeps products from rendering
+                  // underneath it.
+                  paddingBottom: hp('8.5%') + getTabBarClearance(bottom),
                   paddingTop: hp('0.5%'),
                 }}
                 ListHeaderComponent={renderHeader}
@@ -666,7 +695,21 @@ export default function CategoriesScreen() {
           </>
         )}
       </View>
-      <Animated.View style={[styles.floatingContainer, cartAnimatedStyle]}>
+      <Animated.View
+        onLayout={e => {
+          cartHeight.value = e.nativeEvent.layout.height;
+        }}
+        style={[
+          styles.floatingContainer,
+          // AnimatedTabBar now floats with position: absolute over the
+          // content instead of reserving flex space, so this container's
+          // own `bottom: hp('0.7%')` (anchored to the screen's full-height
+          // box) would otherwise sit underneath the tab bar. Push it up by
+          // the bar's clearance so it floats above it again.
+          { bottom: floatingBottomOffset },
+          cartAnimatedStyle,
+        ]}
+      >
         <SelectedProducts selectedProducts={selectedProducts} />
       </Animated.View>
       <FilterSortModal

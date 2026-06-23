@@ -19,6 +19,7 @@ import Animated, {
   interpolate,
   interpolateColor,
   Extrapolation,
+  clamp,
   withTiming,
   withSpring,
 } from 'react-native-reanimated';
@@ -60,6 +61,11 @@ import SeeAllButton from '../components/SeeAllButton';
 import ShimmerPlaceholder from '../components/ShimmerPlaceholder';
 import HomePopupModal from '../components/HomePopupModal';
 import RotatingPlaceholder from '../components/RotatingPlaceholder';
+import useTabBarAnimation from '../hooks/useTabBarAnimation';
+import {
+  tabBarVisibility,
+  getTabBarClearance,
+} from '../animations/tabBarVisibility';
 
 const PlacementBannerCarousel = ({
   banners,
@@ -247,7 +253,7 @@ const ORANGE = '#FF6A00';
 const SEARCH_EXAMPLES = ['Basmati Rice', 'Milk', 'Sunflower Oil', 'Books'];
 
 const HomeScreen = () => {
-  const { top } = useSafeAreaInsets();
+  const { top, bottom } = useSafeAreaInsets();
   const BANNER_WIDTH = wp('84.88%');
   const BANNER_SPACING = wp('4.6%');
   const SNAP_INTERVAL = BANNER_WIDTH + BANNER_SPACING;
@@ -262,26 +268,44 @@ const HomeScreen = () => {
   const searchPressScale = useSharedValue(1);
 
   // ── Floating cart show/hide on scroll direction ─────────────────────────
-  const lastScrollY = useSharedValue(0);
-  const cartTranslateY = useSharedValue(0);
+  // Rides the same `tabBarVisibility` progress the tab bar animates on
+  // (instead of a separate fixed-distance translate) so the cart bar hides
+  // fully off-screen and reappears in lockstep, right above the tab bar.
+  const cartHeight = useSharedValue(hp('7%'));
+  const floatingBottomOffset = hp('0.7%') + getTabBarClearance(bottom);
+
+  // Drives the global, UI-thread-only tab bar visibility (see
+  // src/animations/tabBarVisibility.js). HomeScreen is one of only two
+  // screens allowed to control it (the other is CategoriesScreen).
+  const { onScrollWorklet } = useTabBarAnimation();
 
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: event => {
       const y = event.contentOffset.y;
-      const diff = y - lastScrollY.value;
-      if (y <= 10 || diff < -5) {
-        cartTranslateY.value = withTiming(0, { duration: 200 });
-      } else if (diff > 5) {
-        cartTranslateY.value = withTiming(150, { duration: 200 });
-      }
-      lastScrollY.value = y;
       scrollY.value = y;
+
+      // UI THREAD: drives the shared `tabBarVisibility` progress that both
+      // the tab bar and the cart bar below animate on — no second scroll
+      // listener attached to the ScrollView, no JS thread hop.
+      onScrollWorklet(y);
     },
   });
 
-  const cartAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: cartTranslateY.value }],
-  }));
+  const cartAnimatedStyle = useAnimatedStyle(() => {
+    const progress = clamp(tabBarVisibility.value, 0, 1);
+    return {
+      transform: [
+        {
+          translateY: interpolate(
+            progress,
+            [0, 1],
+            [floatingBottomOffset + cartHeight.value + 20, 0],
+            Extrapolation.CLAMP,
+          ),
+        },
+      ],
+    };
+  });
 
   // Collapsible row: height from measured → 0
   const collapsibleHeaderStyle = useAnimatedStyle(() => {
@@ -1295,7 +1319,10 @@ const HomeScreen = () => {
         scrollEventThrottle={16}
         style={{ flex: 1 }}
         contentContainerStyle={{
-          paddingBottom: hp('0.7%'),
+          // The custom AnimatedTabBar floats over the content (position:
+          // absolute) instead of reserving its own flex space, so this
+          // padding keeps content from rendering underneath it.
+          paddingBottom: hp('0.7%') + getTabBarClearance(bottom),
           flexGrow: 1,
         }}
         showsVerticalScrollIndicator={false}
@@ -1906,7 +1933,21 @@ const HomeScreen = () => {
           </LinearGradient>
         )}
       </Animated.ScrollView>
-      <Animated.View style={[styles.floatingContainer, cartAnimatedStyle]}>
+      <Animated.View
+        onLayout={e => {
+          cartHeight.value = e.nativeEvent.layout.height;
+        }}
+        style={[
+          styles.floatingContainer,
+          // AnimatedTabBar now floats with position: absolute over the
+          // content instead of reserving flex space, so this container's
+          // own `bottom: hp('0.7%')` (anchored to the screen's full-height
+          // box) would otherwise sit underneath the tab bar. Push it up by
+          // the bar's clearance so it floats above it again.
+          { bottom: floatingBottomOffset },
+          cartAnimatedStyle,
+        ]}
+      >
         {!isStoreUnavailable && <SelectedProducts />}
       </Animated.View>
 

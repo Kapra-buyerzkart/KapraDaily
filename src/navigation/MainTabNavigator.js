@@ -18,6 +18,7 @@ import { AppContext } from '../context/appContext';
 import { useNavigation } from '@react-navigation/native';
 import Toast from 'react-native-simple-toast';
 import ServiceSwitcherModal from '../components/ServiceSwitcherModal';
+import AnimatedTabBar from '../components/AnimatedTabBar';
 
 const Tab = createBottomTabNavigator();
 
@@ -32,6 +33,11 @@ export default function MainTabNavigator() {
     <>
       <Tab.Navigator
         initialRouteName="Home"
+        // Custom tab bar swaps in the animated, scroll-aware bar below.
+        // Tab.Screen options (tabBarIcon/tabBarLabel) and listeners
+        // (tabPress) are untouched and still drive AnimatedTabBar's
+        // rendering/press behavior via `descriptors` — see AnimatedTabBar.js.
+        tabBar={props => <AnimatedTabBar {...props} />}
         screenOptions={{
           tabBarShowLabel: true,
           tabBarActiveTintColor: '#F25000',

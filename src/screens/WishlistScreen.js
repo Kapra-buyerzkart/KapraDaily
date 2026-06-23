@@ -17,7 +17,11 @@ import {
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
 import { FONTS } from '../styles/typography';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
+import { getTabBarClearance } from '../animations/tabBarVisibility';
 import LinearGradient from 'react-native-linear-gradient';
 import { useWishlist } from '../context/WishlistContext';
 import { useCart } from '../context/CartContext';
@@ -34,6 +38,7 @@ import { AppContext } from '../context/appContext';
 
 export default function WishlistScreen() {
   const navigation = useNavigation();
+  const { bottom } = useSafeAreaInsets();
   const { wishlistItems, removeFromWishlist, loadWishlist, isLoading } =
     useWishlist();
   const { addToCart, cartItems } = useCart();
@@ -205,7 +210,18 @@ export default function WishlistScreen() {
       </View>
 
       {cartItems && cartItems.length > 0 && (
-        <Animated.View style={[styles.floatingContainer, cartAnimatedStyle]}>
+        <Animated.View
+          style={[
+            styles.floatingContainer,
+            // AnimatedTabBar floats with position: absolute over the
+            // content instead of reserving flex space, so this container's
+            // own `bottom: hp('0.7%')` (anchored to the screen's full-height
+            // box) would otherwise sit underneath the tab bar. Push it up by
+            // the bar's clearance so it floats above it again.
+            { bottom: hp('0.7%') + getTabBarClearance(bottom) },
+            cartAnimatedStyle,
+          ]}
+        >
           <SelectedProducts selectedProducts={cartItems} />
         </Animated.View>
       )}

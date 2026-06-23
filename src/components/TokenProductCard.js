@@ -499,6 +499,8 @@ const styles = StyleSheet.create({
 
   offerTagEmpty: {
     backgroundColor: 'transparent',
+    paddingHorizontal: 0,
+    paddingVertical: 0,
   },
 
   offerText: {
