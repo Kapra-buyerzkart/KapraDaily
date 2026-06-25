@@ -250,7 +250,7 @@ const CategoryItem = React.memo(({ item }) => {
 const INK = '#1A1A1A';
 const ORANGE = '#FF6A00';
 
-const SEARCH_EXAMPLES = ['Basmati Rice', 'Milk', 'Sunflower Oil', 'Books'];
+const SEARCH_EXAMPLES = ['Basmati Rice', 'Milk', 'Sunflower Oil', 'Lemons'];
 
 const HomeScreen = () => {
   const { top, bottom } = useSafeAreaInsets();
@@ -267,11 +267,6 @@ const HomeScreen = () => {
   const headerInfoMaxH = useSharedValue(0);
   const searchPressScale = useSharedValue(1);
 
-  // ── Floating cart show/hide on scroll direction ─────────────────────────
-  // Rides the same `tabBarVisibility` progress the tab bar animates on
-  // (instead of a separate fixed-distance translate) so the cart bar hides
-  // fully off-screen and reappears in lockstep, right above the tab bar.
-  const cartHeight = useSharedValue(hp('7%'));
   const floatingBottomOffset = hp('0.7%') + getTabBarClearance(bottom);
 
   // Drives the global, UI-thread-only tab bar visibility (see
@@ -284,13 +279,15 @@ const HomeScreen = () => {
       const y = event.contentOffset.y;
       scrollY.value = y;
 
-      // UI THREAD: drives the shared `tabBarVisibility` progress that both
-      // the tab bar and the cart bar below animate on — no second scroll
+      // UI THREAD: drives the tab bar's own visibility — no second scroll
       // listener attached to the ScrollView, no JS thread hop.
       onScrollWorklet(y);
     },
   });
 
+  // Nudges the floating cart down slightly when the tab bar hides, and back
+  // to its resting place when the tab bar reappears — rides the same
+  // `tabBarVisibility` progress, just with a much smaller travel distance.
   const cartAnimatedStyle = useAnimatedStyle(() => {
     const progress = clamp(tabBarVisibility.value, 0, 1);
     return {
@@ -299,7 +296,7 @@ const HomeScreen = () => {
           translateY: interpolate(
             progress,
             [0, 1],
-            [floatingBottomOffset + cartHeight.value + 20, 0],
+            [100, 0],
             Extrapolation.CLAMP,
           ),
         },
@@ -1934,9 +1931,6 @@ const HomeScreen = () => {
         )}
       </Animated.ScrollView>
       <Animated.View
-        onLayout={e => {
-          cartHeight.value = e.nativeEvent.layout.height;
-        }}
         style={[
           styles.floatingContainer,
           // AnimatedTabBar now floats with position: absolute over the

@@ -15,6 +15,7 @@ import Animated, {
   interpolate,
   Extrapolation,
   withTiming,
+  clamp,
 } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useState, useEffect, useCallback, useContext } from 'react';
@@ -29,6 +30,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppContext } from '../context/appContext';
 import TokenProductCard from '../components/TokenProductCard';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import Feather from 'react-native-vector-icons/Feather';
 import FilterSortModal from '../components/FilterSortModal';
 
 // Truncate text to a specific limit with dots
@@ -41,6 +43,10 @@ const truncateText = (text, limit = 7) => {
 import StoreUnavailable from '../components/StoreUnavailable';
 import LocationModal from '../components/LocationModal';
 import SelectedProducts from '../components/SelectedProducts';
+import {
+  SCROLL_HIDE_THRESHOLD,
+  TAB_BAR_ANIM_DURATION,
+} from '../animations/tabBarVisibility';
 
 const RECENT_SEARCH_KEY = 'recent_searches_list';
 
@@ -129,27 +135,65 @@ const SearchScreen = () => {
   const STICKY_SHADOW_RANGE = 24;
   const scrollY = useSharedValue(0);
 
-  // ── Floating cart show/hide on scroll direction ─────────────────────────
-  const lastScrollY = useSharedValue(0);
-  const cartTranslateY = useSharedValue(0);
+  // SearchScreen sits outside the tab navigator, so there's no real tab bar
+  // here to ride — but the cart should still nudge down on scroll-down (and
+  // back up on scroll-up) like it does on Home/Categories. This tracks that
+  // locally instead of touching the global `tabBarVisibility`.
+  const cartVisibility = useSharedValue(1);
+  const scrollAnchor = useSharedValue(0);
 
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: event => {
       const y = event.contentOffset.y;
-      const diff = y - lastScrollY.value;
-      if (y <= 10 || diff < -5) {
-        cartTranslateY.value = withTiming(0, { duration: 200 });
-      } else if (diff > 5) {
-        cartTranslateY.value = withTiming(150, { duration: 200 });
-      }
-      lastScrollY.value = y;
       scrollY.value = y;
+
+      if (y <= 0) {
+        scrollAnchor.value = 0;
+        if (cartVisibility.value !== 1) {
+          cartVisibility.value = withTiming(1, {
+            duration: TAB_BAR_ANIM_DURATION,
+          });
+        }
+        return;
+      }
+
+      const diff = y - scrollAnchor.value;
+      if (diff > SCROLL_HIDE_THRESHOLD) {
+        scrollAnchor.value = y;
+        if (cartVisibility.value !== 0) {
+          cartVisibility.value = withTiming(0, {
+            duration: TAB_BAR_ANIM_DURATION,
+          });
+        }
+      } else if (diff < -SCROLL_HIDE_THRESHOLD) {
+        scrollAnchor.value = y;
+        if (cartVisibility.value !== 1) {
+          cartVisibility.value = withTiming(1, {
+            duration: TAB_BAR_ANIM_DURATION,
+          });
+        }
+      }
     },
   });
 
-  const cartAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: cartTranslateY.value }],
-  }));
+  // Nudges the floating cart down when scrolling down, and back to its
+  // resting place when scrolling up — mirrors the Home/Categories behavior.
+  const cartAnimatedStyle = useAnimatedStyle(() => {
+    const progress = clamp(cartVisibility.value, 0, 1);
+    return {
+      transform: [
+        {
+          translateY: interpolate(
+            progress,
+            [0, 1],
+            [40, 0],
+            Extrapolation.CLAMP,
+          ),
+        },
+      ],
+    };
+  });
+
   const stickyShadowAnimStyle = useAnimatedStyle(() => {
     const progress = interpolate(
       scrollY.value,
@@ -254,9 +298,11 @@ const SearchScreen = () => {
           </TouchableOpacity>
         )}
         <View style={styles.divider} />
-        <Image
+        <Feather
+          name="clipboard"
+          color={'black'}
+          size={wp('5%')}
           style={styles.clipboardIcon}
-          source={require('../assets/images/clipboard-two.png')}
         />
       </Animated.View>
       {/* <View style={{ height: hp(2), backgroundColor: '#fefefefe' }} /> */}

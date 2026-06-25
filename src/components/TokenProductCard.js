@@ -7,7 +7,6 @@ import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
-import LinearGradient from 'react-native-linear-gradient';
 import { FONTS } from '../styles/typography';
 import CONFIG from '../globals/config';
 import { useCart } from '../context/CartContext';
@@ -101,6 +100,19 @@ const TokenProductCard = ({
         <View style={styles.topCardBox}>
           <View style={styles.topRow}>
             <View style={styles.topLeftRow}>
+              {!hideToken && quantity === 0 ? (
+                <Text
+                  style={[
+                    styles.tokenText,
+                    isThreeColumn && { fontSize: wp('2%') },
+                  ]}
+                >
+                  {token}
+                </Text>
+              ) : null}
+            </View>
+
+            <View>
               {!hideWishlist ? (
                 <TouchableOpacity
                   activeOpacity={0.8}
@@ -117,118 +129,7 @@ const TokenProductCard = ({
                   />
                 </TouchableOpacity>
               ) : null}
-
-              {!hideToken && quantity === 0 ? (
-                <Text
-                  style={[
-                    styles.tokenText,
-                    isThreeColumn && { fontSize: wp('2%') },
-                  ]}
-                >
-                  {token}
-                </Text>
-              ) : null}
             </View>
-
-            {quantity > 0 ? (
-              <View style={styles.actionEnd}>
-                <LinearGradient
-                  colors={['#FFFFFF', '#FFD8C4']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={[
-                    styles.counterContainer,
-                    isThreeColumn && {
-                      height: wp('7%'),
-                      borderRadius: wp('3.5%'),
-                    },
-                  ]}
-                >
-                  <TouchableOpacity
-                    style={styles.counterBtn}
-                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                    onPress={() => {
-                      if (quantity === 1) {
-                        removeFromCart(cartItemId);
-                      } else {
-                        updateCartItemQuantity(cartItemId, quantity - 1);
-                      }
-                    }}
-                  >
-                    <Entypo
-                      name="minus"
-                      size={isThreeColumn ? 16 : 22}
-                      color="#F25000"
-                    />
-                  </TouchableOpacity>
-
-                  <Text
-                    style={[
-                      styles.counterQty,
-                      isThreeColumn && { fontSize: wp('3.5%') },
-                    ]}
-                  >
-                    {quantity}
-                  </Text>
-
-                  <TouchableOpacity
-                    style={styles.counterBtn}
-                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                    onPress={() =>
-                      updateCartItemQuantity(cartItemId, quantity + 1)
-                    }
-                  >
-                    <Entypo
-                      name="plus"
-                      size={isThreeColumn ? 16 : 22}
-                      color="#F25000"
-                    />
-                  </TouchableOpacity>
-                </LinearGradient>
-              </View>
-            ) : isOutOfStock ? (
-              <View style={styles.actionEnd}>
-                <View
-                  style={[
-                    styles.plusIconDisabled,
-                    isThreeColumn && {
-                      width: wp('6%'),
-                      height: wp('6%'),
-                      borderRadius: wp('3%'),
-                    },
-                  ]}
-                >
-                  <Entypo
-                    name="plus"
-                    size={isThreeColumn ? 16 : 20}
-                    color="#FFFFFF"
-                  />
-                </View>
-              </View>
-            ) : (
-              <TouchableOpacity
-                activeOpacity={0.8}
-                onPress={() => (onAdd ? onAdd(item) : addToCart(item))}
-                style={styles.actionEnd}
-              >
-                <View
-                  style={[
-                    styles.plusIconCircle,
-                    isThreeColumn && {
-                      width: wp('7%'),
-                      height: wp('7%'),
-                      borderRadius: wp('3.5%'),
-                    },
-                  ]}
-                >
-                  <Entypo
-                    name="plus"
-                    size={isThreeColumn ? 16 : 20}
-                    color="#F25000"
-                  />
-                </View>
-              </TouchableOpacity>
-            )}
           </View>
         </View>
 
@@ -257,23 +158,96 @@ const TokenProductCard = ({
                 </Text>
               </View>
             )}
+
+            <View style={styles.actionOverlay}>
+              {quantity > 0 ? (
+                <View style={styles.counterContainer}>
+                  <TouchableOpacity
+                    style={styles.counterBtn}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    onPress={() => {
+                      if (quantity === 1) {
+                        removeFromCart(cartItemId);
+                      } else {
+                        updateCartItemQuantity(cartItemId, quantity - 1);
+                      }
+                    }}
+                  >
+                    <Entypo
+                      name="minus"
+                      size={isThreeColumn ? 16 : 22}
+                      color="#FFFFFF"
+                    />
+                  </TouchableOpacity>
+
+                  <Text
+                    style={[
+                      styles.counterQty,
+                      { top: Platform.OS == 'ios' ? 0 : 1 },
+                      isThreeColumn && { fontSize: wp('3.5%') },
+                    ]}
+                  >
+                    {quantity}
+                  </Text>
+
+                  <TouchableOpacity
+                    style={styles.counterBtn}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    onPress={() =>
+                      updateCartItemQuantity(cartItemId, quantity + 1)
+                    }
+                  >
+                    <Entypo
+                      name="plus"
+                      size={isThreeColumn ? 16 : 22}
+                      color="#FFFFFF"
+                    />
+                  </TouchableOpacity>
+                </View>
+              ) : isOutOfStock ? (
+                <View
+                  style={[
+                    styles.plusIconDisabled,
+                    isThreeColumn && {
+                      width: wp('6%'),
+                      height: wp('6%'),
+                      borderRadius: wp('1.6%'),
+                    },
+                  ]}
+                >
+                  <Entypo
+                    name="plus"
+                    size={isThreeColumn ? 16 : 20}
+                    color="#FFFFFF"
+                  />
+                </View>
+              ) : (
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  onPress={() => (onAdd ? onAdd(item) : addToCart(item))}
+                >
+                  <View
+                    style={[
+                      styles.plusIconCircle,
+                      isThreeColumn && {
+                        width: wp('7%'),
+                        height: wp('7%'),
+                        borderRadius: wp('2.2%'),
+                      },
+                    ]}
+                  >
+                    <Entypo
+                      name="plus"
+                      size={isThreeColumn ? 16 : 20}
+                      color="#F25000"
+                    />
+                  </View>
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
 
           <View style={styles.bottomSection}>
-            <View style={styles.offerRow}>
-              <View style={[styles.offerTag, !offer && styles.offerTagEmpty]}>
-                <Text
-                  style={[
-                    styles.offerText,
-                    isThreeColumn && { fontSize: wp('2.6%') },
-                  ]}
-                >
-                  {offer}
-                </Text>
-              </View>
-              <View style={styles.dashedLine} />
-            </View>
-
             <View style={styles.priceContainer}>
               <Text
                 style={[
@@ -304,6 +278,20 @@ const TokenProductCard = ({
               )}
             </View>
 
+            <View style={styles.offerRow}>
+              <View style={[styles.offerTag, !offer && styles.offerTagEmpty]}>
+                <Text
+                  style={[
+                    styles.offerText,
+                    isThreeColumn && { fontSize: wp('2.6%') },
+                  ]}
+                >
+                  {offer}
+                </Text>
+              </View>
+              <View style={styles.dashedLine} />
+            </View>
+
             <Text
               numberOfLines={2}
               ellipsizeMode="tail"
@@ -318,13 +306,18 @@ const TokenProductCard = ({
             >
               {name}
             </Text>
+
+            <Text
+              style={[
+                styles.productWeight,
+                isThreeColumn && { fontSize: wp('2.4%') },
+              ]}
+            >
+              {weight}
+            </Text>
           </View>
         </View>
-
-        {/* Price Section */}
       </View>
-
-      {/* Bottom Section */}
     </TouchableOpacity>
   );
 };
@@ -365,24 +358,31 @@ const styles = StyleSheet.create({
 
   tokenText: {
     fontSize: wp('2.2%'),
-    color: '#9200A8',
+    color: '#000000ff',
     fontFamily: FONTS.poppins.semiBold,
     marginLeft: wp('2.5%'),
   },
 
+  actionOverlay: {
+    position: 'absolute',
+    right: 3,
+    bottom: 0,
+  },
+
   plusIconCircle: {
-    width: wp('6%'),
-    height: wp('6%'),
-    borderRadius: wp('3.5%'),
+    width: wp('7%'),
+    height: wp('7%'),
+    borderRadius: wp('1.2%'),
     justifyContent: 'center',
-    backgroundColor: '#FFF8F5',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
+    borderWidth: 1.5,
     borderColor: '#F25000',
   },
   plusIconDisabled: {
-    width: wp('6.5%'),
-    height: wp('6.5%'),
-    borderRadius: wp('3.25%'),
+    width: wp('7%'),
+    height: wp('7%'),
+    borderRadius: wp('1.8%'),
     backgroundColor: '#CCCCCC',
     justifyContent: 'center',
     alignItems: 'center',
@@ -392,27 +392,28 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    height: wp('6%'),
-    borderRadius: wp('3%'),
-    borderWidth: 0.5,
-    borderColor: '#F25000',
+    height: wp('7%'),
+    borderRadius: wp('1.2%'),
+    backgroundColor: '#F25000',
   },
 
   counterBtn: {
-    width: wp('9.8%'),
+    width: wp('7%'),
+    height: wp('7%'),
     alignItems: 'center',
     justifyContent: 'center',
   },
 
   counterQty: {
     fontSize: wp('3.5%'),
-    color: '#F25000',
+    color: '#FFFFFF',
     fontFamily: FONTS.poppins.bold,
   },
 
   imageContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    // alignItems: 'center',
+    // backgroundColor: 'green',
+    // justifyContent: 'center',
     marginTop: hp('0.5%'),
     // marginVertical: hp('1%'),
   },
@@ -420,6 +421,7 @@ const styles = StyleSheet.create({
   imageWrapper: {
     position: 'relative',
     alignItems: 'center',
+    // backgroundColor: 'red',
     justifyContent: 'center',
   },
 

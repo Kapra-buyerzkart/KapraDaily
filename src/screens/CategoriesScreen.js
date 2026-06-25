@@ -10,7 +10,6 @@ import {
   ImageBackground,
 } from 'react-native';
 import Animated, {
-  useSharedValue,
   useAnimatedScrollHandler,
   useAnimatedStyle,
   interpolate,
@@ -195,11 +194,6 @@ export default function CategoriesScreen() {
   const [productsList, setProductsList] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // ── Floating cart show/hide on scroll direction ─────────────────────────
-  // Rides the same `tabBarVisibility` progress the tab bar animates on
-  // (instead of a separate fixed-distance translate) so the cart bar hides
-  // fully off-screen and reappears in lockstep, right above the tab bar.
-  const cartHeight = useSharedValue(hp('7%'));
   const floatingBottomOffset = hp('0.7%') + getTabBarClearance(bottom);
 
   // Drives the global, UI-thread-only tab bar visibility (see
@@ -209,8 +203,7 @@ export default function CategoriesScreen() {
 
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: event => {
-      // UI THREAD: drives the shared `tabBarVisibility` progress that both
-      // the tab bar and the cart bar below animate on — no second scroll
+      // UI THREAD: drives the tab bar's own visibility — no second scroll
       // listener attached to the FlatList, no JS thread hop.
       onScrollWorklet(event.contentOffset.y);
     },
@@ -224,13 +217,14 @@ export default function CategoriesScreen() {
           translateY: interpolate(
             progress,
             [0, 1],
-            [floatingBottomOffset + cartHeight.value + 20, 0],
+            [100, 0],
             Extrapolation.CLAMP,
           ),
         },
       ],
     };
   });
+
   const [isFetchingProducts, setIsFetchingProducts] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [pincodeAreaId, setPincodeAreaId] = useState(null);
@@ -696,9 +690,6 @@ export default function CategoriesScreen() {
         )}
       </View>
       <Animated.View
-        onLayout={e => {
-          cartHeight.value = e.nativeEvent.layout.height;
-        }}
         style={[
           styles.floatingContainer,
           // AnimatedTabBar now floats with position: absolute over the
