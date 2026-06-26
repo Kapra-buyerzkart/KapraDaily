@@ -1,26 +1,32 @@
-import React, { useContext, useEffect, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import {
   View,
   Text,
-  Modal,
+  Image,
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
-  FlatList,
-  Image,
   Keyboard,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
-import DelayInput from 'react-native-debounce-input';
 import {
-  widthPercentageToDP as wp,
-  heightPercentageToDP as hp,
-} from 'react-native-responsive-screen';
+  BottomSheetTextInput,
+  BottomSheetFlatList,
+} from '@gorhom/bottom-sheet';
+import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import { getAreasBySearch } from '../api';
 import { AppContext } from '../context/appContext';
 import { FONTS } from '../styles/typography';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import CustomBottomModal from './CustomBottomModal';
+
+const SEARCH_DEBOUNCE_MS = 500;
+const MIN_SEARCH_LENGTH = 3;
 
 const LocationModal = ({
   visible,
@@ -30,28 +36,24 @@ const LocationModal = ({
 }) => {
   const { editPincode } = useContext(AppContext);
 
+  const sheetRef = useRef(null);
+  const debounceTimer = useRef(null);
+
   const [search, setSearch] = useState('');
   const [areas, setAreas] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const inputRef = useRef(null);
-
+  // Keeps the boolean prop contract every screen already relies on while
+  // visibility is actually driven by the BottomSheetModal ref underneath.
   useEffect(() => {
     if (visible) {
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 300);
+      sheetRef.current?.open();
+    } else {
+      sheetRef.current?.close();
     }
   }, [visible]);
 
-  const onSearch = async text => {
-    setSearch(text);
-
-    if (text.length < 3) {
-      setAreas([]);
-      return;
-    }
-
+  const runSearch = useCallback(async text => {
     try {
       setLoading(true);
       const res = await getAreasBySearch(text);
@@ -61,59 +63,108 @@ const LocationModal = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const onSelectLocation = async item => {
-    Keyboard.dismiss();
-    await editPincode(item);
+  const onSearch = useCallback(
+    text => {
+      setSearch(text);
+
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+      }
+
+      if (text.length < MIN_SEARCH_LENGTH) {
+        setAreas([]);
+        return;
+      }
+
+      debounceTimer.current = setTimeout(
+        () => runSearch(text),
+        SEARCH_DEBOUNCE_MS,
+      );
+    },
+    [runSearch],
+  );
+
+  useEffect(() => {
+    return () => {
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+      }
+    };
+  }, []);
+
+  const onSelectLocation = useCallback(
+    async item => {
+      Keyboard.dismiss();
+      await editPincode(item);
+      sheetRef.current?.close();
+    },
+    [editPincode],
+  );
+
+  // Fired by CustomBottomModal on backdrop tap / pan-down-to-close / Android
+  // back, so the parent's `visible` boolean stays in sync either way.
+  const handleSheetClose = useCallback(() => {
+    setSearch('');
+    setAreas([]);
     onClose();
-  };
+  }, [onClose]);
 
-  return (
-    <Modal visible={visible} transparent animationType="slide">
-      {/* {console.log('areas', areas.data)} */}
-      <KeyboardAvoidingView
-        style={styles.overlay}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
-        <View style={styles.container}>
-          {/* Header */}
-          <View style={styles.header}>
+  const noResults =
+    search.length >= MIN_SEARCH_LENGTH &&
+    !loading &&
+    (!areas?.data || areas.data.length === 0);
+
+  const renderContent = useCallback(
+    () => (
+      <View style={styles.container}>
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.titleRow}>
             <Text style={styles.title}>Change Delivery Location</Text>
-            <TouchableOpacity onPress={onClose}>
-              {/* <Text style={styles.close}>✕</Text> */}
-              <MaterialIcons name="close" size={wp('5%')} color="#ffffff" />
-            </TouchableOpacity>
           </View>
+          <TouchableOpacity onPress={() => sheetRef.current?.close()}>
+            <MaterialIcons name="close" size={wp('5%')} color="#6f6f6fff" />
+          </TouchableOpacity>
+        </View>
 
-          {/* Search */}
-          <DelayInput
-            inputRef={inputRef}
-            value={search}
-            delayTimeout={500}
-            minLength={3}
-            onChangeText={onSearch}
-            placeholder="Search location (Please enter at least 3 characters)"
-            style={styles.input}
-            placeholderTextColor={'black'}
-            autoFocus={true}
-          />
+        {/* Search */}
+        <BottomSheetTextInput
+          value={search}
+          onChangeText={onSearch}
+          placeholder="Search location (Please enter at least 3 characters)"
+          style={styles.input}
+          placeholderTextColor={'#9CA3AF'}
+          autoFocus
+        />
 
-          {/* Loader */}
-          {loading && <ActivityIndicator color={'#FF7148'} size="small" />}
+        {/* Loader */}
+        {loading && <ActivityIndicator color={'#FF7148'} size="small" />}
 
-          {/* List */}
-          <FlatList
+        {/* Empty state */}
+        {!loading && noResults ? (
+          <View style={styles.emptyState}>
+            <MaterialIcons
+              name="location-off"
+              size={wp('10%')}
+              color="#ff4d1cff"
+            />
+            <Text style={styles.emptyTitle}>No delivery here yet</Text>
+            <Text style={styles.emptySubtitle}>
+              We couldn't find a serviceable area matching "{search}".
+            </Text>
+          </View>
+        ) : (
+          /* List */
+          <BottomSheetFlatList
             data={areas.data}
             keyExtractor={(_, i) => i.toString()}
             keyboardShouldPersistTaps="handled"
             renderItem={({ item }) => (
               <TouchableOpacity
                 style={styles.item}
-                onPress={() => {
-                  onSelectLocation(item);
-                  onClose();
-                }}
+                onPress={() => onSelectLocation(item)}
               >
                 <Text style={styles.itemText}>
                   {item.areaName} {item.pincode ? `(${item.pincode})` : ''}
@@ -121,49 +172,51 @@ const LocationModal = ({
               </TouchableOpacity>
             )}
           />
-        </View>
-      </KeyboardAvoidingView>
-    </Modal>
+        )}
+      </View>
+    ),
+    [search, areas, loading, noResults, onSearch, onSelectLocation],
+  );
+
+  return (
+    <CustomBottomModal
+      ref={sheetRef}
+      snapPoints={['50%', '50%']}
+      onClose={handleSheetClose}
+      renderContent={renderContent}
+    />
   );
 };
 
 export default LocationModal;
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
-  },
   container: {
-    backgroundColor: '#ffffff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: hp('80%'),
-    paddingBottom: hp('2%'),
+    flex: 1,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    padding: wp('5%'),
-    backgroundColor: '#FF7148',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    paddingTop: wp('2%'),
+    paddingBottom: wp('2%'),
+    paddingHorizontal: wp('5%'),
     alignItems: 'center',
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
   },
   title: {
     fontSize: wp('4.3%'),
-    // fontWeight: '600',
     fontFamily: FONTS.outfit.semiBold,
-    color: '#ffffff',
-  },
-  close: {
-    fontSize: wp('5%'),
+    color: '#FF7148',
+    flexShrink: 1,
   },
   input: {
     margin: wp('5%'),
     padding: wp('3%'),
-    backgroundColor: '#F2F2F2',
+    backgroundColor: '#F2F2F7',
     borderRadius: 8,
     fontSize: wp('3.2%'),
     fontFamily: FONTS.poppins.regular,
@@ -173,6 +226,29 @@ const styles = StyleSheet.create({
     paddingLeft: wp('7%'),
     borderBottomWidth: 1,
     borderBottomColor: '#EEE',
+  },
+  emptyState: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: wp('10%'),
+  },
+  emptyImage: {
+    width: wp('40%'),
+    height: wp('40%'),
+    marginBottom: wp('4%'),
+  },
+  emptyTitle: {
+    fontSize: wp('4%'),
+    fontFamily: FONTS.outfit.semiBold,
+    color: '#1A1A1A',
+    marginBottom: wp('1.5%'),
+  },
+  emptySubtitle: {
+    fontSize: wp('3.2%'),
+    fontFamily: FONTS.poppins.regular,
+    color: '#757575',
+    textAlign: 'center',
   },
   itemText: {
     fontSize: wp('3.3%'),

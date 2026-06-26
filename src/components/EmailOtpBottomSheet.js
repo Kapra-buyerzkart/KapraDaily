@@ -44,10 +44,7 @@ const EmailOtpBottomSheet = forwardRef((props, ref) => {
   const [touched, setTouched] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  const isValidEmail = useMemo(
-    () => EMAIL_REGEX.test(email.trim()),
-    [email],
-  );
+  const isValidEmail = useMemo(() => EMAIL_REGEX.test(email.trim()), [email]);
   const showError = touched && email.length > 0 && !isValidEmail;
 
   // Wipes form state once the sheet is fully dismissed (success, cancel,
@@ -108,10 +105,7 @@ const EmailOtpBottomSheet = forwardRef((props, ref) => {
         </Text>
 
         <View
-          style={[
-            styles.inputWrapper,
-            showError && styles.inputWrapperError,
-          ]}
+          style={[styles.inputWrapper, showError && styles.inputWrapperError]}
         >
           <MaterialIcons
             name="email"

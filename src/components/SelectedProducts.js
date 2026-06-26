@@ -1,5 +1,6 @@
 import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import React, { useMemo } from 'react';
+import Animated, { LinearTransition } from 'react-native-reanimated';
 import LinearGradient from 'react-native-linear-gradient';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import {
@@ -11,6 +12,7 @@ import { FONTS } from '../styles/typography';
 import { useCart } from '../context/CartContext';
 import CONFIG from '../globals/config';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { cartPillSlideIn, cartPillSlideOut } from '../animations/cartItemPop';
 
 const SelectedProducts = () => {
   const navigation = useNavigation();
@@ -37,44 +39,54 @@ const SelectedProducts = () => {
   };
 
   return (
-    <TouchableOpacity
-      onPress={() => navigation.navigate('CartScreen')}
-      style={[
-        styles.mainContainer,
-        { marginBottom: insets.bottom > 0 ? insets.bottom : hp('1%') },
-      ]}
+    <Animated.View
+      entering={cartPillSlideIn}
+      exiting={cartPillSlideOut}
+      layout={LinearTransition.springify().damping(16).stiffness(180)}
     >
-      <LinearGradient
-        colors={['#F25000', '#FF7B3A', '#F25000']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={styles.gradientStyle}
+      <TouchableOpacity
+        onPress={() => navigation.navigate('CartScreen')}
+        style={[
+          styles.mainContainer,
+          { marginBottom: insets.bottom > 0 ? insets.bottom : hp('1%') },
+        ]}
       >
-        <View style={styles.stackContainer}>
-          {previewItems.map((item, index) => (
-            <Image
-              key={item.productId || item.id || index}
-              source={getImageSource(item)}
-              resizeMode="contain"
-              style={[
-                styles.productImage,
-                {
-                  marginLeft: index === 0 ? 0 : wp('-7%'), // overlap to left
-                },
-              ]}
-            />
-          ))}
-        </View>
-        <View style={styles.viewOne}>
-          <Text style={styles.viewCartText}>View cart</Text>
-          <Text style={styles.itemsText}>{cartItems.length} items</Text>
-        </View>
-        <Image
-          source={require('../assets/images/right-arrow.png')}
-          style={styles.rightArrowImageStyle}
-        />
-      </LinearGradient>
-    </TouchableOpacity>
+        <LinearGradient
+          colors={['#F25000', '#FF7B3A', '#F25000']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.gradientStyle}
+        >
+          <View style={styles.stackContainer}>
+            {previewItems.map((item, index) => (
+              <Image
+                key={item.productId || item.id || index}
+                source={getImageSource(item)}
+                resizeMode="contain"
+                style={[
+                  styles.productImage,
+                  {
+                    marginLeft: index === 0 ? 0 : wp('-7%'), // overlap to left
+                  },
+                ]}
+              />
+            ))}
+          </View>
+          <View style={styles.viewOne}>
+            <Text style={styles.viewCartText} numberOfLines={1}>
+              View cart
+            </Text>
+            <Text style={styles.itemsText} numberOfLines={1}>
+              {cartItems.length} items
+            </Text>
+          </View>
+          <Image
+            source={require('../assets/images/right-arrow.png')}
+            style={styles.rightArrowImageStyle}
+          />
+        </LinearGradient>
+      </TouchableOpacity>
+    </Animated.View>
   );
 };
 
@@ -99,19 +111,18 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   gradientStyle: {
-    width: wp('49%'),
+    minWidth: wp('49%'),
     height: hp('6.44%'),
     borderRadius: wp('9.76%'),
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    // paddingLeft: wp("2.5%"),
-    // paddingRight: wp("4%"),
+    paddingLeft: wp('2.5%'),
+    paddingRight: wp('4%'),
+    overflow: 'hidden',
   },
   viewOne: {
-    // flex: 0.5,
-    // paddingLeft: wp("2%"),
-    // alignItems: "center",
+    flexShrink: 1,
     justifyContent: 'center',
   },
   viewCartText: {

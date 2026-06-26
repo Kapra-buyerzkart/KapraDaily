@@ -7,7 +7,6 @@ import { FONTS } from '../styles/typography';
 import CONFIG from '../globals/config';
 import AppButton from './AppButton';
 import { useCart } from '../context/CartContext';
-import { useCart } from '../context/CartContext';
 
 const WishlistProductCard = ({ item, onRemove, onAddToCart, onPress }) => {
     const [imageError, setImageError] = useState(false);

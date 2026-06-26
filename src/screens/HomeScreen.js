@@ -45,6 +45,7 @@ import ProfileAvatarBadge from '../components/ProfileAvatarBadge';
 
 import TokenProductCard from '../components/TokenProductCard';
 import SelectedProducts from '../components/SelectedProducts';
+import FlatOfferBadge from '../components/FlatOfferBadge';
 import { useNavigation } from '@react-navigation/native';
 import { FONTS } from '../styles/typography';
 import useHomeData from '../hooks/useHomeData';
@@ -702,7 +703,7 @@ const HomeScreen = () => {
 
   const CategoryShimmer = () => (
     <View style={styles.categoryMainView}>
-      <Text style={styles.categoryHeaderText}>Shop By Category</Text>
+      <Text style={styles.categoryHeaderText}>Category</Text>
       <View style={styles.categoriesContainer}>
         {[1, 2, 3, 4, 5, 6, 7, 8].map((_, i) => (
           <View key={i} style={styles.item}>
@@ -1372,7 +1373,7 @@ const HomeScreen = () => {
           ) : (
             categories.length > 0 && (
               <View style={styles.categoryMainView}>
-                <Text style={styles.categoryHeaderText}>Shop By Category</Text>
+                <Text style={styles.categoryHeaderText}>Category</Text>
                 <View style={styles.categoriesContainer}>
                   {categories.map((item, index) => (
                     <CategoryItem
@@ -1401,6 +1402,11 @@ const HomeScreen = () => {
                   style={styles.headerBackgroundbg}
                   imageStyle={styles.headerBackgroundbgImage}
                 >
+                  <FlatOfferBadge
+                    discount={50}
+                    style={styles.flatOfferBadgeOverlay}
+                  />
+
                   {((firstProductBlockTitleImage &&
                     firstProductBlockTitleImage.uri) ||
                     firstProductBlock?.Image ||
@@ -1997,6 +2003,14 @@ const styles = StyleSheet.create({
   headerBackgroundbgImage: {
     resizeMode: 'cover',
     borderRadius: wp('8%'),
+  },
+  flatOfferBadgeOverlay: {
+    position: 'absolute',
+    top: -hp('1%'),
+    left: wp('2%'),
+    zIndex: 5,
+    paddingTop: 0,
+    paddingLeft: 0,
   },
   topShowcaseContainer: {
     width: wp('100%'),

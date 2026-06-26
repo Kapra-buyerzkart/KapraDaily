@@ -1,5 +1,12 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  Platform,
+} from 'react-native';
 import Entypo from 'react-native-vector-icons/Entypo';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -43,9 +50,10 @@ const TokenProductCard = ({
         )}% OFF`
       : '';
   const weight = item?.weight || '1kg';
-  const token = `${
-    item?.bTokenValue || item?.token || item?.btokens || '1'
-  } UD Token`;
+  const tokenValue = item?.bTokenValue || item?.token || item?.btokens || '1';
+  const token = `${tokenValue} UD ${
+    Number(tokenValue) > 1 ? 'Tokens' : 'Token'
+  }`;
 
   const liked = propIsInWishlist
     ? propIsInWishlist(productId)
@@ -232,7 +240,7 @@ const TokenProductCard = ({
                       isThreeColumn && {
                         width: wp('7%'),
                         height: wp('7%'),
-                        borderRadius: wp('2.2%'),
+                        borderRadius: wp('2%'),
                       },
                     ]}
                   >
@@ -279,16 +287,14 @@ const TokenProductCard = ({
             </View>
 
             <View style={styles.offerRow}>
-              <View style={[styles.offerTag, !offer && styles.offerTagEmpty]}>
-                <Text
-                  style={[
-                    styles.offerText,
-                    isThreeColumn && { fontSize: wp('2.6%') },
-                  ]}
-                >
-                  {offer}
-                </Text>
-              </View>
+              <Text
+                style={[
+                  styles.offerText,
+                  isThreeColumn && { fontSize: wp('2.6%') },
+                ]}
+              >
+                {offer}
+              </Text>
               <View style={styles.dashedLine} />
             </View>
 
@@ -358,8 +364,8 @@ const styles = StyleSheet.create({
 
   tokenText: {
     fontSize: wp('2.2%'),
-    color: '#000000ff',
-    fontFamily: FONTS.poppins.semiBold,
+    color: '#5E3568',
+    fontFamily: FONTS.gilroy.semiBold,
     marginLeft: wp('2.5%'),
   },
 
@@ -372,7 +378,7 @@ const styles = StyleSheet.create({
   plusIconCircle: {
     width: wp('7%'),
     height: wp('7%'),
-    borderRadius: wp('1.2%'),
+    borderRadius: wp('2%'),
     justifyContent: 'center',
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
@@ -393,13 +399,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     height: wp('7%'),
-    borderRadius: wp('1.2%'),
+    borderRadius: wp('2%'),
     backgroundColor: '#F25000',
   },
 
   counterBtn: {
     width: wp('7%'),
     height: wp('7%'),
+    borderRadius: wp('1.2%'),
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -407,22 +414,22 @@ const styles = StyleSheet.create({
   counterQty: {
     fontSize: wp('3.5%'),
     color: '#FFFFFF',
-    fontFamily: FONTS.poppins.bold,
+    fontFamily: FONTS.gilroy.bold,
   },
 
   imageContainer: {
-    // alignItems: 'center',
-    // backgroundColor: 'green',
-    // justifyContent: 'center',
     marginTop: hp('0.5%'),
-    // marginVertical: hp('1%'),
+    paddingHorizontal: wp('2%'),
   },
 
   imageWrapper: {
     position: 'relative',
+    width: '100%',
     alignItems: 'center',
-    // backgroundColor: 'red',
     justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
+    paddingVertical: hp('1.2%'),
   },
 
   imageFrame: {
@@ -437,8 +444,8 @@ const styles = StyleSheet.create({
   },
 
   productImage: {
-    width: wp('24%'),
-    height: wp('24%'),
+    width: wp('28%'),
+    height: wp('26%'),
     resizeMode: 'contain',
   },
 
@@ -467,12 +474,14 @@ const styles = StyleSheet.create({
   priceText: {
     color: '#000000',
     fontSize: wp('3.8%'),
-    fontFamily: FONTS.poppins.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
   },
 
   mrpLabel: {
     fontSize: wp('3.4%'),
     color: '#9B9B9B',
+    top: Platform.OS === 'ios' ? 0 : 1,
+
     marginStart: wp('1%'),
     fontFamily: FONTS.outfit.medium,
   },
@@ -489,13 +498,14 @@ const styles = StyleSheet.create({
   offerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: hp('0.1%'),
+    paddingVertical: hp('0.5%'),
   },
 
   offerTag: {
-    backgroundColor: '#E8F5E9',
+    // backgroundColor: 'red',
     paddingHorizontal: wp('1.5%'),
     paddingVertical: hp('0.2%'),
+
     borderRadius: wp('1%'),
   },
 
@@ -506,9 +516,9 @@ const styles = StyleSheet.create({
   },
 
   offerText: {
-    color: '#1B8E3E',
+    color: '#0CA201',
     fontSize: wp('2.5%'),
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.bold,
   },
 
   dashedLine: {
@@ -521,17 +531,17 @@ const styles = StyleSheet.create({
 
   productName: {
     fontSize: wp('3.3%'),
-    color: '#1E1E1E',
+    color: '#2F2F2F',
     lineHeight: hp('2.2%'),
-    fontFamily: FONTS.inter.regular,
+    fontFamily: FONTS.gilroy.medium,
     minHeight: hp('5%'),
   },
 
   productWeight: {
     fontSize: wp('2.8%'),
-    color: '#888',
+    color: '#727783',
     marginTop: hp('0.5%'),
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.regular,
   },
   outOfStockOverlay: {
     position: 'absolute',
@@ -546,7 +556,7 @@ const styles = StyleSheet.create({
   },
   outOfStockText: {
     color: '#FF0000',
-    fontFamily: FONTS.poppins.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('2.8%'),
     transform: [{ rotate: '-15deg' }],
     borderWidth: 1,

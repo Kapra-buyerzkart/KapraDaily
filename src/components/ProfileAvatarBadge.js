@@ -62,7 +62,7 @@ export default function ProfileAvatarBadge({
             alignItems: 'center',
           }}
         >
-          <Ionicons name="person" size={avatarSize * 0.55} color={ORANGE} />
+          <Ionicons name="person" size={avatarSize * 0.55} color={'black'} />
         </View>
       </Ring>
 

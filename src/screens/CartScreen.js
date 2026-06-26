@@ -968,7 +968,6 @@ const CartScreen = () => {
 
     return (
       <SafeAreaView edges={['bottom']} style={styles.footer}>
-        {' '}
         <View style={styles.priceContainer}>
           <Text style={styles.payUsingLabel}>TOTAL TO PAY</Text>
           <Text style={styles.totalPriceText}>
