@@ -112,8 +112,8 @@ const ProductListScreen = () => {
         <>
           <FlatList
             data={displayProducts}
-            keyExtractor={item =>
-              (item.productId || item.id || Math.random()).toString()
+            keyExtractor={(item, index) =>
+              (item.productId || item.id || `product-${index}`).toString()
             }
             renderItem={({ item }) => (
               <View style={styles.productWrapper}>

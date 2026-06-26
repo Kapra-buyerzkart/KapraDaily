@@ -88,7 +88,14 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 25044
         versionName "4.2.0"
-        
+
+        // Google Maps SDK key is injected from a Gradle property (set in
+        // ~/.gradle/gradle.properties or CI secrets), never hardcoded in the
+        // manifest. Falls back to empty so debug builds without a key still build.
+        manifestPlaceholders = [
+            GOOGLE_MAPS_API_KEY: (project.findProperty('GOOGLE_MAPS_API_KEY') ?: "")
+        ]
+
         ndk {
             abiFilters "arm64-v8a", "armeabi-v7a"
         }

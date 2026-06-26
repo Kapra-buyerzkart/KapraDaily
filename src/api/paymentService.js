@@ -15,7 +15,5 @@ export const createRazorpayOrderApi = async (payload) => {
  * @returns {Promise<Object>} API response with verification status.
  */
 export const verifyRazorpayPaymentApi = async (payload) => {
-    console.log('payload', payload);
-
     return post(`payments/razorpay/verify`, payload);
 };

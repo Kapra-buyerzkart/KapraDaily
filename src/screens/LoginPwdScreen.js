@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet, ImageBackground, Image, TextInput, TouchableOpacity, KeyboardAvoidingView, ScrollView, Alert, ActivityIndicator } from 'react-native'
 import React, { useState } from 'react'
+import logger from '../utils/logger';
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import { FONTS } from '../styles/typography'
@@ -7,20 +8,10 @@ import { useNavigation, useRoute } from '@react-navigation/native'
 import { useCart } from '../context/CartContext'
 import { loginWithPassword, sendLoginOtp } from '../api'
 import AsyncStorage from '@react-native-async-storage/async-storage';
-// import { setTokens } from '../api/tokenService'
-
-const ACCESS_TOKEN = 'ACCESS_TOKEN';
-const REFRESH_TOKEN = 'REFRESH_TOKEN';
-
-const setTokens = async (accessToken, refreshToken) => {
-    await AsyncStorage.multiSet([
-        [ACCESS_TOKEN, accessToken],
-        [REFRESH_TOKEN, refreshToken],
-    ]);
-};
+import { setTokens } from '../api/tokenService'
 
 const mergeCustomerIdIntoProfile = async (custId) => {
-    console.log('????????', custId)
+    logger.log('????????', custId)
     const storedProfile = await AsyncStorage.getItem('profile');
     const existingProfile = storedProfile ? JSON.parse(storedProfile) : {};
 
@@ -29,7 +20,7 @@ const mergeCustomerIdIntoProfile = async (custId) => {
         custId,
     };
 
-    console.log('updatedProfile', updatedProfile)
+    logger.log('updatedProfile', updatedProfile)
 
     await AsyncStorage.setItem('profile', JSON.stringify(updatedProfile));
 };
@@ -46,7 +37,7 @@ const LoginPwdScreen = () => {
     const { phone } = route.params || {};
 
     const handleContinue = async () => {
-        // console.log(phone, password);
+        // logger.log(phone, password);
 
         if (!password) {
             showStatus({
@@ -60,7 +51,7 @@ const LoginPwdScreen = () => {
         try {
             setLoading(true);
             const response = await loginWithPassword(phone, password);
-            // console.log('Login Response:', response);
+            // logger.log('Login Response:', response);
 
             if (response?.success && response?.data) {
                 const { accessToken, refreshToken, custId } = response.data;
@@ -81,7 +72,7 @@ const LoginPwdScreen = () => {
                 });
             }
         } catch (error) {
-            console.log('Login Error:', error);
+            logger.log('Login Error:', error);
             showStatus({
                 type: 'error',
                 title: 'Error',
@@ -94,7 +85,7 @@ const LoginPwdScreen = () => {
 
     return (
         <SafeAreaView style={styles.mainContainer}>
-            {/* {console.log('kkkkkk', phone)} */}
+            {/* {logger.log('kkkkkk', phone)} */}
             <KeyboardAvoidingView
                 style={{ flex: 1 }}
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}

@@ -18,6 +18,7 @@ import Toast from 'react-native-simple-toast'
 import { useAddresses } from '../hooks/useAddresses'
 import axios from 'axios'
 import { validatePhoneNumbers } from '../utils/validation'
+import { GOOGLE_MAPS_API_KEY } from '../globals/secrets'
 import Geolocation from '@react-native-community/geolocation'
 import CustomLoader from '../components/CustomLoader'
 import Ionicons from 'react-native-vector-icons/Ionicons'
@@ -59,7 +60,7 @@ const AddLocationScreen = () => {
     const [isDragging, setIsDragging] = useState(false)
 
     const defaultCoords = { latitude: 10.0205, longitude: 76.3052 }
-    const apiKey = 'AIzaSyDhItv0zoWdQbDh-5jjKLAEjwRDDrFNc1Y'
+    const apiKey = GOOGLE_MAPS_API_KEY
 
     // The map region — this is the source of truth for where the pin points
     const [region, setRegion] = useState({

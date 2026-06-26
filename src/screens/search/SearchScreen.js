@@ -1,12 +1,10 @@
 import {
   View,
   Text,
-  StyleSheet,
   Image,
   TouchableOpacity,
   TextInput,
   Platform,
-  ActivityIndicator,
 } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -18,37 +16,31 @@ import Animated, {
   clamp,
 } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import React, { useState, useEffect, useCallback, useContext } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
-import { FONTS } from '../styles/typography';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import useProductSearch from '../hooks/useProductSearch';
+import useProductSearch from '../../hooks/useProductSearch';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { AppContext } from '../context/appContext';
-import TokenProductCard from '../components/TokenProductCard';
+import { AppContext } from '../../context/appContext';
+import TokenProductCard from '../../components/TokenProductCard';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Feather from 'react-native-vector-icons/Feather';
-import FilterSortModal from '../components/FilterSortModal';
-
-// Truncate text to a specific limit with dots
-const truncateText = (text, limit = 7) => {
-  if (!text) return '';
-  if (text.length <= limit) return text;
-  return text.substring(0, limit) + '..';
-};
-
-import StoreUnavailable from '../components/StoreUnavailable';
-import LocationModal from '../components/LocationModal';
-import SelectedProducts from '../components/SelectedProducts';
+import FilterSortModal from '../../components/FilterSortModal';
+import StoreUnavailable from '../../components/StoreUnavailable';
+import LocationModal from '../../components/LocationModal';
+import SelectedProducts from '../../components/SelectedProducts';
 import {
   SCROLL_HIDE_THRESHOLD,
   TAB_BAR_ANIM_DURATION,
-} from '../animations/tabBarVisibility';
+} from '../../animations/tabBarVisibility';
 
-const RECENT_SEARCH_KEY = 'recent_searches_list';
+import useRecentSearches from './hooks/useRecentSearches';
+import RecentSearches from './components/RecentSearches';
+import SearchResultsHeader from './components/SearchResultsHeader';
+import styles from './SearchScreen.styles';
 
 const SearchScreen = () => {
   const navigation = useNavigation();
@@ -59,7 +51,7 @@ const SearchScreen = () => {
   const [isLocationModalVisible, setIsLocationModalVisible] = useState(false);
 
   const [currentPincodeId, setCurrentPincodeId] = useState(null);
-  const [recentSearches, setRecentSearches] = useState([]);
+  const { recentSearches, saveSearch } = useRecentSearches();
 
   // Filter & Sort state
   const [isFilterSortModalVisible, setIsFilterSortModalVisible] =
@@ -83,48 +75,20 @@ const SearchScreen = () => {
     const fetchPincode = async () => {
       const stored = await AsyncStorage.getItem('pincodeAreaId');
       if (stored) {
-        setCurrentPincodeId(parseInt(stored));
+        setCurrentPincodeId(parseInt(stored, 10));
       } else if (profile?.pincode) {
         setCurrentPincodeId(profile.pincode);
       }
     };
     fetchPincode();
-    loadRecentSearches();
   }, [profile]);
-
-  const loadRecentSearches = async () => {
-    try {
-      const stored = await AsyncStorage.getItem(RECENT_SEARCH_KEY);
-      if (stored) {
-        setRecentSearches(JSON.parse(stored));
-      }
-    } catch (error) {
-      console.error('Error loading recent searches:', error);
-    }
-  };
-
-  const saveSearch = async keyword => {
-    if (!keyword || keyword.trim().length < 3) return;
-    const cleanKeyword = keyword.trim();
-
-    try {
-      const updated = [
-        cleanKeyword,
-        ...recentSearches.filter(s => s !== cleanKeyword),
-      ].slice(0, 10);
-      setRecentSearches(updated);
-      await AsyncStorage.setItem(RECENT_SEARCH_KEY, JSON.stringify(updated));
-    } catch (error) {
-      console.error('Error saving search:', error);
-    }
-  };
 
   // Save search term if results are found
   useEffect(() => {
     if (!loading && searchTerm.trim().length >= 3 && resultCount > 0) {
       saveSearch(searchTerm);
     }
-  }, [loading, resultCount]);
+  }, [loading, resultCount, searchTerm, saveSearch]);
 
   // ── Sticky header elevation ─────────────────────────────────────────────
   // The search bar already sits outside the list (always pinned); this just
@@ -210,8 +174,6 @@ const SearchScreen = () => {
     };
   });
 
-  // const { showLoader } = useContext(LoaderContext) // Loader handling moved to hook or local loading state used
-
   const renderItem = ({ item }) => {
     return (
       <View style={styles.productWrapper}>
@@ -230,28 +192,6 @@ const SearchScreen = () => {
     );
   };
 
-  const ListHeader = () => {
-    if (searchTerm.length > 0 || recentSearches.length === 0) return null;
-    return (
-      <View>
-        <Text style={styles.recentTitle}>Recent search</Text>
-        <View style={styles.recentContainer}>
-          {recentSearches.slice(0, 8).map((item, index) => (
-            <TouchableOpacity
-              key={index}
-              style={styles.recentProduct}
-              onPress={() => setSearchTerm(item)}
-            >
-              <Text style={styles.recentProductText}>
-                {truncateText(item, 7)}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-    );
-  };
-
   return (
     <SafeAreaView style={styles.mainContainer}>
       <View style={styles.headerContainer}>
@@ -259,7 +199,7 @@ const SearchScreen = () => {
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Image
               style={styles.leftArrowIcon}
-              source={require('../assets/images/left_arrow.png')}
+              source={require('../../assets/images/left_arrow.png')}
             />
           </TouchableOpacity>
           <Text style={styles.searchText}>{catName ? catName : 'Search'}</Text>
@@ -279,7 +219,7 @@ const SearchScreen = () => {
               : [styles.searchIcon, { bottom: hp('0.1%') }]
           }
           tintColor={'#F25000'}
-          source={require('../assets/images/search_icon.png')}
+          source={require('../../assets/images/search_icon.png')}
         />
         <TextInput
           placeholder="What are you looking for ?"
@@ -305,7 +245,6 @@ const SearchScreen = () => {
           style={styles.clipboardIcon}
         />
       </Animated.View>
-      {/* <View style={{ height: hp(2), backgroundColor: '#fefefefe' }} /> */}
 
       {isStoreUnavailable ? (
         <StoreUnavailable
@@ -316,23 +255,11 @@ const SearchScreen = () => {
       ) : (
         <>
           {searchTerm.trim().length > 0 && (
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                paddingRight: wp('5%'),
-              }}
-            >
-              <Text style={styles.resultText}>
-                {loading ? 'Searching...' : `Results found : ${resultCount}`}
-              </Text>
-              {isGlobalFallback && (
-                <Text style={styles.fallbackNoticeText}>
-                  Showing results from all categories
-                </Text>
-              )}
-            </View>
+            <SearchResultsHeader
+              loading={loading}
+              resultCount={resultCount}
+              isGlobalFallback={isGlobalFallback}
+            />
           )}
 
           <Animated.FlatList
@@ -346,7 +273,13 @@ const SearchScreen = () => {
             onScroll={scrollHandler}
             scrollEventThrottle={16}
             showsVerticalScrollIndicator={false}
-            ListHeaderComponent={ListHeader}
+            ListHeaderComponent={
+              <RecentSearches
+                searchTerm={searchTerm}
+                recentSearches={recentSearches}
+                onSelect={setSearchTerm}
+              />
+            }
             contentContainerStyle={{
               paddingHorizontal: wp('2%'),
               paddingTop: hp('1%'),
@@ -358,7 +291,7 @@ const SearchScreen = () => {
               (searchTerm.length > 0 || catId) && (
                 <View style={styles.emptyContainer}>
                   <Image
-                    source={require('../assets/images/noimages/noproductfound.png')}
+                    source={require('../../assets/images/noimages/noproductfound.png')}
                     style={styles.emptyImage}
                   />
                   <Text style={styles.noResultsText}>
@@ -396,154 +329,3 @@ const SearchScreen = () => {
 };
 
 export default SearchScreen;
-
-const styles = StyleSheet.create({
-  mainContainer: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-  },
-  floatingContainer: {
-    position: 'absolute',
-    bottom: hp('3%'),
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-  },
-  headerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: hp('1%'),
-    paddingHorizontal: wp('4.65%'),
-  },
-  leftArrowIcon: {
-    width: wp('2.33%'),
-    height: hp('2.04%'),
-    resizeMode: 'contain',
-  },
-  searchText: {
-    color: '#000000',
-    fontFamily: FONTS.poppins.semiBold,
-    fontSize: wp('4.65%'),
-    marginLeft: wp('8%'),
-  },
-  filterButton: {
-    padding: wp('1.5%'),
-  },
-  searchContainer: {
-    backgroundColor: '#fefefe',
-    width: wp('90.7%'),
-    height: hp('5.36%'),
-    borderRadius: wp('2.33%'),
-    alignSelf: 'center',
-    marginTop: hp('2.7%'),
-    flexDirection: 'row',
-    borderWidth: 0.3,
-    borderColor: '#8f8f8f',
-    alignItems: 'center',
-    paddingHorizontal: wp('4.65%'),
-  },
-  searchIcon: {
-    width: wp('4.19%'),
-    height: wp('4.19%'),
-  },
-  searchInput: {
-    fontFamily: FONTS.poppins.light,
-    fontSize: wp('3.72%'),
-    color: '#000000',
-    marginLeft: wp('2%'),
-    flex: 1,
-    top: Platform.OS == 'ios' ? 1.5 : 1,
-  },
-  divider: {
-    height: hp('2.65%'),
-    width: 1,
-    backgroundColor: '#8f8f8f',
-  },
-  clipboardIcon: {
-    width: wp('4.65%'),
-    height: wp('4.65%'),
-    marginLeft: wp('3.5%'),
-  },
-  resultText: {
-    color: '#000000',
-    fontFamily: FONTS.poppins.medium,
-    fontSize: wp('2.79%'),
-    marginHorizontal: wp('5%'),
-    marginTop: hp('1.5%'),
-  },
-  fallbackNoticeText: {
-    color: '#F25000',
-    fontFamily: FONTS.outfit.medium,
-    fontSize: wp('2.8%'),
-    marginHorizontal: wp('5%'),
-    marginTop: hp('0.5%'),
-  },
-  productCardWrapper: {
-    flex: 1,
-    alignItems: 'center',
-    marginBottom: hp('0.5%'),
-  },
-  columnWrapper: {
-    justifyContent: 'flex-start',
-  },
-  recentTitle: {
-    fontFamily: FONTS.poppins.medium,
-    fontSize: wp('2.79%'),
-    color: '#000000',
-    marginLeft: wp('5%'),
-    marginTop: hp('2%'),
-  },
-  recentProduct: {
-    width: wp('20.23%'),
-    height: hp('2.57%'),
-    borderWidth: 1,
-    borderColor: '#DADADA',
-    borderRadius: wp('2.33%'),
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: wp('2%'),
-    marginBottom: hp('1.2%'),
-  },
-  recentProductText: {
-    fontFamily: FONTS.poppins.regular,
-    fontSize: wp('2.79%'),
-    color: '#000000',
-  },
-  recentContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginHorizontal: wp('3%'),
-    marginTop: hp('1%'),
-  },
-  productWrapper: {
-    flex: 1 / 3,
-    alignItems: 'center',
-  },
-  emptyContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: hp('10%'),
-  },
-  emptyImage: {
-    width: wp('50%'),
-    height: wp('50%'),
-    resizeMode: 'contain',
-  },
-  noResultsText: {
-    fontFamily: FONTS.poppins.medium,
-    fontSize: wp('3.5%'),
-    color: '#666666',
-    textAlign: 'center',
-    marginTop: hp('2%'),
-    paddingHorizontal: wp('10%'),
-  },
-  centeredLoader: {
-    position: 'absolute',
-    top: hp('35%'),
-    left: 0,
-    right: 0,
-    zIndex: 10,
-  },
-});

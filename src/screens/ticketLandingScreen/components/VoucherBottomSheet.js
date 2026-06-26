@@ -14,7 +14,7 @@ import {
   Linking,
   View,
 } from 'react-native';
-import RenderHtml from 'react-native-render-html';
+import SafeRenderHtml from '../../../components/SafeRenderHtml';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { wp, hp } from '../../../utils/responsive';
@@ -74,7 +74,7 @@ const Accordion = ({ title, items, html }) => {
       {open && (
         <View style={styles.accordionBody}>
           {html ? (
-            <RenderHtml
+            <SafeRenderHtml
               contentWidth={width * 0.9}
               source={{ html }}
               baseStyle={htmlBaseStyle}

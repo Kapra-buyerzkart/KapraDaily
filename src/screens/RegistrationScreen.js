@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet, ImageBackground, Image, TextInput, TouchableOpacity, KeyboardAvoidingView, ScrollView } from 'react-native'
 import React, { useEffect, useState } from 'react'
+import logger from '../utils/logger';
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 import { FONTS } from '../styles/typography'
@@ -8,24 +9,15 @@ import { getAreasByPincode, registerUser, sendRegisterOtp } from '../api'
 import { useCart } from '../context/CartContext'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { OneSignal } from 'react-native-onesignal';
+import { setTokens } from '../api/tokenService';
 
 const PINCODE_AREA_MAP = {
     '676519': ['Chungathara', 'Pukkottumanna', 'Manjeri'],
     '682001': ['Kochi', 'Edappally', 'Vyttila']
 }
 
-const ACCESS_TOKEN = 'ACCESS_TOKEN';
-const REFRESH_TOKEN = 'REFRESH_TOKEN';
-
-const setTokens = async (accessToken, refreshToken) => {
-    await AsyncStorage.multiSet([
-        [ACCESS_TOKEN, accessToken],
-        [REFRESH_TOKEN, refreshToken],
-    ]);
-};
-
 const mergeCustomerIdIntoProfile = async (custId) => {
-    // console.log('????????', custId)
+    // logger.log('????????', custId)
     const storedProfile = await AsyncStorage.getItem('profile');
     const existingProfile = storedProfile ? JSON.parse(storedProfile) : {};
 
@@ -34,7 +26,7 @@ const mergeCustomerIdIntoProfile = async (custId) => {
         custId,
     };
 
-    // console.log('updatedProfile', updatedProfile)
+    // logger.log('updatedProfile', updatedProfile)
 
     await AsyncStorage.setItem('profile', JSON.stringify(updatedProfile));
 };
@@ -64,13 +56,13 @@ const RegistrationScreen = () => {
         if (value.length === 6) {
             try {
                 const response = await getAreasByPincode(value)
-                // console.log('resss', response)
+                // logger.log('resss', response)
 
                 // adjust based on your API response structure
                 setAreas(response?.data || [])
                 setSelectedArea(null)
             } catch (error) {
-                console.log('Error fetching areas:', error)
+                logger.log('Error fetching areas:', error)
                 setAreas([])
             }
         } else {
@@ -111,7 +103,7 @@ const RegistrationScreen = () => {
             setLoading(true)
 
             // const response = await sendRegisterOtp(phone)
-            // console.log('OTP response:', response)
+            // logger.log('OTP response:', response)
 
             // if (response?.success === true) {
             //     navigation.navigate('OtpScreen', {
@@ -136,7 +128,7 @@ const RegistrationScreen = () => {
                 pincodeAreaId: selectedArea.pincodeAreaId
             }
             const registerResponse = await registerUser(payload);
-            // console.log('Register User Response:', registerResponse);
+            // logger.log('Register User Response:', registerResponse);
             // navigation.reset({
             //     index: 0,
             //     routes: [{ name: 'MainTabs' }],
@@ -171,7 +163,7 @@ const RegistrationScreen = () => {
             }
 
         } catch (error) {
-            console.log('Registration error:', error)
+            logger.log('Registration error:', error)
             const errorMessage = error?.message || error?.data?.message || error?.data?.Message || 
                 (typeof error === 'string' ? error : 'Something went wrong. Please try again.');
             showStatus({
@@ -186,7 +178,7 @@ const RegistrationScreen = () => {
 
     return (
         <SafeAreaView style={styles.mainContainer}>
-            {/* {console.log("KKKK", phone)} */}
+            {/* {logger.log("KKKK", phone)} */}
             <KeyboardAvoidingView
                 style={{ flex: 1 }}
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -274,7 +266,7 @@ const RegistrationScreen = () => {
                                 />
                             </View>
                         </View>
-                        {/* {console.log('areas', areas)} */}
+                        {/* {logger.log('areas', areas)} */}
                         {areas.length > 0 && (
                             <View style={styles.areaCard}>
                                 <Text style={styles.title}>Select your area</Text>
@@ -289,7 +281,7 @@ const RegistrationScreen = () => {
                                         }}
                                     >
                                         <Text style={styles.areaText}>{area.areaName}</Text>
-                                        {/* {console.log('selectedArea', selectedArea)} */}
+                                        {/* {logger.log('selectedArea', selectedArea)} */}
                                         {selectedArea?.areaName !== area?.areaName ? (<View style={styles.radioOuter} />) : (
                                             <Image style={styles.successIcon} source={require('../assets/images/success.png')} />
                                         )}

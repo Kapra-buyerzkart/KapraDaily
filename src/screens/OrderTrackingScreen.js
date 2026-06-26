@@ -40,6 +40,7 @@ import { useOrderTracking } from '../hooks/useOrderTracking';
 import AppButton from '../components/AppButton';
 import CustomLoader from '../components/CustomLoader';
 import CONFIG from '../globals/config';
+import { openExternalUrl } from '../utils/safeUrl';
 import RatingModal from '../components/RatingModal';
 import StatusModal from '../components/StatusModal';
 import BillSection from '../components/BillSection';
@@ -1313,21 +1314,20 @@ const OrderTrackingScreen = () => {
           ) && (
             <TouchableOpacity
               style={styles.downloadBillContainer}
-              onPress={() => {
+              onPress={async () => {
                 if (invoiceUrl) {
                   // Use siteUrl if invoiceUrl is a relative asset path
                   const fullUrl = invoiceUrl.startsWith('http')
                     ? invoiceUrl
                     : `${CONFIG.image_base_url}${invoiceUrl}`;
 
-                  console.log('Opening Invoice URL:', fullUrl);
-                  Linking.openURL(fullUrl).catch(err => {
-                    console.error("Couldn't load page", err);
+                  const opened = await openExternalUrl(fullUrl);
+                  if (!opened) {
                     Toast.show(
                       'Unable to download invoice at this time',
                       Toast.SHORT,
                     );
-                  });
+                  }
                 } else {
                   Toast.show('Invoice not available yet', Toast.SHORT);
                 }

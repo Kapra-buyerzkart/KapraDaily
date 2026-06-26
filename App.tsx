@@ -24,6 +24,8 @@ import { NavigationContainer } from '@react-navigation/native';
 import RootNavigator from './src/navigation/RootNavigator';
 import { navigationRef } from './src/api/NavigationService';
 import ModalProvider from './src/components/modal/ModalProvider';
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
+import { queryClient, queryPersistOptions } from './src/queryClient';
 
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
@@ -73,17 +75,19 @@ function App() {
           {/* Portal host for CustomModal — mounted once here so any modal
               opened anywhere in the tree renders above the whole app. */}
           <ModalProvider>
-            <AppContextProvider>
-              <CartProvider>
-                <WishlistProvider>
-                  <LoaderContextProvider>
-                    <NavigationContainer ref={navigationRef}>
-                      <RootNavigator />
-                    </NavigationContainer>
-                  </LoaderContextProvider>
-                </WishlistProvider>
-              </CartProvider>
-            </AppContextProvider>
+            <PersistQueryClientProvider client={queryClient} persistOptions={queryPersistOptions}>
+              <AppContextProvider>
+                <CartProvider>
+                  <WishlistProvider>
+                    <LoaderContextProvider>
+                      <NavigationContainer ref={navigationRef}>
+                        <RootNavigator />
+                      </NavigationContainer>
+                    </LoaderContextProvider>
+                  </WishlistProvider>
+                </CartProvider>
+              </AppContextProvider>
+            </PersistQueryClientProvider>
           </ModalProvider>
         </BottomSheetModalProvider>
       </SafeAreaProvider>

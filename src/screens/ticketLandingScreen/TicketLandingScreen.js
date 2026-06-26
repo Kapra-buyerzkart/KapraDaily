@@ -25,6 +25,7 @@ import {
   getMyVouchersApi,
 } from '../../api/voucherService';
 import { getDashboardDataApi } from '../../api/userService';
+import logger from '../../utils/logger';
 
 const AnimatedImageBackground =
   Animated.createAnimatedComponent(ImageBackground);
@@ -53,19 +54,23 @@ const TicketLandingScreen = ({ navigation }) => {
   });
 
   const refreshBCoins = useCallback(() => {
-    getDashboardDataApi().then(res => {
-      if (res?.data?.wallet?.bCoins !== undefined) {
-        setBCoins(res.data.wallet.bCoins);
-      }
-    });
+    getDashboardDataApi()
+      .then(res => {
+        if (res?.data?.wallet?.bCoins !== undefined) {
+          setBCoins(res.data.wallet.bCoins);
+        }
+      })
+      .catch(err => logger.error('Failed to refresh bCoins:', err?.message));
   }, []);
 
   useEffect(() => {
-    getVouchersApi().then(res => {
-      if (res?.data?.items) {
-        setCarouselVouchers(res.data.items);
-      }
-    });
+    getVouchersApi()
+      .then(res => {
+        if (res?.data?.items) {
+          setCarouselVouchers(res.data.items);
+        }
+      })
+      .catch(err => logger.error('Failed to load vouchers:', err?.message));
     refreshBCoins();
   }, [refreshBCoins]);
 
@@ -74,11 +79,11 @@ const TicketLandingScreen = ({ navigation }) => {
       setMyVouchersLoading(true);
       getMyVouchersApi()
         .then(res => {
-          console.log(res, 'ress======response=====>');
           if (res?.data?.items) {
             setMyVouchers(res.data.items);
           }
         })
+        .catch(err => logger.error('Failed to load my vouchers:', err?.message))
         .finally(() => setMyVouchersLoading(false));
     }
   }, [activeTab]);
@@ -102,13 +107,15 @@ const TicketLandingScreen = ({ navigation }) => {
     Promise.all([
       getVoucherByIdApi(voucher?.voucherId),
       getVoucherQuoteApi(voucher?.voucherId, 1, bCoins),
-    ]).then(([voucherRes, quoteRes]) => {
-      if (voucherRes?.data) {
-        setClaimedVoucher(voucherRes.data);
-        if (quoteRes?.success) setClaimedQuoteData(quoteRes.data);
-        setModalVisible(true);
-      }
-    });
+    ])
+      .then(([voucherRes, quoteRes]) => {
+        if (voucherRes?.data) {
+          setClaimedVoucher(voucherRes.data);
+          if (quoteRes?.success) setClaimedQuoteData(quoteRes.data);
+          setModalVisible(true);
+        }
+      })
+      .catch(err => logger.error('Failed to claim voucher:', err?.message));
   };
 
   const handleTabChange = index => {

@@ -13,7 +13,7 @@ import RegistraionScreen from '../screens/RegistrationScreen';
 import OtpScreen from '../screens/OtpScreen';
 import ChangePwdScreen from '../screens/ChangePwdScreen';
 import BCoinScreen from '../screens/BCoinScreen';
-import SearchScreen from '../screens/SearchScreen';
+import SearchScreen from '../screens/search/SearchScreen';
 import OrderSuccessScreen from '../screens/OrderSuccessScreen';
 import OrderFailedScreen from '../screens/OrderFailedScreen';
 import OrderPendingScreen from '../screens/OrderPendingScreen';

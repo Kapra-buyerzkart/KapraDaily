@@ -19,6 +19,7 @@ import BillSection from '../components/BillSection';
 import StatusModal from '../components/StatusModal';
 import DeliverySlotModal from '../components/DeliverySlotModal';
 import LinearGradient from 'react-native-linear-gradient';
+import logger from '../utils/logger';
 
 const CheckoutScreen = () => {
     const navigation = useNavigation();
@@ -77,7 +78,7 @@ const CheckoutScreen = () => {
         // Refresh summary whenever key dependencies change
         if (currentPincodeAreaId) {
             const apiDeliveryMode = deliveryType === 'slot' ? 'slotted' : 'express';
-            console.log('🔄 [CHECKOUT] Syncing summary for area:', currentPincodeAreaId, 'Mode:', apiDeliveryMode);
+            logger.log('🔄 [CHECKOUT] Syncing summary for area:', currentPincodeAreaId, 'Mode:', apiDeliveryMode);
             getCartSummary(apiDeliveryMode, selectedSlot, null, currentPincodeAreaId);
         }
     }, [currentSelectedAddress?.id, deliveryType, selectedSlot, pincodeAreaId]);
@@ -134,7 +135,7 @@ const CheckoutScreen = () => {
         const fetchPaymentModes = async () => {
             try {
                 const response = await getPaymentModesApi();
-                console.log('💳 [CHECKOUT] Fetched Payment Modes:', JSON.stringify(response?.data, null, 2));
+                logger.log('💳 [CHECKOUT] Fetched Payment Modes:', JSON.stringify(response?.data, null, 2));
 
                 if (response?.success && response?.data) {
                     let modes = [...response.data];
@@ -147,7 +148,7 @@ const CheckoutScreen = () => {
                     // FOR TESTING: If no online mode is returned by backend, inject one 
                     // so the Razorpay implementation can be tested.
                     if (!hasOnline) {
-                        console.log('💳 [CHECKOUT] Injecting Online mode for testing purposes.');
+                        logger.log('💳 [CHECKOUT] Injecting Online mode for testing purposes.');
                         modes.push({
                             paymentModeId: 'online_test_mode',
                             paymentModeName: 'Online',
@@ -165,7 +166,7 @@ const CheckoutScreen = () => {
                     }
                 }
             } catch (error) {
-                console.error('Error fetching payment modes:', error);
+                logger.error('Error fetching payment modes:', error);
             }
         };
         fetchPaymentModes();
@@ -188,7 +189,7 @@ const CheckoutScreen = () => {
 
             if (resumeOrderId) {
                 // Skip creation, go straight to payment logic
-                console.log('🔄 [CHECKOUT] Resuming payment for existing order:', resumeOrderId);
+                logger.log('🔄 [CHECKOUT] Resuming payment for existing order:', resumeOrderId);
                 // When resuming, we use the provided razorpay details if available
                 await handlePaymentFlow(resumeOrderId, resumeOrderId, resumeRazorpayOrderId, resumeRazorpayAmount, resumeRazorpayKeyId);
                 return;
@@ -211,9 +212,9 @@ const CheckoutScreen = () => {
                 pincodeAreaId: pincodeAreaId || currentSelectedAddress?.pincodeAreaId || selectedAddress?.pincodeAreaId
             };
 
-            console.log('📦 [CHECKOUT] Creating Order Payload:', JSON.stringify(createPayload, null, 2));
+            logger.log('📦 [CHECKOUT] Creating Order Payload:', JSON.stringify(createPayload, null, 2));
             const createResponse = await createOrderApi(createPayload);
-            console.log('📦 [CHECKOUT] Create Response:', JSON.stringify(createResponse, null, 2));
+            logger.log('📦 [CHECKOUT] Create Response:', JSON.stringify(createResponse, null, 2));
             if (createResponse?.success && createResponse?.data?.orderId) {
                 const orderId = createResponse.data.orderId;
                 const orderNumber = createResponse.data.orderNumber || orderId;
@@ -234,7 +235,7 @@ const CheckoutScreen = () => {
                     }
                 }
             } else if (createResponse?.status === 'CART_CONFLICT') {
-                console.log('🔄 [CHECKOUT] Conflict detected, refreshing cart...');
+                logger.log('🔄 [CHECKOUT] Conflict detected, refreshing cart...');
                 await refreshCart();
                 showLoader(false);
                 setStatusType('error');
@@ -249,7 +250,7 @@ const CheckoutScreen = () => {
                 setStatusModalVisible(true);
             }
         } catch (error) {
-            console.error('📦 [CHECKOUT] Order Error:', error);
+            logger.error('📦 [CHECKOUT] Order Error:', error);
             showLoader(false);
             setStatusType('error');
             setStatusTitle('Error');
@@ -265,9 +266,9 @@ const CheckoutScreen = () => {
             let keyId = passedKeyId;
 
             if (!razorpayOrderId || !amount || !keyId) {
-                console.log('💳 [RAZORPAY] Initiating Payment Flow for Order:', orderId);
+                logger.log('💳 [RAZORPAY] Initiating Payment Flow for Order:', orderId);
                 const rzpCreateResponse = await createRazorpayOrderApi({ orderId });
-                console.log('💳 [RAZORPAY] Create Response:', JSON.stringify(rzpCreateResponse, null, 2));
+                logger.log('💳 [RAZORPAY] Create Response:', JSON.stringify(rzpCreateResponse, null, 2));
 
                 if (rzpCreateResponse?.success && rzpCreateResponse?.data) {
                     keyId = rzpCreateResponse.data.keyId;
@@ -316,11 +317,11 @@ const CheckoutScreen = () => {
 
                     const attemptVerification = async () => {
                         try {
-                            console.log(`🔍 [RAZORPAY] Verification Attempt ${retryCount + 1}...`);
+                            logger.log(`🔍 [RAZORPAY] Verification Attempt ${retryCount + 1}...`);
                             const response = await verifyRazorpayPaymentApi(verifyPayload);
                             return response;
                         } catch (e) {
-                            console.error(`⚠️ [RAZORPAY] Verification Attempt ${retryCount + 1} Error:`, e);
+                            logger.error(`⚠️ [RAZORPAY] Verification Attempt ${retryCount + 1} Error:`, e);
                             return null;
                         }
                     };
@@ -333,7 +334,7 @@ const CheckoutScreen = () => {
                         retryCount < maxRetries
                     ) {
                         retryCount++;
-                        console.log(`🔄 [RAZORPAY] Retrying verification (Count: ${retryCount}) in 3s...`);
+                        logger.log(`🔄 [RAZORPAY] Retrying verification (Count: ${retryCount}) in 3s...`);
                         await new Promise(resolve => setTimeout(resolve, 3000));
                         verifyResponse = await attemptVerification();
                     }
@@ -366,13 +367,13 @@ const CheckoutScreen = () => {
                 }
             }, 200);
         } catch (error) {
-            console.error('Payment Flow Error:', error);
+            logger.error('Payment Flow Error:', error);
             showLoader(false);
         }
     };
 
     const handleVerificationFailure = async (orderId, orderData, sdkResponse, keyId, amount) => {
-        console.log('⚠️ [RAZORPAY] Verification failed or timed out. Checking order details...');
+        logger.log('⚠️ [RAZORPAY] Verification failed or timed out. Checking order details...');
         setStatusType('info');
         setStatusTitle('Verifying Payment...');
         setStatusMessage('Your payment verification is taking longer than expected. Please wait...');
@@ -382,7 +383,7 @@ const CheckoutScreen = () => {
         setTimeout(async () => {
             try {
                 const response = await getOrderDetailsApi(orderId);
-                console.log('🔍 [RAZORPAY] Order Details Check:', response?.data?.orderStatusKey);
+                logger.log('🔍 [RAZORPAY] Order Details Check:', response?.data?.orderStatusKey);
 
                 if (response?.success && response?.data?.orderStatusKey?.toLowerCase() === 'placed') {
                     setStatusModalVisible(false);
@@ -414,7 +415,7 @@ const CheckoutScreen = () => {
                     refreshCart();
                 }
             } catch (err) {
-                console.error('Error fetching order details for verification fallback:', err);
+                logger.error('Error fetching order details for verification fallback:', err);
                 showLoader(false);
                 setStatusType('error');
                 setStatusTitle('Verification Error');

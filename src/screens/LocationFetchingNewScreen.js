@@ -22,6 +22,7 @@ import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplet
 import { BlurView } from '@react-native-community/blur';
 
 import { getFontontSize } from '../globals/GroFunctions';
+import { GOOGLE_MAPS_API_KEY } from '../globals/secrets';
 import { AppContext } from '../context/appContext';
 import { useCart } from '../context/CartContext';
 import { areaListPincodeWise, getAreasByPincode } from '../api';
@@ -480,7 +481,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
   };
 
   const reverseGeocode = async (latitude, longitude) => {
-    const apiKey = 'AIzaSyDhItv0zoWdQbDh-5jjKLAEjwRDDrFNc1Y';
+    const apiKey = GOOGLE_MAPS_API_KEY;
     const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}`;
 
     try {
@@ -982,7 +983,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
                     );
                   }}
                   query={{
-                    key: 'AIzaSyDhItv0zoWdQbDh-5jjKLAEjwRDDrFNc1Y',
+                    key: GOOGLE_MAPS_API_KEY,
                     language: 'en',
                     components: 'country:IN',
                   }}

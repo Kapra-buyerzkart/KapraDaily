@@ -14,6 +14,7 @@ import {
   Keyboard,
 } from 'react-native';
 import React, { useRef, useState, useEffect } from 'react';
+import logger from '../utils/logger';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   widthPercentageToDP as wp,
@@ -39,23 +40,14 @@ import FastImage from 'react-native-fast-image';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import HelpSupportModal from '../components/HelpSupportModal';
 import EmailOtpBottomSheet from '../components/EmailOtpBottomSheet';
-
-const ACCESS_TOKEN = 'ACCESS_TOKEN';
-const REFRESH_TOKEN = 'REFRESH_TOKEN';
+import { setTokens } from '../api/tokenService';
 
 // Number of times the user must tap "Resend OTP" before the email OTP
 // fallback link is offered. Configurable in one place.
 const EMAIL_OTP_FALLBACK_RESEND_THRESHOLD = 1;
 
-const setTokens = async (accessToken, refreshToken) => {
-  await AsyncStorage.multiSet([
-    [ACCESS_TOKEN, accessToken],
-    [REFRESH_TOKEN, refreshToken],
-  ]);
-};
-
 const mergeCustomerIdIntoProfile = async custId => {
-  // console.log('????????', custId)
+  // logger.log('????????', custId)
   const storedProfile = await AsyncStorage.getItem('profile');
   const existingProfile = storedProfile ? JSON.parse(storedProfile) : {};
 
@@ -64,7 +56,7 @@ const mergeCustomerIdIntoProfile = async custId => {
     custId,
   };
 
-  // console.log('updatedProfile', updatedProfile)
+  // logger.log('updatedProfile', updatedProfile)
 
   await AsyncStorage.setItem('profile', JSON.stringify(updatedProfile));
 };
@@ -97,15 +89,16 @@ const OtpScreen = () => {
         RNOtpVerify.removeListener();
       }
     } catch (error) {
-      console.log('OTP Parse Error:', error);
+      logger.log('OTP Parse Error:', error);
     }
   };
 
   useEffect(() => {
     const sendOtpOnLoad = async () => {
-      console.log('[OTP] screen mounted — type:', type, '| phone:', phone);
+      const maskedPhone = phone ? `••••${String(phone).slice(-4)}` : phone;
+      logger.log('[OTP] screen mounted — type:', type, '| phone:', maskedPhone);
       if (!phone) {
-        console.warn('[OTP] phone is undefined/null — OTP not sent');
+        logger.warn('[OTP] phone is undefined/null — OTP not sent');
         return;
       }
 
@@ -113,20 +106,20 @@ const OtpScreen = () => {
         setLoading(true);
 
         if (type === 'login') {
-          console.log('[OTP] sending login OTP to', phone);
-          const res = await sendLoginOtp(phone);
-          console.log('[OTP] login OTP response:', JSON.stringify(res));
+          logger.log('[OTP] sending login OTP to', maskedPhone);
+          await sendLoginOtp(phone);
+          logger.log('[OTP] login OTP request sent');
         }
 
         if (type === 'register') {
-          console.log('[OTP] sending register OTP to', phone);
-          const res = await sendRegisterOtp(phone);
-          console.log('[OTP] register OTP response:', JSON.stringify(res));
+          logger.log('[OTP] sending register OTP to', maskedPhone);
+          await sendRegisterOtp(phone);
+          logger.log('[OTP] register OTP request sent');
         }
       } catch (error) {
-        console.log('[OTP] Send OTP Error — raw:', error);
-        console.log('[OTP] error.message:', error?.message);
-        console.log(
+        logger.log('[OTP] Send OTP Error — raw:', error);
+        logger.log('[OTP] error.message:', error?.message);
+        logger.log(
           '[OTP] error.response:',
           JSON.stringify(error?.response?.data),
         );
@@ -152,7 +145,7 @@ const OtpScreen = () => {
         await RNOtpVerify.getOtp();
         RNOtpVerify.addListener(otpHandler);
       } catch (error) {
-        console.log('OTP Auto Fetch Error:', error);
+        logger.log('OTP Auto Fetch Error:', error);
       }
     };
 
@@ -211,10 +204,10 @@ const OtpScreen = () => {
     try {
       setLoading(true);
       const response = await verifyLoginOtp(phone, enteredOtp);
-      // console.log('Verify OTP Response:', response);
+      // logger.log('Verify OTP Response:', response);
 
       if (response?.success && response?.data) {
-        // console.log("mmmmmmm")
+        // logger.log("mmmmmmm")
         const { accessToken, refreshToken, custId } = response.data;
         await setTokens(accessToken, refreshToken);
 
@@ -240,7 +233,7 @@ const OtpScreen = () => {
         });
       }
     } catch (error) {
-      console.log('Verify OTP Error:', error);
+      logger.log('Verify OTP Error:', error);
       showStatus({
         type: 'error',
         title: 'Error',
@@ -252,7 +245,7 @@ const OtpScreen = () => {
   };
 
   const handleContinueRegister = async () => {
-    // console.log('enteredOtp', enteredOtp)
+    // logger.log('enteredOtp', enteredOtp)
     const enteredOtp = otp.join('');
     if (enteredOtp.length < 5) {
       showStatus({
@@ -266,7 +259,7 @@ const OtpScreen = () => {
     try {
       setLoading(true);
       const response = await verifyRegisterOtp(phone, enteredOtp);
-      // console.log('Verify OTP Response:', response);
+      // logger.log('Verify OTP Response:', response);
 
       if (response?.success && response?.data) {
         const registerToken = response.data.registerToken;
@@ -274,15 +267,15 @@ const OtpScreen = () => {
           registerToken,
           phone,
         });
-        // console.log('registerToken', registerToken)
-        // console.log('name', name)
-        // console.log('email', email)
-        // console.log('password', password)
-        // console.log('whatsAppNo', whatsAppNo)
-        // console.log('referCode', referCode)
-        // console.log('pincodeAreaId', pincodeAreaId)
+        // logger.log('registerToken', registerToken)
+        // logger.log('name', name)
+        // logger.log('email', email)
+        // logger.log('password', password)
+        // logger.log('whatsAppNo', whatsAppNo)
+        // logger.log('referCode', referCode)
+        // logger.log('pincodeAreaId', pincodeAreaId)
         // const registerResponse = await registerUser({ registerToken, name, email, password, whatsAppNo, referCode, pincodeAreaId, });
-        // console.log('Register User Response:', registerResponse);
+        // logger.log('Register User Response:', registerResponse);
         // navigation.reset({
         //     index: 0,
         //     routes: [{ name: 'MainTabs' }],
@@ -322,7 +315,7 @@ const OtpScreen = () => {
         });
       }
     } catch (error) {
-      console.log('Verify OTP Error:', error);
+      logger.log('Verify OTP Error:', error);
       showStatus({
         type: 'error',
         title: 'Error',
@@ -347,7 +340,7 @@ const OtpScreen = () => {
     try {
       setLoading(true);
       const response = await verifyForgotPwdOtp(phone, enteredOtp);
-      // console.log('Verify OTP Response:', response);
+      // logger.log('Verify OTP Response:', response);
 
       if (response?.success && response?.data) {
         // const { accessToken, refreshToken } = response.data;
@@ -370,7 +363,7 @@ const OtpScreen = () => {
         });
       }
     } catch (error) {
-      console.log('Verify OTP Error:', error);
+      logger.log('Verify OTP Error:', error);
       showStatus({
         type: 'error',
         title: 'Error',
@@ -403,7 +396,7 @@ const OtpScreen = () => {
       // surface the "Send OTP to Email" fallback after enough attempts.
       setResendCount(prev => prev + 1);
     } catch (error) {
-      console.log('Resend OTP Error:', error);
+      logger.log('Resend OTP Error:', error);
       showStatus({
         type: 'error',
         title: 'Error',
@@ -498,7 +491,7 @@ const OtpScreen = () => {
           resizeMode={FastImage.resizeMode.contain}
         />
       </View>
-      {/* {console.log('type', type)} */}
+      {/* {logger.log('type', type)} */}
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}

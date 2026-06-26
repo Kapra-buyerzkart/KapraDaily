@@ -1,21 +1,17 @@
-import React, { useState, useEffect, useCallback, useContext, useMemo } from 'react';
-import { getProductSuggestionsApi, searchProductsApi } from '../api/productService';
+import { useState, useEffect, useCallback, useContext, useMemo } from 'react';
 import { useDebounce } from './useDebounce';
 import { AppContext } from '../context/appContext';
 import { LoaderContext } from '../context/loaderContext';
+import useProductSuggestionsQuery from '../queries/useProductSuggestionsQuery';
+import useCategorySearchQuery from '../queries/useCategorySearchQuery';
 
 const useProductSearch = (initialPincodeId, initialCatId = null, filters = {}) => {
     const { profile } = useContext(AppContext);
     const [searchTerm, setSearchTerm] = useState('');
     const [catId, setCatId] = useState(initialCatId);
-    const [suggestions, setSuggestions] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [resultCount, setResultCount] = useState(0);
-    const [isGlobalFallback, setIsGlobalFallback] = useState(false);
+    const { showLoader } = useContext(LoaderContext);
 
     const activePincodeId = initialPincodeId || profile?.pincode;
-    const [error, setError] = useState(null);
-    const { showLoader } = useContext(LoaderContext);
 
     // Extract filter values with defaults
     const sortBy = filters.sortBy || 'relevance';
@@ -24,98 +20,46 @@ const useProductSearch = (initialPincodeId, initialCatId = null, filters = {}) =
 
     // Debounce the search term to avoid excessive API calls
     const debouncedSearchTerm = useDebounce(searchTerm, 500);
+    const isDebouncing = searchTerm.trim() !== debouncedSearchTerm.trim();
+    const trimmedTerm = debouncedSearchTerm.trim();
+    const isSearchingTerm = trimmedTerm.length > 0;
 
-    // Set loading to true as soon as the user starts typing
+    // USER typing -> ALWAYS Global Search (per user request to show products from other categories)
+    const suggestionsQuery = useProductSuggestionsQuery(trimmedTerm, activePincodeId);
+    // Browsing category (no search term) -> Category specific
+    const categoryQuery = useCategorySearchQuery(
+        isSearchingTerm ? null : catId,
+        activePincodeId,
+        sortBy,
+        priceMin,
+        priceMax,
+    );
+
+    const activeQuery = isSearchingTerm ? suggestionsQuery : categoryQuery;
+    const loading = isDebouncing || (activeQuery.isFetching && (isSearchingTerm || !!catId));
+    const error = activeQuery.error || null;
+
+    const isGlobalFallback = isSearchingTerm && !!catId;
+
+    // Mirror `loading` into the global ref-counted loader. The cleanup releases
+    // it whenever loading turns off OR the component unmounts mid-fetch, so the
+    // increment/decrement pair always stays balanced.
     useEffect(() => {
-        if (searchTerm.trim() !== debouncedSearchTerm.trim()) {
-            setLoading(true);
-        }
-    }, [searchTerm]);
-
-    useEffect(() => {
-        const fetchProducts = async () => {
-            const trimmedTerm = debouncedSearchTerm.trim();
-
-            // If neither search term nor catId is present, clear results
-            if (trimmedTerm.length === 0 && !catId) {
-                setSuggestions([]);
-                setResultCount(0);
-                setLoading(false);
-                return;
-            }
-
-            setLoading(true);
-            showLoader(true);
-            setError(null);
-
-            try {
-                let response;
-                const trimmedTerm = debouncedSearchTerm.trim();
-
-                if (trimmedTerm.length > 0) {
-                    // USER typing -> ALWAYS Global Search (per user request to show products from other categories)
-                    console.log('useProductSearch: Searching globally for:', trimmedTerm);
-                    response = await getProductSuggestionsApi(trimmedTerm, activePincodeId);
-
-                    if (response && response.success && Array.isArray(response.data)) {
-                        setSuggestions(response.data);
-                        setResultCount(response.data.length);
-                        // If we have a catId but searched globally, show the fallback notice in SearchScreen
-                        setIsGlobalFallback(!!catId);
-                    } else {
-                        setSuggestions([]);
-                        setResultCount(0);
-                        setIsGlobalFallback(false);
-                    }
-                } else if (catId) {
-                    // Browsing category (no search term) -> Category specific
-                    const payload = {
-                        pincodeAreaId: activePincodeId,
-                        prName: "",
-                        catId: parseInt(catId),
-                        priceMin: priceMin,
-                        priceMax: priceMax,
-                        filterValues: null,
-                        sortBy: sortBy,
-                        pageNumber: 1,
-                        pageSize: 50
-                    };
-                    console.log('useProductSearch: Browsing category:', catId);
-                    response = await searchProductsApi(payload);
-
-                    if (response && response.success && response.data && Array.isArray(response.data.items)) {
-                        setSuggestions(response.data.items);
-                        setResultCount(response.data.items.length);
-                        setIsGlobalFallback(false);
-                    } else {
-                        setSuggestions([]);
-                        setResultCount(0);
-                        setIsGlobalFallback(false);
-                    }
-                } else {
-                    // Neither search term nor catId
-                    setSuggestions([]);
-                    setResultCount(0);
-                    setIsGlobalFallback(false);
-                }
-            } catch (err) {
-                console.error('Error in useProductSearch:', err);
-                setError(err);
-                setSuggestions([]);
-                setResultCount(0);
-            } finally {
-                setLoading(false);
-                showLoader(false);
-            }
-        };
-
-        fetchProducts();
-    }, [debouncedSearchTerm, initialPincodeId, catId, sortBy, priceMin, priceMax]);
+        if (!loading) return;
+        showLoader(true);
+        return () => showLoader(false);
+    }, [loading, showLoader]);
 
     // Client-side sort for general search (no catId) since getProductSuggestionsApi may not support server-side sorting
     const sortedSuggestions = useMemo(() => {
+        const suggestions = isSearchingTerm
+            ? suggestionsQuery.data || []
+            : catId
+                ? categoryQuery.data || []
+                : [];
+
         // Only apply client-side sort when NOT using catId (server handles sort for catId-based search)
-        if (catId || sortBy === 'relevance') return suggestions;
+        if (!isSearchingTerm || sortBy === 'relevance') return suggestions;
 
         const sorted = [...suggestions];
         switch (sortBy) {
@@ -132,25 +76,23 @@ const useProductSearch = (initialPincodeId, initialCatId = null, filters = {}) =
             default:
                 return sorted;
         }
-    }, [suggestions, sortBy, catId]);
+    }, [suggestionsQuery.data, categoryQuery.data, catId, sortBy, isSearchingTerm]);
 
     // Client-side price filter for general search
     const filteredSuggestions = useMemo(() => {
-        if (catId) return sortedSuggestions; // Server handles filtering for catId
+        if (!isSearchingTerm) return sortedSuggestions; // Server handles filtering for catId
         if (priceMin === 0 && priceMax >= 5000) return sortedSuggestions;
 
         return sortedSuggestions.filter(item => {
             const price = item.sellingPrice || item.price || 0;
             return price >= priceMin && price <= priceMax;
         });
-    }, [sortedSuggestions, priceMin, priceMax, catId]);
+    }, [sortedSuggestions, priceMin, priceMax, isSearchingTerm]);
 
     // Function to clear search manually if needed
     const clearSearch = useCallback(() => {
         setSearchTerm('');
         setCatId(null);
-        setSuggestions([]);
-        setResultCount(0);
     }, []);
 
     return {

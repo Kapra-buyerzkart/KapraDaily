@@ -20,7 +20,7 @@ import { wp, hp } from '../../../utils/responsive';
 import RedeemSuccessModal, {
   preloadRedeemSuccessAssets,
 } from './RedeemSuccessModal';
-import RenderHtml from 'react-native-render-html';
+import SafeRenderHtml from '../../../components/SafeRenderHtml';
 import CONFIG from '../../../globals/config';
 import { getVoucherQuoteApi } from '../../../api/voucherService';
 
@@ -358,7 +358,7 @@ const UdenTicketModal = ({
                           style={styles.accordionContent}
                           nestedScrollEnabled
                         >
-                          <RenderHtml
+                          <SafeRenderHtml
                             contentWidth={width * 0.78}
                             source={{ html: voucher.shortDescription }}
                           />
@@ -399,7 +399,7 @@ const UdenTicketModal = ({
                           style={styles.accordionContent}
                           nestedScrollEnabled
                         >
-                          <RenderHtml
+                          <SafeRenderHtml
                             contentWidth={width * 0.78}
                             source={{ html: voucher.termsConditions }}
                           />

@@ -1,7 +1,12 @@
 import { post, get, deleteRequest } from './networkUtils';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getAccessToken } from './tokenService';
+import { getUserIdFromToken } from '../utils/jwt';
+import logger from '../utils/logger';
 
+// Resolves the current user's id from the stored profile or the auth token.
+// Returns null when it cannot be determined — callers must NOT fall back to a
+// hardcoded id (doing so previously caused requests to target another user's cart).
 const getUserId = async () => {
     try {
         const profileStr = await AsyncStorage.getItem('userProfile');
@@ -12,30 +17,14 @@ const getUserId = async () => {
             }
         }
         const token = await getAccessToken();
-        if (token) {
-            const base64Url = token.split('.')[1];
-            if (base64Url) {
-                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-                let decodedStr;
-                try {
-                    decodedStr = decodeURIComponent(escape(atob(base64)));
-                } catch (e) {
-                    if (token.includes('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzIiwicGhvbmUiOiI4MTM3OTU2NTc0')) {
-                        return 3;
-                    }
-                    console.warn('atob failed, user might need to login');
-                    return 3;
-                }
-                const decoded = JSON.parse(decodedStr);
-                if (decoded.sub) {
-                    return parseInt(decoded.sub);
-                }
-            }
+        const userIdFromToken = getUserIdFromToken(token);
+        if (userIdFromToken != null) {
+            return userIdFromToken;
         }
     } catch (error) {
-        console.error('Error getting userId:', error);
+        logger.error('Error getting userId:', error?.message);
     }
-    return 3;
+    return null;
 };
 
 const getPincodeAreaId = async () => {
@@ -55,7 +44,7 @@ const getPincodeAreaId = async () => {
             }
         }
     } catch (error) {
-        console.error('Error getting pincodeAreaId:', error);
+        logger.error('Error getting pincodeAreaId:', error?.message);
     }
     return null;
 };
@@ -152,8 +141,6 @@ export const removeBCoinApi = async (cartVersion, cartId) => {
     const payload = {
         ifMatchCartVersion: cartVersion
     };
-    console.log('wek32krlk4', payload);
-
     return post(`cart/${idToUse}/removebcoin`, payload);
 };
 
@@ -166,7 +153,7 @@ export const applyCouponApi = async (couponCode, cartVersion, pincodeAreaId, car
         pincodeAreaId: areaId,
         ifMatchCartVersion: cartVersion
     };
-    console.log('Applying Coupon Payload:', JSON.stringify(payload, null, 2));
+    logger.log('Applying coupon');
     return post(`cart/${idToUse}/applycoupon`, payload);
 };
 
@@ -196,7 +183,7 @@ export const applyGiftCardApi = async (giftCode, cartVersion, pincodeAreaId, car
         pincodeAreaId: areaId,
         ifMatchCartVersion: cartVersion
     };
-    console.log('Applying GiftCard Payload:', JSON.stringify(payload, null, 2));
+    logger.log('Applying gift card');
     return post(`cart/${idToUse}/applygiftcard`, payload);
 };
 

@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import logger from '../utils/logger';
 import { Platform } from 'react-native';
 import DeviceInfo from 'react-native-device-info';
 import { getProfile } from '../api';
@@ -7,6 +8,7 @@ import { getGeneralSettingsApi, getAppUpdateCheckApi } from '../api/userService'
 import { setLogoutHandler, resetNetworkState } from '../api/networkUtils';
 import * as NavigationService from '../api/NavigationService';
 import { oneSignalLogin, oneSignalLogout } from '../services/OneSignalService';
+import { queryClient } from '../queryClient';
 
 export const AppContext = createContext();
 
@@ -23,14 +25,14 @@ export const AppContextProvider = ({ children }) => {
   const checkForUpdates = useCallback(async () => {
     try {
       const currentVersion = DeviceInfo.getVersion();
-      console.log('currentVersion=======>', currentVersion);
+      logger.log('currentVersion=======>', currentVersion);
       const platform = Platform.OS.toUpperCase(); // ANDROID or IOS
 
       const response = await getAppUpdateCheckApi(currentVersion, platform);
 
       if (response && response.success && response.data) {
         const remoteVersion = response.data.versionCode || response.data.version;
-        console.log('remoteVersion=======>', remoteVersion);
+        logger.log('remoteVersion=======>', remoteVersion);
         if (!remoteVersion || !currentVersion) return;
 
         // Semver version comparison
@@ -57,7 +59,7 @@ export const AppContextProvider = ({ children }) => {
       }
     } catch (error) {
       // User said: "if error no need to show anything"
-      console.log('App update check failed (silent):', error);
+      logger.log('App update check failed (silent):', error);
     }
   }, []);
 
@@ -93,7 +95,7 @@ export const AppContextProvider = ({ children }) => {
         return settingsMap;
       }
     } catch (error) {
-      console.error('Error fetching general settings:', error);
+      logger.error('Error fetching general settings:', error);
     }
     return {};
   }, []);
@@ -125,12 +127,12 @@ export const AppContextProvider = ({ children }) => {
           if (JSON.stringify(prev) === JSON.stringify(mergedProfile)) return prev;
           return mergedProfile;
         });
-        console.log('profilee', mergedProfile);
+        logger.log('profilee', mergedProfile);
       } else {
         await loadProfileTwo(); // Fallback to guest profile if API response is not successful
       }
     } catch (error) {
-      console.log('Profile fetch error:', error);
+      logger.log('Profile fetch error:', error);
       await loadProfileTwo(); // Fallback to guest profile
     }
   }, [loadProfileTwo]);
@@ -197,7 +199,12 @@ export const AppContextProvider = ({ children }) => {
       // This removes: profile, pincodeAreaId, selectedAddressId,
       // manualOverride, manualRegion, manualAddress, ACCESS_TOKEN, REFRESH_TOKEN, etc.
       await AsyncStorage.clear();
-      console.log('🔒 [LOGOUT] AsyncStorage cleared (all location data, tokens, profile removed)');
+      logger.log('🔒 [LOGOUT] AsyncStorage cleared (all location data, tokens, profile removed)');
+
+      // Also clear the in-memory query cache so no still-mounted screen keeps
+      // serving the previous session's (e.g. wallet/dashboard) data between
+      // this clear and the navigation reset below.
+      queryClient.clear();
 
       // Reset in-memory location state so LocationFetchingNewScreen starts fresh
       setLocationNotFetched(false);
@@ -217,7 +224,7 @@ export const AppContextProvider = ({ children }) => {
       setProfile(freshProfile);
 
     } catch (error) {
-      console.log('Logout error:', error);
+      logger.log('Logout error:', error);
     }
   };
 
@@ -231,7 +238,7 @@ export const AppContextProvider = ({ children }) => {
    */
   useEffect(() => {
     if (profile?.custId) {
-      console.log('🔔 [SYNC] Registering OneSignal ExternalId:', profile.custId);
+      logger.log('🔔 [SYNC] Registering OneSignal ExternalId:', profile.custId);
       oneSignalLogin({
         externalId: String(profile.custId),
         tags: {

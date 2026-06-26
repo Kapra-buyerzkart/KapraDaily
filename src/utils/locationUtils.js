@@ -1,9 +1,10 @@
 import { Platform, PermissionsAndroid } from 'react-native';
 import Geocoder from 'react-native-geocoding';
 import Geolocation from '@react-native-community/geolocation';
+import { GOOGLE_MAPS_API_KEY } from '../globals/secrets';
 
 
-Geocoder.init('AIzaSyDhItv0zoWdQbDh-5jjKLAEjwRDDrFNc1Y');
+Geocoder.init(GOOGLE_MAPS_API_KEY);
 
 export const requestLocationPermission = async () => {
     if (Platform.OS === 'android') {
@@ -33,20 +34,27 @@ export const getCurrentLocation = () => {
                 try {
                     const { latitude, longitude } = position.coords;
                     const geo = await Geocoder.from(latitude, longitude);
-                    const data = geo.results[0];
+                    const data = geo?.results?.[0];
+
+                    if (!data) {
+                        reject('No address found for the current location');
+                        return;
+                    }
+
+                    const addressComponents = data.address_components || [];
 
                     const pincode =
-                        data.address_components.find(c =>
+                        addressComponents.find(c =>
                             c.types.includes('postal_code')
                         )?.long_name;
 
                     const locality =
-                        data.address_components.find(c =>
+                        addressComponents.find(c =>
                             c.types.includes('locality')
                         )?.long_name;
 
                     const area =
-                        data.address_components.find(c =>
+                        addressComponents.find(c =>
                             c.types.includes('sublocality')
                         )?.long_name;
 

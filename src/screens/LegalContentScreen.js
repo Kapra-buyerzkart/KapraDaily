@@ -5,8 +5,9 @@ import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-nat
 import { FONTS } from '../styles/typography'
 import { useNavigation, useRoute } from '@react-navigation/native'
 import AntDesign from 'react-native-vector-icons/AntDesign'
-import RenderHtml from 'react-native-render-html'
+import SafeRenderHtml from '../components/SafeRenderHtml'
 import { getGeneralSettingsApi } from '../api/userService'
+import logger from '../utils/logger'
 
 const { width } = Dimensions.get('window')
 
@@ -27,7 +28,7 @@ const LegalContentScreen = () => {
                 const item = items.find(i => i.stName === settingKey)
                 setContent(item?.stValue || '')
             } catch (error) {
-                console.error(`Failed to fetch ${settingKey}:`, error)
+                logger.error(`Failed to fetch ${settingKey}:`, error?.message)
                 setContent('')
             } finally {
                 setLoading(false)
@@ -53,7 +54,7 @@ const LegalContentScreen = () => {
             ) : (
                 <ScrollView contentContainerStyle={styles.container}>
                     {content ? (
-                        <RenderHtml
+                        <SafeRenderHtml
                             contentWidth={width - wp('10%')}
                             source={{ html: content }}
                             baseStyle={styles.baseHtml}

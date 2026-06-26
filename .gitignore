@@ -76,3 +76,12 @@ yarn-error.log
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+# Secrets — must never be committed. Copy the matching *.example to set up locally.
+.env*
+!.env.example
+src/globals/secrets.js
+# NOTE: Firebase config (android/app/google-services.json, ios/GoogleService-Info.plist)
+# is deliberately kept tracked — those keys are client identifiers shipped in every app
+# binary and are protected by GCP API-key restrictions + Firebase Security Rules, not by
+# secrecy. Lock those down provider-side instead of gitignoring the files.

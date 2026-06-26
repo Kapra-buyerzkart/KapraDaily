@@ -8,8 +8,9 @@ import Geocoder from 'react-native-geocoding';
 import Geolocation from '@react-native-community/geolocation';
 import FastImage from 'react-native-fast-image';
 import { useNavigation } from '@react-navigation/native';
+import { GOOGLE_MAPS_API_KEY } from '../globals/secrets';
 
-Geocoder.init('AIzaSyDhItv0zoWdQbDh-5jjKLAEjwRDDrFNc1Y');
+Geocoder.init(GOOGLE_MAPS_API_KEY);
 
 export default function LocationFetchingScreen() {
 

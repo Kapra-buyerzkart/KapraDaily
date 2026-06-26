@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet, TouchableOpacity, Image, Platform, FlatList, BackHandler } from 'react-native'
 import React, { useContext, useState, useCallback } from 'react'
+import logger from '../utils/logger';
 import { AppContext } from '../context/appContext'
 import StoreUnavailable from '../components/StoreUnavailable'
 import LocationModal from '../components/LocationModal'
@@ -24,7 +25,7 @@ const MyOrdersScreen = () => {
         try {
             showLoader(true);
             const response = await getMyOrdersApi();
-            console.log('My Orders Response:', JSON.stringify(response, null, 2));
+            logger.log('My Orders Response:', JSON.stringify(response, null, 2));
             // Assuming response structure: { success: true, data: { items: [...] } } or similar
             // User did not provide response example for list, but usually consistent.
             if (response && response.success && response.data && response.data.items) {
@@ -33,7 +34,7 @@ const MyOrdersScreen = () => {
                 setOrders(response.data);
             }
         } catch (error) {
-            console.error('Error fetching orders:', error);
+            logger.error('Error fetching orders:', error);
         } finally {
             setLoading(false);
             showLoader(false);
