@@ -14,6 +14,7 @@ import {
   Alert,
   Linking,
   AppState,
+  Image,
   ImageBackground,
 } from 'react-native';
 import Geolocation from '@react-native-community/geolocation';
@@ -40,10 +41,9 @@ import {
 import DeviceInfo from 'react-native-device-info';
 import Toast from 'react-native-simple-toast';
 import { useFocusEffect } from '@react-navigation/native';
-import { Image } from 'react-native';
 import AuthButton from '../components/AuthButton';
-import FastImage from 'react-native-fast-image';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import secureStore from '../utils/secureStore';
 import { getAddressListApi } from '../api/addressService';
 const normalizeString = str => {
   if (!str) return '';
@@ -128,12 +128,12 @@ const LocationFetchingNewScreen = ({ navigation }) => {
       // Single source of truth for "do we already have a location?":
       // `pincodeAreaId` is written by every location-picking path in the app
       // (editPincode in appContext.js, used by both LocationModal and this
-      // screen's own flows), and is wiped by logout()'s AsyncStorage.clear().
+      // screen's own flows), and is wiped by logout()'s secureStore clear.
       // `manualOverride` is kept as an additional check to cover the brief
       // window during an in-progress manual search (see onPress handler
       // below) before editPincode has had a chance to persist the new pick.
       const savedOverride = await AsyncStorage.getItem('manualOverride');
-      const storedPincodeAreaId = await AsyncStorage.getItem('pincodeAreaId');
+      const storedPincodeAreaId = await secureStore.getItem('pincodeAreaId');
       if (savedOverride === 'true' || storedPincodeAreaId) {
         setManualOverride(true);
         const savedRegion = await AsyncStorage.getItem('manualRegion');
@@ -247,7 +247,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
       async nextState => {
         if (nextState === 'active') {
           const savedOverride = await AsyncStorage.getItem('manualOverride');
-          const storedPincodeAreaId = await AsyncStorage.getItem('pincodeAreaId');
+          const storedPincodeAreaId = await secureStore.getItem('pincodeAreaId');
           if (savedOverride === 'true' || storedPincodeAreaId) {
             return; // Skip auto-fetching: a location is already persisted/chosen
           }
@@ -610,7 +610,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
             matchingAddress.addressId ||
             matchingAddress.id;
           if (addressId) {
-            await AsyncStorage.setItem('selectedAddressId', String(addressId));
+            await secureStore.setItem('selectedAddressId', String(addressId));
           }
           await editPincode({
             pincodeAreaId: matchingAddress.pincodeAreaId,
@@ -744,10 +744,10 @@ const LocationFetchingNewScreen = ({ navigation }) => {
   if (!addressComponent) {
     return (
       <SafeAreaView style={styles.loaderContainer}>
-        <FastImage
+        <Image
           source={require('../assets/gifs/location-fetching.gif')}
           style={styles.loaderGif}
-          resizeMode={FastImage.resizeMode.cover}
+          resizeMode="cover"
         />
       </SafeAreaView>
     );

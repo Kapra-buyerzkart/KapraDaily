@@ -8,7 +8,7 @@ import React, {
   useRef,
   useEffect,
 } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import secureStore from '../utils/secureStore';
 import { AppContext } from './appContext';
 import Toast from 'react-native-simple-toast';
 import {
@@ -153,7 +153,7 @@ export const CartProvider = ({ children }) => {
         : response?.data?.items || response?.data || [];
 
       if (addressList.length > 0) {
-        const storedSelectedId = await AsyncStorage.getItem(
+        const storedSelectedId = await secureStore.getItem(
           'selectedAddressId',
         );
 
@@ -239,7 +239,7 @@ export const CartProvider = ({ children }) => {
       }
 
       try {
-        await AsyncStorage.setItem('selectedAddressId', String(addressId));
+        await secureStore.setItem('selectedAddressId', String(addressId));
       } catch (e) {
         logger.log('Error saving selectedAddressId', e);
       }
@@ -388,7 +388,7 @@ export const CartProvider = ({ children }) => {
 
   const clearSelectedAddress = useCallback(async () => {
     try {
-      await AsyncStorage.removeItem('selectedAddressId');
+      await secureStore.removeItem('selectedAddressId');
     } catch (e) {
       logger.log('Error clearing selectedAddressId', e);
     }
@@ -854,7 +854,7 @@ export const CartProvider = ({ children }) => {
         if (newItems.length === 0) {
           // If cart is emptied manually, also void the selected address just like in clearCart
           try {
-            AsyncStorage.removeItem('selectedAddressId');
+            secureStore.removeItem('selectedAddressId');
             setAddresses(prev => prev.map(a => ({ ...a, selected: false })));
           } catch (e) {
             logger.log('Error removing selectedAddressId', e);
@@ -994,7 +994,7 @@ export const CartProvider = ({ children }) => {
 
       // Also clear the persistently selected address on checkout completion
       try {
-        await AsyncStorage.removeItem('selectedAddressId');
+        await secureStore.removeItem('selectedAddressId');
         setAddresses(prev => prev.map(item => ({ ...item, selected: false })));
       } catch (clearErr) {
         logger.log('Error clearing selectedAddressId', clearErr);

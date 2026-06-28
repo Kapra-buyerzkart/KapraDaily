@@ -1,9 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import logger from '../utils/logger';
+import secureStore from '../utils/secureStore';
 import { Platform } from 'react-native';
 import DeviceInfo from 'react-native-device-info';
 import { getProfile } from '../api';
+import { clearTokens } from '../api/tokenService';
 import { getGeneralSettingsApi, getAppUpdateCheckApi } from '../api/userService';
 import { setLogoutHandler, resetNetworkState } from '../api/networkUtils';
 import * as NavigationService from '../api/NavigationService';
@@ -106,7 +108,7 @@ export const AppContextProvider = ({ children }) => {
       const response = await getProfile();
 
       if (response?.success && response?.data) {
-        const storedProfile = await AsyncStorage.getItem('profile');
+        const storedProfile = await secureStore.getItem('profile');
         const localProfile = storedProfile ? JSON.parse(storedProfile) : {};
 
         const mergedProfile = {
@@ -119,9 +121,9 @@ export const AppContextProvider = ({ children }) => {
           mergedProfile.pincode = response.data.pincodeAreaId;
         }
 
-        await AsyncStorage.setItem('profile', JSON.stringify(mergedProfile));
+        await secureStore.setItem('profile', JSON.stringify(mergedProfile));
         if (mergedProfile.pincode) {
-          await AsyncStorage.setItem('pincodeAreaId', mergedProfile.pincode.toString());
+          await secureStore.setItem('pincodeAreaId', mergedProfile.pincode.toString());
         }
         setProfile(prev => {
           if (JSON.stringify(prev) === JSON.stringify(mergedProfile)) return prev;
@@ -139,8 +141,8 @@ export const AppContextProvider = ({ children }) => {
 
   /* ---------------- LOAD / CREATE GUEST PROFILE ---------------- */
   const loadProfileTwo = useCallback(async () => {
-    const storedProfile = await AsyncStorage.getItem('profile');
-    const storedPincodeAreaId = await AsyncStorage.getItem('pincodeAreaId');
+    const storedProfile = await secureStore.getItem('profile');
+    const storedPincodeAreaId = await secureStore.getItem('pincodeAreaId');
 
     const defaultProfile = {
       guestId: Math.floor(Math.random() * 9000000000) + 1000000000,
@@ -152,9 +154,9 @@ export const AppContextProvider = ({ children }) => {
       ? { ...defaultProfile, ...JSON.parse(storedProfile) }
       : defaultProfile;
 
-    await AsyncStorage.setItem('profile', JSON.stringify(mergedProfile));
+    await secureStore.setItem('profile', JSON.stringify(mergedProfile));
     if (mergedProfile.pincode) {
-      await AsyncStorage.setItem('pincodeAreaId', mergedProfile.pincode.toString());
+      await secureStore.setItem('pincodeAreaId', mergedProfile.pincode.toString());
     }
     setProfile(prev => {
       if (JSON.stringify(prev) === JSON.stringify(mergedProfile)) return prev;
@@ -164,7 +166,7 @@ export const AppContextProvider = ({ children }) => {
 
   /* ---------------- EDIT PINCODE (SAFE MERGE) ---------------- */
   const editPincode = useCallback(async (item) => {
-    const storedProfile = await AsyncStorage.getItem('profile');
+    const storedProfile = await secureStore.getItem('profile');
     const existingProfile = storedProfile ? JSON.parse(storedProfile) : {};
 
     const updatedProfile = {
@@ -173,9 +175,9 @@ export const AppContextProvider = ({ children }) => {
       pinAddress: item?.areaName ?? existingProfile.pinAddress,
     };
 
-    await AsyncStorage.setItem('profile', JSON.stringify(updatedProfile));
+    await secureStore.setItem('profile', JSON.stringify(updatedProfile));
     if (item?.pincodeAreaId) {
-      await AsyncStorage.setItem('pincodeAreaId', item.pincodeAreaId.toString());
+      await secureStore.setItem('pincodeAreaId', item.pincodeAreaId.toString());
     }
     setProfile(updatedProfile);
   }, []);
@@ -194,12 +196,16 @@ export const AppContextProvider = ({ children }) => {
       
       // Clear network state (queues, isRefreshing flags)
       resetNetworkState();
-      
-      // Clear ALL data from local storage
-      // This removes: profile, pincodeAreaId, selectedAddressId,
-      // manualOverride, manualRegion, manualAddress, ACCESS_TOKEN, REFRESH_TOKEN, etc.
+
+      // Tokens, profile, and selectedAddressId live in secureStore (Keychain),
+      // not AsyncStorage, so they need an explicit clear.
+      await clearTokens();
+      await secureStore.multiRemove(['profile', 'pincodeAreaId', 'selectedAddressId']);
+
+      // Clear remaining (non-sensitive) local storage: manualOverride,
+      // manualRegion, manualAddress, etc.
       await AsyncStorage.clear();
-      logger.log('🔒 [LOGOUT] AsyncStorage cleared (all location data, tokens, profile removed)');
+      logger.log('🔒 [LOGOUT] secureStore + AsyncStorage cleared (tokens, profile, location data removed)');
 
       // Also clear the in-memory query cache so no still-mounted screen keeps
       // serving the previous session's (e.g. wallet/dashboard) data between
@@ -220,7 +226,7 @@ export const AppContextProvider = ({ children }) => {
         guestId: Math.floor(Math.random() * 9000000000) + 1000000000,
       };
 
-      await AsyncStorage.setItem('profile', JSON.stringify(freshProfile));
+      await secureStore.setItem('profile', JSON.stringify(freshProfile));
       setProfile(freshProfile);
 
     } catch (error) {

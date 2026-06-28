@@ -7,8 +7,9 @@ import {
   TouchableOpacity,
   Linking,
   Platform,
+  Image,
+  ImageBackground,
 } from 'react-native';
-import FastImage from 'react-native-fast-image';
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
@@ -97,9 +98,9 @@ const AuthSuccessScreen = ({ navigation }) => {
 
   return (
     // <View style={styles.container}>
-    <FastImage
+    <ImageBackground
       source={require('../assets/images/splash/backgroundbg.png')}
-      resizeMode={FastImage.resizeMode.cover}
+      resizeMode="cover"
       style={styles.container}
     >
       <ScrollView
@@ -108,10 +109,10 @@ const AuthSuccessScreen = ({ navigation }) => {
       >
         {/* Logo Section */}
         <View style={styles.logoContainer}>
-          <FastImage
+          <Image
             source={require('../assets/images/splash/header.png')}
             style={styles.logo}
-            resizeMode={FastImage.resizeMode.contain}
+            resizeMode="contain"
           />
         </View>
 
@@ -119,10 +120,10 @@ const AuthSuccessScreen = ({ navigation }) => {
         <View style={styles.cardsContainer}>
           {/* 20 minss deal - Large Card (Kapra) */}
           <TouchableOpacity activeOpacity={0.9} onPress={handleKapra}>
-            <FastImage
+            <Image
               source={require('../assets/images/splash/udendeal.png')}
               style={styles.largeCard}
-              resizeMode={FastImage.resizeMode.contain}
+              resizeMode="contain"
             />
           </TouchableOpacity>
 
@@ -131,28 +132,28 @@ const AuthSuccessScreen = ({ navigation }) => {
             activeOpacity={0.9}
             onPress={handleTicketCollection}
           >
-            <FastImage
+            <Image
               source={require('../assets/images/splash/Frame 1216249942 1.png')}
               style={styles.largeCard}
-              resizeMode={FastImage.resizeMode.contain}
+              resizeMode="contain"
             />
           </TouchableOpacity>
           {/* Small Cards Row */}
           <View style={styles.row}>
             {/* D2C */}
             <TouchableOpacity activeOpacity={0.9} onPress={handleD2c}>
-              <FastImage
+              <Image
                 source={require('../assets/images/splash/Frame 1216249941 1.png')}
                 style={styles.smallCard}
-                resizeMode={FastImage.resizeMode.contain}
+                resizeMode="contain"
               />
             </TouchableOpacity>
             {/* 48 Hrs Deal */}
             <TouchableOpacity activeOpacity={0.9} onPress={handleKshope}>
-              <FastImage
+              <Image
                 source={require('../assets/images/splash/Frame 1216249939 1.png')}
                 style={styles.smallCard}
-                resizeMode={FastImage.resizeMode.contain}
+                resizeMode="contain"
               />
             </TouchableOpacity>
           </View>
@@ -173,7 +174,7 @@ const AuthSuccessScreen = ({ navigation }) => {
         visible={isComingSoonVisible}
         onClose={() => setIsComingSoonVisible(false)}
       />
-    </FastImage>
+    </ImageBackground>
     // </View>
   );
 };

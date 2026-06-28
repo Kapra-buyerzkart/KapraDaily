@@ -1,7 +1,6 @@
 // AnimatedSplash.js
 import React, { useEffect } from 'react';
 import { View, Image, StyleSheet } from 'react-native';
-import FastImage from 'react-native-fast-image';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 
 const SplashScreen = ({ navigation }) => {
@@ -15,10 +14,10 @@ const SplashScreen = ({ navigation }) => {
 
     return (
         <View style={styles.container}>
-            <FastImage
+            <Image
                 source={require('../assets/images/splash/splash.png')}
                 style={styles.gif}
-                resizeMode={FastImage.resizeMode.contain}
+                resizeMode="contain"
             />
         </View>
     );

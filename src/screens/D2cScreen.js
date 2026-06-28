@@ -1,7 +1,13 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Image,
+  ImageBackground,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import FastImage from 'react-native-fast-image';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import {
   widthPercentageToDP as wp,
@@ -20,9 +26,9 @@ const D2cScreen = ({ navigation }) => {
   const [isComingSoonVisible, setIsComingSoonVisible] = useState(false);
 
   return (
-    <FastImage
+    <ImageBackground
       source={require('../assets/d2c/d2cbg.png')}
-      resizeMode={FastImage.resizeMode.cover}
+      resizeMode="cover"
       style={styles.container}
     >
       <TouchableOpacity
@@ -40,10 +46,10 @@ const D2cScreen = ({ navigation }) => {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.titleContainer}>
-          <FastImage
+          <Image
             source={require('../assets/images/modal/D2C.png')}
             style={styles.logo}
-            resizeMode={FastImage.resizeMode.contain}
+            resizeMode="contain"
           />
         </View>
 
@@ -53,10 +59,10 @@ const D2cScreen = ({ navigation }) => {
             activeOpacity={0.9}
             onPress={() => setIsComingSoonVisible(true)}
           >
-            <FastImage
+            <Image
               source={tile}
               style={styles.tile}
-              resizeMode={FastImage.resizeMode.contain}
+              resizeMode="contain"
             />
           </TouchableOpacity>
         ))}
@@ -66,7 +72,7 @@ const D2cScreen = ({ navigation }) => {
         visible={isComingSoonVisible}
         onClose={() => setIsComingSoonVisible(false)}
       />
-    </FastImage>
+    </ImageBackground>
   );
 };
 

@@ -1,6 +1,6 @@
 import React, { createContext, useState, useContext, useCallback, useMemo, useRef, useEffect } from 'react';
 import { addToWishlistApi, removeFromWishlistApi, getWishlistApi } from '../api/wishlistService';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import secureStore from '../utils/secureStore';
 
 export const WishlistContext = createContext();
 
@@ -25,7 +25,7 @@ export const WishlistProvider = ({ children }) => {
         setIsLoading(true);
         const promise = (async () => {
             try {
-                const storedPincodeAreaId = await AsyncStorage.getItem('pincodeAreaId');
+                const storedPincodeAreaId = await secureStore.getItem('pincodeAreaId');
                 const areaId = storedPincodeAreaId ? parseInt(storedPincodeAreaId) : null;
                 const response = await getWishlistApi(areaId);
                 if (response && response.data && response.data.items) {

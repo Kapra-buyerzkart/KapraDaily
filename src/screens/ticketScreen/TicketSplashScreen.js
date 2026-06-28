@@ -1,6 +1,5 @@
 import React from 'react';
-import { View, Animated, Dimensions, StatusBar } from 'react-native';
-import FastImage from 'react-native-fast-image';
+import { View, Image, Animated, Dimensions, StatusBar } from 'react-native';
 import { splashStyles as styles } from './styles';
 import PulsingDot from './components/PulsingDot';
 import GradientBackground from './components/GradientBackground';
@@ -56,10 +55,10 @@ const TicketSplashScreen = ({ navigation }) => {
             },
           ]}
         >
-          <FastImage
+          <Image
             source={require('../../assets/images/movieTicket/udendeallanding.png')}
             style={styles.logo}
-            resizeMode={FastImage.resizeMode.contain}
+            resizeMode="contain"
           />
         </Animated.View>
         {/* 

@@ -2,8 +2,8 @@ import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   Image,
+  StyleSheet,
   TouchableOpacity,
   Platform,
 } from 'react-native';
@@ -72,16 +72,19 @@ const TokenProductCard = ({
 
   const imageSource = useMemo(() => {
     const img =
-      item?.featuredImage || item?.image || item?.img || item?.imageUrl;
+      item?.featuredImage ||
+      item?.productImage ||
+      item?.image ||
+      item?.img ||
+      item?.imageUrl;
 
     if (!img || imageError) {
       return require('../assets/images/noimage.png');
     }
 
     if (typeof img === 'string') {
-      if (img.startsWith('http')) return { uri: img };
-
-      return { uri: `${CONFIG.image_base_url}${img}` };
+      const uri = img.startsWith('http') ? img : `${CONFIG.image_base_url}${img}`;
+      return { uri };
     }
 
     return img;

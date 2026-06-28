@@ -1,5 +1,6 @@
 import { post, get, deleteRequest } from './networkUtils';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import secureStore from '../utils/secureStore';
 import { getAccessToken } from './tokenService';
 import { getUserIdFromToken } from '../utils/jwt';
 import logger from '../utils/logger';
@@ -29,11 +30,11 @@ const getUserId = async () => {
 
 const getPincodeAreaId = async () => {
     try {
-        const pincodeAreaId = await AsyncStorage.getItem('pincodeAreaId');
+        const pincodeAreaId = await secureStore.getItem('pincodeAreaId');
         if (pincodeAreaId) {
             return parseInt(pincodeAreaId);
         }
-        const profileStr = await AsyncStorage.getItem('profile');
+        const profileStr = await secureStore.getItem('profile');
         if (profileStr) {
             const profile = JSON.parse(profileStr);
             if (profile.pincode) {

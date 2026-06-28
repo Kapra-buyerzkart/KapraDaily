@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import secureStore from '../utils/secureStore';
 import { getCategoriesApi } from '../api/categoryService';
 import { searchProductsApi } from '../api/productService';
 import { AppContext } from '../context/appContext';
@@ -161,7 +161,7 @@ const useCategoriesData = (catId, debouncedSearchText, filters) => {
   useEffect(() => {
     const initializeLocationAndSettings = async () => {
       try {
-        const storedPincodeAreaId = await AsyncStorage.getItem('pincodeAreaId');
+        const storedPincodeAreaId = await secureStore.getItem('pincodeAreaId');
         setPincodeAreaId(
           storedPincodeAreaId
             ? parseInt(storedPincodeAreaId)

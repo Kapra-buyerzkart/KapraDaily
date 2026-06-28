@@ -7,7 +7,7 @@ import { FONTS } from '../styles/typography'
 import { useNavigation, useRoute } from '@react-navigation/native'
 import { getAreasByPincode, registerUser, sendRegisterOtp } from '../api'
 import { useCart } from '../context/CartContext'
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import secureStore from '../utils/secureStore';
 import { OneSignal } from 'react-native-onesignal';
 import { setTokens } from '../api/tokenService';
 
@@ -18,7 +18,7 @@ const PINCODE_AREA_MAP = {
 
 const mergeCustomerIdIntoProfile = async (custId) => {
     // logger.log('????????', custId)
-    const storedProfile = await AsyncStorage.getItem('profile');
+    const storedProfile = await secureStore.getItem('profile');
     const existingProfile = storedProfile ? JSON.parse(storedProfile) : {};
 
     const updatedProfile = {
@@ -28,7 +28,7 @@ const mergeCustomerIdIntoProfile = async (custId) => {
 
     // logger.log('updatedProfile', updatedProfile)
 
-    await AsyncStorage.setItem('profile', JSON.stringify(updatedProfile));
+    await secureStore.setItem('profile', JSON.stringify(updatedProfile));
 };
 
 const RegistrationScreen = () => {

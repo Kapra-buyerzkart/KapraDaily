@@ -23,7 +23,7 @@ import Geolocation from '@react-native-community/geolocation'
 import CustomLoader from '../components/CustomLoader'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import { AppContext } from '../context/appContext'
-import AsyncStorage from '@react-native-async-storage/async-storage'
+import secureStore from '../utils/secureStore'
 
 // Height of the map area — pin is centred on this
 const MAP_HEIGHT = hp('45%')
@@ -277,7 +277,7 @@ const AddLocationScreen = () => {
                 // Persist the selected address ID so other screens can use it
                 const savedAddressId = response?.data?.custAddressId || response?.data?.addressId || response?.data?.id
                 if (savedAddressId) {
-                    await AsyncStorage.setItem('selectedAddressId', String(savedAddressId))
+                    await secureStore.setItem('selectedAddressId', String(savedAddressId))
                 }
 
                 await refreshAddresses()

@@ -22,7 +22,7 @@ import {
 } from 'react-native-responsive-screen';
 import { FONTS } from '../styles/typography';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import secureStore from '../utils/secureStore';
 import { useCart } from '../context/CartContext';
 import {
   verifyLoginOtp,
@@ -36,7 +36,6 @@ import {
 import RNOtpVerify from 'react-native-otp-verify';
 import { AppContext } from '../context/appContext';
 import { OneSignal } from 'react-native-onesignal';
-import FastImage from 'react-native-fast-image';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import HelpSupportModal from '../components/HelpSupportModal';
 import EmailOtpBottomSheet from '../components/EmailOtpBottomSheet';
@@ -48,7 +47,7 @@ const EMAIL_OTP_FALLBACK_RESEND_THRESHOLD = 1;
 
 const mergeCustomerIdIntoProfile = async custId => {
   // logger.log('????????', custId)
-  const storedProfile = await AsyncStorage.getItem('profile');
+  const storedProfile = await secureStore.getItem('profile');
   const existingProfile = storedProfile ? JSON.parse(storedProfile) : {};
 
   const updatedProfile = {
@@ -58,7 +57,7 @@ const mergeCustomerIdIntoProfile = async custId => {
 
   // logger.log('updatedProfile', updatedProfile)
 
-  await AsyncStorage.setItem('profile', JSON.stringify(updatedProfile));
+  await secureStore.setItem('profile', JSON.stringify(updatedProfile));
 };
 
 const OtpScreen = () => {
@@ -460,35 +459,35 @@ const OtpScreen = () => {
           OTP, so the next screen renders from cache instead of decoding
           multi-MB PNGs on mount. Hidden + non-interactive. */}
       <View style={styles.imagePreloader} pointerEvents="none">
-        <FastImage
+        <Image
           source={require('../assets/images/splash/backgroundbg.png')}
           style={styles.preloadBg}
-          resizeMode={FastImage.resizeMode.cover}
+          resizeMode="cover"
         />
-        <FastImage
+        <Image
           source={require('../assets/images/splash/header.png')}
           style={styles.preloadLogo}
-          resizeMode={FastImage.resizeMode.contain}
+          resizeMode="contain"
         />
-        <FastImage
+        <Image
           source={require('../assets/images/splash/udendeal.png')}
           style={styles.preloadLarge}
-          resizeMode={FastImage.resizeMode.contain}
+          resizeMode="contain"
         />
-        <FastImage
+        <Image
           source={require('../assets/images/splash/48hrs.png')}
           style={styles.preloadLarge}
-          resizeMode={FastImage.resizeMode.contain}
+          resizeMode="contain"
         />
-        <FastImage
+        <Image
           source={require('../assets/images/splash/ticket.png')}
           style={styles.preloadSmall}
-          resizeMode={FastImage.resizeMode.contain}
+          resizeMode="contain"
         />
-        <FastImage
+        <Image
           source={require('../assets/images/splash/d2c.png')}
           style={styles.preloadSmall}
-          resizeMode={FastImage.resizeMode.contain}
+          resizeMode="contain"
         />
       </View>
       {/* {logger.log('type', type)} */}

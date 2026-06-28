@@ -6,7 +6,6 @@ import { FONTS } from '../styles/typography';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import Geocoder from 'react-native-geocoding';
 import Geolocation from '@react-native-community/geolocation';
-import FastImage from 'react-native-fast-image';
 import { useNavigation } from '@react-navigation/native';
 import { GOOGLE_MAPS_API_KEY } from '../globals/secrets';
 
@@ -112,10 +111,10 @@ export default function LocationFetchingScreen() {
     if (loading) {
         return (
             <SafeAreaView style={styles.loaderContainer}>
-                <FastImage
+                <Image
                     source={require('../assets/gifs/location-fetching.gif')}
                     style={styles.loaderGif}
-                    resizeMode={FastImage.resizeMode.contain}
+                    resizeMode="contain"
                 />
             </SafeAreaView>
         );

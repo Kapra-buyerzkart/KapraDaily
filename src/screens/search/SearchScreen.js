@@ -23,7 +23,7 @@ import {
 } from 'react-native-responsive-screen';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import useProductSearch from '../../hooks/useProductSearch';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import secureStore from '../../utils/secureStore';
 import { AppContext } from '../../context/appContext';
 import TokenProductCard from '../../components/TokenProductCard';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -73,7 +73,7 @@ const SearchScreen = () => {
 
   useEffect(() => {
     const fetchPincode = async () => {
-      const stored = await AsyncStorage.getItem('pincodeAreaId');
+      const stored = await secureStore.getItem('pincodeAreaId');
       if (stored) {
         setCurrentPincodeId(parseInt(stored, 10));
       } else if (profile?.pincode) {
@@ -273,6 +273,10 @@ const SearchScreen = () => {
             onScroll={scrollHandler}
             scrollEventThrottle={16}
             showsVerticalScrollIndicator={false}
+            initialNumToRender={9}
+            maxToRenderPerBatch={9}
+            windowSize={5}
+            removeClippedSubviews={Platform.OS === 'android'}
             ListHeaderComponent={
               <RecentSearches
                 searchTerm={searchTerm}

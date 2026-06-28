@@ -1,9 +1,16 @@
 import { useState, useEffect, useCallback, useContext, useMemo } from 'react';
+import { Image } from 'react-native';
 import { useDebounce } from './useDebounce';
 import { AppContext } from '../context/appContext';
 import { LoaderContext } from '../context/loaderContext';
 import useProductSuggestionsQuery from '../queries/useProductSuggestionsQuery';
 import useCategorySearchQuery from '../queries/useCategorySearchQuery';
+import { getProductImageUri } from '../utils/imageUrl';
+
+// First screen of results plus a small buffer beyond the FlatList's render
+// window — enough to make scrolling feel instant without competing for
+// bandwidth with images that are still visible.
+const PREFETCH_LOOKAHEAD = 15;
 
 const useProductSearch = (initialPincodeId, initialCatId = null, filters = {}) => {
     const { profile } = useContext(AppContext);
@@ -88,6 +95,17 @@ const useProductSearch = (initialPincodeId, initialCatId = null, filters = {}) =
             return price >= priceMin && price <= priceMax;
         });
     }, [sortedSuggestions, priceMin, priceMax, isSearchingTerm]);
+
+    // Warm the image cache for the upcoming results before the user scrolls
+    // to them, so the rows that mount as they scroll are already cached.
+    useEffect(() => {
+        const uris = filteredSuggestions
+            .slice(0, PREFETCH_LOOKAHEAD)
+            .map(getProductImageUri)
+            .filter(Boolean);
+
+        uris.forEach(uri => Image.prefetch(uri));
+    }, [filteredSuggestions]);
 
     // Function to clear search manually if needed
     const clearSearch = useCallback(() => {

@@ -24,7 +24,7 @@ import LocationModal from '../components/LocationModal';
 import { AppContext } from '../context/appContext';
 import { useContext, useEffect } from 'react';
 import useProductSearch from '../hooks/useProductSearch';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import secureStore from '../utils/secureStore';
 import { ActivityIndicator } from 'react-native';
 
 const ProductListScreen = () => {
@@ -43,7 +43,7 @@ const ProductListScreen = () => {
 
   useEffect(() => {
     const fetchPincode = async () => {
-      const stored = await AsyncStorage.getItem('pincodeAreaId');
+      const stored = await secureStore.getItem('pincodeAreaId');
       if (stored) {
         setPincodeAreaId(parseInt(stored));
       } else if (profile?.pincode) {

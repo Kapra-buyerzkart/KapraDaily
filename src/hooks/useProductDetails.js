@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext } from 'react';
 import { getProductDetails, getRelatedProductsApi } from '../api/productService';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import secureStore from '../utils/secureStore';
 import { getPincodeAreaId } from '../api/pincodeService';
 import CONFIG from '../globals/config';
 import { LoaderContext } from '../context/loaderContext';
@@ -34,7 +34,7 @@ export const useProductDetails = (productId, initialProduct = null) => {
 
                     let currentPincodeId = pincodeAreaId || profile?.pincode;
                     if (!currentPincodeId) {
-                        const stored = await AsyncStorage.getItem('pincodeAreaId');
+                        const stored = await secureStore.getItem('pincodeAreaId');
                         if (stored) {
                             currentPincodeId = parseInt(stored);
                             setPincodeAreaId(currentPincodeId);

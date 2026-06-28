@@ -1,5 +1,6 @@
 import { useState, useEffect, useContext, useCallback, useMemo } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import secureStore from '../utils/secureStore';
 import { getHomepageData } from '../api/homeService';
 import CONFIG from '../globals/config';
 import { useWishlist } from '../context/WishlistContext';
@@ -53,7 +54,7 @@ const useHomeData = () => {
             }
 
             const [storedPincodeAreaId, storedLocality, storedArea] = await Promise.all([
-                AsyncStorage.getItem('pincodeAreaId'),
+                secureStore.getItem('pincodeAreaId'),
                 AsyncStorage.getItem('locality'),
                 AsyncStorage.getItem('area')
             ]);

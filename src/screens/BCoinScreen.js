@@ -267,9 +267,6 @@ const BCoinScreen = () => {
           </TouchableOpacity>
           <Text style={styles.headerText}>UD-coin and UD-token</Text>
         </View>
-
-        {/* <Image style={styles.imageStyle} source={require('../assets/images/bcoin_header_image_two.png')} /> */}
-        {/* <FastImage style={styles.bcoinGif} resizeMode={FastImage.resizeMode.contain} source={require('../assets/gifs/bcoin.gif')} /> */}
       </ImageBackground>
       <View style={styles.innerContainer}>
         <>
