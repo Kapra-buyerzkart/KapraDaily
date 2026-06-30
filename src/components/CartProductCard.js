@@ -10,8 +10,8 @@ import {
 import React, { useState, useMemo, useEffect } from 'react';
 import { BlurView } from '@react-native-community/blur';
 import LinearGradient from 'react-native-linear-gradient';
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Entypo from 'react-native-vector-icons/Entypo';
+import AntDesign from 'react-native-vector-icons/AntDesign';
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
@@ -21,6 +21,7 @@ import { useCart } from '../context/CartContext';
 import CONFIG from '../globals/config';
 import { useWishlist } from '../context/WishlistContext';
 import ConfirmationModal from './ConfirmationModal';
+import { CART_COLORS, CART_RADIUS, CART_SPACING } from '../styles/cartTheme';
 
 const CartProductCard = props => {
   const { updateCartItemQuantity, removeFromCart, updatingItems } = useCart();
@@ -48,12 +49,12 @@ const CartProductCard = props => {
   const specialPrice = itemSpecialPrice || price || 0;
   const isSoldOut = stockQty === 0 || stockQty === '0' || isAvailable === false;
   const isUpdating = updatingItems.includes(String(cartItemId));
+  const btokens = item.totalBtokens || item.bTokenValue || item.bTokens || 0;
 
   const [imageError, setImageError] = useState(false);
   const [quantity, setQuantity] = useState(item.addedQty || item.quantity || 1);
   const [isRemovalModalVisible, setIsRemovalModalVisible] = useState(false);
 
-  // Update local quantity state when item changes
   useEffect(() => {
     setQuantity(item.addedQty || item.quantity || 1);
   }, [item.quantity, item.addedQty]);
@@ -90,7 +91,7 @@ const CartProductCard = props => {
 
   return (
     <View style={styles.productCardView}>
-      <View style={styles.productCardInnerView}>
+      <View style={styles.productImageView}>
         {isSoldOut && (
           <View style={styles.overlayContainer} pointerEvents="none">
             {Platform.OS === 'ios' && (
@@ -116,48 +117,31 @@ const CartProductCard = props => {
               >
                 <Text style={styles.soldOutText}>Sold Out</Text>
               </LinearGradient>
-              <Text style={styles.removeToPlaceorderText}>
-                Remove to place order
-              </Text>
             </View>
           </View>
         )}
-        <View style={styles.productImageView}>
-          {/* <TouchableOpacity
-                        style={[styles.heartContainer, { zIndex: 10 }]}
-                        onPress={() => toggleWishlist(item)}
-                    >
-                        <FontAwesome
-                            name={isLiked ? 'heart' : 'heart-o'}
-                            size={wp('4%')}
-                            color={isLiked ? '#FF0048' : '#979797'}
-                        />
-                    </TouchableOpacity> */}
 
-          <Image
-            style={styles.productImageStyle}
-            source={imageSource}
-            onError={() => setImageError(true)}
+        <Image
+          style={styles.productImageStyle}
+          source={imageSource}
+          onError={() => setImageError(true)}
+        />
+
+        <TouchableOpacity
+          style={styles.removeBtn}
+          onPress={handleDelete}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
+          <AntDesign
+            name="close"
+            size={wp('3%')}
+            color={CART_COLORS.textMuted}
           />
-          {(() => {
-            const btokens =
-              item.totalBtokens || item.bTokenValue || item.bTokens || 0;
-            if (btokens > 0) {
-              return (
-                <View style={styles.btokenContainerSmall}>
-                  <Image
-                    style={styles.btokenImageSmall}
-                    source={require('../assets/images/btoken-icon.png')}
-                  />
-                  <Text style={styles.btokenTextSmall}>{btokens} UD Token</Text>
-                </View>
-              );
-            }
-            return null;
-          })()}
-        </View>
+        </TouchableOpacity>
+      </View>
 
-        <View style={styles.productCardInnerViewTwo}>
+      <View style={styles.productInfo}>
+        <View style={styles.infoRow}>
           <Text
             style={styles.productNameText}
             numberOfLines={2}
@@ -165,69 +149,67 @@ const CartProductCard = props => {
           >
             {productName}
           </Text>
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              paddingRight: wp('2%'),
-            }}
-          >
-            <Text style={styles.productCount}>x {quantity} Qty</Text>
-          </View>
 
-          <View style={styles.productCardInnerViewThree}>
-            <View style={styles.productPrizeView}>
-              {unitPrice !== specialPrice && (
-                <Text style={styles.mrpText}>₹{unitPrice}</Text>
-              )}
-              <Text style={styles.sellingPriceText}>₹{specialPrice}</Text>
-            </View>
-
-            {!disableManage && (
-              <View style={styles.countContainer}>
-                {isUpdating ? (
-                  <View style={styles.loaderWrapper}>
-                    <ActivityIndicator size="small" color="#F25000" />
-                  </View>
-                ) : (
-                  <>
-                    <TouchableOpacity
-                      onPress={handleDecrease}
-                      disabled={isSoldOut}
-                    >
-                      <Image
-                        style={styles.countButtonStyle}
-                        source={require('../assets/images/minus-button.png')}
-                      />
-                    </TouchableOpacity>
-                    <Text style={styles.countText}>{quantity}</Text>
-                    <TouchableOpacity
-                      onPress={handleIncrease}
-                      disabled={isSoldOut}
-                    >
-                      <Image
-                        style={styles.countButtonStyle}
-                        source={require('../assets/images/plus-button.png')}
-                      />
-                    </TouchableOpacity>
-                  </>
-                )}
-              </View>
+          <View style={styles.productPrizeView}>
+            {unitPrice !== specialPrice && (
+              <Text style={styles.mrpText}>₹{unitPrice}</Text>
             )}
+
+            <Text style={styles.sellingPriceText}>₹{specialPrice}</Text>
           </View>
         </View>
-      </View>
 
-      <TouchableOpacity
-        style={styles.deleteButtonContainer}
-        onPress={handleDelete}
-      >
-        <Image
-          style={styles.deleteButtonStyle}
-          source={require('../assets/images/delete_icon.png')}
-        />
-      </TouchableOpacity>
+        <View style={styles.infoRow}>
+          <View style={styles.countColumn}>
+            {btokens > 0 && (
+              <View style={styles.btokenContainerSmall}>
+                <Image
+                  style={styles.btokenImageSmall}
+                  source={require('../assets/icons/tokenud.png')}
+                />
+                <Text style={styles.btokenTextSmall}>{btokens} UD Token</Text>
+              </View>
+            )}
+            <Text style={styles.productCount}>{quantity} pcs</Text>
+          </View>
+
+          {!disableManage && (
+            <View style={styles.countContainer}>
+              {isUpdating ? (
+                <View style={styles.loaderWrapper}>
+                  <ActivityIndicator size="small" color={CART_COLORS.primary} />
+                </View>
+              ) : (
+                <>
+                  <TouchableOpacity
+                    style={styles.stepperBtn}
+                    onPress={handleDecrease}
+                    disabled={isSoldOut}
+                  >
+                    <Entypo
+                      name="minus"
+                      size={wp('3.6%')}
+                      color={CART_COLORS.primary}
+                    />
+                  </TouchableOpacity>
+                  <Text style={styles.countText}>{quantity}</Text>
+                  <TouchableOpacity
+                    style={styles.stepperBtn}
+                    onPress={handleIncrease}
+                    disabled={isSoldOut}
+                  >
+                    <Entypo
+                      name="plus"
+                      size={wp('3.6%')}
+                      color={CART_COLORS.primary}
+                    />
+                  </TouchableOpacity>
+                </>
+              )}
+            </View>
+          )}
+        </View>
+      </View>
 
       <ConfirmationModal
         visible={isRemovalModalVisible}
@@ -242,30 +224,18 @@ const CartProductCard = props => {
 
 const styles = StyleSheet.create({
   productCardView: {
-    width: wp('90.7%'),
-    height: hp('10.7%'),
-    backgroundColor: '#F25000',
-    borderRadius: wp('4.65%'),
-    // paddingRight: wp('8%'),
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: hp('1%'),
-  },
-  wishlistIcon: {
-    position: 'absolute',
-    // left: wp('3.5%'),
-    borderRadius: wp('4.65%'),
-    overflow: 'hidden', // VERY IMPORTANT
-    zIndex: 10,
+    alignItems: 'flex-start',
+    paddingVertical: hp('1.4%'),
   },
   overlayContainer: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     zIndex: 10,
-    borderRadius: wp('4.65%'),
+    borderRadius: CART_RADIUS.productCard,
     overflow: 'hidden',
   },
   overlayDark: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(0,0,0,0.4)',
   },
   soldOutContainer: {
@@ -283,141 +253,119 @@ const styles = StyleSheet.create({
     bottom: hp('2%'),
   },
   soldOutText: {
-    fontFamily: FONTS.poppins.bold,
+    fontFamily: FONTS.gilroy.bold,
     color: '#FFFFFF',
     fontSize: wp('4.18%'),
-    //top: -hp('2.5%')
-  },
-  removeToPlaceorderText: {
-    color: '#FFFFFF',
-    fontFamily: FONTS.poppins.semiBold,
-    fontSize: wp('3.18%'),
-    marginTop: hp('0.8%'),
-  },
-  productCardInnerView: {
-    backgroundColor: '#FFFFFF',
-    flex: 1,
-    borderColor: '#E9E9E9',
-    borderWidth: 1,
-    borderRadius: wp('4.65%'),
-    // justifyContent: 'center',
-    paddingLeft: wp('2%'),
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: wp('82%'),
-    height: '100%',
   },
   productImageView: {
     width: wp('21.4%'),
-    height: hp('9.2%'),
-    backgroundColor: '#ffffff',
-    borderRadius: wp('3.7%'),
+    height: wp('21.4%'),
+    backgroundColor: CART_COLORS.background,
+    borderRadius: CART_RADIUS.productCard,
     justifyContent: 'center',
     alignItems: 'center',
+    position: 'relative',
   },
   productImageStyle: {
-    width: wp('18%'),
-    height: hp('8%'),
+    width: '78%',
+    height: '78%',
     resizeMode: 'contain',
   },
-  productCardInnerViewTwo: {
-    paddingLeft: wp('2%'),
-    // backgroundColor: 'yellow',
-    height: '100%',
-    paddingVertical: wp('1.5%'),
-    justifyContent: 'space-between',
+  removeBtn: {
+    position: 'absolute',
+    top: -CART_SPACING.xs,
+    left: -CART_SPACING.xs,
+    width: wp('5.5%'),
+    height: wp('5.5%'),
+    borderRadius: wp('2.75%'),
+    backgroundColor: CART_COLORS.card,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
+    elevation: 3,
+    zIndex: 11,
+  },
+  productInfo: {
     flex: 1,
+    paddingLeft: CART_SPACING.md,
+    justifyContent: 'space-between',
+    minHeight: wp('21.4%'),
   },
-  productNameText: {
-    fontFamily: FONTS.poppins.regular,
-    fontSize: wp('3%'),
-    color: '#000000',
-  },
-  productCount: {
-    color: '#777777',
-    fontSize: wp('2.8%'),
-    fontFamily: FONTS.outfit.regular,
-    color: '#9E9E9E',
-  },
-  productCardInnerViewThree: {
+  infoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingRight: wp('2%'),
+    alignItems: 'flex-start',
+  },
+  productNameText: {
+    flex: 1,
+    fontFamily: FONTS.gilroy.regular,
+    fontSize: wp('3.7%'),
+    color: CART_COLORS.textPrimary,
+    marginRight: CART_SPACING.sm,
+  },
+  countColumn: {
+    alignSelf: 'flex-end',
+    alignItems: 'flex-start',
+    gap: hp('0.4%'),
+  },
+  productCount: {
+    fontFamily: FONTS.outfit.regular,
+    fontSize: wp('3%'),
+    color: CART_COLORS.textMuted,
   },
   productPrizeView: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  heartContainer: {
-    position: 'absolute',
-    top: wp('1.5%'),
-    left: wp('1.5%'),
-    zIndex: 10,
-  },
-  btokenContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    position: 'absolute',
-    bottom: wp('1.5%'),
-    left: wp('2.5%'),
-  },
-  btokenImageStyle: {
-    width: wp('1.86%'),
-    height: hp('0.75%'),
-  },
-  btokenText: {
-    color: '#5E3568',
-    fontFamily: FONTS.outfit.regular,
-    fontSize: wp('2.3%'),
-    marginLeft: wp('0.5%'),
-  },
   mrpText: {
-    fontFamily: FONTS.poppins.light,
-    fontSize: wp('2.8%'),
-    color: '#777777',
+    fontFamily: FONTS.outfit.regular,
+    fontSize: wp('3.1%'),
+    color: CART_COLORS.textFaint,
     textDecorationLine: 'line-through',
-    marginRight: wp('1%'),
+    marginRight: wp('1.5%'),
   },
   sellingPriceText: {
-    fontFamily: FONTS.poppins.semiBold,
-    fontSize: wp('4.1%'),
-    color: '#000000',
+    fontFamily: FONTS.gilroy.bold,
+    fontSize: wp('3.9%'),
+    color: CART_COLORS.textPrimary,
   },
   countContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: CART_COLORS.card,
+    borderRadius: CART_RADIUS.sm,
+    borderWidth: 1,
+    borderColor: CART_COLORS.border,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 1,
   },
-  countButtonStyle: {
-    width: wp('5.6%'),
-    height: wp('5.6%'),
-  },
-  countText: {
-    color: '#F25000',
-    fontFamily: FONTS.outfit.regular,
-    fontSize: wp('4.2%'),
-    marginHorizontal: wp('3%'),
-  },
-  deleteButtonContainer: {
-    paddingHorizontal: wp('2%'),
-    height: '100%',
+  stepperBtn: {
+    width: wp('6.5%'),
+    height: wp('6.5%'),
     justifyContent: 'center',
     alignItems: 'center',
   },
-  deleteButtonStyle: {
-    width: wp('3.25%'),
-    height: hp('1.7%'),
-    resizeMode: 'contain',
-    tintColor: '#FFFFFF',
+  countText: {
+    color: CART_COLORS.primary,
+    fontFamily: FONTS.gilroy.semiBold,
+    fontSize: wp('3.4%'),
+    minWidth: wp('5%'),
+    textAlign: 'center',
   },
   androidBlurFallback: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(0,0,0,0.4)',
   },
   btokenContainerSmall: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F3E5F5', // Lighter purple tint
+    // backgroundColor: '#F3E5F5',
     paddingHorizontal: wp('1.5%'),
     paddingVertical: hp('0.2%'),
     borderRadius: 4,
@@ -435,8 +383,8 @@ const styles = StyleSheet.create({
     color: '#5E3568',
   },
   loaderWrapper: {
-    width: wp('20%'), // Approx width of the minus + quantity + plus section
-    height: wp('5.6%'),
+    width: wp('20%'),
+    height: wp('6.5%'),
     justifyContent: 'center',
     alignItems: 'center',
   },

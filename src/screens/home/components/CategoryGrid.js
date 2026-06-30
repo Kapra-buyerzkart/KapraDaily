@@ -38,7 +38,10 @@ const CategoryGrid = ({ categories }) => (
     <Text style={styles.categoryHeaderText}>Category</Text>
     <View style={styles.categoriesContainer}>
       {categories.map((item, index) => (
-        <CategoryItem key={(item.catId || item.id || index).toString()} item={item} />
+        <CategoryItem
+          key={(item.catId || item.id || index).toString()}
+          item={item}
+        />
       ))}
     </View>
   </View>

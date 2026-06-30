@@ -100,7 +100,8 @@ export default function CategoriesScreen() {
   const { onScrollWorklet } = useTabBarAnimation();
 
   // Memoized values
-  const floatingBottomOffset = hp('0.7%') + getTabBarClearance(bottom);
+  const tabBarClearance = getTabBarClearance(bottom);
+  const floatingBottomOffset = hp('0.7%') + tabBarClearance;
 
   const categoryName =
     categoriesList.find(cat => cat.catId.toString() === selectedId)?.catName ||
@@ -115,6 +116,11 @@ export default function CategoriesScreen() {
     },
   });
 
+  // Nudges the floating cart down by exactly the space the tab bar frees up
+  // when it hides, and back to its resting place when the tab bar reappears.
+  // `tabBarClearance` is device/platform-aware (see getTabBarClearance), so
+  // the cart always lands flush with the screen bottom instead of overshooting
+  // or leaving a gap on a given device.
   const cartAnimatedStyle = useAnimatedStyle(() => {
     const progress = clamp(tabBarVisibility.value, 0, 1);
     return {
@@ -123,7 +129,7 @@ export default function CategoriesScreen() {
           translateY: interpolate(
             progress,
             [0, 1],
-            [100, 0],
+            [tabBarClearance, 0],
             Extrapolation.CLAMP,
           ),
         },
@@ -307,7 +313,7 @@ export default function CategoriesScreen() {
                   // (position: absolute) instead of reserving its own flex
                   // space, so this padding keeps products from rendering
                   // underneath it.
-                  paddingBottom: hp('8.5%') + getTabBarClearance(bottom),
+                  paddingBottom: hp('8.5%') + tabBarClearance,
                   paddingTop: hp('0.5%'),
                 }}
                 ListHeaderComponent={renderHeader}

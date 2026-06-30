@@ -7,7 +7,13 @@
 
 import { useEffect } from 'react';
 import { NewAppScreen } from '@react-native/new-app-screen';
-import { LogBox, StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
+import {
+  LogBox,
+  StatusBar,
+  StyleSheet,
+  useColorScheme,
+  View,
+} from 'react-native';
 import {
   SafeAreaProvider,
   useSafeAreaInsets,
@@ -63,13 +69,15 @@ function App() {
   // };
 
   useEffect(() => {
-    LogBox.ignoreLogs(['Warning: ...'])
+    LogBox.ignoreLogs(['Warning: ...']);
 
     // OneSignal initialization via structured service
-    import('./src/services/OneSignalService').then(({ requestPushPermissionIfNeeded }) => {
-      requestPushPermissionIfNeeded();
-    });
-  }, [])
+    import('./src/services/OneSignalService').then(
+      ({ requestPushPermissionIfNeeded }) => {
+        requestPushPermissionIfNeeded();
+      },
+    );
+  }, []);
 
   // Restore the persisted ('home' namespace only) cache in the background.
   // Deliberately NOT using PersistQueryClientProvider here: it gates every
@@ -81,19 +89,25 @@ function App() {
   // already in the cache, so racing it against in-flight network fetches is safe.
   useEffect(() => {
     let unsubscribe: (() => void) | undefined;
-    persistQueryClientRestore({ queryClient, ...queryPersistOptions }).finally(() => {
-      unsubscribe = persistQueryClientSubscribe({ queryClient, ...queryPersistOptions });
-    });
+    persistQueryClientRestore({ queryClient, ...queryPersistOptions }).finally(
+      () => {
+        unsubscribe = persistQueryClientSubscribe({
+          queryClient,
+          ...queryPersistOptions,
+        });
+      },
+    );
     return () => unsubscribe?.();
-  }, [])
+  }, []);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor={isDarkMode ? '#000' : '#fff'} />
+        <StatusBar
+          barStyle={isDarkMode ? 'light-content' : 'dark-content'}
+          backgroundColor={isDarkMode ? '#000' : '#fff'}
+        />
         <BottomSheetModalProvider>
-          {/* Portal host for CustomModal — mounted once here so any modal
-              opened anywhere in the tree renders above the whole app. */}
           <ModalProvider>
             <QueryClientProvider client={queryClient}>
               <AppContextProvider>

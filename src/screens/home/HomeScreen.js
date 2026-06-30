@@ -18,7 +18,13 @@ import Animated, {
   withTiming,
   withSpring,
 } from 'react-native-reanimated';
-import React, { useContext, useEffect, useMemo, useState, useCallback } from 'react';
+import React, {
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  useCallback,
+} from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   widthPercentageToDP as wp,
@@ -36,7 +42,10 @@ import { openExternalUrl } from '../../utils/safeUrl';
 import { LoaderContext } from '../../context/loaderContext';
 import { AppContext } from '../../context/appContext';
 import useTabBarAnimation from '../../hooks/useTabBarAnimation';
-import { tabBarVisibility, getTabBarClearance } from '../../animations/tabBarVisibility';
+import {
+  tabBarVisibility,
+  getTabBarClearance,
+} from '../../animations/tabBarVisibility';
 
 import useResolvedAreaId from '../../queries/useResolvedAreaId';
 import useHomepageDataQuery from '../../queries/useHomepageDataQuery';
@@ -49,7 +58,9 @@ import useHomePopup from './hooks/useHomePopup';
 import StickyHeader from './components/StickyHeader';
 import PlacementBannerCarousel from './components/PlacementBannerCarousel';
 import CategoryGrid, { CategoryShimmer } from './components/CategoryGrid';
-import ProductBlock, { resolveTitleImageSource } from './components/ProductBlock';
+import ProductBlock, {
+  resolveTitleImageSource,
+} from './components/ProductBlock';
 import CategoryDiscoverySection from './components/CategoryDiscoverySection';
 import ShimmerPlaceholder from '../../components/ShimmerPlaceholder';
 import sectionCardStyles from './components/sectionCardStyles';
@@ -62,14 +73,24 @@ const SeasonalFruitsShimmer = () => (
   <View style={styles.fruitsContainer}>
     <View style={styles.fruitsHeaderView}>
       <ShimmerPlaceholder
-        style={{ width: wp('40%'), height: hp('2.5%'), borderRadius: 5, marginLeft: wp('5%') }}
+        style={{
+          width: wp('40%'),
+          height: hp('2.5%'),
+          borderRadius: 5,
+          marginLeft: wp('5%'),
+        }}
       />
     </View>
     <View style={{ flexDirection: 'row', marginLeft: wp('5%') }}>
       {[1, 2].map((_, i) => (
         <ShimmerPlaceholder
           key={i}
-          style={{ width: wp('74.88%'), height: hp('19.35%'), borderRadius: wp('4.65%'), marginRight: wp('5%') }}
+          style={{
+            width: wp('74.88%'),
+            height: hp('19.35%'),
+            borderRadius: wp('4.65%'),
+            marginRight: wp('5%'),
+          }}
         />
       ))}
     </View>
@@ -88,7 +109,8 @@ const HomeScreen = () => {
   const headerInfoMaxH = useSharedValue(0);
   const searchPressScale = useSharedValue(1);
 
-  const floatingBottomOffset = hp('0.7%') + getTabBarClearance(bottom);
+  const tabBarClearance = getTabBarClearance(bottom);
+  const floatingBottomOffset = hp('0.7%') + tabBarClearance;
 
   // Drives the global, UI-thread-only tab bar visibility (see
   // src/animations/tabBarVisibility.js). HomeScreen is one of only two
@@ -105,43 +127,112 @@ const HomeScreen = () => {
     },
   });
 
-  // Nudges the floating cart down slightly when the tab bar hides, and back
-  // to its resting place when the tab bar reappears.
+  // Nudges the floating cart down by exactly the space the tab bar frees up
+  // when it hides, and back to its resting place when the tab bar reappears.
+  // `tabBarClearance` is device/platform-aware (see getTabBarClearance), so
+  // the cart always lands flush with the screen bottom instead of overshooting
+  // or leaving a gap on a given device.
   const cartAnimatedStyle = useAnimatedStyle(() => {
     const progress = clamp(tabBarVisibility.value, 0, 1);
     return {
-      transform: [{ translateY: interpolate(progress, [0, 1], [100, 0], Extrapolation.CLAMP) }],
+      transform: [
+        {
+          translateY: interpolate(
+            progress,
+            [0, 1],
+            [tabBarClearance, 0],
+            Extrapolation.CLAMP,
+          ),
+        },
+      ],
     };
   });
 
   const collapsibleHeaderStyle = useAnimatedStyle(() => {
     if (headerInfoMaxH.value <= 0) return {};
     return {
-      height: interpolate(scrollY.value, [0, SCROLL_RANGE], [headerInfoMaxH.value, 0], Extrapolation.CLAMP),
+      height: interpolate(
+        scrollY.value,
+        [0, SCROLL_RANGE],
+        [headerInfoMaxH.value, 0],
+        Extrapolation.CLAMP,
+      ),
       overflow: 'hidden',
     };
   });
 
   const etaAnimStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(scrollY.value, [0, SCROLL_RANGE * 0.65], [1, 0], Extrapolation.CLAMP),
+    opacity: interpolate(
+      scrollY.value,
+      [0, SCROLL_RANGE * 0.65],
+      [1, 0],
+      Extrapolation.CLAMP,
+    ),
     transform: [
-      { translateY: interpolate(scrollY.value, [0, SCROLL_RANGE * 0.65], [0, -40], Extrapolation.CLAMP) },
-      { scale: interpolate(scrollY.value, [0, SCROLL_RANGE * 0.65], [1, 0.9], Extrapolation.CLAMP) },
+      {
+        translateY: interpolate(
+          scrollY.value,
+          [0, SCROLL_RANGE * 0.65],
+          [0, -40],
+          Extrapolation.CLAMP,
+        ),
+      },
+      {
+        scale: interpolate(
+          scrollY.value,
+          [0, SCROLL_RANGE * 0.65],
+          [1, 0.9],
+          Extrapolation.CLAMP,
+        ),
+      },
     ],
   }));
 
   const coinAnimStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(scrollY.value, [0, SCROLL_RANGE], [1, 0.8], Extrapolation.CLAMP),
+    opacity: interpolate(
+      scrollY.value,
+      [0, SCROLL_RANGE],
+      [1, 0.8],
+      Extrapolation.CLAMP,
+    ),
     transform: [
-      { translateY: interpolate(scrollY.value, [0, SCROLL_RANGE], [0, -20], Extrapolation.CLAMP) },
-      { scale: interpolate(scrollY.value, [0, SCROLL_RANGE], [1, 0.9], Extrapolation.CLAMP) },
+      {
+        translateY: interpolate(
+          scrollY.value,
+          [0, SCROLL_RANGE],
+          [0, -20],
+          Extrapolation.CLAMP,
+        ),
+      },
+      {
+        scale: interpolate(
+          scrollY.value,
+          [0, SCROLL_RANGE],
+          [1, 0.9],
+          Extrapolation.CLAMP,
+        ),
+      },
     ],
   }));
 
   const profileAnimStyle = useAnimatedStyle(() => ({
     transform: [
-      { translateY: interpolate(scrollY.value, [0, SCROLL_RANGE], [0, -20], Extrapolation.CLAMP) },
-      { scale: interpolate(scrollY.value, [0, SCROLL_RANGE], [1, 0.9], Extrapolation.CLAMP) },
+      {
+        translateY: interpolate(
+          scrollY.value,
+          [0, SCROLL_RANGE],
+          [0, -20],
+          Extrapolation.CLAMP,
+        ),
+      },
+      {
+        scale: interpolate(
+          scrollY.value,
+          [0, SCROLL_RANGE],
+          [1, 0.9],
+          Extrapolation.CLAMP,
+        ),
+      },
     ],
   }));
 
@@ -154,11 +245,29 @@ const HomeScreen = () => {
   const SEARCH_RADIUS_END = wp('4.5%');
 
   const searchWrapperAnimStyle = useAnimatedStyle(() => {
-    const progress = interpolate(scrollY.value, [0, SCROLL_RANGE], [0, 1], Extrapolation.CLAMP);
+    const progress = interpolate(
+      scrollY.value,
+      [0, SCROLL_RANGE],
+      [0, 1],
+      Extrapolation.CLAMP,
+    );
     return {
-      marginTop: interpolate(scrollY.value, [0, SCROLL_RANGE], [SEARCH_MARGIN_START, SEARCH_MARGIN_END], Extrapolation.CLAMP),
-      height: interpolate(progress, [0, 1], [SEARCH_HEIGHT_START, SEARCH_HEIGHT_END]),
-      borderRadius: interpolate(progress, [0, 1], [SEARCH_RADIUS_START, SEARCH_RADIUS_END]),
+      marginTop: interpolate(
+        scrollY.value,
+        [0, SCROLL_RANGE],
+        [SEARCH_MARGIN_START, SEARCH_MARGIN_END],
+        Extrapolation.CLAMP,
+      ),
+      height: interpolate(
+        progress,
+        [0, 1],
+        [SEARCH_HEIGHT_START, SEARCH_HEIGHT_END],
+      ),
+      borderRadius: interpolate(
+        progress,
+        [0, 1],
+        [SEARCH_RADIUS_START, SEARCH_RADIUS_END],
+      ),
       shadowOpacity: interpolate(progress, [0, 1], [0, 0.12]),
       shadowRadius: interpolate(progress, [0, 1], [0, 8]),
       elevation: interpolate(progress, [0, 1], [0, 4]),
@@ -167,15 +276,29 @@ const HomeScreen = () => {
   });
 
   const glassOverlayAnimStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(scrollY.value, [0, SCROLL_RANGE], [0, 1], Extrapolation.CLAMP),
+    opacity: interpolate(
+      scrollY.value,
+      [0, SCROLL_RANGE],
+      [0, 1],
+      Extrapolation.CLAMP,
+    ),
   }));
 
   const fallbackHeaderBgStyle = useAnimatedStyle(() => ({
-    backgroundColor: interpolateColor(scrollY.value, [0, SCROLL_RANGE], ['#F25000', '#FFFFFF']),
+    backgroundColor: interpolateColor(
+      scrollY.value,
+      [0, SCROLL_RANGE],
+      ['#F25000', '#FFFFFF'],
+    ),
   }));
 
   const stickyBorderAnimStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(scrollY.value, [60, SCROLL_RANGE], [0, 1], Extrapolation.CLAMP),
+    opacity: interpolate(
+      scrollY.value,
+      [60, SCROLL_RANGE],
+      [0, 1],
+      Extrapolation.CLAMP,
+    ),
   }));
 
   const handleSearchPressIn = () => {
@@ -190,7 +313,8 @@ const HomeScreen = () => {
   const { showLoader } = useContext(LoaderContext);
   const [isProfileLoaded, setIsProfileLoaded] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedDiscoveryCategory, setSelectedDiscoveryCategory] = useState(null);
+  const [selectedDiscoveryCategory, setSelectedDiscoveryCategory] =
+    useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const { profile, loadProfileTwo } = useContext(AppContext);
 
@@ -213,7 +337,10 @@ const HomeScreen = () => {
     if (!isProfileLoaded) return;
     if (!profile) return;
     if (!profile.custId) {
-      navigation.reset({ index: 0, routes: [{ name: 'LoginScreen', params: { type: 'login' } }] });
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'LoginScreen', params: { type: 'login' } }],
+      });
     }
   }, [profile, isProfileLoaded]);
 
@@ -244,14 +371,16 @@ const HomeScreen = () => {
   }, [profile?.pincode]);
 
   const data = homepageQuery.data;
-  const { isStoreUnavailable, storeUnavailableData } = deriveStoreUnavailableState({
-    homepageData: data,
-    error: homepageQuery.error,
-    generalSettings: generalSettingsQuery.data,
-  });
+  const { isStoreUnavailable, storeUnavailableData } =
+    deriveStoreUnavailableState({
+      homepageData: data,
+      error: homepageQuery.error,
+      generalSettings: generalSettingsQuery.data,
+    });
 
   const popupData = data?.popup || homepageQuery.error?.popup || null;
-  const { isHomePopupVisible, handleClose, handlePopupPress } = useHomePopup(popupData);
+  const { isHomePopupVisible, handleClose, handlePopupPress } =
+    useHomePopup(popupData);
 
   const categories = data?.categories || [];
   const topBanner = data?.banners?.topBanner || [];
@@ -260,10 +389,14 @@ const HomeScreen = () => {
   const topSectionBanner = data?.banners?.topSectionBanner || [];
   const topAnnouncementBanner = data?.banners?.topAnnouncementBanner || [];
   const topSideBySide = data?.banners?.topSideBySide || [];
-  const firstProductBlockTitleImage = data?.banners?.firstProductBlockTitleImage;
-  const secondProductBlockTitleImage = data?.banners?.secondProductBlockTitleImage;
-  const thirdProductBlockTitleImage = data?.banners?.thirdProductBlockTitleImage;
-  const categoryDiscoveryBackgroundImage = data?.banners?.categoryDiscoveryBackgroundImage;
+  const firstProductBlockTitleImage =
+    data?.banners?.firstProductBlockTitleImage;
+  const secondProductBlockTitleImage =
+    data?.banners?.secondProductBlockTitleImage;
+  const thirdProductBlockTitleImage =
+    data?.banners?.thirdProductBlockTitleImage;
+  const categoryDiscoveryBackgroundImage =
+    data?.banners?.categoryDiscoveryBackgroundImage;
   const bottomShowcaseBanner = data?.banners?.bottomShowcaseBanner;
   const bottomShowcaseProducts = data?.banners?.bottomShowcaseProducts || [];
   const firstProductBlock = data?.firstProductBlock;
@@ -271,18 +404,28 @@ const HomeScreen = () => {
   const thirdProductBlock = data?.thirdProductBlock;
   const categoryDiscovery = data?.categoryDiscovery;
 
-  // Local pull-to-refresh flag only — matches the original useHomeData hook,
-  // whose `isHomeLoading` likewise reflected refresh state, not first-load.
   const isHomeLoading = refreshing;
   const fruits = bottomBanner;
 
-  const firstBlockItems = useMemo(() => firstProductBlock?.Items || firstProductBlock?.items || [], [firstProductBlock]);
-  const secondBlockItems = useMemo(() => secondProductBlock?.Items || secondProductBlock?.items || [], [secondProductBlock]);
-  const thirdBlockItems = useMemo(() => thirdProductBlock?.Items || thirdProductBlock?.items || [], [thirdProductBlock]);
+  const firstBlockItems = useMemo(
+    () => firstProductBlock?.Items || firstProductBlock?.items || [],
+    [firstProductBlock],
+  );
+  const secondBlockItems = useMemo(
+    () => secondProductBlock?.Items || secondProductBlock?.items || [],
+    [secondProductBlock],
+  );
+  const thirdBlockItems = useMemo(
+    () => thirdProductBlock?.Items || thirdProductBlock?.items || [],
+    [thirdProductBlock],
+  );
 
-  const shouldShowFirstBlock = !!firstProductBlock && firstBlockItems.length > 0;
-  const shouldShowSecondBlock = !!secondProductBlock && secondBlockItems.length > 0;
-  const shouldShowThirdBlock = !!thirdProductBlock && thirdBlockItems.length > 0;
+  const shouldShowFirstBlock =
+    !!firstProductBlock && firstBlockItems.length > 0;
+  const shouldShowSecondBlock =
+    !!secondProductBlock && secondBlockItems.length > 0;
+  const shouldShowThirdBlock =
+    !!thirdProductBlock && thirdBlockItems.length > 0;
 
   const discoveryCategories = useMemo(
     () => categoryDiscovery?.Categories || categoryDiscovery?.categories || [],
@@ -292,14 +435,16 @@ const HomeScreen = () => {
     () => categoryDiscovery?.Products || categoryDiscovery?.products || [],
     [categoryDiscovery],
   );
-  const shouldShowCategoryDiscovery = !!categoryDiscovery && discoveryCategories.length > 0;
+  const shouldShowCategoryDiscovery =
+    !!categoryDiscovery && discoveryCategories.length > 0;
 
   // The homepage payload embeds products for the auto-selected first
   // category — used once at auto-select time only, so the API isn't called
   // for it. Any later manual tap (even back onto the first category) goes
   // through the query, matching the original handleDiscoveryCategoryPress
   // behavior of always fetching on an explicit tap.
-  const [useEmbeddedDiscoveryProducts, setUseEmbeddedDiscoveryProducts] = useState(false);
+  const [useEmbeddedDiscoveryProducts, setUseEmbeddedDiscoveryProducts] =
+    useState(false);
 
   const categoryProductsQuery = useCategoryDiscoveryProductsQuery(
     useEmbeddedDiscoveryProducts ? null : selectedDiscoveryCategory?.catId,
@@ -308,7 +453,8 @@ const HomeScreen = () => {
   const discoveryProducts = useEmbeddedDiscoveryProducts
     ? embeddedDiscoveryProducts
     : categoryProductsQuery.data || [];
-  const isDiscoveryLoading = !useEmbeddedDiscoveryProducts && categoryProductsQuery.isLoading;
+  const isDiscoveryLoading =
+    !useEmbeddedDiscoveryProducts && categoryProductsQuery.isLoading;
 
   const handleSelectDiscoveryCategory = category => {
     setUseEmbeddedDiscoveryProducts(false);
@@ -332,16 +478,26 @@ const HomeScreen = () => {
     } else if (linkType === 'category') {
       let actualCatName = '';
       if (categories.length > 0) {
-        const foundCat = categories.find(c => String(c.catId || c.id) === String(linkValue));
+        const foundCat = categories.find(
+          c => String(c.catId || c.id) === String(linkValue),
+        );
         if (foundCat) actualCatName = foundCat.catName || foundCat.name;
       }
-      navigation.navigate('SearchScreen', { catId: linkValue, catName: actualCatName || 'Category' });
+      navigation.navigate('SearchScreen', {
+        catId: linkValue,
+        catName: actualCatName || 'Category',
+      });
     } else if ((linkType === 'external' || linkType === 'url') && linkValue) {
       openExternalUrl(linkValue);
     }
   };
 
-  const [statusModal, setStatusModal] = useState({ visible: false, type: 'success', title: '', message: '' });
+  const [statusModal, setStatusModal] = useState({
+    visible: false,
+    type: 'success',
+    title: '',
+    message: '',
+  });
 
   return (
     <View style={styles.mainContainer}>
@@ -388,14 +544,13 @@ const HomeScreen = () => {
         scrollEventThrottle={16}
         style={{ flex: 1 }}
         contentContainerStyle={{
-          // The custom AnimatedTabBar floats over the content (position:
-          // absolute) instead of reserving its own flex space, so this
-          // padding keeps content from rendering underneath it.
-          paddingBottom: hp('0.7%') + getTabBarClearance(bottom),
+          paddingBottom: floatingBottomOffset,
           flexGrow: 1,
         }}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
       >
         {topBanner.length > 0 && (
           <ImageBackground
@@ -404,7 +559,11 @@ const HomeScreen = () => {
             imageStyle={{ width: '100%', height: '100%', resizeMode: 'cover' }}
           >
             {topAnnouncementBanner.length > 0 && (
-              <Image source={topAnnouncementBanner[0].uri} style={styles.topShowcaseMain} resizeMode="cover" />
+              <Image
+                source={topAnnouncementBanner[0].uri}
+                style={styles.topShowcaseMain}
+                resizeMode="cover"
+              />
             )}
 
             {topSideBySide.length > 0 && (
@@ -416,7 +575,11 @@ const HomeScreen = () => {
                     activeOpacity={0.85}
                     onPress={() => handleBannerPress(banner)}
                   >
-                    <Image source={banner.uri} style={styles.topShowcaseCardImage} resizeMode="contain" />
+                    <Image
+                      source={banner.uri}
+                      style={styles.topShowcaseCardImage}
+                      resizeMode="contain"
+                    />
                   </TouchableOpacity>
                 ))}
               </View>
@@ -445,18 +608,31 @@ const HomeScreen = () => {
               backgroundImage={HOME_BG}
               discountBadge={50}
               showTitleImage={
-                !!(firstProductBlockTitleImage?.uri || firstProductBlock?.Image || firstProductBlock?.image)
+                !!(
+                  firstProductBlockTitleImage?.uri ||
+                  firstProductBlock?.Image ||
+                  firstProductBlock?.image
+                )
               }
-              titleImageSource={resolveTitleImageSource(firstProductBlock, firstProductBlockTitleImage)}
+              titleImageSource={resolveTitleImageSource(
+                firstProductBlock,
+                firstProductBlockTitleImage,
+              )}
               title={firstProductBlock?.Title || firstProductBlock?.title}
               items={firstBlockItems}
-              contentContainerStyle={{ paddingLeft: wp('2%'), paddingRight: wp('1%'), paddingTop: hp('1%') }}
+              contentContainerStyle={{
+                paddingLeft: wp('2%'),
+                paddingRight: wp('1%'),
+                paddingTop: hp('1%'),
+              }}
               shouldShowSeeAll={count => count > 3}
               navigation={navigation}
             />
 
             {midBanner.length > 0 && (
-              <View style={{ marginVertical: hp('1%'), marginBottom: hp('2%') }}>
+              <View
+                style={{ marginVertical: hp('1%'), marginBottom: hp('2%') }}
+              >
                 <PlacementBannerCarousel
                   banners={midBanner}
                   onBannerPress={handleBannerPress}
@@ -471,12 +647,22 @@ const HomeScreen = () => {
               isLoading={isHomeLoading && secondBlockItems.length === 0}
               shouldShow={shouldShowSecondBlock}
               backgroundImage={HOME_BG}
-              showTitleImage={secondProductBlock?.image !== null && secondProductBlock?.image !== undefined}
-              titleImageSource={resolveTitleImageSource(secondProductBlock, secondProductBlockTitleImage)}
+              showTitleImage={
+                secondProductBlock?.image !== null &&
+                secondProductBlock?.image !== undefined
+              }
+              titleImageSource={resolveTitleImageSource(
+                secondProductBlock,
+                secondProductBlockTitleImage,
+              )}
               title={secondProductBlock?.Title || secondProductBlock?.title}
               titleExtraStyle={{ marginTop: hp('2%') }}
               items={secondBlockItems}
-              contentContainerStyle={{ paddingLeft: wp('5%'), paddingRight: wp('1%'), paddingTop: hp('1%') }}
+              contentContainerStyle={{
+                paddingLeft: wp('5%'),
+                paddingRight: wp('1%'),
+                paddingTop: hp('1%'),
+              }}
               shouldShowSeeAll={count => count >= 3}
               seeAllButtonStyle={{ alignSelf: 'center', marginTop: hp('1%') }}
               navigation={navigation}
@@ -486,7 +672,12 @@ const HomeScreen = () => {
               <SeasonalFruitsShimmer />
             ) : (
               fruits.length > 0 && (
-                <View style={{ marginVertical: hp('0.5%'), marginBottom: hp('0.2%') }}>
+                <View
+                  style={{
+                    marginVertical: hp('0.5%'),
+                    marginBottom: hp('0.2%'),
+                  }}
+                >
                   <PlacementBannerCarousel
                     banners={fruits}
                     onBannerPress={handleBannerPress}
@@ -503,13 +694,23 @@ const HomeScreen = () => {
               shouldShow={shouldShowThirdBlock}
               backgroundImage={COMBO_BG}
               showTitleImage={
-                !!(thirdProductBlockTitleImage?.uri || thirdProductBlock?.Image || thirdProductBlock?.image)
+                !!(
+                  thirdProductBlockTitleImage?.uri ||
+                  thirdProductBlock?.Image ||
+                  thirdProductBlock?.image
+                )
               }
-              titleImageSource={resolveTitleImageSource(thirdProductBlock, thirdProductBlockTitleImage)}
+              titleImageSource={resolveTitleImageSource(
+                thirdProductBlock,
+                thirdProductBlockTitleImage,
+              )}
               titleImageResizeMode="contain"
               title={thirdProductBlock?.Title || thirdProductBlock?.title}
               items={thirdBlockItems}
-              contentContainerStyle={{ paddingHorizontal: wp('4.6%'), paddingTop: hp('1%') }}
+              contentContainerStyle={{
+                paddingHorizontal: wp('4.6%'),
+                paddingTop: hp('1%'),
+              }}
               shouldShowSeeAll={count => count > 3}
               trailingSpacer
               navigation={navigation}
@@ -517,7 +718,10 @@ const HomeScreen = () => {
 
             {bottomShowcaseBanner && bottomShowcaseProducts.length > 0 && (
               <>
-                <TouchableOpacity activeOpacity={0.9} onPress={() => handleBannerPress(bottomShowcaseBanner)}>
+                <TouchableOpacity
+                  activeOpacity={0.9}
+                  onPress={() => handleBannerPress(bottomShowcaseBanner)}
+                >
                   <ImageBackground
                     source={bottomShowcaseBanner.uri}
                     style={sectionCardStyles.headerBackgroundbg2}
@@ -527,18 +731,31 @@ const HomeScreen = () => {
                       <FlatList
                         horizontal
                         data={bottomShowcaseProducts}
-                        keyExtractor={(item, index) => (item.bannerId || item.id || index).toString()}
+                        keyExtractor={(item, index) =>
+                          (item.bannerId || item.id || index).toString()
+                        }
                         renderItem={({ item }) => (
-                          <TouchableOpacity onPress={() => handleBannerPress(item)} style={{ marginRight: wp('1%') }}>
+                          <TouchableOpacity
+                            onPress={() => handleBannerPress(item)}
+                            style={{ marginRight: wp('1%') }}
+                          >
                             <Image
                               source={item.uri}
-                              style={{ width: wp('33%'), height: wp('33%'), borderRadius: wp('4%'), marginTop: hp('14%') }}
+                              style={{
+                                width: wp('33%'),
+                                height: wp('33%'),
+                                borderRadius: wp('4%'),
+                                marginTop: hp('14%'),
+                              }}
                               resizeMode="contain"
                             />
                           </TouchableOpacity>
                         )}
                         showsHorizontalScrollIndicator={false}
-                        contentContainerStyle={{ paddingHorizontal: wp('3.6%'), paddingTop: hp('2%') }}
+                        contentContainerStyle={{
+                          paddingHorizontal: wp('3.6%'),
+                          paddingTop: hp('2%'),
+                        }}
                       />
                     </View>
                   </ImageBackground>
@@ -551,7 +768,9 @@ const HomeScreen = () => {
               isHomeLoading={isHomeLoading}
               categoryDiscovery={categoryDiscovery}
               shouldShow={shouldShowCategoryDiscovery}
-              categoryDiscoveryBackgroundImage={categoryDiscoveryBackgroundImage}
+              categoryDiscoveryBackgroundImage={
+                categoryDiscoveryBackgroundImage
+              }
               discoveryCategories={discoveryCategories}
               selectedDiscoveryCategory={selectedDiscoveryCategory}
               onSelectCategory={handleSelectDiscoveryCategory}
@@ -563,10 +782,18 @@ const HomeScreen = () => {
         )}
 
         {!isStoreUnavailable && (
-          <LinearGradient colors={['#FFFFFF', '#F1F1F1']} style={styles.footerBranding}>
+          <LinearGradient
+            colors={['#FFFFFF', '#F1F1F1']}
+            style={styles.footerBranding}
+          >
             <Image
               source={require('../../assets/images/udendeal.png')}
-              style={{ width: wp('65%'), height: hp('10%'), resizeMode: 'contain', marginLeft: wp('-10%') }}
+              style={{
+                width: wp('65%'),
+                height: hp('10%'),
+                resizeMode: 'contain',
+                marginLeft: wp('-10%'),
+              }}
             />
             <View style={{ height: hp('10%') }} />
           </LinearGradient>
@@ -576,11 +803,6 @@ const HomeScreen = () => {
       <Animated.View
         style={[
           styles.floatingContainer,
-          // AnimatedTabBar now floats with position: absolute over the
-          // content instead of reserving flex space, so this container's
-          // own `bottom: hp('0.7%')` (anchored to the screen's full-height
-          // box) would otherwise sit underneath the tab bar. Push it up by
-          // the bar's clearance so it floats above it again.
           { bottom: floatingBottomOffset },
           cartAnimatedStyle,
         ]}

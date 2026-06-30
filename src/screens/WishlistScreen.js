@@ -1,10 +1,4 @@
-import {
-  View,
-  Text,
-  StyleSheet,
-  Image,
-  TouchableOpacity,
-} from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import React, { useState } from 'react';
 import Animated, {
   useSharedValue,
@@ -49,7 +43,7 @@ export default function WishlistScreen() {
   const [confirmationVisible, setConfirmationVisible] = useState(false);
   const [itemToRemove, setItemToRemove] = useState(null);
 
-  // ── Floating cart show/hide on scroll direction ─────────────────────────
+  const tabBarClearance = getTabBarClearance(bottom);
   const lastScrollY = useSharedValue(0);
   const cartTranslateY = useSharedValue(0);
 
@@ -60,7 +54,7 @@ export default function WishlistScreen() {
       if (y <= 10 || diff < -5) {
         cartTranslateY.value = withTiming(0, { duration: 200 });
       } else if (diff > 5) {
-        cartTranslateY.value = withTiming(150, { duration: 200 });
+        cartTranslateY.value = withTiming(tabBarClearance, { duration: 200 });
       }
       lastScrollY.value = y;
     },
@@ -213,13 +207,8 @@ export default function WishlistScreen() {
         <Animated.View
           style={[
             styles.floatingContainer,
-            // AnimatedTabBar floats with position: absolute over the
-            // content instead of reserving flex space, so this container's
-            // own `bottom: hp('0.7%')` (anchored to the screen's full-height
-            // box) would otherwise sit underneath the tab bar. Push it up by
-            // the bar's clearance so it floats above it again.
-            { bottom: hp('0.7%') + getTabBarClearance(bottom) },
-            cartAnimatedStyle,
+            { bottom: hp('0.7%') + tabBarClearance },
+            // cartAnimatedStyle,
           ]}
         >
           <SelectedProducts selectedProducts={cartItems} />

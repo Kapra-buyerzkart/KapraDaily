@@ -74,7 +74,7 @@ export default function MainTabNavigator() {
                 source={require('../assets/images/home.png')}
                 style={[
                   styles.iconImage,
-                  { tintColor: focused ? '#F25000' : null },
+                  { tintColor: focused ? '#F25000' : '#8E8E8E' },
                 ]}
               />
             ),

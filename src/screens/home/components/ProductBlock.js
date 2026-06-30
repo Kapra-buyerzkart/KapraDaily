@@ -1,5 +1,12 @@
 import React from 'react';
-import { View, Text, Image, ImageBackground, FlatList, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  Image,
+  ImageBackground,
+  FlatList,
+  StyleSheet,
+} from 'react-native';
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
@@ -11,11 +18,6 @@ import CONFIG from '../../../globals/config';
 import sectionCardStyles from './sectionCardStyles';
 import ProductBlockShimmer from './ProductBlockShimmer';
 
-// Consolidates the 3 near-identical "background image + title + horizontal
-// product list + See All" sections that used to be triplicated inline in
-// HomeScreen.js. The per-block visual quirks (different padding, different
-// See All thresholds, block 3's content wrapper, etc.) are preserved via
-// props rather than unified, since this is a structural-only refactor.
 const ProductBlock = ({
   isLoading,
   shouldShow,
@@ -28,7 +30,7 @@ const ProductBlock = ({
   titleExtraStyle,
   items,
   contentContainerStyle,
-  shouldShowSeeAll = (count) => count > 3,
+  shouldShowSeeAll = count => count > 3,
   seeAllButtonStyle = { alignSelf: 'center' },
   trailingSpacer = false,
   navigation,
@@ -44,10 +46,6 @@ const ProductBlock = ({
         imageStyle={sectionCardStyles.headerBackgroundbgImage}
       >
         <View style={sectionCardStyles.headerBackgroundbgContent}>
-          {discountBadge != null && (
-            <FlatOfferBadge discount={discountBadge} style={styles.flatOfferBadgeOverlay} />
-          )}
-
           {showTitleImage && (
             <Image
               source={titleImageSource}
@@ -56,7 +54,9 @@ const ProductBlock = ({
             />
           )}
 
-          <Text style={[sectionCardStyles.featuredProductsText, titleExtraStyle]}>
+          <Text
+            style={[sectionCardStyles.featuredProductsText, titleExtraStyle]}
+          >
             {title}
           </Text>
 
@@ -65,7 +65,9 @@ const ProductBlock = ({
           <FlatList
             horizontal
             data={items}
-            keyExtractor={(item, index) => (item.productId || item.id || index).toString()}
+            keyExtractor={(item, index) =>
+              (item.productId || item.id || index).toString()
+            }
             renderItem={({ item }) => (
               <TokenProductCard
                 item={item}
@@ -84,7 +86,10 @@ const ProductBlock = ({
           {shouldShowSeeAll(items.length) && (
             <SeeAllButton
               onPress={() =>
-                navigation.navigate('ProductListScreen', { title, products: items })
+                navigation.navigate('ProductListScreen', {
+                  title,
+                  products: items,
+                })
               }
               style={seeAllButtonStyle}
             />

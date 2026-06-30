@@ -15,7 +15,10 @@ import Animated, {
   withTiming,
   clamp,
 } from 'react-native-reanimated';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 import React, { useState, useEffect, useContext } from 'react';
 import {
   widthPercentageToDP as wp,
@@ -35,6 +38,7 @@ import SelectedProducts from '../../components/SelectedProducts';
 import {
   SCROLL_HIDE_THRESHOLD,
   TAB_BAR_ANIM_DURATION,
+  getTabBarClearance,
 } from '../../animations/tabBarVisibility';
 
 import useRecentSearches from './hooks/useRecentSearches';
@@ -45,6 +49,8 @@ import styles from './SearchScreen.styles';
 const SearchScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
+  const { bottom } = useSafeAreaInsets();
+  const tabBarClearance = getTabBarClearance(bottom);
   const { catId, catName } = route.params || {};
   const { profile, isStoreUnavailable, storeUnavailableData } =
     useContext(AppContext);
@@ -141,7 +147,9 @@ const SearchScreen = () => {
   });
 
   // Nudges the floating cart down when scrolling down, and back to its
-  // resting place when scrolling up — mirrors the Home/Categories behavior.
+  // resting place when scrolling up — mirrors the Home/Categories behavior,
+  // using the same device/platform-aware `tabBarClearance` distance even
+  // though this screen has no real tab bar to ride.
   const cartAnimatedStyle = useAnimatedStyle(() => {
     const progress = clamp(cartVisibility.value, 0, 1);
     return {
@@ -150,7 +158,7 @@ const SearchScreen = () => {
           translateY: interpolate(
             progress,
             [0, 1],
-            [40, 0],
+            [tabBarClearance, 0],
             Extrapolation.CLAMP,
           ),
         },

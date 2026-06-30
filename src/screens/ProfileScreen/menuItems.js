@@ -11,7 +11,7 @@ export const buildMyAccountItems = navigation => [
     key: 'wishlist',
     label: 'My Wishlist',
     icon: <Ionicons name="heart-outline" color={INK} size={wp('4%')} />,
-    onPress: () => navigation.navigate('Wishlist'),
+    onPress: () => navigation.navigate('MainTabs', { screen: 'Wishlist' }),
   },
   {
     key: 'my-orders',

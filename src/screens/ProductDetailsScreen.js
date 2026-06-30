@@ -529,7 +529,7 @@ const ProductDetailsScreen = () => {
 
                       if (!isAvailable || stockQty === 0) {
                         return (
-                          <View style={[styles.addBtn, styles.disabledBtn]}>
+                          <View style={styles.disabledBtn}>
                             <Text
                               style={[
                                 styles.addBtnText,
@@ -981,13 +981,20 @@ const styles = StyleSheet.create({
   },
   addBtnText: {
     color: '#FFF',
+
     fontFamily: FONTS.poppins.bold,
     fontSize: wp('4.8%'),
   },
   disabledBtn: {
     backgroundColor: '#CCC',
     shadowOpacity: 0,
-    elevation: 0,
+    justifyContent: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: wp('34%'),
+    height: hp('5.5%'),
+    borderRadius: hp('3%'),
   },
   outOfStockBadge: {
     fontFamily: FONTS.poppins.semiBold,

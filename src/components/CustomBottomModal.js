@@ -36,6 +36,10 @@ const CustomBottomModal = forwardRef((props, ref) => {
     handleIndicatorStyle,
     keyboardBehavior = 'interactive',
     keyboardBlurBehavior = 'restore',
+    // Lifts the sheet (and dims everything except) this many px off the
+    // bottom, e.g. to float it above a sticky checkout bar that should stay
+    // visible and tappable underneath.
+    bottomInset = 0,
   } = props;
 
   const sheetRef = useRef(null);
@@ -95,18 +99,21 @@ const CustomBottomModal = forwardRef((props, ref) => {
     [onClose],
   );
 
-  // Backdrop with a fade animation; tapping it dismisses the sheet.
+  // Backdrop with a fade animation; tapping it dismisses the sheet. When a
+  // bottomInset is set, stop the backdrop short of it so the content below
+  // (e.g. the sticky checkout bar) stays visible and receives touches.
   const renderBackdrop = useCallback(
     backdropProps => (
       <BottomSheetBackdrop
         {...backdropProps}
+        style={[backdropProps.style, bottomInset ? { bottom: bottomInset } : null]}
         appearsOnIndex={0}
         disappearsOnIndex={-1}
         opacity={0.5}
         pressBehavior="close"
       />
     ),
-    [],
+    [bottomInset],
   );
 
   // Render prop wrapper so FlatList/ScrollView content passed via
@@ -145,6 +152,7 @@ const CustomBottomModal = forwardRef((props, ref) => {
       ref={sheetRef}
       index={0}
       snapPoints={resolvedSnapPoints}
+      bottomInset={bottomInset}
       enablePanDownToClose={enablePanDownToClose}
       enableDynamicSizing={false}
       onChange={handleSheetChange}

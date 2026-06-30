@@ -95,6 +95,11 @@
 		<string>Inter_18pt-ExtraBold.ttf</string>
 		<string>Inter_18pt-BoldItalic.ttf</string>
 		<string>Inter_28pt-ExtraBold.ttf</string>
+		<string>Gilroy-Medium.ttf</string>
+		<string>Gilroy-Regular.ttf</string>
+		<string>Gilroy-Light.ttf</string>
+		<string>Gilroy-Bold.ttf</string>
+		<string>Gilroy-Heavy.ttf</string>
 	</array>
 	<key>UIBackgroundModes</key>
 	<array>

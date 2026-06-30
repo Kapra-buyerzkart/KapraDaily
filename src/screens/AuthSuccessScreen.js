@@ -16,12 +16,15 @@ import {
 } from 'react-native-responsive-screen';
 import { AppContext } from '../context/appContext';
 import ComingSoonModal from '../components/ComingSoonModal';
+import useLandingPagesQuery from '../queries/useLandingPagesQuery';
 
 const { width } = Dimensions.get('window');
 
 const AuthSuccessScreen = ({ navigation }) => {
   const { generalSettings } = useContext(AppContext);
   const [isComingSoonVisible, setIsComingSoonVisible] = useState(false);
+  const { data: landingPages } = useLandingPagesQuery();
+  console.log('[AuthSuccessScreen] landingPages:', landingPages);
 
   const handleKapra = () => {
     navigation.reset({
