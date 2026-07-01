@@ -17,14 +17,53 @@ import {
 import { AppContext } from '../context/appContext';
 import ComingSoonModal from '../components/ComingSoonModal';
 import useLandingPagesQuery from '../queries/useLandingPagesQuery';
+import { getImageUrl } from '../utils/imageUrl';
+import { useFallbackImage } from '../hooks/useFallbackImage';
 
 const { width } = Dimensions.get('window');
+
+const findImage = (images, name) => images?.find(path => path.endsWith(name));
 
 const AuthSuccessScreen = ({ navigation }) => {
   const { generalSettings } = useContext(AppContext);
   const [isComingSoonVisible, setIsComingSoonVisible] = useState(false);
   const { data: landingPages } = useLandingPagesQuery();
-  console.log('[AuthSuccessScreen] landingPages:', landingPages);
+  const landingPageImages = landingPages?.landingPageImages;
+
+  const bgImagePath = findImage(landingPageImages, 'landbg.png');
+  const kapraImagePath = findImage(landingPageImages, '20min.png');
+  const ticketsImagePath = findImage(landingPageImages, 'udentickets.png');
+  const d2cImagePath = findImage(landingPageImages, 'd2c.png');
+  const kshopeImagePath = findImage(landingPageImages, '48hrs.png');
+
+  const bg = useFallbackImage(
+    bgImagePath && getImageUrl(bgImagePath),
+    require('../assets/images/splash/backgroundbg.png'),
+  );
+  const kapra = useFallbackImage(
+    kapraImagePath && getImageUrl(kapraImagePath),
+    require('../assets/images/splash/udendeal.png'),
+  );
+  const tickets = useFallbackImage(
+    ticketsImagePath && getImageUrl(ticketsImagePath),
+    require('../assets/images/splash/Frame 1216249942 1.png'),
+  );
+  const d2c = useFallbackImage(
+    // d2cImagePath && getImageUrl(d2cImagePath),
+    require('../assets/images/splash/Frame 1216249941 1.png'),
+  );
+  const kshope = useFallbackImage(
+    kshopeImagePath && getImageUrl(kshopeImagePath),
+    require('../assets/images/splash/Frame 1216249939 1.png'),
+  );
+
+  console.log('[AuthSuccessScreen] remote image URIs:', {
+    bg: bg.source?.uri,
+    kapra: kapra.source?.uri,
+    tickets: tickets.source?.uri,
+    d2c: d2c.source?.uri,
+    kshope: kshope.source?.uri,
+  });
 
   const handleKapra = () => {
     navigation.reset({
@@ -102,7 +141,8 @@ const AuthSuccessScreen = ({ navigation }) => {
   return (
     // <View style={styles.container}>
     <ImageBackground
-      source={require('../assets/images/splash/backgroundbg.png')}
+      source={bg.source}
+      onError={bg.onError}
       resizeMode="cover"
       style={styles.container}
     >
@@ -124,7 +164,8 @@ const AuthSuccessScreen = ({ navigation }) => {
           {/* 20 minss deal - Large Card (Kapra) */}
           <TouchableOpacity activeOpacity={0.9} onPress={handleKapra}>
             <Image
-              source={require('../assets/images/splash/udendeal.png')}
+              source={kapra.source}
+              onError={kapra.onError}
               style={styles.largeCard}
               resizeMode="contain"
             />
@@ -136,7 +177,8 @@ const AuthSuccessScreen = ({ navigation }) => {
             onPress={handleTicketCollection}
           >
             <Image
-              source={require('../assets/images/splash/Frame 1216249942 1.png')}
+              source={tickets.source}
+              onError={tickets.onError}
               style={styles.largeCard}
               resizeMode="contain"
             />
@@ -146,7 +188,8 @@ const AuthSuccessScreen = ({ navigation }) => {
             {/* D2C */}
             <TouchableOpacity activeOpacity={0.9} onPress={handleD2c}>
               <Image
-                source={require('../assets/images/splash/Frame 1216249941 1.png')}
+                source={d2c.source}
+                onError={d2c.onError}
                 style={styles.smallCard}
                 resizeMode="contain"
               />
@@ -154,7 +197,8 @@ const AuthSuccessScreen = ({ navigation }) => {
             {/* 48 Hrs Deal */}
             <TouchableOpacity activeOpacity={0.9} onPress={handleKshope}>
               <Image
-                source={require('../assets/images/splash/Frame 1216249939 1.png')}
+                source={kshope.source}
+                onError={kshope.onError}
                 style={styles.smallCard}
                 resizeMode="contain"
               />

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, Image, StyleSheet } from 'react-native';
 import { FONTS } from '../../../styles/typography';
 import {
   CART_COLORS,
@@ -9,6 +9,7 @@ import {
   wp,
   hp,
 } from '../../../styles/cartTheme';
+import icons from '../../../assets/icons';
 
 const BillRow = ({ label, value, isGreen }) => (
   <View style={styles.row}>
@@ -33,7 +34,16 @@ const BillSummary = ({ billCalculations }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Bill summary</Text>
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 8,
+        }}
+      >
+        <Image style={{ top: -4 }} source={icons.billSummary} />
+        <Text style={styles.title}>Bill summary</Text>
+      </View>
 
       <View style={styles.card}>
         <BillRow label="Item total" value={`₹${itemTotal.toFixed(2)}`} />

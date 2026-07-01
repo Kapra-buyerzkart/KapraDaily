@@ -72,7 +72,7 @@ const CartProductCard = props => {
 
   // Handle quantity change
   const handleDecrease = () => {
-    if (quantity > 1) {
+    if (quantity > 1 && !isSoldOut) {
       setQuantity(quantity - 1);
       updateCartItemQuantity(cartItemId, quantity - 1, pincodeAreaIdOverride);
     } else {
@@ -184,7 +184,6 @@ const CartProductCard = props => {
                   <TouchableOpacity
                     style={styles.stepperBtn}
                     onPress={handleDecrease}
-                    disabled={isSoldOut}
                   >
                     <Entypo
                       name="minus"

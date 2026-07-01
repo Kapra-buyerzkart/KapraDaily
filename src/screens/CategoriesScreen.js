@@ -1,11 +1,9 @@
 import React, { useState, useContext, useCallback } from 'react';
 import {
   View,
-  Text,
   TouchableOpacity,
   FlatList,
   Image,
-  TextInput,
   StyleSheet,
 } from 'react-native';
 import Animated, {
@@ -24,9 +22,8 @@ import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
-import Feather from 'react-native-vector-icons/Feather';
-import Ionicons from 'react-native-vector-icons/Ionicons';
 
+import HeaderSearch from '../components/HeaderSearch';
 import TokenProductCard from '../components/TokenProductCard';
 import SelectedProducts from '../components/SelectedProducts';
 import FilterSortModal from '../components/FilterSortModal';
@@ -36,7 +33,6 @@ import CategoryListItem from '../components/CategoryListItem';
 import SubCategoryPill from '../components/SubCategoryPill';
 import CategoryProductGridShimmer from '../components/CategoryProductGridShimmer';
 
-import { FONTS } from '../styles/typography';
 import { AppContext } from '../context/appContext';
 import { useDebounce } from '../hooks/useDebounce';
 import useTabBarAnimation from '../hooks/useTabBarAnimation';
@@ -71,7 +67,6 @@ export default function CategoriesScreen() {
 
   // State
   const [searchText, setSearchText] = useState('');
-  const [isSearchVisible, setIsSearchVisible] = useState(false);
   const [isFilterSortModalVisible, setIsFilterSortModalVisible] =
     useState(false);
   const [isLocationModalVisible, setIsLocationModalVisible] = useState(false);
@@ -196,63 +191,15 @@ export default function CategoriesScreen() {
   return (
     <SafeAreaView style={styles.mainContainer} edges={['top', 'left', 'right']}>
       <View style={styles.newHeaderContainer}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={styles.headerBackButton}
-          >
-            <Ionicons name="arrow-back" size={wp('6%')} color="#0F0F0F" />
-          </TouchableOpacity>
-          <Text style={styles.newCategoryHeaderText} numberOfLines={1}>
-            {categoryName}
-          </Text>
-        </View>
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <TouchableOpacity
-            onPress={() => setIsSearchVisible(!isSearchVisible)}
-            style={styles.headerActionButton}
-          >
-            <Feather name="search" size={wp('5.5%')} color="#0F0F0F" />
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => setIsFilterSortModalVisible(true)}
-            style={styles.headerActionButton}
-          >
-            <Ionicons
-              name="options-outline"
-              size={wp('5.5%')}
-              color="#0F0F0F"
-            />
-          </TouchableOpacity>
-        </View>
+        {/* Existing search logic reused: searchText/setSearchText still live here
+            and flow into useCategoriesData via the same debounce as before. */}
+        <HeaderSearch
+          title={categoryName}
+          searchText={searchText}
+          onChangeText={setSearchText}
+          onFilterPress={() => setIsFilterSortModalVisible(true)}
+        />
       </View>
-
-      {isSearchVisible && (
-        <View style={styles.toggleSearchContainer}>
-          <Feather
-            name="search"
-            color={'#666666'}
-            size={wp('4.5%')}
-            style={{ marginLeft: wp('2%') }}
-          />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search product"
-            placeholderTextColor="#999999"
-            value={searchText}
-            onChangeText={setSearchText}
-            autoFocus={true}
-          />
-          {searchText.length > 0 && (
-            <TouchableOpacity
-              onPress={() => setSearchText('')}
-              style={{ marginRight: wp('2%') }}
-            >
-              <Ionicons name="close-circle" size={wp('5%')} color="#999999" />
-            </TouchableOpacity>
-          )}
-        </View>
-      )}
       <View style={styles.row}>
         {isStoreUnavailable ? (
           <StoreUnavailable
@@ -398,40 +345,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#ECECEC',
-  },
-  headerBackButton: {
-    paddingVertical: wp('1%'),
-    paddingRight: wp('2%'),
-  },
-  headerActionButton: {
-    paddingHorizontal: wp('2.2%'),
-    paddingVertical: wp('1%'),
-  },
-  newCategoryHeaderText: {
-    fontFamily: FONTS.poppins.bold,
-    fontSize: wp('5%'),
-    color: '#0F0F0F',
-    flexShrink: 1,
-    marginLeft: wp('1%'),
-  },
-  toggleSearchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#ffffffff',
-    borderRadius: wp('2%'),
-    paddingHorizontal: wp('3%'),
-    height: hp('5.5%'),
-    marginHorizontal: wp('3%'),
-    marginBottom: hp('1.2%'),
-    borderWidth: 1,
-    borderColor: '#ECECEC',
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: wp('3.5%'),
-    marginHorizontal: wp('2%'),
-    color: '#0F0F0F',
-    fontFamily: FONTS.outfit.regular,
   },
   floatingContainer: {
     position: 'absolute',

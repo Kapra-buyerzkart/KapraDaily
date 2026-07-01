@@ -359,7 +359,10 @@ const ProductDetailsScreen = () => {
           {renderHeader()}
           <ScrollView
             ref={mainScrollViewRef}
-            contentContainerStyle={{ paddingBottom: hp('15%') }}
+            contentContainerStyle={{
+              paddingBottom: hp('15%'),
+              paddingTop: hp('5'),
+            }}
             showsVerticalScrollIndicator={false}
             bounces={false}
           >
@@ -801,7 +804,7 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   headerTitle: {
-    fontFamily: FONTS.poppins.bold,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('4.8%'),
     color: '#000',
     marginLeft: wp('2%'),
@@ -880,19 +883,19 @@ const styles = StyleSheet.create({
     minHeight: hp('32%'),
   },
   productName: {
-    fontFamily: FONTS.inter.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('4.2%'),
     color: '#000',
     lineHeight: hp('3%'),
   },
   productDescription: {
-    fontFamily: FONTS.inter.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3.2%'),
     color: '#727783',
     marginTop: hp('0.3%'),
   },
   weightText: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('4.4%'),
     color: '#727783',
     marginTop: hp('1%'),
@@ -913,7 +916,7 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
   },
   tokenBadgeText: {
-    fontFamily: FONTS.poppins.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3.2%'),
     color: '#5e3568',
     marginLeft: wp('1.5%'),
@@ -925,7 +928,7 @@ const styles = StyleSheet.create({
     //  marginTop: hp('3%'),
   },
   discountText: {
-    fontFamily: FONTS.poppins.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('3.4%'),
     color: '#0CA201',
     fontWeight: '600',
@@ -936,19 +939,19 @@ const styles = StyleSheet.create({
     marginTop: hp('0.4%'),
   },
   currentPrice: {
-    fontFamily: FONTS.inter.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('4.8%'),
     color: '#000',
   },
   originalPrice: {
-    fontFamily: FONTS.inter.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('4.8%'),
     color: '#727783',
     textDecorationLine: 'line-through',
     marginLeft: wp('3%'),
   },
   unitPriceText: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3.4%'),
     color: '#969696',
     marginTop: hp('0.4%'),
@@ -982,7 +985,7 @@ const styles = StyleSheet.create({
   addBtnText: {
     color: '#FFF',
 
-    fontFamily: FONTS.poppins.bold,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('4.8%'),
   },
   disabledBtn: {
@@ -997,7 +1000,7 @@ const styles = StyleSheet.create({
     borderRadius: hp('3%'),
   },
   outOfStockBadge: {
-    fontFamily: FONTS.poppins.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('3.2%'),
     color: '#FF0000',
     marginTop: hp('0.5%'),
@@ -1014,7 +1017,7 @@ const styles = StyleSheet.create({
   },
   qtyValue: {
     color: '#FFF',
-    fontFamily: FONTS.poppins.bold,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('4.2%'),
   },
   detailsDivider: {
@@ -1030,7 +1033,7 @@ const styles = StyleSheet.create({
     marginTop: hp('1%'),
   },
   viewProductDetailsButtonText: {
-    fontFamily: FONTS.inter.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3.5%'),
     color: '#f25000',
     marginRight: wp('1.5%'),
@@ -1039,13 +1042,13 @@ const styles = StyleSheet.create({
     marginTop: hp('0.5%'),
   },
   productDetailsText: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3.6%'),
     color: '#555',
     lineHeight: hp('3%'),
   },
   specsHeader: {
-    fontFamily: FONTS.poppins.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('4%'),
     color: '#333',
     marginTop: hp('3%'),
@@ -1069,13 +1072,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   specLabel: {
-    fontFamily: FONTS.poppins.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('3.6%'),
     color: '#444',
     width: wp('40%'),
   },
   specValue: {
-    fontFamily: FONTS.poppins.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3.6%'),
     color: '#777',
     flex: 1,
@@ -1085,7 +1088,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   sectionTitle: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('4.5%'),
     color: '#000',
     paddingHorizontal: wp('8%'),
@@ -1096,7 +1099,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emptyText: {
-    fontFamily: FONTS.poppins.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3.8%'),
     color: '#999',
   },
@@ -1125,7 +1128,7 @@ const styles = StyleSheet.create({
     marginTop: hp('2%'),
   },
   scrollHintText: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3.2%'),
     color: '#F25000',
     marginRight: wp('1%'),

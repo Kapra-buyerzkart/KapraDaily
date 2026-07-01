@@ -83,7 +83,9 @@ const TokenProductCard = ({
     }
 
     if (typeof img === 'string') {
-      const uri = img.startsWith('http') ? img : `${CONFIG.image_base_url}${img}`;
+      const uri = img.startsWith('http')
+        ? img
+        : `${CONFIG.image_base_url}${img}`;
       return { uri };
     }
 
@@ -126,6 +128,8 @@ const TokenProductCard = ({
             <View>
               {!hideWishlist ? (
                 <TouchableOpacity
+                  style={{ padding: 4, right: 4 }}
+                  hitSlop={20}
                   activeOpacity={0.8}
                   onPress={() =>
                     onToggleWishlist
@@ -417,7 +421,7 @@ const styles = StyleSheet.create({
   counterQty: {
     fontSize: wp('3.5%'),
     color: '#FFFFFF',
-    fontFamily: FONTS.gilroy.bold,
+    fontFamily: FONTS.gilroy.semiBold,
   },
 
   imageContainer: {
@@ -465,7 +469,7 @@ const styles = StyleSheet.create({
   // tokenBadgeText: {
   //     color: '#FFF',
   //     fontSize: wp('2.5%'),
-  //     fontFamily: 'Gilroy-Bold',
+  //     fontFamily: 'Gilroy-fbold',
   // },
 
   priceContainer: {
@@ -486,7 +490,7 @@ const styles = StyleSheet.create({
     top: Platform.OS === 'ios' ? 0 : 1,
 
     marginStart: wp('1%'),
-    fontFamily: FONTS.outfit.medium,
+    fontFamily: FONTS.gilroy.medium,
   },
 
   mrpText: {
@@ -521,7 +525,7 @@ const styles = StyleSheet.create({
   offerText: {
     color: '#0CA201',
     fontSize: wp('2.5%'),
-    fontFamily: FONTS.gilroy.bold,
+    fontFamily: FONTS.gilroy.semiBold,
   },
 
   dashedLine: {

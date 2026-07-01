@@ -14,20 +14,58 @@ import {
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
 import ComingSoonModal from '../components/ComingSoonModal';
+import useLandingPagesQuery from '../queries/useLandingPagesQuery';
+import { getImageUrl } from '../utils/imageUrl';
+import { useFallbackImage } from '../hooks/useFallbackImage';
 
-const TILES = [
+const TILES_FALLBACK = [
   require('../assets/d2c/d2c2.png'),
   require('../assets/d2c/d2c1.png'),
   require('../assets/d2c/d2c3.png'),
 ];
 
+const findImage = (images, name) => images?.find(path => path.endsWith(name));
+
 const D2cScreen = ({ navigation }) => {
   const insets = useSafeAreaInsets();
   const [isComingSoonVisible, setIsComingSoonVisible] = useState(false);
+  const { data: landingPages } = useLandingPagesQuery();
+  const d2cImages = landingPages?.d2cImages;
+
+  const titleImagePath = findImage(d2cImages, 'D2C.png');
+  const bgImagePath = findImage(d2cImages, 'd2cbg.png');
+  const tileImagePaths = [
+    findImage(d2cImages, 'd2camsingle.png'),
+    findImage(d2cImages, 'd2cfoods.png'),
+    findImage(d2cImages, 'd2cwash.png'),
+  ];
+
+  const title = useFallbackImage(
+    titleImagePath && getImageUrl(titleImagePath),
+    require('../assets/images/modal/D2C.png'),
+  );
+  const bg = useFallbackImage(
+    bgImagePath && getImageUrl(bgImagePath),
+    require('../assets/d2c/d2cbg.png'),
+  );
+  const tile0 = useFallbackImage(
+    tileImagePaths[0] && getImageUrl(tileImagePaths[0]),
+    TILES_FALLBACK[0],
+  );
+  const tile1 = useFallbackImage(
+    tileImagePaths[1] && getImageUrl(tileImagePaths[1]),
+    TILES_FALLBACK[1],
+  );
+  const tile2 = useFallbackImage(
+    tileImagePaths[2] && getImageUrl(tileImagePaths[2]),
+    TILES_FALLBACK[2],
+  );
+  const tiles = [tile0, tile1, tile2];
 
   return (
     <ImageBackground
-      source={require('../assets/d2c/d2cbg.png')}
+      source={bg.source}
+      onError={bg.onError}
       resizeMode="cover"
       style={styles.container}
     >
@@ -47,20 +85,22 @@ const D2cScreen = ({ navigation }) => {
       >
         <View style={styles.titleContainer}>
           <Image
-            source={require('../assets/images/modal/D2C.png')}
+            source={title.source}
+            onError={title.onError}
             style={styles.logo}
             resizeMode="contain"
           />
         </View>
 
-        {TILES.map((tile, index) => (
+        {tiles.map((tile, index) => (
           <TouchableOpacity
             key={index}
             activeOpacity={0.9}
             onPress={() => setIsComingSoonVisible(true)}
           >
             <Image
-              source={tile}
+              source={tile.source}
+              onError={tile.onError}
               style={styles.tile}
               resizeMode="contain"
             />

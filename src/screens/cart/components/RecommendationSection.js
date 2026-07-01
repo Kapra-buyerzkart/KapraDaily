@@ -1,18 +1,26 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useContext } from 'react';
 import { View, Text, FlatList, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { FONTS } from '../../../styles/typography';
 import { CART_SPACING, wp, hp } from '../../../styles/cartTheme';
 import TokenProductCard from '../../../components/TokenProductCard';
 import useHomepageDataQuery from '../../../queries/useHomepageDataQuery';
-const RecommendationSection = ({ productId, pincodeAreaId }) => {
+import useResolvedAreaId from '../../../queries/useResolvedAreaId';
+import { AppContext } from '../../../context/appContext';
+
+const RecommendationSection = ({ productId }) => {
   const navigation = useNavigation();
-  const { data: homepageData } = useHomepageDataQuery(pincodeAreaId);
+  const { profile } = useContext(AppContext);
+  const { areaId } = useResolvedAreaId(profile?.pincode);
+  const { data: homepageData } = useHomepageDataQuery(areaId);
+
+  console.log(homepageData, 'what is the recommendations');
   const relatedProducts = useMemo(
     () =>
-      (homepageData?.featuredProducts?.length
-        ? homepageData.featuredProducts
-        : homepageData?.bestOffers || []
+      (
+        homepageData?.thirdProductBlock?.Items ||
+        homepageData?.thirdProductBlock?.items ||
+        []
       ).filter(item => String(item.productId || item.id) !== String(productId)),
     [homepageData, productId],
   );

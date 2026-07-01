@@ -35,10 +35,7 @@ const CartFooterSection = ({
 
     <BillSummary billCalculations={billCalculations} />
 
-    <RecommendationSection
-      productId={firstProductId}
-      pincodeAreaId={pincodeAreaId}
-    />
+    <RecommendationSection productId={firstProductId} />
 
     <View style={{ height: bottomSpacerHeight }} />
   </View>

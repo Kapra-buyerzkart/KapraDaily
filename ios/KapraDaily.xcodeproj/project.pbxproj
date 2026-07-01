@@ -36,6 +36,7 @@
 		DF55B6F2633A4B4EAE571485 /* Poppins-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 35C5529043EDEBCCE01B249D /* Poppins-SemiBold.ttf */; };
 		E6FCB45A25CCEC002F78D856 /* Outfit-Light.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 230AAF03515F4DF78F349B95 /* Outfit-Light.ttf */; };
 		FEF3C09680E42C88402FE73B /* Outfit-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 0B43BC60119899D6CF9AA45A /* Outfit-Regular.ttf */; };
+		1078BEE6CB014739BB4BCF97 /* Gilroy-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1149EB5D8CE54E43B471CCC6 /* Gilroy-SemiBold.ttf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -73,6 +74,7 @@
 		E2C6A6755816DC93C626B519 /* Pods-KapraDaily.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-KapraDaily.debug.xcconfig"; path = "Target Support Files/Pods-KapraDaily/Pods-KapraDaily.debug.xcconfig"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		FE1C4802475046C3C5A0DB7F /* Inter_18pt-Regular.ttf */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = file; path = "Inter_18pt-Regular.ttf"; sourceTree = "<group>"; };
+		1149EB5D8CE54E43B471CCC6 /* Gilroy-SemiBold.ttf */ = {isa = PBXFileReference; name = "Gilroy-SemiBold.ttf"; path = "../src/assets/fonts/Gilroy-SemiBold.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -117,6 +119,7 @@
 				36B24D680B9B4588A3A18172 /* Gilroy-Light.ttf */,
 				AF461670181F4D1696D8E7FD /* Gilroy-Bold.ttf */,
 				BA83BE26BCFF4639ADF0AAD8 /* Gilroy-Heavy.ttf */,
+				1149EB5D8CE54E43B471CCC6 /* Gilroy-SemiBold.ttf */,
 			);
 			name = Resources;
 			path = "";
@@ -275,6 +278,7 @@
 				C8A79CDDBC594031BA85DB93 /* Gilroy-Light.ttf in Resources */,
 				B50DC67281664E35A9286C34 /* Gilroy-Bold.ttf in Resources */,
 				A7E520F5633F4AF88E0AE7BD /* Gilroy-Heavy.ttf in Resources */,
+				1078BEE6CB014739BB4BCF97 /* Gilroy-SemiBold.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

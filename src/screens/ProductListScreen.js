@@ -2,44 +2,39 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   FlatList,
-  TextInput,
   Image,
 } from 'react-native';
-import React, { useState } from 'react';
+import React, { useState, useCallback, useContext, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
-import Ionicons from 'react-native-vector-icons/Ionicons';
-import Feather from 'react-native-vector-icons/Feather';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import TokenProductCard from '../components/TokenProductCard';
 import SelectedProducts from '../components/SelectedProducts';
 import { FONTS } from '../styles/typography';
 import StoreUnavailable from '../components/StoreUnavailable';
 import LocationModal from '../components/LocationModal';
+import FilterSortModal from '../components/FilterSortModal';
+import AnimatedHeader from '../components/AnimatedHeader';
 import { AppContext } from '../context/appContext';
-import { useContext, useEffect } from 'react';
 import useProductSearch from '../hooks/useProductSearch';
 import secureStore from '../utils/secureStore';
-import { ActivityIndicator } from 'react-native';
 
 const ProductListScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const { title, products } = route.params || {
-    title: 'Products',
-    products: [],
-  };
+  const { title, products } = route.params || { title: 'Products', products: [] };
 
-  const [searchText, setSearchText] = useState('');
-  const { profile, isStoreUnavailable, storeUnavailableData } =
-    useContext(AppContext);
-  const [isLocationModalVisible, setIsLocationModalVisible] = useState(false);
+  const { profile, isStoreUnavailable, storeUnavailableData } = useContext(AppContext);
+
   const [pincodeAreaId, setPincodeAreaId] = useState(null);
+  const [activeSearchText, setActiveSearchText] = useState('');
+  const [isLocationModalVisible, setIsLocationModalVisible] = useState(false);
+  const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
+  const [filters, setFilters] = useState({ sort: 'relevance', min: 0, max: 5000 });
 
   useEffect(() => {
     const fetchPincode = async () => {
@@ -53,54 +48,45 @@ const ProductListScreen = () => {
     fetchPincode();
   }, [profile]);
 
-  // Use global search if there's a search term
-  const {
-    suggestions: searchResults,
-    loading: searchLoading,
-    setSearchTerm,
-    searchTerm: hookSearchTerm,
-  } = useProductSearch(pincodeAreaId, null, { sortBy: 'relevance' });
+  const { suggestions: searchResults, setSearchTerm } = useProductSearch(
+    pincodeAreaId,
+    null,
+    { sortBy: filters.sort, priceMin: filters.min, priceMax: filters.max },
+  );
 
-  const handleSearch = text => {
-    setSearchText(text);
-    setSearchTerm(text);
-  };
+  // Stable callback — AnimatedHeader is memo-wrapped so this avoids re-renders
+  const handleSearchChange = useCallback(
+    text => {
+      setActiveSearchText(text);
+      setSearchTerm(text);
+    },
+    [setSearchTerm],
+  );
+
+  const handleFilterApply = useCallback(applied => {
+    setFilters(applied);
+  }, []);
+
+  // Stable callbacks — AnimatedHeader is memo-wrapped so this avoids re-renders
+  const handleBack = useCallback(() => {
+    navigation.goBack();
+  }, [navigation]);
+
+  const handleFilterPress = useCallback(() => {
+    setIsFilterModalVisible(true);
+  }, []);
 
   const displayProducts =
-    searchText.trim().length > 0 ? searchResults : products;
-  const isLoading = searchText.trim().length > 0 && searchLoading;
+    activeSearchText.trim().length > 0 ? searchResults : products;
 
   return (
     <SafeAreaView style={styles.mainContainer} edges={['top', 'left', 'right']}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
-        >
-          <Ionicons name="arrow-back" size={wp('6%')} color="#000000" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{title}</Text>
-      </View>
-
-      {/* Search Bar */}
-      <View style={styles.searchSection}>
-        <View style={styles.searchContainer}>
-          <Feather name="search" color={'#2D0F0D'} size={wp('5%')} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search for products..."
-            placeholderTextColor="#767676"
-            value={searchText}
-            onChangeText={handleSearch}
-          />
-          {searchText.length > 0 && (
-            <TouchableOpacity onPress={() => handleSearch('')}>
-              <Ionicons name="close-circle" size={wp('5%')} color="#CCCCCC" />
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
+      <AnimatedHeader
+        title={title}
+        onBack={handleBack}
+        onFilterPress={handleFilterPress}
+        onSearchChange={handleSearchChange}
+      />
 
       {isStoreUnavailable ? (
         <StoreUnavailable
@@ -109,50 +95,57 @@ const ProductListScreen = () => {
           onChangeLocation={() => setIsLocationModalVisible(true)}
         />
       ) : (
-        <>
-          <FlatList
-            data={displayProducts}
-            keyExtractor={(item, index) =>
-              (item.productId || item.id || `product-${index}`).toString()
-            }
-            renderItem={({ item }) => (
-              <View style={styles.productWrapper}>
-                <TokenProductCard
-                  isThreeColumn={true}
-                  item={item}
-                  onPress={() =>
-                    navigation.navigate('ProductDetailsScreen', {
-                      productId: item.productId || item.id,
-                      product: item,
-                    })
-                  }
-                />
-              </View>
-            )}
-            numColumns={3}
-            key={3} // Added key to force re-render when changing numColumns
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.listContent}
-            ListEmptyComponent={
-              <View style={styles.emptyContainer}>
-                <Image
-                  source={require('../assets/images/noimages/noproductfound.png')}
-                  style={styles.emptyImage}
-                />
-                <Text style={styles.emptyText}>No products found</Text>
-              </View>
-            }
-          />
-        </>
+        <FlatList
+          data={displayProducts}
+          keyExtractor={(item, index) =>
+            (item.productId || item.id || `product-${index}`).toString()
+          }
+          renderItem={({ item }) => (
+            <View style={styles.productWrapper}>
+              <TokenProductCard
+                isThreeColumn={true}
+                item={item}
+                onPress={() =>
+                  navigation.navigate('ProductDetailsScreen', {
+                    productId: item.productId || item.id,
+                    product: item,
+                  })
+                }
+              />
+            </View>
+          )}
+          numColumns={3}
+          key={3}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.listContent}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Image
+                source={require('../assets/images/noimages/noproductfound.png')}
+                style={styles.emptyImage}
+              />
+              <Text style={styles.emptyText}>No products found</Text>
+            </View>
+          }
+        />
       )}
 
-      {/* Floating Selection Bar */}
       <View style={styles.floatingContainer}>
         <SelectedProducts />
       </View>
+
       <LocationModal
         visible={isLocationModalVisible}
         onClose={() => setIsLocationModalVisible(false)}
+      />
+
+      <FilterSortModal
+        visible={isFilterModalVisible}
+        onClose={() => setIsFilterModalVisible(false)}
+        onApply={handleFilterApply}
+        initialSort={filters.sort}
+        initialMin={filters.min}
+        initialMax={filters.max}
       />
     </SafeAreaView>
   );
@@ -164,44 +157,6 @@ const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
     backgroundColor: '#FFFFFF',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: wp('4%'),
-    paddingVertical: hp('1.5%'),
-    borderBottomWidth: 1,
-    borderBottomColor: '#F5F5F5',
-  },
-  backButton: {
-    padding: wp('1%'),
-  },
-  headerTitle: {
-    fontFamily: FONTS.poppins.semiBold,
-    fontSize: wp('4.5%'),
-    color: '#000000',
-    marginLeft: wp('3%'),
-  },
-  searchSection: {
-    paddingHorizontal: wp('4%'),
-    paddingVertical: hp('1%'),
-  },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F9F9F9',
-    borderRadius: wp('2%'),
-    paddingHorizontal: wp('3%'),
-    height: hp('5%'),
-    borderWidth: 1,
-    borderColor: '#E3E3E3',
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: wp('3.5%'),
-    color: '#000000',
-    fontFamily: FONTS.outfit.regular,
-    marginLeft: wp('2%'),
   },
   listContent: {
     paddingHorizontal: wp('2%'),
@@ -216,10 +171,16 @@ const styles = StyleSheet.create({
     marginTop: hp('20%'),
     alignItems: 'center',
   },
+  emptyImage: {
+    width: wp('40%'),
+    height: wp('40%'),
+    resizeMode: 'contain',
+  },
   emptyText: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('4%'),
     color: '#999999',
+    marginTop: hp('2%'),
   },
   floatingContainer: {
     position: 'absolute',
@@ -227,16 +188,5 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     alignItems: 'center',
-  },
-  loaderContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  emptyText: {
-    fontFamily: FONTS.poppins.medium,
-    fontSize: wp('4%'),
-    color: '#999999',
-    marginTop: hp('2%'),
   },
 });
