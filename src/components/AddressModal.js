@@ -1,11 +1,9 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   Image,
-  FlatList,
-  Modal,
   Platform,
   StyleSheet,
 } from 'react-native';
@@ -16,6 +14,7 @@ import {
 import { FONTS } from '../styles/typography';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import AntDesign from 'react-native-vector-icons/AntDesign';
+import CustomModal, { MODAL_POSITION } from './modal/CustomModal';
 
 const AddressCard = ({
   item,
@@ -178,86 +177,80 @@ const AddressModal = ({
   onDeleteClicked,
   onCloseThreeDots,
   navigation,
-}) => (
-  <Modal visible={visible} animationType="slide" transparent>
-    <View style={styles.modalOverlay}>
-      <View style={styles.modalContainer}>
-        <View style={styles.modalHeaderView}>
-          <Text style={styles.modalHeaderText}>Select Your Address</Text>
-          <TouchableOpacity onPress={onClose}>
-            <Image
-              style={styles.closeIcon}
-              source={require('../assets/images/close_two.png')}
+}) => {
+  const modalRef = useRef(null);
+
+  // Bridge the parent-controlled `visible` prop to CustomModal's imperative
+  // open/close API (RN core <Modal> does not render on this build).
+  useEffect(() => {
+    if (visible) {
+      modalRef.current?.open();
+    } else {
+      modalRef.current?.close();
+    }
+  }, [visible]);
+
+  return (
+    <CustomModal
+      ref={modalRef}
+      position={MODAL_POSITION.BOTTOM}
+      onClose={onClose}
+      contentStyle={styles.modalContainer}
+    >
+      <View style={styles.modalHeaderView}>
+        <Text style={styles.modalHeaderText}>Select Your Address</Text>
+        <TouchableOpacity onPress={onClose}>
+          <MaterialCommunityIcons
+            name="close"
+            size={wp('6%')}
+            color="#000000"
+          />
+        </TouchableOpacity>
+      </View>
+      <View style={styles.modalInnerView}>
+        <TouchableOpacity
+          onPress={() => {
+            onClose();
+            navigation.navigate('AddLocationScreen');
+          }}
+          style={styles.chooseLocationContainer}
+        >
+          <Image
+            style={
+              Platform.OS === 'ios'
+                ? styles.locationIcon
+                : [styles.locationIcon, { bottom: hp('0.25%') }]
+            }
+            source={require('../assets/images/add_icon.png')}
+          />
+          <Text style={styles.locationText}>Add new location</Text>
+        </TouchableOpacity>
+        <View>
+          <Text style={styles.savedLocationText}>Saved Location</Text>
+          {addresses.map(item => (
+            <AddressCard
+              key={item.id}
+              item={item}
+              onSelect={onSelectAddress}
+              onThreeDots={onThreeDotsClicked}
+              onDelete={onDeleteClicked}
+              onCloseThreeDots={onCloseThreeDots}
+              navigation={navigation}
+              onClose={onClose}
             />
-          </TouchableOpacity>
-        </View>
-        <View style={styles.modalInnerView}>
-          {/* <TouchableOpacity style={styles.chooseLocationContainer}>
-                        <Image
-                            style={Platform.OS === 'ios' ? styles.locationIcon : [styles.locationIcon, { bottom: hp('0.25%') }]}
-                            source={require('../assets/images/location_three.png')}
-                        />
-                        <Text style={styles.locationText}>Choose current location</Text>
-                    </TouchableOpacity> */}
-          <TouchableOpacity
-            onPress={() => {
-              onClose();
-              navigation.navigate('AddLocationScreen');
-            }}
-            style={styles.chooseLocationContainer}
-          >
-            <Image
-              style={
-                Platform.OS === 'ios'
-                  ? styles.locationIcon
-                  : [styles.locationIcon, { bottom: hp('0.25%') }]
-              }
-              source={require('../assets/images/add_icon.png')}
-            />
-            <Text style={styles.locationText}>Add new location</Text>
-          </TouchableOpacity>
-          <View>
-            <Text style={styles.savedLocationText}>Saved Location</Text>
-            <View style={{ maxHeight: hp('35%') }}>
-              <FlatList
-                data={addresses}
-                keyExtractor={item => item.id}
-                renderItem={({ item }) => (
-                  <AddressCard
-                    item={item}
-                    onSelect={onSelectAddress}
-                    onThreeDots={onThreeDotsClicked}
-                    onDelete={onDeleteClicked}
-                    onCloseThreeDots={onCloseThreeDots}
-                    navigation={navigation}
-                    onClose={onClose}
-                  />
-                )}
-                showsVerticalScrollIndicator={false}
-              />
-            </View>
-          </View>
+          ))}
         </View>
       </View>
-    </View>
-  </Modal>
-);
+    </CustomModal>
+  );
+};
 
 export default React.memo(AddressModal);
 
 const styles = StyleSheet.create({
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
-  },
   modalContainer: {
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
     paddingHorizontal: wp('4.65%'),
     paddingVertical: hp('2%'),
-    maxHeight: hp('80%'),
   },
   modalHeaderView: {
     flexDirection: 'row',

@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
   },
   optionLabel: {
     flex: 1,
-    fontFamily: FONTS.gilroy.semiBold,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3.8%'),
     color: CART_COLORS.textPrimary,
   },

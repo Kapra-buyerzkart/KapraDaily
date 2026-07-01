@@ -1,6 +1,16 @@
 module.exports = {
   presets: ['module:@react-native/babel-preset'],
   plugins: [
+    // Path aliasing: import from '@/...' instead of deep '../../../' relatives.
+    // '@' maps to the project's src/ directory. Editor support lives in jsconfig.json.
+    [
+      'module-resolver',
+      {
+        root: ['./src'],
+        alias: { '@': './src' },
+        extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
+      },
+    ],
     // Strip all console.* calls from production (release) bundles so stray logs
     // can never leak data to logcat / device console. `warn` and `error` are kept
     // for diagnostics — sensitive args routed through them are redacted by

@@ -1,8 +1,9 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, Image, FlatList, Modal, TextInput, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, TouchableOpacity, Image, FlatList, StyleSheet } from 'react-native';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { FONTS } from '../styles/typography';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import CustomModal, { MODAL_POSITION } from './modal/CustomModal';
 
 const CouponModal = ({
     visible,
@@ -15,13 +16,28 @@ const CouponModal = ({
     availableGiftCards,
     onCouponClick,
     isCopyOnly = false,
-}) => (
-    <Modal visible={visible} animationType="slide" transparent>
-        <KeyboardAvoidingView
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-            style={styles.modalOverlay}
+}) => {
+    const modalRef = useRef(null);
+
+    // Bridge the parent-controlled `visible` prop to CustomModal's imperative
+    // open/close API (RN core <Modal> does not render on this build).
+    useEffect(() => {
+        if (visible) {
+            modalRef.current?.open();
+        } else {
+            modalRef.current?.close();
+        }
+    }, [visible]);
+
+    return (
+        <CustomModal
+            ref={modalRef}
+            position={MODAL_POSITION.BOTTOM}
+            maxHeight={hp('80%')}
+            scrollable={false}
+            onClose={onClose}
+            contentStyle={styles.modalContainer}
         >
-            <View style={styles.modalContainer}>
                 <View style={styles.modalHeaderView}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: wp('2%') }}>
                         <MaterialCommunityIcons name="ticket-percent" size={wp('6%')} color="#F25000" />
@@ -30,7 +46,7 @@ const CouponModal = ({
                         </Text>
                     </View>
                     <TouchableOpacity onPress={onClose}>
-                        <Image style={styles.closeIcon} source={require('../assets/images/close_two.png')} />
+                        <MaterialCommunityIcons name="close" size={wp('6%')} color="#000000" />
                     </TouchableOpacity>
                 </View>
 
@@ -40,6 +56,7 @@ const CouponModal = ({
                     {isGiftCard ? "Available Gift Cards" : "Available Coupons"}
                 </Text>
                 <FlatList
+                    style={styles.list}
                     data={isGiftCard ? availableGiftCards : availableCoupons}
                     keyExtractor={(item, index) => (item.couponId || item.giftCardId || index).toString()}
                     renderItem={({ item }) => {
@@ -92,26 +109,19 @@ const CouponModal = ({
                     }
                     contentContainerStyle={{ paddingBottom: hp('2%') }}
                 />
-            </View>
-        </KeyboardAvoidingView>
-    </Modal>
-);
+        </CustomModal>
+    );
+};
 
 export default React.memo(CouponModal);
 
 const styles = StyleSheet.create({
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.5)',
-        justifyContent: 'flex-end'
-    },
     modalContainer: {
-        backgroundColor: '#FFFFFF',
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
         paddingHorizontal: wp('4.65%'),
         paddingVertical: hp('2%'),
-        maxHeight: hp('80%')
+    },
+    list: {
+        maxHeight: hp('60%'),
     },
     modalHeaderView: {
         flexDirection: 'row',
@@ -123,11 +133,6 @@ const styles = StyleSheet.create({
         fontFamily: FONTS.poppins.semiBold,
         fontSize: wp('4.5%'),
         color: '#000000'
-    },
-    closeIcon: {
-        width: wp('6%'),
-        height: wp('6%'),
-        resizeMode: 'contain'
     },
     sectionTitle: {
         fontFamily: FONTS.poppins.medium,

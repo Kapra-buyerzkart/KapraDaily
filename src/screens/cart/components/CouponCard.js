@@ -1,9 +1,10 @@
 import React from 'react';
 import OfferRow from './OfferRow';
+import icons from '../../../assets/icons';
 
 const CouponCard = ({ appliedCouponCode, onApply, onRemove }) => (
   <OfferRow
-    iconSource={require('../../../assets/images/couponcode.png')}
+    iconSource={icons.coupon}
     title="Coupon"
     appliedLabel={appliedCouponCode}
     subtitle="View all coupons"

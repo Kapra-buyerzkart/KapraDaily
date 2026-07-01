@@ -1,9 +1,10 @@
 import React from 'react';
 import OfferRow from './OfferRow';
+import icons from '../../../assets/icons';
 
 const RewardsCard = ({ appliedGiftCardCode, onApply, onRemove }) => (
   <OfferRow
-    iconSource={require('../../../assets/images/smart_point.png')}
+    iconSource={icons.smartPoint}
     title="Smart point"
     appliedLabel={appliedGiftCardCode}
     subtitle="View all gift cards"

@@ -21,9 +21,7 @@ const OfferRow = ({
 }) => {
   return (
     <TouchableOpacity activeOpacity={0.8} style={styles.row} onPress={onPress}>
-      <View style={styles.iconBox}>
-        <Image source={iconSource} style={styles.icon} />
-      </View>
+      <Image source={iconSource} style={styles.icon} />
 
       <View style={styles.details}>
         <Text style={styles.title}>{title}</Text>
@@ -62,23 +60,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: CART_COLORS.card,
+    borderWidth: 1,
+    borderColor: CART_COLORS.graySoftColor,
     borderRadius: CART_RADIUS.button,
     paddingVertical: hp('1.3%'),
     paddingHorizontal: CART_SPACING.md,
   },
-  iconBox: {
-    width: wp('10%'),
-    height: wp('10%'),
-    borderRadius: wp('5%'),
-    backgroundColor: CART_COLORS.primaryTint,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   icon: {
-    width: wp('5%'),
-    height: wp('5%'),
-    resizeMode: 'contain',
-    tintColor: CART_COLORS.primary,
+    // width: wp('5%'),
+    // height: wp('5%'),
+    // resizeMode: 'contain',
   },
   details: {
     flex: 1,

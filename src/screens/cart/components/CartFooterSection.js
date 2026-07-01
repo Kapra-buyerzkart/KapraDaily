@@ -1,6 +1,7 @@
 import React from 'react';
 import { View } from 'react-native';
 import WishlistCTA from './WishlistCTA';
+import DeliveryGroupCard from './DeliveryGroupCard';
 import SavingsSection from './SavingsSection';
 import BillSummary from './BillSummary';
 import RecommendationSection from './RecommendationSection';
@@ -19,7 +20,9 @@ const CartFooterSection = ({
   bottomSpacerHeight,
 }) => (
   <View>
-    <WishlistCTA onPress={onWishlistPress} />
+    <DeliveryGroupCard position="bottom">
+      <WishlistCTA onPress={onWishlistPress} />
+    </DeliveryGroupCard>
 
     <SavingsSection
       appliedCouponCode={appliedCouponCode}

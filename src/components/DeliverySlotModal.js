@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
-    View, Text, StyleSheet, Modal, TouchableOpacity,
-    Pressable, ActivityIndicator, ScrollView, Platform
+    View, Text, StyleSheet, TouchableOpacity,
+    ActivityIndicator, ScrollView
 } from 'react-native';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { FONTS } from '../styles/typography';
@@ -9,12 +9,24 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
 import { getDeliverySlotsApi } from '../api/cartService';
+import CustomModal, { MODAL_POSITION } from './modal/CustomModal';
 
 const DeliverySlotModal = ({ visible, onClose, onSelectSlot, pincodeAreaId }) => {
     const [loading, setLoading] = useState(true);
     const [slotGroups, setSlotGroups] = useState([]);
     const [selectedDay, setSelectedDay] = useState(0);
     const [selectedSlot, setSelectedSlot] = useState(null);
+    const modalRef = useRef(null);
+
+    // Bridge the parent-controlled `visible` prop to CustomModal's imperative
+    // open/close API (RN core <Modal> does not render on this build).
+    useEffect(() => {
+        if (visible) {
+            modalRef.current?.open();
+        } else {
+            modalRef.current?.close();
+        }
+    }, [visible]);
 
     useEffect(() => {
         if (visible) {
@@ -59,14 +71,14 @@ const DeliverySlotModal = ({ visible, onClose, onSelectSlot, pincodeAreaId }) =>
     const currentSlots = slotGroups[selectedDay]?.slots || [];
 
     return (
-        <Modal
-            transparent
-            visible={visible}
-            animationType="slide"
-            onRequestClose={onClose}
+        <CustomModal
+            ref={modalRef}
+            position={MODAL_POSITION.BOTTOM}
+            maxHeight={hp('65%')}
+            scrollable={false}
+            onClose={onClose}
+            contentStyle={styles.modalContent}
         >
-            <Pressable style={styles.overlay} onPress={onClose}>
-                <Pressable style={styles.modalContent} onPress={(e) => e.stopPropagation()}>
                     {/* Header */}
                     <View style={styles.header}>
                         <View style={styles.headerLeft}>
@@ -203,25 +215,13 @@ const DeliverySlotModal = ({ visible, onClose, onSelectSlot, pincodeAreaId }) =>
                             </TouchableOpacity>
                         </LinearGradient>
                     </View>
-                </Pressable>
-            </Pressable>
-        </Modal>
+        </CustomModal>
     );
 };
 
 const styles = StyleSheet.create({
-    overlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        justifyContent: 'flex-end',
-    },
     modalContent: {
-        backgroundColor: '#FFFFFF',
-        borderTopLeftRadius: wp('6%'),
-        borderTopRightRadius: wp('6%'),
         paddingTop: hp('1.5%'),
-        paddingBottom: Platform.OS === 'ios' ? hp('4%') : hp('2%'),
-        maxHeight: hp('65%'),
     },
     header: {
         flexDirection: 'row',

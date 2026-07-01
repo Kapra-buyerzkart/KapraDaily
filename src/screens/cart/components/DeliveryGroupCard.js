@@ -4,7 +4,6 @@ import {
   CART_COLORS,
   CART_RADIUS,
   CART_SPACING,
-  CART_SHADOW,
 } from '../../../styles/cartTheme';
 
 const DeliveryGroupCard = ({ position = 'single', children }) => {
@@ -13,6 +12,8 @@ const DeliveryGroupCard = ({ position = 'single', children }) => {
       ? styles.topCap
       : position === 'bottom'
       ? styles.bottomCap
+      : position === 'middle'
+      ? styles.middle
       : styles.singleCap;
 
   return <View style={[styles.shell, radiusStyle]}>{children}</View>;
@@ -24,15 +25,23 @@ const styles = StyleSheet.create({
   shell: {
     backgroundColor: CART_COLORS.card,
     marginHorizontal: CART_SPACING.lg,
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    borderColor: '#E5E7EB',
   },
-  topCap: {},
+  topCap: {
+    borderTopWidth: 1,
+    borderTopLeftRadius: CART_RADIUS.card,
+    borderTopRightRadius: CART_RADIUS.card,
+  },
+  middle: {},
   bottomCap: {
+    borderBottomWidth: 1,
     borderBottomLeftRadius: CART_RADIUS.card,
     borderBottomRightRadius: CART_RADIUS.card,
-    ...CART_SHADOW,
   },
   singleCap: {
+    borderWidth: 1,
     borderRadius: CART_RADIUS.card,
-    ...CART_SHADOW,
   },
 });

@@ -6,13 +6,19 @@ export const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
     backgroundColor: 'white',
+    // borderWidth:1
   },
   listContent: {
     paddingBottom: hp('2%'),
   },
+  // Middle segment of the delivery-group card (matches DeliveryGroupCard shell).
   itemCardWrap: {
-    marginHorizontal: CART_SPACING.lg + 10,
+    marginHorizontal: CART_SPACING.lg,
     paddingHorizontal: CART_SPACING.lg,
+    backgroundColor: CART_COLORS.card,
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    borderColor: '#E5E7EB',
   },
   itemSeparator: {
     height: 1,

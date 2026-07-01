@@ -37,7 +37,6 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: CART_COLORS.border,
     borderStyle: 'dashed',
-    marginTop: CART_SPACING.sm,
   },
   text: {
     flex: 1,

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, ImageBackground } from 'react-native';
 import { FONTS } from '../../../styles/typography';
 import {
   CART_COLORS,
@@ -9,6 +9,7 @@ import {
   wp,
   hp,
 } from '../../../styles/cartTheme';
+import icons from '../../../assets/icons';
 import CouponCard from './CouponCard';
 import RewardsCard from './RewardsCard';
 import CoinCard from './CoinCard';
@@ -23,9 +24,14 @@ const SavingsSection = ({
 }) => {
   return (
     <View style={styles.container}>
-      <View style={styles.ribbon}>
+      <ImageBackground
+        source={icons.saveBanner}
+        style={styles.ribbon}
+        imageStyle={styles.ribbonImage}
+        resizeMode="stretch"
+      >
         <Text style={styles.ribbonText}>Save money</Text>
-      </View>
+      </ImageBackground>
 
       <View style={styles.card}>
         <CouponCard
@@ -59,16 +65,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: CART_SPACING.lg,
   },
   ribbon: {
-    alignSelf: 'flex-start',
-    backgroundColor: CART_COLORS.success,
+    alignSelf: 'center',
     paddingHorizontal: CART_SPACING.lg,
     paddingVertical: hp('0.7%'),
-    borderRadius: CART_RADIUS.button,
     marginBottom: -hp('1.8%'),
-    marginLeft: CART_SPACING.md,
     zIndex: 1,
     ...CART_SHADOW,
   },
+  ribbonImage: {},
   ribbonText: {
     fontFamily: FONTS.poppins.semiBold,
     fontSize: wp('3.4%'),
@@ -80,7 +84,6 @@ const styles = StyleSheet.create({
     paddingTop: hp('2.5%'),
     paddingHorizontal: CART_SPACING.sm,
     paddingBottom: CART_SPACING.sm,
-    // ...CART_SHADOW,
   },
   divider: {
     height: 1,

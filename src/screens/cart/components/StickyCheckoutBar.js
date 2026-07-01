@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   paymentMethodText: {
-    fontFamily: FONTS.gilroy.semiBold,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3.4%'),
     color: CART_COLORS.textPrimary,
     maxWidth: wp('38%'),

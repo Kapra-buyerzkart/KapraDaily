@@ -1,8 +1,9 @@
-import React from 'react';
-import { View, Text, StyleSheet, Modal, TouchableOpacity } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { FONTS } from '../styles/typography';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import CustomModal, { MODAL_POSITION } from './modal/CustomModal';
 
 const StatusModal = ({ visible, onClose, type = 'success', title, message }) => {
     const isSuccess = type === 'success';
@@ -11,54 +12,49 @@ const StatusModal = ({ visible, onClose, type = 'success', title, message }) => 
     const iconColor = isOrange ? '#F25000' : (isSuccess ? '#0CA201' : '#FF0000');
     const buttonColor = isOrange ? '#F25000' : (isSuccess ? '#0CA201' : '#FF0000');
 
+    const modalRef = useRef(null);
+
+    // Bridge the parent-controlled `visible` prop to CustomModal's imperative
+    // open/close API (RN core <Modal> does not render on this build).
+    useEffect(() => {
+        if (visible) {
+            modalRef.current?.open();
+        } else {
+            modalRef.current?.close();
+        }
+    }, [visible]);
+
     return (
-        <Modal
-            transparent={true}
-            visible={visible}
-            animationType="fade"
-            onRequestClose={onClose}
+        <CustomModal
+            ref={modalRef}
+            position={MODAL_POSITION.CENTER}
+            width={wp('85%')}
+            onClose={onClose}
+            contentStyle={styles.content}
         >
-            <View style={styles.overlay}>
-                <View style={styles.modalContainer}>
-                    <View style={styles.iconContainer}>
-                        <MaterialIcons name={iconName} size={wp('12%')} color={iconColor} />
-                    </View>
-
-                    <Text style={styles.title}>{title}</Text>
-                    <Text style={styles.message}>{message}</Text>
-
-                    <View style={styles.buttonContainer}>
-                        <TouchableOpacity
-                            style={[styles.button, { backgroundColor: buttonColor }]}
-                            onPress={onClose}
-                        >
-                            <Text style={styles.buttonText}>OK</Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
+            <View style={styles.iconContainer}>
+                <MaterialIcons name={iconName} size={wp('12%')} color={iconColor} />
             </View>
-        </Modal>
+
+            <Text style={styles.title}>{title}</Text>
+            <Text style={styles.message}>{message}</Text>
+
+            <View style={styles.buttonContainer}>
+                <TouchableOpacity
+                    style={[styles.button, { backgroundColor: buttonColor }]}
+                    onPress={onClose}
+                >
+                    <Text style={styles.buttonText}>OK</Text>
+                </TouchableOpacity>
+            </View>
+        </CustomModal>
     );
 };
 
 const styles = StyleSheet.create({
-    overlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    modalContainer: {
-        width: wp('85%'),
-        backgroundColor: '#FFFFFF',
-        borderRadius: wp('5%'),
+    content: {
         padding: wp('5%'),
         alignItems: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
-        elevation: 5,
     },
     iconContainer: {
         marginBottom: hp('2%'),

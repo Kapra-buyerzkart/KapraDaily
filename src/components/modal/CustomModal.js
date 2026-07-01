@@ -76,6 +76,10 @@ const CustomModal = forwardRef((props, ref) => {
     maxHeight,
     containerStyle,
     contentStyle,
+    // When false, children are rendered directly instead of inside the
+    // built-in ScrollView. Use for content that manages its own scrolling
+    // (nested ScrollView/FlatList) to avoid nested-scroll gesture conflicts.
+    scrollable = true,
     statusBarStyle = 'light-content',
     statusBarBackgroundColor = '#000000',
     disableStatusBarTint = false,
@@ -322,14 +326,18 @@ const CustomModal = forwardRef((props, ref) => {
                   </View>
                 </GestureDetector>
               )}
-              <ScrollView
-                bounces={false}
-                showsVerticalScrollIndicator={false}
-                keyboardShouldPersistTaps="handled"
-                contentContainerStyle={[styles.scrollContent, contentStyle]}
-              >
-                {children}
-              </ScrollView>
+              {scrollable ? (
+                <ScrollView
+                  bounces={false}
+                  showsVerticalScrollIndicator={false}
+                  keyboardShouldPersistTaps="handled"
+                  contentContainerStyle={[styles.scrollContent, contentStyle]}
+                >
+                  {children}
+                </ScrollView>
+              ) : (
+                <View style={contentStyle}>{children}</View>
+              )}
             </Pressable>
           </Animated.View>
         </Animated.View>
@@ -352,6 +360,7 @@ const CustomModal = forwardRef((props, ref) => {
     resolvedMaxHeight,
     resolvedWidth,
     safeAreaStyle,
+    scrollable,
     showDragHandle,
   ]);
 

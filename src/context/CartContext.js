@@ -153,9 +153,7 @@ export const CartProvider = ({ children }) => {
         : response?.data?.items || response?.data || [];
 
       if (addressList.length > 0) {
-        const storedSelectedId = await secureStore.getItem(
-          'selectedAddressId',
-        );
+        const storedSelectedId = await secureStore.getItem('selectedAddressId');
 
         let selectionFound = false;
         const mappedAddresses = addressList

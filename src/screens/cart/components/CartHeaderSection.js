@@ -2,6 +2,7 @@ import React from 'react';
 import CartHeader from './CartHeader';
 import AddressSelector from './AddressSelector';
 import DeliveryHeader from './DeliveryHeader';
+import DeliveryGroupCard from './DeliveryGroupCard';
 import StoreUnavailableBanner from './StoreUnavailableBanner';
 
 const CartHeaderSection = ({
@@ -28,15 +29,16 @@ const CartHeaderSection = ({
         onChangePress={onAddressPress}
       />
     )}
-
-    <DeliveryHeader
-      itemCount={itemCount}
-      tokenLabel={tokenLabel}
-      isScheduled={isScheduled}
-      scheduleLabel={scheduleLabel}
-      onSchedulePress={onSchedulePress}
-      onSwitchToExpress={onSwitchToExpress}
-    />
+    <DeliveryGroupCard position="top">
+      <DeliveryHeader
+        itemCount={itemCount}
+        tokenLabel={tokenLabel}
+        isScheduled={isScheduled}
+        scheduleLabel={scheduleLabel}
+        onSchedulePress={onSchedulePress}
+        onSwitchToExpress={onSwitchToExpress}
+      />
+    </DeliveryGroupCard>
   </>
 );
 

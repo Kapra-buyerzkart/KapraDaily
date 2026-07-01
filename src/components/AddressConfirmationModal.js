@@ -1,127 +1,115 @@
-import React from 'react';
-import { View, Text, StyleSheet, Modal, TouchableOpacity } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { FONTS } from '../styles/typography';
 import LinearGradient from 'react-native-linear-gradient';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import CustomModal, { MODAL_POSITION } from './modal/CustomModal';
 
 const AddressConfirmationModal = ({ visible, onClose, pincode, areaName, onConfirm, isServiceable = true, unavailableMessage, isPlacingOrder = false, onChangeAddress }) => {
+    const modalRef = useRef(null);
+
+    // Bridge the parent-controlled `visible` prop to CustomModal's imperative
+    // open/close API (RN core <Modal> does not render on this build).
+    useEffect(() => {
+        if (visible) {
+            modalRef.current?.open();
+        } else {
+            modalRef.current?.close();
+        }
+    }, [visible]);
+
     return (
-        <Modal
-            transparent={true}
-            visible={visible}
-            animationType="fade"
-            onRequestClose={onClose}
+        <CustomModal
+            ref={modalRef}
+            position={MODAL_POSITION.CENTER}
+            width={wp('90%')}
+            backdropOpacity={0.7}
+            closeOnBackdropPress={false}
+            onClose={onClose}
+            containerStyle={styles.container}
+            contentStyle={styles.content}
         >
-            <View style={styles.overlay}>
-                <View style={styles.modalContainer}>
-                    <View style={[styles.iconContainer, !isServiceable && styles.iconContainerWarning]}>
-                        <Ionicons
-                            name={isServiceable ? "location" : "warning"}
-                            size={wp('8%')}
-                            color={isServiceable ? "#F25000" : "#FF0000"}
-                        />
-                    </View>
-
-                    <Text style={styles.title}>{isServiceable ? "Delivery Confirmation" : "Delivery Unavailable"}</Text>
-
-                    {isServiceable ? (
-                        <Text style={styles.message}>
-                            <Text style={styles.messageRegular}>Your order will be delivered to pincode </Text>
-                            <Text style={styles.messageHighlight}>{pincode} {areaName}</Text>
-                        </Text>
-                    ) : (
-                        <Text style={styles.message}>
-                            <Text style={styles.messageRegular}>{unavailableMessage || "We currently do not serve this area: "}</Text>
-                            {/* <Text style={styles.messageHighlight}>{pincode} {areaName}</Text> */}
-                        </Text>
-                    )}
-
-                    {isServiceable && (
-                        <Text style={styles.warningMessage}>
-                            {isPlacingOrder ? "Clicking Confirm will finalize your order." : "Note: your cart might have been updated due to address change"}
-                        </Text>
-                    )}
-
-                    <View style={styles.buttonContainer}>
-                        {isServiceable ? (
-                            <TouchableOpacity
-                                style={{ width: '100%' }}
-                                activeOpacity={0.8}
-                                onPress={() => {
-                                    if (onConfirm) {
-                                        onConfirm();
-                                    } else {
-                                        onClose();
-                                    }
-                                }}
-                            >
-                                <LinearGradient
-                                    colors={['#F25000', '#FF8C00']}
-                                    start={{ x: 0, y: 0 }}
-                                    end={{ x: 1, y: 0 }}
-                                    style={styles.gradientButton}
-                                >
-                                    <Text
-                                        style={styles.buttonText}
-                                    >
-                                        {isPlacingOrder ? "Confirm & Place Order" : "Confirm Delivery"}
-                                    </Text>
-                                </LinearGradient>
-                            </TouchableOpacity>
-                        ) : (
-                            <TouchableOpacity
-                                style={[styles.outlineButton, { width: '100%' }]}
-                                onPress={() => {
-                                    if (onChangeAddress) {
-                                        onChangeAddress();
-                                    } else {
-                                        onClose();
-                                    }
-                                }}
-                            >
-                                <Text
-                                    style={styles.outlineButtonText}
-                                >
-                                    Change Address
-                                </Text>
-                            </TouchableOpacity>
-                        )}
-
-                        {/* {!isServiceable && (
-                            <TouchableOpacity
-                                style={[styles.closeLabel, { marginTop: hp('1.5%') }]}
-                                onPress={onClose}
-                            >
-                                <Text style={styles.closeLabelText}>Cancel</Text>
-                            </TouchableOpacity>
-                        )} */}
-                    </View>
-                </View>
+            <View style={[styles.iconContainer, !isServiceable && styles.iconContainerWarning]}>
+                <Ionicons
+                    name={isServiceable ? "location" : "warning"}
+                    size={wp('8%')}
+                    color={isServiceable ? "#F25000" : "#FF0000"}
+                />
             </View>
-        </Modal>
+
+            <Text style={styles.title}>{isServiceable ? "Delivery Confirmation" : "Delivery Unavailable"}</Text>
+
+            {isServiceable ? (
+                <Text style={styles.message}>
+                    <Text style={styles.messageRegular}>Your order will be delivered to pincode </Text>
+                    <Text style={styles.messageHighlight}>{pincode} {areaName}</Text>
+                </Text>
+            ) : (
+                <Text style={styles.message}>
+                    <Text style={styles.messageRegular}>{unavailableMessage || "We currently do not serve this area: "}</Text>
+                </Text>
+            )}
+
+            {isServiceable && (
+                <Text style={styles.warningMessage}>
+                    {isPlacingOrder ? "Clicking Confirm will finalize your order." : "Note: your cart might have been updated due to address change"}
+                </Text>
+            )}
+
+            <View style={styles.buttonContainer}>
+                {isServiceable ? (
+                    <TouchableOpacity
+                        style={{ width: '100%' }}
+                        activeOpacity={0.8}
+                        onPress={() => {
+                            if (onConfirm) {
+                                onConfirm();
+                            } else {
+                                onClose();
+                            }
+                        }}
+                    >
+                        <LinearGradient
+                            colors={['#F25000', '#FF8C00']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 0 }}
+                            style={styles.gradientButton}
+                        >
+                            <Text style={styles.buttonText}>
+                                {isPlacingOrder ? "Confirm & Place Order" : "Confirm Delivery"}
+                            </Text>
+                        </LinearGradient>
+                    </TouchableOpacity>
+                ) : (
+                    <TouchableOpacity
+                        style={[styles.outlineButton, { width: '100%' }]}
+                        onPress={() => {
+                            if (onChangeAddress) {
+                                onChangeAddress();
+                            } else {
+                                onClose();
+                            }
+                        }}
+                    >
+                        <Text style={styles.outlineButtonText}>
+                            Change Address
+                        </Text>
+                    </TouchableOpacity>
+                )}
+            </View>
+        </CustomModal>
     );
 };
 
 const styles = StyleSheet.create({
-    overlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    modalContainer: {
-        width: wp('90%'),
-        backgroundColor: '#FFFFFF',
+    container: {
         borderRadius: wp('8%'),
+    },
+    content: {
         paddingVertical: wp('6%'),
         paddingHorizontal: wp('5%'),
         alignItems: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.3,
-        shadowRadius: 20,
-        elevation: 10,
     },
     iconContainer: {
         width: wp('16%'),
@@ -207,15 +195,6 @@ const styles = StyleSheet.create({
         color: '#F25000',
         textAlign: 'center',
     },
-    closeLabel: {
-        alignSelf: 'center',
-    },
-    closeLabelText: {
-        fontFamily: FONTS.poppins.medium,
-        fontSize: wp('3.5%'),
-        color: '#9E9E9E',
-        textDecorationLine: 'underline',
-    }
 });
 
 export default AddressConfirmationModal;

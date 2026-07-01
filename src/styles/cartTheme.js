@@ -18,6 +18,7 @@ export const CART_COLORS = {
   pink: '#FF0066',
   pinkTint: '#FFF0F4',
   danger: '#D32F2F',
+  graySoftColor: '#E5E7EB',
 };
 
 export const CART_RADIUS = {
