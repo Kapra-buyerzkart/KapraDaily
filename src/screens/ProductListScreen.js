@@ -14,7 +14,7 @@ import LocationModal from '../components/LocationModal';
 import FilterSortModal from '../components/FilterSortModal';
 import AnimatedHeader from '../components/AnimatedHeader';
 import { AppContext } from '../context/appContext';
-import useProductSearch from '../hooks/useProductSearch';
+import useProductSearch, { MIN_SEARCH_LENGTH } from '../hooks/useProductSearch';
 import secureStore from '../utils/secureStore';
 
 const ProductListScreen = () => {
@@ -79,7 +79,7 @@ const ProductListScreen = () => {
   }, []);
 
   const displayProducts =
-    activeSearchText.trim().length > 0 ? searchResults : products;
+    activeSearchText.trim().length >= MIN_SEARCH_LENGTH ? searchResults : products;
 
   return (
     <SafeAreaView style={styles.mainContainer} edges={['top', 'left', 'right']}>

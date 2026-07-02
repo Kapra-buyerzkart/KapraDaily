@@ -1,5 +1,13 @@
 import React from 'react';
-import { View, Text, Image, ImageBackground, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  Image,
+  ImageBackground,
+  TouchableOpacity,
+  StyleSheet,
+  Platform,
+} from 'react-native';
 import Animated from 'react-native-reanimated';
 import {
   widthPercentageToDP as wp,
@@ -53,17 +61,28 @@ const StickyHeader = ({
       <View style={styles.headerViewOne}>
         <Animated.View style={etaAnimStyle}>
           <Text style={styles.timeText}>20 mins</Text>
-          <TouchableOpacity style={styles.addressView} onPress={onPressLocation}>
+          <TouchableOpacity
+            style={styles.addressView}
+            onPress={onPressLocation}
+          >
             <Entypo
               name={'location-pin'}
               size={wp('4%')}
               color={'#FFFFFF'}
               style={{ marginRight: wp('1%') }}
             />
-            <Text style={styles.addressText} numberOfLines={1} ellipsizeMode="tail">
+            <Text
+              style={styles.addressText}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
               {profile?.pinAddress || 'Select Location'}
             </Text>
-            <Entypo name={'chevron-right'} size={wp('3.6%')} color={'#FFFFFF'} />
+            <Entypo
+              name={'chevron-right'}
+              size={wp('3.6%')}
+              color={'#FFFFFF'}
+            />
           </TouchableOpacity>
         </Animated.View>
         <View style={styles.headerRightWrapper}>
@@ -72,17 +91,27 @@ const StickyHeader = ({
               onPress={() => navigation.navigate('BCoinScreen')}
               style={styles.bcoinContainer}
             >
-              <Image source={require('../../../assets/icons/udcoin.png')} style={styles.bcoinIcon} />
-              <Text style={styles.tokenText}>{dashboardData?.wallet?.bCoins || '0'}</Text>
+              <Image
+                source={require('../../../assets/icons/udcoin.png')}
+                style={styles.bcoinIcon}
+              />
+              <Text style={styles.tokenText}>
+                {dashboardData?.wallet?.bCoins || '0'}
+              </Text>
             </TouchableOpacity>
           </Animated.View>
           <Animated.View style={profileAnimStyle}>
             <View style={{ overflow: 'visible' }}>
               <TouchableOpacity
-                onPress={() => navigation.navigate('ProfileScreen', { type: 'login' })}
+                onPress={() =>
+                  navigation.navigate('ProfileScreen', { type: 'login' })
+                }
                 activeOpacity={0.85}
               >
-                <ProfileAvatarBadge size={profileAvatarSize} isPrivileged={profile?.isPrivileged} />
+                <ProfileAvatarBadge
+                  size={profileAvatarSize}
+                  isPrivileged={profile?.isPrivileged}
+                />
               </TouchableOpacity>
             </View>
           </Animated.View>
@@ -108,7 +137,9 @@ const StickyHeader = ({
       ]}
     >
       <TouchableOpacity
-        onPress={() => !isStoreUnavailable && navigation.navigate('SearchScreen')}
+        onPress={() =>
+          !isStoreUnavailable && navigation.navigate('SearchScreen')
+        }
         onPressIn={onSearchPressIn}
         onPressOut={onSearchPressOut}
         style={[
@@ -121,27 +152,43 @@ const StickyHeader = ({
         <View style={styles.searchProductContainer}>
           <RotatingPlaceholder
             examples={SEARCH_EXAMPLES}
-            prefix='Search for "'
+            prefix="Search for "
             suffix='"'
             style={styles.searchProductText}
           />
         </View>
-        <Feather name="clipboard" color={'black'} size={wp('5%')} style={styles.clipboardIcon} />
+        <Feather
+          name="clipboard"
+          color={'black'}
+          size={wp('5%')}
+          style={styles.clipboardIcon}
+        />
       </TouchableOpacity>
     </Animated.View>
   );
 
   if (topSectionBanner && topSectionBanner.length > 0) {
     return (
-      <TouchableOpacity activeOpacity={0.9} onPress={() => onBannerPress(topSectionBanner[0])}>
+      <TouchableOpacity
+        activeOpacity={0.9}
+        onPress={() => onBannerPress(topSectionBanner[0])}
+      >
         <ImageBackground
           source={topSectionBanner[0].uri}
-          style={{ width: wp('100%'), paddingTop: top, paddingBottom: hp('1%') }}
+          style={{
+            width: wp('100%'),
+            paddingTop: top,
+            paddingBottom: hp('1%'),
+          }}
           imageStyle={{ resizeMode: 'cover' }}
         >
           <Animated.View
             pointerEvents="none"
-            style={[StyleSheet.absoluteFill, { backgroundColor: '#FFFFFF' }, glassOverlayAnimStyle]}
+            style={[
+              StyleSheet.absoluteFill,
+              { backgroundColor: '#FFFFFF' },
+              glassOverlayAnimStyle,
+            ]}
           />
 
           {renderCollapsibleInfo()}
@@ -150,7 +197,11 @@ const StickyHeader = ({
           <Animated.View
             pointerEvents="none"
             style={[
-              { height: 1, backgroundColor: 'rgba(0,0,0,0.08)', marginTop: hp('0.5%') },
+              {
+                height: 1,
+                backgroundColor: 'rgba(0,0,0,0.08)',
+                marginTop: hp('0.5%'),
+              },
               stickyBorderAnimStyle,
             ]}
           />
@@ -160,14 +211,23 @@ const StickyHeader = ({
   }
 
   return (
-    <Animated.View style={[{ paddingTop: top, paddingBottom: hp('1%') }, fallbackHeaderBgStyle]}>
+    <Animated.View
+      style={[
+        { paddingTop: top, paddingBottom: hp('1%') },
+        fallbackHeaderBgStyle,
+      ]}
+    >
       {renderCollapsibleInfo()}
       {renderSearchBar()}
 
       <Animated.View
         pointerEvents="none"
         style={[
-          { height: 1, backgroundColor: 'rgba(255,255,255,0.08)', marginTop: hp('0.5%') },
+          {
+            height: 1,
+            backgroundColor: 'rgba(255,255,255,0.08)',
+            marginTop: hp('0.5%'),
+          },
           stickyBorderAnimStyle,
         ]}
       />

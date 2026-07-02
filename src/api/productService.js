@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { get, post } from './networkUtils';
 
 export const getProductDetails = async (productId, pincodeAreaId) => {
@@ -16,10 +17,11 @@ export const getRelatedProductsApi = async (productId, pincodeAreaId, limit = 10
     });
 };
 
-export const getProductSuggestionsApi = async (term, pincodeAreaId, limit = 8) => {
+export const getProductSuggestionsApi = async (term, pincodeAreaId, limit = 8, signal) => {
     try {
         const response = await get(`product/suggestions`, {
-            params: { term, pincodeAreaId, limit }
+            params: { term, pincodeAreaId, limit },
+            signal,
         });
 
         // Handle case where success is false or data is missing
@@ -36,6 +38,11 @@ export const getProductSuggestionsApi = async (term, pincodeAreaId, limit = 8) =
         // If server returns error or success:false, return empty list structure to prevent UI errors
         return { success: true, data: [] };
     } catch (error) {
+        // Let react-query see cancellations as cancellations (not as a successful empty
+        // response) so an aborted request for a stale term doesn't poison its cache entry.
+        if (axios.isCancel(error) || error.code === 'ERR_CANCELED') {
+            throw error;
+        }
         // Silently handle error as no results found
         return { success: true, data: [] };
     }

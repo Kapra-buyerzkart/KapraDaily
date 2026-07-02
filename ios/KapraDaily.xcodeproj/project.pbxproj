@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		0B80440D73890361693F8430 /* Poppins-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 9EB289BFC06846D085CE7083 /* Poppins-Regular.ttf */; };
+		1078BEE6CB014739BB4BCF97 /* Gilroy-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1149EB5D8CE54E43B471CCC6 /* Gilroy-SemiBold.ttf */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		14334B413E2B4C59AFD928BC /* Gilroy-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 63CAC06FB886468EB2F1D6E9 /* Gilroy-Regular.ttf */; };
 		1DFAAD124EF2F1B6211DFF9B /* Outfit-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 574BF55C8EFBB8EB29343430 /* Outfit-Bold.ttf */; };
@@ -36,13 +37,13 @@
 		DF55B6F2633A4B4EAE571485 /* Poppins-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 35C5529043EDEBCCE01B249D /* Poppins-SemiBold.ttf */; };
 		E6FCB45A25CCEC002F78D856 /* Outfit-Light.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 230AAF03515F4DF78F349B95 /* Outfit-Light.ttf */; };
 		FEF3C09680E42C88402FE73B /* Outfit-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 0B43BC60119899D6CF9AA45A /* Outfit-Regular.ttf */; };
-		1078BEE6CB014739BB4BCF97 /* Gilroy-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1149EB5D8CE54E43B471CCC6 /* Gilroy-SemiBold.ttf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		0B2EC2C2CDF0D6F6CDA433DF /* Lexend-Medium.ttf */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = file; path = "Lexend-Medium.ttf"; sourceTree = "<group>"; };
 		0B43BC60119899D6CF9AA45A /* Outfit-Regular.ttf */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = file; path = "Outfit-Regular.ttf"; sourceTree = "<group>"; };
 		111B5ED39B4E384FB08C0EDE /* Inter_18pt-BoldItalic.ttf */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = file; path = "Inter_18pt-BoldItalic.ttf"; sourceTree = "<group>"; };
+		1149EB5D8CE54E43B471CCC6 /* Gilroy-SemiBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Gilroy-SemiBold.ttf"; path = "../src/assets/fonts/Gilroy-SemiBold.ttf"; sourceTree = "<group>"; };
 		134A9F7D64D529307254A44C /* Poppins-Light.ttf */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = file; path = "Poppins-Light.ttf"; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* KapraDaily.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KapraDaily.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = KapraDaily/Images.xcassets; sourceTree = "<group>"; };
@@ -74,7 +75,6 @@
 		E2C6A6755816DC93C626B519 /* Pods-KapraDaily.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-KapraDaily.debug.xcconfig"; path = "Target Support Files/Pods-KapraDaily/Pods-KapraDaily.debug.xcconfig"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		FE1C4802475046C3C5A0DB7F /* Inter_18pt-Regular.ttf */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = file; path = "Inter_18pt-Regular.ttf"; sourceTree = "<group>"; };
-		1149EB5D8CE54E43B471CCC6 /* Gilroy-SemiBold.ttf */ = {isa = PBXFileReference; name = "Gilroy-SemiBold.ttf"; path = "../src/assets/fonts/Gilroy-SemiBold.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */

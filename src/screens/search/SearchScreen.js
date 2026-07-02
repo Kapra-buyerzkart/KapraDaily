@@ -25,7 +25,7 @@ import {
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import useProductSearch from '../../hooks/useProductSearch';
+import useProductSearch, { MIN_SEARCH_LENGTH } from '../../hooks/useProductSearch';
 import secureStore from '../../utils/secureStore';
 import { AppContext } from '../../context/appContext';
 import TokenProductCard from '../../components/TokenProductCard';
@@ -261,7 +261,7 @@ const SearchScreen = () => {
         />
       ) : (
         <>
-          {searchTerm.trim().length > 0 && (
+          {searchTerm.trim().length >= MIN_SEARCH_LENGTH && (
             <SearchResultsHeader
               loading={loading}
               resultCount={resultCount}
@@ -299,14 +299,14 @@ const SearchScreen = () => {
             ListEmptyComponent={
               !loading &&
               suggestions.length === 0 &&
-              (searchTerm.length > 0 || catId) && (
+              (searchTerm.trim().length >= MIN_SEARCH_LENGTH || catId) && (
                 <View style={styles.emptyContainer}>
                   <Image
                     source={require('../../assets/images/noimages/noproductfound.png')}
                     style={styles.emptyImage}
                   />
                   <Text style={styles.noResultsText}>
-                    {searchTerm.length > 0
+                    {searchTerm.trim().length >= MIN_SEARCH_LENGTH
                       ? `No products found for "${searchTerm}"`
                       : `No products found in this category`}
                   </Text>

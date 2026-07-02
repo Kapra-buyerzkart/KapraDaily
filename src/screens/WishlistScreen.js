@@ -47,6 +47,8 @@ export default function WishlistScreen() {
   const lastScrollY = useSharedValue(0);
   const cartTranslateY = useSharedValue(0);
 
+  const insets = useSafeAreaInsets();
+
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: event => {
       const y = event.contentOffset.y;
@@ -128,7 +130,7 @@ export default function WishlistScreen() {
   const renderFooter = () => (
     <View style={styles.footerContainer}>
       <Image
-        source={require('../assets/images/wishlistnomore.png')}
+        source={require('../assets/images/noimages/nothing_found.png')}
         style={styles.footerImage}
       />
       <Text style={styles.footerText}>NO MORE ITEMS</Text>
@@ -137,7 +139,7 @@ export default function WishlistScreen() {
   const renderNoitem = () => (
     <View style={styles.footerContainer}>
       <Image
-        source={require('../assets/images/nowish.png')}
+        source={require('../assets/images/noimages/nothing_found.png')}
         style={styles.footerImage}
       />
       <Text style={styles.footerText}>{'No Wish \n Items'}</Text>
@@ -145,35 +147,33 @@ export default function WishlistScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.mainContainer} edges={['top']}>
-      <LinearGradient
-        colors={['#FFE7DB', '#FFFFFF']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
+    <View
+      style={[styles.mainContainer, { paddingTop: insets.top }]}
+      edges={['top']}
+    >
+      <View
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+
+          paddingHorizontal: wp('4.65%'),
+        }}
       >
-        <View
-          style={{
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            paddingHorizontal: wp('4.65%'),
-          }}
-        >
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <TouchableOpacity onPress={() => navigation.goBack()}>
-              <Image
-                style={styles.leftArrowIcon}
-                source={require('../assets/images/left_arrow.png')}
-              />
-            </TouchableOpacity>
-            <Text style={styles.header}>Wishlist</Text>
-          </View>
-          <Image
-            style={styles.giftImage}
-            source={require('../assets/images/gift_two.png')}
-          />
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <TouchableOpacity onPress={() => navigation.goBack()}>
+            <Image
+              style={styles.leftArrowIcon}
+              source={require('../assets/images/left_arrow.png')}
+            />
+          </TouchableOpacity>
+          <Text style={styles.header}>Wishlist</Text>
         </View>
-      </LinearGradient>
+        <Image
+          style={styles.giftImage}
+          source={require('../assets/images/noimages/nothing_found.png')}
+        />
+      </View>
       <View style={styles.productListView}>
         {isStoreUnavailable ? (
           <StoreUnavailable
@@ -229,14 +229,14 @@ export default function WishlistScreen() {
         visible={isLocationModalVisible}
         onClose={() => setIsLocationModalVisible(false)}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'white',
   },
   header: {
     fontFamily: FONTS.poppins.semiBold,

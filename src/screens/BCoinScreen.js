@@ -516,12 +516,12 @@ const BCoinScreen = () => {
           )}
         </>
       </View>
-      {/* <TouchableOpacity
+      <TouchableOpacity
         onPress={() => setShowRedeemModal(true)}
         style={styles.redeemButton}
       >
         <Text style={styles.redeemText}>Redeem UD-coin</Text>
-      </TouchableOpacity> */}
+      </TouchableOpacity>
       <LocationModal
         visible={isLocationModalVisible}
         onClose={() => setIsLocationModalVisible(false)}

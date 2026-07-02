@@ -15,6 +15,7 @@ export const COLORS = {
   info: '#00BCD4',
 
   pink: '#FF0066',
+  darkRed: '#FF0000',
   pinkTint: '#FFF0F4',
 
   black: '#000000',

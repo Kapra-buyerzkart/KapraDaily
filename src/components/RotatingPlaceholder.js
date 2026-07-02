@@ -1,4 +1,5 @@
 import React, { memo, useEffect, useState, useCallback } from 'react';
+import { View } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -106,15 +107,26 @@ const RotatingPlaceholder = ({
   });
 
   return (
-    <Animated.Text
-      style={[style, animatedStyle]}
-      numberOfLines={numberOfLines}
-      pointerEvents="none"
-    >
-      {prefix}
-      {examples[currentIndex]}
-      {suffix}
-    </Animated.Text>
+    <View style={{ flexDirection: 'row' }}>
+      {prefix ? (
+        <Animated.Text
+          style={style}
+          numberOfLines={numberOfLines}
+          pointerEvents="none"
+        >
+          {prefix}
+        </Animated.Text>
+      ) : null}
+      <Animated.Text
+        style={[style, animatedStyle]}
+        numberOfLines={numberOfLines}
+        pointerEvents="none"
+      >
+        {suffix}
+        {examples[currentIndex]}
+        {suffix}
+      </Animated.Text>
+    </View>
   );
 };
 

@@ -4,12 +4,9 @@ import {
   StyleSheet,
   TouchableOpacity,
   Image,
-  Platform,
   ActivityIndicator,
 } from 'react-native';
 import React, { useState, useMemo, useEffect } from 'react';
-import { BlurView } from '@react-native-community/blur';
-import LinearGradient from 'react-native-linear-gradient';
 import Entypo from 'react-native-vector-icons/Entypo';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import {
@@ -22,6 +19,7 @@ import CONFIG from '../globals/config';
 import { useWishlist } from '../context/WishlistContext';
 import ConfirmationModal from './ConfirmationModal';
 import { CART_COLORS, CART_RADIUS, CART_SPACING } from '../styles/cartTheme';
+import COLORS from '@/styles/colors';
 
 const CartProductCard = props => {
   const { updateCartItemQuantity, removeFromCart, updatingItems } = useCart();
@@ -90,37 +88,18 @@ const CartProductCard = props => {
   };
 
   return (
-    <View style={styles.productCardView}>
-      <View style={styles.productImageView}>
-        {isSoldOut && (
-          <View style={styles.overlayContainer} pointerEvents="none">
-            {Platform.OS === 'ios' && (
-              <BlurView
-                style={StyleSheet.absoluteFill}
-                blurType="light"
-                blurAmount={2.5}
-                reducedTransparencyFallbackColor="rgba(0,0,0,0.4)"
-              />
-            )}
-            <View style={styles.overlayDark} />
-
-            {Platform.OS === 'android' && (
-              <View style={styles.androidBlurFallback} />
-            )}
-
-            <View style={styles.soldOutContainer}>
-              <LinearGradient
-                colors={['#FF0000', '#FF8D8D']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.soldOutGradient}
-              >
-                <Text style={styles.soldOutText}>Sold Out</Text>
-              </LinearGradient>
-            </View>
-          </View>
-        )}
-
+    <View
+      style={[
+        styles.productCardView,
+        isSoldOut && styles.productCardViewSoldOut,
+      ]}
+    >
+      <View
+        style={[
+          styles.productImageView,
+          isSoldOut && styles.productImageViewSoldOut,
+        ]}
+      >
         <Image
           style={styles.productImageStyle}
           source={imageSource}
@@ -142,13 +121,28 @@ const CartProductCard = props => {
 
       <View style={styles.productInfo}>
         <View style={styles.infoRow}>
-          <Text
-            style={styles.productNameText}
-            numberOfLines={2}
-            ellipsizeMode="tail"
-          >
-            {productName}
-          </Text>
+          {isSoldOut ? (
+            <View style={styles.soldOutInfoColumn}>
+              <View style={styles.soldOutBadge}>
+                <Text style={styles.soldOutBadgeText}>Sold Out</Text>
+              </View>
+              <Text
+                style={styles.removeToPlaceOrderText}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                Remove to place order
+              </Text>
+            </View>
+          ) : (
+            <Text
+              style={styles.productNameText}
+              numberOfLines={2}
+              ellipsizeMode="tail"
+            >
+              {productName}
+            </Text>
+          )}
 
           <View style={styles.productPrizeView}>
             {unitPrice !== specialPrice && (
@@ -161,7 +155,7 @@ const CartProductCard = props => {
 
         <View style={styles.infoRow}>
           <View style={styles.countColumn}>
-            {btokens > 0 && (
+            {!isSoldOut && btokens > 0 && (
               <View style={styles.btokenContainerSmall}>
                 <Image
                   style={styles.btokenImageSmall}
@@ -170,7 +164,9 @@ const CartProductCard = props => {
                 <Text style={styles.btokenTextSmall}>{btokens} UD Token</Text>
               </View>
             )}
-            <Text style={styles.productCount}>{quantity} pcs</Text>
+            {!isSoldOut && (
+              <Text style={styles.productCount}>{quantity} pcs</Text>
+            )}
           </View>
 
           {!disableManage && (
@@ -227,34 +223,35 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     paddingVertical: hp('1.4%'),
   },
-  overlayContainer: {
-    ...StyleSheet.absoluteFill,
-    zIndex: 10,
-    borderRadius: CART_RADIUS.productCard,
-    overflow: 'hidden',
+  productCardViewSoldOut: {
+    borderRadius: CART_RADIUS.card,
+    // backgroundColor: CART_COLORS.background,
+    paddingHorizontal: CART_SPACING.sm,
   },
-  overlayDark: {
-    ...StyleSheet.absoluteFill,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+  soldOutInfoColumn: {
+    flex: 1,
+    alignItems: 'flex-start',
+    marginRight: CART_SPACING.sm,
   },
-  soldOutContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: '100%',
+  soldOutBadge: {
+    backgroundColor: COLORS.error,
+    borderBottomRightRadius: 10,
+    borderBottomLeftRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    marginBottom: hp('0.6%'),
   },
-  soldOutGradient: {
-    width: wp('27.9%'),
-    height: hp('3.3%'),
-    borderBottomRightRadius: wp('2.3%'),
-    borderBottomLeftRadius: wp('2.3%'),
-    justifyContent: 'center',
-    alignItems: 'center',
-    bottom: hp('2%'),
-  },
-  soldOutText: {
+  soldOutBadgeText: {
     fontFamily: FONTS.gilroy.bold,
     color: '#FFFFFF',
-    fontSize: wp('4.18%'),
+    fontSize: wp('3%'),
+    textAlign: 'center',
+    textTransform: 'uppercase',
+  },
+  removeToPlaceOrderText: {
+    fontFamily: FONTS.gilroy.medium,
+    fontSize: wp('4%'),
+    color: CART_COLORS.textGray,
   },
   productImageView: {
     width: wp('21.4%'),
@@ -264,6 +261,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
+  },
+  productImageViewSoldOut: {
+    backgroundColor: CART_COLORS.background,
   },
   productImageStyle: {
     width: '78%',
@@ -356,10 +356,6 @@ const styles = StyleSheet.create({
     fontSize: wp('3.4%'),
     minWidth: wp('5%'),
     textAlign: 'center',
-  },
-  androidBlurFallback: {
-    ...StyleSheet.absoluteFill,
-    backgroundColor: 'rgba(0,0,0,0.4)',
   },
   btokenContainerSmall: {
     flexDirection: 'row',
