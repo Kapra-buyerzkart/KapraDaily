@@ -4,13 +4,13 @@ import CategoriesScreen from '../screens/CategoriesScreen';
 import WishlistScreen from '../screens/WishlistScreen';
 import KshopeScreen from '../screens/KshopeScreen';
 import { Image, Platform, StyleSheet, Text } from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import HomeStack from './HomeStack';
+import icons from '../assets/icons';
 import { FONTS } from '../styles/typography';
 import { useContext } from 'react';
 import { AppContext } from '../context/appContext';
@@ -39,7 +39,7 @@ export default function MainTabNavigator() {
         tabBar={props => <AnimatedTabBar {...props} />}
         screenOptions={{
           tabBarShowLabel: true,
-          tabBarActiveTintColor: '#F25000',
+          tabBarActiveTintColor: '#000000ff',
           tabBarInactiveTintColor: null,
 
           tabBarStyle: {
@@ -69,12 +69,12 @@ export default function MainTabNavigator() {
           options={{
             headerShown: false,
 
-            tabBarIcon: ({ focused, color }) => (
+            tabBarIcon: ({ focused }) => (
               <Image
-                source={require('../assets/images/home.png')}
+                source={focused ? icons.homeFilled : icons.home}
                 style={[
                   styles.iconImage,
-                  { tintColor: focused ? '#F25000' : '#8E8E8E' },
+                  { tintColor: focused ? '#000000ff' : '#8E8E8E' },
                 ]}
               />
             ),
@@ -101,10 +101,12 @@ export default function MainTabNavigator() {
             headerShown: false,
 
             tabBarIcon: ({ focused }) => (
-              <Ionicons
-                name="basket-outline"
-                size={wp('6.12%')}
-                color={focused ? '#F25000' : '#8E8E8E'}
+              <Image
+                source={focused ? icons.catFilld : icons.cat}
+                style={[
+                  styles.iconImage,
+                  { tintColor: focused ? '#000000ff' : '#8E8E8E' },
+                ]}
               />
             ),
 
@@ -134,11 +136,11 @@ export default function MainTabNavigator() {
 
             tabBarIcon: ({ focused }) => (
               <Image
-                source={require('../assets/images/heart.png')}
+                source={focused ? icons.heartFilled : icons.heart}
                 style={{
                   height: wp('5.4%'),
                   width: wp('5.4%'),
-                  tintColor: focused ? '#F25000' : null,
+                  tintColor: focused ? '#000000ff' : '#8E8E8E',
                   resizeMode: 'contain',
                 }}
               />

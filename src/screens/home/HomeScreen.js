@@ -108,7 +108,7 @@ const HomeScreen = () => {
   const searchPressScale = useSharedValue(1);
 
   const tabBarClearance = getTabBarClearance(bottom);
-  const floatingBottomOffset = hp('0.7%') + tabBarClearance;
+  const floatingBottomOffset = hp('0.2%') + tabBarClearance;
 
   const { onScrollWorklet } = useTabBarAnimation();
 

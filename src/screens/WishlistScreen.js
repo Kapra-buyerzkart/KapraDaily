@@ -64,12 +64,11 @@ export default function WishlistScreen() {
     transform: [{ translateY: cartTranslateY.value }],
   }));
 
-  // Refresh wishlist when screen is focused
   useFocusEffect(
     React.useCallback(() => {
       let isMounted = true;
       const fetchWishlist = async () => {
-        if (isLoading) return; // Avoid redundant fetches if already loading
+        if (isLoading) return;
 
         showLoader(true);
         await loadWishlist(true); // Force fetch to bypass standard caching
@@ -207,7 +206,7 @@ export default function WishlistScreen() {
         <Animated.View
           style={[
             styles.floatingContainer,
-            { bottom: hp('0.7%') + tabBarClearance },
+            { bottom: hp('0.2%') + tabBarClearance },
             // cartAnimatedStyle,
           ]}
         >

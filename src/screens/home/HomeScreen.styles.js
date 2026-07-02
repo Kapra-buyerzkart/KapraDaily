@@ -11,7 +11,7 @@ const styles = StyleSheet.create({
   },
   floatingContainer: {
     position: 'absolute',
-    bottom: hp('0.7%'),
+    bottom: hp('10%'),
     left: 0,
     right: 0,
     alignItems: 'center',

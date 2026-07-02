@@ -27,6 +27,12 @@ const icons = {
   wrap: require('./wrap.png'),
   udCoinNew: require('./udCoinNew.png'),
   saveBanner: require('./saveBanner.png'),
+  home: require('./home.png'),
+  homeFilled: require('./home_filled.png'),
+  heart: require('./heart.png'),
+  heartFilled: require('./heart_filled.png'),
+  cat: require('./categories_shaded.png'),
+  catFilld: require('./categories.png'),
 };
 
 export default icons;

@@ -99,7 +99,7 @@ export default function CategoriesScreen() {
 
   // Memoized values
   const tabBarClearance = getTabBarClearance(bottom);
-  const floatingBottomOffset = hp('0.7%') + tabBarClearance;
+  const floatingBottomOffset = hp('0.2%') + tabBarClearance;
 
   const categoryName =
     categoriesList.find(cat => cat.catId.toString() === selectedId)?.catName ||
