@@ -1,10 +1,4 @@
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  Image,
-} from 'react-native';
+import { View, Text, StyleSheet, FlatList, Image } from 'react-native';
 import React, { useState, useCallback, useContext, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -26,15 +20,23 @@ import secureStore from '../utils/secureStore';
 const ProductListScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const { title, products } = route.params || { title: 'Products', products: [] };
+  const { title, products } = route.params || {
+    title: 'Products',
+    products: [],
+  };
 
-  const { profile, isStoreUnavailable, storeUnavailableData } = useContext(AppContext);
+  const { profile, isStoreUnavailable, storeUnavailableData } =
+    useContext(AppContext);
 
   const [pincodeAreaId, setPincodeAreaId] = useState(null);
   const [activeSearchText, setActiveSearchText] = useState('');
   const [isLocationModalVisible, setIsLocationModalVisible] = useState(false);
   const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
-  const [filters, setFilters] = useState({ sort: 'relevance', min: 0, max: 5000 });
+  const [filters, setFilters] = useState({
+    sort: 'relevance',
+    min: 0,
+    max: 5000,
+  });
 
   useEffect(() => {
     const fetchPincode = async () => {

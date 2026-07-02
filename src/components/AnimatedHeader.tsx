@@ -7,6 +7,7 @@ import {
   BackHandler,
   StyleProp,
   ViewStyle,
+  Image,
 } from 'react-native';
 import Animated, {
   useAnimatedStyle,
@@ -22,6 +23,7 @@ import Feather from 'react-native-vector-icons/Feather';
 import { FONTS } from '../styles/typography';
 import SearchInput from './SearchInput';
 import useAnimatedHeader from '../hooks/useAnimatedHeader';
+import icons from '@/assets/icons';
 
 const HEADER_HEIGHT = hp('7%');
 
@@ -34,7 +36,13 @@ interface AnimatedHeaderProps {
 }
 
 const AnimatedHeader = memo(
-  ({ title, onBack, onFilterPress, onSearchChange, style }: AnimatedHeaderProps) => {
+  ({
+    title,
+    onBack,
+    onFilterPress,
+    onSearchChange,
+    style,
+  }: AnimatedHeaderProps) => {
     const {
       progress,
       isSearchActive,
@@ -66,23 +74,34 @@ const AnimatedHeader = memo(
 
     // Title fades up and out as search opens
     const titleAnimatedStyle = useAnimatedStyle(() => ({
-      opacity: interpolate(progress.value, [0, 0.45], [1, 0], Extrapolation.CLAMP),
-      transform: [
-        { translateY: interpolate(progress.value, [0, 1], [0, -6]) },
-      ],
+      opacity: interpolate(
+        progress.value,
+        [0, 0.45],
+        [1, 0],
+        Extrapolation.CLAMP,
+      ),
+      transform: [{ translateY: interpolate(progress.value, [0, 1], [0, -6]) }],
     }));
 
     // Search input fades in and grows from slightly scaled to full
     const searchWrapperAnimatedStyle = useAnimatedStyle(() => ({
-      opacity: interpolate(progress.value, [0.35, 1], [0, 1], Extrapolation.CLAMP),
-      transform: [
-        { scaleX: interpolate(progress.value, [0, 1], [0.88, 1]) },
-      ],
+      opacity: interpolate(
+        progress.value,
+        [0.35, 1],
+        [0, 1],
+        Extrapolation.CLAMP,
+      ),
+      transform: [{ scaleX: interpolate(progress.value, [0, 1], [0.88, 1]) }],
     }));
 
     // Search icon in header fades out as search opens
     const searchIconAnimatedStyle = useAnimatedStyle(() => ({
-      opacity: interpolate(progress.value, [0, 0.4], [1, 0], Extrapolation.CLAMP),
+      opacity: interpolate(
+        progress.value,
+        [0, 0.4],
+        [1, 0],
+        Extrapolation.CLAMP,
+      ),
     }));
 
     return (
@@ -102,11 +121,15 @@ const AnimatedHeader = memo(
         <View style={styles.middle}>
           {/* Title — always in tree, fades out when search opens */}
           <Animated.View
-            style={[StyleSheet.absoluteFill, styles.titleWrapper, titleAnimatedStyle]}
+            style={[
+              StyleSheet.absoluteFill,
+              styles.titleWrapper,
+              titleAnimatedStyle,
+            ]}
             pointerEvents="none"
           >
             <Text style={styles.title} numberOfLines={1}>
-              {title}
+              {/* {title} */}
             </Text>
           </Animated.View>
 
@@ -151,7 +174,7 @@ const AnimatedHeader = memo(
             accessibilityLabel="Sort and filter"
             accessibilityRole="button"
           >
-            <Feather name="sliders" size={wp('5%')} color="#000000" />
+            <Image source={icons.filter} />
           </TouchableOpacity>
         </View>
       </View>

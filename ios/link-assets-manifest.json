@@ -74,31 +74,31 @@
       "sha1": "187a51467f6faeab3853f62a38c729817a938bc0"
     },
     {
-      "path": "src/assets/fonts/Poppins-Bold.ttf",
+      "path": "src/assets/fonts/gilroy-Bold.ttf",
       "sha1": "875cf0cecd647bcf22e79d633d868c1b1ec98dfa"
     },
     {
-      "path": "src/assets/fonts/Poppins-ExtraBold.ttf",
+      "path": "src/assets/fonts/gilroy-ExtraBold.ttf",
       "sha1": "4b5c0750f073abd576413a0898d3b95adaf199c8"
     },
     {
-      "path": "src/assets/fonts/Poppins-Italic.ttf",
+      "path": "src/assets/fonts/gilroy-Italic.ttf",
       "sha1": "e2bfcd56016c3c915221ef1c5fc1a17b0776eb91"
     },
     {
-      "path": "src/assets/fonts/Poppins-Light.ttf",
+      "path": "src/assets/fonts/gilroy-Light.ttf",
       "sha1": "e247a92158e112f8bf7b638c8d95381d66b00dbb"
     },
     {
-      "path": "src/assets/fonts/Poppins-Medium.ttf",
+      "path": "src/assets/fonts/gilroy-Medium.ttf",
       "sha1": "283f21b44efbdbf276ba802be2d949a36bbc4233"
     },
     {
-      "path": "src/assets/fonts/Poppins-Regular.ttf",
+      "path": "src/assets/fonts/gilroy-Regular.ttf",
       "sha1": "fdd3002e7d814ee47c1c1b8487c72c6bbb3a2d00"
     },
     {
-      "path": "src/assets/fonts/Poppins-SemiBold.ttf",
+      "path": "src/assets/fonts/gilroy-SemiBold.ttf",
       "sha1": "8a4ace9392d06bcb7f8ea2f5169b07e4c383a90d"
     }
   ]

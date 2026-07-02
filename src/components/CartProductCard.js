@@ -62,7 +62,7 @@ const CartProductCard = props => {
   // Get image source
   const imageSource = useMemo(() => {
     if (imageError || !featuredImage) {
-      return require('../assets/images/noimage.png');
+      return require('../assets/images/udenDealNotfound.png');
     }
     if (typeof featuredImage === 'string' && featuredImage.startsWith('http')) {
       return { uri: featuredImage };

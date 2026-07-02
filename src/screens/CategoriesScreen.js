@@ -4,6 +4,7 @@ import {
   TouchableOpacity,
   FlatList,
   Image,
+  Text,
   StyleSheet,
 } from 'react-native';
 import Animated, {
@@ -14,6 +15,8 @@ import Animated, {
   clamp,
 } from 'react-native-reanimated';
 import { useRoute, useNavigation } from '@react-navigation/native';
+import { FONTS } from '../styles/typography';
+
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -191,8 +194,6 @@ export default function CategoriesScreen() {
   return (
     <SafeAreaView style={styles.mainContainer} edges={['top', 'left', 'right']}>
       <View style={styles.newHeaderContainer}>
-        {/* Existing search logic reused: searchText/setSearchText still live here
-            and flow into useCategoriesData via the same debounce as before. */}
         <HeaderSearch
           title={categoryName}
           searchText={searchText}
@@ -279,9 +280,14 @@ export default function CategoriesScreen() {
                     !loading ? (
                     <View style={styles.emptyContainer}>
                       <Image
-                        source={require('../assets/images/noimages/noproductfound.png')}
+                        source={require('../assets/images/udenDealNotfound.png')}
                         style={styles.emptyImage}
                       />
+
+                      <Text style={styles.emptyText}>
+                        Uh-oh! We couldn't find any products in this category.
+                        Check back later for new additions.
+                      </Text>
                     </View>
                   ) : null
                 }
@@ -365,5 +371,12 @@ const styles = StyleSheet.create({
     height: wp('40%'),
     resizeMode: 'contain',
     marginBottom: hp('2%'),
+  },
+  emptyText: {
+    fontSize: wp('3.5%'),
+    color: '#000000',
+    fontFamily: FONTS.gilroy.medium,
+    textAlign: 'center',
+    lineHeight: hp('2.5%'),
   },
 });

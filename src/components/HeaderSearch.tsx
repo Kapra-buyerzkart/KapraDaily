@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Keyboard,
+  Image,
 } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -20,6 +21,8 @@ import Feather from 'react-native-vector-icons/Feather';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { FONTS } from '../styles/typography';
 import { CART_COLORS } from '../styles/cartTheme';
+import icons from '@/assets/icons';
+import { scheduleOnRN } from 'react-native-worklets';
 
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
@@ -34,10 +37,6 @@ interface HeaderSearchProps {
   onFilterPress: () => void;
 }
 
-// Title <-> search-input morph + search-icon <-> close-icon morph, driven by a
-// single `progress` shared value. All search behavior (value/onChangeText/
-// onSubmitEditing) is passed straight through from the parent screen — this
-// component only owns the transition animation, not the search logic itself.
 const HeaderSearch = memo(
   ({
     title,
@@ -50,21 +49,16 @@ const HeaderSearch = memo(
     const progress = useSharedValue(0);
     const inputRef = useRef<TextInput>(null);
 
-    // --- animation: open ---
     const openSearch = useCallback(() => {
       setIsActive(true);
       progress.value = withTiming(1, {
         duration: ANIMATION_DURATION,
         easing: ANIMATION_EASING,
       });
-      // Input stays mounted at all times (no remount/flicker); focus it
-      // programmatically instead of relying on TextInput's `autoFocus`.
       requestAnimationFrame(() => inputRef.current?.focus());
     }, [progress]);
 
-    // --- animation: close ---
     const closeSearch = useCallback(() => {
-      // Reuse the app's existing clear behavior: first press with text clears it.
       if (searchText.length > 0) {
         onChangeText('');
         return;
@@ -76,7 +70,7 @@ const HeaderSearch = memo(
         { duration: ANIMATION_DURATION, easing: ANIMATION_EASING },
         finished => {
           if (finished) {
-            runOnJS(setIsActive)(false);
+            scheduleOnRN(setIsActive, false);
           }
         },
       );
@@ -95,10 +89,20 @@ const HeaderSearch = memo(
       opacity: interpolate(progress.value, [0, 1], [1, 0], Extrapolation.CLAMP),
       transform: [
         {
-          scale: interpolate(progress.value, [0, 1], [1, 0.92], Extrapolation.CLAMP),
+          scale: interpolate(
+            progress.value,
+            [0, 1],
+            [1, 0.92],
+            Extrapolation.CLAMP,
+          ),
         },
         {
-          translateX: interpolate(progress.value, [0, 1], [0, -8], Extrapolation.CLAMP),
+          translateX: interpolate(
+            progress.value,
+            [0, 1],
+            [0, -8],
+            Extrapolation.CLAMP,
+          ),
         },
       ],
     }));
@@ -108,23 +112,42 @@ const HeaderSearch = memo(
       opacity: interpolate(progress.value, [0, 1], [0, 1], Extrapolation.CLAMP),
       transform: [
         {
-          scale: interpolate(progress.value, [0, 1], [0.94, 1], Extrapolation.CLAMP),
+          scale: interpolate(
+            progress.value,
+            [0, 1],
+            [0.94, 1],
+            Extrapolation.CLAMP,
+          ),
         },
         {
-          translateX: interpolate(progress.value, [0, 1], [10, 0], Extrapolation.CLAMP),
+          translateX: interpolate(
+            progress.value,
+            [0, 1],
+            [10, 0],
+            Extrapolation.CLAMP,
+          ),
         },
       ],
     }));
 
-    // --- animation: search icon morphs into the close (X) icon ---
     const searchIconAnimatedStyle = useAnimatedStyle(() => ({
       opacity: interpolate(progress.value, [0, 1], [1, 0], Extrapolation.CLAMP),
       transform: [
         {
-          scale: interpolate(progress.value, [0, 1], [1, 0.4], Extrapolation.CLAMP),
+          scale: interpolate(
+            progress.value,
+            [0, 1],
+            [1, 0.4],
+            Extrapolation.CLAMP,
+          ),
         },
         {
-          rotate: `${interpolate(progress.value, [0, 1], [0, 45], Extrapolation.CLAMP)}deg`,
+          rotate: `${interpolate(
+            progress.value,
+            [0, 1],
+            [0, 45],
+            Extrapolation.CLAMP,
+          )}deg`,
         },
       ],
     }));
@@ -133,10 +156,20 @@ const HeaderSearch = memo(
       opacity: interpolate(progress.value, [0, 1], [0, 1], Extrapolation.CLAMP),
       transform: [
         {
-          scale: interpolate(progress.value, [0, 1], [0.4, 1], Extrapolation.CLAMP),
+          scale: interpolate(
+            progress.value,
+            [0, 1],
+            [0.4, 1],
+            Extrapolation.CLAMP,
+          ),
         },
         {
-          rotate: `${interpolate(progress.value, [0, 1], [-45, 0], Extrapolation.CLAMP)}deg`,
+          rotate: `${interpolate(
+            progress.value,
+            [0, 1],
+            [-45, 0],
+            Extrapolation.CLAMP,
+          )}deg`,
         },
       ],
     }));
@@ -151,8 +184,6 @@ const HeaderSearch = memo(
           >
             {title}
           </Animated.Text>
-          {/* Existing search logic reused as-is: value/onChangeText/onSubmitEditing
-              are the parent screen's own state and handlers. */}
           <AnimatedTextInput
             ref={inputRef}
             style={[styles.input, inputAnimatedStyle]}
@@ -183,7 +214,11 @@ const HeaderSearch = memo(
                 <Feather name="search" size={wp('5.5%')} color="#0F0F0F" />
               </Animated.View>
               <Animated.View
-                style={[styles.iconLayer, styles.iconLayerAbsolute, closeIconAnimatedStyle]}
+                style={[
+                  styles.iconLayer,
+                  styles.iconLayerAbsolute,
+                  closeIconAnimatedStyle,
+                ]}
                 pointerEvents="none"
               >
                 <Ionicons name="close" size={wp('6%')} color="#0F0F0F" />
@@ -197,7 +232,7 @@ const HeaderSearch = memo(
             accessibilityLabel="Sort and filter"
             accessibilityRole="button"
           >
-            <Ionicons name="options-outline" size={wp('5.5%')} color="#0F0F0F" />
+            <Image source={icons.filter} style={styles.filterStyle} />
           </TouchableOpacity>
         </View>
       </>
@@ -218,6 +253,11 @@ const styles = StyleSheet.create({
     fontSize: wp('5%'),
     color: '#0F0F0F',
     marginLeft: wp('1%'),
+  },
+  filterStyle: {
+    width: wp('5.5%'),
+    height: wp('5.5%'),
+    resizeMode: 'contain',
   },
   input: {
     position: 'absolute',

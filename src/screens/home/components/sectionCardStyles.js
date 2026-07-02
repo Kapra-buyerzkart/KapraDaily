@@ -42,12 +42,9 @@ const sectionCardStyles = StyleSheet.create({
     resizeMode: 'contain',
   },
   featuredProductsText: {
-    fontFamily: FONTS.outfit.medium,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('4.5%'),
     color: '#1E1E1E',
-    marginLeft: wp('5%'),
-    marginTop: hp('1%'),
-    marginBottom: hp('1%'),
   },
   tokenTopDivider: {
     marginTop: hp('1%'),

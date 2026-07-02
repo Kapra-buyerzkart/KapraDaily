@@ -7,6 +7,7 @@ export const CART_COLORS = {
   background: '#F7F8FA',
   card: '#FFFFFF',
   primary: '#F25000',
+  lightOrnage: '#F57333',
   primaryTint: '#FFF5F0',
   success: '#0CA201',
   successTint: '#E9F8E8',

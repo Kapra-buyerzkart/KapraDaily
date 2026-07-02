@@ -99,8 +99,6 @@ const SeasonalFruitsShimmer = () => (
 
 const HomeScreen = () => {
   const { top, bottom } = useSafeAreaInsets();
-  // Cap the avatar at a phone-sized max so it doesn't balloon on wider screens
-  // (wp() scales linearly with device width, with no upper bound otherwise).
   const PROFILE_AVATAR_SIZE = Math.min(wp('14%'), 56);
 
   // ── Sticky search header animation ──────────────────────────────────────
@@ -112,26 +110,16 @@ const HomeScreen = () => {
   const tabBarClearance = getTabBarClearance(bottom);
   const floatingBottomOffset = hp('0.7%') + tabBarClearance;
 
-  // Drives the global, UI-thread-only tab bar visibility (see
-  // src/animations/tabBarVisibility.js). HomeScreen is one of only two
-  // screens allowed to control it (the other is CategoriesScreen).
   const { onScrollWorklet } = useTabBarAnimation();
 
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: event => {
       const y = event.contentOffset.y;
       scrollY.value = y;
-      // UI THREAD: drives the tab bar's own visibility — no second scroll
-      // listener attached to the ScrollView, no JS thread hop.
       onScrollWorklet(y);
     },
   });
 
-  // Nudges the floating cart down by exactly the space the tab bar frees up
-  // when it hides, and back to its resting place when the tab bar reappears.
-  // `tabBarClearance` is device/platform-aware (see getTabBarClearance), so
-  // the cart always lands flush with the screen bottom instead of overshooting
-  // or leaving a gap on a given device.
   const cartAnimatedStyle = useAnimatedStyle(() => {
     const progress = clamp(tabBarVisibility.value, 0, 1);
     return {
@@ -236,7 +224,6 @@ const HomeScreen = () => {
     ],
   }));
 
-  // Pre-compute responsive values outside the worklet (hp/wp are not worklet functions)
   const SEARCH_MARGIN_START = hp('2%');
   const SEARCH_MARGIN_END = hp('0.8%');
   const SEARCH_HEIGHT_START = hp('5.4%');
@@ -438,11 +425,6 @@ const HomeScreen = () => {
   const shouldShowCategoryDiscovery =
     !!categoryDiscovery && discoveryCategories.length > 0;
 
-  // The homepage payload embeds products for the auto-selected first
-  // category — used once at auto-select time only, so the API isn't called
-  // for it. Any later manual tap (even back onto the first category) goes
-  // through the query, matching the original handleDiscoveryCategoryPress
-  // behavior of always fetching on an explicit tap.
   const [useEmbeddedDiscoveryProducts, setUseEmbeddedDiscoveryProducts] =
     useState(false);
 
@@ -602,6 +584,7 @@ const HomeScreen = () => {
           />
         ) : (
           <>
+            <View style={{ paddingTop: hp('4%') }}></View>
             <ProductBlock
               isLoading={isHomeLoading && firstBlockItems.length === 0}
               shouldShow={shouldShowFirstBlock}
@@ -780,23 +763,11 @@ const HomeScreen = () => {
             />
           </>
         )}
-
+        <View style={{ height: hp('4%') }} />
         {!isStoreUnavailable && (
-          <LinearGradient
-            colors={['#FFFFFF', '#F1F1F1']}
-            style={styles.footerBranding}
-          >
-            <Image
-              source={require('../../assets/images/udendeal.png')}
-              style={{
-                width: wp('65%'),
-                height: hp('10%'),
-                resizeMode: 'contain',
-                marginLeft: wp('-10%'),
-              }}
-            />
-            <View style={{ height: hp('10%') }} />
-          </LinearGradient>
+          <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+            <Image source={require('../../assets/images/sealUD.png')} />
+          </View>
         )}
       </Animated.ScrollView>
 
@@ -807,7 +778,7 @@ const HomeScreen = () => {
           cartAnimatedStyle,
         ]}
       >
-        {!isStoreUnavailable && <SelectedProducts />}
+        {!isStoreUnavailable && !!data && <SelectedProducts />}
       </Animated.View>
 
       <StatusModal

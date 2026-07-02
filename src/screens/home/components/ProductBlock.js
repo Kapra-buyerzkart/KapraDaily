@@ -6,17 +6,20 @@ import {
   ImageBackground,
   FlatList,
   StyleSheet,
+  TouchableOpacity,
 } from 'react-native';
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
+import { FONTS } from '../../../styles/typography';
 import TokenProductCard from '../../../components/TokenProductCard';
 import SeeAllButton from '../../../components/SeeAllButton';
 import FlatOfferBadge from '../../../components/FlatOfferBadge';
 import CONFIG from '../../../globals/config';
 import sectionCardStyles from './sectionCardStyles';
 import ProductBlockShimmer from './ProductBlockShimmer';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 const ProductBlock = ({
   isLoading,
@@ -40,27 +43,55 @@ const ProductBlock = ({
 
   return (
     <>
-      <ImageBackground
-        source={backgroundImage}
-        style={sectionCardStyles.headerBackgroundbg}
-        imageStyle={sectionCardStyles.headerBackgroundbgImage}
-      >
+      <View style={{ backgroundColor: 'white' }}>
         <View style={sectionCardStyles.headerBackgroundbgContent}>
-          {showTitleImage && (
-            <Image
-              source={titleImageSource}
-              style={sectionCardStyles.starImage}
-              resizeMode={titleImageResizeMode}
-            />
-          )}
-
-          <Text
-            style={[sectionCardStyles.featuredProductsText, titleExtraStyle]}
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              paddingTop: 20,
+              paddingHorizontal: 16,
+            }}
           >
-            {title}
-          </Text>
+            <Text
+              style={[sectionCardStyles.featuredProductsText, titleExtraStyle]}
+            >
+              {title}
+            </Text>
 
-          <View style={sectionCardStyles.tokenTopDivider} />
+            {shouldShowSeeAll(items.length) && (
+              <TouchableOpacity
+                style={{}}
+                onPress={() =>
+                  navigation.navigate('SearchScreen', {
+                    title,
+                    products: items,
+                  })
+                }
+                hitSlop={40}
+                style={{ flexDirection: 'row', alignItems: 'center' }}
+              >
+                <Text
+                  style={{
+                    fontSize: 16,
+                    fontFamily: FONTS.gilroy.medium,
+                  }}
+                >
+                  View All
+                </Text>
+                <View style={{ paddingLeft: 5 }}>
+                  <MaterialIcons
+                    name="arrow-forward-ios"
+                    size={15}
+                    color="#323135"
+                  />
+                </View>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* <View style={sectionCardStyles.tokenTopDivider} /> */}
 
           <FlatList
             horizontal
@@ -83,7 +114,7 @@ const ProductBlock = ({
             contentContainerStyle={contentContainerStyle}
           />
 
-          {shouldShowSeeAll(items.length) && (
+          {/* {shouldShowSeeAll(items.length) && (
             <SeeAllButton
               onPress={() =>
                 navigation.navigate('ProductListScreen', {
@@ -93,9 +124,9 @@ const ProductBlock = ({
               }
               style={seeAllButtonStyle}
             />
-          )}
+          )} */}
         </View>
-      </ImageBackground>
+      </View>
       {trailingSpacer && <View style={{ height: hp('1%') }} />}
     </>
   );

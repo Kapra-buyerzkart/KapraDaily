@@ -40,11 +40,12 @@ import {
   TAB_BAR_ANIM_DURATION,
   getTabBarClearance,
 } from '../../animations/tabBarVisibility';
-
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import useRecentSearches from './hooks/useRecentSearches';
 import RecentSearches from './components/RecentSearches';
 import SearchResultsHeader from './components/SearchResultsHeader';
 import styles from './SearchScreen.styles';
+import icons from '@/assets/icons';
 
 const SearchScreen = () => {
   const navigation = useNavigation();
@@ -146,10 +147,6 @@ const SearchScreen = () => {
     },
   });
 
-  // Nudges the floating cart down when scrolling down, and back to its
-  // resting place when scrolling up — mirrors the Home/Categories behavior,
-  // using the same device/platform-aware `tabBarClearance` distance even
-  // though this screen has no real tab bar to ride.
   const cartAnimatedStyle = useAnimatedStyle(() => {
     const progress = clamp(cartVisibility.value, 0, 1);
     return {
@@ -216,11 +213,11 @@ const SearchScreen = () => {
           onPress={() => setIsFilterSortModalVisible(true)}
           style={styles.filterButton}
         >
-          <Ionicons name="options-outline" size={wp('5.5%')} color="#000000" />
+          <Image source={icons.filter} />
         </TouchableOpacity>
       </View>
       <Animated.View style={[styles.searchContainer, stickyShadowAnimStyle]}>
-        <Image
+        {/* <Image
           style={
             Platform.OS === 'ios'
               ? styles.searchIcon
@@ -228,7 +225,9 @@ const SearchScreen = () => {
           }
           tintColor={'#F25000'}
           source={require('../../assets/images/search_icon.png')}
-        />
+        /> */}
+
+        <Feather name="search" size={20} color="#F25000" />
         <TextInput
           placeholder="What are you looking for ?"
           placeholderTextColor={'#222222'}

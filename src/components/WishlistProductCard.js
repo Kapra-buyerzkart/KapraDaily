@@ -18,7 +18,7 @@ const WishlistProductCard = ({ item, onRemove, onAddToCart, onPress }) => {
     const cartItemId = cartItem?.cartItemId || itemId;
 
     const imageSource = imageError || !item.productImage
-        ? require('../assets/images/noimage.png')
+        ? require('../assets/images/udenDealNotfound.png')
         : { uri: `${CONFIG.image_base_url}${item.productImage}` };
 
     const discountPercentage = item.unitPrice && item.specialPrice

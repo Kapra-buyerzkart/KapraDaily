@@ -124,7 +124,7 @@ const images = {
   minusButton: require('./minus-button.png'),
   minus: require('./minus.png'),
   noDeliveryArea: require('./no-delivery-area.png'),
-  noimage: require('./noimage.png'),
+  noimage: require('./udenDealNotfound.png'),
   normalRupee: require('./normal_rupee.png'),
   nowish: require('./nowish.png'),
   offer: require('./offer.png'),

@@ -14,6 +14,7 @@ const icons = {
   coins: require('./coins.png'),
   coupon: require('./coupon.png'),
   location: require('./location.png'),
+  filter: require('./filter.png'),
   online: require('./online.png'),
   search: require('./search.png'),
   singleCoin: require('./singleCoin.png'),

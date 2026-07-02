@@ -10,7 +10,7 @@ const OrderProductCard = ({ item, orderStatus, onReturn }) => {
 
     // Helper to resolve image source
     const getImageSource = (img) => {
-        if (!img || imageError) return require('../assets/images/noimage.png');
+        if (!img || imageError) return require('../assets/images/udenDealNotfound.png');
         if (typeof img === 'string') {
             if (img.startsWith('http')) return { uri: img };
             return { uri: `${CONFIG.image_base_url}${img}` };

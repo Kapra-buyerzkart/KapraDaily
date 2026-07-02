@@ -34,14 +34,8 @@ const BillSummary = ({ billCalculations }) => {
 
   return (
     <View style={styles.container}>
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: 8,
-        }}
-      >
-        <Image style={{ top: -4 }} source={icons.billSummary} />
+      <View style={styles.titleRow}>
+        <Image source={icons.billSummary} style={styles.titleIcon} />
         <Text style={styles.title}>Bill summary</Text>
       </View>
 
@@ -112,11 +106,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: CART_SPACING.lg,
     marginTop: hp('2.5%'),
   },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingLeft: 16,
+    marginBottom: hp('1%'),
+  },
+  titleIcon: {
+    width: wp('4.2%'),
+    height: wp('4.2%'),
+    resizeMode: 'contain',
+  },
   title: {
     fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('3.8%'),
     color: CART_COLORS.textPrimary,
-    marginBottom: hp('1%'),
   },
   card: {
     backgroundColor: CART_COLORS.card,

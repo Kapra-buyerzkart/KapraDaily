@@ -42,7 +42,7 @@ const ProductCard = props => {
 
   // Helper to resolve image source
   const getImageSource = img => {
-    if (!img || imageError) return require('../assets/images/noimage.png'); // Fallback to clock.png on error or empty
+    if (!img || imageError) return require('../assets/images/udenDealNotfound.png'); // Fallback on error or empty
     if (typeof img === 'string') {
       // Check if it's already a full URL or needs base URL
       if (img.startsWith('http')) return { uri: img };

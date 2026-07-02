@@ -1,4 +1,4 @@
-import { View } from 'react-native';
+import { StatusBar, View } from 'react-native';
 import React, { useContext, useState, useMemo, useRef } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { heightPercentageToDP as hp } from 'react-native-responsive-screen';
@@ -213,6 +213,11 @@ const CartScreen = () => {
 
   return (
     <View style={[styles.mainContainer, { paddingTop: insets.top }]}>
+      <StatusBar
+        translucent
+        backgroundColor={'transparent'}
+        barStyle={'dark-content'}
+      />
       <CartList
         listRef={listRef}
         data={cartItems}
