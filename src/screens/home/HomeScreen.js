@@ -369,6 +369,8 @@ const HomeScreen = () => {
   const { isHomePopupVisible, handleClose, handlePopupPress } =
     useHomePopup(popupData);
 
+  console.log(isStoreUnavailable, '------isStoreUnavailable');
+
   const categories = data?.categories || [];
   const topBanner = data?.banners?.topBanner || [];
   const midBanner = data?.banners?.midBanner || [];
@@ -764,9 +766,14 @@ const HomeScreen = () => {
           </>
         )}
         <View style={{ height: hp('4%') }} />
-        {!isStoreUnavailable && (
+
+        {isStoreUnavailable && isHomeLoading && (
           <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-            <Image source={require('../../assets/images/sealUD.png')} />
+            <Image
+              source={require('../../assets/images/sealUD.png')}
+              resizeMode="contain"
+              style={{ width: wp('50%'), height: wp('50%') }}
+            />
           </View>
         )}
       </Animated.ScrollView>
