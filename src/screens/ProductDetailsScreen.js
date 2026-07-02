@@ -1084,7 +1084,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   similarProductsSection: {
-    //  paddingTop: hp('1%'),
+    paddingTop: hp('2%'),
     backgroundColor: '#FFFFFF',
   },
   sectionTitle: {
