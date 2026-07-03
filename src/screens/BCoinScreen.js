@@ -11,11 +11,15 @@ import {
   RefreshControl,
   ImageBackground,
   Modal,
+  StatusBar,
 } from 'react-native';
 import React, { useState, useEffect, useCallback, useContext } from 'react';
 import { AppContext } from '../context/appContext';
 import LocationModal from '../components/LocationModal';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 import {
   heightPercentageToDP as hp,
   widthPercentageToDP as wp,
@@ -76,7 +80,21 @@ const BCoinScreen = () => {
   const [isLocationModalVisible, setIsLocationModalVisible] = useState(false);
   const isMounted = React.useRef(true);
 
+  console.log(generalSettings, 'generalSettings====>');
+  console.log(generalSettings.min_coins_to_redeem_cash, 'generalSettings====>');
+
+  const minCoinsToRedeem = Number(generalSettings?.min_coins_to_redeem_cash);
+  const isDisabledTrue = (walletData?.wallet?.bCoins || 0) < minCoinsToRedeem;
   const showHistoryNote = generalSettings?.show_temporary_message === '1';
+
+  console.log(
+    minCoinsToRedeem,
+    'minCoinsToRedeem',
+    walletData?.wallet?.bCoins,
+    'walletData?.wallet?.bCoins',
+    isDisabledTrue,
+    'isDisabledTrue',
+  );
 
   useEffect(() => {
     return () => {
@@ -253,272 +271,289 @@ const BCoinScreen = () => {
     }
   };
 
+  const insets = useSafeAreaInsets();
+
+  const formatShortDate = date =>
+    date
+      ? new Date(date)
+          .toLocaleDateString('en-IN', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+          })
+          .toLowerCase()
+      : '';
+
+  // Group history rows under an uppercase month heading (e.g. JANUARY),
+  // newest month first, matching the redesigned history section.
+  const groupHistoryByMonth = items => {
+    if (!items || items.length === 0) return [];
+    const groups = {};
+    const order = [];
+    items.forEach(item => {
+      const date = item.transactionDate ? new Date(item.transactionDate) : null;
+      const key = date ? `${date.getFullYear()}-${date.getMonth()}` : 'other';
+      if (!groups[key]) {
+        groups[key] = {
+          key,
+          label: date
+            ? date.toLocaleDateString('en-US', { month: 'long' }).toUpperCase()
+            : 'OTHER',
+          sortValue: date ? date.getTime() : 0,
+          items: [],
+        };
+        order.push(key);
+      }
+      groups[key].items.push(item);
+    });
+    return order
+      .map(key => groups[key])
+      .sort((a, b) => b.sortValue - a.sortValue);
+  };
+
+  const activeHistory =
+    selected === 'bcoin' ? walletData?.bcoinHistory : walletData?.btokenHistory;
+  const historyGroups = groupHistoryByMonth(activeHistory);
+  const historyTintColor = selected === 'bcoin' ? '#FBF0D9' : '#F1EAFB';
+
   return (
-    <SafeAreaView style={styles.mainContainer}>
+    <View style={[styles.mainContainer]}>
+      <StatusBar
+        translucent
+        backgroundColor={'transparent'}
+        barStyle={'light-content'}
+      />
       <ImageBackground
-        style={styles.backgroundImageStyle}
-        source={require('../assets/images/bcoinbg.png')}
+        style={styles.hero}
+        source={require('../assets/images/token_header.png')}
+        resizeMode="cover"
       >
-        <View style={styles.headerContainer}>
-          <TouchableOpacity hitSlop={40} onPress={() => navigation.goBack()}>
-            <AntDesign name="left" size={wp('5%')} color="#000" />
+        <View
+          style={[styles.heroTopRow, { paddingTop: insets.top + hp('1%') }]}
+        >
+          <TouchableOpacity
+            style={styles.circleBtn}
+            hitSlop={20}
+            onPress={() => navigation.goBack()}
+          >
+            <AntDesign name="left" size={wp('4.5%')} color="#000" />
           </TouchableOpacity>
-          <Text style={styles.headerText}>UD-coin and UD-token</Text>
+          <TouchableOpacity
+            style={styles.knowMorePill}
+            activeOpacity={0.85}
+            onPress={() => setShowInfoModal(true)}
+          >
+            <AntDesign name="infocirlceo" size={wp('3.6%')} color="#333" />
+            <Text style={styles.knowMoreText}>Know more</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.heroCenter}>
+          <Text style={styles.totalLabel}>Total UD coins</Text>
+          <View style={styles.totalRow}>
+            <Image
+              style={styles.totalCoin}
+              source={require('../assets/icons/udcoinUpdated.png')}
+            />
+            <Text style={styles.totalValue}>
+              {Number(walletData?.wallet?.bCoins || 0).toFixed(2)}
+            </Text>
+          </View>
         </View>
       </ImageBackground>
-      <View style={styles.innerContainer}>
-        <>
-          <View>
-            <View style={styles.bcoinContainerOne}>
-              <Image
-                style={styles.bcoinImage}
-                source={require('../assets/images/bcoinn.png')}
-              />
-              <Text style={styles.bcoinText}>UD-coin</Text>
-              <View style={styles.bcoinInnerView}>
-                <Text style={styles.availableBalanceHeaderText}>
-                  Available Balance
-                </Text>
-                <Text style={styles.availableBalanceValueText}>
-                  {walletData?.wallet?.bCoins || '0.00'}
-                </Text>
-              </View>
-            </View>
-            <View style={styles.bcoinContainerTwo}>
-              <View style={styles.bcoinInnerViewTwo}>
-                <Text style={styles.bcoinTextTwo}>
-                  Today's UD-coin value :{' '}
-                </Text>
-                <Text style={styles.bcoinPriceText}>
-                  ₹{walletData?.wallet?.bCoinValue || '0.00'}
-                </Text>
-              </View>
-              <TouchableOpacity
-                onPress={() => {
-                  fetchBCoinValueHistory();
-                  setShowModal(true);
-                }}
-                style={styles.bcoinInnerViewTwo}
-              >
-                <Text style={styles.viewText}>View</Text>
-                <Image
-                  style={styles.rightArrowsIcon}
-                  source={require('../assets/images/right-arrows-two.png')}
-                />
-              </TouchableOpacity>
-            </View>
-          </View>
-          <View
-            style={[
-              styles.bcoinContainerOne,
-              {
-                borderRadius: wp('5.33%'),
-                marginTop: hp('1.5%'),
-              },
-            ]}
-          >
-            <Image
-              style={styles.bcoinImage}
-              source={require('../assets/images/btoken.png')}
-            />
-            <Text style={styles.bcoinText}>UD-token</Text>
-            <View style={styles.bcoinInnerView}>
-              <Text style={styles.availableBalanceHeaderText}>
-                Available Balance
-              </Text>
-              <Text style={styles.availableBalanceValueText}>
-                {walletData?.wallet?.bTokens || '0'}
-              </Text>
-            </View>
-          </View>
-          <TouchableOpacity
-            onPress={() => setShowInfoModal(true)}
-            style={{ paddingTop: 20 }}
-          >
-            <Text
-              style={{
-                textAlign: 'right',
-                textDecorationLine: 'underline',
-                textDecorationColor: '#ff6200ff',
-                textDecorationStyle: 'solid',
-                marginRight: wp('6%'),
-                fontSize: wp('4%'),
+      <View style={styles.contentCard}>
+        <TouchableOpacity
+          style={styles.valuePill}
+          activeOpacity={0.9}
+          onPress={() => {
+            fetchBCoinValueHistory();
+            setShowModal(true);
+          }}
+        >
+          <Text style={styles.valueLabel}>Today's value ,</Text>
+          <Image
+            style={styles.valueCoin}
+            source={require('../assets/icons/udcoinUpdated.png')}
+          />
+          <Text style={styles.valueEq}>
+            1 = ₹{walletData?.wallet?.bCoinValue || '0.00'}
+          </Text>
+        </TouchableOpacity>
 
-                color: '#ff6200ff',
-                fontFamily: FONTS.poppins.regular,
-                fontWeight: '600',
-              }}
-            >
-              Know more
+        <View style={styles.tokenCard}>
+          <View style={styles.tokenLeft}>
+            <Image
+              style={styles.tokenLogo}
+              source={require('../assets/icons/tokenud.png')}
+            />
+            <Text style={styles.tokenTitle}>UD-Token</Text>
+          </View>
+          <View style={styles.tokenRight}>
+            <Text style={styles.tokenBalLabel}>Available Balance</Text>
+            <Text style={styles.tokenBalValue}>
+              {walletData?.wallet?.bTokens || '0'}
             </Text>
-          </TouchableOpacity>
-          <View style={styles.historyHeaderRow}>
-            <Text style={styles.historyHeaderText}>History</Text>
           </View>
-          <View style={styles.bcoinTokenHeaderContainer}>
-            <TouchableOpacity
-              onPress={() => setSelected('bcoin')}
-              style={
-                selected === 'bcoin'
-                  ? [
-                      styles.bcoinSingleContainer,
-                      {
-                        borderBottomWidth: hp('0.43%'),
-                        borderBottomColor: '#F25000',
-                      },
-                    ]
-                  : styles.bcoinSingleContainer
-              }
-            >
+        </View>
+
+        <View style={styles.tabRow}>
+          <TouchableOpacity
+            style={styles.tab}
+            activeOpacity={0.8}
+            onPress={() => setSelected('bcoin')}
+          >
+            <View style={styles.tabInner}>
+              <Image
+                style={styles.tabCoinIcon}
+                source={require('../assets/icons/udcoinUpdated.png')}
+              />
               <Text
-                style={
-                  selected === 'bcoin'
-                    ? [
-                        styles.bcoinSingleText,
-                        {
-                          color: '#F25000',
-                        },
-                      ]
-                    : styles.bcoinSingleText
-                }
-              >
-                UD-coin
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => setSelected('btoken')}
-              style={
-                selected === 'btoken'
-                  ? [
-                      styles.bcoinSingleContainer,
-                      {
-                        borderBottomWidth: hp('0.43%'),
-                        borderBottomColor: '#F25000',
-                      },
-                    ]
-                  : styles.bcoinSingleContainer
-              }
-            >
-              <Text
-                style={
-                  selected === 'btoken'
-                    ? [
-                        styles.bcoinSingleText,
-                        {
-                          color: '#F25000',
-                        },
-                      ]
-                    : styles.bcoinSingleText
-                }
-              >
-                UD-token
-              </Text>
-            </TouchableOpacity>
-          </View>
-          <ScrollView>
-            {(selected === 'bcoin'
-              ? walletData?.bcoinHistory
-              : walletData?.btokenHistory
-            )?.map((item, index, array) => (
-              <View
-                key={item.historyId}
                 style={[
-                  styles.bcoinContainer,
-                  {
-                    borderBottomWidth: index === array.length - 1 ? 0 : 1,
-                  },
+                  styles.tabText,
+                  selected === 'bcoin' && styles.tabTextActive,
                 ]}
               >
-                <Image
-                  style={styles.bcoinImageTwo}
-                  source={
-                    selected === 'bcoin'
-                      ? require('../assets/images/bcoinn.png')
-                      : require('../assets/images/btoken.png')
-                  }
-                />
-                <View style={{ flex: 1, marginLeft: wp('3%') }}>
-                  <Text style={styles.bcoinContent}>{item.description}</Text>
-                  {/* <Text style={[styles.bcoinContent, {
-                                        fontSize: wp('3.5%'),
-                                        fontFamily: FONTS.poppins.semiBold,
-                                        marginTop: 2
-                                    }]}>
-                                        {item.orderId || 'N/A'}
-                                    </Text> */}
-                  <View style={{ marginTop: hp('0.5%') }}>
-                    <Text
-                      style={[
-                        styles.bcoinContent,
-                        {
-                          fontSize: wp('3.1%'),
-                          color: '#727783',
-                        },
-                      ]}
-                    >
-                      {item.transactionDate
-                        ? new Date(item.transactionDate).toLocaleDateString(
-                            'en-IN',
-                            {
-                              day: '2-digit',
-                              month: '2-digit',
-                              year: 'numeric',
-                            },
-                          )
-                        : ''}
-                    </Text>
-                  </View>
-                </View>
-                <Text
-                  style={[
-                    styles.bcoinPriceTextTwo,
-                    {
-                      color:
-                        item.transactionType === 'credit' ||
-                        item.transactionType === 'Credit'
-                          ? '#0CA201'
-                          : '#FF0000',
-                    },
-                  ]}
-                >
-                  {item.transactionType === 'credit' ||
-                  item.transactionType === 'Credit'
-                    ? '+'
-                    : ''}
-                  {item.amount.toFixed(2)}{' '}
-                  {selected === 'bcoin' ? 'coins' : 'tokens'}
-                </Text>
-              </View>
-            ))}
-            {!isLoading &&
-              (!walletData ||
-                (selected === 'bcoin'
-                  ? walletData?.bcoinHistory?.length === 0
-                  : walletData?.btokenHistory?.length === 0)) && (
-                <View style={{ alignItems: 'center', marginTop: hp('5%') }}>
-                  <Text style={styles.viewText}>No history available</Text>
-                </View>
-              )}
-          </ScrollView>
-          {showHistoryNote && (
-            <View
-              style={[
-                styles.historyNoteContainer,
-                { marginHorizontal: wp('5%'), marginBottom: hp('1%') },
-              ]}
-            >
-              <Text style={styles.historyNoteText}>
-                This app displays only the most recent transaction history
+                UD coin
               </Text>
             </View>
+            <View
+              style={[
+                styles.tabUnderline,
+                selected === 'bcoin' && styles.tabUnderlineActive,
+              ]}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.tab}
+            activeOpacity={0.8}
+            onPress={() => setSelected('btoken')}
+          >
+            <View style={styles.tabInner}>
+              <Image
+                style={styles.tabTicketIcon}
+                source={require('../assets/icons/tokenud.png')}
+              />
+              <Text
+                style={[
+                  styles.tabText,
+                  selected === 'btoken' && styles.tabTextActive,
+                ]}
+              >
+                UD-Token
+              </Text>
+            </View>
+            <View
+              style={[
+                styles.tabUnderline,
+                selected === 'btoken' && styles.tabUnderlineActive,
+              ]}
+            />
+          </TouchableOpacity>
+        </View>
+
+        <ScrollView
+          style={styles.historyScroll}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: hp('2%') }}
+        >
+          {historyGroups.map(group => (
+            <View key={group.key}>
+              <View style={styles.monthHeader}>
+                <Text style={styles.monthHeaderText}>{group.label}</Text>
+              </View>
+              {group.items.map(item => {
+                const isCredit =
+                  item.transactionType === 'credit' ||
+                  item.transactionType === 'Credit';
+                return (
+                  <View key={item.historyId} style={styles.historyRow}>
+                    <View
+                      style={[
+                        styles.historyIconWrap,
+                        { backgroundColor: historyTintColor },
+                      ]}
+                    >
+                      <Image
+                        style={
+                          selected === 'bcoin'
+                            ? styles.historyCoin
+                            : styles.historyTicket
+                        }
+                        source={
+                          selected === 'bcoin'
+                            ? require('../assets/icons/udcoinUpdated.png')
+                            : require('../assets/icons/tokenud.png')
+                        }
+                      />
+                    </View>
+                    <View style={styles.historyMiddle}>
+                      <Text style={styles.historyTitle}>
+                        {item.description || 'Unknown Transaction'}
+                      </Text>
+                      {item.orderId ? (
+                        <Text style={styles.historySub}>
+                          for order #{item.orderId}
+                        </Text>
+                      ) : null}
+                      <Text style={styles.historyDate}>
+                        {formatShortDate(item.transactionDate)}
+                      </Text>
+                    </View>
+                    <Text
+                      style={[
+                        styles.historyAmount,
+                        { color: isCredit ? '#0CA201' : '#FF0000' },
+                      ]}
+                    >
+                      {isCredit ? '+' : ''}
+                      {item.amount.toFixed(2)}{' '}
+                      {selected === 'bcoin' ? 'coins' : 'tokens'}
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>
+          ))}
+          {!isLoading && historyGroups.length === 0 && (
+            <View style={{ alignItems: 'center', marginTop: hp('5%') }}>
+              <Text style={styles.emptyText}>No history available</Text>
+            </View>
           )}
-        </>
+        </ScrollView>
+        {showHistoryNote && (
+          <View
+            style={[
+              styles.historyNoteContainer,
+              { marginHorizontal: wp('5%'), marginBottom: hp('1%') },
+            ]}
+          >
+            <Text style={styles.historyNoteText}>
+              This app displays only the most recent transaction history
+            </Text>
+          </View>
+        )}
       </View>
       <TouchableOpacity
-        onPress={() => setShowRedeemModal(true)}
-        style={styles.redeemButton}
+        onPress={() => {
+          if (isDisabledTrue) {
+            setStatusType('error');
+            setStatusTitle('Insufficient UD-coins');
+            setStatusMessage(
+              `You do not have enough UD-coins to redeem. A minimum of ${minCoinsToRedeem} UD-coins is required.`,
+            );
+            setStatusModalVisible(true);
+            return;
+          }
+          setShowRedeemModal(true);
+        }}
+        style={[
+          styles.redeemButton,
+          isDisabledTrue && {
+            backgroundColor: 'gray',
+            opacity: 0.5,
+          },
+        ]}
       >
-        <Text style={styles.redeemText}>Redeem UD-coin</Text>
+        <Text style={styles.redeemText}>Redeem now</Text>
       </TouchableOpacity>
       <LocationModal
         visible={isLocationModalVisible}
@@ -741,7 +776,7 @@ const BCoinScreen = () => {
         title={statusTitle}
         message={statusMessage}
       />
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -750,175 +785,288 @@ export default BCoinScreen;
 const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+
+    backgroundColor: 'white',
+    paddingBottom: 20,
   },
-  headerContainer: {
+  hero: {
+    height: hp('30%'),
+    width: '100%',
+  },
+  heroTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginLeft: wp('4.65%'),
-    marginTop: hp('4%'),
+    justifyContent: 'space-between',
+    paddingHorizontal: wp('5%'),
   },
-  headerText: {
-    color: '#000000',
-    fontFamily: FONTS.poppins.semiBold,
-    fontSize: wp('4.65%'),
-    marginLeft: wp('6%'),
+  circleBtn: {
+    width: wp('9.5%'),
+    height: wp('9.5%'),
+    borderRadius: wp('9.5%') / 2,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  imageStyle: {
-    width: wp('47.44%'),
-    height: hp('21.88%'),
+  knowMorePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: wp('3.5%'),
+    paddingVertical: hp('0.9%'),
+    borderRadius: wp('6%'),
+  },
+  knowMoreText: {
+    fontFamily: FONTS.gilroy.medium,
+    fontSize: wp('3.1%'),
+    color: '#333333',
+    marginLeft: wp('1.5%'),
+  },
+  heroCenter: {
+    alignItems: 'center',
+    marginTop: hp('1.5%'),
+  },
+  totalLabel: {
+    fontFamily: FONTS.gilroy.medium,
+    fontSize: wp('4%'),
+    color: '#FFFFFF',
+  },
+  totalRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: hp('0.8%'),
+  },
+  totalCoin: {
+    width: wp('7.5%'),
+    height: wp('7.5%'),
     resizeMode: 'contain',
-    alignSelf: 'center',
-    // marginTop: hp('4.1%')
-    bottom: hp('1.1%'),
+    marginRight: wp('2.5%'),
   },
-  backgroundImageStyle: {
-    height: hp('26%'),
-    resizeMode: 'contain',
+  totalValue: {
+    fontFamily: FONTS.gilroy.bold,
+    fontSize: wp('9%'),
+    color: '#FFFFFF',
   },
-  innerContainer: {
+  contentCard: {
     backgroundColor: '#FFFFFF',
     flex: 1,
-    borderTopLeftRadius: wp('7%'),
-    borderTopRightRadius: wp('7%'),
-    bottom: hp('2.5%'),
+    borderTopLeftRadius: wp('8%'),
+    borderTopRightRadius: wp('8%'),
+    marginTop: -hp('3.5%'),
+    paddingTop: hp('1%'),
   },
-  bcoinContainerOne: {
-    width: wp('90.7%'),
-    height: hp('6.15%'),
+  valuePill: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderColor: '#DADADA',
-    borderWidth: 1,
-    borderTopLeftRadius: wp('6.33%'),
-    borderTopRightRadius: wp('6.33%'),
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     alignSelf: 'center',
-    marginTop: hp('3%'),
-    paddingHorizontal: wp('3.25%'),
+    backgroundColor: '#FFFFFF',
+    borderRadius: wp('7%'),
+    paddingVertical: hp('1.4%'),
+    paddingHorizontal: wp('7%'),
+    marginTop: -hp('4.5%'),
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    elevation: 6,
   },
-  bcoinImage: {
-    width: wp('6.23%'),
-    height: hp('3.72%'),
-    resizeMode: 'contain',
-  },
-  bcoinText: {
-    fontSize: wp('4.18%'),
-    fontFamily: FONTS.poppins.regular,
+  valueLabel: {
+    fontFamily: FONTS.gilroy.semiBold,
+    fontSize: wp('3.7%'),
     color: '#000000',
   },
-  bcoinInnerView: {
+  valueCoin: {
+    width: wp('4.5%'),
+    height: wp('4.5%'),
+    resizeMode: 'contain',
+    marginHorizontal: wp('1.5%'),
+  },
+  valueEq: {
+    fontFamily: FONTS.gilroy.semiBold,
+    fontSize: wp('3.7%'),
+    color: '#000000',
+  },
+  tokenCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: wp('90.7%'),
+    alignSelf: 'center',
+    borderWidth: 1,
+    borderColor: '#EAEAEA',
+    borderRadius: wp('4%'),
+    paddingVertical: hp('1.4%'),
+    paddingHorizontal: wp('4%'),
+    marginTop: hp('2.5%'),
+  },
+  tokenLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  tokenLogo: {
+    width: wp('9%'),
+    height: wp('6%'),
+    resizeMode: 'contain',
+    marginRight: wp('2.5%'),
+  },
+  tokenTitle: {
+    fontFamily: FONTS.gilroy.semiBold,
+    fontSize: wp('4.18%'),
+    color: '#000000',
+  },
+  tokenRight: {
     alignItems: 'flex-end',
+  },
+  tokenBalLabel: {
+    fontFamily: FONTS.gilroy.regular,
+    fontSize: wp('2.7%'),
+    color: '#9A9A9A',
+  },
+  tokenBalValue: {
+    fontFamily: FONTS.gilroy.bold,
+    fontSize: wp('4.65%'),
+    marginTop: 6,
+
+    color: '#000000',
+  },
+  tabRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: hp('2.5%'),
+    marginBottom: hp('0.5%'),
+  },
+  tab: {
+    alignItems: 'center',
+    width: wp('38%'),
+  },
+  tabInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingBottom: hp('1%'),
+  },
+  tabCoinIcon: {
+    width: wp('5%'),
+    height: wp('5%'),
+    resizeMode: 'contain',
+    marginRight: wp('2%'),
+  },
+  tabTicketIcon: {
+    width: wp('7%'),
+    height: wp('4.5%'),
+    resizeMode: 'contain',
+    marginRight: wp('2%'),
+  },
+  tabText: {
+    fontFamily: FONTS.gilroy.semiBold,
+    fontSize: wp('3.9%'),
+    color: '#9A9A9A',
+  },
+  tabTextActive: {
+    color: '#000000',
+  },
+  tabUnderline: {
+    height: hp('0.35%'),
+    width: '70%',
+    borderRadius: 2,
+    backgroundColor: 'transparent',
+  },
+  tabUnderlineActive: {
+    backgroundColor: '#F25000',
+  },
+  historyScroll: {
+    flex: 1,
+    marginTop: hp('0.5%'),
+  },
+  monthHeader: {
+    backgroundColor: '#F4F4F4',
+    paddingVertical: hp('0.9%'),
+    paddingHorizontal: wp('5%'),
+  },
+  monthHeaderText: {
+    fontFamily: FONTS.gilroy.semiBold,
+    fontSize: wp('3.2%'),
+    color: '#8A8A8A',
+    letterSpacing: 0.5,
+  },
+  historyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: wp('90.7%'),
+    alignSelf: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#EFEFEF',
+    paddingVertical: hp('1.6%'),
+  },
+  historyIconWrap: {
+    width: wp('9.5%'),
+    height: wp('9.5%'),
+    borderRadius: wp('9.5%') / 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  historyCoin: {
+    width: wp('6%'),
+    height: wp('6%'),
+    resizeMode: 'contain',
+  },
+  historyTicket: {
+    width: wp('4%'),
+    height: wp('4%'),
+    resizeMode: 'contain',
+  },
+  historyMiddle: {
+    flex: 1,
+    marginLeft: wp('3%'),
+  },
+  historyTitle: {
+    fontFamily: FONTS.gilroy.semiBold,
+    fontSize: wp('3.6%'),
+    color: '#000000',
+  },
+  historySub: {
+    fontFamily: FONTS.gilroy.regular,
+    fontSize: wp('2.9%'),
+    color: '#000000ff',
+    marginTop: hp('0.2%'),
+  },
+  historyDate: {
+    fontFamily: FONTS.gilroy.regular,
+    fontSize: wp('2.9%'),
+    color: '#B5B5B5',
+    marginTop: hp('0.5%'),
+  },
+  historyAmount: {
+    fontFamily: FONTS.gilroy.bold,
+    fontSize: wp('3.6%'),
+    marginLeft: wp('2%'),
+  },
+  emptyText: {
+    fontFamily: FONTS.gilroy.medium,
+    fontSize: wp('3.5%'),
+    color: '#9A9A9A',
   },
   availableBalanceHeaderText: {
     color: '#616161',
-    fontFamily: FONTS.poppins.light,
+    fontFamily: FONTS.gilroy.light,
     fontSize: wp('2.32%'),
   },
-  availableBalanceValueText: {
-    fontFamily: FONTS.poppins.semiBold,
-    fontSize: wp('4.65%'),
-    color: '#F25000',
-  },
-  bcoinContainerTwo: {
-    alignSelf: 'center',
-    width: wp('90.7%'),
-    height: hp('3.22%'),
-    borderColor: '#DADADA',
-    borderWidth: 1,
-    borderTopWidth: 0,
-    borderBottomLeftRadius: wp('6.33%'),
-    borderBottomRightRadius: wp('6.33%'),
-    //  backgroundColor: '#FED7C4',
-    justifyContent: 'space-between',
-    flexDirection: 'row',
-    paddingHorizontal: wp('3%'),
-  },
-  bcoinInnerViewTwo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  bcoinTextTwo: {
-    fontFamily: FONTS.poppins.regular,
-    color: '#616161',
-    fontSize: wp('2.79%'),
-  },
-  bcoinPriceText: {
-    fontFamily: FONTS.poppins.semiBold,
-    color: '#000000',
-    fontSize: wp('2.79%'),
-  },
   viewText: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('2.79%'),
     color: '#616161',
-  },
-  rightArrowsIcon: {
-    width: wp('3.72%'),
-    height: hp('1.07%'),
-    marginLeft: wp('2.5%'),
-  },
-  historyHeaderText: {
-    color: '#000000',
-    fontFamily: FONTS.poppins.medium,
-    fontSize: wp('4.19%'),
-    marginTop: hp('3%'),
-    alignSelf: 'center',
-  },
-  bcoinTokenHeaderContainer: {
-    flexDirection: 'row',
-    marginTop: hp('2%'),
-    alignSelf: 'center',
-  },
-  bcoinSingleContainer: {
-    alignItems: 'center',
-    width: wp('38.4%'),
-    paddingBottom: hp('0.4%'),
-  },
-  bcoinSingleText: {
-    color: '#616161',
-    fontFamily: FONTS.poppins.medium,
-    fontSize: wp('3.72%'),
-  },
-  bcoinContainer: {
-    flexDirection: 'row',
-    width: wp('90.7%'),
-    justifyContent: 'space-between',
-    alignSelf: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#DADADA',
-    paddingBottom: hp('1.5%'),
-    marginTop: hp('1.5%'),
-    paddingVertical: hp('1.5%'),
-    paddingHorizontal: wp('3%'),
-  },
-  bcoinImageTwo: {
-    width: wp('5.98%'),
-    height: wp('5.98%'),
-    resizeMode: 'contain',
-  },
-  bcoinContent: {
-    fontFamily: FONTS.poppins.regular,
-    color: '#000000',
-    fontSize: wp('2.56%'),
-  },
-  bcoinPriceTextTwo: {
-    color: '#FF0000',
-    fontFamily: FONTS.poppins.semiBold,
-    fontSize: wp('3.49%'),
   },
   redeemButton: {
     width: wp('90.7%'),
     height: hp('6.11%'),
     backgroundColor: '#F25000',
-    borderRadius: wp('10.33%'),
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
     alignSelf: 'center',
   },
   redeemText: {
     color: '#FFFFFF',
-    fontFamily: FONTS.poppins.bold,
+    fontFamily: FONTS.gilroy.bold,
     fontSize: wp('4.18%'),
   },
   modalOverlay: {
@@ -947,7 +1095,7 @@ const styles = StyleSheet.create({
   },
   modalHeaderText: {
     color: '#000000',
-    fontFamily: FONTS.poppins.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('4.65%'),
   },
   closeIcon: {
@@ -963,13 +1111,13 @@ const styles = StyleSheet.create({
   },
   dateText: {
     color: '#000000',
-    fontFamily: FONTS.poppins.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3.72%'),
     width: wp('30%'),
   },
   timeText: {
     color: '#000000',
-    fontFamily: FONTS.poppins.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3.72%'),
     width: wp('40%'),
   },
@@ -980,7 +1128,7 @@ const styles = StyleSheet.create({
   },
   rateText: {
     color: '#FF0000',
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3.25%'),
   },
   upImage: {
@@ -1004,7 +1152,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: wp('4%'),
     paddingVertical: hp('1.5%'),
     marginTop: hp('1%'),
-    fontFamily: FONTS.poppins.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('4%'),
     color: '#000',
     backgroundColor: '#F9F9F9',
@@ -1028,7 +1176,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF5F0',
   },
   methodText: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3.72%'),
     color: '#616161',
   },
@@ -1038,7 +1186,7 @@ const styles = StyleSheet.create({
   historyHeaderRow: {
     flexDirection: 'column',
     alignItems: 'flex-start',
-    marginTop: hp('2%'),
+    // marginTop: hp('2%'),
     marginBottom: hp('1%'),
   },
   historyNoteContainer: {
@@ -1051,18 +1199,18 @@ const styles = StyleSheet.create({
     borderLeftColor: '#F25000',
   },
   historyNoteText: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('2.8%'),
     color: '#F25000',
   },
   infoSectionTitle: {
-    fontFamily: FONTS.poppins.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('4.18%'),
     color: '#000000',
     marginBottom: hp('0.8%'),
   },
   infoSectionBody: {
-    fontFamily: FONTS.poppins.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3.5%'),
     color: '#616161',
     lineHeight: hp('2.4%'),

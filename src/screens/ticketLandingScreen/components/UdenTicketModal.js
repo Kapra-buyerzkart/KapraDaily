@@ -23,6 +23,7 @@ import RedeemSuccessModal, {
 import SafeRenderHtml from '../../../components/SafeRenderHtml';
 import CONFIG from '../../../globals/config';
 import { getVoucherQuoteApi } from '../../../api/voucherService';
+import COLORS from '@/styles/colors';
 
 const { width, height } = Dimensions.get('window');
 
@@ -407,6 +408,12 @@ const UdenTicketModal = ({
                       )}
                     </View>
                   )}
+
+                  <View style={styles.noCoinsContainer}>
+                    <Text style={styles.noCoins}>
+                      * You dont have enough coins to redeem this card
+                    </Text>
+                  </View>
                 </View>
               )}
 
@@ -434,7 +441,6 @@ const UdenTicketModal = ({
                 </Animated.View>
               )}
 
-              {/* Price row + BUY NOW */}
               <View style={styles.priceRow}>
                 <View style={styles.priceLeft}>
                   {quoteLoading ? (
@@ -452,6 +458,7 @@ const UdenTicketModal = ({
                             </Text>
                           )}
                       </View>
+
                       {quoteData && quoteData.coinsApplied > 0 && (
                         <View style={styles.usingRow}>
                           <Text style={styles.usingText}>Using </Text>
@@ -626,6 +633,18 @@ const styles = StyleSheet.create({
     color: '#111111',
     minWidth: 28,
     textAlign: 'center',
+  },
+  noCoins: {
+    color: COLORS.error,
+    fontSize: 12,
+    fontFamily: 'Gilroy-Medium',
+    fontStyle: 'italic',
+  },
+
+  noCoinsContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: hp(2),
   },
 
   // UD-Coin banner

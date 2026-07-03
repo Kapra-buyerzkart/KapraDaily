@@ -188,6 +188,7 @@ const images = {
   wishlistnomore: require('./wishlistnomore.png'),
   wl1: require('./wl1.png'),
   wl2: require('./wl2.png'),
+  tokenHeader: require('./token_header.png'),
   zerodeli: require('./zerodeli.png'),
 };
 

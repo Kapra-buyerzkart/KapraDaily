@@ -33,6 +33,7 @@ const icons = {
   heartFilled: require('./heart_filled.png'),
   cat: require('./categories_shaded.png'),
   catFilld: require('./categories.png'),
+  udCoin: require('./udcoinUpdated.png'),
 };
 
 export default icons;

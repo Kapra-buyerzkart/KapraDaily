@@ -28,6 +28,7 @@ export const queryPersistOptions = {
   maxAge: 24 * 60 * 60 * 1000,
   dehydrateOptions: {
     shouldDehydrateQuery: (query) =>
+      query.state.status === 'success' &&
       !['dashboard', 'categoryProducts', 'search'].includes(query.queryKey[0]),
   },
 };
