@@ -55,7 +55,12 @@ const SearchScreen = () => {
   const route = useRoute();
   const { bottom } = useSafeAreaInsets();
   const tabBarClearance = getTabBarClearance(bottom);
-  const { catId, catName } = route.params || {};
+  const {
+    catId,
+    catName,
+    products: staticProducts,
+    title: staticTitle,
+  } = route.params || {};
   const { profile, isStoreUnavailable, storeUnavailableData } =
     useContext(AppContext);
   const [isLocationModalVisible, setIsLocationModalVisible] = useState(false);
@@ -80,6 +85,17 @@ const SearchScreen = () => {
     resultCount,
     isGlobalFallback,
   } = useProductSearch(currentPincodeId, catId, filters);
+
+  // "View All" from a home product block passes its already-fetched items
+  // directly (those blocks are curated lists with no catId to query by), so
+  // show them as-is until the user actually starts typing/searching by category.
+  const hasStaticProducts =
+    Array.isArray(staticProducts) && staticProducts.length > 0;
+  const isBrowsingStaticList =
+    hasStaticProducts && !catId && searchTerm.trim().length < MIN_SEARCH_LENGTH;
+  const displayedSuggestions = isBrowsingStaticList
+    ? staticProducts
+    : suggestions;
 
   useEffect(() => {
     const fetchPincode = async () => {
@@ -207,7 +223,9 @@ const SearchScreen = () => {
           <TouchableOpacity hitSlop={40} onPress={() => navigation.goBack()}>
             <AntDesign name="left" size={wp('5%')} color="black" />
           </TouchableOpacity>
-          <Text style={styles.searchText}>{catName ? catName : 'Search'}</Text>
+          <Text style={styles.searchText}>
+            {catName ? catName : staticTitle ? staticTitle : 'Search'}
+          </Text>
         </View>
         <TouchableOpacity
           onPress={() => setIsFilterSortModalVisible(true)}
@@ -270,7 +288,7 @@ const SearchScreen = () => {
           )}
 
           <Animated.FlatList
-            data={loading ? [] : suggestions}
+            data={loading ? [] : displayedSuggestions}
             keyExtractor={(item, index) =>
               (item.productId || item.id || index).toString()
             }
@@ -298,8 +316,10 @@ const SearchScreen = () => {
             }}
             ListEmptyComponent={
               !loading &&
-              suggestions.length === 0 &&
-              (searchTerm.trim().length >= MIN_SEARCH_LENGTH || catId) && (
+              displayedSuggestions.length === 0 &&
+              (searchTerm.trim().length >= MIN_SEARCH_LENGTH ||
+                catId ||
+                hasStaticProducts) && (
                 <View style={styles.emptyContainer}>
                   <Image
                     source={require('../../assets/images/noimages/noproductfound.png')}
