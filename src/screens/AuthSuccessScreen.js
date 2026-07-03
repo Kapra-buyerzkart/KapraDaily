@@ -110,30 +110,34 @@ const AuthSuccessScreen = ({ navigation }) => {
       isKshopeEnabled,
     );
 
-    if (isKshopeEnabled) {
-      const deepLink = 'udmv://';
-      const storeUrl =
-        Platform.OS === 'ios'
-          ? generalSettings?.kshope_ios_url ||
-            'https://apps.apple.com/in/app/uden-deal/id6448085736'
-          : generalSettings?.kshope_android_url ||
-            'https://play.google.com/store/apps/details?id=com.kshope';
+    if (!isKshopeEnabled) {
+      console.log('[Kshope] Disabled from backend. Showing Coming Soon.');
+      handleComingSoon();
+      return;
+    }
 
+    const deepLink = 'udmv://';
+    const storeUrl =
+      Platform.OS === 'ios'
+        ? generalSettings?.kshope_ios_url ||
+          'https://apps.apple.com/in/app/uden-deal/id6448085736'
+        : generalSettings?.kshope_android_url ||
+          'https://play.google.com/store/apps/details?id=com.kshope';
+
+    try {
+      console.log('[Kshope] Attempting to open deep link:', deepLink);
+      await Linking.openURL(deepLink);
+      console.log('[Kshope] Deep link opened successfully');
+    } catch (deepLinkErr) {
+      console.warn(
+        '[Kshope] Deep link failed, app not installed. Redirecting to store:',
+        storeUrl,
+      );
       try {
-        console.log('[Kshope] Attempting to open deep link:', deepLink);
-        await Linking.openURL(deepLink);
-        console.log('[Kshope] Deep link opened successfully');
-      } catch (deepLinkErr) {
-        console.warn(
-          '[Kshope] Deep link failed, app not installed. Redirecting to store:',
-          storeUrl,
-        );
-        try {
-          await Linking.openURL(storeUrl);
-        } catch (storeErr) {
-          console.error('[Kshope] Store URL also failed:', storeErr);
-          handleComingSoon();
-        }
+        await Linking.openURL(storeUrl);
+      } catch (storeErr) {
+        console.error('[Kshope] Store URL also failed:', storeErr);
+        handleComingSoon();
       }
     }
   };
