@@ -7,8 +7,8 @@ import { styles, INK } from '../styles';
 export default function ProfileHeader({ onBack }) {
   return (
     <View style={styles.header}>
-      <TouchableOpacity style={styles.backButton} onPress={onBack}>
-        <AntDesign name={'arrowleft'} size={wp('4.5%')} color={INK} />
+      <TouchableOpacity hitSlop={40} style={styles.backButton} onPress={onBack}>
+        <AntDesign name="left" size={wp('5%')} color={INK} />
       </TouchableOpacity>
       <Text style={styles.profileHeaderText}>Profile</Text>
     </View>

@@ -18,7 +18,7 @@ import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import AntDesign from 'react-native-vector-icons/AntDesign';
 import Feather from 'react-native-vector-icons/Feather';
 import { FONTS } from '../styles/typography';
 import SearchInput from './SearchInput';
@@ -110,11 +110,11 @@ const AnimatedHeader = memo(
         <TouchableOpacity
           onPress={handleBack}
           style={styles.backButton}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          hitSlop={40}
           accessibilityLabel={isSearchActive ? 'Exit search' : 'Go back'}
           accessibilityRole="button"
         >
-          <Ionicons name="arrow-back" size={wp('6%')} color="#000000" />
+          <AntDesign name="left" size={wp('5%')} color="#000000" />
         </TouchableOpacity>
 
         {/* Middle: title and search input layered via absoluteFill */}

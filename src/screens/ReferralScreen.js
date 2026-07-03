@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import AntDesign from 'react-native-vector-icons/AntDesign';
 import Toast from 'react-native-simple-toast';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -176,11 +177,8 @@ const ReferralScreen = () => {
   return (
     <SafeAreaView style={styles.mainContainer}>
       <View style={styles.headerContainer}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Image
-            style={styles.leftArrowIcon}
-            source={require('../assets/images/left_arrow.png')}
-          />
+        <TouchableOpacity hitSlop={40} onPress={() => navigation.goBack()}>
+          <AntDesign name="left" size={wp('5%')} color="#000" />
         </TouchableOpacity>
         <Text style={styles.referralText}>Referral</Text>
         {/* <View style={styles.bcoinContainer}>
@@ -299,11 +297,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginLeft: wp('2%'),
     marginRight: wp('5%'),
-  },
-  leftArrowIcon: {
-    width: wp('10.33%'),
-    height: hp('2.04%'),
-    resizeMode: 'contain',
   },
   referralText: {
     color: '#000000',

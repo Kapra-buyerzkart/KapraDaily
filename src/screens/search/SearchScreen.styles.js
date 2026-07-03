@@ -24,16 +24,11 @@ const styles = StyleSheet.create({
     marginTop: hp('1%'),
     paddingHorizontal: wp('4.65%'),
   },
-  leftArrowIcon: {
-    width: wp('2.33%'),
-    height: hp('2.04%'),
-    resizeMode: 'contain',
-  },
   searchText: {
     color: '#000000',
     fontFamily: FONTS.poppins.semiBold,
     fontSize: wp('4.65%'),
-    marginLeft: wp('8%'),
+    marginLeft: wp('2%'),
   },
   filterButton: {
     padding: wp('1.5%'),

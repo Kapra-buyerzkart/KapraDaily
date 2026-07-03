@@ -96,11 +96,11 @@ const ChangePasswordScreen = () => {
                 <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
                     <ImageBackground style={styles.backgroundImage} source={require('../assets/images/login_background_image.jpg')}>
                         <View style={styles.headerRow}>
-                            <TouchableOpacity onPress={() => navigation.goBack()}>
-                                <AntDesign name={'left'} size={wp('6%')} color={'#FFFFFF'} />
+                            <TouchableOpacity hitSlop={40} onPress={() => navigation.goBack()}>
+                                <AntDesign name="left" size={wp('5%')} color={'#FFFFFF'} />
                             </TouchableOpacity>
                             <Text style={styles.headerTitle}>Change Password</Text>
-                            <View style={{ width: wp('6%') }} />
+                            <View style={{ width: wp('5%') }} />
                         </View>
                         <Image style={styles.kapraLogo} source={require('../assets/images/kapra_logo.png')} />
                     </ImageBackground>

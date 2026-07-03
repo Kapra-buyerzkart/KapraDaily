@@ -21,6 +21,7 @@ import {
   widthPercentageToDP as wp,
 } from 'react-native-responsive-screen';
 import { FONTS } from '../styles/typography';
+import AntDesign from 'react-native-vector-icons/AntDesign';
 import { useNavigation } from '@react-navigation/native';
 import {
   getWalletDataApi,
@@ -259,11 +260,8 @@ const BCoinScreen = () => {
         source={require('../assets/images/bcoinbg.png')}
       >
         <View style={styles.headerContainer}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Image
-              style={styles.leftArrowIcon}
-              source={require('../assets/images/left_arrow.png')}
-            />
+          <TouchableOpacity hitSlop={40} onPress={() => navigation.goBack()}>
+            <AntDesign name="left" size={wp('5%')} color="#000" />
           </TouchableOpacity>
           <Text style={styles.headerText}>UD-coin and UD-token</Text>
         </View>
@@ -759,11 +757,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginLeft: wp('4.65%'),
     marginTop: hp('4%'),
-  },
-  leftArrowIcon: {
-    width: wp('2.33%'),
-    height: hp('2.03%'),
-    resizeMode: 'contain',
   },
   headerText: {
     color: '#000000',

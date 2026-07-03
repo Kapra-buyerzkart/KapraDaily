@@ -452,11 +452,11 @@ const CheckoutScreen = () => {
         <SafeAreaView style={styles.mainContainer}>
             {/* Header */}
             <View style={styles.headerContainer}>
-                <TouchableOpacity onPress={() => navigation.goBack()}>
-                    <AntDesign name={'left'} size={wp('6%')} color={'#000000'} />
+                <TouchableOpacity hitSlop={40} onPress={() => navigation.goBack()}>
+                    <AntDesign name="left" size={wp('5%')} color={'#000000'} />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Checkout</Text>
-                <View style={{ width: wp('6%') }} />
+                <View style={{ width: wp('5%') }} />
             </View>
 
             <ScrollView ref={scrollViewRef} contentContainerStyle={styles.scrollContent}>

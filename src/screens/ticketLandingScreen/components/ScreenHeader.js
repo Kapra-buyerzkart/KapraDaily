@@ -1,5 +1,7 @@
 import React from 'react';
 import { View, Image, TouchableOpacity } from 'react-native';
+import AntDesign from 'react-native-vector-icons/AntDesign';
+import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import Reanimated, {
   useAnimatedStyle,
   interpolate,
@@ -48,8 +50,9 @@ const ScreenHeader = ({ navigation, insets, scrollY }) => {
           styles.backButton,
           { top: insets.top > 0 ? insets.top + 16 : 40 },
         ]}
+        hitSlop={40}
       >
-        <Image source={require('../../../assets/icons/backArrow.png')} />
+        <AntDesign name="left" size={wp('5%')} color="#FFFFFF" />
       </TouchableOpacity>
       <Reanimated.View style={titleAnimStyle}>
         <Image

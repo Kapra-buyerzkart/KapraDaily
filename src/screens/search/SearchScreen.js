@@ -25,12 +25,15 @@ import {
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import useProductSearch, { MIN_SEARCH_LENGTH } from '../../hooks/useProductSearch';
+import useProductSearch, {
+  MIN_SEARCH_LENGTH,
+} from '../../hooks/useProductSearch';
 import secureStore from '../../utils/secureStore';
 import { AppContext } from '../../context/appContext';
 import TokenProductCard from '../../components/TokenProductCard';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Feather from 'react-native-vector-icons/Feather';
+import AntDesign from 'react-native-vector-icons/AntDesign';
 import FilterSortModal from '../../components/FilterSortModal';
 import StoreUnavailable from '../../components/StoreUnavailable';
 import LocationModal from '../../components/LocationModal';
@@ -201,11 +204,8 @@ const SearchScreen = () => {
     <SafeAreaView style={styles.mainContainer}>
       <View style={styles.headerContainer}>
         <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Image
-              style={styles.leftArrowIcon}
-              source={require('../../assets/images/left_arrow.png')}
-            />
+          <TouchableOpacity hitSlop={40} onPress={() => navigation.goBack()}>
+            <AntDesign name="left" size={wp('5%')} color="black" />
           </TouchableOpacity>
           <Text style={styles.searchText}>{catName ? catName : 'Search'}</Text>
         </View>

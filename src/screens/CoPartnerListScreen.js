@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, FlatList, ActivityIndicator, Platform, StatusBar } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import AntDesign from 'react-native-vector-icons/AntDesign';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { FONTS } from '../styles/typography';
@@ -39,8 +40,8 @@ const CoPartnerListScreen = () => {
 
     const renderHeader = () => (
         <View style={styles.header}>
-            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-                <MaterialCommunityIcons name="chevron-left" size={wp('8%')} color="#000" />
+            <TouchableOpacity hitSlop={40} onPress={() => navigation.goBack()} style={styles.backBtn}>
+                <AntDesign name="left" size={wp('5%')} color="#000" />
             </TouchableOpacity>
             <MaterialCommunityIcons name={icon} size={wp('6%')} color="#F25000" style={{ marginRight: wp('2%') }} />
             <Text style={styles.headerTitle}>{title}</Text>

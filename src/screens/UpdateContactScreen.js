@@ -226,13 +226,13 @@ const UpdateContactScreen = () => {
             source={require('../assets/images/login_background_image.jpg')}
           >
             <View style={styles.headerRow}>
-              <TouchableOpacity onPress={() => navigation.goBack()}>
-                <AntDesign name={'left'} size={wp('6%')} color={'#FFFFFF'} />
+              <TouchableOpacity hitSlop={40} onPress={() => navigation.goBack()}>
+                <AntDesign name="left" size={wp('5%')} color={'#FFFFFF'} />
               </TouchableOpacity>
               <Text style={styles.headerTitle}>
                 Update {type === 'phone' ? 'Phone' : 'Email'}
               </Text>
-              <View style={{ width: wp('6%') }} />
+              <View style={{ width: wp('5%') }} />
             </View>
             <Image
               style={styles.kapraLogo}

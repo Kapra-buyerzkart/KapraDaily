@@ -10,6 +10,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, NavigationProp } from '@react-navigation/native';
 import AntDesign from 'react-native-vector-icons/AntDesign';
+import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import { useReferralLevelMembersScreen } from './useReferralLevelMembersScreen';
 import styles from './styles';
 
@@ -68,7 +69,7 @@ const ReferralLevelMembersScreen = () => {
       accessibilityRole="button"
       accessibilityLabel="Go back"
       onPress={() => navigation.goBack()}>
-      <AntDesign name="arrowleft" size={18} color="#1A1A1A" />
+      <AntDesign name="left" size={wp('5%')} color="#1A1A1A" />
     </TouchableOpacity>
   );
 

@@ -4,6 +4,7 @@ import {
   StatusBar,
   View,
   ImageBackground,
+  Image,
 } from 'react-native';
 import Reanimated, {
   useSharedValue,
@@ -26,6 +27,7 @@ import {
 } from '../../api/voucherService';
 import { getDashboardDataApi } from '../../api/userService';
 import logger from '../../utils/logger';
+import CONFIG from '../../globals/config';
 
 const AnimatedImageBackground =
   Animated.createAnimatedComponent(ImageBackground);
@@ -87,6 +89,17 @@ const TicketLandingScreen = ({ navigation }) => {
         .finally(() => setMyVouchersLoading(false));
     }
   }, [activeTab]);
+
+  useEffect(() => {
+    const uris = [...carouselVouchers, ...myVouchers]
+      .map(item => item?.imageUrl || item?.image)
+      .filter(value => typeof value === 'string' && value.length > 0)
+      .map(value =>
+        value.startsWith('http') ? value : CONFIG.image_base_url + value,
+      );
+
+    uris.forEach(uri => Image.prefetch(uri));
+  }, [carouselVouchers, myVouchers]);
 
   const handleImageLoad = () => {
     Animated.timing(imageOpacity, {
@@ -163,9 +176,18 @@ const TicketLandingScreen = ({ navigation }) => {
           bounces={false}
           stickyHeaderIndices={[2]}
         >
-          <ScreenHeader navigation={navigation} insets={insets} scrollY={scrollY} />
+          <ScreenHeader
+            navigation={navigation}
+            insets={insets}
+            scrollY={scrollY}
+          />
           <CoinBar bCoins={bCoins} scrollY={scrollY} />
-          <TabBar activeTab={activeTab} onTabChange={handleTabChange} scrollY={scrollY} insets={insets} />
+          <TabBar
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
+            scrollY={scrollY}
+            insets={insets}
+          />
           <Animated.View style={tabContentStyle}>
             {activeTab === 0 ? (
               <CardCarousel

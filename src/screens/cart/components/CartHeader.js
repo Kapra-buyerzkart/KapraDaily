@@ -8,12 +8,12 @@ import { CART_COLORS, CART_SPACING, wp, hp } from '../../../styles/cartTheme';
 const CartHeader = ({ onBack, onClearAll }) => {
   return (
     <View style={styles.header}>
-      <TouchableOpacity
-        onPress={onBack}
-        style={styles.backBtn}
-        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-      >
-        <AntDesign name="left" size={wp('5%')} color={CART_COLORS.textPrimary} />
+      <TouchableOpacity onPress={onBack} style={styles.backBtn} hitSlop={40}>
+        <AntDesign
+          name="left"
+          size={wp('5%')}
+          color={CART_COLORS.textPrimary}
+        />
       </TouchableOpacity>
 
       <Text style={styles.title}>Cart</Text>
@@ -23,7 +23,11 @@ const CartHeader = ({ onBack, onClearAll }) => {
         activeOpacity={0.8}
         style={styles.clearAllBtn}
       >
-        <Feather name="trash-2" size={wp('3.4%')} color={CART_COLORS.textMuted} />
+        <Feather
+          name="trash-2"
+          size={wp('3.4%')}
+          color={CART_COLORS.textMuted}
+        />
         <Text style={styles.clearAllText}>Clear all</Text>
       </TouchableOpacity>
     </View>

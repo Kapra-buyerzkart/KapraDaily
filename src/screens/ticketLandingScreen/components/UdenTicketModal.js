@@ -410,7 +410,6 @@ const UdenTicketModal = ({
                 </View>
               )}
 
-              {/* Why the buy button is disabled */}
               {disabledReason && (
                 <Animated.View
                   style={[
@@ -453,19 +452,19 @@ const UdenTicketModal = ({
                             </Text>
                           )}
                       </View>
-                      {/* {quoteData && quoteData.coinsApplied > 0 && ( */}
-                      <View style={styles.usingRow}>
-                        <Text style={styles.usingText}>Using </Text>
-                        <Image
-                          source={require('../../../assets/icons/udcoin.png')}
-                          style={{ width: wp('6%'), height: wp('6%') }}
-                          resizeMode="contain"
-                        />
-                        <Text style={styles.usingAmount}>
-                          {quoteData?.coinsApplied}
-                        </Text>
-                      </View>
-                      {/* )} */}
+                      {quoteData && quoteData.coinsApplied > 0 && (
+                        <View style={styles.usingRow}>
+                          <Text style={styles.usingText}>Using </Text>
+                          <Image
+                            source={require('../../../assets/icons/udcoin.png')}
+                            style={{ width: wp('6%'), height: wp('6%') }}
+                            resizeMode="contain"
+                          />
+                          <Text style={styles.usingAmount}>
+                            {quoteData?.coinsApplied}
+                          </Text>
+                        </View>
+                      )}
                     </>
                   )}
                 </View>

@@ -124,8 +124,8 @@ const SavedAddressScreen = () => {
     return (
         <SafeAreaView style={styles.mainContainer}>
             <View style={styles.headerContainer}>
-                <TouchableOpacity onPress={() => navigation.goBack()}>
-                    <Image style={styles.leftArrowIcon} source={require('../assets/images/left_arrow.png')} />
+                <TouchableOpacity hitSlop={40} onPress={() => navigation.goBack()}>
+                    <AntDesign name="left" size={wp('5%')} color="#000" />
                 </TouchableOpacity>
                 <Text style={styles.addressText}>Address</Text>
             </View>
@@ -200,11 +200,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginTop: hp('1%'),
         marginLeft: wp('2%')
-    },
-    leftArrowIcon: {
-        width: wp('10.33%'),
-        height: hp('2.04%'),
-        resizeMode: 'contain'
     },
     addressText: {
         color: '#000000',

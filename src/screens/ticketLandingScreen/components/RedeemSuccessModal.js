@@ -132,6 +132,7 @@ const RedeemSuccessModal = ({
 
             <View style={styles.btnRow}>
               <TouchableOpacity
+                hitSlop={40}
                 style={styles.backBtn}
                 onPress={onBack}
                 activeOpacity={0.75}

@@ -94,8 +94,8 @@ const SupportTicketsListScreen = () => {
     return (
         <SafeAreaView style={styles.mainContainer}>
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                    <AntDesign name="left" size={wp('6%')} color="#000" />
+                <TouchableOpacity hitSlop={40} onPress={() => navigation.goBack()} style={styles.backButton}>
+                    <AntDesign name="left" size={wp('5%')} color="#000" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Support Tickets</Text>
                 <TouchableOpacity onPress={() => navigation.navigate('SupportTicketScreen')} style={styles.addButton}>

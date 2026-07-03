@@ -22,6 +22,7 @@ import { GOOGLE_MAPS_API_KEY } from '../globals/secrets'
 import Geolocation from '@react-native-community/geolocation'
 import CustomLoader from '../components/CustomLoader'
 import Ionicons from 'react-native-vector-icons/Ionicons'
+import AntDesign from 'react-native-vector-icons/AntDesign'
 import { AppContext } from '../context/appContext'
 import secureStore from '../utils/secureStore'
 
@@ -425,9 +426,9 @@ const AddLocationScreen = () => {
                             <TouchableOpacity
                                 style={styles.backButtonContainer}
                                 onPress={() => navigation.goBack()}
-                                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                                hitSlop={40}
                             >
-                                <Image style={styles.leftArrowIcon} source={require('../assets/images/left_arrow.png')} />
+                                <AntDesign name="left" size={wp('5%')} color="#000" />
                             </TouchableOpacity>
                             <Text style={styles.addLocationText}>
                                 {isEditMode ? 'Edit location' : 'Add location'}
@@ -722,12 +723,6 @@ const styles = StyleSheet.create({
     },
     backButtonContainer: {
         padding: wp('1%'),
-    },
-    leftArrowIcon: {
-        width: wp('4.5%'),
-        height: hp('2.5%'),
-        resizeMode: 'contain',
-        tintColor: '#000000',
     },
     addLocationText: {
         fontFamily: FONTS.poppins.semiBold,

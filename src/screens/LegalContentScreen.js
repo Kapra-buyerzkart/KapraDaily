@@ -40,11 +40,11 @@ const LegalContentScreen = () => {
     return (
         <SafeAreaView style={styles.mainContainer}>
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                    <AntDesign name="left" size={wp('6%')} color="#000" />
+                <TouchableOpacity hitSlop={40} onPress={() => navigation.goBack()} style={styles.backButton}>
+                    <AntDesign name="left" size={wp('5%')} color="#000" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>{title}</Text>
-                <View style={{ width: wp('6%') }} />
+                <View style={{ width: wp('5%') }} />
             </View>
 
             {loading ? (

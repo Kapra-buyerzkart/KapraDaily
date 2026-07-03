@@ -11,6 +11,7 @@ import {
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
 import { FONTS } from '../styles/typography';
+import AntDesign from 'react-native-vector-icons/AntDesign';
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -161,11 +162,8 @@ export default function WishlistScreen() {
         }}
       >
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Image
-              style={styles.leftArrowIcon}
-              source={require('../assets/images/left_arrow.png')}
-            />
+          <TouchableOpacity hitSlop={40} onPress={() => navigation.goBack()}>
+            <AntDesign name="left" size={wp('5%')} color="#000" />
           </TouchableOpacity>
           <Text style={styles.header}>Wishlist</Text>
         </View>
@@ -243,11 +241,6 @@ const styles = StyleSheet.create({
     fontSize: wp('4.65%'),
     alignSelf: 'center',
     marginLeft: wp('4%'),
-  },
-  leftArrowIcon: {
-    width: wp('2.33%'),
-    height: hp('2.04%'),
-    resizeMode: 'contain',
   },
   giftImage: {
     width: wp('37.9%'),

@@ -72,8 +72,9 @@ const D2cScreen = ({ navigation }) => {
       <TouchableOpacity
         style={[styles.backButton, { top: insets.top + hp('1.5%') }]}
         onPress={() => navigation.goBack()}
+        hitSlop={40}
       >
-        <AntDesign name="arrowleft" size={wp('5%')} color="#000000" />
+        <AntDesign name="left" size={wp('5%')} color="#000000" />
       </TouchableOpacity>
 
       <ScrollView

@@ -807,7 +807,7 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('4.8%'),
     color: '#000',
-    marginLeft: wp('2%'),
+    marginHorizontal: wp('4%'),
   },
   headerRight: {
     flexDirection: 'row',
@@ -1084,7 +1084,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   similarProductsSection: {
-    paddingTop: hp('2%'),
+    //  paddingTop: hp('1%'),
     backgroundColor: '#FFFFFF',
   },
   sectionTitle: {
