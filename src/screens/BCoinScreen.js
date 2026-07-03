@@ -80,9 +80,6 @@ const BCoinScreen = () => {
   const [isLocationModalVisible, setIsLocationModalVisible] = useState(false);
   const isMounted = React.useRef(true);
 
-  console.log(generalSettings, 'generalSettings====>');
-  console.log(generalSettings.min_coins_to_redeem_cash, 'generalSettings====>');
-
   const minCoinsToRedeem = Number(generalSettings?.min_coins_to_redeem_cash);
   const isDisabledTrue = (walletData?.wallet?.bCoins || 0) < minCoinsToRedeem;
   const showHistoryNote = generalSettings?.show_temporary_message === '1';

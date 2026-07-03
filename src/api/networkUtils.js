@@ -18,14 +18,15 @@ let isLoggingOut = false;
  * Registers a callback for handling 401 Unauthorized logouts from the network layer.
  * @param {Function} handler The logout function to be called on auth failure.
  */
-export const setLogoutHandler = (handler) => {
+export const setLogoutHandler = handler => {
   logoutHandler = handler;
 };
 
 /* -------------------- HELPERS -------------------- */
-const checkAuthApi = (url) => {
+const checkAuthApi = url => {
   if (!url) return false;
-  return url.includes('auth/loginpassword') ||
+  return (
+    url.includes('auth/loginpassword') ||
     url.includes('auth/sendotp') ||
     url.includes('auth/verifyotp') ||
     url.includes('auth/checkphone') ||
@@ -33,12 +34,18 @@ const checkAuthApi = (url) => {
     url.includes('auth/register') ||
     url.includes('auth/refreshtoken') ||
     url.includes('auth/resetpassword') ||
-    url.includes('auth/send-login-otp-email');
+    url.includes('auth/send-login-otp-email')
+  );
 };
 
 /* -------------------- ERROR HANDLER -------------------- */
 const errorHandler = error => {
-  logger.log(' [API ERROR]:', error?.response?.status, error?.config?.url, error?.message);
+  logger.log(
+    ' [API ERROR]:',
+    error?.response?.status,
+    error?.config?.url,
+    error?.message,
+  );
 
   if (error.message === 'Network Error') {
     throw 'Network Error. Ensure you are connected to internet.';
@@ -49,21 +56,32 @@ const errorHandler = error => {
   }
 
   const status = error?.response?.status;
-  const message = error?.response?.data?.Message ||
+  const message =
+    error?.response?.data?.Message ||
     error?.response?.data?.message ||
-    (error?.response?.data?.errors ? Object.values(error?.response?.data?.errors).flat().join(', ') : null);
+    (error?.response?.data?.errors
+      ? Object.values(error?.response?.data?.errors).flat().join(', ')
+      : null);
 
   const isAuthApi = checkAuthApi(error?.config?.url);
 
   // 401 and other auth errors are handled by the response interceptor
 
   // Handle specific database identity conflicts (FK_Carts_Customers)
-  if (typeof message === 'string' && (message.includes('FK_Carts_Customers') || (message.includes('conflict') && message.includes('custId')))) {
-    logger.log('[API]: Database identity conflict detected (error), triggering logout.');
+  if (
+    typeof message === 'string' &&
+    (message.includes('FK_Carts_Customers') ||
+      (message.includes('conflict') && message.includes('custId')))
+  ) {
+    logger.log(
+      '[API]: Database identity conflict detected (error), triggering logout.',
+    );
     if (!isLoggingOut) {
       isLoggingOut = true;
       logoutHandler(true);
-      setTimeout(() => { isLoggingOut = false; }, 2000);
+      setTimeout(() => {
+        isLoggingOut = false;
+      }, 2000);
     }
     throw { Message: 'Session expired, please login again.', status: 401 };
   }
@@ -96,7 +114,9 @@ axiosInstance.interceptors.request.use(
   async config => {
     const isAuthApi = checkAuthApi(config.url);
 
-    const fullUrl = config.baseURL ? `${config.baseURL}${config.url}` : config.url;
+    const fullUrl = config.baseURL
+      ? `${config.baseURL}${config.url}`
+      : config.url;
     logger.log('API URL 👉', fullUrl, 'isAuthApi 👉', isAuthApi);
 
     if (!isAuthApi) {
@@ -108,7 +128,7 @@ axiosInstance.interceptors.request.use(
 
     return config;
   },
-  error => Promise.reject(error)
+  error => Promise.reject(error),
 );
 
 /* -------------------- REFRESH TOKEN LOGIC -------------------- */
@@ -138,12 +158,19 @@ axiosInstance.interceptors.response.use(
     const data = response.data;
     if (data && data.success === false && data.message) {
       const msg = String(data.message);
-      if (msg.includes('FK_Carts_Customers') || (msg.includes('conflict') && msg.includes('custId'))) {
-        logger.log('[API]: Database identity conflict detected (success branch), triggering logout.');
+      if (
+        msg.includes('FK_Carts_Customers') ||
+        (msg.includes('conflict') && msg.includes('custId'))
+      ) {
+        logger.log(
+          '[API]: Database identity conflict detected (success branch), triggering logout.',
+        );
         if (!isLoggingOut) {
           isLoggingOut = true;
           logoutHandler(true);
-          setTimeout(() => { isLoggingOut = false; }, 2000);
+          setTimeout(() => {
+            isLoggingOut = false;
+          }, 2000);
         }
       }
     }
@@ -163,14 +190,19 @@ axiosInstance.interceptors.response.use(
       const refreshToken = await getRefreshToken();
       if (!refreshToken) {
         const hadAuthHeader = !!originalRequest.headers?.Authorization;
-        logger.log('🔒 [API]: No refresh token available. hadAuthHeader:', hadAuthHeader);
+        logger.log(
+          '🔒 [API]: No refresh token available. hadAuthHeader:',
+          hadAuthHeader,
+        );
 
         // Only yank user to LoginScreen with "Session expired" if they *were* logged in
         if (hadAuthHeader) {
           if (!isLoggingOut) {
             isLoggingOut = true;
             logoutHandler(true);
-            setTimeout(() => { isLoggingOut = false; }, 3000);
+            setTimeout(() => {
+              isLoggingOut = false;
+            }, 3000);
           }
         }
         return Promise.reject(error);
@@ -189,10 +221,9 @@ axiosInstance.interceptors.response.use(
 
       try {
         logger.log('🔄 [API]: Attempting token refresh...');
-        const res = await axios.post(
-          `${CONFIG.base_url}auth/refreshtoken`,
-          { refreshToken: refreshToken }
-        );
+        const res = await axios.post(`${CONFIG.base_url}auth/refreshtoken`, {
+          refreshToken: refreshToken,
+        });
 
         // Do NOT log the response body — it contains access/refresh tokens.
         logger.log('🔄 [API]: Refresh response received:', res.status);
@@ -214,14 +245,18 @@ axiosInstance.interceptors.response.use(
           throw new Error('New access token not found in refresh response');
         }
       } catch (err) {
-        logger.log('🔒 [API]: Token refresh failed:', err?.response?.status || err?.message);
+        logger.log(
+          '🔒 [API]: Token refresh failed:',
+          err?.response?.status || err?.message,
+        );
         processQueue(err);
         await clearTokens();
-        // Both tokens invalid — session expired
         if (!isLoggingOut) {
           isLoggingOut = true;
           logoutHandler(true);
-          setTimeout(() => { isLoggingOut = false; }, 3000);
+          setTimeout(() => {
+            isLoggingOut = false;
+          }, 3000);
         }
         return Promise.reject(err);
       } finally {
@@ -230,7 +265,7 @@ axiosInstance.interceptors.response.use(
     }
 
     errorHandler(error);
-  }
+  },
 );
 
 /* -------------------- API METHODS -------------------- */
