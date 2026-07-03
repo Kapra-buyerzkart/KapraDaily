@@ -333,17 +333,17 @@ const BCoinScreen = () => {
         >
           <TouchableOpacity
             style={styles.circleBtn}
-            hitSlop={20}
+            hitSlop={40}
             onPress={() => navigation.goBack()}
           >
-            <AntDesign name="left" size={wp('4.5%')} color="#000" />
+            <AntDesign name="left" size={wp('4.5%')} color="#ffffffff" />
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.knowMorePill}
             activeOpacity={0.85}
             onPress={() => setShowInfoModal(true)}
           >
-            <AntDesign name="infocirlceo" size={wp('3.6%')} color="#333" />
+            <AntDesign name="infocirlceo" size={wp('3.6%')} color="white" />
             <Text style={styles.knowMoreText}>Know more</Text>
           </TouchableOpacity>
         </View>
@@ -803,22 +803,22 @@ const styles = StyleSheet.create({
     width: wp('9.5%'),
     height: wp('9.5%'),
     borderRadius: wp('9.5%') / 2,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   knowMorePill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
     paddingHorizontal: wp('3.5%'),
     paddingVertical: hp('0.9%'),
     borderRadius: wp('6%'),
   },
   knowMoreText: {
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('3.1%'),
-    color: '#333333',
+    fontFamily: FONTS.gilroy.semiBold,
+    fontSize: wp('3.5%'),
+    color: 'white',
     marginLeft: wp('1.5%'),
   },
   heroCenter: {
@@ -1190,11 +1190,11 @@ const styles = StyleSheet.create({
     marginBottom: hp('1%'),
   },
   historyNoteContainer: {
-    backgroundColor: '#FFF5F0',
+    // backgroundColor: '#FFF5F0',
     paddingHorizontal: wp('3%'),
     paddingVertical: hp('0.8%'),
     borderRadius: wp('2%'),
-    marginTop: hp('0.5%'),
+    // marginTop: hp('0.5%'),
     borderLeftWidth: 3,
     borderLeftColor: '#F25000',
   },
