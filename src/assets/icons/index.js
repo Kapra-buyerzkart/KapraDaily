@@ -39,6 +39,7 @@ const icons = {
   blurbg: require('./blurbg.png'),
   savedAddress: require('./savedAddress.png'),
   coPartnerdashboard: require('./coPartnerdashboard.png'),
+  transparentBackArrow: require('./transbckarrow.png'),
 };
 
 export default icons;

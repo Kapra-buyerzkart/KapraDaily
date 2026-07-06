@@ -12,28 +12,37 @@ import icons from '@/assets/icons';
 import images from '@/assets/images';
 import ProfileAvatarBadge from '../../../components/ProfileAvatarBadge';
 import { styles, INK } from '../styles';
+import ProfileUserInfo from './ProfileUserInfo';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-export default function ProfileHeader({ onBack, onEditProfile, isPrivileged }) {
+export default function ProfileHeader({
+  profile,
+  onBack,
+  onEditProfile,
+  isPrivileged,
+}) {
+  const insets = useSafeAreaInsets();
   return (
     <ImageBackground
       source={icons.blurbg}
       style={styles.header}
-      imageStyle={styles.headerImage}
+      imageStyle={[styles.headerImage]}
     >
-      <View style={styles.headerTopRow}>
+      <View
+        style={[
+          styles.headerTopRow,
+          {
+            paddingTop: insets.top,
+          },
+        ]}
+      >
         <TouchableOpacity
           hitSlop={40}
           style={styles.backButton}
           onPress={onBack}
           accessibilityLabel="Go back"
         >
-          <Image
-            source={icons.backArrowNew}
-            style={{
-              resizeMode: 'contain',
-              tintColor: INK,
-            }}
-          />
+          <Image source={icons.transparentBackArrow} />
         </TouchableOpacity>
         <Text style={styles.profileHeaderText}>Profile</Text>
       </View>
@@ -51,6 +60,7 @@ export default function ProfileHeader({ onBack, onEditProfile, isPrivileged }) {
           </TouchableOpacity>
         </View>
       </View>
+      <ProfileUserInfo profile={profile} />
     </ImageBackground>
   );
 }

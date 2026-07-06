@@ -63,15 +63,14 @@ export default function ProfileScreen() {
   });
 
   return (
-    <View style={[{ marginTop: insets.top, backgroundColor: COLORS.white }]}>
+    <View style={{ backgroundColor: COLORS.white }}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <ProfileHeader
+          profile={profile}
           onBack={() => navigation.goBack()}
           onEditProfile={() => navigation.navigate('EditProfileScreen')}
           isPrivileged={profile?.isPrivileged}
         />
-
-        <ProfileUserInfo profile={profile} />
 
         <ProfileQuickActions
           onMyOrders={() => navigation.navigate('MyOrdersScreen')}

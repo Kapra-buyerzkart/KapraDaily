@@ -20,15 +20,11 @@ export const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: BG,
   },
-  header: {
-    height: hp('30%'),
-    overflow: 'hidden',
-    borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32,
-  },
+
   headerImage: {
-    borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32,
+    resizeMode: 'stretch',
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
   },
   headerTopRow: {
     flexDirection: 'row',
@@ -43,12 +39,7 @@ export const styles = StyleSheet.create({
     borderRadius: wp('4.5%'),
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
+    backgroundColor: '',
   },
   profileHeaderText: {
     color: INK,
@@ -67,8 +58,8 @@ export const styles = StyleSheet.create({
   },
   avatarEditBadge: {
     position: 'absolute',
-    right: -2,
-    bottom: 2,
+    right: 0,
+    bottom: 10,
     width: wp('6.5%'),
     height: wp('6.5%'),
     borderRadius: wp('3.25%'),
@@ -80,8 +71,7 @@ export const styles = StyleSheet.create({
   },
   userInfoWrapper: {
     alignItems: 'center',
-    paddingTop: hp('1.6%'),
-    paddingBottom: hp('0.4%'),
+    paddingBottom: hp('1.9%'),
     paddingHorizontal: wp('6%'),
   },
   userNameText: {
@@ -93,7 +83,7 @@ export const styles = StyleSheet.create({
   phoneNumberStyle: {
     fontSize: wp('3.4%'),
     fontFamily: FONTS.gilroy.medium,
-    color: GRAY_600,
+    color: 'black',
     marginTop: hp('0.4%'),
     textAlign: 'center',
   },
@@ -135,25 +125,23 @@ export const styles = StyleSheet.create({
   },
   sectionsContainer: {
     paddingHorizontal: wp('5%'),
-    marginTop: hp('1%'),
   },
   sectionCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
     borderWidth: 1,
     borderColor: DIVIDER,
-    paddingVertical: hp('0.5%'),
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.03,
     shadowRadius: 4,
-    elevation: 1,
+    // elevation: 1,
   },
   listItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    minHeight: hp('6.5%'),
+    minHeight: hp('5.5%'),
     paddingHorizontal: wp('4%'),
   },
   listItemLeft: {

@@ -38,6 +38,7 @@ import StoreUnavailable from '../components/StoreUnavailable';
 import LocationModal from '../components/LocationModal';
 import { AppContext } from '../context/appContext';
 import ShimmerPlaceholder from '../components/ShimmerPlaceholder';
+import icons from '@/assets/icons';
 
 const ProductDetailsScreen = () => {
   const [selectedImage, setSelectedImage] = useState(null);
@@ -144,7 +145,8 @@ const ProductDetailsScreen = () => {
             onPress={() => navigation.goBack()}
             style={styles.iconCircle}
           >
-            <Ionicons name="chevron-back" size={wp('6%')} color="#000" />
+            <Image source={icons.backArrowNew} />
+            {/* <Ionicons name="chevron-back" size={wp('6%')} color="#000" /> */}
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Product Details</Text>
         </View>
@@ -312,9 +314,8 @@ const ProductDetailsScreen = () => {
     <View style={styles.floatingHeader}>
       <View style={styles.headerLeft}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={wp('6%')} color="#000" />
+          <Image source={icons.backArrowNew} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Product Details</Text>
       </View>
       <View style={styles.headerRight}>
         <TouchableOpacity
@@ -344,7 +345,8 @@ const ProductDetailsScreen = () => {
         <SafeAreaView edges={['top']} style={{ flex: 1 }}>
           <View style={styles.standardHeader}>
             <TouchableOpacity onPress={() => navigation.goBack()}>
-              <Ionicons name="chevron-back" size={wp('6%')} color="#000" />
+              <Image source={icons.backArrowNew} />
+              {/* <Ionicons name="chevron-back" size={wp('6%')} color="#000" /> */}
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Product Details</Text>
           </View>
@@ -420,7 +422,6 @@ const ProductDetailsScreen = () => {
                   borderColor: '#D9D9D9',
                   borderWidth: 0.5,
                   width: wp('92%'),
-                  alignSelf: 'center',
                   borderRadius: 30,
                   paddingHorizontal: 20,
                   paddingTop: 25,
@@ -429,6 +430,34 @@ const ProductDetailsScreen = () => {
               >
                 <View style={styles.titleRow}>
                   <View style={{ flex: 1 }}>
+                    <View
+                      style={{
+                        flex: 1,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        paddingBottom: hp('1%'),
+                      }}
+                    >
+                      <View>
+                        {discountPercentage > 0 && (
+                          <Text style={styles.discountText}>
+                            {Math.round(discountPercentage) ||
+                              ((unitPrice - specialPrice) / unitPrice) * 100}
+                            % OFF
+                          </Text>
+                        )}
+                      </View>
+
+                      <View style={styles.tokenBadge}>
+                        <Image
+                          style={styles.tokenIconSmall}
+                          source={require('../assets/icons/tokenud.png')}
+                        />
+                        <Text style={styles.tokenBadgeText}>
+                          {Number(bTokenValue)} UD Token
+                        </Text>
+                      </View>
+                    </View>
                     <Text style={styles.productName}>{productName}</Text>
                     <Text style={styles.productDescription}>
                       {shortDescription}
@@ -440,135 +469,127 @@ const ProductDetailsScreen = () => {
                   </View>
                 </View>
 
-                <View style={styles.tokenBadge}>
-                  <Image
-                    style={styles.tokenIconSmall}
-                    source={require('../assets/images/btoken-icon-three.png')}
-                  />
-                  <Text style={styles.tokenBadgeText}>
-                    {Number(bTokenValue)} UD Token
-                  </Text>
-                </View>
-
-                <View style={styles.priceSection}>
-                  <View style={{ flex: 1 }}>
-                    {discountPercentage > 0 && (
-                      <Text style={styles.discountText}>
-                        {Math.round(discountPercentage) ||
-                          ((unitPrice - specialPrice) / unitPrice) * 100}
-                        % OFF
-                      </Text>
-                    )}
-                    <View style={styles.priceRow}>
-                      <Text style={styles.currentPrice}>₹{specialPrice}</Text>
-                      {!!unitPrice &&
-                        Number(unitPrice) > Number(specialPrice) && (
-                          <Text style={styles.originalPrice}>₹{unitPrice}</Text>
-                        )}
-                    </View>
-                    {/* <Text style={styles.unitPriceText}>{product?.unitPriceText || '13.9/100g'}</Text> */}
+                <View
+                  style={{
+                    flex: 1,
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <View style={styles.priceRow}>
+                    <Text style={styles.currentPrice}>₹{specialPrice}</Text>
+                    {!!unitPrice &&
+                      Number(unitPrice) > Number(specialPrice) && (
+                        <Text style={styles.originalPrice}>₹{unitPrice}</Text>
+                      )}
                   </View>
 
-                  <View style={styles.actionContainer}>
-                    {(() => {
-                      const cartItem = cartItems.find(
-                        i =>
-                          String(i.productId || i.id) ===
-                          String(finalProductId),
-                      );
-                      const quantity = cartItem ? cartItem.quantity : 0;
-                      const cartItemId = cartItem?.cartItemId || finalProductId;
-
-                      if (quantity > 0) {
-                        return (
-                          <View style={styles.quantitySelector}>
-                            <TouchableOpacity
-                              onPress={() =>
-                                quantity === 1
-                                  ? removeFromCart(cartItemId)
-                                  : updateCartItemQuantity(
-                                      cartItemId,
-                                      quantity - 1,
-                                    )
-                              }
-                            >
-                              <LinearGradient
-                                colors={['#FFFFFF', '#FFD8C4']}
-                                start={{ x: 0, y: 0 }}
-                                end={{ x: 1, y: 1 }}
-                                style={styles.plusIconCircle}
-                              >
-                                <Entypo
-                                  name="minus"
-                                  size={wp('5%')}
-                                  color="#F25000"
-                                  style={styles.qtyIcon}
-                                />
-                              </LinearGradient>
-                            </TouchableOpacity>
-                            <Text style={styles.qtyValue}>{quantity}</Text>
-                            <TouchableOpacity
-                              onPress={() =>
-                                updateCartItemQuantity(cartItemId, quantity + 1)
-                              }
-                            >
-                              <LinearGradient
-                                colors={['#FFFFFF', '#FFD8C4']}
-                                start={{ x: 0, y: 0 }}
-                                end={{ x: 1, y: 1 }}
-                                style={styles.plusIconCircle}
-                              >
-                                <Entypo
-                                  name="plus"
-                                  size={wp('5%')}
-                                  color="#F25000"
-                                  style={styles.qtyIcon}
-                                />
-                              </LinearGradient>
-                            </TouchableOpacity>
-                          </View>
+                  <View style={styles.priceSection}>
+                    <View style={styles.actionContainer}>
+                      {(() => {
+                        const cartItem = cartItems.find(
+                          i =>
+                            String(i.productId || i.id) ===
+                            String(finalProductId),
                         );
-                      }
+                        const quantity = cartItem ? cartItem.quantity : 0;
+                        const cartItemId =
+                          cartItem?.cartItemId || finalProductId;
 
-                      if (!isAvailable || stockQty === 0) {
+                        if (quantity > 0) {
+                          return (
+                            <View style={styles.quantitySelector}>
+                              <TouchableOpacity
+                                onPress={() =>
+                                  quantity === 1
+                                    ? removeFromCart(cartItemId)
+                                    : updateCartItemQuantity(
+                                        cartItemId,
+                                        quantity - 1,
+                                      )
+                                }
+                              >
+                                <LinearGradient
+                                  colors={['#FFFFFF', '#FFD8C4']}
+                                  start={{ x: 0, y: 0 }}
+                                  end={{ x: 1, y: 1 }}
+                                  style={styles.plusIconCircle}
+                                >
+                                  <Entypo
+                                    name="minus"
+                                    size={wp('5%')}
+                                    color="#F25000"
+                                    style={styles.qtyIcon}
+                                  />
+                                </LinearGradient>
+                              </TouchableOpacity>
+                              <Text style={styles.qtyValue}>{quantity}</Text>
+                              <TouchableOpacity
+                                onPress={() =>
+                                  updateCartItemQuantity(
+                                    cartItemId,
+                                    quantity + 1,
+                                  )
+                                }
+                              >
+                                <LinearGradient
+                                  colors={['#FFFFFF', '#FFD8C4']}
+                                  start={{ x: 0, y: 0 }}
+                                  end={{ x: 1, y: 1 }}
+                                  style={styles.plusIconCircle}
+                                >
+                                  <Entypo
+                                    name="plus"
+                                    size={wp('5%')}
+                                    color="#F25000"
+                                    style={styles.qtyIcon}
+                                  />
+                                </LinearGradient>
+                              </TouchableOpacity>
+                            </View>
+                          );
+                        }
+
+                        if (!isAvailable || stockQty === 0) {
+                          return (
+                            <View style={styles.disabledBtn}>
+                              <Text
+                                style={[
+                                  styles.addBtnText,
+                                  { fontSize: wp('3.5%') },
+                                ]}
+                              >
+                                OUT OF STOCK
+                              </Text>
+                            </View>
+                          );
+                        }
+
                         return (
-                          <View style={styles.disabledBtn}>
-                            <Text
+                          <TouchableOpacity
+                            style={styles.addBtn}
+                            onPress={() => product && addToCart(product)}
+                          >
+                            <LinearGradient
+                              colors={['#FFFFFF', '#FFD8C4']}
+                              start={{ x: 0, y: 0 }}
+                              end={{ x: 1, y: 1 }}
                               style={[
-                                styles.addBtnText,
-                                { fontSize: wp('3.5%') },
+                                styles.plusIconCircle,
+                                { marginRight: wp('3%') },
                               ]}
                             >
-                              OUT OF STOCK
-                            </Text>
-                          </View>
+                              <Entypo
+                                name="plus"
+                                size={wp('5%')}
+                                color="#F25000"
+                              />
+                            </LinearGradient>
+                            <Text style={styles.addBtnText}>ADD</Text>
+                          </TouchableOpacity>
                         );
-                      }
-
-                      return (
-                        <TouchableOpacity
-                          style={styles.addBtn}
-                          onPress={() => product && addToCart(product)}
-                        >
-                          <LinearGradient
-                            colors={['#FFFFFF', '#FFD8C4']}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
-                            style={[
-                              styles.plusIconCircle,
-                              { marginRight: wp('3%') },
-                            ]}
-                          >
-                            <Entypo
-                              name="plus"
-                              size={wp('5%')}
-                              color="#F25000"
-                            />
-                          </LinearGradient>
-                          <Text style={styles.addBtnText}>ADD</Text>
-                        </TouchableOpacity>
-                      );
-                    })()}
+                      })()}
+                    </View>
                   </View>
                 </View>
 
@@ -584,11 +605,12 @@ const ProductDetailsScreen = () => {
                 />
                 <View style={styles.divider} />
                 <TouchableOpacity
+                  hitSlop={30}
                   onPress={toggleDetails}
                   style={styles.viewProductDetailsButton}
                 >
                   <Text style={styles.viewProductDetailsButtonText}>
-                    View product details
+                    {showDetails ? 'View less details' : 'View product details'}
                   </Text>
                   <AntDesign
                     name={showDetails ? 'up' : 'down'}
@@ -676,14 +698,14 @@ const ProductDetailsScreen = () => {
                           }
                           style={styles.scrollIndicator}
                         >
-                          <Text style={styles.scrollHintText}>
+                          {/* <Text style={styles.scrollHintText}>
                             Scroll for more
                           </Text>
                           <MaterialIcons
                             name="keyboard-arrow-down"
                             size={wp('4%')}
                             color="#F25000"
-                          />
+                          /> */}
                         </TouchableOpacity>
                       </>
                     )}
@@ -901,14 +923,13 @@ const styles = StyleSheet.create({
     marginTop: hp('1%'),
   },
   tokenBadge: {
+    top: 3,
     flexDirection: 'row',
     alignItems: 'center',
-    //  backgroundColor: '#F3E8FF',
     alignSelf: 'flex-start',
-    // paddingHorizontal: wp('3%'),
-    // paddingVertical: hp('0.6%'),
-    borderRadius: 8,
-    marginTop: hp('2%'),
+    paddingHorizontal: wp('3%'),
+    borderLeftWidth: 1,
+    borderColor: 'black',
   },
   tokenIconSmall: {
     width: wp('4%'),
@@ -930,8 +951,12 @@ const styles = StyleSheet.create({
   discountText: {
     fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('3.4%'),
-    color: '#0CA201',
-    fontWeight: '600',
+    color: '#FFF',
+    paddingHorizontal: hp('2%'),
+    borderRadius: 20,
+    paddingVertical: hp('.5%'),
+    marginRight: 16,
+    backgroundColor: '#0CA201',
   },
   priceRow: {
     flexDirection: 'row',
@@ -1037,6 +1062,7 @@ const styles = StyleSheet.create({
     fontSize: wp('3.5%'),
     color: '#f25000',
     marginRight: wp('1.5%'),
+    paddingBottom: hp(0.5),
   },
   productDetailsView: {
     marginTop: hp('0.5%'),
@@ -1084,7 +1110,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   similarProductsSection: {
-    //  paddingTop: hp('1%'),
+    paddingTop: hp('1%'),
     backgroundColor: '#FFFFFF',
   },
   sectionTitle: {

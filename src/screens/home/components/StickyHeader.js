@@ -15,6 +15,7 @@ import {
 } from 'react-native-responsive-screen';
 import Entypo from 'react-native-vector-icons/Entypo';
 import Feather from 'react-native-vector-icons/Feather';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { FONTS } from '../../../styles/typography';
 import ProfileAvatarBadge from '../../../components/ProfileAvatarBadge';
 import RotatingPlaceholder from '../../../components/RotatingPlaceholder';
@@ -62,11 +63,11 @@ const StickyHeader = ({
         <Animated.View style={etaAnimStyle}>
           <Text style={styles.timeText}>20 mins</Text>
           <TouchableOpacity
-            style={styles.addressView}
+            style={[styles.addressView, { marginTop: hp('0.4%') }]}
             onPress={onPressLocation}
           >
-            <Entypo
-              name={'location-pin'}
+            <Feather
+              name={'map-pin'}
               size={wp('4%')}
               color={'#FFFFFF'}
               style={{ marginRight: wp('1%') }}
@@ -252,8 +253,6 @@ const styles = StyleSheet.create({
   addressView: {
     flexDirection: 'row',
     alignItems: 'center',
-    // top: Platform.OS === 'ios' ? -hp('0.2%') : -hp('1%'),
-    left: Platform.OS === 'ios' ? wp('0%') : -wp('0.5%'),
   },
   addressText: {
     color: '#FFFFFF',
