@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Image, TouchableOpacity } from 'react-native';
-import AntDesign from 'react-native-vector-icons/AntDesign';
+import icons from '@/assets/icons';
 import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import Reanimated, {
   useAnimatedStyle,
@@ -52,7 +52,13 @@ const ScreenHeader = ({ navigation, insets, scrollY }) => {
         ]}
         hitSlop={40}
       >
-        <AntDesign name="left" size={wp('5%')} color="#FFFFFF" />
+        <Image
+          source={icons.backArrowNew}
+          style={{
+            resizeMode: 'contain',
+            tintColor: '#FFFFFF',
+          }}
+        />
       </TouchableOpacity>
       <Reanimated.View style={titleAnimStyle}>
         <Image

@@ -181,12 +181,12 @@ const styles = StyleSheet.create({
     paddingTop: hp('0.5%'),
   },
   title: {
-    fontFamily: FONTS.poppins.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('4.65%'),
     color: '#000000',
   },
   subtitle: {
-    fontFamily: FONTS.poppins.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3.25%'),
     color: '#616161',
     marginTop: hp('0.5%'),
@@ -210,13 +210,13 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    fontFamily: FONTS.poppins.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3.72%'),
     color: '#000000',
     padding: 0,
   },
   errorText: {
-    fontFamily: FONTS.poppins.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3%'),
     color: '#D32F2F',
     marginTop: hp('0.8%'),
@@ -237,7 +237,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F2F2F2',
   },
   cancelButtonText: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3.72%'),
     color: '#616161',
   },
@@ -248,7 +248,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F2A98A',
   },
   sendButtonText: {
-    fontFamily: FONTS.poppins.bold,
+    fontFamily: FONTS.gilroy.bold,
     fontSize: wp('3.72%'),
     color: '#FFFFFF',
   },

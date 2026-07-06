@@ -26,17 +26,6 @@ const SubCategoryPill = ({ item, isSelected, onPress }) => (
 export default React.memo(SubCategoryPill);
 
 const styles = StyleSheet.create({
-  // subCatPillActive: {
-  //   flexDirection: 'row',
-  //   alignItems: 'center',
-  //   paddingHorizontal: wp('2.5%'),
-  //   paddingVertical: hp('0.6%'),
-  //   borderRadius: wp('8%'),
-  //   borderWidth: 1,
-  //   borderColor: '#F25000',
-  //   backgroundColor: 'white',
-  // },
-
   subCatPillActive: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -44,9 +33,20 @@ const styles = StyleSheet.create({
     paddingVertical: hp('0.6%'),
     borderRadius: wp('8%'),
     borderWidth: 1,
-    borderColor: '#000000ff',
+    borderColor: '#F25000',
     backgroundColor: 'white',
   },
+
+  // subCatPillActive: {
+  //   flexDirection: 'row',
+  //   alignItems: 'center',
+  //   paddingHorizontal: wp('2.5%'),
+  //   paddingVertical: hp('0.6%'),
+  //   borderRadius: wp('8%'),
+  //   borderWidth: 1,
+  //   borderColor: '#000000ff',
+  //   backgroundColor: 'white',
+  // },
   subCatPillInactive: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -65,26 +65,26 @@ const styles = StyleSheet.create({
     resizeMode: 'cover',
   },
   subCatPillTextActive: {
-    fontFamily: FONTS.poppins.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('3.5%'),
     color: '#FF6B00',
     marginRight: wp('2%'),
   },
   subCatPillTextInactive: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3.5%'),
     color: '#6B7280',
     marginRight: wp('2%'),
   },
 
-  subCatPillTextActive: {
-    fontFamily: FONTS.poppins.semiBold,
-    fontSize: wp('3.5%'),
-    color: '#000000ff',
-    marginRight: wp('2%'),
-  },
+  // subCatPillTextActive: {
+  //   fontFamily: FONTS.gilroy.semiBold,
+  //   fontSize: wp('3.5%'),
+  //   color: '#000000ff',
+  //   marginRight: wp('2%'),
+  // },
   subCatPillTextInactive: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3.5%'),
     color: '#6B7280',
     marginRight: wp('2%'),

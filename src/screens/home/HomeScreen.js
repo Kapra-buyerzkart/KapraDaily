@@ -347,9 +347,6 @@ const HomeScreen = () => {
       setRefreshing(false);
     }
   }, [dashboardQuery.refetch, homepageQuery.refetch]);
-
-  // Reset discovery category to null to trigger auto-select of the first one
-  // in the new location once the (now re-keyed) homepage query resolves.
   useEffect(() => {
     if (profile?.pincode) {
       setSelectedDiscoveryCategory(null);

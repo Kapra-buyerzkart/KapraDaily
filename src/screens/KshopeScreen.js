@@ -426,7 +426,7 @@ const styles = StyleSheet.create({
     marginRight: wp('2.5%'),
   },
   userName: {
-    fontFamily: FONTS.poppins.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('4%'),
     color: '#FFFFFF',
   },
@@ -450,7 +450,7 @@ const styles = StyleSheet.create({
   searchPlaceholder: {
     flex: 1,
     marginLeft: wp('2%'),
-    fontFamily: FONTS.poppins.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3.5%'),
     color: '#999999',
   },
@@ -490,7 +490,7 @@ const styles = StyleSheet.create({
     marginTop: hp('2%'),
   },
   sectionTitle: {
-    fontFamily: FONTS.poppins.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('4%'),
     color: '#222222',
     textAlign: 'center',
@@ -522,7 +522,7 @@ const styles = StyleSheet.create({
     height: wp('11%'),
   },
   categoryLabel: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('2.8%'),
     color: '#444444',
     textAlign: 'center',
@@ -542,7 +542,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F0F0F0',
   },
   accessorizeLabel: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('2.8%'),
     color: '#444444',
     textAlign: 'center',

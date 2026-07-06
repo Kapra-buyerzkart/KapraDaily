@@ -33,7 +33,6 @@ import { AppContext } from '../../context/appContext';
 import TokenProductCard from '../../components/TokenProductCard';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Feather from 'react-native-vector-icons/Feather';
-import AntDesign from 'react-native-vector-icons/AntDesign';
 import FilterSortModal from '../../components/FilterSortModal';
 import StoreUnavailable from '../../components/StoreUnavailable';
 import LocationModal from '../../components/LocationModal';
@@ -221,7 +220,13 @@ const SearchScreen = () => {
       <View style={styles.headerContainer}>
         <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
           <TouchableOpacity hitSlop={40} onPress={() => navigation.goBack()}>
-            <AntDesign name="left" size={wp('5%')} color="black" />
+            <Image
+              source={icons.backArrowNew}
+              style={{
+                resizeMode: 'contain',
+                tintColor: 'black',
+              }}
+            />
           </TouchableOpacity>
           <Text style={styles.searchText}>
             {catName ? catName : staticTitle ? staticTitle : 'Search'}

@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
   },
   ribbonImage: {},
   ribbonText: {
-    fontFamily: FONTS.poppins.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('3.4%'),
     color: '#FFFFFF',
   },

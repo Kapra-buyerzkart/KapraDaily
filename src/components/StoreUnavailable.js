@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
     height: hp('25%'),
   },
   unavailableText: {
-    fontFamily: FONTS.outfit.light,
+    fontFamily: FONTS.gilroy.light,
     fontSize: wp('3.7%'),
     color: '#333',
     textAlign: 'center',
@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
     borderRadius: wp('2%'),
   },
   changeLocationButtonText: {
-    fontFamily: FONTS.outfit.bold,
+    fontFamily: FONTS.gilroy.bold,
     fontSize: wp('4%'),
     color: '#FFFFFF',
   },

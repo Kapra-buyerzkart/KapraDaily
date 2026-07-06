@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: wp('3.5%'),
     color: '#000000',
-    fontFamily: FONTS.outfit.regular,
+    fontFamily: FONTS.gilroy.regular,
     paddingVertical: 0,
   },
 });

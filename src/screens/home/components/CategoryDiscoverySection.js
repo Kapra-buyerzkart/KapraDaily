@@ -169,7 +169,7 @@ const CategoryDiscoverySection = ({
                         categoryChipStyles.label,
                         selectedDiscoveryCategory?.catId === item.catId && {
                           color: '#F25000',
-                          fontFamily: FONTS.poppins.semiBold,
+                          fontFamily: FONTS.gilroy.semiBold,
                         },
                       ]}
                       numberOfLines={2}

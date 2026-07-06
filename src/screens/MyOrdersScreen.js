@@ -14,7 +14,7 @@ import { AppContext } from '../context/appContext';
 import StoreUnavailable from '../components/StoreUnavailable';
 import LocationModal from '../components/LocationModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import AntDesign from 'react-native-vector-icons/AntDesign';
+import icons from '@/assets/icons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
 import {
@@ -97,7 +97,13 @@ const MyOrdersScreen = () => {
             }
           }}
         >
-          <AntDesign name="left" size={wp('5%')} color={'#000000'} />
+          <Image
+            source={icons.backArrowNew}
+            style={{
+              resizeMode: 'contain',
+              tintColor: '#000000',
+            }}
+          />
         </TouchableOpacity>
 
         <Text style={styles.headerText}>My Orders</Text>
@@ -165,7 +171,7 @@ const styles = StyleSheet.create({
     paddingRight: wp('7%'),
   },
   headerText: {
-    fontFamily: FONTS.poppins.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('4.65%'),
     color: '#000000',
     flex: 1,
@@ -189,7 +195,7 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
   },
   orderNoteText: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('2.8%'),
     color: '#F25000',
   },

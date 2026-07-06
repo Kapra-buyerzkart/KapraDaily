@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
     gap: CART_SPACING.xs,
   },
   scheduleBtnText: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3.1%'),
     color: CART_COLORS.primary,
   },

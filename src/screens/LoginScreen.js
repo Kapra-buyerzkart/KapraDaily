@@ -454,14 +454,14 @@ const styles = StyleSheet.create({
     bottom: hp('4%'),
   },
   headerText: {
-    fontFamily: FONTS.poppins.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('4.65%'),
     color: '#000000',
     alignSelf: 'center',
     marginBottom: hp('3%'),
   },
   enterNumberText: {
-    fontFamily: FONTS.poppins.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3.72%'),
     color: '#616161',
   },
@@ -475,7 +475,7 @@ const styles = StyleSheet.create({
     marginTop: hp('5%'),
   },
   continueButtonText: {
-    fontFamily: FONTS.poppins.bold,
+    fontFamily: FONTS.gilroy.bold,
     fontSize: wp('4.18%'),
     color: '#FFFFFF',
   },
@@ -491,7 +491,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-end',
     marginTop: hp('0.5%'),
     color: '#F25000',
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3.25%'),
   },
 });

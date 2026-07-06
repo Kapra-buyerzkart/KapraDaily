@@ -6,10 +6,15 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   ListRenderItemInfo,
+  Image,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useNavigation, useRoute, NavigationProp } from '@react-navigation/native';
-import AntDesign from 'react-native-vector-icons/AntDesign';
+import {
+  useNavigation,
+  useRoute,
+  NavigationProp,
+} from '@react-navigation/native';
+import icons from '@/assets/icons';
 import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import { useReferralLevelMembersScreen } from './useReferralLevelMembersScreen';
 import styles from './styles';
@@ -55,11 +60,13 @@ const extractMembers = (data: any): ReferralLevelMember[] => {
 
 const ReferralLevelMembersScreen = () => {
   const insets = useSafeAreaInsets();
-  const navigation = useNavigation<NavigationProp<Record<string, object | undefined>>>();
+  const navigation =
+    useNavigation<NavigationProp<Record<string, object | undefined>>>();
   const route = useRoute<any>();
   const { levelNumber, label } = route.params ?? {};
 
-  const { members, isLoading, error } = useReferralLevelMembersScreen(levelNumber);
+  const { members, isLoading, error } =
+    useReferralLevelMembersScreen(levelNumber);
   const memberList = extractMembers(members);
 
   const renderBackButton = () => (
@@ -68,8 +75,15 @@ const ReferralLevelMembersScreen = () => {
       activeOpacity={0.7}
       accessibilityRole="button"
       accessibilityLabel="Go back"
-      onPress={() => navigation.goBack()}>
-      <AntDesign name="left" size={wp('5%')} color="#1A1A1A" />
+      onPress={() => navigation.goBack()}
+    >
+      <Image
+        source={icons.backArrowNew}
+        style={{
+          resizeMode: 'contain',
+          tintColor: '#1A1A1A',
+        }}
+      />
     </TouchableOpacity>
   );
 
@@ -77,7 +91,9 @@ const ReferralLevelMembersScreen = () => {
     <View style={styles.header}>
       {renderBackButton()}
       <View style={styles.headerTextWrap}>
-        <Text style={styles.headerTitle}>{label || `Level ${levelNumber}`}</Text>
+        <Text style={styles.headerTitle}>
+          {label || `Level ${levelNumber}`}
+        </Text>
         <Text style={styles.headerSub}>
           {memberList.length} {memberList.length === 1 ? 'member' : 'members'}
         </Text>
@@ -107,7 +123,9 @@ const ReferralLevelMembersScreen = () => {
       </View>
       {item.btEarnedForYou != null && (
         <View style={styles.memberRight}>
-          <Text style={styles.memberBt}>{formatBT(item.btEarnedForYou)} BT</Text>
+          <Text style={styles.memberBt}>
+            {formatBT(item.btEarnedForYou)} BT
+          </Text>
           <Text style={styles.memberBtLabel}>earned for you</Text>
         </View>
       )}

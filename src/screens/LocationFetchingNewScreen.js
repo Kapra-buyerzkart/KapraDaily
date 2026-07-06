@@ -119,7 +119,10 @@ const LocationFetchingNewScreen = ({ navigation }) => {
     if (profile?.custId) {
       navigation.reset({ index: 0, routes: [{ name: 'AuthSuccessScreen' }] });
     } else {
-      navigation.reset({ index: 0, routes: [{ name: 'LoginScreen', params: { type: 'login' } }] });
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'LoginScreen', params: { type: 'login' } }],
+      });
     }
   };
 
@@ -171,20 +174,9 @@ const LocationFetchingNewScreen = ({ navigation }) => {
     };
   }, []);
 
-  // useEffect(() => {
-  //   const subscription = AppState.addEventListener('change', nextState => {
-  //     if (nextState === 'active') {
-  //       setAppActive(prev => !prev);   // 🔥 toggle state → forces re-run of useEffect
-  //     }
-  //   });
-
-  //   return () => subscription.remove();
-  // }, []);
-
   const openLocationSettings = () => {
     if (Platform.OS !== 'android') return;
 
-    // Try all safe fallback options
     Linking.openSettings().catch(() => {});
     Linking.sendIntent('android.settings.LOCATION_SOURCE_SETTINGS').catch(
       () => {},
@@ -247,7 +239,9 @@ const LocationFetchingNewScreen = ({ navigation }) => {
       async nextState => {
         if (nextState === 'active') {
           const savedOverride = await AsyncStorage.getItem('manualOverride');
-          const storedPincodeAreaId = await secureStore.getItem('pincodeAreaId');
+          const storedPincodeAreaId = await secureStore.getItem(
+            'pincodeAreaId',
+          );
           if (savedOverride === 'true' || storedPincodeAreaId) {
             return; // Skip auto-fetching: a location is already persisted/chosen
           }
@@ -456,26 +450,23 @@ const LocationFetchingNewScreen = ({ navigation }) => {
       setLoading(false);
     };
 
-    // 1️⃣ Cached / coarse location first (WiFi/cell — very fast on cold start)
+    // Always request a high-accuracy (GPS) fix — retry once more on failure
+    // before giving up, since a single high-accuracy request can time out
+    // indoors/cold-start.
     Geolocation.getCurrentPosition(
       onSuccess,
       error => {
-        console.log(
-          '📍 [LOCATION] Cached/coarse failed, trying high accuracy...',
-          error,
-        );
-        // 2️⃣ Escalate to high accuracy, but still accept a recent fix
-        //    (maximumAge: 0 forces a brand-new fix that times out indoors/cold-start)
+        console.log('📍 [LOCATION] High accuracy failed, retrying...', error);
         Geolocation.getCurrentPosition(onSuccess, onFinalError, {
           enableHighAccuracy: true,
           timeout: 20000,
-          maximumAge: 60000,
+          maximumAge: 0,
         });
       },
       {
-        enableHighAccuracy: false,
-        timeout: 5000,
-        maximumAge: 600000, // allow cached location up to 10 minutes old
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 0,
       },
     );
   };

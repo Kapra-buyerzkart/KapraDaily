@@ -244,7 +244,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   timeText: {
-    fontFamily: FONTS.poppins.extraBold,
+    fontFamily: FONTS.gilroy.bold,
     color: '#FFFFFF',
     fontSize: wp('5.5%'),
     top: 0,
@@ -252,13 +252,13 @@ const styles = StyleSheet.create({
   addressView: {
     flexDirection: 'row',
     alignItems: 'center',
-    top: Platform.OS === 'ios' ? -hp('0.2%') : -hp('1%'),
+    // top: Platform.OS === 'ios' ? -hp('0.2%') : -hp('1%'),
     left: Platform.OS === 'ios' ? wp('0%') : -wp('0.5%'),
   },
   addressText: {
     color: '#FFFFFF',
     fontSize: wp('3%'),
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     maxWidth: wp('53%'),
   },
   bcoinContainer: {
@@ -281,7 +281,7 @@ const styles = StyleSheet.create({
     gap: wp('1%'),
   },
   tokenText: {
-    fontFamily: FONTS.poppins.bold,
+    fontFamily: FONTS.gilroy.bold,
     fontSize: wp('3.2%'),
     color: INK,
   },
@@ -295,7 +295,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   searchProductText: {
-    fontFamily: FONTS.poppins.light,
+    fontFamily: FONTS.gilroy.light,
     fontSize: wp('3.72%'),
     color: '#3A3A3A',
   },

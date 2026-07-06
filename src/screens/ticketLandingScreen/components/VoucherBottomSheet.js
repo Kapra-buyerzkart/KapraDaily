@@ -17,7 +17,7 @@ import {
 import SafeRenderHtml from '../../../components/SafeRenderHtml';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import AntDesign from 'react-native-vector-icons/AntDesign';
+import icons from '@/assets/icons';
 import { wp, hp } from '../../../utils/responsive';
 import CONFIG from '../../../globals/config';
 
@@ -235,7 +235,13 @@ const VoucherBottomSheet = ({ visible, onClose, voucher }) => {
                 style={styles.backBtn}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
-                <AntDesign name="left" size={wp('5%')} color="#FFFFFF" />
+                <Image
+                  source={icons.backArrowNew}
+                  style={{
+                    resizeMode: 'contain',
+                    tintColor: '#FFFFFF',
+                  }}
+                />
               </TouchableOpacity>
               <Image
                 source={toImageSource(voucher.imageUrl)}

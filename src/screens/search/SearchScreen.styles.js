@@ -26,7 +26,7 @@ const styles = StyleSheet.create({
   },
   searchText: {
     color: '#000000',
-    fontFamily: FONTS.poppins.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('4.65%'),
     marginLeft: wp('2%'),
   },
@@ -51,7 +51,7 @@ const styles = StyleSheet.create({
     height: wp('4.19%'),
   },
   searchInput: {
-    fontFamily: FONTS.poppins.light,
+    fontFamily: FONTS.gilroy.light,
     fontSize: wp('3.72%'),
     color: '#000000',
     marginLeft: wp('2%'),
@@ -70,14 +70,14 @@ const styles = StyleSheet.create({
   },
   resultText: {
     color: '#000000',
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('2.79%'),
     marginHorizontal: wp('5%'),
     marginTop: hp('1.5%'),
   },
   fallbackNoticeText: {
     color: '#F25000',
-    fontFamily: FONTS.outfit.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('2.8%'),
     marginHorizontal: wp('5%'),
     marginTop: hp('0.5%'),
@@ -91,7 +91,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
   },
   recentTitle: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('2.79%'),
     color: '#000000',
     marginLeft: wp('5%'),
@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
     marginBottom: hp('1.2%'),
   },
   recentProductText: {
-    fontFamily: FONTS.poppins.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('2.79%'),
     color: '#000000',
   },
@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
   },
   noResultsText: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3.5%'),
     color: '#666666',
     textAlign: 'center',

@@ -134,12 +134,12 @@ const styles = StyleSheet.create({
     paddingTop: hp('0.5%'),
   },
   title: {
-    fontFamily: FONTS.poppins.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('4.65%'),
     color: '#000000',
   },
   subtitle: {
-    fontFamily: FONTS.poppins.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3.25%'),
     color: '#616161',
     marginBottom: hp('2.5%'),
@@ -163,12 +163,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   optionLabel: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3.72%'),
     color: '#000000',
   },
   optionValue: {
-    fontFamily: FONTS.poppins.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3.25%'),
     color: '#616161',
     marginTop: 2,

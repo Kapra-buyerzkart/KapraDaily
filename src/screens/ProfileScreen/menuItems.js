@@ -1,58 +1,40 @@
 import React from 'react';
+import { Image, Linking } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import CONFIG from '../../globals/config';
-import { Linking } from 'react-native';
-import { INK } from './styles';
+import icons from '@/assets/icons';
+import { INK, RED } from './styles';
 
-export const buildMyAccountItems = navigation => [
+export const buildOffersItems = ({ onBCoin, onSmartPoint, onCoupons }) => [
   {
-    key: 'wishlist',
-    label: 'My Wishlist',
-    icon: <Ionicons name="heart-outline" color={INK} size={wp('4%')} />,
-    onPress: () => navigation.navigate('MainTabs', { screen: 'Wishlist' }),
-  },
-  {
-    key: 'my-orders',
-    label: 'My Orders',
-    icon: <Ionicons name="receipt-outline" color={INK} size={wp('4%')} />,
-    onPress: () => navigation.navigate('MyOrdersScreen'),
-  },
-  {
-    key: 'my-cart',
-    label: 'My Cart',
-    icon: <Ionicons name="cart-outline" color={INK} size={wp('4%')} />,
-    onPress: () => navigation.navigate('CartScreen'),
-  },
-  {
-    key: 'co-partner-dashboard',
-    label: 'Co-Partner Dashboard',
+    key: 'b-coin',
+    label: 'B - Coin',
     icon: (
-      <MaterialCommunityIcons
-        name="account-group-outline"
-        color={INK}
-        size={wp('4%')}
+      <Image
+        source={icons.udcoin}
+        style={{ width: wp('4%'), height: wp('4%') }}
+        resizeMode="contain"
       />
     ),
-    onPress: () => navigation.navigate('CoPartnerDashboardScreen'),
-    hideDividerAfter: true,
+    onPress: onBCoin,
   },
   {
-    key: 'my-affiliates',
-    label: 'My Affiliates',
-    icon: (
-      <MaterialCommunityIcons
-        name="account-group-outline"
-        color={INK}
-        size={wp('4%')}
-      />
-    ),
-    onPress: () => navigation.navigate('MyAffilateScreen'),
+    key: 'smart-point',
+    label: 'Smart point',
+    icon: <Ionicons name="wallet-outline" color={INK} size={wp('4%')} />,
+    onPress: onSmartPoint,
+  },
+  {
+    key: 'coupon',
+    label: 'Coupon',
+    icon: <Ionicons name="pricetag-outline" color={INK} size={wp('4%')} />,
+    onPress: onCoupons,
   },
 ];
 
-export const buildAccountSecurityItems = navigation => [
+export const buildMyAccountItems = navigation => [
   {
     key: 'update-phone',
     label: 'Update Phone Number',
@@ -80,21 +62,68 @@ export const buildAccountSecurityItems = navigation => [
       navigation.navigate('UpdateContactScreen', { type: 'email' }),
   },
   {
-    key: 'change-password',
-    label: 'Change Password',
+    key: 'update-password',
+    label: 'Update Password',
     icon: (
       <MaterialCommunityIcons name="lock-outline" color={INK} size={wp('4%')} />
     ),
     onPress: () => navigation.navigate('ChangePasswordScreen'),
+  },
+  {
+    key: 'my-affiliates',
+    label: 'My Affiliates',
+    icon: (
+      <MaterialCommunityIcons
+        name="account-group-outline"
+        color={INK}
+        size={wp('4%')}
+      />
+    ),
+    onPress: () => navigation.navigate('MyAffilateScreen'),
+  },
+  {
+    key: 'wishlist',
+    label: 'My Wishlist',
+    icon: <Ionicons name="heart-outline" color={INK} size={wp('4%')} />,
+    onPress: () => navigation.navigate('MainTabs', { screen: 'Wishlist' }),
+  },
+  {
+    key: 'my-cart',
+    label: 'My Cart',
+    icon: <Ionicons name="cart-outline" color={INK} size={wp('4%')} />,
+    onPress: () => navigation.navigate('CartScreen'),
   },
 ];
 
 export const buildInformationItems = ({
   navigation,
   helpSheetRef,
-  setIsLogoutModalVisible,
+  suggestProductsSheetRef,
   setIsDeleteAccountModalVisible,
 }) => [
+  {
+    key: 'suggest-products',
+    label: 'Suggest Products',
+    icon: (
+      <MaterialCommunityIcons
+        name="lightbulb-on-outline"
+        color={INK}
+        size={wp('4%')}
+      />
+    ),
+    onPress: () => suggestProductsSheetRef.current?.open(),
+  },
+  {
+    key: 'customer-support',
+    label: 'Customer Support',
+    icon: <Ionicons name="headset-outline" color={INK} size={wp('4%')} />,
+    onPress: () => helpSheetRef.current?.open(),
+  },
+  {
+    key: 'faq',
+    label: 'F&Q',
+    icon: <Ionicons name="help-circle-outline" color={INK} size={wp('4%')} />,
+  },
   {
     key: 'privacy-policy',
     label: 'Privacy Policy',
@@ -139,13 +168,6 @@ export const buildInformationItems = ({
     label: 'Support Tickets',
     icon: <Ionicons name="help-circle-outline" color={INK} size={wp('4%')} />,
     onPress: () => navigation.navigate('SupportTicketsListScreen'),
-    hideDividerAfter: true,
-  },
-  {
-    key: 'customer-support',
-    label: 'Customer Support',
-    icon: <Ionicons name="headset-outline" color={INK} size={wp('4%')} />,
-    onPress: () => helpSheetRef.current?.open(),
   },
   {
     key: 'kpc-login',
@@ -154,20 +176,13 @@ export const buildInformationItems = ({
     onPress: () => Linking.openURL(CONFIG.image_base_url),
   },
   {
-    key: 'log-out',
-    label: 'Log Out',
-    textColor: '#FF0000',
-    icon: <Ionicons name="log-out-outline" color={'#FF0000'} size={wp('4%')} />,
-    onPress: () => setIsLogoutModalVisible(true),
-  },
-  {
     key: 'delete-account',
     label: 'Delete Account',
-    textColor: '#FF0000',
+    textColor: RED,
     icon: (
       <MaterialCommunityIcons
         name="account-remove-outline"
-        color={'#FF0000'}
+        color={RED}
         size={wp('4%')}
       />
     ),

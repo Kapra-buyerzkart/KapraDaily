@@ -376,17 +376,17 @@ const styles = StyleSheet.create({
     paddingRight: wp('3%'),
   },
   title: {
-    fontFamily: FONTS.poppins.bold,
+    fontFamily: FONTS.gilroy.bold,
     fontSize: wp('5.5%'),
     color: '#000000',
   },
   titleAccent: {
-    fontFamily: FONTS.poppins.bold,
+    fontFamily: FONTS.gilroy.bold,
     fontSize: wp('5.5%'),
-    color: '#F25000',
+    color: '#000000',
   },
   subtitle: {
-    fontFamily: FONTS.poppins.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3.4%'),
     color: '#777777',
     marginTop: hp('0.4%'),
@@ -438,7 +438,7 @@ const styles = StyleSheet.create({
     gap: wp('2%'),
   },
   cardTitle: {
-    fontFamily: FONTS.poppins.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('4.1%'),
     color: '#111111',
   },
@@ -449,7 +449,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   cardDescription: {
-    fontFamily: FONTS.poppins.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3.2%'),
     color: '#888888',
     marginTop: hp('0.3%'),
@@ -462,7 +462,7 @@ const styles = StyleSheet.create({
     paddingVertical: hp('0.1%'),
   },
   badgeText: {
-    fontFamily: FONTS.poppins.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('2.4%'),
     color: '#FFFFFF',
   },
@@ -476,7 +476,7 @@ const styles = StyleSheet.create({
     gap: wp('1%'),
   },
   activeBadgeText: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('2.4%'),
     color: '#1FA855',
   },

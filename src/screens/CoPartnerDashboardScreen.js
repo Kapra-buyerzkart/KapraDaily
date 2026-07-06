@@ -11,10 +11,11 @@ import {
   Platform,
   StatusBar,
   ImageBackground,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import AntDesign from 'react-native-vector-icons/AntDesign';
+import icons from '@/assets/icons';
 import LinearGradient from 'react-native-linear-gradient';
 import {
   widthPercentageToDP as wp,
@@ -282,7 +283,13 @@ const CoPartnerDashboardScreen = () => {
         onPress={() => navigation.goBack()}
         style={styles.backBtn}
       >
-        <AntDesign name="left" size={wp('5%')} color="#000" />
+        <Image
+          source={icons.backArrowNew}
+          style={{
+            resizeMode: 'contain',
+            tintColor: '#000',
+          }}
+        />
       </TouchableOpacity>
       <Text style={styles.headerTitle}>Co-Partner Dashboard</Text>
     </View>
@@ -955,13 +962,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: wp('10%'),
   },
   emptyStateTitle: {
-    fontFamily: FONTS.poppins.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('5%'),
     color: '#333333',
     marginTop: hp('2%'),
   },
   emptyStateSubtitle: {
-    fontFamily: FONTS.poppins.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3.5%'),
     color: '#888888',
     textAlign: 'center',
@@ -975,7 +982,7 @@ const styles = StyleSheet.create({
     marginTop: hp('10%'),
   },
   emptyStateBtnText: {
-    fontFamily: FONTS.poppins.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('3.8%'),
     color: '#FFFFFF',
   },
@@ -998,7 +1005,7 @@ const styles = StyleSheet.create({
     padding: wp('2%'),
   },
   headerTitle: {
-    fontFamily: FONTS.poppins.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('4.5%'),
     color: '#000000',
     marginLeft: wp('2%'),
@@ -1032,13 +1039,13 @@ const styles = StyleSheet.create({
     borderBottomColor: '#F25000',
   },
   tabText: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3.5%'),
     color: '#666666',
   },
   activeTabText: {
     color: '#F25000',
-    fontFamily: FONTS.poppins.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
   },
   contentWrap: {
     paddingHorizontal: wp('4%'),
@@ -1062,14 +1069,14 @@ const styles = StyleSheet.create({
     // marginBottom: hp('2%'),
   },
   mainCardLabel: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3.5%'),
     color: '#FFFFFF',
     opacity: 0.9,
     marginTop: hp('2.3%'),
   },
   mainCardValue: {
-    fontFamily: FONTS.poppins.bold,
+    fontFamily: FONTS.gilroy.bold,
     fontSize: wp('8%'),
     color: '#FFFFFF',
     marginTop: hp('0%'),
@@ -1112,12 +1119,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   statLabel: {
-    fontFamily: FONTS.poppins.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('2.8%'),
     color: '#4A3D3D',
   },
   statValue: {
-    fontFamily: FONTS.poppins.bold,
+    fontFamily: FONTS.gilroy.bold,
     fontSize: wp('4%'),
     color: '#000000',
   },
@@ -1138,13 +1145,13 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   dateRangeLabel: {
-    fontFamily: FONTS.poppins.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('2.5%'),
     color: '#888888',
     marginBottom: hp('0.2%'),
   },
   dateRangeValue: {
-    fontFamily: FONTS.poppins.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('3.2%'),
     color: '#000000',
   },
@@ -1160,7 +1167,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   filterBtnText: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3%'),
     color: '#FFFFFF',
     textAlign: 'center',
@@ -1189,7 +1196,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   listTitle: {
-    fontFamily: FONTS.poppins.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('4%'),
     color: '#000000',
     marginLeft: wp('2%'),
@@ -1200,7 +1207,7 @@ const styles = StyleSheet.create({
     paddingBottom: hp('0.2%'),
   },
   viewAllText: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3.5%'),
     color: '#F25000',
   },
@@ -1214,7 +1221,7 @@ const styles = StyleSheet.create({
     borderTopColor: '#F5F5F5',
   },
   viewMoreText: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3.5%'),
     color: '#F25000',
     marginRight: wp('1%'),
@@ -1240,12 +1247,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   itemName: {
-    fontFamily: FONTS.poppins.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('3.5%'),
     color: '#181C1E',
   },
   itemSub: {
-    fontFamily: FONTS.poppins.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('2.8%'),
     color: '#4A3D3D',
     marginTop: hp('0.2%'),
@@ -1254,12 +1261,12 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   itemStatusValue: {
-    fontFamily: FONTS.poppins.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('3.5%'),
     color: '#181C1E',
   },
   itemDate: {
-    fontFamily: FONTS.poppins.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('2.8%'),
     color: '#4A3D3D',
     marginTop: hp('0.2%'),
@@ -1283,7 +1290,7 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   modalTitle: {
-    fontFamily: FONTS.poppins.bold,
+    fontFamily: FONTS.gilroy.bold,
     fontSize: wp('4.5%'),
     color: '#181C1E',
     marginBottom: hp('1.5%'),
@@ -1302,7 +1309,7 @@ const styles = StyleSheet.create({
     borderColor: '#FFE0CC',
   },
   presetPillText: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3.2%'),
     color: '#F25000',
   },
@@ -1328,13 +1335,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF2EB',
   },
   rangeDisplayLabel: {
-    fontFamily: FONTS.poppins.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('2.3%'),
     color: '#888888',
     marginBottom: hp('0.2%'),
   },
   rangeDisplayValue: {
-    fontFamily: FONTS.poppins.bold,
+    fontFamily: FONTS.gilroy.bold,
     fontSize: wp('3.2%'),
     color: '#181C1E',
   },
@@ -1357,7 +1364,7 @@ const styles = StyleSheet.create({
     padding: wp('1%'),
   },
   calendarMonthYear: {
-    fontFamily: FONTS.poppins.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('3.8%'),
     color: '#181C1E',
   },
@@ -1372,7 +1379,7 @@ const styles = StyleSheet.create({
   calendarWeekdayText: {
     width: '14.28%',
     textAlign: 'center',
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('2.8%'),
     color: '#888888',
   },
@@ -1390,7 +1397,7 @@ const styles = StyleSheet.create({
     borderRadius: wp('4.5%'),
   },
   calendarDayText: {
-    fontFamily: FONTS.poppins.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3%'),
     color: '#181C1E',
   },
@@ -1400,7 +1407,7 @@ const styles = StyleSheet.create({
   },
   calendarDayTextSelected: {
     color: '#FFFFFF',
-    fontFamily: FONTS.poppins.bold,
+    fontFamily: FONTS.gilroy.bold,
   },
   calendarDayInRange: {
     backgroundColor: '#FFE6D5',
@@ -1408,7 +1415,7 @@ const styles = StyleSheet.create({
   },
   calendarDayTextInRange: {
     color: '#F25000',
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
   },
   modalActions: {
     flexDirection: 'row',
@@ -1425,7 +1432,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   modalCancelBtnText: {
-    fontFamily: FONTS.poppins.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('3.5%'),
     color: '#666666',
   },
@@ -1449,7 +1456,7 @@ const styles = StyleSheet.create({
     elevation: 0,
   },
   modalApplyBtnText: {
-    fontFamily: FONTS.poppins.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('3.5%'),
     color: '#FFFFFF',
   },

@@ -42,7 +42,8 @@ const ProductCard = props => {
 
   // Helper to resolve image source
   const getImageSource = img => {
-    if (!img || imageError) return require('../assets/images/udenDealNotfound.png'); // Fallback on error or empty
+    if (!img || imageError)
+      return require('../assets/images/udenDealNotfound.png'); // Fallback on error or empty
     if (typeof img === 'string') {
       // Check if it's already a full URL or needs base URL
       if (img.startsWith('http')) return { uri: img };
@@ -280,7 +281,7 @@ const styles = StyleSheet.create({
     // backgroundColor: "yellow",
   },
   btokenText: {
-    fontFamily: FONTS.outfit.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('2.3%'),
     color: '#5E3568',
   },
@@ -321,7 +322,7 @@ const styles = StyleSheet.create({
   },
   quantityText: {
     color: '#F04B1B',
-    fontFamily: FONTS.poppins.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('3%'),
     marginHorizontal: wp('1.5%'),
     minWidth: wp('3%'),
@@ -344,14 +345,14 @@ const styles = StyleSheet.create({
   offerText: {
     color: '#F04B1B',
     fontSize: wp('2.5%'),
-    fontFamily: FONTS.outfit.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
   },
   productCardViewFour: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   mrpText: {
-    fontFamily: FONTS.poppins.light,
+    fontFamily: FONTS.gilroy.light,
     fontSize: wp('2.5%'),
     color: '#777777',
   },
@@ -364,13 +365,13 @@ const styles = StyleSheet.create({
     padding: wp('0.5%'),
   },
   priceText: {
-    fontFamily: FONTS.poppins.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('3.7%'),
     color: '#0CA201',
   },
   productNameText: {
     // fontFamily: "Gilroy-Light",
-    fontFamily: FONTS.outfit.light,
+    fontFamily: FONTS.gilroy.light,
     fontSize: wp('3.25%'),
     color: '#000000',
     textAlign: 'center',
@@ -389,7 +390,7 @@ const styles = StyleSheet.create({
   },
   outOfStockText: {
     color: '#FF0000',
-    fontFamily: FONTS.poppins.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('2.8%'),
     transform: [{ rotate: '-15deg' }],
     borderWidth: 1,

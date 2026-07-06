@@ -190,6 +190,11 @@ const images = {
   wl2: require('./wl2.png'),
   tokenHeader: require('./token_header.png'),
   zerodeli: require('./zerodeli.png'),
+  noAffliate: require('./noimages/noAffilate.png'),
+  noCoins: require('./noimages/noCoins.png'),
+  noCouponCode: require('./noimages/noCouponCode.png'),
+  noCoupons: require('./noimages/noCoupons.png'),
+  noWishlist: require('./noimages/noWishlist.png'),
 };
 
 export default images;

@@ -262,11 +262,19 @@ const UdenTicketModal = ({
               />
 
               {/* Gift card image */}
-              <Image
+              <ImageBackground
+                imageStyle={{ borderRadius: 20 }}
                 source={giftCardUri}
                 style={styles.giftCard}
-                resizeMode="cover"
-              />
+                resizeMode="contain"
+              >
+                <View style={styles.giftCardTextContainer}>
+                  <Text style={{ color: COLORS.white }}>Expires on</Text>
+                  <Text style={styles.giftCardText}>
+                    {voucher?.expireDate?.replace(/-/g, ' ')}
+                  </Text>
+                </View>
+              </ImageBackground>
 
               {/* Quantity selector */}
               <View style={styles.qtyRow}>
@@ -587,6 +595,17 @@ const styles = StyleSheet.create({
     height: hp(22),
     borderRadius: 12,
     marginBottom: hp(2),
+  },
+
+  giftCardTextContainer: {
+    position: 'absolute',
+    bottom: hp(1),
+    right: wp(4),
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  giftCardText: {
+    color: COLORS.white,
   },
 
   // Quantity

@@ -1,4 +1,5 @@
 import { StyleSheet } from 'react-native';
+import { FONTS } from '../../styles/typography';
 
 const INK = '#1A1A1A';
 const ORANGE = '#FF6A00';
@@ -19,6 +20,11 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     paddingBottom: 8,
     gap: 12,
+  },
+  afliatTextStyle: {
+    fontSize: 20,
+    fontFamily: FONTS.gilroy.bold,
+    padding: 10,
   },
   backButton: {
     width: 36,

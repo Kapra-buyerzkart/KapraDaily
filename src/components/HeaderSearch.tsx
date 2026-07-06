@@ -249,7 +249,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   title: {
-    fontFamily: FONTS.poppins.bold,
+    fontFamily: FONTS.gilroy.bold,
     fontSize: wp('5%'),
     color: '#0F0F0F',
     marginLeft: wp('1%'),
@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     fontSize: wp('4.2%'),
     color: '#0F0F0F',
-    fontFamily: FONTS.outfit.regular,
+    fontFamily: FONTS.gilroy.regular,
     padding: 0,
   },
   actionsRow: {

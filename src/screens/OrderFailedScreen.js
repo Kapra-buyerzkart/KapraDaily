@@ -264,11 +264,11 @@ const styles = StyleSheet.create({
   },
   statusText: {
     color: '#FF0000',
-    fontFamily: FONTS.poppins.bold,
+    fontFamily: FONTS.gilroy.bold,
     fontSize: wp('6%'),
   },
   statusTextTwo: {
-    fontFamily: FONTS.outfit.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3.5%'),
     color: '#616161',
     marginTop: hp('0.5%'),
@@ -292,7 +292,7 @@ const styles = StyleSheet.create({
     marginBottom: hp('1.5%'),
   },
   orderCardTitle: {
-    fontFamily: FONTS.poppins.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('4%'),
     color: '#000000',
     marginLeft: wp('2%'),
@@ -304,12 +304,12 @@ const styles = StyleSheet.create({
     paddingVertical: hp('1%'),
   },
   detailLabel: {
-    fontFamily: FONTS.outfit.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3.5%'),
     color: '#999999',
   },
   detailValue: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3.5%'),
     color: '#333333',
   },
@@ -322,7 +322,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   detailBadgeText: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3%'),
     color: '#333333',
     marginLeft: wp('1%'),
@@ -341,12 +341,12 @@ const styles = StyleSheet.create({
     borderTopColor: '#F0F0F0',
   },
   totalLabel: {
-    fontFamily: FONTS.poppins.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('4%'),
     color: '#000000',
   },
   totalAmount: {
-    fontFamily: FONTS.poppins.bold,
+    fontFamily: FONTS.gilroy.bold,
     fontSize: wp('5.5%'),
     color: '#FF0000',
   },
@@ -364,7 +364,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   retryButtonText: {
-    fontFamily: FONTS.poppins.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('4%'),
     color: '#FFFFFF',
     marginLeft: wp('1.5%'),
@@ -379,13 +379,13 @@ const styles = StyleSheet.create({
     borderColor: '#E0E0E0',
   },
   homeButtonText: {
-    fontFamily: FONTS.poppins.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('4%'),
     color: '#616161',
     marginLeft: wp('1.5%'),
   },
   footerNote: {
-    fontFamily: FONTS.outfit.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3%'),
     color: '#9E9E9E',
     textAlign: 'center',

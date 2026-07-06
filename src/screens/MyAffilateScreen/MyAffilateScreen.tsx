@@ -6,13 +6,17 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   ListRenderItemInfo,
+  Image,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
-import AntDesign from 'react-native-vector-icons/AntDesign';
 import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import { useMyAffilateScreen } from './useMyAffilateScreen';
 import styles from './styles';
+import images from '@/assets/images';
+import icons from '@/assets/icons';
+import { hp } from '@/styles/cartTheme';
+import { FONTS } from '@/styles/typography';
 
 /* ----------------------------- API types ----------------------------- */
 
@@ -58,7 +62,8 @@ const levelLabel = (levelNumber: number): string => {
 
 const MyAffilateScreen = () => {
   const insets = useSafeAreaInsets();
-  const navigation = useNavigation<NavigationProp<Record<string, object | undefined>>>();
+  const navigation =
+    useNavigation<NavigationProp<Record<string, object | undefined>>>();
   const { networkLevels, isLoading, error } = useMyAffilateScreen();
   const data = networkLevels as ReferralLevelSummary | null;
 
@@ -68,11 +73,33 @@ const MyAffilateScreen = () => {
       activeOpacity={0.7}
       accessibilityRole="button"
       accessibilityLabel="Go back"
-      onPress={() => navigation.goBack()}>
-      <AntDesign name="left" size={wp('5%')} color="#1A1A1A" />
+      onPress={() => navigation.goBack()}
+    >
+      <Image
+        source={icons.backArrowNew}
+        style={{
+          resizeMode: 'contain',
+          tintColor: '#1A1A1A',
+        }}
+      />
     </TouchableOpacity>
   );
 
+  const renderEmpty = () => {
+    return (
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          paddingBottom: hp('20%'),
+        }}
+      >
+        <Image source={images.noAffliate}></Image>
+        <Text style={styles.afliatTextStyle}>Affiliate is empty</Text>
+      </View>
+    );
+  };
   if (isLoading && !data) {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -137,7 +164,9 @@ const MyAffilateScreen = () => {
               <Text style={styles.levelBadgeEmptyText}>{item.label}</Text>
             </View>
             <View style={styles.levelInfo}>
-              <Text style={styles.levelNameEmpty}>Level {item.levelNumber}</Text>
+              <Text style={styles.levelNameEmpty}>
+                Level {item.levelNumber}
+              </Text>
               <Text style={styles.levelDescEmpty}>No members yet</Text>
             </View>
             <View style={styles.levelRight}>
@@ -159,7 +188,8 @@ const MyAffilateScreen = () => {
             levelNumber: item.levelNumber,
             label: item.label,
           })
-        }>
+        }
+      >
         <View style={styles.levelMain}>
           <View style={[styles.levelBadge, styles.levelBadgeFilled]}>
             <Text style={styles.levelBadgeFilledText}>{item.label}</Text>
@@ -174,9 +204,12 @@ const MyAffilateScreen = () => {
           </View>
           <View style={styles.levelRight}>
             <Text style={styles.levelCount}>
-              {item.memberCount} <Text style={styles.levelCountUnit}>people</Text>
+              {item.memberCount}{' '}
+              <Text style={styles.levelCountUnit}>people</Text>
             </Text>
-            <Text style={styles.levelBt}>{formatBT(item.totalBTEarned)} BT</Text>
+            <Text style={styles.levelBt}>
+              {formatBT(item.totalBTEarned)} BT
+            </Text>
           </View>
         </View>
       </TouchableOpacity>
@@ -193,17 +226,21 @@ const MyAffilateScreen = () => {
         </View>
       </View>
 
-      <FlatList
-        data={levels}
-        keyExtractor={l => `L${l.levelNumber}`}
-        renderItem={renderLevel}
-        ListHeaderComponent={renderHeader}
-        contentContainerStyle={[
-          styles.listContent,
-          { paddingBottom: insets.bottom + 24 },
-        ]}
-        showsVerticalScrollIndicator={false}
-      />
+      {levels?.length === 0 ? (
+        renderEmpty()
+      ) : (
+        <FlatList
+          data={levels}
+          keyExtractor={l => `L${l.levelNumber}`}
+          renderItem={renderLevel}
+          ListHeaderComponent={renderHeader}
+          contentContainerStyle={[
+            styles.listContent,
+            { paddingBottom: insets.bottom + 24 },
+          ]}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
     </View>
   );
 };

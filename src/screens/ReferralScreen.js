@@ -11,7 +11,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import AntDesign from 'react-native-vector-icons/AntDesign';
+import icons from '@/assets/icons';
 import Toast from 'react-native-simple-toast';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -178,7 +178,13 @@ const ReferralScreen = () => {
     <SafeAreaView style={styles.mainContainer}>
       <View style={styles.headerContainer}>
         <TouchableOpacity hitSlop={40} onPress={() => navigation.goBack()}>
-          <AntDesign name="left" size={wp('5%')} color="#000" />
+          <Image
+            source={icons.backArrowNew}
+            style={{
+              resizeMode: 'contain',
+              tintColor: '#000',
+            }}
+          />
         </TouchableOpacity>
         <Text style={styles.referralText}>Referral</Text>
         {/* <View style={styles.bcoinContainer}>
@@ -300,7 +306,7 @@ const styles = StyleSheet.create({
   },
   referralText: {
     color: '#000000',
-    fontFamily: FONTS.poppins.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('4.65%'),
     marginLeft: wp('2%'),
     flex: 1,
@@ -322,7 +328,7 @@ const styles = StyleSheet.create({
   },
   bcoinText: {
     fontSize: wp('3.25%'),
-    fontFamily: FONTS.poppins.regular,
+    fontFamily: FONTS.gilroy.regular,
     color: '#000000',
     marginLeft: wp('2%'),
   },
@@ -345,12 +351,12 @@ const styles = StyleSheet.create({
     marginLeft: wp('3%'),
   },
   referTitleMain: {
-    fontFamily: FONTS.poppins.bold,
+    fontFamily: FONTS.gilroy.bold,
     fontSize: wp('4.5%'),
     color: '#000000',
   },
   rewardSubText: {
-    fontFamily: FONTS.poppins.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('2.8%'),
     color: '#666666',
     marginTop: hp('0.2%'),
@@ -366,7 +372,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   earnedLabel: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3%'),
     color: '#FFFFFF',
     opacity: 0.9,
@@ -383,7 +389,7 @@ const styles = StyleSheet.create({
     tintColor: '#FFFFFF',
   },
   amountHighlight: {
-    fontFamily: FONTS.poppins.bold,
+    fontFamily: FONTS.gilroy.bold,
     fontSize: wp('6%'),
     color: '#FFFFFF',
     marginLeft: wp('1%'),
@@ -407,13 +413,13 @@ const styles = StyleSheet.create({
     tintColor: '#F25000',
   },
   refinedInviteBtnText: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3.5%'),
     color: '#F25000',
     marginLeft: wp('2%'),
   },
   referEarnText: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('4.19%'),
     color: '#000000',
     alignSelf: 'center',
@@ -437,7 +443,7 @@ const styles = StyleSheet.create({
   },
   referralRewardText: {
     color: '#616161',
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3.72%'),
   },
   bcoinContainerTwo: {
@@ -453,7 +459,7 @@ const styles = StyleSheet.create({
   bcoinTextTwo: {
     fontSize: wp('6.97%'),
     color: '#F9A833',
-    fontFamily: FONTS.poppins.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
     marginLeft: wp('2%'),
   },
   modernReferralCard: {
@@ -477,7 +483,7 @@ const styles = StyleSheet.create({
     // marginBottom: hp('1.5%')
   },
   modernRewardLabel: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3%'),
     color: '#71717A',
     marginBottom: hp('0.5%'),
@@ -487,13 +493,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modernCurrency: {
-    fontFamily: FONTS.poppins.bold,
+    fontFamily: FONTS.gilroy.bold,
     fontSize: wp('4%'),
     color: '#F25000',
     marginRight: wp('1%'),
   },
   modernAmount: {
-    fontFamily: FONTS.poppins.bold,
+    fontFamily: FONTS.gilroy.bold,
     fontSize: wp('6%'),
     color: '#18181B',
   },
@@ -509,7 +515,7 @@ const styles = StyleSheet.create({
     // marginBottom: hp('3%')
   },
   modernCodeLabel: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('2.9%'),
     color: '#71717A',
     marginBottom: hp('1.5%'),
@@ -526,14 +532,14 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
   },
   modernCodeText: {
-    fontFamily: FONTS.poppins.bold,
+    fontFamily: FONTS.gilroy.bold,
     fontSize: wp('5%'),
     color: '#F25000',
     letterSpacing: 2,
     marginRight: wp('3%'),
   },
   modernTapToCopy: {
-    fontFamily: FONTS.poppins.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('2.8%'),
     color: '#A1A1AA',
     marginTop: hp('0.8%'),
@@ -555,7 +561,7 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   modernInviteBtnText: {
-    fontFamily: FONTS.poppins.bold,
+    fontFamily: FONTS.gilroy.bold,
     fontSize: wp('4.2%'),
     color: '#FFFFFF',
     marginLeft: wp('2.5%'),
@@ -576,7 +582,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.8)',
   },
   rewardLabel: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3.5%'),
     color: '#616161',
     marginBottom: hp('1%'),
@@ -587,13 +593,13 @@ const styles = StyleSheet.create({
     marginBottom: hp('2.5%'),
   },
   currencySymbol: {
-    fontFamily: FONTS.poppins.bold,
+    fontFamily: FONTS.gilroy.bold,
     fontSize: wp('6%'),
     color: '#F25000',
     marginRight: wp('1%'),
   },
   rewardValue: {
-    fontFamily: FONTS.poppins.bold,
+    fontFamily: FONTS.gilroy.bold,
     fontSize: wp('9%'),
     color: '#F25000',
   },
@@ -612,7 +618,7 @@ const styles = StyleSheet.create({
   },
   inviteButtonTextNew: {
     color: '#FFFFFF',
-    fontFamily: FONTS.poppins.bold,
+    fontFamily: FONTS.gilroy.bold,
     fontSize: wp('4.2%'),
     marginLeft: wp('2.5%'),
   },
@@ -639,7 +645,7 @@ const styles = StyleSheet.create({
   },
   sendInviteText: {
     color: '#FFFFFF',
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('4.19%'),
     marginLeft: wp('2.5%'),
   },
@@ -654,7 +660,7 @@ const styles = StyleSheet.create({
   },
   lastTwo: {
     fontSize: wp('3.25%'),
-    fontFamily: FONTS.poppins.regular,
+    fontFamily: FONTS.gilroy.regular,
     color: '#000000',
   },
   divider: {
@@ -706,22 +712,22 @@ const styles = StyleSheet.create({
   },
   userInitialText: {
     color: '#FFFFFF',
-    fontFamily: FONTS.poppins.bold,
+    fontFamily: FONTS.gilroy.bold,
     fontSize: wp('4%'),
   },
   listItemText: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3.8%'),
     color: '#000000',
   },
   registeredLabelMini: {
-    fontFamily: FONTS.poppins.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('2.4%'),
     color: '#777777',
     marginBottom: -hp('0.2%'),
   },
   dateEndText: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3.2%'),
     color: '#F25000',
   },
@@ -739,7 +745,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   emptyText: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('4%'),
     color: '#616161',
     marginTop: hp('2%'),
@@ -769,12 +775,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   solidReferTitle: {
-    fontFamily: FONTS.poppins.bold,
+    fontFamily: FONTS.gilroy.bold,
     fontSize: wp('5.5%'),
     color: '#1A1A1A',
   },
   solidSubTitle: {
-    fontFamily: FONTS.poppins.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3%'),
     color: '#666666',
     marginTop: hp('0.5%'),
@@ -791,7 +797,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   solidRewardLabel: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3.2%'),
     color: '#777777',
     marginBottom: hp('0.5%'),
@@ -808,7 +814,7 @@ const styles = StyleSheet.create({
     marginRight: wp('1.5%'),
   },
   solidRewardValue: {
-    fontFamily: FONTS.poppins.bold,
+    fontFamily: FONTS.gilroy.bold,
     fontSize: wp('7%'),
     color: '#1A1A1A',
   },
@@ -819,7 +825,7 @@ const styles = StyleSheet.create({
     marginTop: hp('2.5%'),
   },
   solidCodeLabel: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3.5%'),
     color: '#444444',
   },
@@ -834,7 +840,7 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
   },
   solidCodeText: {
-    fontFamily: FONTS.poppins.bold,
+    fontFamily: FONTS.gilroy.bold,
     fontSize: wp('4%'),
     color: '#F25000',
     letterSpacing: 1,
@@ -854,7 +860,7 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   solidBtnText: {
-    fontFamily: FONTS.poppins.bold,
+    fontFamily: FONTS.gilroy.bold,
     fontSize: wp('4.2%'),
     color: '#FFFFFF',
     marginLeft: wp('2%'),

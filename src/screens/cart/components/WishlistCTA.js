@@ -53,7 +53,7 @@ const styles = StyleSheet.create({
     paddingVertical: hp('0.6%'),
   },
   addBtnText: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3.1%'),
     color: CART_COLORS.pink,
   },

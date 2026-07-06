@@ -191,11 +191,10 @@ axiosInstance.interceptors.response.use(
       if (!refreshToken) {
         const hadAuthHeader = !!originalRequest.headers?.Authorization;
         logger.log(
-          '🔒 [API]: No refresh token available. hadAuthHeader:',
+          ' [API]: No refresh token available. hadAuthHeader:',
           hadAuthHeader,
         );
 
-        // Only yank user to LoginScreen with "Session expired" if they *were* logged in
         if (hadAuthHeader) {
           if (!isLoggingOut) {
             isLoggingOut = true;
@@ -235,7 +234,6 @@ axiosInstance.interceptors.response.use(
 
         if (newAccessToken) {
           logger.log('✅ [API]: Token refresh successful, storing new tokens');
-          // Store both new access token AND new refresh token
           await setTokens(newAccessToken, newRefreshToken || refreshToken);
           processQueue(null, newAccessToken);
 

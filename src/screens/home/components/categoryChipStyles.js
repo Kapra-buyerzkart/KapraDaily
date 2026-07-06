@@ -33,7 +33,7 @@ const categoryChipStyles = StyleSheet.create({
     fontSize: wp('2.8%'),
     textAlign: 'center',
     color: '#190A07',
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
   },
 });
 

@@ -1,6 +1,9 @@
 import { View, ScrollView } from 'react-native';
 import React from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 import CouponModal from '../../components/CouponModal';
 import LocationModal from '../../components/LocationModal';
 import ConfirmationModal from '../../components/ConfirmationModal';
@@ -8,23 +11,22 @@ import StatusModal from '../../components/StatusModal';
 import HelpSupportModal from '../../components/HelpSupportModal';
 import { useProfileScreen } from './useProfileScreen';
 import { styles } from './styles';
-import {
-  buildMyAccountItems,
-  buildAccountSecurityItems,
-  buildInformationItems,
-} from './menuItems';
+import { buildMyAccountItems, buildInformationItems } from './menuItems';
 import ProfileHeader from './components/ProfileHeader';
 import ProfileUserInfo from './components/ProfileUserInfo';
 import ProfileQuickActions from './components/ProfileQuickActions';
 import OffersSection from './components/OffersSection';
 import ListSection from './components/ListSection';
-import RequestProductSection from './components/RequestProductSection';
+import SuggestProductsModal from './components/SuggestProductsModal';
+import LogoutButton from './components/LogoutButton';
 import ProfileFooter from './components/ProfileFooter';
+import COLORS from '@/styles/colors';
 
 export default function ProfileScreen() {
   const {
     navigation,
     helpSheetRef,
+    suggestProductsSheetRef,
     profile,
     offersModalVisible,
     setOffersModalVisible,
@@ -42,7 +44,6 @@ export default function ProfileScreen() {
     setIsLogoutModalVisible,
     isDeleteAccountModalVisible,
     setIsDeleteAccountModalVisible,
-    walletData,
     statusConfig,
     setStatusConfig,
     handleRequestProduct,
@@ -52,50 +53,47 @@ export default function ProfileScreen() {
     handleApplyCoupon,
   } = useProfileScreen();
 
+  const insets = useSafeAreaInsets();
   const myAccountItems = buildMyAccountItems(navigation);
-  const accountSecurityItems = buildAccountSecurityItems(navigation);
   const informationItems = buildInformationItems({
     navigation,
     helpSheetRef,
-    setIsLogoutModalVisible,
+    suggestProductsSheetRef,
     setIsDeleteAccountModalVisible,
   });
 
   return (
-    <SafeAreaView edges={['top']} style={styles.mainConatiner}>
-      <ScrollView>
-        <ProfileHeader onBack={() => navigation.goBack()} />
+    <View style={[{ marginTop: insets.top, backgroundColor: COLORS.white }]}>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <ProfileHeader
+          onBack={() => navigation.goBack()}
+          onEditProfile={() => navigation.navigate('EditProfileScreen')}
+          isPrivileged={profile?.isPrivileged}
+        />
 
-        <View style={styles.profileCard}>
-          <ProfileUserInfo
-            profile={profile}
-            walletData={walletData}
-            onEditProfile={() => navigation.navigate('EditProfileScreen')}
-            onPressCoin={() => navigation.navigate('BCoinScreen')}
-          />
-          <ProfileQuickActions
-            onSavedAddress={() => navigation.navigate('SavedAddressScreen')}
-            onMyOrders={() => navigation.navigate('MyOrdersScreen')}
-            onRefer={() => navigation.navigate('ReferralScreen')}
-          />
-        </View>
+        <ProfileUserInfo profile={profile} />
+
+        <ProfileQuickActions
+          onMyOrders={() => navigation.navigate('MyOrdersScreen')}
+          onSavedAddress={() => navigation.navigate('SavedAddressScreen')}
+          onCoPartnerDashboard={() =>
+            navigation.navigate('CoPartnerDashboardScreen')
+          }
+          onRefer={() => navigation.navigate('ReferralScreen')}
+        />
 
         <View style={styles.sectionsContainer}>
           <OffersSection
+            onBCoin={() => navigation.navigate('BCoinScreen')}
             onSmartPoint={() => openOffersModal('Gift Cards')}
             onCoupons={() => openOffersModal('Coupons')}
           />
           <ListSection title="My Account" items={myAccountItems} />
-          <ListSection title="Account Security" items={accountSecurityItems} />
           <ListSection title="Informations" items={informationItems} />
         </View>
 
-        <RequestProductSection
-          requestText={requestText}
-          setRequestText={setRequestText}
-          isSubmittingRequest={isSubmittingRequest}
-          onSubmit={handleRequestProduct}
-        />
+        <LogoutButton onPress={() => setIsLogoutModalVisible(true)} />
+
         <ProfileFooter />
       </ScrollView>
 
@@ -145,6 +143,13 @@ export default function ProfileScreen() {
       />
 
       <HelpSupportModal ref={helpSheetRef} />
-    </SafeAreaView>
+      <SuggestProductsModal
+        ref={suggestProductsSheetRef}
+        requestText={requestText}
+        setRequestText={setRequestText}
+        isSubmittingRequest={isSubmittingRequest}
+        onSubmit={handleRequestProduct}
+      />
+    </View>
   );
 }

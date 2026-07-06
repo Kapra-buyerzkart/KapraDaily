@@ -7,6 +7,7 @@ const icons = {
   vector: require('./Vector.png'),
   address: require('./address.png'),
   backArrow: require('./backArrow.png'),
+  backArrowNew: require('./backArrowNew.png'),
   billSummary: require('./billSummary.png'),
   cash: require('./cash.png'),
   clipboard: require('./clipboard.png'),
@@ -33,7 +34,11 @@ const icons = {
   heartFilled: require('./heart_filled.png'),
   cat: require('./categories_shaded.png'),
   catFilld: require('./categories.png'),
-  udCoin: require('./udcoinUpdated.png'),
+  myorder: require('./myoroders.png'),
+  referNearn: require('./referNearn.png'),
+  blurbg: require('./blurbg.png'),
+  savedAddress: require('./savedAddress.png'),
+  coPartnerdashboard: require('./coPartnerdashboard.png'),
 };
 
 export default icons;

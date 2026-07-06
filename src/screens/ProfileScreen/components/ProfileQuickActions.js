@@ -1,36 +1,58 @@
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, Image } from 'react-native';
 import React from 'react';
 import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
-import { LocationIcon, OrderIcon, ReferIcon } from '../../../components/ProfileIcons';
-import { styles } from '../styles';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import {
+  LocationIcon,
+  OrderIcon,
+  ReferIcon,
+} from '../../../components/ProfileIcons';
+import { styles, ORANGE } from '../styles';
+import icons from '@/assets/icons';
 
 export default function ProfileQuickActions({
-  onSavedAddress,
   onMyOrders,
+  onSavedAddress,
+  onCoPartnerDashboard,
   onRefer,
 }) {
   return (
-    <View style={styles.containerTwo}>
-      <TouchableOpacity onPress={onSavedAddress} style={styles.saveAddressContainer}>
-        <View style={styles.actionIconView}>
-          <LocationIcon width={wp('5%')} height={wp('5%')} color="#FFFFFF" />
-        </View>
-        <Text style={styles.saveAddressText}>{'Saved \nAddress'}</Text>
+    <View style={styles.quickActionsRow}>
+      <TouchableOpacity
+        onPress={onMyOrders}
+        style={styles.quickActionCard}
+        activeOpacity={0.7}
+        accessibilityLabel="My Orders"
+      >
+        <Image source={icons.myorder} />
+        <Text style={styles.quickActionText}>{'My\nOrders'}</Text>
       </TouchableOpacity>
-      <TouchableOpacity onPress={onMyOrders} style={styles.saveAddressContainer}>
-        <View style={styles.actionIconView}>
-          <OrderIcon width={wp('5%')} height={wp('5%')} color="#FFFFFF" />
-        </View>
-        <Text style={styles.saveAddressText}>{'My \nOrders'}</Text>
+      <TouchableOpacity
+        onPress={onSavedAddress}
+        style={styles.quickActionCard}
+        activeOpacity={0.7}
+        accessibilityLabel="Saved Address"
+      >
+        <Image source={icons.savedAddress} />
+        <Text style={styles.quickActionText}>{'Saved\nAddress'}</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        onPress={onCoPartnerDashboard}
+        style={styles.quickActionCard}
+        activeOpacity={0.7}
+        accessibilityLabel="Co-Partner Dashboard"
+      >
+        <Image source={icons.coPartnerdashboard} />
+        <Text style={styles.quickActionText}>{'Co-Partner\nDashboard'}</Text>
       </TouchableOpacity>
       <TouchableOpacity
         onPress={onRefer}
-        style={[styles.saveAddressContainer, styles.saveAddressAccent]}
+        style={styles.quickActionCard}
+        activeOpacity={0.7}
+        accessibilityLabel="Refer and Earn"
       >
-        <View style={styles.actionIconView}>
-          <ReferIcon width={wp('5%')} height={wp('5%')} color="#FFFFFF" />
-        </View>
-        <Text style={styles.saveAddressText}>Refer</Text>
+        <Image source={icons.referNearn} />
+        <Text style={styles.quickActionText}>{'Refer &\nEarn'}</Text>
       </TouchableOpacity>
     </View>
   );

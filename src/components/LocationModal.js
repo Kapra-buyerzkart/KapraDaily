@@ -209,7 +209,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: wp('4.3%'),
-    fontFamily: FONTS.outfit.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
     color: '#FF7148',
     flexShrink: 1,
   },
@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F2F2F7',
     borderRadius: 8,
     fontSize: wp('3.2%'),
-    fontFamily: FONTS.poppins.regular,
+    fontFamily: FONTS.gilroy.regular,
   },
   item: {
     paddingVertical: wp('4%'),
@@ -240,19 +240,19 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: wp('4%'),
-    fontFamily: FONTS.outfit.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
     color: '#1A1A1A',
     marginBottom: wp('1.5%'),
   },
   emptySubtitle: {
     fontSize: wp('3.2%'),
-    fontFamily: FONTS.poppins.regular,
+    fontFamily: FONTS.gilroy.regular,
     color: '#757575',
     textAlign: 'center',
   },
   itemText: {
     fontSize: wp('3.3%'),
-    fontFamily: FONTS.poppins.regular,
+    fontFamily: FONTS.gilroy.regular,
     color: '#000000',
   },
 });

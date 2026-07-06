@@ -18,6 +18,7 @@ import {
 export const useProfileScreen = () => {
   const navigation = useNavigation();
   const helpSheetRef = useRef(null);
+  const suggestProductsSheetRef = useRef(null);
   const {
     profile,
     loadProfile,
@@ -206,6 +207,7 @@ export const useProfileScreen = () => {
   return {
     navigation,
     helpSheetRef,
+    suggestProductsSheetRef,
     profile,
     isStoreUnavailable,
     storeUnavailableData,

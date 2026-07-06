@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import AntDesign from 'react-native-vector-icons/AntDesign';
+import icons from '@/assets/icons';
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
@@ -74,7 +74,13 @@ const D2cScreen = ({ navigation }) => {
         onPress={() => navigation.goBack()}
         hitSlop={40}
       >
-        <AntDesign name="left" size={wp('5%')} color="#000000" />
+        <Image
+          source={icons.backArrowNew}
+          style={{
+            resizeMode: 'contain',
+            tintColor: '#000000',
+          }}
+        />
       </TouchableOpacity>
 
       <ScrollView

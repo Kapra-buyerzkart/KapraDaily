@@ -1,7 +1,7 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import AntDesign from 'react-native-vector-icons/AntDesign';
+import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
+import icons from '@/assets/icons';
 import { FONTS } from '../../../styles/typography';
 import { CART_COLORS, CART_SPACING, wp, hp } from '../../../styles/cartTheme';
 
@@ -9,10 +9,12 @@ const CartHeader = ({ onBack, onClearAll }) => {
   return (
     <View style={styles.header}>
       <TouchableOpacity onPress={onBack} style={styles.backBtn} hitSlop={40}>
-        <AntDesign
-          name="left"
-          size={wp('5%')}
-          color={CART_COLORS.textPrimary}
+        <Image
+          source={icons.backArrowNew}
+          style={{
+            resizeMode: 'contain',
+            tintColor: CART_COLORS.textPrimary,
+          }}
         />
       </TouchableOpacity>
 
@@ -49,7 +51,7 @@ const styles = StyleSheet.create({
   },
   title: {
     flex: 1,
-    fontFamily: FONTS.poppins.semiBold,
+    fontFamily: FONTS.gilroy.bold,
     fontSize: wp('4.8%'),
     color: CART_COLORS.textPrimary,
     marginLeft: CART_SPACING.sm,
@@ -65,7 +67,7 @@ const styles = StyleSheet.create({
     gap: CART_SPACING.xs,
   },
   clearAllText: {
-    fontFamily: FONTS.outfit.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3%'),
     color: CART_COLORS.textMuted,
   },

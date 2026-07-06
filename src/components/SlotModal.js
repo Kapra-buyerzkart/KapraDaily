@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
     marginBottom: hp('2%'),
   },
   modalHeaderText: {
-    fontFamily: FONTS.poppins.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('4.5%'),
     color: '#000000',
   },
@@ -232,13 +232,13 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
   },
   timeTextTwo: {
-    fontFamily: FONTS.outfit.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3.5%'),
     color: '#F25000',
     marginLeft: wp('1%'),
   },
   quickDeliveryText: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('4%'),
     color: '#000000',
   },
@@ -261,7 +261,7 @@ const styles = StyleSheet.create({
     marginRight: wp('3%'),
   },
   sectionTitle: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3.5%'),
     color: '#000000',
   },
@@ -284,12 +284,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF5F0',
   },
   dateLabelText: {
-    fontFamily: FONTS.outfit.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3%'),
     color: '#777777',
   },
   dateText: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3.5%'),
     color: '#000000',
     marginTop: hp('0.5%'),
@@ -312,7 +312,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF5F0',
   },
   slotText: {
-    fontFamily: FONTS.outfit.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3.5%'),
     color: '#777777',
   },

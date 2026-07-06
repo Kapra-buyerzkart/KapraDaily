@@ -6,10 +6,7 @@ import { styles } from '../styles';
 export default function ProfileFooter() {
   return (
     <View style={styles.footerBranding}>
-      <View style={styles.logoWrapper}>
-        <Image source={require('../../../assets/images/logoo.png')} style={styles.footerLogo} />
-      </View>
-      <Text style={styles.versionText}>Version {DeviceInfo.getVersion()}</Text>
+      <View style={styles.logoWrapper}></View>
     </View>
   );
 }

@@ -133,8 +133,8 @@ const CouponModal = ({
             <Image
               source={
                 isGiftCard
-                  ? require('../assets/images/noimages/nothing_found.png')
-                  : require('../assets/images/noimages/nothing_found.png')
+                  ? require('../assets/images/noimages/noCouponCode.png')
+                  : require('../assets/images/noimages/noCoupons.png')
               }
               style={styles.emptyImage}
             />
@@ -188,7 +188,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: wp('4%'),
     paddingVertical: hp('1.5%'),
-    fontFamily: FONTS.outfit.regular,
+    fontFamily: FONTS.gilroy.regular,
     color: '#000000',
   },
   applyCouponButton: {

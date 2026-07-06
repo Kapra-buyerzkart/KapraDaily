@@ -664,7 +664,7 @@ const styles = StyleSheet.create({
     gap: wp('1.2%'),
   },
   helpButtonText: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3.25%'),
     color: '#FFFFFF',
   },
@@ -699,7 +699,7 @@ const styles = StyleSheet.create({
     marginTop: -hp('5%'),
   },
   headerText: {
-    fontFamily: FONTS.poppins.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('4.65%'),
     color: '#000000',
     alignSelf: 'center',
@@ -712,12 +712,12 @@ const styles = StyleSheet.create({
     marginBottom: hp('1%'),
   },
   phoneNoText: {
-    fontFamily: FONTS.poppins.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3.72%'),
     color: '#000000',
   },
   otpSentText: {
-    fontFamily: FONTS.poppins.light,
+    fontFamily: FONTS.gilroy.light,
     fontSize: wp('3.12%'),
     color: '#616161',
     alignSelf: 'center',
@@ -729,7 +729,7 @@ const styles = StyleSheet.create({
     marginLeft: wp('2%'),
   },
   enterNumberText: {
-    fontFamily: FONTS.poppins.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3.72%'),
     color: '#616161',
     paddingBottom: 20,
@@ -757,12 +757,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: wp('5%'),
   },
   usePwdText: {
-    fontFamily: FONTS.poppins.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3.25%'),
     color: '#F25000',
   },
   time: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3.25%'),
     color: '#616161',
   },
@@ -773,13 +773,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: wp('2%'),
   },
   emailFallbackText: {
-    fontFamily: FONTS.poppins.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3.25%'),
     color: '#616161',
     textAlign: 'center',
   },
   emailFallbackLink: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     color: '#F25000',
   },
   continueButton: {
@@ -792,7 +792,7 @@ const styles = StyleSheet.create({
     marginTop: hp('3.5%'),
   },
   continueButtonText: {
-    fontFamily: FONTS.poppins.bold,
+    fontFamily: FONTS.gilroy.bold,
     fontSize: wp('4.18%'),
     color: '#FFFFFF',
   },

@@ -18,7 +18,6 @@ import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
-import AntDesign from 'react-native-vector-icons/AntDesign';
 import Feather from 'react-native-vector-icons/Feather';
 import { FONTS } from '../styles/typography';
 import SearchInput from './SearchInput';
@@ -114,7 +113,13 @@ const AnimatedHeader = memo(
           accessibilityLabel={isSearchActive ? 'Exit search' : 'Go back'}
           accessibilityRole="button"
         >
-          <AntDesign name="left" size={wp('5%')} color="#000000" />
+          <Image
+            source={icons.backArrowNew}
+            style={{
+              resizeMode: 'contain',
+              tintColor: '#000000',
+            }}
+          />
         </TouchableOpacity>
 
         {/* Middle: title and search input layered via absoluteFill */}

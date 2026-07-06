@@ -1,9 +1,19 @@
-import { View, Text, StyleSheet, Image, TouchableOpacity, Platform } from 'react-native'
-import AntDesign from 'react-native-vector-icons/AntDesign'
-import Ionicons from 'react-native-vector-icons/Ionicons'
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'
-import React from 'react'
-import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  Platform,
+} from 'react-native';
+import AntDesign from 'react-native-vector-icons/AntDesign';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import React from 'react';
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from 'react-native-responsive-screen';
 import { FONTS } from '../styles/typography';
 import { useNavigation } from '@react-navigation/native';
 import { reorderApi } from '../api/orderService';
@@ -13,273 +23,417 @@ import ConfirmationModal from './ConfirmationModal';
 import { AppContext } from '../context/appContext';
 import { useState, useContext } from 'react';
 
-const MyOrdersProductCard = (props) => {
-    const { isStoreUnavailable } = useContext(AppContext);
-    const [showReorderModal, setShowReorderModal] = useState(false);
+const MyOrdersProductCard = props => {
+  const { isStoreUnavailable } = useContext(AppContext);
+  const [showReorderModal, setShowReorderModal] = useState(false);
 
-    const itemData = props.item.item || props.item || {};
+  const itemData = props.item.item || props.item || {};
 
-    // Standardized product list parsing
-    const getProductList = () => {
-        if (itemData.productImagesCsv) {
-            return itemData.productImagesCsv.split(',').map(url => ({ image: url }));
-        }
-        return itemData.items || itemData.products || itemData.selectedProducts || [];
-    };
-
-    const productList = getProductList();
-
-    const { addToCart } = useCart();
-
-    // Format Date
-    const formatDate = (dateString) => {
-        if (!dateString) return '';
-        try {
-            const date = new Date(dateString);
-            return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        } catch (e) {
-            return dateString;
-        }
-    };
-
-    const getPaymentLabel = (method) => {
-        if (!method) return 'Cash On Delivery'
-        const m = method.toUpperCase()
-        if (m === 'COD') return 'Cash On Delivery'
-        if (m === 'ONLINE' || m === 'UPI' || m === 'PREPAID') return 'Online Payment'
-        return method
+  // Standardized product list parsing
+  const getProductList = () => {
+    if (itemData.productImagesCsv) {
+      return itemData.productImagesCsv.split(',').map(url => ({ image: url }));
     }
-
-    const navigation = useNavigation()
-
     return (
-        <View style={{
-            marginBottom: hp('2%'), alignSelf: 'center'
-        }}>
-            <View style={styles.orderInnerContainer}>
-                <View style={styles.orderTopView}>
-                    <View style={styles.orderTopInnerView}>
-                        <Image style={styles.homeIcon} source={require('../assets/images/home_icon.png')} />
-                        <Text style={Platform.OS === 'android' ? [styles.homeText, {
-                            top: hp('0.3')
-                        }] : [styles.homeText, {
-                            top: hp('0.1')
-                        }]}>{itemData.addressType || 'Home'}</Text>
-                    </View>
-                    <View style={styles.orderTopInnerView}>
-                        {(() => {
-                            const status = (itemData.orderStatusText || itemData.status || '').toLowerCase();
-                            const iconStyle = styles.statusIcon;
-                            if (status.includes('cancel')) {
-                                return <AntDesign name="closecircle" size={wp('3%')} color="#E74C3C" />;
-                            } else if (status.includes('deliver') && !status.includes('out')) {
-                                return <AntDesign name="checkcircle" size={wp('3%')} color="#27AE60" />;
-                            } else if (status.includes('out') || status.includes('dispatch')) {
-                                return <Image source={require('../assets/images/order/outfordelivery.png')} style={iconStyle} />;
-                            } else if (status.includes('pending')) {
-                                return <Image source={require('../assets/images/order/orderpending.png')} style={iconStyle} />;
-                            } else if (status.includes('placed')) {
-                                return <Image source={require('../assets/images/order/orderplaced.png')} style={iconStyle} />;
-                            } else if (status.includes('accept')) {
-                                return <Image source={require('../assets/images/order/orderaccepted.png')} style={iconStyle} />;
-                            } else if (status.includes('pack')) {
-                                return <Image source={require('../assets/images/order/orderpacked.png')} style={iconStyle} />;
-                            } else if (status.includes('assign')) {
-                                return <Image source={require('../assets/images/order/outfordelivery.png')} style={iconStyle} />;
-                            } else {
-                                return <Image source={require('../assets/images/order/orderplaced.png')} style={iconStyle} />;
-                            }
-                        })()}
-                        <Text style={[styles.homeText, Platform.OS === 'android' && { top: hp('0.1') },
-                        (itemData.orderStatusText || itemData.status || '').toLowerCase().includes('cancel') && { color: '#E74C3C' },
-                        ]}>{itemData.orderStatusText || itemData.status || getPaymentLabel(itemData.paymentMethod)}</Text>
-                    </View>
-                </View>
-                <View style={styles.orderMiddleView}>
-                    <View style={styles.stackContainer}>
-                        {productList.slice(0, 3).map((item, index) => (
-                            <Image
-                                key={index}
-                                source={item.image ? {
-                                    uri: `${CONFIG.image_base_url}${item.image}`
-                                } : require('../assets/images/product1.png')}
-                                style={[
-                                    styles.productImage,
-                                    {
-                                        marginLeft: index === 0 ? 0 : wp("-7%"), // overlap to left
-                                        // zIndex: index + 1,                 // last image on top
-                                    },
-                                ]}
-                            />
-                        ))}
-                    </View>
-                    <View>
-                        <Text style={styles.orderNumberText}>#{itemData.orderNumber || itemData.orderId || itemData.id}</Text>
+      itemData.items || itemData.products || itemData.selectedProducts || []
+    );
+  };
 
-                        <Text style={[styles.orderNumberText, {
-                            marginTop: hp('0.2%')
-                        }]}>Total item : {itemData.totalOrderItems || productList.length}</Text>
-                    </View>
-                    <Text style={styles.priceText}>₹{
-                        (itemData.grandTotal ?? itemData.price ?? itemData.totalAmount ?? 0).toFixed(2)}</Text>
-                </View>
-                <View style={[styles.buttonContainer, !itemData.canReorder && { justifyContent: 'center' }]}>
-                    {itemData.canReorder && (
-                        <TouchableOpacity
-                            style={[styles.button, { backgroundColor: '#F25000' }, isStoreUnavailable && { opacity: 0.6 }]}
-                            onPress={() => !isStoreUnavailable && setShowReorderModal(true)}
-                            activeOpacity={isStoreUnavailable ? 1 : 0.7}
-                        >
-                            <Text style={[styles.buttonText, {
-                                color: '#FFFFFF',
-                            }]}>Reorder</Text>
-                        </TouchableOpacity>
-                    )}
-                    <TouchableOpacity onPress={() => navigation.navigate('OrderTrackingScreen', {
-                        orderId: itemData.orderId || itemData.id,
-                        orderNumber: itemData.orderNumber,
-                        order: itemData
-                    })} style={[
-                        styles.button,
-                        {
-                            borderWidth: 1,
-                            borderColor: '#DADADA',
-                        },
-                        !itemData.canReorder && { width: wp('85%') }
-                    ]}>
-                        <Text style={[styles.buttonText, {
-                            color: '#616161',
+  const productList = getProductList();
 
-                        }]}>Details</Text>
-                    </TouchableOpacity>
+  const { addToCart } = useCart();
 
-                </View>
-            </View>
-            <View style={styles.orderBottomView}>
-                <Text style={styles.placedOrderText}>Order placed on: {formatDate(itemData.orderDate || itemData.date || itemData.time)}</Text>
-            </View>
+  // Format Date
+  const formatDate = dateString => {
+    if (!dateString) return '';
+    try {
+      const date = new Date(dateString);
+      return (
+        date.toLocaleDateString() +
+        ' ' +
+        date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      );
+    } catch (e) {
+      return dateString;
+    }
+  };
 
-            <ConfirmationModal
-                visible={showReorderModal}
-                title="Reorder Item"
-                message="Are you sure you want to reorder this item?"
-                confirmText="Reorder"
-                cancelText="Cancel"
-                onClose={() => setShowReorderModal(false)}
-                onConfirm={async () => {
-                    try {
-                        const idToUse = itemData.orderId || itemData.id || itemData.orderNumber;
-                        if (idToUse) {
-                            await reorderApi({ orderId: idToUse });
-                            navigation.navigate('CartScreen');
-                        }
-                    } catch (e) {
-                        console.error(e);
-                    }
-                }}
+  const getPaymentLabel = method => {
+    if (!method) return 'Cash On Delivery';
+    const m = method.toUpperCase();
+    if (m === 'COD') return 'Cash On Delivery';
+    if (m === 'ONLINE' || m === 'UPI' || m === 'PREPAID')
+      return 'Online Payment';
+    return method;
+  };
+
+  const navigation = useNavigation();
+
+  return (
+    <View
+      style={{
+        marginBottom: hp('2%'),
+        alignSelf: 'center',
+      }}
+    >
+      <View style={styles.orderInnerContainer}>
+        <View style={styles.orderTopView}>
+          <View style={styles.orderTopInnerView}>
+            <Image
+              style={styles.homeIcon}
+              source={require('../assets/images/home_icon.png')}
             />
-        </View >
-    )
-}
+            <Text
+              style={
+                Platform.OS === 'android'
+                  ? [
+                      styles.homeText,
+                      {
+                        top: hp('0.3'),
+                      },
+                    ]
+                  : [
+                      styles.homeText,
+                      {
+                        top: hp('0.1'),
+                      },
+                    ]
+              }
+            >
+              {itemData.addressType || 'Home'}
+            </Text>
+          </View>
+          <View style={styles.orderTopInnerView}>
+            {(() => {
+              const status = (
+                itemData.orderStatusText ||
+                itemData.status ||
+                ''
+              ).toLowerCase();
+              const iconStyle = styles.statusIcon;
+              if (status.includes('cancel')) {
+                return (
+                  <AntDesign
+                    name="closecircle"
+                    size={wp('3%')}
+                    color="#E74C3C"
+                  />
+                );
+              } else if (
+                status.includes('deliver') &&
+                !status.includes('out')
+              ) {
+                return (
+                  <AntDesign
+                    name="checkcircle"
+                    size={wp('3%')}
+                    color="#27AE60"
+                  />
+                );
+              } else if (
+                status.includes('out') ||
+                status.includes('dispatch')
+              ) {
+                return (
+                  <Image
+                    source={require('../assets/images/order/outfordelivery.png')}
+                    style={iconStyle}
+                  />
+                );
+              } else if (status.includes('pending')) {
+                return (
+                  <Image
+                    source={require('../assets/images/order/orderpending.png')}
+                    style={iconStyle}
+                  />
+                );
+              } else if (status.includes('placed')) {
+                return (
+                  <Image
+                    source={require('../assets/images/order/orderplaced.png')}
+                    style={iconStyle}
+                  />
+                );
+              } else if (status.includes('accept')) {
+                return (
+                  <Image
+                    source={require('../assets/images/order/orderaccepted.png')}
+                    style={iconStyle}
+                  />
+                );
+              } else if (status.includes('pack')) {
+                return (
+                  <Image
+                    source={require('../assets/images/order/orderpacked.png')}
+                    style={iconStyle}
+                  />
+                );
+              } else if (status.includes('assign')) {
+                return (
+                  <Image
+                    source={require('../assets/images/order/outfordelivery.png')}
+                    style={iconStyle}
+                  />
+                );
+              } else {
+                return (
+                  <Image
+                    source={require('../assets/images/order/orderplaced.png')}
+                    style={iconStyle}
+                  />
+                );
+              }
+            })()}
+            <Text
+              style={[
+                styles.homeText,
+                Platform.OS === 'android' && { top: hp('0.1') },
+                (itemData.orderStatusText || itemData.status || '')
+                  .toLowerCase()
+                  .includes('cancel') && { color: '#E74C3C' },
+              ]}
+            >
+              {itemData.orderStatusText ||
+                itemData.status ||
+                getPaymentLabel(itemData.paymentMethod)}
+            </Text>
+          </View>
+        </View>
+        <View style={styles.orderMiddleView}>
+          <View style={styles.stackContainer}>
+            {productList.slice(0, 3).map((item, index) => (
+              <Image
+                key={index}
+                source={
+                  item.image
+                    ? {
+                        uri: `${CONFIG.image_base_url}${item.image}`,
+                      }
+                    : require('../assets/images/product1.png')
+                }
+                style={[
+                  styles.productImage,
+                  {
+                    marginLeft: index === 0 ? 0 : wp('-7%'), // overlap to left
+                    // zIndex: index + 1,                 // last image on top
+                  },
+                ]}
+              />
+            ))}
+          </View>
+          <View>
+            <Text style={styles.orderNumberText}>
+              #{itemData.orderNumber || itemData.orderId || itemData.id}
+            </Text>
 
-export default MyOrdersProductCard
+            <Text
+              style={[
+                styles.orderNumberText,
+                {
+                  marginTop: hp('0.2%'),
+                },
+              ]}
+            >
+              Total item : {itemData.totalOrderItems || productList.length}
+            </Text>
+          </View>
+          <Text style={styles.priceText}>
+            ₹
+            {(
+              itemData.grandTotal ??
+              itemData.price ??
+              itemData.totalAmount ??
+              0
+            ).toFixed(2)}
+          </Text>
+        </View>
+        <View
+          style={[
+            styles.buttonContainer,
+            !itemData.canReorder && { justifyContent: 'center' },
+          ]}
+        >
+          {itemData.canReorder && (
+            <TouchableOpacity
+              style={[
+                styles.button,
+                { backgroundColor: '#F25000' },
+                isStoreUnavailable && { opacity: 0.6 },
+              ]}
+              onPress={() => !isStoreUnavailable && setShowReorderModal(true)}
+              activeOpacity={isStoreUnavailable ? 1 : 0.7}
+            >
+              <Text
+                style={[
+                  styles.buttonText,
+                  {
+                    color: '#FFFFFF',
+                  },
+                ]}
+              >
+                Reorder
+              </Text>
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity
+            onPress={() =>
+              navigation.navigate('OrderTrackingScreen', {
+                orderId: itemData.orderId || itemData.id,
+                orderNumber: itemData.orderNumber,
+                order: itemData,
+              })
+            }
+            style={[
+              styles.button,
+              {
+                borderWidth: 1,
+                borderColor: '#DADADA',
+              },
+              !itemData.canReorder && { width: wp('85%') },
+            ]}
+          >
+            <Text
+              style={[
+                styles.buttonText,
+                {
+                  color: '#616161',
+                },
+              ]}
+            >
+              Details
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+      <View style={styles.orderBottomView}>
+        <Text style={styles.placedOrderText}>
+          Order placed on:{' '}
+          {formatDate(itemData.orderDate || itemData.date || itemData.time)}
+        </Text>
+      </View>
+
+      <ConfirmationModal
+        visible={showReorderModal}
+        title="Reorder Item"
+        message="Are you sure you want to reorder this item?"
+        confirmText="Reorder"
+        cancelText="Cancel"
+        onClose={() => setShowReorderModal(false)}
+        onConfirm={async () => {
+          try {
+            const idToUse =
+              itemData.orderId || itemData.id || itemData.orderNumber;
+            if (idToUse) {
+              await reorderApi({ orderId: idToUse });
+              navigation.navigate('CartScreen');
+            }
+          } catch (e) {
+            console.error(e);
+          }
+        }}
+      />
+    </View>
+  );
+};
+
+export default MyOrdersProductCard;
 
 const styles = StyleSheet.create({
-    productImage: {
-        height: wp("13.5%"),
-        width: wp("13.5%"),
-        borderRadius: 100,
-        borderWidth: 1,
-        borderColor: "#00000040",
-        backgroundColor: "#fff",
-    },
-    orderInnerContainer: {
-        width: wp('90.7%'),
-        height: hp('19%'),
-        borderWidth: 1,
-        borderColor: '#DADADA',
-        borderRadius: wp('2.33%'),
-        paddingVertical: hp('0.7%'),
-    },
-    orderTopView: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        borderStyle: 'dashed',
-        borderBottomWidth: 1,
-        paddingHorizontal: wp('2.5%'),
-        paddingBottom: hp('1%'),
-        borderColor: '#DADADA',
-    },
-    orderTopInnerView: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    homeIcon: {
-        width: wp('3.72%'),
-        height: hp('1.4%')
-    },
-    successIcon: {
-        width: wp('3.02%'),
-        height: hp('1.4%')
-    },
-    homeText: {
-        fontFamily: FONTS.poppins.regular,
-        fontSize: wp('3.25%'),
-        color: '#000000',
-        marginLeft: wp('1.5%'),
-    },
-    orderMiddleView: {
-        flexDirection: 'row',
-        marginTop: hp('1.5%'),
-        justifyContent: 'space-between',
-        paddingHorizontal: wp('2.5%'),
-        alignItems: 'center',
-    },
-    orderNumberText: {
-        fontFamily: FONTS.poppins.regular,
-        fontSize: wp('3.72%'),
-        color: '#000000'
-    },
-    priceText: {
-        color: '#0CA201',
-        fontFamily: FONTS.poppins.semiBold,
-        fontSize: wp('5.11%'),
-        alignSelf: 'flex-end'
-    },
-    buttonContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginHorizontal: wp('2.5%'),
-        marginTop: hp('1.5%')
-    },
-    button: {
-        width: wp('41%'),
-        height: hp('4.3%'),
-        borderRadius: wp('20%'),
-        justifyContent: 'center',
-        alignItems: 'center'
-    },
-    buttonText: {
-        fontFamily: FONTS.poppins.semiBold,
-        fontSize: wp('3.95%')
-    },
-    placedOrderText: {
-        fontFamily: FONTS.poppins.regular,
-        fontSize: wp('3.25%'),
-        color: '#616161'
-    },
-    orderBottomView: {
-        paddingTop: hp('0.5%'),
-        paddingLeft: wp('2.7%')
-    },
-    stackContainer: {
-        flexDirection: "row",
-        alignItems: "center",
-        backgroundColor: '#ffffff'
-    },
-    statusIcon: {
-        width: wp('3.5%'),
-        height: wp('3.5%'),
-        resizeMode: 'contain',
-    },
-})
+  productImage: {
+    height: wp('13.5%'),
+    width: wp('13.5%'),
+    borderRadius: 100,
+    borderWidth: 1,
+    borderColor: '#00000040',
+    backgroundColor: '#fff',
+  },
+  orderInnerContainer: {
+    width: wp('90.7%'),
+    height: hp('19%'),
+    borderWidth: 1,
+    borderColor: '#DADADA',
+    borderRadius: wp('2.33%'),
+    paddingVertical: hp('0.7%'),
+  },
+  orderTopView: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    borderStyle: 'dashed',
+    borderBottomWidth: 1,
+    paddingHorizontal: wp('2.5%'),
+    paddingBottom: hp('1%'),
+    borderColor: '#DADADA',
+  },
+  orderTopInnerView: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  homeIcon: {
+    width: wp('3.72%'),
+    height: hp('1.4%'),
+  },
+  successIcon: {
+    width: wp('3.02%'),
+    height: hp('1.4%'),
+  },
+  homeText: {
+    fontFamily: FONTS.gilroy.regular,
+    fontSize: wp('3.25%'),
+    color: '#000000',
+    marginLeft: wp('1.5%'),
+  },
+  orderMiddleView: {
+    flexDirection: 'row',
+    marginTop: hp('1.5%'),
+    justifyContent: 'space-between',
+    paddingHorizontal: wp('2.5%'),
+    alignItems: 'center',
+  },
+  orderNumberText: {
+    fontFamily: FONTS.gilroy.regular,
+    fontSize: wp('3.72%'),
+    color: '#000000',
+  },
+  priceText: {
+    color: '#0CA201',
+    fontFamily: FONTS.gilroy.semiBold,
+    fontSize: wp('5.11%'),
+    alignSelf: 'flex-end',
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginHorizontal: wp('2.5%'),
+    marginTop: hp('1.5%'),
+  },
+  button: {
+    width: wp('41%'),
+    height: hp('4.3%'),
+    borderRadius: wp('20%'),
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  buttonText: {
+    fontFamily: FONTS.gilroy.semiBold,
+    fontSize: wp('3.95%'),
+  },
+  placedOrderText: {
+    fontFamily: FONTS.gilroy.regular,
+    fontSize: wp('3.25%'),
+    color: '#616161',
+  },
+  orderBottomView: {
+    paddingTop: hp('0.5%'),
+    paddingLeft: wp('2.7%'),
+  },
+  stackContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+  },
+  statusIcon: {
+    width: wp('3.5%'),
+    height: wp('3.5%'),
+    resizeMode: 'contain',
+  },
+});

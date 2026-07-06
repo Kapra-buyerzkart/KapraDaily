@@ -105,19 +105,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    fontFamily: FONTS.poppins.bold,
+    fontFamily: FONTS.gilroy.bold,
     fontSize: wp('5%'),
     color: '#000000',
     textAlign: 'center',
   },
   versionText: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3.5%'),
     color: '#F25000',
     marginBottom: hp('1.5%'),
   },
   message: {
-    fontFamily: FONTS.poppins.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3.8%'),
     color: '#616161',
     textAlign: 'center',
@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   updateButtonText: {
-    fontFamily: FONTS.poppins.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('4%'),
     color: '#FFFFFF',
   },
@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   laterButtonText: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3.5%'),
     color: '#9E9E9E',
   },

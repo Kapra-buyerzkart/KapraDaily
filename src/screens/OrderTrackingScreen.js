@@ -507,7 +507,7 @@ const OrderTrackingScreen = () => {
               <Text
                 style={{
                   color: '#FFFFFF',
-                  fontFamily: FONTS.poppins.bold,
+                  fontFamily: FONTS.gilroy.bold,
                   fontSize: wp('3.5%'),
                 }}
               >
@@ -589,7 +589,7 @@ const OrderTrackingScreen = () => {
               <Text
                 style={{
                   color: '#FFFFFF',
-                  fontFamily: FONTS.poppins.bold,
+                  fontFamily: FONTS.gilroy.bold,
                   fontSize: wp('3.5%'),
                 }}
               >
@@ -1527,7 +1527,7 @@ const styles = StyleSheet.create({
     paddingTop: hp('1.5%'),
   },
   headerText: {
-    fontFamily: FONTS.poppins.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('4.65%'),
     color: '#000000',
     flex: 1,
@@ -1553,7 +1553,7 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
   },
   helpText: {
-    fontFamily: FONTS.poppins.light,
+    fontFamily: FONTS.gilroy.light,
     color: '#616161',
     fontSize: wp('2.79%'),
     marginLeft: wp('1%'),
@@ -1578,7 +1578,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   paidBadgeText: {
-    fontFamily: FONTS.outfit.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3%'),
     color: '#27AE60',
     marginLeft: wp('1%'),
@@ -1602,13 +1602,13 @@ const styles = StyleSheet.create({
     // bottom: hp('0.1%')
   },
   statusNumberText: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     color: '#FFFFFF',
     fontSize: wp('2.09%'),
   },
   statusNameText: {
     color: '#616161',
-    fontFamily: FONTS.poppins.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('2.79%'),
     marginLeft: wp('1.5%'),
   },
@@ -1642,7 +1642,7 @@ const styles = StyleSheet.create({
     marginLeft: wp('1.5%'),
   },
   placedDescription: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('2.79%'),
     color: '#616161',
     marginLeft: wp('1.5%'),
@@ -1692,12 +1692,12 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   deliveryAgentNameText: {
-    fontFamily: FONTS.poppins.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3.95%'),
     color: '#000000',
   },
   deliveryAgentTextTwo: {
-    fontFamily: FONTS.poppins.light,
+    fontFamily: FONTS.gilroy.light,
     fontSize: wp('2.79%'),
     color: '#696969',
     marginTop: hp('0.3%'),
@@ -1741,12 +1741,12 @@ const styles = StyleSheet.create({
   },
   addressHeaderText: {
     fontSize: wp('2.79%'),
-    fontFamily: FONTS.poppins.regular,
+    fontFamily: FONTS.gilroy.regular,
     color: '#000000',
     marginLeft: wp('1.5%'),
   },
   addressLineText: {
-    fontFamily: FONTS.poppins.light,
+    fontFamily: FONTS.gilroy.light,
     fontSize: wp('2.55%'), // ✅ FIXED
     color: '#606060',
     width: '85%',
@@ -1757,7 +1757,7 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
   },
   paymentMethodText: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     color: '#000000',
     fontSize: wp('3.72%'),
     alignSelf: 'flex-start',
@@ -1771,7 +1771,7 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
   },
   paymentText: {
-    fontFamily: FONTS.poppins.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3.02%'),
     color: '#000000',
     flex: 1,
@@ -1833,11 +1833,11 @@ const styles = StyleSheet.create({
     paddingRight: wp('5%'),
   },
   productsHeaderText: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3.72%'),
   },
   productsHeaderCount: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3.72%'),
     color: '#616161',
   },
@@ -1859,33 +1859,33 @@ const styles = StyleSheet.create({
     height: wp('8.6%'),
   },
   productName: {
-    fontFamily: FONTS.poppins.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3.02%'),
     color: '#000000',
   },
   productNameTwo: {
-    fontFamily: FONTS.poppins.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3.02%'),
     color: '#000000',
   },
   productQuantity: {
-    fontFamily: FONTS.poppins.light,
+    fontFamily: FONTS.gilroy.light,
     fontSize: wp('2.79%'),
     color: '#000000',
   },
   productQuantityTwo: {
-    fontFamily: FONTS.poppins.light,
+    fontFamily: FONTS.gilroy.light,
     fontSize: wp('2.79%'),
     color: '#000000',
   },
   productPrice: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3.72%'),
     color: '#000000',
     alignSelf: 'flex-end',
   },
   productPriceTwo: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3.72%'),
     color: '#000000',
     alignSelf: 'flex-end',
@@ -1919,7 +1919,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   viewBillText: {
-    fontFamily: FONTS.poppins.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3.02%'),
     color: '#000000',
   },
@@ -1927,7 +1927,7 @@ const styles = StyleSheet.create({
     marginLeft: wp('3%'),
   },
   totalPriceText: {
-    fontFamily: FONTS.outfit.medium,
+    fontFamily: FONTS.gilroy.medium,
     color: '#616161',
     fontSize: wp('5.11%'),
   },
@@ -1954,14 +1954,14 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
   },
   downloadBillText: {
-    fontFamily: FONTS.poppins.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3.02%'),
     color: '#616161',
     marginLeft: wp('3%'),
   },
   orderDetailsText: {
     color: '#000000',
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3.72%'),
     alignSelf: 'flex-start',
     marginLeft: wp('6%'),
@@ -1985,7 +1985,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   orderDetailsKeyText: {
-    fontFamily: FONTS.poppins.light,
+    fontFamily: FONTS.gilroy.light,
     fontSize: wp('3.25%'),
     color: '#8A8A8A',
   },
@@ -1996,7 +1996,7 @@ const styles = StyleSheet.create({
   },
   orderDetailsValueText: {
     color: '#2B2B2B',
-    fontFamily: FONTS.poppins.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3.25%'),
   },
   cancelButtonGradient: {
@@ -2008,12 +2008,12 @@ const styles = StyleSheet.create({
     marginTop: hp('2%'),
   },
   cancelButtonText: {
-    fontFamily: FONTS.poppins.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
     color: '#FFFFFF',
     fontSize: wp('4.65%'),
   },
   retryHintText: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3.5%'),
     color: '#27AE60',
     textAlign: 'center',
@@ -2034,7 +2034,7 @@ const styles = StyleSheet.create({
     marginBottom: hp('0.5%'),
   },
   ratingText: {
-    fontFamily: FONTS.poppins.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3.72%'),
     color: '#000000',
   },
@@ -2072,7 +2072,7 @@ const styles = StyleSheet.create({
     height: wp('2.8%'),
   },
   paidSuccessfullyText: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('2.8%'),
     color: '#0CA201',
     marginLeft: wp('1.5%'),
@@ -2094,7 +2094,7 @@ const styles = StyleSheet.create({
   returnText: {
     color: '#F25000',
     fontSize: wp('3.72%'),
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     marginLeft: wp('1%'),
   },
   dliveryAgentRatingMainContainer: {
@@ -2125,7 +2125,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   deliveryAgentRatingText: {
-    fontFamily: FONTS.poppins.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3.72%'),
     color: '#000000',
   },
@@ -2143,7 +2143,7 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: wp('4.65%'),
   },
   deliveryAgentRatingName: {
-    fontFamily: FONTS.poppins.light,
+    fontFamily: FONTS.gilroy.light,
     fontSize: wp('2.79%'),
     color: '#696969',
   },
@@ -2161,12 +2161,12 @@ const styles = StyleSheet.create({
     marginTop: hp('0.8%'),
   },
   billBreakdownLabel: {
-    fontFamily: FONTS.poppins.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3.25%'),
     color: '#616161',
   },
   billBreakdownValue: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3.25%'),
     color: '#000000',
   },
@@ -2183,12 +2183,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   finalTotalLabel: {
-    fontFamily: FONTS.poppins.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('4.2%'),
     color: '#000000',
   },
   finalTotalValue: {
-    fontFamily: FONTS.poppins.bold,
+    fontFamily: FONTS.gilroy.bold,
     fontSize: wp('4.5%'),
     color: '#0CA201',
   },

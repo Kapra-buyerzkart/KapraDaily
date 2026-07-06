@@ -38,7 +38,7 @@ const styles = StyleSheet.create({
   },
   storeNotFoundText: {
     flex: 1,
-    fontFamily: FONTS.outfit.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3%'),
     color: CART_COLORS.danger,
     marginLeft: CART_SPACING.sm,

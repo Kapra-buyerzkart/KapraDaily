@@ -311,7 +311,7 @@ const styles = StyleSheet.create({
     gap: hp('0.4%'),
   },
   productCount: {
-    fontFamily: FONTS.outfit.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3%'),
     color: CART_COLORS.textMuted,
   },
@@ -320,7 +320,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   mrpText: {
-    fontFamily: FONTS.outfit.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3.1%'),
     color: CART_COLORS.textFaint,
     textDecorationLine: 'line-through',

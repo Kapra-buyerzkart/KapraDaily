@@ -17,7 +17,7 @@ import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
-import AntDesign from 'react-native-vector-icons/AntDesign';
+import icons from '@/assets/icons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { FONTS } from '../styles/typography';
@@ -226,8 +226,17 @@ const UpdateContactScreen = () => {
             source={require('../assets/images/login_background_image.jpg')}
           >
             <View style={styles.headerRow}>
-              <TouchableOpacity hitSlop={40} onPress={() => navigation.goBack()}>
-                <AntDesign name="left" size={wp('5%')} color={'#FFFFFF'} />
+              <TouchableOpacity
+                hitSlop={40}
+                onPress={() => navigation.goBack()}
+              >
+                <Image
+                  source={icons.backArrowNew}
+                  style={{
+                    resizeMode: 'contain',
+                    tintColor: '#FFFFFF',
+                  }}
+                />
               </TouchableOpacity>
               <Text style={styles.headerTitle}>
                 Update {type === 'phone' ? 'Phone' : 'Email'}
@@ -370,7 +379,7 @@ const styles = StyleSheet.create({
     marginBottom: hp('4%'),
   },
   headerTitle: {
-    fontFamily: FONTS.poppins.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('5%'),
     color: '#FFFFFF',
   },
@@ -393,7 +402,7 @@ const styles = StyleSheet.create({
     marginBottom: hp('2%'),
   },
   label: {
-    fontFamily: FONTS.poppins.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3.8%'),
     color: '#616161',
     marginBottom: hp('0.5%'),
@@ -409,7 +418,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   prefix: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('4%'),
     color: '#000',
     marginRight: wp('2%'),
@@ -418,7 +427,7 @@ const styles = StyleSheet.create({
     flex: 1,
     color: '#000',
     fontSize: wp('4%'),
-    fontFamily: FONTS.poppins.regular,
+    fontFamily: FONTS.gilroy.regular,
   },
   actionButton: {
     backgroundColor: '#F25000',
@@ -439,7 +448,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0,
   },
   actionButtonText: {
-    fontFamily: FONTS.poppins.bold,
+    fontFamily: FONTS.gilroy.bold,
     fontSize: wp('4.5%'),
     color: '#FFFFFF',
   },
@@ -460,7 +469,7 @@ const styles = StyleSheet.create({
   },
   otpInput: {
     fontSize: wp('5%'),
-    fontFamily: FONTS.poppins.bold,
+    fontFamily: FONTS.gilroy.bold,
     color: '#000',
     textAlign: 'center',
     width: '100%',
@@ -470,12 +479,12 @@ const styles = StyleSheet.create({
     marginTop: hp('2%'),
   },
   resendTextActive: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3.5%'),
     color: '#F25000',
   },
   resendTextDisabled: {
-    fontFamily: FONTS.poppins.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3.5%'),
     color: '#616161',
   },
@@ -484,7 +493,7 @@ const styles = StyleSheet.create({
     marginTop: hp('3%'),
   },
   changeContactLinkText: {
-    fontFamily: FONTS.poppins.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3.5%'),
     color: '#F25000',
     textDecorationLine: 'underline',

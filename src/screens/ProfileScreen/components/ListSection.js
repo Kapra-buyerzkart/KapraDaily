@@ -2,7 +2,7 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import React, { Fragment } from 'react';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
-import { styles, GRAY_500, INK } from '../styles';
+import { styles, ORANGE } from '../styles';
 
 export default function ListSection({ title, items }) {
   return (
@@ -23,7 +23,7 @@ export default function ListSection({ title, items }) {
                   {item.label}
                 </Text>
               </View>
-              <AntDesign name={'right'} color={INK} size={wp('3.5%')} />
+              <AntDesign name={'right'} color={ORANGE} size={wp('3.5%')} />
             </TouchableOpacity>
             {index < items.length - 1 && !item.hideDividerAfter && (
               <View style={styles.divider} />

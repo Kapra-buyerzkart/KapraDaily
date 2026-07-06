@@ -8,7 +8,11 @@ import { CART_COLORS, CART_SPACING, wp, hp } from '../../../styles/cartTheme';
 const AddressSelector = ({ address, onPress }) => {
   return (
     <TouchableOpacity activeOpacity={0.8} onPress={onPress} style={styles.row}>
-      <Ionicons name="location-outline" size={wp('4.2%')} color={CART_COLORS.textPrimary} />
+      <Ionicons
+        name="location-outline"
+        size={wp('4.2%')}
+        color={CART_COLORS.textPrimary}
+      />
       <Text style={styles.addressText} numberOfLines={1}>
         {address || 'Select delivery address'}
       </Text>
@@ -29,7 +33,7 @@ const styles = StyleSheet.create({
   },
   addressText: {
     flex: 1,
-    fontFamily: FONTS.outfit.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3.4%'),
     color: CART_COLORS.textPrimary,
     marginHorizontal: CART_SPACING.sm,

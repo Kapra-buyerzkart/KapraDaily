@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
     marginBottom: hp('2%'),
   },
   modalHeaderText: {
-    fontFamily: FONTS.poppins.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('4.5%'),
     color: '#000000',
   },
@@ -282,13 +282,13 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
   },
   locationText: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('4%'),
     color: '#F25000',
     marginLeft: wp('3%'),
   },
   savedLocationText: {
-    fontFamily: FONTS.poppins.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('4%'),
     color: '#000000',
     marginVertical: hp('1.5%'),
@@ -315,7 +315,7 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
   },
   addressTypeText: {
-    fontFamily: FONTS.poppins.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3.5%'),
     color: '#000000',
     marginLeft: wp('2%'),
@@ -336,7 +336,7 @@ const styles = StyleSheet.create({
     tintColor: '#FFFFFF',
   },
   selectedText: {
-    fontFamily: FONTS.outfit.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3%'),
     color: '#FFFFFF',
     marginLeft: wp('1%'),
@@ -366,7 +366,7 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   addressLine: {
-    fontFamily: FONTS.outfit.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3.5%'),
     color: '#777777',
     marginTop: hp('0.5%'),

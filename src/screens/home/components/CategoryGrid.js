@@ -53,7 +53,7 @@ const styles = StyleSheet.create({
     marginTop: hp('1.5%'),
   },
   categoryHeaderText: {
-    fontFamily: FONTS.outfit.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('4.2%'),
     marginBottom: hp('1%'),
   },

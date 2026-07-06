@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
     marginTop: hp('2.5%'),
   },
   title: {
-    fontFamily: FONTS.poppins.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('3.8%'),
     color: '#000000',
     paddingHorizontal: CART_SPACING.lg,

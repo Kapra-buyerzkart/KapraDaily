@@ -118,7 +118,7 @@ const BillSection = ({ billCalculations }) => {
             <Text
               style={[
                 styles.billContentText,
-                { color: '#0CA201', fontFamily: FONTS.outfit.medium },
+                { color: '#0CA201', fontFamily: FONTS.gilroy.medium },
               ]}
             >
               You saved : ₹{totalSavings.toFixed(2)}
@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
   },
   billHeaderText: {
-    fontFamily: FONTS.poppins.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('4%'),
     color: '#000000',
     marginLeft: wp('2%'),
@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
     marginTop: hp('1%'),
   },
   billContentText: {
-    fontFamily: FONTS.outfit.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3.5%'),
     color: '#777777',
   },
@@ -179,14 +179,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   mrpText: {
-    fontFamily: FONTS.outfit.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3%'),
     color: '#777777',
     textDecorationLine: 'line-through',
     marginRight: wp('2%'),
   },
   priceText: {
-    fontFamily: FONTS.outfit.medium,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3.5%'),
     color: '#000000',
   },
@@ -202,7 +202,7 @@ const styles = StyleSheet.create({
     marginTop: hp('2%'),
   },
   billSumText: {
-    fontFamily: FONTS.poppins.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('4%'),
     color: '#000000',
   },

@@ -11,7 +11,7 @@ import {
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
 import { FONTS } from '../styles/typography';
-import AntDesign from 'react-native-vector-icons/AntDesign';
+import icons from '@/assets/icons';
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -30,6 +30,8 @@ import SelectedProducts from '../components/SelectedProducts';
 import StoreUnavailable from '../components/StoreUnavailable';
 import LocationModal from '../components/LocationModal';
 import { AppContext } from '../context/appContext';
+import images from '@/assets/images';
+import COLORS from '@/styles/colors';
 
 export default function WishlistScreen() {
   const navigation = useNavigation();
@@ -98,7 +100,6 @@ export default function WishlistScreen() {
     }
   };
   const renderItem = ({ item }) => {
-    // Map wishlist specific keys to standard keys used by TokenProductCard
     const mappedItem = {
       ...item,
       productId: item.productId,
@@ -130,28 +131,18 @@ export default function WishlistScreen() {
 
   const renderFooter = () => (
     <View style={styles.footerContainer}>
-      <Image
-        source={require('../assets/images/noimages/nothing_found.png')}
-        style={styles.footerImage}
-      />
       <Text style={styles.footerText}>NO MORE ITEMS</Text>
     </View>
   );
   const renderNoitem = () => (
     <View style={styles.footerContainer}>
-      <Image
-        source={require('../assets/images/noimages/nothing_found.png')}
-        style={styles.footerImage}
-      />
-      <Text style={styles.footerText}>{'No Wish \n Items'}</Text>
+      <Image source={images.noWishlist} style={styles.footerImage} />
+      <Text style={styles.footerText}>Your Wishlist is Empty</Text>
     </View>
   );
 
   return (
-    <View
-      style={[styles.mainContainer, { paddingTop: insets.top }]}
-      edges={['top']}
-    >
+    <View style={[styles.mainContainer, { paddingTop: insets.top }]}>
       <View
         style={{
           flexDirection: 'row',
@@ -163,16 +154,18 @@ export default function WishlistScreen() {
       >
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <TouchableOpacity hitSlop={40} onPress={() => navigation.goBack()}>
-            <AntDesign name="left" size={wp('5%')} color="#000" />
+            <Image
+              source={icons.backArrowNew}
+              style={{
+                resizeMode: 'contain',
+                tintColor: '#000',
+              }}
+            />
           </TouchableOpacity>
           <Text style={styles.header}>Wishlist</Text>
         </View>
-        <Image
-          style={styles.giftImage}
-          source={require('../assets/images/noimages/nothing_found.png')}
-        />
       </View>
-      <View style={styles.productListView}>
+      <View style={{ flex: 1 }}>
         {isStoreUnavailable ? (
           <StoreUnavailable
             image={storeUnavailableData.image}
@@ -191,8 +184,9 @@ export default function WishlistScreen() {
             onScroll={scrollHandler}
             scrollEventThrottle={16}
             ListEmptyComponent={!isLoading && renderNoitem}
-            ListFooterComponent={wishlistItems?.length > 0 && renderFooter}
+            style={{ flex: 1 }}
             contentContainerStyle={{
+              flexGrow: 1,
               paddingHorizontal: wp('1%'),
               paddingBottom: hp('15%'),
             }}
@@ -237,9 +231,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
   },
   header: {
-    fontFamily: FONTS.poppins.semiBold,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('4.65%'),
     alignSelf: 'center',
+    fontWeight: 400,
     marginLeft: wp('4%'),
   },
   giftImage: {
@@ -281,7 +276,7 @@ const styles = StyleSheet.create({
   },
   newWishesText: {
     color: '#000000',
-    fontFamily: FONTS.outfit.regular,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3.25%'),
   },
   floatingContainer: {
@@ -291,22 +286,22 @@ const styles = StyleSheet.create({
     right: 0,
   },
   footerContainer: {
-    width: '100%',
+    flex: 1,
+    // backgroundColor: 'red',
+
     alignItems: 'center',
-    marginTop: hp('2%'),
-    paddingBottom: hp('10%'),
     justifyContent: 'center',
   },
   footerImage: {
-    width: wp('20%'),
-    height: wp('20%'),
+    // width: wp('20%'),
+    // height: wp('20%'),
     resizeMode: 'contain',
   },
   footerText: {
-    color: 'rgba(242, 80, 0, 0.3)',
+    color: COLORS.black,
     fontSize: 20,
-    fontWeight: '900',
-    fontFamily: FONTS.poppins.regular,
+    padding: 10,
+    fontFamily: FONTS.gilroy.bold,
     textAlign: 'center',
     //  marginTop: hp('1%'),
   },

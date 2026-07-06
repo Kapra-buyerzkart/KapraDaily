@@ -26,6 +26,7 @@ import {
 } from 'react-native-responsive-screen';
 import { FONTS } from '../styles/typography';
 import AntDesign from 'react-native-vector-icons/AntDesign';
+import icons from '@/assets/icons';
 import { useNavigation } from '@react-navigation/native';
 import {
   getWalletDataApi,
@@ -333,7 +334,13 @@ const BCoinScreen = () => {
             hitSlop={40}
             onPress={() => navigation.goBack()}
           >
-            <AntDesign name="left" size={wp('4.5%')} color="#ffffffff" />
+            <Image
+              source={icons.backArrowNew}
+              style={{
+                resizeMode: 'contain',
+                tintColor: '#ffffffff',
+              }}
+            />
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.knowMorePill}
