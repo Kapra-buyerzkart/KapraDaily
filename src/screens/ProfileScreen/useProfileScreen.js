@@ -38,6 +38,7 @@ export const useProfileScreen = () => {
   const [isLogoutModalVisible, setIsLogoutModalVisible] = useState(false);
   const [isDeleteAccountModalVisible, setIsDeleteAccountModalVisible] =
     useState(false);
+  const [isLanguageModalVisible, setIsLanguageModalVisible] = useState(false);
   const [walletData, setWalletData] = useState(null);
   const [statusConfig, setStatusConfig] = useState({
     visible: false,
@@ -227,6 +228,8 @@ export const useProfileScreen = () => {
     setIsLogoutModalVisible,
     isDeleteAccountModalVisible,
     setIsDeleteAccountModalVisible,
+    isLanguageModalVisible,
+    setIsLanguageModalVisible,
     walletData,
     statusConfig,
     setStatusConfig,

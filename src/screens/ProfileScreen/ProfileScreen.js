@@ -20,6 +20,7 @@ import ListSection from './components/ListSection';
 import SuggestProductsModal from './components/SuggestProductsModal';
 import LogoutButton from './components/LogoutButton';
 import ProfileFooter from './components/ProfileFooter';
+import LanguageSwitcherModal from '../../components/LanguageSwitcherModal';
 import COLORS from '@/styles/colors';
 
 export default function ProfileScreen() {
@@ -44,6 +45,8 @@ export default function ProfileScreen() {
     setIsLogoutModalVisible,
     isDeleteAccountModalVisible,
     setIsDeleteAccountModalVisible,
+    isLanguageModalVisible,
+    setIsLanguageModalVisible,
     statusConfig,
     setStatusConfig,
     handleRequestProduct,
@@ -54,7 +57,10 @@ export default function ProfileScreen() {
   } = useProfileScreen();
 
   const insets = useSafeAreaInsets();
-  const myAccountItems = buildMyAccountItems(navigation);
+  const myAccountItems = buildMyAccountItems({
+    navigation,
+    onLanguage: () => setIsLanguageModalVisible(true),
+  });
   const informationItems = buildInformationItems({
     navigation,
     helpSheetRef,
@@ -139,6 +145,11 @@ export default function ProfileScreen() {
         type={statusConfig.type}
         title={statusConfig.title}
         message={statusConfig.message}
+      />
+
+      <LanguageSwitcherModal
+        visible={isLanguageModalVisible}
+        onClose={() => setIsLanguageModalVisible(false)}
       />
 
       <HelpSupportModal ref={helpSheetRef} />

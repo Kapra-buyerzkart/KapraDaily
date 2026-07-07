@@ -6,27 +6,38 @@ import {
 } from 'react-native-responsive-screen';
 import { FONTS } from '../styles/typography';
 import { useNavigation } from '@react-navigation/native';
+import icons from '@/assets/icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const CartEmptyComponent = () => {
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
 
   return (
-    <View style={styles.mainContainer}>
-      <Image
-        style={styles.imageStyle}
-        source={require('../assets/images/empty_cart_illustration.jpg')}
-      />
-      <Text style={styles.titleText}>Your cart is empty</Text>
-      <Text style={styles.subtitleText}>
-        Looks like you haven't added anything to your cart yet.
-      </Text>
-
-      <TouchableOpacity
-        style={styles.shopNowButton}
-        onPress={() => navigation.navigate('MainTabs', { screen: 'Home' })}
-      >
-        <Text style={styles.shopNowText}>Shop Now</Text>
+    <View
+      style={{ flex: 1, marginTop: insets.top, paddingHorizontal: hp('2%') }}
+    >
+      <TouchableOpacity hitSlop={40} onPress={() => navigation.goBack()}>
+        <Image source={icons.backArrowNew} />
       </TouchableOpacity>
+
+      <View style={styles.mainContainer}>
+        <Image
+          style={styles.imageStyle}
+          source={require('../assets/icons/emptyCart.png')}
+        />
+        <Text style={styles.titleText}>Your cart is empty</Text>
+        <Text style={styles.subtitleText}>
+          Looks like you haven't added anything to your cart yet.
+        </Text>
+
+        <TouchableOpacity
+          style={styles.shopNowButton}
+          onPress={() => navigation.navigate('MainTabs', { screen: 'Home' })}
+        >
+          <Text style={styles.shopNowText}>Shop Now</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -35,10 +46,10 @@ export default CartEmptyComponent;
 
 const styles = StyleSheet.create({
   mainContainer: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: wp('10%'),
-    marginTop: hp('10%'),
   },
   imageStyle: {
     width: wp('60%'),

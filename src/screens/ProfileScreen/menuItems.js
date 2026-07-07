@@ -34,7 +34,7 @@ export const buildOffersItems = ({ onBCoin, onSmartPoint, onCoupons }) => [
   },
 ];
 
-export const buildMyAccountItems = navigation => [
+export const buildMyAccountItems = ({ navigation, onLanguage }) => [
   {
     key: 'update-phone',
     label: 'Update Phone Number',
@@ -92,6 +92,12 @@ export const buildMyAccountItems = navigation => [
     label: 'My Cart',
     icon: <Ionicons name="cart-outline" color={INK} size={wp('4%')} />,
     onPress: () => navigation.navigate('CartScreen'),
+  },
+  {
+    key: 'language',
+    label: 'Language',
+    icon: <Ionicons name="language-outline" color={INK} size={wp('4%')} />,
+    onPress: onLanguage,
   },
 ];
 

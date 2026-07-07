@@ -21,6 +21,8 @@ import CartModals from './cart/components/CartModals';
 import StickyCheckoutBar from './cart/components/StickyCheckoutBar';
 import PaymentBottomSheet from './cart/components/PaymentBottomSheet';
 import { styles } from './cart/styles/Cart.styles';
+import images from '@/assets/images';
+import icons from '@/assets/icons';
 
 const CartScreen = () => {
   const navigation = useNavigation();
@@ -205,7 +207,7 @@ const CartScreen = () => {
 
   if (cartItems.length === 0 && !isFinalizingOrder) {
     return (
-      <View style={[styles.mainContainer, { paddingTop: insets.top }]}>
+      <View style={[styles.mainContainer]}>
         <CartEmptyComponent />
       </View>
     );
@@ -218,6 +220,7 @@ const CartScreen = () => {
         backgroundColor={'transparent'}
         barStyle={'dark-content'}
       />
+
       <CartList
         listRef={listRef}
         data={cartItems}
