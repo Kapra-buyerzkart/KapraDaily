@@ -6,6 +6,7 @@ import {
 } from 'react-native-responsive-screen';
 import { FONTS } from '../styles/typography';
 import { getImageUrl } from '../utils/imageUrl';
+import COLORS from '@/styles/colors';
 
 const SubCategoryPill = ({ item, isSelected, onPress }) => (
   <TouchableOpacity
@@ -33,7 +34,7 @@ const styles = StyleSheet.create({
     paddingVertical: hp('0.6%'),
     borderRadius: wp('8%'),
     borderWidth: 1,
-    borderColor: '#F25000',
+    borderColor: COLORS.primary,
     backgroundColor: 'white',
   },
 

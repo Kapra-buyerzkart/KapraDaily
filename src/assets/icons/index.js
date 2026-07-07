@@ -40,6 +40,8 @@ const icons = {
   savedAddress: require('./savedAddress.png'),
   coPartnerdashboard: require('./coPartnerdashboard.png'),
   transparentBackArrow: require('./transbckarrow.png'),
+  copartnerDash: require('./co-partnerDashborad.png'),
+
   emptyCart: require('./emptyCart.png'),
 };
 

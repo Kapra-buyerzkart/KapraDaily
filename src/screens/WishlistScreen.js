@@ -145,10 +145,6 @@ export default function WishlistScreen() {
     <View style={[styles.mainContainer, { paddingTop: insets.top }]}>
       <View
         style={{
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-
           paddingHorizontal: wp('4.65%'),
         }}
       >
@@ -162,10 +158,16 @@ export default function WishlistScreen() {
               }}
             />
           </TouchableOpacity>
-          <Text style={styles.header}>Wishlist</Text>
+          <Text style={styles.header}>Your Wishlist</Text>
         </View>
       </View>
-      <View style={{ flex: 1 }}>
+      <View
+        style={{
+          flex: 1,
+          paddingTop: hp('4%'),
+          alignSelf: 'center',
+        }}
+      >
         {isStoreUnavailable ? (
           <StoreUnavailable
             image={storeUnavailableData.image}
@@ -228,7 +230,7 @@ export default function WishlistScreen() {
 const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: COLORS.white,
   },
   header: {
     fontFamily: FONTS.gilroy.semiBold,

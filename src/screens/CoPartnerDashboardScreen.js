@@ -31,6 +31,7 @@ import {
   getCoPartnerOrdersApi,
   getCoPartnerPayoutsApi,
 } from '../api/userService';
+import images from '@/assets/images';
 
 const formatDate = dateStr => {
   if (!dateStr) return '';
@@ -889,11 +890,13 @@ const CoPartnerDashboardScreen = () => {
         />
         {renderHeader()}
         <View style={styles.emptyStateContainer}>
-          <MaterialCommunityIcons
+          {/* <MaterialCommunityIcons
             name="account-cancel-outline"
             size={wp('16%')}
             color="#CCCCCC"
-          />
+          /> */}
+
+          <Image source={icons.copartnerDash} />
           <Text style={styles.emptyStateTitle}>No Data Found</Text>
           <Text style={styles.emptyStateSubtitle}>
             You aren't a registered Co-Partner.

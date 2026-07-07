@@ -333,6 +333,7 @@ const styles = StyleSheet.create({
   },
   leftMenu: {
     width: wp('22%'),
+    paddingTop: hp('2%'),
     backgroundColor: '#FFFFFF',
     borderRightWidth: 1,
     borderColor: '#ECECEC',
