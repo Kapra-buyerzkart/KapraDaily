@@ -37,7 +37,7 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
  * keyboard-safe, and hardware-back-button behaviour as the rest of the app.
  */
 const EmailOtpBottomSheet = forwardRef((props, ref) => {
-  const { phone, onSuccess, onError } = props;
+  const { onSuccess, onError } = props;
 
   const sheetRef = useRef(null);
   const [email, setEmail] = useState('');
@@ -78,12 +78,10 @@ const EmailOtpBottomSheet = forwardRef((props, ref) => {
 
     try {
       setSubmitting(true);
-      const response = await sendLoginOtpToEmail({
-        phone,
-        email: trimmedEmail,
-      });
+      const response = await sendLoginOtpToEmail(trimmedEmail);
 
       if (response?.success) {
+        console.log(response, 'success process=====>');
         handleClose();
         onSuccess?.(trimmedEmail);
       } else {
@@ -94,7 +92,7 @@ const EmailOtpBottomSheet = forwardRef((props, ref) => {
     } finally {
       setSubmitting(false);
     }
-  }, [email, isValidEmail, submitting, phone, handleClose, onSuccess, onError]);
+  }, [email, isValidEmail, submitting, handleClose, onSuccess, onError]);
 
   const renderContent = useCallback(
     () => (

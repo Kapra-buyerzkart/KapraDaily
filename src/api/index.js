@@ -4,8 +4,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export const loginWithPassword = async (phone, password) => {
   const payload = {
     phone,
-    password
-  }
+    password,
+  };
   return post('auth/loginpassword', payload);
 };
 
@@ -38,7 +38,7 @@ export const verifyLoginOtp = async (phone, otp) => {
     phone,
     otp,
     otpType: 'login',
-    loggedInFromDevice: "app"
+    loggedInFromDevice: 'app',
   };
   return post('auth/verifyotp', payload);
 };
@@ -53,7 +53,7 @@ export const verifyForgotPwdOtp = async (phone, otp) => {
 };
 
 export const verifyRegisterOtp = async (phone, otp) => {
-  console.log('PPPPPPPPPPPPP', phone)
+  console.log('PPPPPPPPPPPPP', phone);
   const payload = {
     phone,
     otp,
@@ -100,17 +100,23 @@ export const resendLoginOtp = async phone => {
   return post('auth/resendotp', payload);
 };
 
-// Fallback delivery channel for the login OTP. The backend still issues an
-// otpType: 'login' OTP that is verified through the existing verifyLoginOtp
-// (auth/verifyotp) flow — this only changes where the OTP is delivered.
-export const sendLoginOtpToEmail = async ({ phone, email }) => {
+// Fallback delivery channel for the login OTP.
+export const sendLoginOtpToEmail = async email => {
   const payload = {
-    phone,
-    email,
+    emailId: email,
+  };
+  return post('sendotpmail', payload);
+};
+
+export const verifyLoginOtpEmail = async (email, otp) => {
+  const payload = {
+    phone: email,
+    otp,
     otpType: 'login',
     loggedInFromDevice: 'app',
   };
-  return post('auth/send-login-otp-email', payload);
+  console.log('[verifyLoginOtpEmail] payload', payload);
+  return post('verifyotpmail', payload);
 };
 
 export const resendForgotPwdOtp = async phone => {
@@ -125,19 +131,19 @@ export const getProfile = async () => {
   return get('me');
 };
 
-export const getAreasByPincode = async (pincode) => {
-  console.log('pincode', pincode)
+export const getAreasByPincode = async pincode => {
+  console.log('pincode', pincode);
   return get(`pincodearea/getbypincode?search=${pincode}`);
 };
 
-export const getAreasBySearch = async (search) => {
+export const getAreasBySearch = async search => {
   console.log('search', search);
   return get(`/pincodearea/search?search=${search}`);
 };
 
-export const checkPhone = async (phoneNo) => {
+export const checkPhone = async phoneNo => {
   const payload = {
-    phone: phoneNo
+    phone: phoneNo,
   };
-  return post(`auth/checkphone`, payload)
-}
+  return post(`auth/checkphone`, payload);
+};

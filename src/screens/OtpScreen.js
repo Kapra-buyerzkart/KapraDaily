@@ -26,6 +26,7 @@ import secureStore from '../utils/secureStore';
 import { useCart } from '../context/CartContext';
 import {
   verifyLoginOtp,
+  verifyLoginOtpEmail,
   sendLoginOtp,
   verifyForgotPwdOtp,
   resendLoginOtp,
@@ -41,8 +42,6 @@ import HelpSupportModal from '../components/HelpSupportModal';
 import EmailOtpBottomSheet from '../components/EmailOtpBottomSheet';
 import { setTokens } from '../api/tokenService';
 
-// Number of times the user must tap "Resend OTP" before the email OTP
-// fallback link is offered. Configurable in one place.
 const EMAIL_OTP_FALLBACK_RESEND_THRESHOLD = 1;
 
 const mergeCustomerIdIntoProfile = async custId => {
@@ -74,6 +73,7 @@ const OtpScreen = () => {
   const [isResendDisabled, setIsResendDisabled] = useState(true);
   const [loading, setLoading] = useState(false);
   const [resendCount, setResendCount] = useState(0);
+  const [otpEmail, setOtpEmail] = useState(null);
   const helpSheetRef = useRef(null);
   const emailOtpSheetRef = useRef(null);
 
@@ -202,7 +202,9 @@ const OtpScreen = () => {
 
     try {
       setLoading(true);
-      const response = await verifyLoginOtp(phone, enteredOtp);
+      const response = otpEmail
+        ? await verifyLoginOtpEmail(otpEmail, enteredOtp)
+        : await verifyLoginOtp(phone, enteredOtp);
       // logger.log('Verify OTP Response:', response);
 
       if (response?.success && response?.data) {
@@ -391,8 +393,6 @@ const OtpScreen = () => {
       inputRefs[0].current?.focus();
       setTimer(30);
       setIsResendDisabled(true);
-      // Track how many times the user has asked for a resend so we can
-      // surface the "Send OTP to Email" fallback after enough attempts.
       setResendCount(prev => prev + 1);
     } catch (error) {
       logger.log('Resend OTP Error:', error);
@@ -413,15 +413,18 @@ const OtpScreen = () => {
   }, []);
 
   // Fired by EmailOtpBottomSheet once the email OTP has actually been sent.
-  // Verification still goes through the unchanged handleContinueLogin /
-  // verifyLoginOtp flow below — this only confirms delivery.
-  const handleEmailOtpSuccess = React.useCallback(() => {
+  // Records the target email so handleContinueLogin verifies through
+  // verifyLoginOtpEmail (verifyotpmail) instead of the phone-based flow.
+  const handleEmailOtpSuccess = email => {
+    setOtpEmail(email);
+    setOtp(['', '', '', '', '']);
+    inputRefs[0].current?.focus();
     showStatus({
       type: 'success',
       title: 'Success',
       message: 'OTP has been sent to your email.',
     });
-  }, [showStatus]);
+  };
 
   const handleEmailOtpError = React.useCallback(
     message => {
@@ -454,10 +457,6 @@ const OtpScreen = () => {
         onSuccess={handleEmailOtpSuccess}
         onError={handleEmailOtpError}
       />
-
-      {/* Pre-warm the heavy AuthSuccessScreen images while the user types the
-          OTP, so the next screen renders from cache instead of decoding
-          multi-MB PNGs on mount. Hidden + non-interactive. */}
       <View style={styles.imagePreloader} pointerEvents="none">
         <Image
           source={require('../assets/images/splash/backgroundbg.png')}
@@ -591,11 +590,13 @@ const OtpScreen = () => {
                     </Text>
                   </>
                 ) : (
-                  <TouchableOpacity onPress={handleResendOtp}>
-                    <Text style={[styles.usePwdText, { color: '#F25000' }]}>
-                      Resend OTP
-                    </Text>
-                  </TouchableOpacity>
+                  !resendCount >= EMAIL_OTP_FALLBACK_RESEND_THRESHOLD && (
+                    <TouchableOpacity style={{}} onPress={handleResendOtp}>
+                      <Text style={[styles.usePwdText, { color: '#F25000' }]}>
+                        Resend OTP
+                      </Text>
+                    </TouchableOpacity>
+                  )
                 )}
               </View>
             </View>
