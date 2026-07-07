@@ -51,7 +51,7 @@ export const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-end',
     alignItems: 'center',
-    paddingBottom: hp('2.2%'),
+    paddingBottom: hp('1.2%'),
   },
   avatarInner: {
     position: 'relative',

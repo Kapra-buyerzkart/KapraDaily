@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { LoaderContextProvider } from './src/context/loaderContext';
 import { AppContextProvider } from './src/context/appContext';
@@ -62,27 +63,29 @@ function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <StatusBar
-          barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-          backgroundColor={isDarkMode ? '#000' : '#fff'}
-        />
-        <BottomSheetModalProvider>
-          <ModalProvider>
-            <QueryClientProvider client={queryClient}>
-              <AppContextProvider>
-                <CartProvider>
-                  <WishlistProvider>
-                    <LoaderContextProvider>
-                      <NavigationContainer ref={navigationRef}>
-                        <RootNavigator />
-                      </NavigationContainer>
-                    </LoaderContextProvider>
-                  </WishlistProvider>
-                </CartProvider>
-              </AppContextProvider>
-            </QueryClientProvider>
-          </ModalProvider>
-        </BottomSheetModalProvider>
+        <KeyboardProvider>
+          <StatusBar
+            barStyle={isDarkMode ? 'light-content' : 'dark-content'}
+            backgroundColor={isDarkMode ? '#000' : '#fff'}
+          />
+          <BottomSheetModalProvider>
+            <ModalProvider>
+              <QueryClientProvider client={queryClient}>
+                <AppContextProvider>
+                  <CartProvider>
+                    <WishlistProvider>
+                      <LoaderContextProvider>
+                        <NavigationContainer ref={navigationRef}>
+                          <RootNavigator />
+                        </NavigationContainer>
+                      </LoaderContextProvider>
+                    </WishlistProvider>
+                  </CartProvider>
+                </AppContextProvider>
+              </QueryClientProvider>
+            </ModalProvider>
+          </BottomSheetModalProvider>
+        </KeyboardProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

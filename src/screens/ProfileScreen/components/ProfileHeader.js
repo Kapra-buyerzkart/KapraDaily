@@ -23,11 +23,7 @@ export default function ProfileHeader({
 }) {
   const insets = useSafeAreaInsets();
   return (
-    <ImageBackground
-      source={icons.blurbg}
-      style={styles.header}
-      imageStyle={[styles.headerImage]}
-    >
+    <ImageBackground source={icons.blurbg} imageStyle={[styles.headerImage]}>
       <View
         style={[
           styles.headerTopRow,

@@ -21,7 +21,7 @@ import LoginPwdScreen from '../screens/LoginPwdScreen';
 import SavedAddressScreen from '../screens/SavedAddressScreen';
 import ReferralScreen from '../screens/ReferralScreen';
 import { AppContext } from '../context/appContext';
-import EditProfileScreen from '../screens/EditProfileScreen';
+import EditProfileScreen from '../screens/EditProfileScreen/EditProfileScreen';
 import ChangePasswordScreen from '../screens/ChangePasswordScreen';
 import UpdateContactScreen from '../screens/UpdateContactScreen';
 import CheckoutScreen from '../screens/CheckoutScreen';
