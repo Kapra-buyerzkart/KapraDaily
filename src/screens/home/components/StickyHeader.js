@@ -87,7 +87,7 @@ const StickyHeader = ({
           </TouchableOpacity>
         </Animated.View>
         <View style={styles.headerRightWrapper}>
-          <Animated.View style={coinAnimStyle}>
+          <Animated.View style={etaAnimStyle}>
             <TouchableOpacity
               onPress={() => navigation.navigate('BCoinScreen')}
               style={styles.bcoinContainer}
@@ -101,7 +101,7 @@ const StickyHeader = ({
               </Text>
             </TouchableOpacity>
           </Animated.View>
-          <Animated.View style={profileAnimStyle}>
+          <Animated.View style={etaAnimStyle}>
             <View style={{ overflow: 'visible' }}>
               <TouchableOpacity
                 onPress={() =>
