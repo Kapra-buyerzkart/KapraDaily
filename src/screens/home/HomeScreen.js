@@ -39,6 +39,7 @@ import StatusModal from '../../components/StatusModal';
 import StoreUnavailable from '../../components/StoreUnavailable';
 import HomePopupModal from '../../components/HomePopupModal';
 import { openExternalUrl } from '../../utils/safeUrl';
+import { shuffle } from '../../utils/shuffle';
 import { LoaderContext } from '../../context/loaderContext';
 import { AppContext } from '../../context/appContext';
 import useTabBarAnimation from '../../hooks/useTabBarAnimation';
@@ -366,8 +367,6 @@ const HomeScreen = () => {
   const { isHomePopupVisible, handleClose, handlePopupPress } =
     useHomePopup(popupData);
 
-  console.log(isStoreUnavailable, '------isStoreUnavailable');
-
   const categories = data?.categories || [];
   const topBanner = data?.banners?.topBanner || [];
   const midBanner = data?.banners?.midBanner || [];
@@ -393,16 +392,20 @@ const HomeScreen = () => {
   const isHomeLoading = refreshing;
   const fruits = bottomBanner;
 
+  // Randomize the product rails so they aren't in the same server order on
+  // every launch. Keyed on the block data, so the shuffle re-runs only when a
+  // fetch produces new data (app boot / pull-to-refresh) and stays stable
+  // across re-renders within a session.
   const firstBlockItems = useMemo(
-    () => firstProductBlock?.Items || firstProductBlock?.items || [],
+    () => shuffle(firstProductBlock?.Items || firstProductBlock?.items || []),
     [firstProductBlock],
   );
   const secondBlockItems = useMemo(
-    () => secondProductBlock?.Items || secondProductBlock?.items || [],
+    () => shuffle(secondProductBlock?.Items || secondProductBlock?.items || []),
     [secondProductBlock],
   );
   const thirdBlockItems = useMemo(
-    () => thirdProductBlock?.Items || thirdProductBlock?.items || [],
+    () => shuffle(thirdProductBlock?.Items || thirdProductBlock?.items || []),
     [thirdProductBlock],
   );
 

@@ -28,6 +28,7 @@ import {
 import { getAddressListApi, deleteAddressApi } from '../api/addressService';
 import ConfirmationModal from '../components/ConfirmationModal';
 import StatusModal from '../components/StatusModal';
+import { prefetchProductImages } from '../utils/imageUrl';
 
 export const CartContext = createContext();
 
@@ -431,6 +432,9 @@ export const CartProvider = ({ children }) => {
                 quantity: item.quantity || item.addedQty || 1,
               }));
               setCartItems(normalizedItems);
+              // Warm the cache so the floating cart pill thumbnails render
+              // instantly instead of downloading cold on first paint.
+              prefetchProductImages(normalizedItems);
             } else {
               setCartItems([]);
             }
@@ -719,6 +723,10 @@ export const CartProvider = ({ children }) => {
   const addToCart = useCallback(
     async (item, pincodeAreaIdOverride = null) => {
       const productId = item.productId || item.id;
+
+      // Warm the pill thumbnail immediately (usually already hot from the
+      // product card the user just tapped) so it shows without a cold fetch.
+      prefetchProductImages([item]);
 
       logger.log('➕ [ADD TO CART] Adding product:', {
         productId,

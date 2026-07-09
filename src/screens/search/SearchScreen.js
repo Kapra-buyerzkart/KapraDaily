@@ -19,6 +19,7 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
+import { KeyboardStickyView } from 'react-native-keyboard-controller';
 import React, { useState, useEffect, useContext } from 'react';
 import {
   widthPercentageToDP as wp,
@@ -357,9 +358,11 @@ const SearchScreen = () => {
         visible={isLocationModalVisible}
         onClose={() => setIsLocationModalVisible(false)}
       />
-      <Animated.View style={[styles.floatingContainer, cartAnimatedStyle]}>
-        <SelectedProducts />
-      </Animated.View>
+      <KeyboardStickyView style={styles.floatingContainer}>
+        <Animated.View style={cartAnimatedStyle}>
+          <SelectedProducts />
+        </Animated.View>
+      </KeyboardStickyView>
     </SafeAreaView>
   );
 };

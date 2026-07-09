@@ -85,3 +85,9 @@ src/globals/secrets.js
 # is deliberately kept tracked — those keys are client identifiers shipped in every app
 # binary and are protected by GCP API-key restrictions + Firebase Security Rules, not by
 # secrecy. Lock those down provider-side instead of gitignoring the files.
+
+# Claude Code / Argent tooling (local dev tooling, not shipped)
+.claude/
+.agents/
+.mcp.json
+skills-lock.json

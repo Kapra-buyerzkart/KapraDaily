@@ -1,9 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { getHomepageData } from '../api/homeService';
 import { homeKeys } from './queryKeys';
-import { transformHomepageResponse, extractPopupFromResponse } from './transformHomepageResponse';
+import {
+  transformHomepageResponse,
+  extractPopupFromResponse,
+} from './transformHomepageResponse';
 
-const useHomepageDataQuery = (areaId) =>
+const useHomepageDataQuery = areaId =>
   useQuery({
     queryKey: homeKeys.homepage(areaId),
     queryFn: async () => {
@@ -17,6 +20,11 @@ const useHomepageDataQuery = (areaId) =>
     },
     select: transformHomepageResponse,
     enabled: areaId !== undefined,
+    retry: (failureCount, error) => {
+      const status = error?.status ?? error?.response?.status;
+      if (status === 404 || status === 400) return false;
+      return failureCount < 2;
+    },
   });
 
 export default useHomepageDataQuery;

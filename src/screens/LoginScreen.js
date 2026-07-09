@@ -5,7 +5,6 @@ import {
   ImageBackground,
   TextInput,
   TouchableOpacity,
-  KeyboardAvoidingView,
   ScrollView,
   Alert,
   ActivityIndicator,
@@ -17,6 +16,7 @@ import {
 import React, { useState, useContext, useRef, useEffect } from 'react';
 import logger from '../utils/logger';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
