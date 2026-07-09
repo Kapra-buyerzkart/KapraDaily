@@ -14,6 +14,7 @@ import Animated, {
   Extrapolation,
   withTiming,
   clamp,
+  FadeInUp,
 } from 'react-native-reanimated';
 import {
   SafeAreaView,
@@ -30,6 +31,7 @@ import useProductSearch, {
   MIN_SEARCH_LENGTH,
 } from '../../hooks/useProductSearch';
 import secureStore from '../../utils/secureStore';
+import { getStaggerDelay } from '../../utils/staggerDelay';
 import { AppContext } from '../../context/appContext';
 import TokenProductCard from '../../components/TokenProductCard';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -116,19 +118,9 @@ const SearchScreen = () => {
     }
   }, [loading, resultCount, searchTerm, saveSearch]);
 
-  // ── Sticky header elevation ─────────────────────────────────────────────
-  // The search bar already sits outside the list (always pinned); this just
-  // fades in a subtle shadow once content scrolls beneath it, signaling the
-  // fixed header is "elevated" above the list. Shadows/elevation render
-  // outside the box model in RN, so this adds zero layout footprint — no
-  // height/margin change, no shift to the content below. UI-thread only.
   const STICKY_SHADOW_RANGE = 24;
   const scrollY = useSharedValue(0);
 
-  // SearchScreen sits outside the tab navigator, so there's no real tab bar
-  // here to ride — but the cart should still nudge down on scroll-down (and
-  // back up on scroll-up) like it does on Home/Categories. This tracks that
-  // locally instead of touching the global `tabBarVisibility`.
   const cartVisibility = useSharedValue(1);
   const scrollAnchor = useSharedValue(0);
 
@@ -198,13 +190,14 @@ const SearchScreen = () => {
     };
   });
 
-  const renderItem = ({ item }) => {
+  const renderItem = ({ item, index }) => {
     return (
       <View style={styles.productWrapper}>
         <TokenProductCard
           isThreeColumn={true}
           item={item}
           hideWishlist={false}
+          entering={FadeInUp.delay(getStaggerDelay(index))}
           onPress={() =>
             navigation.navigate('ProductDetailsScreen', {
               productId: item.productId || item.id,
@@ -241,16 +234,6 @@ const SearchScreen = () => {
         </TouchableOpacity>
       </View>
       <Animated.View style={[styles.searchContainer, stickyShadowAnimStyle]}>
-        {/* <Image
-          style={
-            Platform.OS === 'ios'
-              ? styles.searchIcon
-              : [styles.searchIcon, { bottom: hp('0.1%') }]
-          }
-          tintColor={'#F25000'}
-          source={require('../../assets/images/search_icon.png')}
-        /> */}
-
         <Feather name="search" size={20} color="#F25000" />
         <TextInput
           placeholder="What are you looking for ?"

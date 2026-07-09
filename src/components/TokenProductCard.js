@@ -17,6 +17,7 @@ import { FONTS } from '../styles/typography';
 import CONFIG from '../globals/config';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
+import AnimatedPressable from './AnimatedPressable';
 
 // Constants
 const DEFAULT_PRODUCT_NAME = 'Lorem Ipsum is simply dummy textsimply dummy';
@@ -371,16 +372,15 @@ const QuantityControl = React.memo(function QuantityControl({
   }
 
   return (
-    <TouchableOpacity activeOpacity={0.8} onPress={onAdd}>
-      <View
-        style={[
-          styles.plusIconCircle,
-          isThreeColumn && styles.plusIconCircleThreeColumn,
-        ]}
-      >
-        <Entypo name="plus" size={isThreeColumn ? 16 : 20} color="#F25000" />
-      </View>
-    </TouchableOpacity>
+    <AnimatedPressable
+      onPress={onAdd}
+      style={[
+        styles.plusIconCircle,
+        isThreeColumn && styles.plusIconCircleThreeColumn,
+      ]}
+    >
+      <Entypo name="plus" size={isThreeColumn ? 16 : 20} color="#F25000" />
+    </AnimatedPressable>
   );
 });
 
@@ -427,6 +427,7 @@ const TokenProductCard = ({
   isThreeColumn,
   hideToken,
   containerStyle,
+  entering,
 }) => {
   // State
   const [imageError, setImageError] = useState(false);
@@ -533,8 +534,8 @@ const TokenProductCard = ({
 
   // JSX return
   return (
-    <TouchableOpacity
-      activeOpacity={0.9}
+    <AnimatedPressable
+      entering={entering}
       style={[
         styles.cardContainer,
         isThreeColumn && styles.threeColumnContainer,
@@ -632,7 +633,7 @@ const TokenProductCard = ({
           </View>
         </View>
       </View>
-    </TouchableOpacity>
+    </AnimatedPressable>
   );
 };
 

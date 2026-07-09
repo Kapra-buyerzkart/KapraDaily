@@ -13,6 +13,7 @@ import Animated, {
   interpolate,
   Extrapolation,
   clamp,
+  FadeInUp,
 } from 'react-native-reanimated';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { FONTS } from '../styles/typography';
@@ -40,6 +41,7 @@ import { AppContext } from '../context/appContext';
 import { useDebounce } from '../hooks/useDebounce';
 import useTabBarAnimation from '../hooks/useTabBarAnimation';
 import useCategoriesData from '../hooks/useCategoriesData';
+import { getStaggerDelay } from '../utils/staggerDelay';
 import {
   tabBarVisibility,
   getTabBarClearance,
@@ -232,10 +234,11 @@ export default function CategoriesScreen() {
                 keyExtractor={(item, index) =>
                   (item?.productId || item?.id || index).toString()
                 }
-                renderItem={({ item }) => (
+                renderItem={({ item, index }) => (
                   <TokenProductCard
                     isThreeColumn={false}
                     item={item}
+                    entering={FadeInUp.delay(getStaggerDelay(index))}
                     containerStyle={{
                       width: wp('36.5%'),
                       marginHorizontal: wp('0.4%'),

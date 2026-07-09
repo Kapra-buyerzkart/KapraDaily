@@ -10,6 +10,12 @@ import {
   PanResponder,
   Platform,
 } from 'react-native';
+import ReanimatedAnimated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  interpolateColor,
+} from 'react-native-reanimated';
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
@@ -25,6 +31,62 @@ const SORT_OPTIONS = [
   { label: 'Price: Low to High', value: 'lowToHigh' },
   { label: 'Price: High to Low', value: 'highToLow' },
 ];
+
+const SELECTION_DURATION = 150;
+const CHIP_BG_INACTIVE = '#FFFFFF';
+const CHIP_BG_ACTIVE = '#FFF5F0';
+const CHIP_BORDER_INACTIVE = '#E5E5E5';
+const CHIP_BORDER_ACTIVE = '#F25000';
+const CHIP_TEXT_INACTIVE = '#666';
+const CHIP_TEXT_ACTIVE = '#F25000';
+
+const AnimatedTouchable =
+  ReanimatedAnimated.createAnimatedComponent(TouchableOpacity);
+const AnimatedText = ReanimatedAnimated.createAnimatedComponent(Text);
+
+const SortOptionChip = ({ label, isSelected, onPress }) => {
+  const progress = useSharedValue(isSelected ? 1 : 0);
+
+  useEffect(() => {
+    progress.value = withTiming(isSelected ? 1 : 0, {
+      duration: SELECTION_DURATION,
+    });
+  }, [isSelected, progress]);
+
+  const chipStyle = useAnimatedStyle(() => ({
+    backgroundColor: interpolateColor(
+      progress.value,
+      [0, 1],
+      [CHIP_BG_INACTIVE, CHIP_BG_ACTIVE],
+    ),
+    borderColor: interpolateColor(
+      progress.value,
+      [0, 1],
+      [CHIP_BORDER_INACTIVE, CHIP_BORDER_ACTIVE],
+    ),
+  }));
+
+  const labelStyle = useAnimatedStyle(() => ({
+    color: interpolateColor(
+      progress.value,
+      [0, 1],
+      [CHIP_TEXT_INACTIVE, CHIP_TEXT_ACTIVE],
+    ),
+  }));
+
+  return (
+    <AnimatedTouchable style={[styles.sortOption, chipStyle]} onPress={onPress}>
+      <AnimatedText
+        style={[
+          isSelected ? styles.selectedSortLabel : styles.sortLabel,
+          labelStyle,
+        ]}
+      >
+        {label}
+      </AnimatedText>
+    </AnimatedTouchable>
+  );
+};
 
 const FilterSortModal = ({
   visible,
@@ -125,23 +187,12 @@ const FilterSortModal = ({
             <Text style={styles.sectionTitle}>Sort By</Text>
             <View style={styles.sortContainer}>
               {SORT_OPTIONS.map(option => (
-                <TouchableOpacity
+                <SortOptionChip
                   key={option.value}
-                  style={[
-                    styles.sortOption,
-                    selectedSort === option.value && styles.selectedSortOption,
-                  ]}
+                  label={option.label}
+                  isSelected={selectedSort === option.value}
                   onPress={() => setSelectedSort(option.value)}
-                >
-                  <Text
-                    style={[
-                      styles.sortLabel,
-                      selectedSort === option.value && styles.selectedSortLabel,
-                    ]}
-                  >
-                    {option.label}
-                  </Text>
-                </TouchableOpacity>
+                />
               ))}
             </View>
 
@@ -252,17 +303,11 @@ const styles = StyleSheet.create({
     borderColor: '#E5E5E5',
     marginBottom: hp('1%'),
   },
-  selectedSortOption: {
-    backgroundColor: '#FFF5F0',
-    borderColor: '#F25000',
-  },
   sortLabel: {
     fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3.2%'),
-    color: '#666',
   },
   selectedSortLabel: {
-    color: '#F25000',
     fontFamily: FONTS.gilroy.medium,
   },
   priceDisplay: {

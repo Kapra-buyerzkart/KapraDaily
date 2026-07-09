@@ -12,6 +12,7 @@ import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
+import { FadeInUp } from 'react-native-reanimated';
 import { FONTS } from '../../../styles/typography';
 import TokenProductCard from '../../../components/TokenProductCard';
 import SeeAllButton from '../../../components/SeeAllButton';
@@ -20,6 +21,7 @@ import CONFIG from '../../../globals/config';
 import sectionCardStyles from './sectionCardStyles';
 import ProductBlockShimmer from './ProductBlockShimmer';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import { getStaggerDelay } from '../../../utils/staggerDelay';
 
 const ProductBlock = ({
   isLoading,
@@ -99,9 +101,10 @@ const ProductBlock = ({
             keyExtractor={(item, index) =>
               (item.productId || item.id || index).toString()
             }
-            renderItem={({ item }) => (
+            renderItem={({ item, index }) => (
               <TokenProductCard
                 item={item}
+                entering={FadeInUp.delay(getStaggerDelay(index))}
                 onPress={() =>
                   navigation.navigate('ProductDetailsScreen', {
                     productId: item.productId || item.id,

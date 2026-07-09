@@ -6,6 +6,7 @@ import {
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { FadeInUp } from 'react-native-reanimated';
 import TokenProductCard from '../components/TokenProductCard';
 import SelectedProducts from '../components/SelectedProducts';
 import { FONTS } from '../styles/typography';
@@ -16,6 +17,7 @@ import AnimatedHeader from '../components/AnimatedHeader';
 import { AppContext } from '../context/appContext';
 import useProductSearch, { MIN_SEARCH_LENGTH } from '../hooks/useProductSearch';
 import secureStore from '../utils/secureStore';
+import { getStaggerDelay } from '../utils/staggerDelay';
 
 const ProductListScreen = () => {
   const navigation = useNavigation();
@@ -102,11 +104,12 @@ const ProductListScreen = () => {
           keyExtractor={(item, index) =>
             (item.productId || item.id || `product-${index}`).toString()
           }
-          renderItem={({ item }) => (
+          renderItem={({ item, index }) => (
             <View style={styles.productWrapper}>
               <TokenProductCard
                 isThreeColumn={true}
                 item={item}
+                entering={FadeInUp.delay(getStaggerDelay(index))}
                 onPress={() =>
                   navigation.navigate('ProductDetailsScreen', {
                     productId: item.productId || item.id,

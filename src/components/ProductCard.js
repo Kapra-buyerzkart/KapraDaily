@@ -1,5 +1,10 @@
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import React, { useState, useEffect } from 'react';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+} from 'react-native-reanimated';
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
@@ -17,8 +22,8 @@ import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 
 const ProductCard = props => {
-  const [imageLoading, setImageLoading] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const imageOpacity = useSharedValue(0);
 
   // Hooks
   const navigation = useNavigation();
@@ -69,11 +74,17 @@ const ProductCard = props => {
     item.featuredImage || item.img || item.imageUrl,
   );
 
+  const imageAnimatedStyle = useAnimatedStyle(
+    () => ({
+      opacity: imageOpacity.value * (isOutOfStock ? 0.5 : 1),
+    }),
+    [isOutOfStock],
+  );
+
   useEffect(() => {
-    // Reset state when item changes
     setImageError(false);
-    setImageLoading(true);
-  }, [item.featuredImage, item.img]);
+    imageOpacity.value = 0;
+  }, [item.featuredImage, item.img, imageOpacity]);
 
   // console.log('ProductCard Render', item.id || item.productId);
 
@@ -145,31 +156,19 @@ const ProductCard = props => {
         )}
       </View>
       <View style={styles.productCardViewTwo}>
-        {/* {imageLoading && <ShimmerPlaceholder style={[styles.productCardImage, { position: 'absolute' }]} />} */}
-        <Image
+        <Animated.Image
           source={imageSource}
-          style={[
-            styles.productCardImage,
-            {
-              opacity:
-                item.stockQty === 0 ||
-                item.stockQty === '0' ||
-                item.isAvailable === false
-                  ? 0.5
-                  : 1,
-            },
-          ]}
+          style={[styles.productCardImage, imageAnimatedStyle]}
           resizeMode="contain"
-          onLoadStart={() => setImageLoading(true)}
-          onLoadEnd={() => setImageLoading(false)}
+          onLoadEnd={() => {
+            imageOpacity.value = withTiming(1, { duration: 220 });
+          }}
           onError={() => {
             setImageError(true);
-            setImageLoading(false);
+            imageOpacity.value = withTiming(1, { duration: 220 });
           }}
         />
-        {(item.stockQty === 0 ||
-          item.stockQty === '0' ||
-          item.isAvailable === false) && (
+        {isOutOfStock && (
           <View style={styles.outOfStockOverlay}>
             <Text style={styles.outOfStockText}>Out of Stock</Text>
           </View>

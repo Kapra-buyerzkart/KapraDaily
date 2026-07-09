@@ -1,4 +1,11 @@
-import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  ActivityIndicator,
+} from 'react-native';
 import React, { useState } from 'react';
 import Animated, {
   useSharedValue,
@@ -23,7 +30,6 @@ import { useCart } from '../context/CartContext';
 import ConfirmationModal from '../components/ConfirmationModal';
 import { useFocusEffect } from '@react-navigation/native';
 import TokenProductCard from '../components/TokenProductCard';
-import { LoaderContext } from '../context/loaderContext';
 import { useContext } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import SelectedProducts from '../components/SelectedProducts';
@@ -39,7 +45,6 @@ export default function WishlistScreen() {
   const { wishlistItems, removeFromWishlist, loadWishlist, isLoading } =
     useWishlist();
   const { addToCart, cartItems } = useCart();
-  const { showLoader } = useContext(LoaderContext);
   const { isStoreUnavailable, storeUnavailableData } = useContext(AppContext);
   const [isLocationModalVisible, setIsLocationModalVisible] = useState(false);
 
@@ -71,21 +76,8 @@ export default function WishlistScreen() {
 
   useFocusEffect(
     React.useCallback(() => {
-      let isMounted = true;
-      const fetchWishlist = async () => {
-        if (isLoading) return;
-
-        showLoader(true);
-        await loadWishlist(true); // Force fetch to bypass standard caching
-        if (isMounted) {
-          showLoader(false);
-        }
-      };
-      fetchWishlist();
-      return () => {
-        isMounted = false;
-      };
-    }, [loadWishlist, showLoader]), // Stability is now ensured by context memoization
+      loadWishlist(true); // Force fetch to bypass standard caching
+    }, [loadWishlist]), // Stability is now ensured by context memoization
   );
 
   const handleRemoveFromWishlist = (productId, productName) => {
@@ -174,6 +166,10 @@ export default function WishlistScreen() {
             text={storeUnavailableData.text}
             onChangeLocation={() => setIsLocationModalVisible(true)}
           />
+        ) : isLoading && wishlistItems.length === 0 ? (
+          <View style={styles.footerContainer}>
+            <ActivityIndicator size="large" color={COLORS.primary} />
+          </View>
         ) : (
           <Animated.FlatList
             data={wishlistItems}

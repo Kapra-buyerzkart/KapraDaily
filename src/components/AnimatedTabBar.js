@@ -1,56 +1,108 @@
 import React, { useEffect } from 'react';
 import { StyleSheet, TouchableOpacity } from 'react-native';
 import Animated, {
+  useSharedValue,
   useAnimatedStyle,
   interpolate,
   Extrapolation,
   clamp,
   withTiming,
+  withSpring,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { heightPercentageToDP as hp } from 'react-native-responsive-screen';
+import {
+  heightPercentageToDP as hp,
+  widthPercentageToDP as wp,
+} from 'react-native-responsive-screen';
 import {
   tabBarVisibility,
   TAB_BAR_ANIM_DURATION,
   TAB_BAR_EXTRA_HIDDEN_OFFSET,
   getTabBarHeight,
 } from '../animations/tabBarVisibility';
+const ICON_ACTIVE_SCALE = 1.12;
+const ICON_LIFT = -3;
+const FADE_DURATION = 200;
+const LOW_BOUNCE_SPRING = { damping: 50, stiffness: 260, mass: 0.5 };
 
-// Drop-in replacement for React Navigation's built-in bottom tab bar
-// (`tabBar={props => <AnimatedTabBar {...props} />}` on <Tab.Navigator>).
-// It renders from `state` / `descriptors` exactly like the default tab bar
-// does, so every `tabBarIcon`, `tabBarLabel`, and `listeners.tabPress`
-// already defined on each <Tab.Screen> in MainTabNavigator keeps working
-// completely unchanged — this component only adds the show/hide animation
-// on top of identical visuals and identical press behavior.
+function TabBarButton({ focused, options, accessibilityLabel, onPress }) {
+  const progress = useSharedValue(focused ? 1 : 0);
+  const fade = useSharedValue(focused ? 1 : 0);
+
+  useEffect(() => {
+    progress.value = withSpring(focused ? 1 : 0, LOW_BOUNCE_SPRING);
+    fade.value = withTiming(focused ? 1 : 0, { duration: FADE_DURATION });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focused]);
+
+  const iconStyle = useAnimatedStyle(() => ({
+    transform: [
+      {
+        scale: interpolate(
+          progress.value,
+          [0, 1],
+          [1, ICON_ACTIVE_SCALE],
+          Extrapolation.CLAMP,
+        ),
+      },
+      {
+        translateY: interpolate(
+          progress.value,
+          [0, 1],
+          [0, ICON_LIFT],
+          Extrapolation.CLAMP,
+        ),
+      },
+    ],
+  }));
+
+  const pillStyle = useAnimatedStyle(() => ({
+    opacity: fade.value,
+    transform: [
+      {
+        scale: interpolate(fade.value, [0, 1], [0.8, 1], Extrapolation.CLAMP),
+      },
+    ],
+  }));
+
+  const labelStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(fade.value, [0, 1], [0.65, 1]),
+  }));
+
+  const color = focused ? '#F25000' : '#8E8E8E';
+
+  return (
+    <TouchableOpacity
+      accessibilityRole="button"
+      accessibilityState={focused ? { selected: true } : {}}
+      accessibilityLabel={accessibilityLabel}
+      onPress={onPress}
+      activeOpacity={0.8}
+      style={styles.tabButton}
+    >
+      <Animated.View style={styles.iconWrapper}>
+        <Animated.View style={[styles.pill, pillStyle]} />
+        <Animated.View style={iconStyle}>
+          {options.tabBarIcon ? options.tabBarIcon({ focused, color }) : null}
+        </Animated.View>
+      </Animated.View>
+      <Animated.View style={labelStyle}>
+        {options.tabBarLabel ? options.tabBarLabel({ focused, color }) : null}
+      </Animated.View>
+    </TouchableOpacity>
+  );
+}
+
 export default function AnimatedTabBar({ state, descriptors, navigation }) {
   const insets = useSafeAreaInsets();
-
-  // Same height formula as the tab bar's previous `screenOptions.tabBarStyle`
-  // (shared with HomeScreen/CategoriesScreen via getTabBarHeight so their
-  // content padding always matches this bar's actual height).
   const tabBarHeight = getTabBarHeight(insets.bottom);
 
-  // Per spec: Hidden Position = tabHeight + bottomSafeArea + 20.
   const hiddenTranslateY =
     tabBarHeight + insets.bottom + TAB_BAR_EXTRA_HIDDEN_OFFSET;
-
-  // Edge case: whenever the focused tab changes (tab navigation / returning
-  // from another tab), force the bar visible. This is a discrete navigation
-  // event (state.index changing), not a scroll calculation, so a JS-thread
-  // effect here doesn't violate the "no JS thread for scroll" requirement —
-  // it just kicks off a UI-thread `withTiming` like everything else.
   useEffect(() => {
     tabBarVisibility.value = withTiming(1, { duration: TAB_BAR_ANIM_DURATION });
   }, [state.index]);
 
-  // ─── UI THREAD ───────────────────────────────────────────────────────────
-  // Reads the single global progress value that HomeScreen/CategoriesScreen
-  // write to from their scroll worklets and maps it onto translateY only.
-  // `clamp` guards against any transient out-of-range value so the bar can
-  // never overshoot past its hidden position. This style recomputes on the
-  // UI thread every frame `tabBarVisibility` changes — no JS thread, no
-  // React re-render, no bridge traffic.
   const animatedStyle = useAnimatedStyle(() => {
     const progress = clamp(tabBarVisibility.value, 0, 1);
     return {
@@ -78,7 +130,6 @@ export default function AnimatedTabBar({ state, descriptors, navigation }) {
       {state.routes.map((route, index) => {
         const { options } = descriptors[route.key];
         const focused = state.index === index;
-        const color = focused ? '#F25000' : '#8E8E8E';
 
         const onPress = () => {
           // Standard React Navigation custom-tab-bar boilerplate: emit the
@@ -97,22 +148,13 @@ export default function AnimatedTabBar({ state, descriptors, navigation }) {
         };
 
         return (
-          <TouchableOpacity
+          <TabBarButton
             key={route.key}
-            accessibilityRole="button"
-            accessibilityState={focused ? { selected: true } : {}}
+            focused={focused}
+            options={options}
             accessibilityLabel={options.tabBarAccessibilityLabel}
             onPress={onPress}
-            activeOpacity={0.8}
-            style={styles.tabButton}
-          >
-            {options.tabBarIcon
-              ? options.tabBarIcon({ focused, color })
-              : null}
-            {options.tabBarLabel
-              ? options.tabBarLabel({ focused, color })
-              : null}
-          </TouchableOpacity>
+          />
         );
       })}
     </Animated.View>

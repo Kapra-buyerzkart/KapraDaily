@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,12 @@ import {
   Animated,
   Pressable,
 } from 'react-native';
+import ReanimatedAnimated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  interpolateColor,
+} from 'react-native-reanimated';
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
@@ -23,6 +29,50 @@ const SORT_OPTIONS = [
   { label: 'Price: Low to High', value: 'price_asc' },
   { label: 'Price: High to Low', value: 'price_desc' },
 ];
+
+const SELECTION_DURATION = 150;
+const LABEL_INACTIVE = '#666';
+const LABEL_ACTIVE = '#F25000';
+const RADIO_INACTIVE = '#DADADA';
+const RADIO_ACTIVE = '#F25000';
+
+const AnimatedText = ReanimatedAnimated.createAnimatedComponent(Text);
+const AnimatedRadio = ReanimatedAnimated.createAnimatedComponent(View);
+
+const SortOptionRow = ({ label, isSelected, onPress }) => {
+  const progress = useSharedValue(isSelected ? 1 : 0);
+
+  useEffect(() => {
+    progress.value = withTiming(isSelected ? 1 : 0, {
+      duration: SELECTION_DURATION,
+    });
+  }, [isSelected, progress]);
+
+  const labelStyle = useAnimatedStyle(() => ({
+    color: interpolateColor(progress.value, [0, 1], [LABEL_INACTIVE, LABEL_ACTIVE]),
+  }));
+
+  const radioStyle = useAnimatedStyle(() => ({
+    borderColor: interpolateColor(
+      progress.value,
+      [0, 1],
+      [RADIO_INACTIVE, RADIO_ACTIVE],
+    ),
+  }));
+
+  return (
+    <TouchableOpacity style={styles.optionItem} onPress={onPress}>
+      <AnimatedText
+        style={[isSelected ? styles.selectedOptionLabel : styles.optionLabel, labelStyle]}
+      >
+        {label}
+      </AnimatedText>
+      <AnimatedRadio style={[styles.radio, radioStyle]}>
+        {isSelected && <View style={styles.radioInner} />}
+      </AnimatedRadio>
+    </TouchableOpacity>
+  );
+};
 
 const SortModal = ({ visible, onClose, onSelect, selectedValue }) => {
   return (
@@ -44,33 +94,17 @@ const SortModal = ({ visible, onClose, onSelect, selectedValue }) => {
             </TouchableOpacity>
           </View>
 
-          {SORT_OPTIONS.map(option => {
-            const isSelected = selectedValue === option.value;
-            return (
-              <TouchableOpacity
-                key={option.value}
-                style={styles.optionItem}
-                onPress={() => {
-                  onSelect(option.value);
-                  onClose();
-                }}
-              >
-                <Text
-                  style={[
-                    styles.optionLabel,
-                    isSelected && styles.selectedOptionLabel,
-                  ]}
-                >
-                  {option.label}
-                </Text>
-                <View
-                  style={[styles.radio, isSelected && styles.selectedRadio]}
-                >
-                  {isSelected && <View style={styles.radioInner} />}
-                </View>
-              </TouchableOpacity>
-            );
-          })}
+          {SORT_OPTIONS.map(option => (
+            <SortOptionRow
+              key={option.value}
+              label={option.label}
+              isSelected={selectedValue === option.value}
+              onPress={() => {
+                onSelect(option.value);
+                onClose();
+              }}
+            />
+          ))}
         </View>
       </Pressable>
     </Modal>
@@ -115,23 +149,17 @@ const styles = StyleSheet.create({
   optionLabel: {
     fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3.8%'),
-    color: '#666',
   },
   selectedOptionLabel: {
     fontFamily: FONTS.gilroy.medium,
-    color: '#F25000',
   },
   radio: {
     width: wp('5%'),
     height: wp('5%'),
     borderRadius: wp('2.5%'),
     borderWidth: 2,
-    borderColor: '#DADADA',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  selectedRadio: {
-    borderColor: '#F25000',
   },
   radioInner: {
     width: wp('2.5%'),
