@@ -1,7 +1,7 @@
 import React, { useContext, useEffect } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import LocationFetchingScreen from '../screens/LocationFetchingScreen';
-import LocationFetchingNewScreen from '../screens/LocationFetchingNewScreen';
+import LocationScreen from '../screens/location/LocationScreen';
 import MainTabNavigator from './MainTabNavigator';
 import CartScreen from '../screens/CartScreen';
 import ProfileScreen from '../screens/ProfileScreen/ProfileScreen';
@@ -68,7 +68,7 @@ export default function RootNavigator() {
         {/* <Stack.Screen name="LocationFetching" component={LocationFetchingScreen} /> */}
         <Stack.Screen
           name="LocationFetchingNew"
-          component={LocationFetchingNewScreen}
+          component={LocationScreen}
         />
         <Stack.Screen name="LoginScreen" component={LoginScreen} />
         <Stack.Screen name="LoginPwdScreen" component={LoginPwdScreen} />
