@@ -34,6 +34,10 @@ export const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
+  const cartItemsRef = useRef([]);
+  useEffect(() => {
+    cartItemsRef.current = cartItems;
+  }, [cartItems]);
   const [isLoading, setIsLoading] = useState(false);
   const [cartSummary, setCartSummary] = useState(null);
   const [isStoreUnavailable, setIsStoreUnavailable] = useState(false);
@@ -915,10 +919,17 @@ export const CartProvider = ({ children }) => {
             cartItemIdStr
           ) {
             oldQuantity = item.quantity || 1;
-            return { ...item, quantity };
+            // Keep addedQty in sync with quantity — CartProductCard's own
+            // re-sync effect reads addedQty first, and previously relied on
+            // refreshCart's loadCart() to refresh addedQty from the server
+            // after every update. Since the success path below now skips
+            // that refetch, addedQty must be updated here too or it goes
+            // stale and the displayed quantity snaps back.
+            return { ...item, quantity, addedQty: quantity };
           }
           return item;
         });
+        cartItemsRef.current = updated;
         return updated;
       });
 
@@ -945,11 +956,52 @@ export const CartProvider = ({ children }) => {
           );
 
           if (response && response.success) {
-            // Update version immediately if returned
-            if (response.data?.cart?.cartVersion) {
-              updateCartVersion(response.data.cart.cartVersion);
+            const freshVersion = response.data?.cart?.cartVersion;
+
+            if (freshVersion) {
+              // Perf: the update response gave us a fresh cartVersion, so we
+              // can skip the redundant loadCart() list re-fetch — the
+              // optimistic update already reflects correct local state.
+              // Only re-sync the summary (pricing/coupon/threshold math),
+              // mirroring refreshCart's own sold-out-item guard.
+              updateCartVersion(freshVersion);
+
+              const selectedAddress = addressesRef.current.find(
+                a => a.selected,
+              );
+              const pincodeAreaId =
+                pincodeAreaIdOverride !== undefined
+                  ? pincodeAreaIdOverride
+                  : selectedAddress?.pincodeAreaId;
+
+              const hasInvalidItems = cartItemsRef.current.some(
+                cartItem =>
+                  cartItem.unavailable === 1 ||
+                  cartItem.insufficientStock === 1 ||
+                  cartItem.notAvailableInStore === 1 ||
+                  cartItem.qtyAvailable === 0,
+              );
+
+              if (hasInvalidItems) {
+                logger.log(
+                  '🔄 [UPDATE QTY] Skipping summary refresh: has sold-out items.',
+                );
+                setCartSummary(null);
+              } else {
+                await getCartSummary(
+                  'express',
+                  null,
+                  freshVersion,
+                  pincodeAreaId,
+                );
+              }
+            } else {
+              // The update response didn't echo a fresh cartVersion, so we
+              // have no reliable ifMatchCartVersion for a summary-only call —
+              // fall back to the full refresh (loadCart always returns a
+              // fresh version) to avoid a spurious version-mismatch failure.
+              await refreshCart(pincodeAreaIdOverride);
             }
-            await refreshCart(pincodeAreaIdOverride);
           } else if (response && response.message) {
             throw response.message;
           }
@@ -972,12 +1024,12 @@ export const CartProvider = ({ children }) => {
             Toast.show('Requested qty is not available', Toast.LONG);
           }
 
-          // Rollback on error
+          // Rollback on error (also revert addedQty — see note above)
           setCartItems(prevItems =>
             prevItems.map(item =>
               String(item.cartItemId || item.productId || item.id) ===
               cartItemIdStr
-                ? { ...item, quantity: oldQuantity }
+                ? { ...item, quantity: oldQuantity, addedQty: oldQuantity }
                 : item,
             ),
           );
@@ -988,7 +1040,7 @@ export const CartProvider = ({ children }) => {
         }
       }, 500); // 500ms debounce
     },
-    [removeFromCart, refreshCart, updateCartVersion],
+    [removeFromCart, refreshCart, updateCartVersion, getCartSummary],
   );
 
   // ─── clearCart ───

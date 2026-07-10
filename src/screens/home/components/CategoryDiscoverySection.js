@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,12 +7,19 @@ import {
   ScrollView,
   FlatList,
   TouchableOpacity,
+  StyleSheet,
 } from 'react-native';
+import Animated, {
+  FadeInUp,
+  interpolateColor,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
-import { FadeInUp } from 'react-native-reanimated';
 import { FONTS } from '../../../styles/typography';
 import CONFIG from '../../../globals/config';
 import TokenProductCard from '../../../components/TokenProductCard';
@@ -89,6 +96,59 @@ const ExploreShimmer = () => (
   </View>
 );
 
+const DiscoveryChip = React.memo(function DiscoveryChip({
+  item,
+  isActive,
+  onPress,
+}) {
+  const activeProgress = useSharedValue(isActive ? 1 : 0);
+
+  useEffect(() => {
+    activeProgress.value = withTiming(isActive ? 1 : 0, { duration: 180 });
+  }, [isActive, activeProgress]);
+
+  const containerAnimatedStyle = useAnimatedStyle(() => ({
+    backgroundColor: interpolateColor(
+      activeProgress.value,
+      [0, 1],
+      ['#FFFFFF', '#FFE9E0'],
+    ),
+    borderColor: interpolateColor(
+      activeProgress.value,
+      [0, 1],
+      ['#F3F4F6', '#F25000'],
+    ),
+  }));
+
+  const underlineAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: activeProgress.value,
+    transform: [{ scaleX: activeProgress.value }],
+  }));
+
+  return (
+    <TouchableOpacity style={categoryChipStyles.item} onPress={onPress}>
+      <Animated.View
+        style={[categoryChipStyles.categoryItemContainer, containerAnimatedStyle]}
+      >
+        <Image
+          source={{ uri: `${CONFIG.image_base_url}${item.imageUrl}` }}
+          style={categoryChipStyles.image}
+          resizeMode="contain"
+        />
+      </Animated.View>
+
+      <Text
+        style={[categoryChipStyles.label, isActive && styles.activeLabel]}
+        numberOfLines={2}
+      >
+        {item.catName || item.name}
+      </Text>
+
+      <Animated.View style={[styles.chipUnderline, underlineAnimatedStyle]} />
+    </TouchableOpacity>
+  );
+});
+
 const CategoryDiscoverySection = ({
   isHomeLoading,
   categoryDiscovery,
@@ -145,52 +205,12 @@ const CategoryDiscoverySection = ({
                 }}
               >
                 {discoveryCategories.map((item, index) => (
-                  <TouchableOpacity
+                  <DiscoveryChip
                     key={(item.catId || item.id || index).toString()}
-                    style={categoryChipStyles.item}
+                    item={item}
+                    isActive={selectedDiscoveryCategory?.catId === item.catId}
                     onPress={() => onSelectCategory(item)}
-                  >
-                    <View
-                      style={[
-                        categoryChipStyles.categoryItemContainer,
-                        selectedDiscoveryCategory?.catId === item.catId &&
-                          categoryChipStyles.categoryItemContainerActive,
-                      ]}
-                    >
-                      <Image
-                        source={{
-                          uri: `${CONFIG.image_base_url}${item.imageUrl}`,
-                        }}
-                        style={categoryChipStyles.image}
-                        resizeMode="contain"
-                      />
-                    </View>
-
-                    <Text
-                      style={[
-                        categoryChipStyles.label,
-                        selectedDiscoveryCategory?.catId === item.catId && {
-                          color: '#F25000',
-                          fontFamily: FONTS.gilroy.semiBold,
-                        },
-                      ]}
-                      numberOfLines={2}
-                    >
-                      {item.catName || item.name}
-                    </Text>
-
-                    {selectedDiscoveryCategory?.catId === item.catId && (
-                      <View
-                        style={{
-                          height: 2,
-                          backgroundColor: '#F25000',
-                          width: '80%',
-                          marginTop: 4,
-                          borderRadius: 2,
-                        }}
-                      />
-                    )}
-                  </TouchableOpacity>
+                  />
                 ))}
               </ScrollView>
             </>
@@ -244,5 +264,19 @@ const CategoryDiscoverySection = ({
     </>
   );
 };
+
+const styles = StyleSheet.create({
+  activeLabel: {
+    color: '#F25000',
+    fontFamily: FONTS.gilroy.semiBold,
+  },
+  chipUnderline: {
+    height: 2,
+    backgroundColor: '#F25000',
+    width: '80%',
+    marginTop: 4,
+    borderRadius: 2,
+  },
+});
 
 export default CategoryDiscoverySection;

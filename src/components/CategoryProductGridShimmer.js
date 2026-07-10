@@ -62,8 +62,8 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
   },
   shimmerCardContainer: {
-    width: wp('36.5%'),
-    marginHorizontal: wp('0.4%'),
+    width: wp('33%'),
+    marginHorizontal: wp('1%'),
     marginVertical: hp('0.8%'),
     backgroundColor: '#FFFFFF',
     borderRadius: 8,

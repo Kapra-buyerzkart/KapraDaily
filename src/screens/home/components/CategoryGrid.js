@@ -41,6 +41,7 @@ const CategoryGrid = ({ categories }) => (
         <CategoryItem
           key={(item.catId || item.id || index).toString()}
           item={item}
+          index={index}
         />
       ))}
     </View>

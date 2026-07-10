@@ -1,5 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSequence,
+  withTiming,
+  withSpring,
+} from 'react-native-reanimated';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Entypo from 'react-native-vector-icons/Entypo';
 import {
@@ -14,6 +21,25 @@ import { useCart } from '../context/CartContext';
 const WishlistProductCard = ({ item, onRemove, onAddToCart, onPress }) => {
   const [imageError, setImageError] = useState(false);
   const { cartItems, updateCartItemQuantity, removeFromCart } = useCart();
+  const heartScale = useSharedValue(1);
+  const imageOpacity = useSharedValue(0);
+
+  const heartAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: heartScale.value }],
+  }));
+
+  const imageAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: imageOpacity.value,
+  }));
+
+  const handleRemove = useCallback(() => {
+    heartScale.value = withSequence(
+      withTiming(1.3, { duration: 120 }),
+      withSpring(1, { damping: 6, stiffness: 200 }),
+    );
+    // Small delay so user sees the pop before removal
+    setTimeout(() => onRemove(item.productId, item.productName), 200);
+  }, [heartScale, onRemove, item.productId, item.productName]);
 
   const itemId = item.productId;
   const cartItem = cartItems.find(
@@ -26,6 +52,11 @@ const WishlistProductCard = ({ item, onRemove, onAddToCart, onPress }) => {
     imageError || !item.productImage
       ? require('../assets/images/udenDealNotfound.png')
       : { uri: `${CONFIG.image_base_url}${item.productImage}` };
+
+  useEffect(() => {
+    setImageError(false);
+    imageOpacity.value = 0;
+  }, [item.productImage, imageOpacity]);
 
   const discountPercentage =
     item.unitPrice && item.specialPrice
@@ -41,18 +72,24 @@ const WishlistProductCard = ({ item, onRemove, onAddToCart, onPress }) => {
   return (
     <TouchableOpacity style={styles.productCard} onPress={onPress}>
       <View style={styles.productCardViewOne}>
-        <TouchableOpacity
-          onPress={() => onRemove(item.productId, item.productName)}
-        >
-          <Image
-            style={styles.productHeart}
-            source={require('../assets/images/heart_red.png')}
-          />
+        <TouchableOpacity onPress={handleRemove}>
+          <Animated.View style={heartAnimatedStyle}>
+            <Image
+              style={styles.productHeart}
+              source={require('../assets/images/heart_red.png')}
+            />
+          </Animated.View>
         </TouchableOpacity>
-        <Image
-          style={styles.productImage}
+        <Animated.Image
+          style={[styles.productImage, imageAnimatedStyle]}
           source={imageSource}
-          onError={() => setImageError(true)}
+          onLoadEnd={() => {
+            imageOpacity.value = withTiming(1, { duration: 220 });
+          }}
+          onError={() => {
+            setImageError(true);
+            imageOpacity.value = withTiming(1, { duration: 220 });
+          }}
         />
       </View>
       <View style={styles.productCardViewTwo}>

@@ -2,11 +2,17 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   Image,
   ActivityIndicator,
 } from 'react-native';
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withSequence,
+  withSpring,
+} from 'react-native-reanimated';
 import Entypo from 'react-native-vector-icons/Entypo';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import {
@@ -18,8 +24,11 @@ import { useCart } from '../context/CartContext';
 import CONFIG from '../globals/config';
 import { useWishlist } from '../context/WishlistContext';
 import ConfirmationModal from './ConfirmationModal';
+import AnimatedPressable from './AnimatedPressable';
 import { CART_COLORS, CART_RADIUS, CART_SPACING } from '../styles/cartTheme';
 import COLORS from '@/styles/colors';
+
+const BUMP_SPRING = { damping: 8, stiffness: 260, mass: 0.4 };
 
 const CartProductCard = props => {
   const { updateCartItemQuantity, removeFromCart, updatingItems } = useCart();
@@ -52,10 +61,30 @@ const CartProductCard = props => {
   const [imageError, setImageError] = useState(false);
   const [quantity, setQuantity] = useState(item.addedQty || item.quantity || 1);
   const [isRemovalModalVisible, setIsRemovalModalVisible] = useState(false);
+  const imageOpacity = useSharedValue(0);
+  const qtyScale = useSharedValue(1);
 
   useEffect(() => {
     setQuantity(item.addedQty || item.quantity || 1);
+    qtyScale.value = withSequence(
+      withTiming(1.18, { duration: 100 }),
+      withSpring(1, BUMP_SPRING),
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [item.quantity, item.addedQty]);
+
+  useEffect(() => {
+    setImageError(false);
+    imageOpacity.value = 0;
+  }, [featuredImage, imageOpacity]);
+
+  const imageAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: imageOpacity.value,
+  }));
+
+  const qtyAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: qtyScale.value }],
+  }));
 
   // Get image source
   const imageSource = useMemo(() => {
@@ -69,23 +98,23 @@ const CartProductCard = props => {
   }, [featuredImage, imageError]);
 
   // Handle quantity change
-  const handleDecrease = () => {
+  const handleDecrease = useCallback(() => {
     if (quantity > 1 && !isSoldOut) {
       setQuantity(quantity - 1);
       updateCartItemQuantity(cartItemId, quantity - 1, pincodeAreaIdOverride);
     } else {
       setIsRemovalModalVisible(true);
     }
-  };
+  }, [quantity, isSoldOut, cartItemId, pincodeAreaIdOverride, updateCartItemQuantity]);
 
-  const handleIncrease = () => {
+  const handleIncrease = useCallback(() => {
     setQuantity(quantity + 1);
     updateCartItemQuantity(cartItemId, quantity + 1, pincodeAreaIdOverride);
-  };
+  }, [quantity, cartItemId, pincodeAreaIdOverride, updateCartItemQuantity]);
 
-  const handleDelete = () => {
+  const handleDelete = useCallback(() => {
     setIsRemovalModalVisible(true);
-  };
+  }, []);
 
   return (
     <View
@@ -100,13 +129,19 @@ const CartProductCard = props => {
           isSoldOut && styles.productImageViewSoldOut,
         ]}
       >
-        <Image
-          style={styles.productImageStyle}
+        <Animated.Image
+          style={[styles.productImageStyle, imageAnimatedStyle]}
           source={imageSource}
-          onError={() => setImageError(true)}
+          onLoadEnd={() => {
+            imageOpacity.value = withTiming(1, { duration: 220 });
+          }}
+          onError={() => {
+            setImageError(true);
+            imageOpacity.value = withTiming(1, { duration: 220 });
+          }}
         />
 
-        <TouchableOpacity
+        <AnimatedPressable
           style={styles.removeBtn}
           onPress={handleDelete}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -116,7 +151,7 @@ const CartProductCard = props => {
             size={wp('3%')}
             color={CART_COLORS.textMuted}
           />
-        </TouchableOpacity>
+        </AnimatedPressable>
       </View>
 
       <View style={styles.productInfo}>
@@ -177,7 +212,7 @@ const CartProductCard = props => {
                 </View>
               ) : (
                 <>
-                  <TouchableOpacity
+                  <AnimatedPressable
                     style={styles.stepperBtn}
                     onPress={handleDecrease}
                   >
@@ -186,9 +221,11 @@ const CartProductCard = props => {
                       size={wp('3.6%')}
                       color={CART_COLORS.primary}
                     />
-                  </TouchableOpacity>
-                  <Text style={styles.countText}>{quantity}</Text>
-                  <TouchableOpacity
+                  </AnimatedPressable>
+                  <Animated.Text style={[styles.countText, qtyAnimatedStyle]}>
+                    {quantity}
+                  </Animated.Text>
+                  <AnimatedPressable
                     style={styles.stepperBtn}
                     onPress={handleIncrease}
                     disabled={isSoldOut}
@@ -198,7 +235,7 @@ const CartProductCard = props => {
                       size={wp('3.6%')}
                       color={CART_COLORS.primary}
                     />
-                  </TouchableOpacity>
+                  </AnimatedPressable>
                 </>
               )}
             </View>

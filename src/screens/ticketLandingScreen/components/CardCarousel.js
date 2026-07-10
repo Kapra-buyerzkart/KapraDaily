@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   View,
   Image,
@@ -6,144 +6,274 @@ import {
   Animated,
   TouchableOpacity,
   Platform,
+  Dimensions,
+  Vibration,
 } from 'react-native';
+import Reanimated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
+  interpolate,
+  Extrapolation,
+  runOnJS,
+  FadeInDown,
+} from 'react-native-reanimated';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import LinearGradient from 'react-native-linear-gradient';
 import { hp } from '../../../utils/responsive';
 import styles from '../styles';
-import { SNAP_INTERVAL } from '../constants';
 import CONFIG from '../../../globals/config';
 
 const PLACEHOLDER_IMAGE = require('../../../assets/images/movieTicket/voucher.png');
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-const AnimatedCard = ({ item, index, scrollX }) => {
-  const inputRange = [
-    (index - 1) * SNAP_INTERVAL,
-    index * SNAP_INTERVAL,
-    (index + 1) * SNAP_INTERVAL,
-  ];
+const STACK_VISIBLE = 3;
+const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.28;
+const STACK_SCALE_STEP = 0.06;
+const STACK_Y_STEP = 16;
 
-  const scale = scrollX.interpolate({
-    inputRange,
-    outputRange: [0.85, 1, 0.85],
-    extrapolate: 'clamp',
-  });
-  const opacity = scrollX.interpolate({
-    inputRange,
-    outputRange: [0.5, 1, 0.5],
-    extrapolate: 'clamp',
-  });
-  const glowOpacity = scrollX.interpolate({
-    inputRange,
-    outputRange: [0, 1, 0],
-    extrapolate: 'clamp',
+const getCardImageSource = item => {
+  if (item?.imageUrl) return { uri: CONFIG.image_base_url + item.imageUrl };
+  if (item?.cardImage) return item.cardImage;
+  if (item?.image) return item.image;
+  return PLACEHOLDER_IMAGE;
+};
+
+const StackCard = ({ item, stackIndex, dragX, dragY, isTop }) => {
+  const imageSource = getCardImageSource(item);
+  const zIndex = isTop ? 10 : STACK_VISIBLE - stackIndex;
+
+  // Transform lives on its own inner view (never on the view that also carries
+  // `entering`) — Reanimated warns that a layout-mount animation and a
+  // per-frame transform style fight over the same `transform` prop otherwise.
+  const transformStyle = useAnimatedStyle(() => {
+    if (isTop) {
+      const rotate = interpolate(
+        dragX.value,
+        [-SCREEN_WIDTH / 2, 0, SCREEN_WIDTH / 2],
+        [-12, 0, 12],
+        Extrapolation.CLAMP,
+      );
+      return {
+        transform: [
+          { translateX: dragX.value },
+          { translateY: dragY.value * 0.4 },
+          { rotate: `${rotate}deg` },
+        ],
+      };
+    }
+
+    const dragProgress = interpolate(
+      Math.abs(dragX.value) + Math.abs(dragY.value) * 0.5,
+      [0, SWIPE_THRESHOLD * 1.1],
+      [0, 1],
+      Extrapolation.CLAMP,
+    );
+
+    const scale = interpolate(
+      dragProgress,
+      [0, 1],
+      [1 - stackIndex * STACK_SCALE_STEP, 1 - (stackIndex - 1) * STACK_SCALE_STEP],
+      Extrapolation.CLAMP,
+    );
+    const translateY = interpolate(
+      dragProgress,
+      [0, 1],
+      [stackIndex * STACK_Y_STEP, (stackIndex - 1) * STACK_Y_STEP],
+      Extrapolation.CLAMP,
+    );
+
+    return {
+      transform: [{ translateY }, { scale }],
+    };
   });
 
-  const imageSource = item?.imageUrl
-    ? { uri: CONFIG.image_base_url + item.imageUrl }
-    : PLACEHOLDER_IMAGE;
+  const glowStyle = useAnimatedStyle(() => {
+    if (!isTop) return { opacity: 0 };
+    const progress = interpolate(
+      Math.abs(dragX.value),
+      [0, SWIPE_THRESHOLD],
+      [0, 0.7],
+      Extrapolation.CLAMP,
+    );
+    return { opacity: progress };
+  });
+
   return (
-    <Animated.View
-      style={[styles.cardContainer, { transform: [{ scale }], opacity }]}
+    <Reanimated.View
+      entering={FadeInDown.delay(stackIndex * 90).springify().damping(16)}
+      style={[styles.stackCardSlot, { zIndex }]}
     >
-      <Animated.View style={[styles.cardGlow, { opacity: glowOpacity }]} />
-      <Image
-        source={imageSource}
-        style={styles.cardImage}
-        resizeMode="cover"
-        defaultSource={PLACEHOLDER_IMAGE}
-      />
-      <Text style={styles.cardTitle}>{item.title}</Text>
-    </Animated.View>
+      <Reanimated.View style={[styles.stackCardVisual, transformStyle]}>
+        {isTop && (
+          <Reanimated.View
+            pointerEvents="none"
+            style={[styles.stackCardGlow, glowStyle]}
+          />
+        )}
+        <Image
+          source={imageSource}
+          style={styles.cardImage}
+          resizeMode="cover"
+          defaultSource={PLACEHOLDER_IMAGE}
+        />
+        {!!item?.discountTitle && (
+          <View style={styles.stackDiscountBadge}>
+            <Text style={styles.stackDiscountBadgeText}>
+              {item.discountTitle}
+            </Text>
+          </View>
+        )}
+        <Text style={styles.cardTitle}>{item?.title}</Text>
+      </Reanimated.View>
+    </Reanimated.View>
+  );
+};
+
+const ArrowButton = ({ iconName, onPress }) => {
+  const scale = useSharedValue(1);
+  const pressStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const handlePress = () => {
+    scale.value = withTiming(0.85, { duration: 70 }, () => {
+      scale.value = withTiming(1, { duration: 90 });
+    });
+    onPress();
+  };
+
+  return (
+    <TouchableOpacity
+      style={styles.arrowButton}
+      onPress={handlePress}
+      activeOpacity={0.6}
+    >
+      <Reanimated.View style={pressStyle}>
+        <MaterialIcons name={iconName} size={28} color="#FFFFFF" />
+      </Reanimated.View>
+    </TouchableOpacity>
   );
 };
 
 const CardCarousel = ({ fadeAnim, onClaim, vouchers }) => {
-  const cards = vouchers ?? [];
+  const cards = useMemo(() => vouchers ?? [], [vouchers]);
 
-  console.log(cards, '====cards===>');
+  const cardCount = cards.length;
+  const [activeIndex, setActiveIndex] = useState(0);
 
-  const flatListRef = useRef(null);
-  const scrollX = useRef(new Animated.Value(0)).current;
-  const [activeCardIndex, setActiveCardIndex] = useState(0);
-  const scrollToIndex = useCallback(
-    index => {
-      if (index >= 0 && index < cards.length) {
-        flatListRef.current?.scrollToIndex({ index, animated: true });
-        setActiveCardIndex(index);
-      }
-    },
-    [cards.length],
+  const dragX = useSharedValue(0);
+  const dragY = useSharedValue(0);
+  const claimScale = useSharedValue(1);
+  const hapticFired = useSharedValue(false);
+
+  const triggerHaptic = useCallback(() => {
+    Vibration.vibrate(10);
+  }, []);
+
+  const advance = useCallback(() => {
+    setActiveIndex(i => (cardCount ? (i + 1) % cardCount : 0));
+    dragX.value = 0;
+    dragY.value = 0;
+  }, [cardCount, dragX, dragY]);
+
+  const handleNext = useCallback(() => {
+    if (cardCount < 2) return;
+    dragX.value = withTiming(-SCREEN_WIDTH * 1.4, { duration: 220 }, finished => {
+      if (finished) runOnJS(advance)();
+    });
+    dragY.value = withTiming(-30, { duration: 220 });
+  }, [advance, cardCount, dragX, dragY]);
+
+  const handlePrev = useCallback(() => {
+    if (cardCount < 2) return;
+    setActiveIndex(i => (i - 1 + cardCount) % cardCount);
+    dragX.value = -SCREEN_WIDTH;
+    dragY.value = 0;
+    dragX.value = withSpring(0, { damping: 16, stiffness: 160 });
+  }, [cardCount, dragX, dragY]);
+
+  const panGesture = useMemo(
+    () =>
+      Gesture.Pan()
+        .onBegin(() => {
+          hapticFired.value = false;
+        })
+        .onUpdate(event => {
+          dragX.value = event.translationX;
+          dragY.value = event.translationY;
+          const passedThreshold = Math.abs(event.translationX) > SWIPE_THRESHOLD;
+          if (passedThreshold && !hapticFired.value) {
+            hapticFired.value = true;
+            runOnJS(triggerHaptic)();
+          }
+        })
+        .onEnd(event => {
+          const shouldDismiss =
+            Math.abs(event.translationX) > SWIPE_THRESHOLD ||
+            Math.abs(event.velocityX) > 800;
+
+          if (shouldDismiss) {
+            const direction = event.translationX < 0 ? -1 : 1;
+            dragX.value = withTiming(
+              direction * SCREEN_WIDTH * 1.4,
+              { duration: 220 },
+              finished => {
+                if (finished) runOnJS(advance)();
+              },
+            );
+            dragY.value = withTiming(event.translationY * 0.5, { duration: 220 });
+          } else {
+            dragX.value = withSpring(0, { damping: 16, stiffness: 180 });
+            dragY.value = withSpring(0, { damping: 16, stiffness: 180 });
+          }
+        }),
+    [advance, dragX, dragY, hapticFired, triggerHaptic],
   );
 
-  const handlePrev = useCallback(
-    () => scrollToIndex(activeCardIndex - 1),
-    [activeCardIndex, scrollToIndex],
-  );
-  const handleNext = useCallback(
-    () => scrollToIndex(activeCardIndex + 1),
-    [activeCardIndex, scrollToIndex],
-  );
+  const handleClaimPressIn = () => {
+    claimScale.value = withTiming(0.92, { duration: 90 });
+  };
+  const handleClaimPressOut = () => {
+    claimScale.value = withSpring(1, { damping: 12, stiffness: 220 });
+  };
+  const claimButtonStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: claimScale.value }],
+  }));
 
-  const handleScrollEnd = useCallback(
-    event => {
-      const index = Math.round(
-        event.nativeEvent.contentOffset.x / SNAP_INTERVAL,
-      );
-      if (index >= 0 && index < cards.length) {
-        setActiveCardIndex(index);
-      }
-    },
-    [cards.length],
-  );
+  if (cardCount === 0) return null;
 
-  const getItemLayout = useCallback(
-    (_, index) => ({
-      length: SNAP_INTERVAL,
-      offset: SNAP_INTERVAL * index,
-      index,
-    }),
-    [],
-  );
-
-  const renderCard = useCallback(
-    ({ item, index }) => (
-      <AnimatedCard item={item} index={index} scrollX={scrollX} />
-    ),
-    [scrollX],
-  );
-
-  if (cards.length === 0) return null;
+  const stackSlots = [];
+  for (let stackIndex = Math.min(STACK_VISIBLE, cardCount) - 1; stackIndex >= 0; stackIndex -= 1) {
+    const item = cards[(activeIndex + stackIndex) % cardCount];
+    const isTop = stackIndex === 0;
+    const card = (
+      <StackCard
+        key={stackIndex}
+        item={item}
+        stackIndex={stackIndex}
+        dragX={dragX}
+        dragY={dragY}
+        isTop={isTop}
+      />
+    );
+    stackSlots.push(
+      isTop ? (
+        <GestureDetector gesture={panGesture} key="top-gesture">
+          {card}
+        </GestureDetector>
+      ) : (
+        card
+      ),
+    );
+  }
 
   return (
     <>
       <Animated.View style={[styles.carouselWrapper, { opacity: fadeAnim }]}>
-        <Animated.FlatList
-          ref={flatListRef}
-          data={cards}
-          keyExtractor={(_, index) => String(index)}
-          renderItem={renderCard}
-          horizontal
-          pagingEnabled={false}
-          snapToInterval={SNAP_INTERVAL}
-          snapToAlignment="center"
-          decelerationRate="fast"
-          scrollEnabled={true}
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.carouselList}
-          onMomentumScrollEnd={handleScrollEnd}
-          onScrollEndDrag={handleScrollEnd}
-          getItemLayout={getItemLayout}
-          initialScrollIndex={0}
-          windowSize={5}
-          maxToRenderPerBatch={5}
-          removeClippedSubviews
-          onScroll={Animated.event(
-            [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-            { useNativeDriver: true },
-          )}
-          scrollEventThrottle={16}
-        />
+        <View style={styles.stackContainer}>{stackSlots}</View>
       </Animated.View>
 
       <View
@@ -153,29 +283,9 @@ const CardCarousel = ({ fadeAnim, onClaim, vouchers }) => {
         ]}
       >
         <View style={styles.arrowPill}>
-          <TouchableOpacity
-            style={styles.arrowButton}
-            onPress={handlePrev}
-            activeOpacity={0.6}
-          >
-            <MaterialIcons
-              name="keyboard-arrow-left"
-              size={28}
-              color="#FFFFFF"
-            />
-          </TouchableOpacity>
+          <ArrowButton iconName="keyboard-arrow-left" onPress={handlePrev} />
           <View style={styles.arrowDivider} />
-          <TouchableOpacity
-            style={styles.arrowButton}
-            onPress={handleNext}
-            activeOpacity={0.6}
-          >
-            <MaterialIcons
-              name="keyboard-arrow-right"
-              size={28}
-              color="#FFFFFF"
-            />
-          </TouchableOpacity>
+          <ArrowButton iconName="keyboard-arrow-right" onPress={handleNext} />
         </View>
       </View>
 
@@ -188,16 +298,20 @@ const CardCarousel = ({ fadeAnim, onClaim, vouchers }) => {
       <View style={styles.claimWrapper}>
         <TouchableOpacity
           activeOpacity={0.8}
-          onPress={() => onClaim(cards[activeCardIndex])}
+          onPressIn={handleClaimPressIn}
+          onPressOut={handleClaimPressOut}
+          onPress={() => onClaim(cards[activeIndex])}
         >
-          <LinearGradient
-            colors={['#F5D680', '#D4A843', '#C49A38']}
-            start={{ x: 0.5, y: 0 }}
-            end={{ x: 0.5, y: 1 }}
-            style={styles.claimButton}
-          >
-            <Text style={styles.claimText}>Claim</Text>
-          </LinearGradient>
+          <Reanimated.View style={claimButtonStyle}>
+            <LinearGradient
+              colors={['#F5D680', '#D4A843', '#C49A38']}
+              start={{ x: 0.5, y: 0 }}
+              end={{ x: 0.5, y: 1 }}
+              style={styles.claimButton}
+            >
+              <Text style={styles.claimText}>Claim</Text>
+            </LinearGradient>
+          </Reanimated.View>
         </TouchableOpacity>
       </View>
     </>

@@ -93,6 +93,11 @@ const UdenTicketModal = ({
   const descArrowAnim = useRef(new Animated.Value(0)).current;
   const termsArrowAnim = useRef(new Animated.Value(0)).current;
   const reasonAnim = useRef(new Animated.Value(0)).current;
+  const qtyPopAnim = useRef(new Animated.Value(1)).current;
+  const priceAnim = useRef(new Animated.Value(0)).current;
+  const giftCardAnim = useRef(new Animated.Value(0)).current;
+  const coinPulseAnim = useRef(new Animated.Value(1)).current;
+  const closeRotateAnim = useRef(new Animated.Value(0)).current;
   const [quantity, setQuantity] = useState(1);
   const [modalVisible, setModalVisible] = useState(false);
   const [openAccordion, setOpenAccordion] = useState(null);
@@ -230,6 +235,73 @@ const UdenTicketModal = ({
     }).start();
   }, [disabledReason]);
 
+  useEffect(() => {
+    qtyPopAnim.setValue(0.7);
+    Animated.spring(qtyPopAnim, {
+      toValue: 1,
+      friction: 4,
+      tension: 220,
+      useNativeDriver: true,
+    }).start();
+  }, [quantity]);
+
+  useEffect(() => {
+    priceAnim.setValue(0);
+    Animated.timing(priceAnim, {
+      toValue: 1,
+      duration: 260,
+      useNativeDriver: true,
+    }).start();
+  }, [quoteData, quoteLoading]);
+
+  useEffect(() => {
+    if (visible) {
+      giftCardAnim.setValue(0);
+      Animated.timing(giftCardAnim, {
+        toValue: 1,
+        duration: 420,
+        delay: 120,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [visible]);
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(coinPulseAnim, {
+          toValue: 1.15,
+          duration: 900,
+          useNativeDriver: true,
+        }),
+        Animated.timing(coinPulseAnim, {
+          toValue: 1,
+          duration: 900,
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, []);
+
+  const handleClosePressIn = () => {
+    Animated.spring(closeRotateAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+      speed: 30,
+    }).start();
+  };
+
+  const handleClosePressOut = () => {
+    Animated.spring(closeRotateAnim, {
+      toValue: 0,
+      useNativeDriver: true,
+      speed: 20,
+      bounciness: 8,
+    }).start();
+  };
+
   return (
     <>
       <Modal
@@ -262,19 +334,33 @@ const UdenTicketModal = ({
               />
 
               {/* Gift card image */}
-              <ImageBackground
-                imageStyle={{ borderRadius: 20 }}
-                source={giftCardUri}
-                style={styles.giftCard}
-                resizeMode="contain"
+              <Animated.View
+                style={{
+                  opacity: giftCardAnim,
+                  transform: [
+                    {
+                      scale: giftCardAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0.94, 1],
+                      }),
+                    },
+                  ],
+                }}
               >
-                <View style={styles.giftCardTextContainer}>
-                  <Text style={{ color: COLORS.white }}>Expires on</Text>
-                  <Text style={styles.giftCardText}>
-                    {voucher?.expireDate?.replace(/-/g, ' ')}
-                  </Text>
-                </View>
-              </ImageBackground>
+                <ImageBackground
+                  imageStyle={{ borderRadius: 20 }}
+                  source={giftCardUri}
+                  style={styles.giftCard}
+                  resizeMode="contain"
+                >
+                  <View style={styles.giftCardTextContainer}>
+                    <Text style={{ color: COLORS.white }}>Expires on</Text>
+                    <Text style={styles.giftCardText}>
+                      {voucher?.expireDate?.replace(/-/g, ' ')}
+                    </Text>
+                  </View>
+                </ImageBackground>
+              </Animated.View>
 
               {/* Quantity selector */}
               <View style={styles.qtyRow}>
@@ -295,7 +381,14 @@ const UdenTicketModal = ({
                     −
                   </Text>
                 </AnimatedButton>
-                <Text style={styles.qtyValue}>{quantity}</Text>
+                <Animated.Text
+                  style={[
+                    styles.qtyValue,
+                    { transform: [{ scale: qtyPopAnim }] },
+                  ]}
+                >
+                  {quantity}
+                </Animated.Text>
                 <AnimatedButton
                   style={[
                     styles.qtyBtn,
@@ -323,9 +416,13 @@ const UdenTicketModal = ({
               >
                 <Text style={styles.coinBannerText}>Use your</Text>
 
-                <Image
+                <Animated.Image
                   source={require('../../../assets/icons/udcoin.png')}
-                  style={{ width: wp('6%'), height: wp('6%') }}
+                  style={{
+                    width: wp('6%'),
+                    height: wp('6%'),
+                    transform: [{ scale: coinPulseAnim }],
+                  }}
                   resizeMode="contain"
                 />
 
@@ -363,15 +460,17 @@ const UdenTicketModal = ({
                         </Animated.Text>
                       </TouchableOpacity>
                       {openAccordion === 'description' && (
-                        <ScrollView
-                          style={styles.accordionContent}
-                          nestedScrollEnabled
-                        >
-                          <SafeRenderHtml
-                            contentWidth={width * 0.78}
-                            source={{ html: voucher.shortDescription }}
-                          />
-                        </ScrollView>
+                        <Animated.View style={{ opacity: descArrowAnim }}>
+                          <ScrollView
+                            style={styles.accordionContent}
+                            nestedScrollEnabled
+                          >
+                            <SafeRenderHtml
+                              contentWidth={width * 0.78}
+                              source={{ html: voucher.shortDescription }}
+                            />
+                          </ScrollView>
+                        </Animated.View>
                       )}
                     </View>
                   )}
@@ -404,15 +503,17 @@ const UdenTicketModal = ({
                         </Animated.Text>
                       </TouchableOpacity>
                       {openAccordion === 'terms' && (
-                        <ScrollView
-                          style={styles.accordionContent}
-                          nestedScrollEnabled
-                        >
-                          <SafeRenderHtml
-                            contentWidth={width * 0.78}
-                            source={{ html: voucher.termsConditions }}
-                          />
-                        </ScrollView>
+                        <Animated.View style={{ opacity: termsArrowAnim }}>
+                          <ScrollView
+                            style={styles.accordionContent}
+                            nestedScrollEnabled
+                          >
+                            <SafeRenderHtml
+                              contentWidth={width * 0.78}
+                              source={{ html: voucher.termsConditions }}
+                            />
+                          </ScrollView>
+                        </Animated.View>
                       )}
                     </View>
                   )}
@@ -454,7 +555,19 @@ const UdenTicketModal = ({
                   {quoteLoading ? (
                     <ActivityIndicator size="small" color="#5B2BE0" />
                   ) : (
-                    <>
+                    <Animated.View
+                      style={{
+                        opacity: priceAnim,
+                        transform: [
+                          {
+                            translateY: priceAnim.interpolate({
+                              inputRange: [0, 1],
+                              outputRange: [6, 0],
+                            }),
+                          },
+                        ],
+                      }}
+                    >
                       <View style={styles.priceMainRow}>
                         <Text style={styles.priceCurrent}>
                           ₹{quoteData ? quoteData.amountPayable : denomination}
@@ -480,7 +593,7 @@ const UdenTicketModal = ({
                           </Text>
                         </View>
                       )}
-                    </>
+                    </Animated.View>
                   )}
                 </View>
 
@@ -510,8 +623,29 @@ const UdenTicketModal = ({
             </ImageBackground>
 
             {/* Close button */}
-            <AnimatedButton style={styles.closeBtn} onPress={onClose}>
-              <Text style={styles.closeBtnText}>✕</Text>
+            <AnimatedButton
+              style={styles.closeBtn}
+              onPress={onClose}
+              onPressIn={handleClosePressIn}
+              onPressOut={handleClosePressOut}
+            >
+              <Animated.Text
+                style={[
+                  styles.closeBtnText,
+                  {
+                    transform: [
+                      {
+                        rotate: closeRotateAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: ['0deg', '90deg'],
+                        }),
+                      },
+                    ],
+                  },
+                ]}
+              >
+                ✕
+              </Animated.Text>
             </AnimatedButton>
           </Animated.View>
         </View>

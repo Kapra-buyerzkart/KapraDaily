@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Image,
   Platform,
@@ -7,6 +7,12 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withSpring,
+} from 'react-native-reanimated';
 import Entypo from 'react-native-vector-icons/Entypo';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {
@@ -28,6 +34,7 @@ const DEFAULT_TOKEN_VALUE = '1';
 const COUNTER_HIT_SLOP = { top: 10, bottom: 10, left: 10, right: 10 };
 const WISHLIST_HIT_SLOP = 20;
 const NO_IMAGE_SOURCE = require('../assets/images/udenDealNotfound.png');
+const UD_TOKEN_ICON = require('../assets/icons/tokenud.png');
 
 // Styles
 const styles = StyleSheet.create({
@@ -52,7 +59,7 @@ const styles = StyleSheet.create({
   topLeftRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginStart: wp('1%'),
+    marginStart: wp('2.5%'),
   },
   imageContainer: {
     marginTop: hp('0.5%'),
@@ -168,12 +175,27 @@ const styles = StyleSheet.create({
     borderRadius: 18,
   },
 
+  // Token
+  tokenRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  tokenIcon: {
+    width: wp('3%'),
+    height: wp('3%'),
+    resizeMode: 'contain',
+  },
+  tokenIconThreeColumn: {
+    width: wp('2.6%'),
+    height: wp('2.6%'),
+  },
+
   // Typography
   tokenText: {
     fontSize: wp('2.2%'),
     color: '#5E3568',
     fontFamily: FONTS.gilroy.semiBold,
-    marginLeft: wp('2.5%'),
+    marginLeft: wp('1%'),
   },
   tokenTextThreeColumn: {
     fontSize: wp('2%'),
@@ -264,11 +286,28 @@ const styles = StyleSheet.create({
 });
 
 // Sub-components
+const HEART_POP_SPRING = { damping: 8, stiffness: 300, mass: 0.5 };
+
 const WishlistButton = React.memo(function WishlistButton({
   liked,
   isThreeColumn,
   onPress,
 }) {
+  const scale = useSharedValue(1);
+
+  useEffect(() => {
+    if (liked) {
+      scale.value = withSequence(
+        withSpring(1.35, HEART_POP_SPRING),
+        withSpring(1, HEART_POP_SPRING),
+      );
+    }
+  }, [liked, scale]);
+
+  const heartAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
   return (
     <TouchableOpacity
       style={styles.wishlistButton}
@@ -276,11 +315,13 @@ const WishlistButton = React.memo(function WishlistButton({
       activeOpacity={0.8}
       onPress={onPress}
     >
-      <Ionicons
-        name={liked ? 'heart' : 'heart-outline'}
-        size={isThreeColumn ? wp('4.6%') : wp('5.5%')}
-        color={liked ? '#FF0048' : '#9B9B9B'}
-      />
+      <Animated.View style={heartAnimatedStyle}>
+        <Ionicons
+          name={liked ? 'heart' : 'heart-outline'}
+          size={isThreeColumn ? wp('4.6%') : wp('5.5%')}
+          color={liked ? '#FF0048' : '#9B9B9B'}
+        />
+      </Animated.View>
     </TouchableOpacity>
   );
 });
@@ -330,13 +371,13 @@ const QuantityControl = React.memo(function QuantityControl({
   if (quantity > 0) {
     return (
       <View style={styles.counterContainer}>
-        <TouchableOpacity
+        <AnimatedPressable
           style={styles.counterBtn}
           hitSlop={COUNTER_HIT_SLOP}
           onPress={onDecrement}
         >
           <Entypo name="minus" size={isThreeColumn ? 16 : 22} color="#FFFFFF" />
-        </TouchableOpacity>
+        </AnimatedPressable>
 
         <Text
           style={[
@@ -347,13 +388,13 @@ const QuantityControl = React.memo(function QuantityControl({
           {quantity}
         </Text>
 
-        <TouchableOpacity
+        <AnimatedPressable
           style={styles.counterBtn}
           hitSlop={COUNTER_HIT_SLOP}
           onPress={onIncrement}
         >
           <Entypo name="plus" size={isThreeColumn ? 16 : 22} color="#FFFFFF" />
-        </TouchableOpacity>
+        </AnimatedPressable>
       </View>
     );
   }
@@ -548,14 +589,23 @@ const TokenProductCard = ({
           <View style={styles.topRow}>
             <View style={styles.topLeftRow}>
               {!hideToken && quantity === 0 ? (
-                <Text
-                  style={[
-                    styles.tokenText,
-                    isThreeColumn && styles.tokenTextThreeColumn,
-                  ]}
-                >
-                  {token}
-                </Text>
+                <View style={styles.tokenRow}>
+                  <Image
+                    source={UD_TOKEN_ICON}
+                    style={[
+                      styles.tokenIcon,
+                      isThreeColumn && styles.tokenIconThreeColumn,
+                    ]}
+                  />
+                  <Text
+                    style={[
+                      styles.tokenText,
+                      isThreeColumn && styles.tokenTextThreeColumn,
+                    ]}
+                  >
+                    {token}
+                  </Text>
+                </View>
               ) : null}
             </View>
 

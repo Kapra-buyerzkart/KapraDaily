@@ -392,10 +392,6 @@ const HomeScreen = () => {
   const isHomeLoading = refreshing;
   const fruits = bottomBanner;
 
-  // Randomize the product rails so they aren't in the same server order on
-  // every launch. Keyed on the block data, so the shuffle re-runs only when a
-  // fetch produces new data (app boot / pull-to-refresh) and stays stable
-  // across re-renders within a session.
   const firstBlockItems = useMemo(
     () => shuffle(firstProductBlock?.Items || firstProductBlock?.items || []),
     [firstProductBlock],
@@ -587,6 +583,22 @@ const HomeScreen = () => {
         ) : (
           <>
             <View style={{ paddingTop: hp('4%') }}></View>
+
+            {midBanner?.length > 0 && (
+              <View
+                style={{ marginVertical: hp('1%'), marginBottom: hp('2%') }}
+              >
+                <PlacementBannerCarousel
+                  banners={midBanner}
+                  onBannerPress={handleBannerPress}
+                  style={{ height: hp('22%') }}
+                  showDots={true}
+                  fullWidth={true}
+                  infinite
+                />
+              </View>
+            )}
+
             <ProductBlock
               isLoading={isHomeLoading && firstBlockItems.length === 0}
               shouldShow={shouldShowFirstBlock}
@@ -613,20 +625,6 @@ const HomeScreen = () => {
               shouldShowSeeAll={count => count > 3}
               navigation={navigation}
             />
-
-            {midBanner.length > 0 && (
-              <View
-                style={{ marginVertical: hp('1%'), marginBottom: hp('2%') }}
-              >
-                <PlacementBannerCarousel
-                  banners={midBanner}
-                  onBannerPress={handleBannerPress}
-                  style={{ height: hp('22%') }}
-                  showDots={false}
-                  fullWidth={false}
-                />
-              </View>
-            )}
 
             <ProductBlock
               isLoading={isHomeLoading && secondBlockItems.length === 0}

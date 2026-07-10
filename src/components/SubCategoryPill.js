@@ -6,21 +6,20 @@ import Animated, {
   withTiming,
   interpolateColor,
 } from 'react-native-reanimated';
-import {
-  widthPercentageToDP as wp,
-  heightPercentageToDP as hp,
-} from 'react-native-responsive-screen';
+import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import { FONTS } from '../styles/typography';
 import { getImageUrl } from '../utils/imageUrl';
-import COLORS from '@/styles/colors';
 import AnimatedPressable from './AnimatedPressable';
 
 const AnimatedText = Animated.createAnimatedComponent(Animated.Text);
 
-const BORDER_INACTIVE = '#ECECEC';
+const BG_INACTIVE = '#FFFFFF';
+const BG_ACTIVE = '#FFF3EA';
+const BORDER_INACTIVE = '#EFEFEF';
+const BORDER_ACTIVE = '#FF6B00';
 const TEXT_INACTIVE = '#6B7280';
 const TEXT_ACTIVE = '#FF6B00';
-const SELECTION_DURATION = 150;
+const SELECTION_DURATION = 180;
 
 const SubCategoryPill = ({ item, isSelected, onPress }) => {
   const progress = useSharedValue(isSelected ? 1 : 0);
@@ -32,10 +31,15 @@ const SubCategoryPill = ({ item, isSelected, onPress }) => {
   }, [isSelected, progress]);
 
   const containerStyle = useAnimatedStyle(() => ({
+    backgroundColor: interpolateColor(
+      progress.value,
+      [0, 1],
+      [BG_INACTIVE, BG_ACTIVE],
+    ),
     borderColor: interpolateColor(
       progress.value,
       [0, 1],
-      [BORDER_INACTIVE, COLORS.primary],
+      [BORDER_INACTIVE, BORDER_ACTIVE],
     ),
   }));
 
@@ -64,27 +68,26 @@ const styles = StyleSheet.create({
   subCatPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: wp('2.5%'),
-    paddingVertical: hp('0.6%'),
-    borderRadius: wp('8%'),
+    height: 44,
+    paddingHorizontal: wp('3%'),
+    borderRadius: 22,
     borderWidth: 1,
-    backgroundColor: 'white',
   },
   subCatPillImage: {
-    width: wp('8%'),
-    height: wp('8%'),
-    borderRadius: wp('4%'),
+    width: wp('7%'),
+    height: wp('7%'),
+    borderRadius: wp('3.5%'),
     marginRight: wp('2%'),
     resizeMode: 'cover',
   },
   subCatPillTextActive: {
-    fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('3.5%'),
-    marginRight: wp('2%'),
+    fontFamily: FONTS.gilroy.bold,
+    fontSize: wp('3.4%'),
+    marginRight: wp('1.5%'),
   },
   subCatPillTextInactive: {
     fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('3.5%'),
-    marginRight: wp('2%'),
+    fontSize: wp('3.4%'),
+    marginRight: wp('1.5%'),
   },
 });

@@ -12,14 +12,9 @@ import Animated, {
   useAnimatedStyle,
   interpolate,
   Extrapolation,
-  withTiming,
-  clamp,
   FadeInUp,
 } from 'react-native-reanimated';
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
 import React, { useState, useEffect, useContext } from 'react';
 import {
@@ -40,11 +35,6 @@ import FilterSortModal from '../../components/FilterSortModal';
 import StoreUnavailable from '../../components/StoreUnavailable';
 import LocationModal from '../../components/LocationModal';
 import SelectedProducts from '../../components/SelectedProducts';
-import {
-  SCROLL_HIDE_THRESHOLD,
-  TAB_BAR_ANIM_DURATION,
-  getTabBarClearance,
-} from '../../animations/tabBarVisibility';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import useRecentSearches from './hooks/useRecentSearches';
 import RecentSearches from './components/RecentSearches';
@@ -55,8 +45,6 @@ import icons from '@/assets/icons';
 const SearchScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const { bottom } = useSafeAreaInsets();
-  const tabBarClearance = getTabBarClearance(bottom);
   const {
     catId,
     catName,
@@ -121,57 +109,10 @@ const SearchScreen = () => {
   const STICKY_SHADOW_RANGE = 24;
   const scrollY = useSharedValue(0);
 
-  const cartVisibility = useSharedValue(1);
-  const scrollAnchor = useSharedValue(0);
-
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: event => {
-      const y = event.contentOffset.y;
-      scrollY.value = y;
-
-      if (y <= 0) {
-        scrollAnchor.value = 0;
-        if (cartVisibility.value !== 1) {
-          cartVisibility.value = withTiming(1, {
-            duration: TAB_BAR_ANIM_DURATION,
-          });
-        }
-        return;
-      }
-
-      const diff = y - scrollAnchor.value;
-      if (diff > SCROLL_HIDE_THRESHOLD) {
-        scrollAnchor.value = y;
-        if (cartVisibility.value !== 0) {
-          cartVisibility.value = withTiming(0, {
-            duration: TAB_BAR_ANIM_DURATION,
-          });
-        }
-      } else if (diff < -SCROLL_HIDE_THRESHOLD) {
-        scrollAnchor.value = y;
-        if (cartVisibility.value !== 1) {
-          cartVisibility.value = withTiming(1, {
-            duration: TAB_BAR_ANIM_DURATION,
-          });
-        }
-      }
+      scrollY.value = event.contentOffset.y;
     },
-  });
-
-  const cartAnimatedStyle = useAnimatedStyle(() => {
-    const progress = clamp(cartVisibility.value, 0, 1);
-    return {
-      transform: [
-        {
-          translateY: interpolate(
-            progress,
-            [0, 1],
-            [tabBarClearance, 0],
-            Extrapolation.CLAMP,
-          ),
-        },
-      ],
-    };
   });
 
   const stickyShadowAnimStyle = useAnimatedStyle(() => {
@@ -342,9 +283,7 @@ const SearchScreen = () => {
         onClose={() => setIsLocationModalVisible(false)}
       />
       <KeyboardStickyView style={styles.floatingContainer}>
-        <Animated.View style={cartAnimatedStyle}>
-          <SelectedProducts />
-        </Animated.View>
+        <SelectedProducts />
       </KeyboardStickyView>
     </SafeAreaView>
   );

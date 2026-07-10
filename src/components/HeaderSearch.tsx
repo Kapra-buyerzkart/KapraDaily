@@ -273,10 +273,19 @@ const styles = StyleSheet.create({
   actionsRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: wp('2.5%'),
   },
   headerActionButton: {
-    paddingHorizontal: wp('2.2%'),
-    paddingVertical: wp('1%'),
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+
+    // shadowRadius: 8,
+    // elevation: 2,
   },
   iconStack: {
     width: wp('5.5%'),

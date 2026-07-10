@@ -1,9 +1,49 @@
-import React, { useState } from 'react';
-import { View, FlatList, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import {
+  View,
+  FlatList,
+  Image,
+  TouchableOpacity,
+  StyleSheet,
+} from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useAnimatedScrollHandler,
+  useSharedValue,
+  interpolate,
+  Extrapolation,
+} from 'react-native-reanimated';
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
+
+const DOT_ACTIVE_WIDTH = wp('2.25%');
+const DOT_INACTIVE_WIDTH = wp('1.32%');
+const PaginationDot = ({ scrollX, index, count, snap, infinite }) => {
+  const animatedStyle = useAnimatedStyle(() => {
+    const pos = scrollX.value / snap;
+    const realPos = infinite ? (((pos - 1) % count) + count) % count : pos;
+    let dist = Math.abs(realPos - index);
+    if (infinite) {
+      dist = Math.min(dist, count - dist);
+    }
+    dist = Math.min(dist, 1);
+    return {
+      width: interpolate(
+        dist,
+        [0, 1],
+        [DOT_ACTIVE_WIDTH, DOT_INACTIVE_WIDTH],
+        Extrapolation.CLAMP,
+      ),
+      opacity: interpolate(dist, [0, 1], [1, 0.3], Extrapolation.CLAMP),
+    };
+  });
+
+  return <Animated.View style={[styles.dot, animatedStyle]} />;
+};
+
+const AUTOPLAY_INTERVAL_MS = 4000;
 
 const PlacementBannerCarousel = ({
   banners,
@@ -11,20 +51,88 @@ const PlacementBannerCarousel = ({
   style,
   fullWidth = false,
   showDots = true,
+  infinite = false,
 }) => {
-  const [activeIndex, setActiveIndex] = useState(0);
+  const flatListRef = useRef(null);
+  const currentIndexRef = useRef(1);
+  const isDraggingRef = useRef(false);
+  const scrollX = useSharedValue(0);
 
-  if (!banners || banners.length === 0) return null;
+  const isInfinite = infinite && !!banners && banners.length > 1;
 
   const BANNER_WIDTH = fullWidth ? wp('100%') : wp('85%');
   const BANNER_SPACING = fullWidth ? 0 : wp('4%');
+  const ITEM_MARGIN = BANNER_SPACING / 2;
   const SNAP_INTERVAL = BANNER_WIDTH + BANNER_SPACING;
+  // Side inset so the active card sits centered with an equal peek on both sides.
+  const CONTENT_PADDING = fullWidth
+    ? 0
+    : (wp('100%') - BANNER_WIDTH) / 2 - ITEM_MARGIN;
+  // Distance from the content edge to the first item's left edge (padding + its own margin).
+  const ITEM_OFFSET = fullWidth ? 0 : CONTENT_PADDING + ITEM_MARGIN;
 
-  const onScroll = e => {
-    const offsetX = e.nativeEvent.contentOffset.x;
-    const slideIndex = Math.round(offsetX / SNAP_INTERVAL);
-    if (slideIndex !== activeIndex) {
-      setActiveIndex(slideIndex);
+  const scrollHandler = useAnimatedScrollHandler(event => {
+    scrollX.value = event.contentOffset.x;
+  });
+
+  useEffect(() => {
+    if (!isInfinite) return undefined;
+
+    currentIndexRef.current = 1;
+    scrollX.value = SNAP_INTERVAL;
+    const resetTimer = setTimeout(() => {
+      flatListRef.current?.scrollToIndex({ index: 1, animated: false });
+    }, 0);
+
+    const autoplayTimer = setInterval(() => {
+      if (isDraggingRef.current) return;
+      const next = currentIndexRef.current + 1;
+      flatListRef.current?.scrollToIndex({ index: next, animated: true });
+      currentIndexRef.current = next;
+    }, AUTOPLAY_INTERVAL_MS);
+
+    return () => {
+      clearTimeout(resetTimer);
+      clearInterval(autoplayTimer);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isInfinite, banners]);
+
+  if (!banners || banners.length === 0) return null;
+
+  const extendedBanners = isInfinite
+    ? [banners[banners.length - 1], ...banners, banners[0]]
+    : banners;
+
+  const getItemLayout = (_, index) => ({
+    length: SNAP_INTERVAL,
+    offset: ITEM_OFFSET + SNAP_INTERVAL * index,
+    index,
+  });
+
+  const onScrollBeginDrag = () => {
+    isDraggingRef.current = true;
+  };
+
+  const onMomentumScrollEnd = e => {
+    isDraggingRef.current = false;
+    if (!isInfinite) return;
+
+    const slideIndex = Math.round(
+      e.nativeEvent.contentOffset.x / SNAP_INTERVAL,
+    );
+    currentIndexRef.current = slideIndex;
+
+    // Jump (without animation) from a cloned edge back to the real banner.
+    if (slideIndex === 0) {
+      currentIndexRef.current = banners.length;
+      flatListRef.current?.scrollToIndex({
+        index: banners.length,
+        animated: false,
+      });
+    } else if (slideIndex === extendedBanners.length - 1) {
+      currentIndexRef.current = 1;
+      flatListRef.current?.scrollToIndex({ index: 1, animated: false });
     }
   };
 
@@ -44,10 +152,7 @@ const PlacementBannerCarousel = ({
             fullWidth ? styles.topHomeBannerViewFull : styles.topHomeBannerView
           }
         >
-          <Image
-            source={banners[0].uri}
-            style={styles.topHomeBannerImage}
-          />
+          <Image source={banners[0].uri} style={styles.topHomeBannerImage} />
         </TouchableOpacity>
       </View>
     );
@@ -55,21 +160,26 @@ const PlacementBannerCarousel = ({
 
   return (
     <View style={[style, !fullWidth && { overflow: 'visible' }]}>
-      <FlatList
-        data={banners}
+      <Animated.FlatList
+        ref={flatListRef}
+        data={extendedBanners}
         horizontal
         pagingEnabled={fullWidth}
         snapToInterval={fullWidth ? undefined : SNAP_INTERVAL}
         snapToAlignment={fullWidth ? undefined : 'start'}
         decelerationRate="fast"
         showsHorizontalScrollIndicator={false}
-        onScroll={onScroll}
+        onScroll={scrollHandler}
+        onScrollBeginDrag={isInfinite ? onScrollBeginDrag : undefined}
+        onMomentumScrollEnd={isInfinite ? onMomentumScrollEnd : undefined}
+        getItemLayout={isInfinite ? getItemLayout : undefined}
+        initialScrollIndex={isInfinite ? 1 : undefined}
         scrollEventThrottle={16}
         keyExtractor={(_, index) => index.toString()}
         contentContainerStyle={
           fullWidth
             ? undefined
-            : { paddingHorizontal: wp('4.6%'), paddingVertical: hp('1%') }
+            : { paddingHorizontal: CONTENT_PADDING, paddingVertical: hp('1%') }
         }
         renderItem={({ item }) => (
           <View
@@ -77,7 +187,7 @@ const PlacementBannerCarousel = ({
               !fullWidth && styles.carouselShadowWrapper,
               {
                 width: BANNER_WIDTH,
-                marginRight: BANNER_SPACING,
+                marginHorizontal: ITEM_MARGIN,
                 height: '100%',
               },
             ]}
@@ -95,7 +205,7 @@ const PlacementBannerCarousel = ({
               <Image
                 source={item.uri}
                 style={styles.topHomeBannerImage}
-                resizeMode="stretch"
+                resizeMode="cover"
               />
             </TouchableOpacity>
           </View>
@@ -104,13 +214,13 @@ const PlacementBannerCarousel = ({
       {showDots && (
         <View style={styles.pagination}>
           {banners.map((_, i) => (
-            <View
+            <PaginationDot
               key={i}
-              style={[
-                styles.dot,
-                { opacity: i === activeIndex ? 1 : 0.3 },
-                i === activeIndex && styles.activeDot,
-              ]}
+              scrollX={scrollX}
+              index={i}
+              count={banners.length}
+              snap={SNAP_INTERVAL}
+              infinite={isInfinite}
             />
           ))}
         </View>
@@ -148,19 +258,13 @@ const styles = StyleSheet.create({
   pagination: {
     flexDirection: 'row',
     alignSelf: 'center',
-    marginTop: hp('1.5%'),
+    marginTop: hp('1%'),
   },
   dot: {
-    width: wp('2.32%'),
-    height: wp('2.32%'),
+    height: wp('1.0%'),
     backgroundColor: '#F25000',
     borderRadius: 30,
-    marginHorizontal: wp('1.17%'),
-  },
-  activeDot: {
-    width: wp('3.25%'),
-    height: wp('3.25'),
-    borderRadius: 30,
+    marginHorizontal: wp('0.17%'),
   },
 });
 

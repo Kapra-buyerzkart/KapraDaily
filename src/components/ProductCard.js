@@ -1,9 +1,11 @@
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
+  withSequence,
+  withSpring,
 } from 'react-native-reanimated';
 import {
   widthPercentageToDP as wp,
@@ -24,6 +26,7 @@ import { useWishlist } from '../context/WishlistContext';
 const ProductCard = props => {
   const [imageError, setImageError] = useState(false);
   const imageOpacity = useSharedValue(0);
+  const heartScale = useSharedValue(1);
 
   // Hooks
   const navigation = useNavigation();
@@ -32,35 +35,27 @@ const ProductCard = props => {
   const { isInWishlist, toggleWishlist } = useWishlist();
 
   const { item, hideWishlist } = props;
-  // API products use productId, local products might use id
   const itemId = item.productId || item.id;
   const isLiked = isInWishlist(itemId);
   const isOutOfStock =
     item.stockQty === 0 || item.stockQty === '0' || item.isAvailable === false;
 
-  // Find quantity in cart — convert to string to avoid type mismatch (number vs string)
   const cartItem = cartItems.find(
     i => String(i.productId || i.id) === String(itemId),
   );
   const quantity = cartItem?.quantity || cartItem?.addedQty || 0;
   const cartItemId = cartItem?.cartItemId || itemId;
 
-  // Helper to resolve image source
   const getImageSource = img => {
     if (!img || imageError)
       return require('../assets/images/udenDealNotfound.png'); // Fallback on error or empty
     if (typeof img === 'string') {
-      // Check if it's already a full URL or needs base URL
       if (img.startsWith('http')) return { uri: img };
-      // Use CONFIG.image_base_url if available, assume it might need specific path handling
-      // Based on config: image_base_url: `https://grocery.kapradaily.com/webadmin/`
       return { uri: `${CONFIG.image_base_url}${img}` };
     }
-    return img; // For require(...) local images
+    return img;
   };
 
-  // const { item } = props;
-  // Map API fields to UI expected fields or use them directly
   const name = item.prName || item.name || '';
   const price = item.specialPrice || item.price || '';
   const mrp = item.unitPrice || item.mrp || '';
@@ -81,6 +76,18 @@ const ProductCard = props => {
     [isOutOfStock],
   );
 
+  const heartAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: heartScale.value }],
+  }));
+
+  const handleWishlistToggle = useCallback(() => {
+    heartScale.value = withSequence(
+      withTiming(1.3, { duration: 120 }),
+      withSpring(1, { damping: 6, stiffness: 200 }),
+    );
+    toggleWishlist(item);
+  }, [heartScale, toggleWishlist, item]);
+
   useEffect(() => {
     setImageError(false);
     imageOpacity.value = 0;
@@ -100,12 +107,14 @@ const ProductCard = props => {
     >
       <View style={styles.productCardViewOne}>
         {!hideWishlist && (
-          <TouchableOpacity onPress={() => toggleWishlist(item)}>
-            <FontAwesome
-              name={isLiked ? 'heart' : 'heart-o'}
-              size={wp('5.5%')}
-              color={isLiked ? '#FF0048' : '#979797'}
-            />
+          <TouchableOpacity onPress={handleWishlistToggle}>
+            <Animated.View style={heartAnimatedStyle}>
+              <FontAwesome
+                name={isLiked ? 'heart' : 'heart-o'}
+                size={wp('5.5%')}
+                color={isLiked ? '#FF0048' : '#979797'}
+              />
+            </Animated.View>
           </TouchableOpacity>
         )}
 

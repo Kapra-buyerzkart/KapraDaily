@@ -13,7 +13,14 @@ export function getTabBarHeight(insetsBottom) {
 }
 
 export function getTabBarClearance(insetsBottom) {
-  return getTabBarHeight(insetsBottom) + insetsBottom;
+  // getTabBarHeight already spans the full on-screen tab bar box — Android
+  // bakes insetsBottom into it, iOS's fixed height already reaches through
+  // the home-indicator area since the bar is pinned with bottom: 0. Adding
+  // insetsBottom again here double-counted the safe area, which is far more
+  // noticeable on iOS (near-universal non-zero home-indicator inset) than on
+  // Android (often 0 with 3-button nav), making the floating cart sit
+  // visibly higher on iOS.
+  return getTabBarHeight(insetsBottom);
 }
 
 export function updateTabBarVisibilityWorklet(y, scrollAnchor) {

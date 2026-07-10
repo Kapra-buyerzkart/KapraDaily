@@ -133,13 +133,7 @@ const TabBar = ({ activeTab, onTabChange, scrollY, insets }) => {
         <Reanimated.View
           style={[StyleSheet.absoluteFill, blurOpacityStyle]}
           pointerEvents="none"
-        >
-          {/* <BlurView
-            style={StyleSheet.absoluteFill}
-            blurType="dark"
-            blurAmount={8}
-          /> */}
-        </Reanimated.View>
+        ></Reanimated.View>
       )}
 
       {/* Subtle red ambient glow (matches the screen's right-side red gradient) */}

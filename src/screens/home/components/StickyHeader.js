@@ -248,7 +248,6 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.gilroy.bold,
     color: '#FFFFFF',
     fontSize: wp('5.5%'),
-    top: 0,
   },
   addressView: {
     flexDirection: 'row',

@@ -13,8 +13,23 @@ import {
   Alert,
   ImageBackground,
 } from 'react-native';
-import React, { useRef, useState, useEffect, useContext } from 'react';
+import React, {
+  useRef,
+  useState,
+  useEffect,
+  useContext,
+  useCallback,
+} from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import ReanimatedView, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming as withTimingReanimated,
+  withSequence,
+  withSpring,
+  withDelay,
+  FadeInUp,
+} from 'react-native-reanimated';
 import {
   heightPercentageToDP as hp,
   widthPercentageToDP as wp,
@@ -30,6 +45,7 @@ import SelectedProducts from '../components/SelectedProducts';
 import { useWishlist } from '../context/WishlistContext';
 import { useCart } from '../context/CartContext';
 import { useProductDetails } from '../hooks/useProductDetails';
+import { getStaggerDelay } from '../utils/staggerDelay';
 import { LoaderContext } from '../context/loaderContext';
 import Entypo from 'react-native-vector-icons/Entypo';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -38,7 +54,70 @@ import StoreUnavailable from '../components/StoreUnavailable';
 import LocationModal from '../components/LocationModal';
 import { AppContext } from '../context/appContext';
 import ShimmerPlaceholder from '../components/ShimmerPlaceholder';
+import AnimatedPressable from '../components/AnimatedPressable';
 import icons from '@/assets/icons';
+import COLORS from '@/styles/colors';
+
+const BUMP_SPRING = { damping: 8, stiffness: 260, mass: 0.4 };
+const HEART_SPRING = { damping: 10, stiffness: 340, mass: 0.5 };
+
+const SECTION_STAGGER_MS = 90;
+
+const AnimatedImageBackground =
+  ReanimatedView.createAnimatedComponent(ImageBackground);
+
+const scaleFadeIn =
+  (delayMs = 0) =>
+  () => {
+    'worklet';
+    return {
+      initialValues: {
+        opacity: 0,
+        transform: [{ scale: 0.92 }],
+      },
+      animations: {
+        opacity: withDelay(delayMs, withTimingReanimated(1, { duration: 260 })),
+        transform: [
+          {
+            scale: withDelay(
+              delayMs,
+              withSpring(1, { damping: 16, stiffness: 220, mass: 0.5 }),
+            ),
+          },
+        ],
+      },
+    };
+  };
+
+const GalleryImage = ({ source, style, imageStyle }) => {
+  const opacity = useSharedValue(0);
+  const animatedStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
+
+  return (
+    <AnimatedImageBackground
+      source={source}
+      style={[style, animatedStyle]}
+      imageStyle={imageStyle}
+      onLoadEnd={() => {
+        opacity.value = withTimingReanimated(1, { duration: 220 });
+      }}
+    />
+  );
+};
+
+const PaginationDot = ({ isSelected }) => {
+  const animatedStyle = useAnimatedStyle(() => ({
+    width: withTimingReanimated(isSelected ? wp('5%') : wp('2%'), {
+      duration: 250,
+    }),
+    backgroundColor: withTimingReanimated(
+      isSelected ? COLORS.primary : 'rgba(255,255,255,0.55)',
+      { duration: 250 },
+    ),
+  }));
+
+  return <ReanimatedView.View style={[styles.paginationDot, animatedStyle]} />;
+};
 
 const ProductDetailsScreen = () => {
   const [selectedImage, setSelectedImage] = useState(null);
@@ -101,6 +180,34 @@ const ProductDetailsScreen = () => {
   };
 
   const isLiked = isInWishlist(finalProductId);
+
+  const heartScale = useSharedValue(1);
+  const qtyScale = useSharedValue(1);
+
+  const heartAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: heartScale.value }],
+  }));
+
+  const qtyAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: qtyScale.value }],
+  }));
+
+  const handleWishlistToggle = useCallback(() => {
+    heartScale.value = withSequence(
+      withTimingReanimated(1.18, { duration: 90 }),
+      withSpring(1, HEART_SPRING),
+    );
+    if (product) {
+      toggleWishlist(product);
+    }
+  }, [heartScale, toggleWishlist, product]);
+
+  const bumpQty = useCallback(() => {
+    qtyScale.value = withSequence(
+      withTimingReanimated(1.18, { duration: 100 }),
+      withSpring(1, BUMP_SPRING),
+    );
+  }, [qtyScale]);
 
   const toggleDetails = () => {
     const isExpanding = !showDetails;
@@ -320,17 +427,19 @@ const ProductDetailsScreen = () => {
       <View style={styles.headerRight}>
         <TouchableOpacity
           style={styles.iconCircle}
-          onPress={() => product && toggleWishlist(product)}
+          onPress={handleWishlistToggle}
         >
-          <Ionicons
-            name={isLiked ? 'heart' : 'heart-outline'}
-            size={wp('7%')}
-            color={'red'}
-            style={{
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          />
+          <ReanimatedView.View style={heartAnimatedStyle}>
+            <Ionicons
+              name={isLiked ? 'heart' : 'heart-outline'}
+              size={wp('7%')}
+              color={COLORS.error}
+              style={{
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            />
+          </ReanimatedView.View>
         </TouchableOpacity>
         {/* <TouchableOpacity style={styles.iconCircle} onPress={handleShare}>
                     <Ionicons name="share-social" size={wp('6%')} color="#000" />
@@ -368,7 +477,10 @@ const ProductDetailsScreen = () => {
             showsVerticalScrollIndicator={false}
             bounces={false}
           >
-            <View style={styles.topSection}>
+            <ReanimatedView.View
+              style={styles.topSection}
+              entering={scaleFadeIn(0)}
+            >
               <FlatList
                 data={
                   apiImages && apiImages.length > 0 ? apiImages : [productImage]
@@ -388,7 +500,7 @@ const ProductDetailsScreen = () => {
                 }}
                 renderItem={({ item }) => (
                   <View style={styles.mainImageContainer}>
-                    <ImageBackground
+                    <GalleryImage
                       source={item || productImage}
                       style={styles.imageStyle}
                       imageStyle={{ resizeMode: 'contain' }}
@@ -403,20 +515,15 @@ const ProductDetailsScreen = () => {
                   apiImages.map((_, index) => {
                     const isSelected =
                       selectedImage?.uri === apiImages[index]?.uri;
-                    return (
-                      <View
-                        key={index}
-                        style={[
-                          styles.paginationDot,
-                          isSelected && styles.paginationDotActive,
-                        ]}
-                      />
-                    );
+                    return <PaginationDot key={index} isSelected={isSelected} />;
                   })}
               </View>
-            </View>
+            </ReanimatedView.View>
 
-            <View style={styles.infoCard}>
+            <ReanimatedView.View
+              style={styles.infoCard}
+              entering={scaleFadeIn(SECTION_STAGGER_MS)}
+            >
               <View
                 style={{
                   borderColor: '#D9D9D9',
@@ -499,15 +606,16 @@ const ProductDetailsScreen = () => {
                         if (quantity > 0) {
                           return (
                             <View style={styles.quantitySelector}>
-                              <TouchableOpacity
-                                onPress={() =>
+                              <AnimatedPressable
+                                onPress={() => {
+                                  bumpQty();
                                   quantity === 1
                                     ? removeFromCart(cartItemId)
                                     : updateCartItemQuantity(
                                         cartItemId,
                                         quantity - 1,
-                                      )
-                                }
+                                      );
+                                }}
                               >
                                 <LinearGradient
                                   colors={['#FFFFFF', '#FFD8C4']}
@@ -522,15 +630,20 @@ const ProductDetailsScreen = () => {
                                     style={styles.qtyIcon}
                                   />
                                 </LinearGradient>
-                              </TouchableOpacity>
-                              <Text style={styles.qtyValue}>{quantity}</Text>
-                              <TouchableOpacity
-                                onPress={() =>
+                              </AnimatedPressable>
+                              <ReanimatedView.Text
+                                style={[styles.qtyValue, qtyAnimatedStyle]}
+                              >
+                                {quantity}
+                              </ReanimatedView.Text>
+                              <AnimatedPressable
+                                onPress={() => {
+                                  bumpQty();
                                   updateCartItemQuantity(
                                     cartItemId,
                                     quantity + 1,
-                                  )
-                                }
+                                  );
+                                }}
                               >
                                 <LinearGradient
                                   colors={['#FFFFFF', '#FFD8C4']}
@@ -545,7 +658,7 @@ const ProductDetailsScreen = () => {
                                     style={styles.qtyIcon}
                                   />
                                 </LinearGradient>
-                              </TouchableOpacity>
+                              </AnimatedPressable>
                             </View>
                           );
                         }
@@ -566,9 +679,12 @@ const ProductDetailsScreen = () => {
                         }
 
                         return (
-                          <TouchableOpacity
+                          <AnimatedPressable
                             style={styles.addBtn}
-                            onPress={() => product && addToCart(product)}
+                            onPress={() => {
+                              bumpQty();
+                              product && addToCart(product);
+                            }}
                           >
                             <LinearGradient
                               colors={['#FFFFFF', '#FFD8C4']}
@@ -586,7 +702,7 @@ const ProductDetailsScreen = () => {
                               />
                             </LinearGradient>
                             <Text style={styles.addBtnText}>ADD</Text>
-                          </TouchableOpacity>
+                          </AnimatedPressable>
                         );
                       })()}
                     </View>
@@ -712,9 +828,12 @@ const ProductDetailsScreen = () => {
                   </View>
                 </Animated.View>
               </View>
-            </View>
+            </ReanimatedView.View>
 
-            <View style={styles.similarProductsSection}>
+            <ReanimatedView.View
+              style={styles.similarProductsSection}
+              entering={scaleFadeIn(SECTION_STAGGER_MS * 2)}
+            >
               <Text style={styles.sectionTitle}>Similar Products</Text>
               {relatedLoading ? (
                 <ActivityIndicator
@@ -729,9 +848,10 @@ const ProductDetailsScreen = () => {
                   keyExtractor={(item, index) =>
                     (item.productId || item.id || index).toString()
                   }
-                  renderItem={({ item }) => (
+                  renderItem={({ item, index }) => (
                     <TokenProductCard
                       item={item}
+                      entering={FadeInUp.delay(getStaggerDelay(index))}
                       onPress={() =>
                         navigation.push('ProductDetailsScreen', {
                           productId: item.productId || item.id,
@@ -756,7 +876,7 @@ const ProductDetailsScreen = () => {
                   }
                 />
               )}
-            </View>
+            </ReanimatedView.View>
           </ScrollView>
         </>
       )}
@@ -817,13 +937,6 @@ const styles = StyleSheet.create({
     height: wp('10%'),
     borderRadius: wp('3%'),
     backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 5,
-    elevation: 5,
   },
   headerTitle: {
     fontFamily: FONTS.gilroy.semiBold,
@@ -871,24 +984,18 @@ const styles = StyleSheet.create({
     bottom: hp('2%'),
     flexDirection: 'row',
     alignSelf: 'center',
+    alignItems: 'center',
   },
   paginationDot: {
-    width: wp('4%'),
-    height: wp('4%'),
-    borderRadius: wp('2%'),
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
-    backgroundColor: '#727783',
-    marginHorizontal: wp('1.5%'),
+    height: wp('2%'),
+    borderRadius: wp('1%'),
+    marginHorizontal: wp('1%'),
+    backgroundColor: 'rgba(255,255,255,0.55)',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.15,
     shadowRadius: 2,
-    elevation: 3,
-  },
-  paginationDotActive: {
-    backgroundColor: '#F25000',
-    borderColor: '#ffffff',
+    elevation: 2,
   },
   infoCard: {
     // marginTop: -hp('5%'),

@@ -13,7 +13,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingBottom: 40,
+    // paddingBottom: 40,
   },
   tokenBadgeIcon: {
     flexDirection: 'row',
@@ -168,6 +168,55 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.3)',
     fontSize: 13,
     fontFamily: 'Gilroy-Medium',
+  },
+
+  // ── CRED-style swipe stack ──
+  stackContainer: {
+    width: '100%',
+    height: width * 0.45 + (Platform.OS === 'ios' ? 34 : 40),
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+  },
+  stackCardSlot: {
+    position: 'absolute',
+    top: 0,
+    width: width * 0.72,
+    height: width * 0.45,
+  },
+  stackCardVisual: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 14,
+    backgroundColor: '#161616',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.35,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  stackCardGlow: {
+    position: 'absolute',
+    top: -5,
+    left: -5,
+    right: -5,
+    bottom: -5,
+    borderRadius: 19,
+    borderWidth: 2,
+    borderColor: '#F5D680',
+  },
+  stackDiscountBadge: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  stackDiscountBadgeText: {
+    color: '#F5D680',
+    fontSize: 12,
+    fontFamily: 'Gilroy-Bold',
   },
 
   // ── Carousel Arrows ──

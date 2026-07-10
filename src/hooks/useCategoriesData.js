@@ -3,7 +3,7 @@ import secureStore from '../utils/secureStore';
 import { getCategoriesApi } from '../api/categoryService';
 import { searchProductsApi } from '../api/productService';
 import { AppContext } from '../context/appContext';
-import { LoaderContext } from '../context/loaderContext';
+import { shuffle } from '../utils/shuffle';
 
 const PAGE_SIZE = 20;
 
@@ -12,7 +12,6 @@ const PAGE_SIZE = 20;
 // category/sub-category, debounced search text, or filters change.
 const useCategoriesData = (catId, debouncedSearchText, filters) => {
   const { profile, setStoreUnavailable } = useContext(AppContext);
-  const { showLoader } = useContext(LoaderContext);
 
   const [selectedId, setSelectedId] = useState(catId?.toString() || '1');
   const [selectedSubCatId, setSelectedSubCatId] = useState(null);
@@ -20,6 +19,7 @@ const useCategoriesData = (catId, debouncedSearchText, filters) => {
   const [subCategoriesList, setSubCategoriesList] = useState([]);
   const [productsList, setProductsList] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isFetchingSubCategories, setIsFetchingSubCategories] = useState(false);
   const [isFetchingProducts, setIsFetchingProducts] = useState(false);
   const [pincodeAreaId, setPincodeAreaId] = useState(null);
   const [pageNumber, setPageNumber] = useState(1);
@@ -60,7 +60,10 @@ const useCategoriesData = (catId, debouncedSearchText, filters) => {
         response.data &&
         response.data.items
       ) {
-        const newProducts = response.data.items;
+        // Shuffle each page as it arrives (not the accumulated list on every
+        // render) so already-rendered items never reorder from under the
+        // user mid-scroll — only the freshly fetched page gets randomized.
+        const newProducts = shuffle(response.data.items);
         if (page === 1) {
           setProductsList(newProducts);
         } else {
@@ -89,7 +92,6 @@ const useCategoriesData = (catId, debouncedSearchText, filters) => {
   const fetchCategories = async () => {
     try {
       setLoading(true);
-      showLoader(true);
       const response = await getCategoriesApi(1); // Fetch root categories to find 105
       console.log('Categories Response:', JSON.stringify(response, null, 2));
       if (
@@ -121,13 +123,12 @@ const useCategoriesData = (catId, debouncedSearchText, filters) => {
       console.error('Error fetching categories:', error);
     } finally {
       setLoading(false);
-      showLoader(false);
     }
   };
 
   const fetchSubCategories = async parentId => {
     try {
-      showLoader(true);
+      setIsFetchingSubCategories(true);
       const response = await getCategoriesApi(parentId);
       console.log('SubCategories Response:', JSON.stringify(response, null, 2));
       if (
@@ -145,7 +146,7 @@ const useCategoriesData = (catId, debouncedSearchText, filters) => {
       console.error('Error fetching subcategories:', error);
       setSubCategoriesList([]);
     } finally {
-      showLoader(false);
+      setIsFetchingSubCategories(false);
     }
   };
 
@@ -213,6 +214,7 @@ const useCategoriesData = (catId, debouncedSearchText, filters) => {
     subCategoriesList,
     productsList,
     loading,
+    isFetchingSubCategories,
     isFetchingProducts,
     isFetchingMore,
     handleLoadMore,

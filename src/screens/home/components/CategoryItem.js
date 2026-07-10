@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, Image, TouchableOpacity } from 'react-native';
+import { View, Text, Image } from 'react-native';
+import { FadeInUp } from 'react-native-reanimated';
 import { useNavigation } from '@react-navigation/native';
 import CONFIG from '../../../globals/config';
 import getCategoryPlaceholder from './getCategoryPlaceholder';
 import categoryChipStyles from './categoryChipStyles';
+import AnimatedPressable from '../../../components/AnimatedPressable';
+import { getStaggerDelay } from '../../../utils/staggerDelay';
 
-const CategoryItem = React.memo(({ item }) => {
+const CategoryItem = React.memo(({ item, index = 0 }) => {
   const navigation = useNavigation();
   const [imageError, setImageError] = useState(false);
 
@@ -19,7 +22,8 @@ const CategoryItem = React.memo(({ item }) => {
   }
 
   return (
-    <TouchableOpacity
+    <AnimatedPressable
+      entering={FadeInUp.delay(getStaggerDelay(index))}
       style={categoryChipStyles.item}
       onPress={() =>
         navigation.navigate('SearchScreen', {
@@ -40,7 +44,7 @@ const CategoryItem = React.memo(({ item }) => {
       <Text style={categoryChipStyles.label} numberOfLines={2}>
         {item.catName || item.name}
       </Text>
-    </TouchableOpacity>
+    </AnimatedPressable>
   );
 });
 

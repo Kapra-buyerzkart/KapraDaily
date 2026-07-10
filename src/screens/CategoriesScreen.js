@@ -1,4 +1,4 @@
-import React, { useState, useContext, useCallback } from 'react';
+import React, { useState, useContext, useCallback, useRef } from 'react';
 import {
   View,
   TouchableOpacity,
@@ -10,6 +10,12 @@ import {
 import Animated, {
   useAnimatedScrollHandler,
   useAnimatedStyle,
+  useAnimatedRef,
+  useAnimatedReaction,
+  useSharedValue,
+  scrollTo,
+  withTiming,
+  Easing,
   interpolate,
   Extrapolation,
   clamp,
@@ -36,6 +42,8 @@ import LocationModal from '../components/LocationModal';
 import CategoryListItem from '../components/CategoryListItem';
 import SubCategoryPill from '../components/SubCategoryPill';
 import CategoryProductGridShimmer from '../components/CategoryProductGridShimmer';
+import CategorySidebarShimmer from '../components/CategorySidebarShimmer';
+import SubCategoryPillsShimmer from '../components/SubCategoryPillsShimmer';
 
 import { AppContext } from '../context/appContext';
 import { useDebounce } from '../hooks/useDebounce';
@@ -92,12 +100,61 @@ export default function CategoriesScreen() {
     subCategoriesList,
     productsList,
     loading,
+    isFetchingSubCategories,
     isFetchingProducts,
     isFetchingMore,
     handleLoadMore,
   } = useCategoriesData(catId, debouncedSearchText, filters);
 
   const { onScrollWorklet } = useTabBarAnimation();
+
+  // Sidebar auto-scroll-to-center: tapping a category scrolls the sidebar so
+  // the selected item eases toward the vertical center.
+  // Two shared values on purpose: `sidebarScrollY` mirrors the live native
+  // scroll position; `sidebarAutoScrollY` drives the programmatic scrollTo, so
+  // a user's manual drag never fights the imperative scroll from a tap.
+  const sidebarListRef = useAnimatedRef();
+  const sidebarScrollY = useSharedValue(0);
+  const sidebarAutoScrollY = useSharedValue(0);
+  const sidebarContentHeight = useSharedValue(0);
+  const sidebarViewportHeight = useSharedValue(0);
+  const itemLayoutsRef = useRef({});
+
+  useAnimatedReaction(
+    () => sidebarAutoScrollY.value,
+    current => {
+      scrollTo(sidebarListRef, 0, current, false);
+    },
+  );
+
+  const sidebarScrollHandler = useAnimatedScrollHandler({
+    onScroll: event => {
+      sidebarScrollY.value = event.contentOffset.y;
+    },
+  });
+
+  const scrollSidebarToCenter = useCallback(
+    targetCatId => {
+      const layout = itemLayoutsRef.current[targetCatId];
+      if (!layout) return;
+      const viewportH = sidebarViewportHeight.value;
+      const contentH = sidebarContentHeight.value;
+      const maxScroll = Math.max(contentH - viewportH, 0);
+      const rawTarget = layout.y + layout.height / 2 - viewportH / 2;
+      const target = Math.max(0, Math.min(rawTarget, maxScroll));
+      sidebarAutoScrollY.value = sidebarScrollY.value;
+      sidebarAutoScrollY.value = withTiming(target, {
+        duration: 400,
+        easing: Easing.out(Easing.cubic),
+      });
+    },
+    [
+      sidebarContentHeight,
+      sidebarViewportHeight,
+      sidebarScrollY,
+      sidebarAutoScrollY,
+    ],
+  );
 
   // Memoized values
   const tabBarClearance = getTabBarClearance(bottom);
@@ -110,17 +167,10 @@ export default function CategoriesScreen() {
   // Animated styles / scroll handler
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: event => {
-      // UI THREAD: drives the tab bar's own visibility — no second scroll
-      // listener attached to the FlatList, no JS thread hop.
       onScrollWorklet(event.contentOffset.y);
     },
   });
 
-  // Nudges the floating cart down by exactly the space the tab bar frees up
-  // when it hides, and back to its resting place when the tab bar reappears.
-  // `tabBarClearance` is device/platform-aware (see getTabBarClearance), so
-  // the cart always lands flush with the screen bottom instead of overshooting
-  // or leaving a gap on a given device.
   const cartAnimatedStyle = useAnimatedStyle(() => {
     const progress = clamp(tabBarVisibility.value, 0, 1);
     return {
@@ -146,15 +196,25 @@ export default function CategoriesScreen() {
   const renderItem = useCallback(
     ({ item }) => {
       const isSelected = item?.catId?.toString() === selectedId;
+      const itemCatId = item?.catId?.toString();
       return (
         <CategoryListItem
           item={item}
           isSelected={isSelected}
-          onPress={() => setSelectedId(item?.catId?.toString())}
+          onLayout={e => {
+            itemLayoutsRef.current[itemCatId] = {
+              y: e.nativeEvent.layout.y,
+              height: e.nativeEvent.layout.height,
+            };
+          }}
+          onPress={() => {
+            setSelectedId(itemCatId);
+            scrollSidebarToCenter(itemCatId);
+          }}
         />
       );
     },
-    [selectedId, setSelectedId],
+    [selectedId, setSelectedId, scrollSidebarToCenter],
   );
 
   const renderSubCategory = useCallback(
@@ -173,8 +233,11 @@ export default function CategoriesScreen() {
     [selectedSubCatId, setSelectedSubCatId],
   );
 
-  const renderHeader = useCallback(
-    () => (
+  const renderHeader = useCallback(() => {
+    if (loading || isFetchingSubCategories) {
+      return <SubCategoryPillsShimmer />;
+    }
+    return (
       <FlatList
         data={subCategoriesList}
         keyExtractor={(item, index) => (item?.catId || index).toString()}
@@ -189,9 +252,8 @@ export default function CategoriesScreen() {
           gap: wp('2.5%'),
         }}
       />
-    ),
-    [subCategoriesList, renderSubCategory],
-  );
+    );
+  }, [subCategoriesList, renderSubCategory, isFetchingSubCategories, loading]);
 
   return (
     <SafeAreaView style={styles.mainContainer} edges={['top', 'left', 'right']}>
@@ -214,17 +276,32 @@ export default function CategoriesScreen() {
           <>
             {/* LEFT MENU */}
             <View style={styles.leftMenu}>
-              <FlatList
-                data={categoriesList}
-                keyExtractor={(item, index) =>
-                  (item?.catId || index).toString()
-                }
-                renderItem={renderItem}
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={{
-                  paddingBottom: hp('6%'),
-                }}
-              />
+              {loading ? (
+                <CategorySidebarShimmer />
+              ) : (
+                <Animated.FlatList
+                  ref={sidebarListRef}
+                  data={categoriesList}
+                  keyExtractor={(item, index) =>
+                    (item?.catId || index).toString()
+                  }
+                  renderItem={renderItem}
+                  showsVerticalScrollIndicator={false}
+                  onScroll={sidebarScrollHandler}
+                  scrollEventThrottle={16}
+                  onContentSizeChange={(w, h) => {
+                    sidebarContentHeight.value = h;
+                  }}
+                  onLayout={e => {
+                    sidebarViewportHeight.value = e.nativeEvent.layout.height;
+                  }}
+                  contentContainerStyle={{
+                    paddingVertical: hp('2%'),
+                    paddingHorizontal: wp('1.5%'),
+                    paddingBottom: hp('6%'),
+                  }}
+                />
+              )}
             </View>
 
             {/* RIGHT CONTENT */}
@@ -240,9 +317,9 @@ export default function CategoriesScreen() {
                     item={item}
                     entering={FadeInUp.delay(getStaggerDelay(index))}
                     containerStyle={{
-                      width: wp('36.5%'),
-                      marginHorizontal: wp('0.4%'),
-                      marginVertical: hp('0.8%'),
+                      width: wp('33%'),
+                      marginHorizontal: wp('1%'),
+                      marginVertical: hp('1%'),
                     }}
                     onPress={() =>
                       navigation.navigate('ProductDetailsScreen', {
@@ -258,8 +335,8 @@ export default function CategoriesScreen() {
                 onScroll={scrollHandler}
                 scrollEventThrottle={16}
                 contentContainerStyle={{
-                  paddingLeft: wp('1%'),
-                  paddingRight: wp('1%'),
+                  paddingLeft: wp('1.5%'),
+                  paddingRight: wp('1.5%'),
                   // The custom AnimatedTabBar floats over the content
                   // (position: absolute) instead of reserving its own flex
                   // space, so this padding keeps products from rendering
@@ -276,11 +353,9 @@ export default function CategoriesScreen() {
                   ) : null
                 }
                 ListEmptyComponent={
-                  isFetchingProducts ? (
+                  loading || isFetchingProducts ? (
                     <CategoryProductGridShimmer rows={3} />
-                  ) : productsList.length === 0 &&
-                    !isFetchingMore &&
-                    !loading ? (
+                  ) : productsList.length === 0 && !isFetchingMore ? (
                     <View style={styles.emptyContainer}>
                       <Image
                         source={require('../assets/images/udenDealNotfound.png')}
@@ -328,33 +403,46 @@ export default function CategoriesScreen() {
 const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#FFF',
   },
   row: {
     flex: 1,
     flexDirection: 'row',
+    backgroundColor: '#FFF',
   },
   leftMenu: {
-    width: wp('22%'),
-    paddingTop: hp('2%'),
+    width: wp('23%'),
+    marginTop: hp('1.5%'),
+    marginBottom: hp('1.5%'),
+    marginLeft: wp('1.5%'),
+    marginRight: wp('1.2%'),
+    borderRadius: 28,
     backgroundColor: '#FFFFFF',
-    borderRightWidth: 1,
-    borderColor: '#ECECEC',
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.06,
+    shadowRadius: 14,
+    elevation: 3,
   },
   rightContent: {
     flex: 1,
     overflow: 'visible',
+    backgroundColor: '#FFF',
   },
   newHeaderContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: wp('6%'),
-    paddingTop: hp('1.8%'),
-    paddingBottom: hp('1.4%'),
+    paddingTop: hp('2.2%'),
+    paddingBottom: hp('1.8%'),
     backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#ECECEC',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 1,
   },
   floatingContainer: {
     position: 'absolute',
