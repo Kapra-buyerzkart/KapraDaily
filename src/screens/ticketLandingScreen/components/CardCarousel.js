@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Platform,
   Dimensions,
+  StyleSheet,
   Vibration,
 } from 'react-native';
 import Reanimated, {
@@ -23,26 +24,19 @@ import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import LinearGradient from 'react-native-linear-gradient';
 import { hp } from '../../../utils/responsive';
-import styles from '../styles';
-import CONFIG from '../../../globals/config';
+import { getVoucherImageSource } from '@/components/events/imageUtils';
 
-const PLACEHOLDER_IMAGE = require('../../../assets/images/movieTicket/voucher.png');
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const STACK_VISIBLE = 3;
 const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.28;
 const STACK_SCALE_STEP = 0.06;
 const STACK_Y_STEP = 16;
-
-const getCardImageSource = item => {
-  if (item?.imageUrl) return { uri: CONFIG.image_base_url + item.imageUrl };
-  if (item?.cardImage) return item.cardImage;
-  if (item?.image) return item.image;
-  return PLACEHOLDER_IMAGE;
-};
+const CARD_WIDTH = SCREEN_WIDTH * 0.72;
+const CARD_HEIGHT = CARD_WIDTH * 0.62;
 
 const StackCard = ({ item, stackIndex, dragX, dragY, isTop }) => {
-  const imageSource = getCardImageSource(item);
+  const imageSource = getVoucherImageSource(item);
   const zIndex = isTop ? 10 : STACK_VISIBLE - stackIndex;
 
   // Transform lives on its own inner view (never on the view that also carries
@@ -75,7 +69,10 @@ const StackCard = ({ item, stackIndex, dragX, dragY, isTop }) => {
     const scale = interpolate(
       dragProgress,
       [0, 1],
-      [1 - stackIndex * STACK_SCALE_STEP, 1 - (stackIndex - 1) * STACK_SCALE_STEP],
+      [
+        1 - stackIndex * STACK_SCALE_STEP,
+        1 - (stackIndex - 1) * STACK_SCALE_STEP,
+      ],
       Extrapolation.CLAMP,
     );
     const translateY = interpolate(
@@ -117,7 +114,6 @@ const StackCard = ({ item, stackIndex, dragX, dragY, isTop }) => {
           source={imageSource}
           style={styles.cardImage}
           resizeMode="cover"
-          defaultSource={PLACEHOLDER_IMAGE}
         />
         {!!item?.discountTitle && (
           <View style={styles.stackDiscountBadge}>
@@ -126,7 +122,9 @@ const StackCard = ({ item, stackIndex, dragX, dragY, isTop }) => {
             </Text>
           </View>
         )}
-        <Text style={styles.cardTitle}>{item?.title}</Text>
+        <Text style={styles.cardTitle} numberOfLines={1}>
+          {item?.title}
+        </Text>
       </Reanimated.View>
     </Reanimated.View>
   );
@@ -181,9 +179,13 @@ const CardCarousel = ({ fadeAnim, onClaim, vouchers }) => {
 
   const handleNext = useCallback(() => {
     if (cardCount < 2) return;
-    dragX.value = withTiming(-SCREEN_WIDTH * 1.4, { duration: 220 }, finished => {
-      if (finished) runOnJS(advance)();
-    });
+    dragX.value = withTiming(
+      -SCREEN_WIDTH * 1.4,
+      { duration: 220 },
+      finished => {
+        if (finished) runOnJS(advance)();
+      },
+    );
     dragY.value = withTiming(-30, { duration: 220 });
   }, [advance, cardCount, dragX, dragY]);
 
@@ -204,7 +206,8 @@ const CardCarousel = ({ fadeAnim, onClaim, vouchers }) => {
         .onUpdate(event => {
           dragX.value = event.translationX;
           dragY.value = event.translationY;
-          const passedThreshold = Math.abs(event.translationX) > SWIPE_THRESHOLD;
+          const passedThreshold =
+            Math.abs(event.translationX) > SWIPE_THRESHOLD;
           if (passedThreshold && !hapticFired.value) {
             hapticFired.value = true;
             runOnJS(triggerHaptic)();
@@ -224,7 +227,9 @@ const CardCarousel = ({ fadeAnim, onClaim, vouchers }) => {
                 if (finished) runOnJS(advance)();
               },
             );
-            dragY.value = withTiming(event.translationY * 0.5, { duration: 220 });
+            dragY.value = withTiming(event.translationY * 0.5, {
+              duration: 220,
+            });
           } else {
             dragX.value = withSpring(0, { damping: 16, stiffness: 180 });
             dragY.value = withSpring(0, { damping: 16, stiffness: 180 });
@@ -246,7 +251,11 @@ const CardCarousel = ({ fadeAnim, onClaim, vouchers }) => {
   if (cardCount === 0) return null;
 
   const stackSlots = [];
-  for (let stackIndex = Math.min(STACK_VISIBLE, cardCount) - 1; stackIndex >= 0; stackIndex -= 1) {
+  for (
+    let stackIndex = Math.min(STACK_VISIBLE, cardCount) - 1;
+    stackIndex >= 0;
+    stackIndex -= 1
+  ) {
     const item = cards[(activeIndex + stackIndex) % cardCount];
     const isTop = stackIndex === 0;
     const card = (
@@ -271,15 +280,15 @@ const CardCarousel = ({ fadeAnim, onClaim, vouchers }) => {
   }
 
   return (
-    <>
-      <Animated.View style={[styles.carouselWrapper, { opacity: fadeAnim }]}>
+    <Animated.View style={{ opacity: fadeAnim }}>
+      <View style={styles.carouselWrapper}>
         <View style={styles.stackContainer}>{stackSlots}</View>
-      </Animated.View>
+      </View>
 
       <View
         style={[
           styles.arrowContainer,
-          { marginTop: Platform.OS === 'ios' ? hp(14) : hp(17) },
+          { marginTop: Platform.OS === 'ios' ? hp(4) : hp(5) },
         ]}
       >
         <View style={styles.arrowPill}>
@@ -288,12 +297,6 @@ const CardCarousel = ({ fadeAnim, onClaim, vouchers }) => {
           <ArrowButton iconName="keyboard-arrow-right" onPress={handleNext} />
         </View>
       </View>
-
-      <Image
-        source={require('../../../assets/images/movieTicket/Subtract.png')}
-        style={styles.subtractImage}
-        resizeMode="contain"
-      />
 
       <View style={styles.claimWrapper}>
         <TouchableOpacity
@@ -314,8 +317,100 @@ const CardCarousel = ({ fadeAnim, onClaim, vouchers }) => {
           </Reanimated.View>
         </TouchableOpacity>
       </View>
-    </>
+    </Animated.View>
   );
 };
+
+const styles = StyleSheet.create({
+  carouselWrapper: {
+    alignItems: 'center',
+    marginTop: hp(3),
+  },
+  stackContainer: {
+    width: CARD_WIDTH,
+    height: CARD_HEIGHT,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stackCardSlot: {
+    position: 'absolute',
+    width: CARD_WIDTH,
+    height: CARD_HEIGHT,
+  },
+  stackCardVisual: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 20,
+    overflow: 'hidden',
+    backgroundColor: '#161616',
+  },
+  stackCardGlow: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: '#9A5CFF',
+  },
+  cardImage: {
+    width: '100%',
+    height: '100%',
+  },
+  stackDiscountBadge: {
+    position: 'absolute',
+    top: 12,
+    left: 12,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  stackDiscountBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontFamily: 'Gilroy-Bold',
+  },
+  cardTitle: {
+    position: 'absolute',
+    bottom: 12,
+    left: 12,
+    right: 12,
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontFamily: 'Gilroy-Bold',
+  },
+  arrowContainer: {
+    alignItems: 'center',
+  },
+  arrowPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 30,
+    paddingHorizontal: 6,
+  },
+  arrowButton: {
+    padding: 10,
+  },
+  arrowDivider: {
+    width: 1,
+    height: 20,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+  },
+  claimWrapper: {
+    alignItems: 'center',
+    marginTop: hp(4),
+  },
+  claimButton: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  claimText: {
+    color: '#1A1200',
+    fontSize: 18,
+    fontFamily: 'Gilroy-Bold',
+  },
+});
 
 export default CardCarousel;

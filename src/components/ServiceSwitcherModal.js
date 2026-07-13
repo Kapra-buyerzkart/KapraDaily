@@ -116,9 +116,15 @@ const ServiceCard = memo(({ service, isActive, onPress }) => {
   );
 });
 
-const ServiceSwitcherModal = ({ visible, onClose }) => {
+const ServiceSwitcherModal = ({ visible, onClose, excludeServiceId }) => {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
+
+  // Hide the service the user is already on (e.g. Uden Tickets on the movie
+  // ticket landing screen) so the switcher only offers other destinations.
+  const services = excludeServiceId
+    ? SERVICES.filter(service => service.id !== excludeServiceId)
+    : SERVICES;
 
   const [modalVisible, setModalVisible] = useState(false);
   const [activeServiceId, setActiveServiceId] = useState(null);
@@ -307,7 +313,7 @@ const ServiceSwitcherModal = ({ visible, onClose }) => {
             </View>
 
             <View style={styles.cardsWrap}>
-              {SERVICES.map(service => (
+              {services.map(service => (
                 <ServiceCard
                   key={service.id}
                   service={service}

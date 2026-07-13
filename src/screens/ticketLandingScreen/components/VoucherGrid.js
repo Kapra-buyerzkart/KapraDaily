@@ -1,82 +1,26 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  Image,
-  TouchableOpacity,
-  ActivityIndicator,
-} from 'react-native';
-import styles from '../styles';
-import CONFIG from '../../../globals/config';
-
-const toImageSource = value =>
-  typeof value === 'string' ? { uri: CONFIG.image_base_url + value } : value;
-
-const VoucherCard = ({ item, onPress }) => (
-  <TouchableOpacity
-    style={styles.voucherCard}
-    activeOpacity={0.8}
-    onPress={() => onPress(item)}
-  >
-    <Image
-      source={toImageSource(item.imageUrl || item.image)}
-      style={styles.voucherCardImage}
-      resizeMode="cover"
-    />
-    <View style={styles.voucherCardBody}>
-      <Text style={styles.voucherCardTitle}>{item.title}</Text>
-      <Text style={styles.voucherCardDesc}>₹{item.denomination} Voucher</Text>
-    </View>
-  </TouchableOpacity>
-);
+import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import VoucherCard from '@/components/events/VoucherCard';
 
 const VoucherGrid = ({ vouchers = [], loading = false, onVoucherPress }) => {
   if (loading) {
     return (
-      <View
-        style={[
-          styles.voucherGrid,
-          {
-            justifyContent: 'center',
-            alignItems: 'center',
-            paddingVertical: 40,
-          },
-        ]}
-      >
-        <ActivityIndicator color="#e07f2b" />
+      <View style={[styles.grid, styles.centered]}>
+        <ActivityIndicator color="#9A5CFF" />
       </View>
     );
   }
 
-  console.log(vouchers, 'here is vouchere yaal');
-
   if (!vouchers?.length) {
     return (
-      <View
-        style={[
-          styles.voucherGrid,
-          {
-            justifyContent: 'center',
-            alignItems: 'center',
-            paddingVertical: 40,
-          },
-        ]}
-      >
-        <Text
-          style={{
-            color: 'rgba(255,255,255,0.4)',
-            fontFamily: 'Gilroy-Regular',
-            fontSize: 14,
-          }}
-        >
-          No vouchers yet
-        </Text>
+      <View style={[styles.grid, styles.centered]}>
+        <Text style={styles.emptyText}>No vouchers yet</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.voucherGrid}>
+    <View style={styles.grid}>
       {vouchers.map((item, index) => (
         <VoucherCard
           key={item?.purchaseId || item?.voucherId || item?.id || index}
@@ -84,16 +28,28 @@ const VoucherGrid = ({ vouchers = [], loading = false, onVoucherPress }) => {
           onPress={onVoucherPress}
         />
       ))}
-
-      {/* {vouchers.map((item, index) => (
-        <VoucherCard
-          key={item?.purchaseId || item?.voucherId || item?.id || index}
-          item={item}
-          onPress={onVoucherPress}
-        />
-      ))} */}
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    gap: 12,
+  },
+  centered: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  emptyText: {
+    color: 'rgba(255,255,255,0.4)',
+    fontFamily: 'Gilroy-Regular',
+    fontSize: 14,
+  },
+});
 
 export default VoucherGrid;

@@ -12,13 +12,18 @@ import Reanimated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import styles from './styles';
-import ScreenHeader from './components/ScreenHeader';
-import CoinBar from './components/CoinBar';
-import TabBar from './components/TabBar';
+import EventHeader from '@/components/events/EventHeader';
+import EventCategoryTabs, {
+  TAB_IDS,
+} from '@/components/events/EventCategoryTabs';
+import EmptyState from '@/components/events/EmptyState';
+import PopularTab from './components/PopularTab';
 import CardCarousel from './components/CardCarousel';
-import VoucherGrid from './components/VoucherGrid';
 import UdenTicketModal from './components/UdenTicketModal';
 import VoucherBottomSheet from './components/VoucherBottomSheet';
+import BottomTabBar from './components/BottomTabBar';
+import MyBookingsModal from './components/MyBookingsModal';
+import ServiceSwitcherModal from '../../components/ServiceSwitcherModal';
 import {
   getVouchersApi,
   getVoucherByIdApi,
@@ -32,20 +37,29 @@ import CONFIG from '../../globals/config';
 const AnimatedImageBackground =
   Animated.createAnimatedComponent(ImageBackground);
 
+const EVENTS_ICON = require('../../assets/events/Group 1000004805.png');
+const SPORTS_ICON = require('../../assets/events/Group 1000004803.png');
+const BILLS_ICON = require('../../assets/events/Group 1000004804.png');
+
 const TicketLandingScreen = ({ navigation }) => {
   const insets = useSafeAreaInsets();
   const [fadeAnim] = useState(() => new Animated.Value(0));
   const [imageOpacity] = useState(() => new Animated.Value(0));
-  const [activeTab, setActiveTab] = useState(0);
+  const [activeTab, setActiveTab] = useState(TAB_IDS.POPULAR);
   const tabAnim = useRef(new Animated.Value(1)).current;
   const [modalVisible, setModalVisible] = useState(false);
   const [claimedVoucher, setClaimedVoucher] = useState(null);
   const [selectedVoucher, setSelectedVoucher] = useState(null);
   const [carouselVouchers, setCarouselVouchers] = useState([]);
+  const [carouselLoading, setCarouselLoading] = useState(true);
   const [myVouchers, setMyVouchers] = useState([]);
   const [myVouchersLoading, setMyVouchersLoading] = useState(false);
+  const [myBookingsVisible, setMyBookingsVisible] = useState(false);
+  const [storeSwitcherVisible, setStoreSwitcherVisible] = useState(false);
   const [bCoins, setBCoins] = useState(0);
   const [claimedQuoteData, setClaimedQuoteData] = useState(null);
+  const [giftQuote, setGiftQuote] = useState(null);
+  const [giftQuoteLoading, setGiftQuoteLoading] = useState(false);
 
   const scrollY = useSharedValue(0);
 
@@ -66,29 +80,29 @@ const TicketLandingScreen = ({ navigation }) => {
   }, []);
 
   useEffect(() => {
+    setCarouselLoading(true);
     getVouchersApi()
       .then(res => {
         if (res?.data?.items) {
           setCarouselVouchers(res.data.items);
         }
       })
-      .catch(err => logger.error('Failed to load vouchers:', err?.message));
+      .catch(err => logger.error('Failed to load vouchers:', err?.message))
+      .finally(() => setCarouselLoading(false));
     refreshBCoins();
   }, [refreshBCoins]);
 
   useEffect(() => {
-    if (activeTab === 1) {
-      setMyVouchersLoading(true);
-      getMyVouchersApi()
-        .then(res => {
-          if (res?.data?.items) {
-            setMyVouchers(res.data.items);
-          }
-        })
-        .catch(err => logger.error('Failed to load my vouchers:', err?.message))
-        .finally(() => setMyVouchersLoading(false));
-    }
-  }, [activeTab]);
+    setMyVouchersLoading(true);
+    getMyVouchersApi()
+      .then(res => {
+        if (res?.data?.items) {
+          setMyVouchers(res.data.items);
+        }
+      })
+      .catch(err => logger.error('Failed to load my vouchers:', err?.message))
+      .finally(() => setMyVouchersLoading(false));
+  }, []);
 
   useEffect(() => {
     const uris = [...carouselVouchers, ...myVouchers]
@@ -100,6 +114,29 @@ const TicketLandingScreen = ({ navigation }) => {
 
     uris.forEach(uri => Image.prefetch(uri));
   }, [carouselVouchers, myVouchers]);
+
+  useEffect(() => {
+    const featured = carouselVouchers?.[0];
+    if (!featured?.voucherId) {
+      setGiftQuote(null);
+      return undefined;
+    }
+    let cancelled = false;
+    setGiftQuoteLoading(true);
+    getVoucherQuoteApi(featured.voucherId, 1, bCoins)
+      .then(res => {
+        if (!cancelled && res?.success) setGiftQuote(res.data);
+      })
+      .catch(err =>
+        logger.error('Failed to load gift card quote:', err?.message),
+      )
+      .finally(() => {
+        if (!cancelled) setGiftQuoteLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [carouselVouchers, bCoins]);
 
   const handleImageLoad = () => {
     Animated.timing(imageOpacity, {
@@ -131,13 +168,24 @@ const TicketLandingScreen = ({ navigation }) => {
       .catch(err => logger.error('Failed to claim voucher:', err?.message));
   };
 
-  const handleTabChange = index => {
+  const handleGoHome = () => {
+    navigation.navigate('MainTabs', {
+      screen: 'Home',
+      params: { screen: 'HomeScreen' },
+    });
+  };
+
+  const handleOpenStoreSwitcher = () => {
+    setStoreSwitcherVisible(true);
+  };
+
+  const handleTabChange = tabId => {
     Animated.timing(tabAnim, {
       toValue: 0,
       duration: 120,
       useNativeDriver: true,
     }).start(() => {
-      setActiveTab(index);
+      setActiveTab(tabId);
       Animated.spring(tabAnim, {
         toValue: 1,
         useNativeDriver: true,
@@ -174,32 +222,59 @@ const TicketLandingScreen = ({ navigation }) => {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           bounces={false}
-          stickyHeaderIndices={[2]}
+          stickyHeaderIndices={[1]}
         >
-          <ScreenHeader
+          <EventHeader
             navigation={navigation}
             insets={insets}
-            scrollY={scrollY}
+            bCoins={bCoins}
           />
-          <CoinBar bCoins={bCoins} scrollY={scrollY} />
-          <TabBar
+          <EventCategoryTabs
             activeTab={activeTab}
             onTabChange={handleTabChange}
             scrollY={scrollY}
-            insets={insets}
           />
+
           <Animated.View style={tabContentStyle}>
-            {activeTab === 0 ? (
+            {activeTab === TAB_IDS.POPULAR && (
+              <PopularTab
+                fadeAnim={fadeAnim}
+                vouchers={carouselVouchers}
+                loading={carouselLoading}
+                bCoins={bCoins}
+                giftQuote={giftQuote}
+                giftQuoteLoading={giftQuoteLoading}
+                onClaim={handleClaim}
+                onGoToVouchers={() => handleTabChange(TAB_IDS.VOUCHERS)}
+                onGoToSports={() => handleTabChange(TAB_IDS.SPORTS)}
+              />
+            )}
+            {activeTab === TAB_IDS.VOUCHERS && (
               <CardCarousel
                 fadeAnim={fadeAnim}
-                onClaim={handleClaim}
                 vouchers={carouselVouchers}
+                onClaim={handleClaim}
               />
-            ) : (
-              <VoucherGrid
-                vouchers={myVouchers}
-                loading={myVouchersLoading}
-                onVoucherPress={setSelectedVoucher}
+            )}
+            {activeTab === TAB_IDS.EVENTS && (
+              <EmptyState
+                icon={EVENTS_ICON}
+                title="Events"
+                subtitle="Event ticket booking is coming soon. Stay tuned!"
+              />
+            )}
+            {activeTab === TAB_IDS.SPORTS && (
+              <EmptyState
+                icon={SPORTS_ICON}
+                title="Sports"
+                subtitle="Book tickets for your favourite sports, coming soon."
+              />
+            )}
+            {activeTab === TAB_IDS.BILLS && (
+              <EmptyState
+                icon={BILLS_ICON}
+                title="Bills & Recharge"
+                subtitle="Pay bills and recharge with UD-Coins, coming soon."
               />
             )}
           </Animated.View>
@@ -221,6 +296,26 @@ const TicketLandingScreen = ({ navigation }) => {
         visible={!!selectedVoucher}
         voucher={selectedVoucher}
         onClose={() => setSelectedVoucher(null)}
+      />
+      <MyBookingsModal
+        visible={myBookingsVisible}
+        vouchers={myVouchers}
+        loading={myVouchersLoading}
+        onVoucherPress={setSelectedVoucher}
+        onClose={() => setMyBookingsVisible(false)}
+      />
+
+      <BottomTabBar
+        bookingsCount={myVouchers.length}
+        onHomePress={handleGoHome}
+        onMyBookingsPress={() => setMyBookingsVisible(true)}
+        onStorePress={handleOpenStoreSwitcher}
+      />
+
+      <ServiceSwitcherModal
+        visible={storeSwitcherVisible}
+        onClose={() => setStoreSwitcherVisible(false)}
+        excludeServiceId="movie"
       />
     </View>
   );
