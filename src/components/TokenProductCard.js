@@ -29,7 +29,6 @@ import AnimatedPressable from './AnimatedPressable';
 const DEFAULT_PRODUCT_NAME = 'Lorem Ipsum is simply dummy textsimply dummy';
 const DEFAULT_MRP = '394';
 const DEFAULT_PRICE = '324';
-const DEFAULT_WEIGHT = '1kg';
 const DEFAULT_TOKEN_VALUE = '1';
 const COUNTER_HIT_SLOP = { top: 10, bottom: 10, left: 10, right: 10 };
 const WISHLIST_HIT_SLOP = 20;
@@ -470,6 +469,8 @@ const TokenProductCard = ({
   containerStyle,
   entering,
 }) => {
+  console.log('TokenProductCard item:', JSON.stringify(item, null, 2));
+
   // State
   const [imageError, setImageError] = useState(false);
 
@@ -495,7 +496,7 @@ const TokenProductCard = ({
         mrp: item?.mrp || item?.unitPrice || DEFAULT_MRP,
         price: item?.price || item?.specialPrice || DEFAULT_PRICE,
         offer: discount ? `${Math.round(discount)}% OFF` : '',
-        weight: item?.weight || DEFAULT_WEIGHT,
+        weight: item?.weight,
         token: `${derivedTokenValue} UD ${
           Number(derivedTokenValue) > 1 ? 'Tokens' : 'Token'
         }`,
@@ -505,6 +506,8 @@ const TokenProductCard = ({
           item?.isAvailable === false,
       };
     }, [item]);
+
+  console.log;
 
   const cartItem = useMemo(
     () =>

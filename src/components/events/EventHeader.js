@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import icons from '@/assets/icons';
 import CoinBalance from './CoinBalance';
+import { wp } from '../../utils/responsive';
 
 const EventHeader = ({ navigation, insets, bCoins }) => {
   const paddingTop = insets?.top > 0 ? insets.top + 16 : 40;
@@ -14,12 +15,15 @@ const EventHeader = ({ navigation, insets, bCoins }) => {
           hitSlop={40}
           style={styles.backButton}
         >
-          <Image
-            source={icons.backArrowNew}
-            style={styles.backIcon}
-          />
+          <Image source={icons.backArrowNew} style={styles.backIcon} />
         </TouchableOpacity>
-        <Image source={icons.titleText} style={styles.logo} />
+
+        <Image
+          style={{ width: wp('20%'), height: wp('20%') }}
+          source={require('../../assets/images/movieTicket/udendeallanding.png')}
+          resizeMode="contain"
+        />
+        {/* <Image source={icons.titleTextTwo} style={styles.logo} /> */}
       </View>
       <CoinBalance bCoins={bCoins} />
     </View>
@@ -38,18 +42,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     flexShrink: 1,
-    marginRight: 12,
   },
-  backButton: {
-    marginRight: 14,
-  },
+  backButton: {},
   backIcon: {
     resizeMode: 'contain',
     tintColor: '#FFFFFF',
+    resizeMode: 'contain',
+    width: 67,
+    height: 32,
   },
-  logo: {
-    alignSelf: 'center',
-  },
+  logo: {},
 });
 
 export default EventHeader;

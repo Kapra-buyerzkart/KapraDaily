@@ -1,6 +1,8 @@
 import React from 'react';
-import { View, Image, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Image, Text, StyleSheet } from 'react-native';
+import { FadeInUp } from 'react-native-reanimated';
 import { getVoucherImageSource } from './imageUtils';
+import AnimatedPressable from '@/components/AnimatedPressable';
 
 const GiftCard = ({ voucher, quote, quoteLoading, onPress }) => {
   if (!voucher) return null;
@@ -10,7 +12,11 @@ const GiftCard = ({ voucher, quote, quoteLoading, onPress }) => {
     : quote?.coinsApplied ?? quote?.udcoinsRequired ?? 0;
 
   return (
-    <TouchableOpacity activeOpacity={0.9} style={styles.card} onPress={onPress}>
+    <AnimatedPressable
+      style={styles.card}
+      entering={FadeInUp}
+      onPress={onPress}
+    >
       <Image
         source={getVoucherImageSource(voucher)}
         style={styles.image}
@@ -33,7 +39,7 @@ const GiftCard = ({ voucher, quote, quoteLoading, onPress }) => {
           </View>
         </View>
       </View>
-    </TouchableOpacity>
+    </AnimatedPressable>
   );
 };
 

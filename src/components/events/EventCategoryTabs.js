@@ -150,10 +150,18 @@ const CategoryTab = ({ tab, isActive, onPress }) => {
   );
 };
 
-const EventCategoryTabs = ({ activeTab, onTabChange, scrollY }) => {
+const EventCategoryTabs = ({ activeTab, onTabChange, scrollY, insets }) => {
+  const topInset = insets?.top ?? 0;
+
   const containerStyle = useAnimatedStyle(() => {
     if (!scrollY) return {};
     return {
+      paddingTop: interpolate(
+        scrollY.value,
+        [STICKY_START, STICKY_END],
+        [0, topInset],
+        Extrapolation.CLAMP,
+      ),
       backgroundColor: interpolateColor(
         scrollY.value,
         [STICKY_START, STICKY_END],

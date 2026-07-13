@@ -8,8 +8,8 @@ import SectionTitle from '@/components/events/SectionTitle';
 import LoadingSkeleton from '@/components/events/LoadingSkeleton';
 import EmptyState from '@/components/events/EmptyState';
 
-const VOUCHERS_ICON = require('../../../assets/events/ticketsBulk.png');
-const SPORTS_ICON = require('../../../assets/events/trophyBulk.png');
+const VOUCHERS_ICON = require('../../../assets/events/Frame 1216250138.png');
+const SPORTS_ICON = require('../../../assets/events/Group 1000004808.png');
 const POPULAR_ICON = require('../../../assets/events/Group 1000004801.png');
 
 const PopularTab = ({
@@ -50,11 +50,13 @@ const PopularTab = ({
           icon={VOUCHERS_ICON}
           title={'Get BookMyShow vouchers from\nUDEN Tickets'}
           onPress={onGoToVouchers}
+          index={0}
         />
         <QuickActionCard
           icon={SPORTS_ICON}
           title={'Book tickets for your\nfavourite sports'}
           onPress={onGoToSports}
+          index={1}
         />
       </View>
 
@@ -72,11 +74,12 @@ const PopularTab = ({
       {!loading && listItems.length > 0 && (
         <>
           <SectionTitle title="Featured Events" />
-          {listItems.map(item => (
+          {listItems.map((item, index) => (
             <EventCard
               key={item?.voucherId ?? item?.id}
               item={item}
               onPress={onClaim}
+              index={index}
             />
           ))}
         </>

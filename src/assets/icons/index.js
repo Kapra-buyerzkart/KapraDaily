@@ -22,6 +22,7 @@ const icons = {
   smartPoint: require('./smartPoint.png'),
   tick: require('./tick.png'),
   titleText: require('./titleText.png'),
+
   tokenud: require('./tokenud.png'),
   udcoin: require('./udcoin.png'),
   udentcketPurple: require('./udentcketPurple.png'),

@@ -1,11 +1,15 @@
 import React from 'react';
-import { View, Image, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Image, Text, StyleSheet } from 'react-native';
+import { FadeInUp } from 'react-native-reanimated';
 import { getVoucherImageSource } from './imageUtils';
+import AnimatedPressable from '@/components/AnimatedPressable';
+import { getStaggerDelay } from '@/utils/staggerDelay';
+import COLORS from '@/styles/colors';
 
-const EventCard = ({ item, onPress }) => (
-  <TouchableOpacity
-    activeOpacity={0.9}
+const EventCard = ({ item, onPress, index = 0 }) => (
+  <AnimatedPressable
     style={styles.card}
+    entering={FadeInUp.delay(getStaggerDelay(index))}
     onPress={() => onPress?.(item)}
   >
     <Image
@@ -28,14 +32,14 @@ const EventCard = ({ item, onPress }) => (
         )}
       </View>
     </View>
-  </TouchableOpacity>
+  </AnimatedPressable>
 );
 
 const styles = StyleSheet.create({
   card: {
     marginHorizontal: 20,
     marginTop: 16,
-    borderRadius: 16,
+    borderRadius: 12,
     overflow: 'hidden',
     backgroundColor: 'rgba(255,255,255,0.05)',
     borderWidth: 1,
@@ -60,13 +64,12 @@ const styles = StyleSheet.create({
   },
   pill: {
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.25)',
-    borderRadius: 16,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    borderColor: COLORS.purple,
+    borderRadius: 7.5,
+    padding: 10,
   },
   pillText: {
-    color: 'rgba(255,255,255,0.85)',
+    color: COLORS.white,
     fontSize: 11,
     fontFamily: 'Gilroy-Medium',
   },

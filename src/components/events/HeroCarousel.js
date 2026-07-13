@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Image, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Image, Text, StyleSheet } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useAnimatedScrollHandler,
@@ -10,6 +10,7 @@ import Animated, {
 import LinearGradient from 'react-native-linear-gradient';
 import { wp, hp } from '../../utils/responsive';
 import { getVoucherImageSource } from './imageUtils';
+import AnimatedPressable from '@/components/AnimatedPressable';
 
 const AUTOPLAY_INTERVAL_MS = 4000;
 const BANNER_WIDTH = wp(88);
@@ -43,11 +44,7 @@ const PaginationDot = ({ scrollX, index, count, snap, infinite }) => {
 };
 
 const Slide = ({ item, onPress }) => (
-  <TouchableOpacity
-    activeOpacity={0.9}
-    style={styles.slide}
-    onPress={() => onPress?.(item)}
-  >
+  <AnimatedPressable style={styles.slide} onPress={() => onPress?.(item)}>
     <Image
       source={getVoucherImageSource(item)}
       style={styles.image}
@@ -68,7 +65,7 @@ const Slide = ({ item, onPress }) => (
         <Text style={styles.priceText}>From ₹{item?.denomination ?? 0}</Text>
       </View>
     </View>
-  </TouchableOpacity>
+  </AnimatedPressable>
 );
 
 const HeroCarousel = ({ data, onItemPress }) => {

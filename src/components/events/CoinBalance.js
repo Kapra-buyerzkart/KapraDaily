@@ -1,21 +1,15 @@
 import React from 'react';
-import { Image, Text, StyleSheet } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
+import { Animated, Image, Text, StyleSheet } from 'react-native';
 
 const CoinBalance = ({ bCoins, style }) => (
-  <LinearGradient
-    colors={['rgba(255,255,255,0.22)', 'rgba(255,255,255,0.08)']}
-    start={{ x: 0, y: 0 }}
-    end={{ x: 1, y: 1 }}
-    style={[styles.pill, style]}
-  >
+  <Animated.View style={[styles.pill, style]}>
     <Image
       source={require('../../assets/icons/udcoin.png')}
       style={styles.icon}
       resizeMode="contain"
     />
     <Text style={styles.amount}>{bCoins || 0}</Text>
-  </LinearGradient>
+  </Animated.View>
 );
 
 const styles = StyleSheet.create({
@@ -27,6 +21,8 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.18)',
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    overflow: 'hidden',
   },
   icon: {
     width: 20,

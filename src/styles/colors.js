@@ -13,6 +13,7 @@ export const COLORS = {
   errorTint: '#FFEBEE',
   warning: '#F2994A',
   info: '#00BCD4',
+  purple: '#6E34C0',
 
   pink: '#FF0066',
   darkRed: '#FF0000',

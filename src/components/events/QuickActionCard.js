@@ -1,33 +1,53 @@
+import COLORS from '@/styles/colors';
 import React from 'react';
-import { View, Image, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import {
+  View,
+  Image,
+  Text,
+  TouchableOpacity,
+  ImageBackground,
+  StyleSheet,
+} from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+
+const bgQuickAction = require('../../assets/events/bgQucikAction.png');
 
 const QuickActionCard = ({ icon, title, onPress }) => (
   <TouchableOpacity activeOpacity={0.85} style={styles.card} onPress={onPress}>
-    <View style={styles.container}>
-      <View style={styles.titleContainer}>
-        <Image source={icon} style={styles.icon} resizeMode="contain" />
-        <Text style={styles.title} numberOfLines={2}>
-          {title}
-        </Text>
-      </View>
+    <ImageBackground
+      source={bgQuickAction}
+      style={styles.background}
+      imageStyle={styles.backgroundImage}
+      resizeMode="contain"
+    >
+      <View style={styles.container}>
+        <View style={styles.titleContainer}>
+          <Image source={icon} style={styles.icon} resizeMode="contain" />
+          <Text style={styles.title} numberOfLines={2}>
+            {title}
+          </Text>
+        </View>
 
-      <View style={styles.arrow}>
-        <MaterialIcons name="arrow-forward-ios" size={16} color="#FFFFFF" />
+        <View style={styles.arrow}>
+          <MaterialIcons name="arrow-forward-ios" size={16} color="#FFFFFF" />
+        </View>
       </View>
-    </View>
+    </ImageBackground>
   </TouchableOpacity>
 );
 
 const styles = StyleSheet.create({
   card: {
-    padding: 16,
-    backgroundColor: 'rgba(255,255,255,0.06)',
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: 'rgba(105, 102, 102, 0.08)',
+    overflow: 'hidden',
+  },
+  background: {
+    padding: 16,
     justifyContent: 'space-between',
   },
+  backgroundImage: {},
   titleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -35,25 +55,21 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
   },
   icon: {
-    width: 22,
-    height: 22,
-    top: 2,
-    resizeMode: 'contain',
+    width: 53,
+    height: 41,
   },
   title: {
     color: '#FFFFFF',
-    fontSize: 13,
     fontFamily: 'Gilroy-SemiBold',
     lineHeight: 18,
     paddingLeft: 10,
-    marginTop: 12,
   },
   arrow: {
-    top: 2,
     borderRadius: 18,
-    backgroundColor: '#6E34C0',
+    backgroundColor: COLORS.purple,
     width: 36,
     height: 36,
     justifyContent: 'center',

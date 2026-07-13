@@ -5,14 +5,18 @@ import {
   View,
   ImageBackground,
   Image,
+  Platform,
 } from 'react-native';
 import Reanimated, {
   useSharedValue,
   useAnimatedScrollHandler,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import styles from './styles';
 import EventHeader from '@/components/events/EventHeader';
+import EventCard from '@/components/events/EventCard';
+import LoadingSkeleton from '@/components/events/LoadingSkeleton';
 import EventCategoryTabs, {
   TAB_IDS,
 } from '@/components/events/EventCategoryTabs';
@@ -31,6 +35,11 @@ import {
   getMyVouchersApi,
 } from '../../api/voucherService';
 import { getDashboardDataApi } from '../../api/userService';
+import {
+  getEventDetailsListApi,
+  getEventDetailsByIdApi,
+  DUMMY_EVENTS,
+} from '../../api/eventService';
 import logger from '../../utils/logger';
 import CONFIG from '../../globals/config';
 
@@ -60,6 +69,8 @@ const TicketLandingScreen = ({ navigation }) => {
   const [claimedQuoteData, setClaimedQuoteData] = useState(null);
   const [giftQuote, setGiftQuote] = useState(null);
   const [giftQuoteLoading, setGiftQuoteLoading] = useState(false);
+  const [events, setEvents] = useState([]);
+  const [eventsLoading, setEventsLoading] = useState(false);
 
   const scrollY = useSharedValue(0);
 
@@ -68,6 +79,19 @@ const TicketLandingScreen = ({ navigation }) => {
       scrollY.value = event.contentOffset.y;
     },
   });
+  const applyStatusBar = useCallback(() => {
+    StatusBar.setBarStyle('light-content');
+    if (Platform.OS === 'android') {
+      StatusBar.setTranslucent(true);
+      StatusBar.setBackgroundColor('transparent');
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      applyStatusBar();
+    }, [applyStatusBar]),
+  );
 
   const refreshBCoins = useCallback(() => {
     getDashboardDataApi()
@@ -169,17 +193,45 @@ const TicketLandingScreen = ({ navigation }) => {
   };
 
   const handleGoHome = () => {
-    navigation.navigate('MainTabs', {
-      screen: 'Home',
-      params: { screen: 'HomeScreen' },
-    });
+    handleTabChange(TAB_IDS.POPULAR);
   };
 
   const handleOpenStoreSwitcher = () => {
     setStoreSwitcherVisible(true);
   };
 
+  const fetchEventDetailsList = useCallback(() => {
+    setEventsLoading(true);
+    getEventDetailsListApi()
+      .then(res => {
+        const items = res?.data?.items || res?.data || [];
+        setEvents(Array.isArray(items) ? items : []);
+      })
+      .catch(err => {
+        logger.error('Failed to load event details list:', err?.message);
+        setEvents(DUMMY_EVENTS);
+      })
+      .finally(() => setEventsLoading(false));
+  }, []);
+
+  const handleEventPress = useCallback(event => {
+    const eventId = event?.eventId ?? event?.id;
+    if (eventId === undefined || eventId === null) {
+      return;
+    }
+    getEventDetailsByIdApi(eventId)
+      .then(res => {
+        logger.log('Event details:', res?.data ?? res);
+      })
+      .catch(err =>
+        logger.error('Failed to load event details:', err?.message),
+      );
+  }, []);
+
   const handleTabChange = tabId => {
+    if (tabId === TAB_IDS.EVENTS) {
+      fetchEventDetailsList();
+    }
     Animated.timing(tabAnim, {
       toValue: 0,
       duration: 120,
@@ -209,7 +261,11 @@ const TicketLandingScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#000000" />
+      <StatusBar
+        barStyle="light-content"
+        translucent
+        backgroundColor="transparent"
+      />
       <AnimatedImageBackground
         source={require('../../assets/images/movieTicket/ticketLandingBg.png')}
         style={[styles.imageBg, { opacity: imageOpacity }]}
@@ -233,6 +289,7 @@ const TicketLandingScreen = ({ navigation }) => {
             activeTab={activeTab}
             onTabChange={handleTabChange}
             scrollY={scrollY}
+            insets={insets}
           />
 
           <Animated.View style={tabContentStyle}>
@@ -256,13 +313,26 @@ const TicketLandingScreen = ({ navigation }) => {
                 onClaim={handleClaim}
               />
             )}
-            {activeTab === TAB_IDS.EVENTS && (
-              <EmptyState
-                icon={EVENTS_ICON}
-                title="Events"
-                subtitle="Event ticket booking is coming soon. Stay tuned!"
-              />
-            )}
+            {activeTab === TAB_IDS.EVENTS &&
+              (eventsLoading ? (
+                <LoadingSkeleton />
+              ) : events.length > 0 ? (
+                events.map((item, index) => (
+                  <EventCa
+                    rd
+                    key={item?.eventId ?? item?.id}
+                    item={item}
+                    onPress={handleEventPress}
+                    index={index}
+                  />
+                ))
+              ) : (
+                <EmptyState
+                  icon={EVENTS_ICON}
+                  title="Events"
+                  subtitle="Event ticket booking is coming soon. Stay tuned!"
+                />
+              ))}
             {activeTab === TAB_IDS.SPORTS && (
               <EmptyState
                 icon={SPORTS_ICON}
@@ -314,7 +384,12 @@ const TicketLandingScreen = ({ navigation }) => {
 
       <ServiceSwitcherModal
         visible={storeSwitcherVisible}
-        onClose={() => setStoreSwitcherVisible(false)}
+        onClose={() => {
+          setStoreSwitcherVisible(false);
+          // The switcher's native Modal (statusBarTranslucent) can reset the
+          // Android status bar as it tears down; re-assert ours afterwards.
+          setTimeout(applyStatusBar, 350);
+        }}
         excludeServiceId="movie"
       />
     </View>
