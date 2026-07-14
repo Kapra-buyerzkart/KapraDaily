@@ -3,6 +3,7 @@ import { View, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import icons from '@/assets/icons';
 import CoinBalance from './CoinBalance';
 import { wp } from '../../utils/responsive';
+import { hp } from '@/styles/cartTheme';
 
 const EventHeader = ({ navigation, insets, bCoins }) => {
   const paddingTop = insets?.top > 0 ? insets.top + 16 : 40;
@@ -18,12 +19,11 @@ const EventHeader = ({ navigation, insets, bCoins }) => {
           <Image source={icons.backArrowNew} style={styles.backIcon} />
         </TouchableOpacity>
 
-        <Image
-          style={{ width: wp('20%'), height: wp('20%') }}
+        {/* <Image
+          style={{ height: hp('3.5%'), width: wp('18.5%') }}
           source={require('../../assets/images/movieTicket/udendeallanding.png')}
           resizeMode="contain"
-        />
-        {/* <Image source={icons.titleTextTwo} style={styles.logo} /> */}
+        /> */}
       </View>
       <CoinBalance bCoins={bCoins} />
     </View>
@@ -41,7 +41,6 @@ const styles = StyleSheet.create({
   left: {
     flexDirection: 'row',
     alignItems: 'center',
-    flexShrink: 1,
   },
   backButton: {},
   backIcon: {

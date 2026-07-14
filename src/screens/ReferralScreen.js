@@ -1,18 +1,17 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useContext } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   Image,
+  ImageBackground,
   TouchableOpacity,
-  FlatList,
   Share,
-  Clipboard,
-  ActivityIndicator,
+  StatusBar,
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import icons from '@/assets/icons';
-import Toast from 'react-native-simple-toast';
+import images from '@/assets/images';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   widthPercentageToDP as wp,
@@ -20,136 +19,16 @@ import {
 } from 'react-native-responsive-screen';
 import { useNavigation } from '@react-navigation/native';
 import { FONTS } from '../styles/typography';
-import { getReferralHistoryApi } from '../api/userService';
-import { LoaderContext } from '../context/loaderContext';
 import { AppContext } from '../context/appContext';
-import StoreUnavailable from '../components/StoreUnavailable';
-import LocationModal from '../components/LocationModal';
 import CONFIG from '../globals/config';
-// import moment from 'moment'
 
 const ReferralScreen = () => {
   const navigation = useNavigation();
-  const { showLoader } = useContext(LoaderContext);
-  const { profile, isStoreUnavailable, storeUnavailableData } =
-    useContext(AppContext);
-  const [referrals, setReferrals] = useState([]);
-  const [isLocationModalVisible, setIsLocationModalVisible] = useState(false);
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
-  const [pageNumber, setPageNumber] = useState(1);
-  const [hasMoreData, setHasMoreData] = useState(true);
-  const [isFetchingMore, setIsFetchingMore] = useState(false);
-  const pageSize = 20;
+  const { profile } = useContext(AppContext);
 
-  useEffect(() => {
-    fetchReferralHistory(1);
-  }, []);
-
-  const fetchReferralHistory = async (page = 1) => {
-    try {
-      if (page === 1) {
-        showLoader(true);
-        setHasMoreData(true);
-      } else {
-        setIsFetchingMore(true);
-      }
-      const response = await getReferralHistoryApi(page, pageSize);
-      console.log('Referral History Response:', response);
-      if (response?.success && response?.data?.items) {
-        const referralData = Array.isArray(response.data.items)
-          ? response.data.items
-          : [];
-        if (page === 1) {
-          setReferrals(referralData);
-        } else {
-          setReferrals(prev => [...prev, ...referralData]);
-        }
-        setPageNumber(page);
-        if (referralData.length < pageSize) {
-          setHasMoreData(false);
-        }
-      } else {
-        if (page === 1) setReferrals([]);
-        setHasMoreData(false);
-      }
-    } catch (error) {
-      console.error('Fetch Referral History Error:', error);
-      if (page === 1) setReferrals([]);
-      setHasMoreData(false);
-    } finally {
-      showLoader(false);
-      setIsFetchingMore(false);
-      setIsInitialLoad(false);
-    }
-  };
-
-  const handleLoadMore = () => {
-    if (!isFetchingMore && hasMoreData && !isInitialLoad) {
-      fetchReferralHistory(pageNumber + 1);
-    }
-  };
-
-  const renderItem = ({ item }) => {
-    const formatDate = dateString => {
-      if (!dateString) return '';
-      const [date] = dateString.split('T');
-      const [year, month, day] = date.split('-');
-      return `${day}-${month}-${year}`;
-    };
-
-    const formattedDate = formatDate(item.createdAt);
-
-    return (
-      <View
-        style={[
-          styles.listItem,
-          { height: 'auto', paddingVertical: hp('1.5%') },
-        ]}
-      >
-        <View style={styles.listItemLeft}>
-          <View style={styles.listIconWrapper}>
-            <View style={styles.userInitialCircle}>
-              <Text style={styles.userInitialText}>
-                {(item.custName || 'U').charAt(0).toUpperCase()}
-              </Text>
-            </View>
-          </View>
-          <View style={{ marginLeft: wp('3%') }}>
-            <Text style={styles.listItemText}>{item.custName || 'User'}</Text>
-          </View>
-        </View>
-        <View style={styles.listItemRight}>
-          <Text style={styles.registeredLabelMini}>Registered on</Text>
-          <Text style={styles.dateEndText}>{formattedDate}</Text>
-        </View>
-      </View>
-    );
-  };
-
-  const renderEmpty = () => {
-    if (isInitialLoad) return null;
-    return (
-      <View style={styles.emptyContainer}>
-        {/* <Image
-                    source={require('../assets/images/nowish.png')}
-                    style={styles.emptyImage}
-                /> */}
-        <Text style={styles.emptyText}>No Referral History</Text>
-      </View>
-    );
-  };
-
-  const MaskedText = ({ value }) => {
-    const lastTwo = value.slice(-2);
-    const masked = '*'.repeat(value.length - 2);
-
-    return (
-      <View style={styles.container}>
-        <Text style={styles.masked}>{masked}</Text>
-        <Text style={styles.lastTwo}>{lastTwo}</Text>
-      </View>
-    );
-  };
+  const bCoinBalance = Number(
+    profile?.totalBCoins || profile?.bCoins || 0,
+  ).toFixed(1);
 
   const onShare = async () => {
     try {
@@ -159,710 +38,199 @@ const ReferralScreen = () => {
       const message = `Hey! Download UdenDeal and get fresh groceries delivered to your doorstep. Join me using my referral code: ${
         profile?.referalCode || 'WELCOME'
       } and enjoy exclusive rewards! Download now: ${shareUrl}`;
-      await Share.share({
-        message: message,
-      });
+      await Share.share({ message });
     } catch (error) {
       console.error('Error sharing:', error.message);
     }
   };
 
-  const copyToClipboard = () => {
-    Clipboard.setString(
-      profile?.referralCode || profile?.referalCode || 'WELCOME',
-    );
-    Toast.show('Referral code copied!', Toast.SHORT);
-  };
-
   return (
-    <SafeAreaView style={styles.mainContainer}>
-      <View style={styles.headerContainer}>
-        <TouchableOpacity hitSlop={40} onPress={() => navigation.goBack()}>
-          <Image
-            source={icons.backArrowNew}
-            style={{
-              resizeMode: 'contain',
-              tintColor: '#000',
-            }}
-          />
-        </TouchableOpacity>
-        <Text style={styles.referralText}>Referral</Text>
-        {/* <View style={styles.bcoinContainer}>
-                    <Image style={styles.bcoinImage} source={require('../assets/images/rupee.png')} />
-                    <Text style={styles.bcoinText}>{profile?.totalBCoins || '0.00'}</Text>
-                </View> */}
-      </View>
-      <View style={{ flex: 1 }}>
-        <>
-          {/* <Text style={styles.referEarnText}>Refer and Earn</Text> */}
-          <View style={styles.solidPremiumCard}>
-            <View style={styles.solidHeaderRow}>
-              <Image
-                style={styles.solidSpeakerIcon}
-                source={require('../assets/images/loud-speaker.png')}
-              />
-              <View style={styles.solidTitleCol}>
-                <Text style={styles.solidReferTitle}>Refer & Earn</Text>
-                <Text style={styles.solidSubTitle}>
-                  Get rewarded for every friend who shops using your invite.
-                </Text>
-              </View>
-            </View>
-
-            <View style={styles.solidRewardBox}>
-              <Text style={styles.solidRewardLabel}>Total Rewards Earned</Text>
-              <View style={styles.solidRewardAmountRow}>
-                <Image
-                  source={require('../assets/images/bcoinn.png')}
-                  style={styles.solidCoinIcon}
-                />
-                <Text style={styles.solidRewardValue}>
-                  {profile?.referralEarning ||
-                    referrals[0]?.totalTokensEarned ||
-                    '0.00'}
-                </Text>
-              </View>
-            </View>
-
-            <TouchableOpacity style={styles.solidInviteBtn} onPress={onShare}>
-              <MaterialCommunityIcons
-                name="share-variant"
-                size={wp('5%')}
-                color="#FFFFFF"
-              />
-              <Text style={styles.solidBtnText}>Send Invite</Text>
-            </TouchableOpacity>
-          </View>
-          <Text
-            style={[
-              styles.referEarnText,
-              {
-                marginTop: hp('3%'),
-                marginBottom: hp('1%'),
-              },
-            ]}
-          >
-            Referral History
-          </Text>
-
-          <FlatList
-            data={referrals}
-            keyExtractor={(item, index) => `${item.referrerCustId}-${index}`}
-            renderItem={renderItem}
-            ListEmptyComponent={renderEmpty}
-            onEndReached={handleLoadMore}
-            onEndReachedThreshold={0.5}
-            ItemSeparatorComponent={() => <View style={styles.divider} />}
-            ListFooterComponent={() => (
-              <>
-                {isFetchingMore && (
-                  <ActivityIndicator
-                    size="small"
-                    color="#F25000"
-                    style={{ paddingVertical: 10 }}
-                  />
-                )}
-                {referrals.length > 0 && !isFetchingMore && (
-                  <View style={{ height: hp('2%') }} />
-                )}
-              </>
-            )}
-            style={
-              referrals.length > 0
-                ? [styles.historyListCard, { flex: 1 }]
-                : { flex: 1 }
-            }
-            contentContainerStyle={
-              referrals.length === 0
-                ? styles.emptyListContent
-                : styles.listContent
-            }
-            showsVerticalScrollIndicator={false}
-          />
-        </>
-      </View>
-
-      <LocationModal
-        visible={isLocationModalVisible}
-        onClose={() => setIsLocationModalVisible(false)}
+    <ImageBackground
+      source={images.referBg}
+      style={styles.background}
+      resizeMode="cover"
+    >
+      <StatusBar
+        translucent
+        backgroundColor="transparent"
+        barStyle="light-content"
       />
-    </SafeAreaView>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.headerContainer}>
+          <TouchableOpacity
+            hitSlop={40}
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}
+          >
+            <Image
+              source={icons.backArrowNew}
+              style={styles.backIcon}
+            />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Refer and Earn</Text>
+          <View style={styles.coinBadge}>
+            <Image source={images.bcoinn} style={styles.coinIcon} />
+            <Text style={styles.coinText}>{bCoinBalance} B</Text>
+          </View>
+        </View>
+
+        <View style={styles.content}>
+          <View style={styles.heroCard}>
+            <Image
+              source={images.referIcon}
+              style={styles.heroImage}
+              resizeMode="contain"
+            />
+            <Text style={styles.heroText}>SHARE & EARN</Text>
+          </View>
+
+          <TouchableOpacity
+            style={styles.shareButton}
+            activeOpacity={0.85}
+            onPress={onShare}
+          >
+            <MaterialCommunityIcons
+              name="share-variant"
+              size={wp('5%')}
+              color="#FFFFFF"
+            />
+            <Text style={styles.shareButtonText}>Share</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            hitSlop={20}
+            onPress={() => navigation.navigate('ReferralHistoryScreen')}
+          >
+            <Text style={styles.historyLink}>Refer history</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    </ImageBackground>
   );
 };
 
 export default ReferralScreen;
 
 const styles = StyleSheet.create({
-  mainContainer: {
+  background: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#5B199B',
+  },
+  safeArea: {
+    flex: 1,
   },
   headerContainer: {
-    marginTop: hp('3%'),
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginLeft: wp('2%'),
-    marginRight: wp('5%'),
-  },
-  referralText: {
-    color: '#000000',
-    fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('4.65%'),
-    marginLeft: wp('2%'),
-    flex: 1,
-  },
-  bcoinContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#F9A833',
-    backgroundColor: '#FFBA331A',
-    borderRadius: wp('2.33%'),
-    paddingHorizontal: wp('2%'),
-    paddingVertical: hp('0.3%'),
-  },
-  bcoinImage: {
-    width: wp('4.65%'),
-    height: wp('4.65%'),
-    resizeMode: 'contain',
-  },
-  bcoinText: {
-    fontSize: wp('3.25%'),
-    fontFamily: FONTS.gilroy.regular,
-    color: '#000000',
-    marginLeft: wp('2%'),
-  },
-  headerContentContainer: {
-    paddingBottom: hp('2%'),
-    backgroundColor: '#FFFFFF',
-  },
-  headerRowMinimal: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: wp('4%'),
+    paddingBottom: hp('1.5%'),
     marginTop: hp('1%'),
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.12)',
   },
-  speakerLeftSmall: {
-    width: wp('20%'),
-    height: wp('20%'),
-    resizeMode: 'contain',
-  },
-  headerTextCol: {
-    marginLeft: wp('3%'),
-  },
-  referTitleMain: {
-    fontFamily: FONTS.gilroy.bold,
-    fontSize: wp('4.5%'),
-    color: '#000000',
-  },
-  rewardSubText: {
-    fontFamily: FONTS.gilroy.regular,
-    fontSize: wp('2.8%'),
-    color: '#666666',
-    marginTop: hp('0.2%'),
-  },
-  rewardHighlightBox: {
-    backgroundColor: '#F25000',
-    borderRadius: wp('3%'),
-    paddingVertical: hp('1.5%'),
-    paddingHorizontal: wp('5%'),
-    marginTop: hp('1.5%'),
-    width: wp('85%'),
-    alignSelf: 'center',
+  backButton: {
+    width: wp('9%'),
+    height: wp('9%'),
+    borderRadius: wp('4.5%'),
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    justifyContent: 'center',
     alignItems: 'center',
   },
-  earnedLabel: {
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('3%'),
-    color: '#FFFFFF',
-    opacity: 0.9,
-  },
-  earnedValueContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: hp('0.5%'),
-  },
-  rupeeIconBox: {
+  backIcon: {
     width: wp('4.5%'),
     height: wp('4.5%'),
     resizeMode: 'contain',
     tintColor: '#FFFFFF',
   },
-  amountHighlight: {
-    fontFamily: FONTS.gilroy.bold,
-    fontSize: wp('6%'),
+  headerTitle: {
+    flex: 1,
     color: '#FFFFFF',
-    marginLeft: wp('1%'),
-  },
-  refinedInviteBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: wp('2%'),
-    borderWidth: 1,
-    borderColor: '#F25000',
-    paddingVertical: hp('1%'),
-    paddingHorizontal: wp('4%'),
-    marginTop: hp('2%'),
-    alignSelf: 'center',
-  },
-  shareIconMini: {
-    width: wp('4.1%'),
-    height: wp('4.1%'),
-    resizeMode: 'contain',
-    tintColor: '#F25000',
-  },
-  refinedInviteBtnText: {
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('3.5%'),
-    color: '#F25000',
-    marginLeft: wp('2%'),
-  },
-  referEarnText: {
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('4.19%'),
-    color: '#000000',
-    alignSelf: 'center',
-    marginTop: hp('2%'),
-  },
-  innerContainer: {
-    width: wp('91.16%'),
-    // height: hp('35.63%'),
-    borderWidth: 0.5,
-    borderColor: '#DADADA',
-    borderRadius: wp('2.33%'),
-    alignSelf: 'center',
-    marginTop: hp('1%'),
-    alignItems: 'center',
-    //  paddingVertical: hp('2%')
-  },
-  loudspeakerImageStyle: {
-    width: wp('48.37%'),
-    height: wp('40.37%'),
-    resizeMode: 'contain',
-  },
-  referralRewardText: {
-    color: '#616161',
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('3.72%'),
-  },
-  bcoinContainerTwo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: hp('1.4%'),
-  },
-  bcoinImageTwo: {
-    width: wp('7.67%'),
-    height: wp('7.67%'),
-    resizeMode: 'contain',
-  },
-  bcoinTextTwo: {
-    fontSize: wp('6.97%'),
-    color: '#F9A833',
     fontFamily: FONTS.gilroy.semiBold,
-    marginLeft: wp('2%'),
+    fontSize: wp('4.65%'),
+    marginLeft: wp('3%'),
   },
-  modernReferralCard: {
-    //  backgroundColor: '#FFFFFF',
-    borderRadius: wp('5%'),
-    width: wp('88%'),
-    //  marginTop: hp('2%'),
-    paddingVertical: hp('1%'),
-    paddingHorizontal: wp('5%'),
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.12,
-    shadowRadius: 15,
-    elevation: 8,
-    borderWidth: 1,
-    borderColor: '#F0F0F0',
-    alignItems: 'center',
-  },
-  modernRewardSection: {
-    alignItems: 'center',
-    // marginBottom: hp('1.5%')
-  },
-  modernRewardLabel: {
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('3%'),
-    color: '#71717A',
-    marginBottom: hp('0.5%'),
-  },
-  modernAmountRow: {
+  coinBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  modernCurrency: {
-    fontFamily: FONTS.gilroy.bold,
-    fontSize: wp('4%'),
-    color: '#F25000',
-    marginRight: wp('1%'),
-  },
-  modernAmount: {
-    fontFamily: FONTS.gilroy.bold,
-    fontSize: wp('6%'),
-    color: '#18181B',
-  },
-  modernDivider: {
-    width: '100%',
-    height: 1,
-    backgroundColor: '#F4F4F5',
-    marginVertical: hp('1%'),
-  },
-  modernCodeSection: {
-    width: '100%',
-    alignItems: 'center',
-    // marginBottom: hp('3%')
-  },
-  modernCodeLabel: {
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('2.9%'),
-    color: '#71717A',
-    marginBottom: hp('1.5%'),
-  },
-  modernCodeBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    // backgroundColor: '#FFF5F0',
-    borderRadius: wp('3%'),
-    paddingVertical: hp('1%'),
-    paddingHorizontal: wp('8%'),
-    borderWidth: 1,
-    borderColor: '#F2500030',
-    borderStyle: 'dashed',
-  },
-  modernCodeText: {
-    fontFamily: FONTS.gilroy.bold,
-    fontSize: wp('5%'),
-    color: '#F25000',
-    letterSpacing: 2,
-    marginRight: wp('3%'),
-  },
-  modernTapToCopy: {
-    fontFamily: FONTS.gilroy.regular,
-    fontSize: wp('2.8%'),
-    color: '#A1A1AA',
-    marginTop: hp('0.8%'),
-    marginBottom: hp('1%'),
-  },
-  modernInviteBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F25000',
-    borderRadius: wp('10%'),
-    paddingVertical: hp('1.8%'),
-    paddingHorizontal: wp('12%'),
-    width: '100%',
-    justifyContent: 'center',
-    shadowColor: '#F25000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.35,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  modernInviteBtnText: {
-    fontFamily: FONTS.gilroy.bold,
-    fontSize: wp('4.2%'),
-    color: '#FFFFFF',
-    marginLeft: wp('2.5%'),
-  },
-  rewardCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    backgroundColor: '#2D0A4E',
     borderRadius: wp('4%'),
-    padding: wp('5%'),
-    width: wp('85%'),
-    alignItems: 'center',
-    marginTop: hp('2.5%'),
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.1,
-    shadowRadius: 20,
-    elevation: 10,
+    paddingHorizontal: wp('2.5%'),
+    paddingVertical: hp('0.5%'),
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.8)',
+    borderColor: '#F9A833',
   },
-  rewardLabel: {
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('3.5%'),
-    color: '#616161',
-    marginBottom: hp('1%'),
-  },
-  rewardValueContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: hp('2.5%'),
-  },
-  currencySymbol: {
-    fontFamily: FONTS.gilroy.bold,
-    fontSize: wp('6%'),
-    color: '#F25000',
-    marginRight: wp('1%'),
-  },
-  rewardValue: {
-    fontFamily: FONTS.gilroy.bold,
-    fontSize: wp('9%'),
-    color: '#F25000',
-  },
-  inviteButtonNew: {
-    backgroundColor: '#F25000',
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: hp('1.5%'),
-    paddingHorizontal: wp('10%'),
-    borderRadius: wp('12%'),
-    shadowColor: '#F25000',
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.4,
-    shadowRadius: 10,
-    elevation: 8,
-  },
-  inviteButtonTextNew: {
-    color: '#FFFFFF',
-    fontFamily: FONTS.gilroy.bold,
-    fontSize: wp('4.2%'),
-    marginLeft: wp('2.5%'),
-  },
-  shareIconWhite: {
+  coinIcon: {
     width: wp('5%'),
     height: wp('5%'),
     resizeMode: 'contain',
-    tintColor: '#FFFFFF',
-  },
-  sendInviteButton: {
-    flexDirection: 'row',
-    width: wp('76.74%'),
-    height: hp('5.36%'),
-    backgroundColor: '#F25000',
-    borderRadius: wp('2.33%'),
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: hp('0.8%'),
-  },
-  sendIcon: {
-    width: wp('5.12%'),
-    height: hp('1.93%'),
-    resizeMode: 'contain',
-  },
-  sendInviteText: {
-    color: '#FFFFFF',
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('4.19%'),
-    marginLeft: wp('2.5%'),
-  },
-  container: {
-    flexDirection: 'row',
-    // alignItems: 'flex-end',
-  },
-  masked: {
-    fontSize: wp('4%'),
-    letterSpacing: 1,
-    color: '#000000',
-  },
-  lastTwo: {
-    fontSize: wp('3.25%'),
-    fontFamily: FONTS.gilroy.regular,
-    color: '#000000',
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#F2F2F2',
-    marginHorizontal: wp('4%'),
-  },
-  historyListCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    marginHorizontal: wp('4%'),
-    marginBottom: hp('1.5%'),
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 5,
-    elevation: 2,
-    borderWidth: 1,
-    borderColor: '#F2F2F2',
-  },
-  listItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: wp('4%'),
-  },
-  listItemLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  listItemRight: {
-    alignItems: 'flex-end',
-  },
-  listIconWrapper: {
-    width: wp('10%'),
-    height: wp('10%'),
-    borderRadius: wp('5%'),
-    backgroundColor: '#FFE7DB',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  userInitialCircle: {
-    width: wp('8%'),
-    height: wp('8%'),
-    borderRadius: wp('4%'),
-    backgroundColor: '#F25000',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  userInitialText: {
-    color: '#FFFFFF',
-    fontFamily: FONTS.gilroy.bold,
-    fontSize: wp('4%'),
-  },
-  listItemText: {
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('3.8%'),
-    color: '#000000',
-  },
-  registeredLabelMini: {
-    fontFamily: FONTS.gilroy.regular,
-    fontSize: wp('2.4%'),
-    color: '#777777',
-    marginBottom: -hp('0.2%'),
-  },
-  dateEndText: {
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('3.2%'),
-    color: '#F25000',
-  },
-  listContent: {
-    paddingBottom: hp('5%'),
-  },
-  emptyListContent: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingBottom: hp('10%'),
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emptyText: {
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('4%'),
-    color: '#616161',
-    marginTop: hp('2%'),
-  },
-  solidPremiumCard: {
-    width: wp('92%'),
-    alignSelf: 'center',
-    marginTop: hp('2%'),
-    backgroundColor: '#FFF2EB', // Very light orange/peach
-    borderRadius: wp('5%'),
-    padding: wp('5%'),
-    borderColor: '#FFD1B3',
-    borderWidth: 1,
-  },
-  solidHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: hp('2%'),
-  },
-  solidSpeakerIcon: {
-    width: wp('15%'),
-    height: wp('15%'),
-    resizeMode: 'contain',
-  },
-  solidTitleCol: {
-    marginLeft: wp('3%'),
-    flex: 1,
-  },
-  solidReferTitle: {
-    fontFamily: FONTS.gilroy.bold,
-    fontSize: wp('5.5%'),
-    color: '#1A1A1A',
-  },
-  solidSubTitle: {
-    fontFamily: FONTS.gilroy.regular,
-    fontSize: wp('3%'),
-    color: '#666666',
-    marginTop: hp('0.5%'),
-  },
-  solidRewardBox: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: wp('3%'),
-    padding: wp('3%'),
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 5,
-    elevation: 2,
-  },
-  solidRewardLabel: {
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('3.2%'),
-    color: '#777777',
-    marginBottom: hp('0.5%'),
-  },
-  solidRewardAmountRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  solidCoinIcon: {
-    width: wp('6%'),
-    height: wp('6%'),
-    resizeMode: 'contain',
     marginRight: wp('1.5%'),
   },
-  solidRewardValue: {
-    fontFamily: FONTS.gilroy.bold,
-    fontSize: wp('7%'),
-    color: '#1A1A1A',
-  },
-  solidCodeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: hp('2.5%'),
-  },
-  solidCodeLabel: {
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('3.5%'),
-    color: '#444444',
-  },
-  solidCodeTouch: {
-    backgroundColor: '#FFE1CC',
-    paddingHorizontal: wp('3%'),
-    paddingVertical: hp('0.5%'),
-    borderRadius: wp('2%'),
-    marginLeft: wp('2%'),
-    borderWidth: 1,
-    borderColor: '#FFB880',
-    borderStyle: 'dashed',
-  },
-  solidCodeText: {
-    fontFamily: FONTS.gilroy.bold,
-    fontSize: wp('4%'),
-    color: '#F25000',
-    letterSpacing: 1,
-  },
-  solidInviteBtn: {
-    backgroundColor: '#F25000',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: wp('10%'),
-    paddingVertical: hp('1.5%'),
-    marginTop: hp('2.5%'),
-    shadowColor: '#F25000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 5,
-  },
-  solidBtnText: {
-    fontFamily: FONTS.gilroy.bold,
-    fontSize: wp('4.2%'),
+  coinText: {
     color: '#FFFFFF',
-    marginLeft: wp('2%'),
+    fontFamily: FONTS.gilroy.bold,
+    fontSize: wp('3.2%'),
+  },
+  content: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: wp('6%'),
+    paddingBottom: hp('6%'),
+  },
+  heroCard: {
+    width: wp('72%'),
+    backgroundColor: '#F9B213',
+    borderRadius: wp('6%'),
+    borderWidth: wp('1.2%'),
+    borderColor: '#FFFFFF',
+    alignItems: 'center',
+    paddingTop: hp('2.5%'),
+    paddingBottom: hp('3%'),
+    paddingHorizontal: wp('4%'),
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 10,
+  },
+  heroImage: {
+    width: wp('58%'),
+    height: wp('62%'),
+  },
+  heroText: {
+    fontFamily: FONTS.gilroy.bold,
+    fontSize: wp('7.5%'),
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
+    marginTop: hp('1%'),
+    textAlign: 'center',
+  },
+  shareButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F25000',
+    borderRadius: wp('3%'),
+    paddingVertical: hp('1.9%'),
+    width: wp('72%'),
+    marginTop: hp('4%'),
+    shadowColor: '#F25000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
+    elevation: 6,
+  },
+  shareButtonText: {
+    color: '#FFFFFF',
+    fontFamily: FONTS.gilroy.bold,
+    fontSize: wp('4.5%'),
+    marginLeft: wp('2.5%'),
+  },
+  historyLink: {
+    color: '#FFFFFF',
+    fontFamily: FONTS.gilroy.semiBold,
+    fontSize: wp('4%'),
+    marginTop: hp('2.5%'),
+    textDecorationLine: 'underline',
   },
 });

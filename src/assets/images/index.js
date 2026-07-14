@@ -195,6 +195,9 @@ const images = {
   noCouponCode: require('./noimages/noCouponCode.png'),
   noCoupons: require('./noimages/noCoupons.png'),
   noWishlist: require('./noimages/noWishlist.png'),
+  referBg: require('./referbg.png'),
+  referIcon: require('./referImage.png'),
+  shareNearn: require('../sharenearn.png'),
 };
 
 export default images;

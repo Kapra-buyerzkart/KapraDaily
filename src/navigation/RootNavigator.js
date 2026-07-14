@@ -20,6 +20,7 @@ import OrderPendingScreen from '../screens/OrderPendingScreen';
 import LoginPwdScreen from '../screens/LoginPwdScreen';
 import SavedAddressScreen from '../screens/SavedAddressScreen';
 import ReferralScreen from '../screens/ReferralScreen';
+import ReferralHistoryScreen from '../screens/ReferralHistoryScreen';
 import { AppContext } from '../context/appContext';
 import EditProfileScreen from '../screens/EditProfileScreen/EditProfileScreen';
 import ChangePasswordScreen from '../screens/ChangePasswordScreen';
@@ -109,6 +110,10 @@ export default function RootNavigator() {
           component={SavedAddressScreen}
         />
         <Stack.Screen name="ReferralScreen" component={ReferralScreen} />
+        <Stack.Screen
+          name="ReferralHistoryScreen"
+          component={ReferralHistoryScreen}
+        />
         <Stack.Screen name="EditProfileScreen" component={EditProfileScreen} />
         <Stack.Screen
           name="ChangePasswordScreen"

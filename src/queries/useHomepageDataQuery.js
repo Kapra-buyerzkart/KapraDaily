@@ -20,6 +20,8 @@ const useHomepageDataQuery = areaId =>
     },
     select: transformHomepageResponse,
     enabled: areaId !== undefined,
+    staleTime: 60 * 1000, // banners/catalog can change intra-day; revalidate sooner than the 5 min default
+    refetchOnMount: 'always', // paint persisted cache instantly, then revalidate on every HomeScreen mount
     retry: (failureCount, error) => {
       const status = error?.status ?? error?.response?.status;
       if (status === 404 || status === 400) return false;

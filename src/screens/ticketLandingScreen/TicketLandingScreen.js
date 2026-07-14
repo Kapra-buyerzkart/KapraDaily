@@ -38,7 +38,6 @@ import { getDashboardDataApi } from '../../api/userService';
 import {
   getEventDetailsListApi,
   getEventDetailsByIdApi,
-  DUMMY_EVENTS,
 } from '../../api/eventService';
 import logger from '../../utils/logger';
 import CONFIG from '../../globals/config';
@@ -209,7 +208,7 @@ const TicketLandingScreen = ({ navigation }) => {
       })
       .catch(err => {
         logger.error('Failed to load event details list:', err?.message);
-        setEvents(DUMMY_EVENTS);
+        setEvents([]);
       })
       .finally(() => setEventsLoading(false));
   }, []);
@@ -318,8 +317,7 @@ const TicketLandingScreen = ({ navigation }) => {
                 <LoadingSkeleton />
               ) : events.length > 0 ? (
                 events.map((item, index) => (
-                  <EventCa
-                    rd
+                  <EventCard
                     key={item?.eventId ?? item?.id}
                     item={item}
                     onPress={handleEventPress}
@@ -329,8 +327,8 @@ const TicketLandingScreen = ({ navigation }) => {
               ) : (
                 <EmptyState
                   icon={EVENTS_ICON}
-                  title="Events"
-                  subtitle="Event ticket booking is coming soon. Stay tuned!"
+                  title="No events found"
+                  subtitle="There are no events available right now. Please check back later."
                 />
               ))}
             {activeTab === TAB_IDS.SPORTS && (
