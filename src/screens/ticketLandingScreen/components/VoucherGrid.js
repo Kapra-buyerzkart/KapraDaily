@@ -1,44 +1,68 @@
-import React from 'react';
-import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import React, { useCallback } from 'react';
+import {
+  View,
+  Text,
+  ActivityIndicator,
+  FlatList,
+  StyleSheet,
+} from 'react-native';
 import VoucherCard from '@/components/events/VoucherCard';
 
-const VoucherGrid = ({ vouchers = [], loading = false, onVoucherPress }) => {
+const keyExtractor = (item, index) =>
+  String(item?.purchaseId || item?.voucherId || item?.id || index);
+
+const VoucherGrid = ({
+  vouchers = [],
+  loading = false,
+  onVoucherPress,
+  bottomInset = 0,
+}) => {
+  const renderItem = useCallback(
+    ({ item }) => <VoucherCard item={item} onPress={onVoucherPress} />,
+    [onVoucherPress],
+  );
+
   if (loading) {
     return (
-      <View style={[styles.grid, styles.centered]}>
+      <View style={[styles.list, styles.centered]}>
         <ActivityIndicator color="#9A5CFF" />
       </View>
     );
   }
 
-  if (!vouchers?.length) {
-    return (
-      <View style={[styles.grid, styles.centered]}>
-        <Text style={styles.emptyText}>No vouchers yet</Text>
-      </View>
-    );
-  }
-
   return (
-    <View style={styles.grid}>
-      {vouchers.map((item, index) => (
-        <VoucherCard
-          key={item?.purchaseId || item?.voucherId || item?.id || index}
-          item={item}
-          onPress={onVoucherPress}
-        />
-      ))}
-    </View>
+    <FlatList
+      style={styles.list}
+      data={vouchers}
+      keyExtractor={keyExtractor}
+      renderItem={renderItem}
+      numColumns={2}
+      columnWrapperStyle={styles.column}
+      contentContainerStyle={[
+        styles.content,
+        { paddingBottom: bottomInset + 20 },
+      ]}
+      showsVerticalScrollIndicator={false}
+      ListEmptyComponent={
+        <View style={styles.centered}>
+          <Text style={styles.emptyText}>No vouchers yet</Text>
+        </View>
+      }
+    />
   );
 };
 
 const styles = StyleSheet.create({
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+  list: {
+    flex: 1,
+  },
+  content: {
     paddingHorizontal: 20,
     paddingTop: 20,
+  },
+  column: {
     gap: 12,
+    marginBottom: 12,
   },
   centered: {
     justifyContent: 'center',
@@ -52,4 +76,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default VoucherGrid;
+export default React.memo(VoucherGrid);

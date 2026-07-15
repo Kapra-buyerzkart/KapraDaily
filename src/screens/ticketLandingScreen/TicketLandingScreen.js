@@ -1,4 +1,10 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  useMemo,
+} from 'react';
 import {
   Animated,
   StatusBar,
@@ -46,6 +52,10 @@ const AnimatedImageBackground =
 const EVENTS_ICON = require('../../assets/events/Group 1000004805.png');
 const SPORTS_ICON = require('../../assets/events/Group 1000004803.png');
 const BILLS_ICON = require('../../assets/events/Group 1000004804.png');
+
+// The category tabs (cell index 1) pin to the top while the header above them
+// scrolls away — matching the previous ScrollView stickyHeaderIndices behavior.
+const STICKY_INDICES = [1];
 
 const TicketLandingScreen = ({ navigation }) => {
   const insets = useSafeAreaInsets();
@@ -159,7 +169,7 @@ const TicketLandingScreen = ({ navigation }) => {
     };
   }, [carouselVouchers, bCoins]);
 
-  const handleImageLoad = () => {
+  const handleImageLoad = useCallback(() => {
     Animated.timing(imageOpacity, {
       toValue: 1,
       duration: 600,
@@ -171,44 +181,50 @@ const TicketLandingScreen = ({ navigation }) => {
         useNativeDriver: true,
       }).start();
     });
-  };
+  }, [imageOpacity, fadeAnim]);
 
-  const handleClaim = voucher => {
-    setClaimedQuoteData(null);
-    Promise.all([
-      getVoucherByIdApi(voucher?.voucherId),
-      getVoucherQuoteApi(voucher?.voucherId, 1, bCoins),
-    ])
-      .then(([voucherRes, quoteRes]) => {
-        if (voucherRes?.data) {
-          setClaimedVoucher(voucherRes.data);
-          if (quoteRes?.success) setClaimedQuoteData(quoteRes.data);
-          setModalVisible(true);
-        }
-      })
-      .catch(err => logger.error('Failed to claim voucher:', err?.message));
-  };
+  const handleClaim = useCallback(
+    voucher => {
+      setClaimedQuoteData(null);
+      Promise.all([
+        getVoucherByIdApi(voucher?.voucherId),
+        getVoucherQuoteApi(voucher?.voucherId, 1, bCoins),
+      ])
+        .then(([voucherRes, quoteRes]) => {
+          if (voucherRes?.data) {
+            setClaimedVoucher(voucherRes.data);
+            if (quoteRes?.success) setClaimedQuoteData(quoteRes.data);
+            setModalVisible(true);
+          }
+        })
+        .catch(err => logger.error('Failed to claim voucher:', err?.message));
+    },
+    [bCoins],
+  );
 
-  const handleGoHome = () => {
-    handleTabChange(TAB_IDS.POPULAR);
-  };
-
-  const handleOpenStoreSwitcher = () => {
+  const handleOpenStoreSwitcher = useCallback(() => {
     setStoreSwitcherVisible(true);
-  };
+  }, []);
+
+  const voucherPressTimeoutRef = useRef(null);
+  useEffect(() => () => clearTimeout(voucherPressTimeoutRef.current), []);
+
+  const handleVoucherPress = useCallback(voucher => {
+    setMyBookingsVisible(false);
+    voucherPressTimeoutRef.current = setTimeout(
+      () => setSelectedVoucher(voucher),
+      Platform.OS === 'ios' ? 400 : 250,
+    );
+  }, []);
 
   const fetchEventDetailsList = useCallback(() => {
-    console.log('fetchEventDetailsList: called');
     setEventsLoading(true);
     getEventDetailsListApi()
       .then(res => {
-        console.log('Event list raw response:', res);
         const items = res?.data?.items || res?.data || [];
-        console.log('Event list data:', items);
         setEvents(Array.isArray(items) ? items : []);
       })
       .catch(err => {
-        console.log('Event list error:', err?.message, err);
         logger.error('Failed to load event details list:', err?.message);
         setEvents([]);
       })
@@ -217,7 +233,6 @@ const TicketLandingScreen = ({ navigation }) => {
 
   const handleEventPress = useCallback(
     event => {
-      console.log('EventCard onPress data:', event);
       const eventId = event?.eventId ?? event?.id;
       if (eventId === undefined || eventId === null) {
         return;
@@ -227,36 +242,234 @@ const TicketLandingScreen = ({ navigation }) => {
     [navigation],
   );
 
-  const handleTabChange = tabId => {
-    if (tabId === TAB_IDS.EVENTS) {
-      fetchEventDetailsList();
-    }
-    Animated.timing(tabAnim, {
-      toValue: 0,
-      duration: 120,
-      useNativeDriver: true,
-    }).start(() => {
-      setActiveTab(tabId);
-      Animated.spring(tabAnim, {
-        toValue: 1,
+  const handleTabChange = useCallback(
+    tabId => {
+      if (tabId === TAB_IDS.EVENTS) {
+        fetchEventDetailsList();
+      }
+      Animated.timing(tabAnim, {
+        toValue: 0,
+        duration: 120,
         useNativeDriver: true,
-        tension: 80,
-        friction: 10,
-      }).start();
-    });
-  };
+      }).start(() => {
+        setActiveTab(tabId);
+        Animated.spring(tabAnim, {
+          toValue: 1,
+          useNativeDriver: true,
+          tension: 80,
+          friction: 10,
+        }).start();
+      });
+    },
+    [fetchEventDetailsList, tabAnim],
+  );
 
-  const tabContentStyle = {
-    opacity: tabAnim,
-    transform: [
-      {
-        translateY: tabAnim.interpolate({
-          inputRange: [0, 1],
-          outputRange: [10, 0],
-        }),
-      },
+  const handleGoHome = useCallback(
+    () => handleTabChange(TAB_IDS.POPULAR),
+    [handleTabChange],
+  );
+  const handleGoToVouchers = useCallback(
+    () => handleTabChange(TAB_IDS.VOUCHERS),
+    [handleTabChange],
+  );
+  const handleGoToSports = useCallback(
+    () => handleTabChange(TAB_IDS.SPORTS),
+    [handleTabChange],
+  );
+
+  const handleCloseUdenModal = useCallback(() => {
+    setModalVisible(false);
+    setClaimedQuoteData(null);
+  }, []);
+  const handleCloseVoucherSheet = useCallback(
+    () => setSelectedVoucher(null),
+    [],
+  );
+  const handleCloseMyBookings = useCallback(
+    () => setMyBookingsVisible(false),
+    [],
+  );
+  const handleOpenMyBookings = useCallback(
+    () => setMyBookingsVisible(true),
+    [],
+  );
+  const handleCloseStoreSwitcher = useCallback(() => {
+    setStoreSwitcherVisible(false);
+    setTimeout(applyStatusBar, 350);
+  }, [applyStatusBar]);
+
+  const tabContentStyle = useMemo(
+    () => ({
+      opacity: tabAnim,
+      transform: [
+        {
+          translateY: tabAnim.interpolate({
+            inputRange: [0, 1],
+            outputRange: [10, 0],
+          }),
+        },
+      ],
+    }),
+    [tabAnim],
+  );
+
+  const imageBgStyle = useMemo(
+    () => [styles.imageBg, { opacity: imageOpacity }],
+    [imageOpacity],
+  );
+  const gradientStyle = useMemo(
+    () => [styles.statusBarGradient, { height: insets.top + 24 }],
+    [insets.top],
+  );
+
+  const renderTabContent = useCallback(() => {
+    switch (activeTab) {
+      case TAB_IDS.POPULAR:
+        return (
+          <PopularTab
+            fadeAnim={fadeAnim}
+            vouchers={carouselVouchers}
+            loading={carouselLoading}
+            bCoins={bCoins}
+            giftQuote={giftQuote}
+            giftQuoteLoading={giftQuoteLoading}
+            onClaim={handleClaim}
+            onGoToVouchers={handleGoToVouchers}
+            onGoToSports={handleGoToSports}
+          />
+        );
+      case TAB_IDS.VOUCHERS:
+        return (
+          <CardCarousel
+            fadeAnim={fadeAnim}
+            vouchers={carouselVouchers}
+            onClaim={handleClaim}
+          />
+        );
+      case TAB_IDS.SPORTS:
+        return (
+          <EmptyState
+            icon={SPORTS_ICON}
+            title="Sports"
+            subtitle="Book tickets for your favourite sports, coming soon."
+          />
+        );
+      case TAB_IDS.BILLS:
+        return (
+          <EmptyState
+            icon={BILLS_ICON}
+            title="Bills & Recharge"
+            subtitle="Pay bills and recharge with UD-Coins, coming soon."
+          />
+        );
+      default:
+        return null;
+    }
+  }, [
+    activeTab,
+    fadeAnim,
+    carouselVouchers,
+    carouselLoading,
+    bCoins,
+    giftQuote,
+    giftQuoteLoading,
+    handleClaim,
+    handleGoToVouchers,
+    handleGoToSports,
+  ]);
+
+  // Heterogeneous data for the single vertical scroller: a non-sticky header,
+  // the sticky category tabs, then the active tab's content (the Events tab
+  // spreads its cards as individual virtualized rows).
+  const listData = useMemo(() => {
+    const base = [{ type: 'header' }, { type: 'tabs' }];
+    if (activeTab === TAB_IDS.EVENTS) {
+      if (eventsLoading) return [...base, { type: 'events-loading' }];
+      if (events.length > 0) {
+        return [
+          ...base,
+          ...events.map((event, index) => ({ type: 'event', event, index })),
+        ];
+      }
+      return [...base, { type: 'events-empty' }];
+    }
+    return [...base, { type: 'tab-content' }];
+  }, [activeTab, eventsLoading, events]);
+
+  const keyExtractor = useCallback((item, index) => {
+    if (item.type === 'event') {
+      return `event-${item.event?.eventId ?? item.event?.id ?? index}`;
+    }
+    return `${item.type}-${index}`;
+  }, []);
+
+  const renderItem = useCallback(
+    ({ item }) => {
+      switch (item.type) {
+        case 'header':
+          return (
+            <EventHeader
+              navigation={navigation}
+              insets={insets}
+              bCoins={bCoins}
+            />
+          );
+        case 'tabs':
+          return (
+            <EventCategoryTabs
+              activeTab={activeTab}
+              onTabChange={handleTabChange}
+              scrollY={scrollY}
+              insets={insets}
+            />
+          );
+        case 'event':
+          return (
+            <Animated.View style={tabContentStyle}>
+              <EventCard
+                item={item.event}
+                onPress={handleEventPress}
+                index={item.index}
+              />
+            </Animated.View>
+          );
+        case 'events-loading':
+          return (
+            <Animated.View style={tabContentStyle}>
+              <LoadingSkeleton />
+            </Animated.View>
+          );
+        case 'events-empty':
+          return (
+            <Animated.View style={tabContentStyle}>
+              <EmptyState
+                icon={EVENTS_ICON}
+                title="No events found"
+                subtitle="There are no events available right now. Please check back later."
+              />
+            </Animated.View>
+          );
+        case 'tab-content':
+        default:
+          return (
+            <Animated.View style={tabContentStyle}>
+              {renderTabContent()}
+            </Animated.View>
+          );
+      }
+    },
+    [
+      navigation,
+      insets,
+      bCoins,
+      activeTab,
+      handleTabChange,
+      scrollY,
+      tabContentStyle,
+      handleEventPress,
+      renderTabContent,
     ],
-  };
+  );
 
   return (
     <View style={styles.container}>
@@ -267,86 +480,21 @@ const TicketLandingScreen = ({ navigation }) => {
       />
       <AnimatedImageBackground
         source={require('../../assets/images/movieTicket/ticketLandingBg.png')}
-        style={[styles.imageBg, { opacity: imageOpacity }]}
+        style={imageBgStyle}
         onLoad={handleImageLoad}
         resizeMode="cover"
       >
-        <Reanimated.ScrollView
+        <Reanimated.FlatList
+          data={listData}
+          renderItem={renderItem}
+          keyExtractor={keyExtractor}
           onScroll={scrollHandler}
           scrollEventThrottle={16}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           bounces={false}
-          stickyHeaderIndices={[1]}
-        >
-          <EventHeader
-            navigation={navigation}
-            insets={insets}
-            bCoins={bCoins}
-          />
-          <EventCategoryTabs
-            activeTab={activeTab}
-            onTabChange={handleTabChange}
-            scrollY={scrollY}
-            insets={insets}
-          />
-
-          <Animated.View style={tabContentStyle}>
-            {activeTab === TAB_IDS.POPULAR && (
-              <PopularTab
-                fadeAnim={fadeAnim}
-                vouchers={carouselVouchers}
-                loading={carouselLoading}
-                bCoins={bCoins}
-                giftQuote={giftQuote}
-                giftQuoteLoading={giftQuoteLoading}
-                onClaim={handleClaim}
-                onGoToVouchers={() => handleTabChange(TAB_IDS.VOUCHERS)}
-                onGoToSports={() => handleTabChange(TAB_IDS.SPORTS)}
-              />
-            )}
-            {activeTab === TAB_IDS.VOUCHERS && (
-              <CardCarousel
-                fadeAnim={fadeAnim}
-                vouchers={carouselVouchers}
-                onClaim={handleClaim}
-              />
-            )}
-            {activeTab === TAB_IDS.EVENTS &&
-              (eventsLoading ? (
-                <LoadingSkeleton />
-              ) : events.length > 0 ? (
-                events.map((item, index) => (
-                  <EventCard
-                    key={item?.eventId ?? item?.id}
-                    item={item}
-                    onPress={handleEventPress}
-                    index={index}
-                  />
-                ))
-              ) : (
-                <EmptyState
-                  icon={EVENTS_ICON}
-                  title="No events found"
-                  subtitle="There are no events available right now. Please check back later."
-                />
-              ))}
-            {activeTab === TAB_IDS.SPORTS && (
-              <EmptyState
-                icon={SPORTS_ICON}
-                title="Sports"
-                subtitle="Book tickets for your favourite sports, coming soon."
-              />
-            )}
-            {activeTab === TAB_IDS.BILLS && (
-              <EmptyState
-                icon={BILLS_ICON}
-                title="Bills & Recharge"
-                subtitle="Pay bills and recharge with UD-Coins, coming soon."
-              />
-            )}
-          </Animated.View>
-        </Reanimated.ScrollView>
+          stickyHeaderIndices={STICKY_INDICES}
+        />
       </AnimatedImageBackground>
 
       <LinearGradient
@@ -354,7 +502,7 @@ const TicketLandingScreen = ({ navigation }) => {
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         pointerEvents="none"
-        style={[styles.statusBarGradient, { height: insets.top + 24 }]}
+        style={gradientStyle}
       />
 
       <UdenTicketModal
@@ -363,39 +511,31 @@ const TicketLandingScreen = ({ navigation }) => {
         bCoins={bCoins}
         initialQuoteData={claimedQuoteData}
         onPurchaseSettled={refreshBCoins}
-        onClose={() => {
-          setModalVisible(false);
-          setClaimedQuoteData(null);
-        }}
+        onClose={handleCloseUdenModal}
       />
       <VoucherBottomSheet
         visible={!!selectedVoucher}
         voucher={selectedVoucher}
-        onClose={() => setSelectedVoucher(null)}
+        onClose={handleCloseVoucherSheet}
       />
       <MyBookingsModal
         visible={myBookingsVisible}
         vouchers={myVouchers}
         loading={myVouchersLoading}
-        onVoucherPress={setSelectedVoucher}
-        onClose={() => setMyBookingsVisible(false)}
+        onVoucherPress={handleVoucherPress}
+        onClose={handleCloseMyBookings}
       />
 
       <BottomTabBar
         bookingsCount={myVouchers.length}
         onHomePress={handleGoHome}
-        onMyBookingsPress={() => setMyBookingsVisible(true)}
+        onMyBookingsPress={handleOpenMyBookings}
         onStorePress={handleOpenStoreSwitcher}
       />
 
       <ServiceSwitcherModal
         visible={storeSwitcherVisible}
-        onClose={() => {
-          setStoreSwitcherVisible(false);
-          // The switcher's native Modal (statusBarTranslucent) can reset the
-          // Android status bar as it tears down; re-assert ours afterwards.
-          setTimeout(applyStatusBar, 350);
-        }}
+        onClose={handleCloseStoreSwitcher}
         excludeServiceId="movie"
       />
     </View>

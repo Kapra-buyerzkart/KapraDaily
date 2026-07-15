@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
   ImageBackground,
@@ -11,6 +11,13 @@ import {
 import { wp, hp } from '../../../utils/responsive';
 
 export const preloadRedeemSuccessAssets = () => {};
+
+const Row = ({ label, value, valueStyle }) => (
+  <View style={styles.row}>
+    <Text style={styles.rowLabel}>{label}</Text>
+    <Text style={[styles.rowValue, valueStyle]}>{value}</Text>
+  </View>
+);
 
 const RedeemSuccessModal = ({
   visible,
@@ -62,18 +69,14 @@ const RedeemSuccessModal = ({
     }
   }, [visible]);
 
-  const today = new Date();
-  const dateStr = today.toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
-
-  const Row = ({ label, value, valueStyle }) => (
-    <View style={styles.row}>
-      <Text style={styles.rowLabel}>{label}</Text>
-      <Text style={[styles.rowValue, valueStyle]}>{value}</Text>
-    </View>
+  const dateStr = useMemo(
+    () =>
+      new Date().toLocaleDateString('en-GB', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      }),
+    [],
   );
 
   return (
@@ -308,4 +311,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default RedeemSuccessModal;
+export default React.memo(RedeemSuccessModal);

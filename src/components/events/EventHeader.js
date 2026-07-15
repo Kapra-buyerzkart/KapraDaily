@@ -53,4 +53,4 @@ const styles = StyleSheet.create({
   logo: {},
 });
 
-export default EventHeader;
+export default React.memo(EventHeader);

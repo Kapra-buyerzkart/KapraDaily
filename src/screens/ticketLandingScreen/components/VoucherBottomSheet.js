@@ -1,4 +1,10 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, {
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+  useEffect,
+} from 'react';
 import Clipboard from '@react-native-clipboard/clipboard';
 import {
   Animated,
@@ -49,13 +55,12 @@ const openInChrome = async () => {
   try {
     canChrome = await Linking.canOpenURL(chromeUrl);
   } catch (e) {
-    // iOS rejects canOpenURL when the scheme isn't in LSApplicationQueriesSchemes
     canChrome = false;
   }
   Linking.openURL(canChrome ? chromeUrl : BMS_URL).catch(() => {});
 };
 
-const Accordion = ({ title, items, html }) => {
+const Accordion = React.memo(({ title, items, html }) => {
   const [open, setOpen] = useState(false);
   return (
     <View style={styles.accordion}>
@@ -92,16 +97,22 @@ const Accordion = ({ title, items, html }) => {
       )}
     </View>
   );
-};
+});
 
 const toImageSource = value =>
   typeof value === 'string' ? { uri: CONFIG.image_base_url + value } : value;
 
-const VoucherBottomSheet = ({ visible, onClose, voucher }) => {
+const VoucherBottomSheet = ({ visible, onClose, voucher: voucherProp }) => {
   const insets = useSafeAreaInsets();
   const [modalVisible, setModalVisible] = useState(false);
   const [copied, setCopied] = useState(false);
   const [successVisible, setSuccessVisible] = useState(false);
+
+  const [displayedVoucher, setDisplayedVoucher] = useState(voucherProp);
+
+  useEffect(() => {
+    if (voucherProp) setDisplayedVoucher(voucherProp);
+  }, [voucherProp]);
 
   const translateY = useRef(new Animated.Value(height)).current;
   const backdropOpacity = useRef(new Animated.Value(0)).current;
@@ -167,38 +178,48 @@ const VoucherBottomSheet = ({ visible, onClose, voucher }) => {
     }),
   ).current;
 
-  const handleCopy = () => {
-    Clipboard.setString(voucher?.voucherCode ?? '');
+  const copyTimeoutRef = useRef(null);
+  useEffect(() => () => clearTimeout(copyTimeoutRef.current), []);
+
+  const handleCopy = useCallback(() => {
+    Clipboard.setString(displayedVoucher?.voucherCode ?? '');
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+    clearTimeout(copyTimeoutRef.current);
+    copyTimeoutRef.current = setTimeout(() => setCopied(false), 2000);
+  }, [displayedVoucher]);
 
-  if (!voucher) return null;
+  const derived = useMemo(() => {
+    if (!displayedVoucher) return null;
+    const v = displayedVoucher;
+    const days = v.codeExpiryDate
+      ? Math.max(
+          0,
+          Math.ceil(
+            (new Date(v.codeExpiryDate) - new Date()) / (1000 * 60 * 60 * 24),
+          ),
+        )
+      : 0;
+    const formatDate = iso =>
+      new Date(iso).toLocaleDateString('en-IN', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      });
+    return {
+      daysLeft: days,
+      voucherDetails: [
+        `Denomination: ₹${v.denomination}`,
+        `Status: ${v.codeStatus}`,
+        `Purchased on: ${formatDate(v.purchasedAt)}`,
+        `Valid till: ${formatDate(v.codeExpiryDate)}`,
+      ],
+    };
+  }, [displayedVoucher]);
 
-  const daysLeft = voucher.codeExpiryDate
-    ? Math.max(
-        0,
-        Math.ceil(
-          (new Date(voucher.codeExpiryDate) - new Date()) /
-            (1000 * 60 * 60 * 24),
-        ),
-      )
-    : 0;
+  if (!displayedVoucher) return null;
 
-  const formatDate = iso =>
-    new Date(iso).toLocaleDateString('en-IN', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    });
-
-  const voucherDetails = [
-    `Denomination: ₹${voucher.denomination}`,
-    `Status: ${voucher.codeStatus}`,
-    `Purchased on: ${formatDate(voucher.purchasedAt)}`,
-    `Valid till: ${formatDate(voucher.codeExpiryDate)}`,
-  ];
-
+  const voucher = displayedVoucher;
+  const { daysLeft, voucherDetails } = derived;
   const safeBottom = insets.bottom > 0 ? insets.bottom : 20;
 
   return (
@@ -497,4 +518,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default VoucherBottomSheet;
+export default React.memo(VoucherBottomSheet);

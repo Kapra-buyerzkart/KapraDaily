@@ -57,4 +57,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default VoucherCard;
+export default React.memo(VoucherCard);

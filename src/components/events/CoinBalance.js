@@ -36,4 +36,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default CoinBalance;
+export default React.memo(CoinBalance);

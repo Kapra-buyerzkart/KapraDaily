@@ -73,4 +73,4 @@ const EventSummaryCard = ({
   </View>
 );
 
-export default EventSummaryCard;
+export default React.memo(EventSummaryCard);

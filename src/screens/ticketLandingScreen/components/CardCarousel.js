@@ -35,7 +35,7 @@ const STACK_Y_STEP = 16;
 const CARD_WIDTH = SCREEN_WIDTH * 0.72;
 const CARD_HEIGHT = CARD_WIDTH * 0.62;
 
-const StackCard = ({ item, stackIndex, dragX, dragY, isTop }) => {
+const StackCard = React.memo(({ item, stackIndex, dragX, dragY, isTop }) => {
   const imageSource = getVoucherImageSource(item);
   const zIndex = isTop ? 10 : STACK_VISIBLE - stackIndex;
 
@@ -100,7 +100,9 @@ const StackCard = ({ item, stackIndex, dragX, dragY, isTop }) => {
 
   return (
     <Reanimated.View
-      entering={FadeInDown.delay(stackIndex * 90).springify().damping(16)}
+      entering={FadeInDown.delay(stackIndex * 90)
+        .springify()
+        .damping(16)}
       style={[styles.stackCardSlot, { zIndex }]}
     >
       <Reanimated.View style={[styles.stackCardVisual, transformStyle]}>
@@ -128,9 +130,9 @@ const StackCard = ({ item, stackIndex, dragX, dragY, isTop }) => {
       </Reanimated.View>
     </Reanimated.View>
   );
-};
+});
 
-const ArrowButton = ({ iconName, onPress }) => {
+const ArrowButton = React.memo(({ iconName, onPress }) => {
   const scale = useSharedValue(1);
   const pressStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
@@ -154,7 +156,7 @@ const ArrowButton = ({ iconName, onPress }) => {
       </Reanimated.View>
     </TouchableOpacity>
   );
-};
+});
 
 const CardCarousel = ({ fadeAnim, onClaim, vouchers }) => {
   const cards = useMemo(() => vouchers ?? [], [vouchers]);
@@ -413,4 +415,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default CardCarousel;
+export default React.memo(CardCarousel);

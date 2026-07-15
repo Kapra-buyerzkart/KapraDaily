@@ -57,4 +57,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default LoadingSkeleton;
+export default React.memo(LoadingSkeleton);

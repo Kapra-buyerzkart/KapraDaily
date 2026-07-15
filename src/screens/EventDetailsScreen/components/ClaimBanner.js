@@ -16,4 +16,4 @@ const ClaimBanner = () => (
   </ImageBackground>
 );
 
-export default ClaimBanner;
+export default React.memo(ClaimBanner);

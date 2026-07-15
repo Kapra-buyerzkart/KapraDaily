@@ -57,4 +57,4 @@ const ArtistList = ({ artists }) => {
   );
 };
 
-export default ArtistList;
+export default React.memo(ArtistList);

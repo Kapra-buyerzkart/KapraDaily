@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import {
   View,
   Image,
@@ -61,7 +61,9 @@ const ICON_SIZE = 34;
 const STICKY_START = 40;
 const STICKY_END = 90;
 
-const TabIcon = ({ tab, active }) => {
+const keyExtractor = item => item.id;
+
+const TabIcon = React.memo(({ tab, active }) => {
   if (tab.id === TAB_IDS.POPULAR) {
     return (
       <Image
@@ -102,9 +104,9 @@ const TabIcon = ({ tab, active }) => {
       />
     </View>
   );
-};
+});
 
-const CategoryTab = ({ tab, isActive, onPress }) => {
+const CategoryTab = React.memo(({ tab, isActive, onPress }) => {
   const activeProgress = useSharedValue(isActive ? 1 : 0);
   const scale = useSharedValue(1);
 
@@ -148,10 +150,21 @@ const CategoryTab = ({ tab, isActive, onPress }) => {
       </Reanimated.View>
     </TouchableOpacity>
   );
-};
+});
 
 const EventCategoryTabs = ({ activeTab, onTabChange, scrollY, insets }) => {
   const topInset = insets?.top ?? 0;
+
+  const renderItem = useCallback(
+    ({ item }) => (
+      <CategoryTab
+        tab={item}
+        isActive={activeTab === item.id}
+        onPress={onTabChange}
+      />
+    ),
+    [activeTab, onTabChange],
+  );
 
   const containerStyle = useAnimatedStyle(() => {
     if (!scrollY) return {};
@@ -194,16 +207,10 @@ const EventCategoryTabs = ({ activeTab, onTabChange, scrollY, insets }) => {
       <FlatList
         data={TABS}
         horizontal
-        keyExtractor={item => item.id}
+        keyExtractor={keyExtractor}
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.listContent}
-        renderItem={({ item }) => (
-          <CategoryTab
-            tab={item}
-            isActive={activeTab === item.id}
-            onPress={onTabChange}
-          />
-        )}
+        renderItem={renderItem}
       />
     </Reanimated.View>
   );
@@ -273,4 +280,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default EventCategoryTabs;
+export default React.memo(EventCategoryTabs);

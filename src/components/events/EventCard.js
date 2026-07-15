@@ -75,4 +75,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default EventCard;
+export default React.memo(EventCard);

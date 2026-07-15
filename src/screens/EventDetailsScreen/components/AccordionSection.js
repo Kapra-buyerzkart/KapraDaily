@@ -41,4 +41,4 @@ const AccordionSection = ({ title, children, defaultOpen = false }) => {
   );
 };
 
-export default AccordionSection;
+export default React.memo(AccordionSection);

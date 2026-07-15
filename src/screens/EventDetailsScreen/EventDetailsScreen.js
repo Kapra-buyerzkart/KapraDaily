@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   TouchableOpacity,
 } from 'react-native';
+import Toast from 'react-native-simple-toast';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import styles from './styles';
 import COLORS from '@/styles/colors';
@@ -17,13 +18,64 @@ import EventSummaryCard from './components/EventSummaryCard';
 import MoreToKnow from './components/MoreToKnow';
 import ArtistList from './components/ArtistList';
 import EventAccordions from './components/EventAccordions';
+import TicketSelectionModal from './components/TicketSelectionModal';
+import { createEventBookingApi } from '../../api/eventService';
+import logger from '../../utils/logger';
 
 const EventDetailsScreen = ({ navigation, route }) => {
   const insets = useSafeAreaInsets();
-  const { event, loading, details, apiResponse } = useEventDetails(route);
+  const { event, loading, details } = useEventDetails(route);
+  const [ticketModalVisible, setTicketModalVisible] = useState(false);
+  const [bookingInProgress, setBookingInProgress] = useState(false);
 
-  console.log(apiResponse, 'eventDetails api response========>');
-  console.log(details, 'details========>');
+  const handleBack = useCallback(() => navigation.goBack(), [navigation]);
+  const openTicketModal = useCallback(() => setTicketModalVisible(true), []);
+  const closeTicketModal = useCallback(() => setTicketModalVisible(false), []);
+  const handleBuyNow = useCallback(
+    async selection => {
+      if (bookingInProgress) return;
+
+      const bookingItems = (selection?.lines || []).map(({ cat, qty }) => ({
+        ticketCategoryId: cat.ticketCategoryId,
+        quantity: qty,
+      }));
+
+      if (!details?.sessionId || bookingItems.length === 0) {
+        Toast.show('Please select at least one ticket.', Toast.LONG);
+        return;
+      }
+
+      const payload = {
+        sessionId: details.sessionId,
+        bookingItems,
+        bookingPlacedFrom: 'app',
+      };
+      logger.log('Event booking payload:', payload);
+
+      setBookingInProgress(true);
+      try {
+        const responseData = await createEventBookingApi(payload);
+        console.log('Event booking response:', responseData);
+
+        setTicketModalVisible(false);
+        Toast.show('Booking placed successfully!', Toast.LONG);
+      } catch (err) {
+        logger.error('Failed to create event booking:', err?.message);
+        Toast.show(
+          err?.message || 'Failed to place booking. Please try again.',
+          Toast.LONG,
+        );
+      } finally {
+        setBookingInProgress(false);
+      }
+    },
+    [bookingInProgress, details?.sessionId],
+  );
+
+  const claimWrapStyle = useMemo(
+    () => [styles.claimWrap, { paddingBottom: insets.bottom + 16 }],
+    [insets.bottom],
+  );
 
   if (loading && !event) {
     return (
@@ -51,11 +103,7 @@ const EventDetailsScreen = ({ navigation, route }) => {
         showsVerticalScrollIndicator={false}
         bounces={false}
       >
-        <EventHero
-          event={event}
-          insets={insets}
-          onBack={() => navigation.goBack()}
-        />
+        <EventHero event={event} insets={insets} onBack={handleBack} />
         <ClaimBanner />
         <EventSummaryCard
           name={details?.name}
@@ -72,11 +120,23 @@ const EventDetailsScreen = ({ navigation, route }) => {
         <EventAccordions details={details.detailsText} terms={details.terms} />
       </ScrollView>
 
-      <View style={[styles.claimWrap, { paddingBottom: insets.bottom + 16 }]}>
-        <TouchableOpacity activeOpacity={0.85} style={styles.claimButton}>
+      <View style={claimWrapStyle}>
+        <TouchableOpacity
+          activeOpacity={0.85}
+          style={styles.claimButton}
+          onPress={openTicketModal}
+        >
           <Text style={styles.claimText}>Claim</Text>
         </TouchableOpacity>
       </View>
+
+      <TicketSelectionModal
+        visible={ticketModalVisible}
+        onClose={closeTicketModal}
+        ticketCategories={details?.ticketCategories}
+        onBuyNow={handleBuyNow}
+        submitting={bookingInProgress}
+      />
     </View>
   );
 };

@@ -1,7 +1,6 @@
 import React from 'react';
 import {
   Modal,
-  ScrollView,
   Text,
   TouchableOpacity,
   View,
@@ -38,16 +37,12 @@ const MyBookingsModal = ({
             <MaterialIcons name="close" size={24} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
-        >
-          <VoucherGrid
-            vouchers={vouchers}
-            loading={loading}
-            onVoucherPress={onVoucherPress}
-          />
-        </ScrollView>
+        <VoucherGrid
+          vouchers={vouchers}
+          loading={loading}
+          onVoucherPress={onVoucherPress}
+          bottomInset={insets.bottom}
+        />
       </View>
     </Modal>
   );
@@ -75,4 +70,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default MyBookingsModal;
+export default React.memo(MyBookingsModal);

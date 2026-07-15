@@ -77,4 +77,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default QuickActionCard;
+export default React.memo(QuickActionCard);

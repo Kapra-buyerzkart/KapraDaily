@@ -14,4 +14,4 @@ const EventAccordions = ({ details, terms }) => (
   </View>
 );
 
-export default EventAccordions;
+export default React.memo(EventAccordions);

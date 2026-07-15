@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Platform, StatusBar } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { getEventDetailsByIdApi } from '../../../api/eventService';
@@ -8,6 +8,16 @@ import { formatDate, formatTime } from '../utils';
 const deriveDetails = event => {
   const sessionStart =
     event?.SessionStart || event?.sessionStart || event?.eventDate || event?.date || event?.startDate;
+
+  const sessions = Array.isArray(event?.sessions) ? event.sessions : [];
+  const activeSession =
+    sessions.find(session => session?.statusKey === 'active') ||
+    sessions[0] ||
+    null;
+  const ticketCategoriesMap = event?.ticketCategories || {};
+  const ticketCategories = activeSession
+    ? ticketCategoriesMap[String(activeSession.sessionId)] || []
+    : Object.values(ticketCategoriesMap)[0] || [];
 
   return {
     name: event?.eventName || event?.title || event?.name || 'Event',
@@ -31,6 +41,8 @@ const deriveDetails = event => {
       : [],
     detailsText: event?.details || event?.description || event?.about || '',
     terms: event?.termsAndConditions || event?.terms || event?.tnc || '',
+    sessionId: activeSession?.sessionId ?? null,
+    ticketCategories,
   };
 };
 
@@ -41,7 +53,6 @@ export default function useEventDetails(route) {
 
   const [event, setEvent] = useState(initialEvent);
   const [loading, setLoading] = useState(!initialEvent);
-  const [apiResponse, setApiResponse] = useState(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -58,8 +69,6 @@ export default function useEventDetails(route) {
     setLoading(!initialEvent);
     getEventDetailsByIdApi(eventId)
       .then(res => {
-        console.log('getEventDetailsByIdApi response:', JSON.stringify(res, null, 2));
-        setApiResponse(res);
         const data = res?.data ?? res;
         if (data) {
           // The detail API nests the core fields (description,
@@ -75,5 +84,10 @@ export default function useEventDetails(route) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [eventId]);
 
-  return { event, loading, apiResponse, details: deriveDetails(event) };
+  const details = useMemo(() => deriveDetails(event), [event]);
+
+  return useMemo(
+    () => ({ event, loading, details }),
+    [event, loading, details],
+  );
 }

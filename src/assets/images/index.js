@@ -200,4 +200,5 @@ const images = {
   shareNearn: require('../sharenearn.png'),
   vineeth: require('./vineeth.jpeg'),
   fallback: require('./noimages/fallback.png'),
+  claimbutton: require('./claimbutton.png'),
 };

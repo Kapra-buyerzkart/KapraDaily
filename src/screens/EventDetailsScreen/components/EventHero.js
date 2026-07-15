@@ -30,4 +30,4 @@ const EventHero = ({ event, insets, onBack }) => (
   </ImageBackground>
 );
 
-export default EventHero;
+export default React.memo(EventHero);

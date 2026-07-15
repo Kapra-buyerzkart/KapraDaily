@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { Animated, View, StyleSheet } from 'react-native';
 import HeroCarousel from '@/components/events/HeroCarousel';
 import QuickActionCard from '@/components/events/QuickActionCard';
@@ -23,6 +23,18 @@ const PopularTab = ({
   onGoToVouchers,
   onGoToSports,
 }) => {
+  const featured = vouchers?.[0];
+  const heroItems = useMemo(() => vouchers?.slice(0, 5) ?? [], [vouchers]);
+  const listItems = useMemo(
+    () => (vouchers && vouchers.length > 1 ? vouchers.slice(1) : []),
+    [vouchers],
+  );
+  const containerStyle = useMemo(() => ({ opacity: fadeAnim }), [fadeAnim]);
+  const handleGiftPress = useCallback(
+    () => onClaim(featured),
+    [onClaim, featured],
+  );
+
   if (!loading && (!vouchers || vouchers.length === 0)) {
     return (
       <EmptyState
@@ -33,12 +45,8 @@ const PopularTab = ({
     );
   }
 
-  const featured = vouchers?.[0];
-  const heroItems = vouchers?.slice(0, 5) ?? [];
-  const listItems = vouchers && vouchers.length > 1 ? vouchers.slice(1) : [];
-
   return (
-    <Animated.View style={{ opacity: fadeAnim }}>
+    <Animated.View style={containerStyle}>
       {loading ? (
         <LoadingSkeleton variant="hero" />
       ) : (
@@ -65,7 +73,7 @@ const PopularTab = ({
           voucher={featured}
           quote={giftQuote}
           quoteLoading={giftQuoteLoading}
-          onPress={() => onClaim(featured)}
+          onPress={handleGiftPress}
         />
       )}
 
@@ -97,4 +105,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default PopularTab;
+export default React.memo(PopularTab);

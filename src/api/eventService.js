@@ -1,4 +1,4 @@
-import { get } from './networkUtils';
+import { get, post } from './networkUtils';
 
 export const getEventDetailsListApi = async config => {
   return get('eventdetails/list', config);
@@ -6,4 +6,41 @@ export const getEventDetailsListApi = async config => {
 
 export const getEventDetailsByIdApi = async (eventId, config) => {
   return get(`eventdetails/${eventId}`, config);
+};
+
+export const checkTicketAvailabilityApi = async (ticketCategoryId, quantity, config) => {
+  return post('eventdetails/checkavailability', { ticketCategoryId, quantity }, config);
+};
+
+export const createEventBookingApi = async (
+  { sessionId, bookingItems, bookingPlacedFrom },
+  config,
+) => {
+  return post(
+    'eventbooking/create',
+    { sessionId, bookingItems, bookingPlacedFrom },
+    config,
+  );
+};
+
+export const confirmEventPaymentApi = async (
+  { bookingId, paymentGateway, transactionId, gatewayReference },
+  config,
+) => {
+  return post(
+    'eventpayment/confirm',
+    { bookingId, paymentGateway, transactionId, gatewayReference },
+    config,
+  );
+};
+
+export const failEventPaymentApi = async (
+  { bookingId, paymentGateway, transactionId, gatewayReference, remarks },
+  config,
+) => {
+  return post(
+    'eventpayment/failed',
+    { bookingId, paymentGateway, transactionId, gatewayReference, remarks },
+    config,
+  );
 };

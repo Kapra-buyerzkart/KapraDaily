@@ -132,7 +132,6 @@ const UdenTicketModal = ({
     ? { uri: CONFIG.image_base_url + voucher.imageUrl }
     : PLACEHOLDER_IMAGE;
 
-  console.log(denomination, '====');
   useEffect(() => {
     preloadRedeemSuccessAssets();
   }, []);
@@ -169,7 +168,6 @@ const UdenTicketModal = ({
     };
   }, [quantity, voucher?.voucherId, bCoins, visible]);
   const ORANGE = '#FF6A00';
-  console.log(voucher, 'voucher is here ==========>');
 
   useEffect(() => {
     if (visible) {
@@ -218,7 +216,6 @@ const UdenTicketModal = ({
 
   const decreaseQty = () => setQuantity(q => Math.max(1, q - 1));
   const increaseQty = () => setQuantity(q => Math.min(maxQty, q + 1));
-  console.log(quoteData, 'QuoteData=====>');
 
   const disabledReason = isOutOfStock
     ? 'This voucher is currently out of stock.'

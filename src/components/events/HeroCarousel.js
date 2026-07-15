@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { View, Image, Text, StyleSheet } from 'react-native';
 import Animated, {
   useAnimatedStyle,
@@ -23,7 +23,15 @@ const CONTENT_PADDING = (wp(100) - BANNER_WIDTH) / 2 - ITEM_MARGIN;
 const DOT_ACTIVE_WIDTH = 18;
 const DOT_INACTIVE_WIDTH = 6;
 
-const PaginationDot = ({ scrollX, index, count, snap, infinite }) => {
+const getItemLayout = (_, index) => ({
+  length: SNAP_INTERVAL,
+  offset: CONTENT_PADDING + SNAP_INTERVAL * index,
+  index,
+});
+
+const keyExtractor = (item, index) => `${item?.voucherId ?? index}-${index}`;
+
+const PaginationDot = React.memo(({ scrollX, index, count, snap, infinite }) => {
   const animatedStyle = useAnimatedStyle(() => {
     const pos = scrollX.value / snap;
     const realPos = infinite ? (((pos - 1) % count) + count) % count : pos;
@@ -41,9 +49,9 @@ const PaginationDot = ({ scrollX, index, count, snap, infinite }) => {
     };
   });
   return <Animated.View style={[styles.dot, animatedStyle]} />;
-};
+});
 
-const Slide = ({ item, onPress }) => (
+const Slide = React.memo(({ item, onPress }) => (
   <AnimatedPressable style={styles.slide} onPress={() => onPress?.(item)}>
     <Image
       source={getVoucherImageSource(item)}
@@ -66,7 +74,7 @@ const Slide = ({ item, onPress }) => (
       </View>
     </View>
   </AnimatedPressable>
-);
+));
 
 const HeroCarousel = ({ data, onItemPress }) => {
   const flatListRef = useRef(null);
@@ -102,7 +110,12 @@ const HeroCarousel = ({ data, onItemPress }) => {
       clearInterval(autoplayTimer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isInfinite, banners]);
+  }, [isInfinite, banners.length]);
+
+  const renderSlide = useCallback(
+    ({ item }) => <Slide item={item} onPress={onItemPress} />,
+    [onItemPress],
+  );
 
   if (banners.length === 0) return null;
 
@@ -117,12 +130,6 @@ const HeroCarousel = ({ data, onItemPress }) => {
   const extendedBanners = isInfinite
     ? [banners[banners.length - 1], ...banners, banners[0]]
     : banners;
-
-  const getItemLayout = (_, index) => ({
-    length: SNAP_INTERVAL,
-    offset: CONTENT_PADDING + SNAP_INTERVAL * index,
-    index,
-  });
 
   const onScrollBeginDrag = () => {
     isDraggingRef.current = true;
@@ -165,9 +172,9 @@ const HeroCarousel = ({ data, onItemPress }) => {
         getItemLayout={getItemLayout}
         initialScrollIndex={1}
         scrollEventThrottle={16}
-        keyExtractor={(item, index) => `${item?.voucherId ?? index}-${index}`}
-        contentContainerStyle={{ paddingHorizontal: CONTENT_PADDING }}
-        renderItem={({ item }) => <Slide item={item} onPress={onItemPress} />}
+        keyExtractor={keyExtractor}
+        contentContainerStyle={styles.listContent}
+        renderItem={renderSlide}
       />
       <View style={styles.pagination}>
         {banners.map((_, i) => (
@@ -188,6 +195,9 @@ const HeroCarousel = ({ data, onItemPress }) => {
 const styles = StyleSheet.create({
   wrapper: {
     marginTop: 8,
+  },
+  listContent: {
+    paddingHorizontal: CONTENT_PADDING,
   },
   singleWrapper: {
     alignItems: 'center',
@@ -251,4 +261,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default HeroCarousel;
+export default React.memo(HeroCarousel);

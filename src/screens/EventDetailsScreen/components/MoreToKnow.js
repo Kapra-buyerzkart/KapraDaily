@@ -49,4 +49,4 @@ const MoreToKnow = ({ ageLimit, language }) => {
   );
 };
 
-export default MoreToKnow;
+export default React.memo(MoreToKnow);
