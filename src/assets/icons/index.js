@@ -15,6 +15,10 @@ const icons = {
   coins: require('./coins.png'),
   coupon: require('./coupon.png'),
   location: require('./location.png'),
+  locationtwo: require('./locationtwo.png'),
+  calendar: require('./calendar.png'),
+  people: require('./people.png'),
+  language: require('./language.png'),
   filter: require('./filter.png'),
   online: require('./online.png'),
   search: require('./search.png'),
@@ -44,6 +48,7 @@ const icons = {
   copartnerDash: require('./co-partnerDashborad.png'),
 
   emptyCart: require('./emptyCart.png'),
+  udbanner: require('./udbanner.png'),
 };
 
 export default icons;

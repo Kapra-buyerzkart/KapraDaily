@@ -11,6 +11,7 @@ import Reanimated, {
   useSharedValue,
   useAnimatedScrollHandler,
 } from 'react-native-reanimated';
+import LinearGradient from 'react-native-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import styles from './styles';
@@ -35,10 +36,7 @@ import {
   getMyVouchersApi,
 } from '../../api/voucherService';
 import { getDashboardDataApi } from '../../api/userService';
-import {
-  getEventDetailsListApi,
-  getEventDetailsByIdApi,
-} from '../../api/eventService';
+import { getEventDetailsListApi } from '../../api/eventService';
 import logger from '../../utils/logger';
 import CONFIG from '../../globals/config';
 
@@ -200,32 +198,34 @@ const TicketLandingScreen = ({ navigation }) => {
   };
 
   const fetchEventDetailsList = useCallback(() => {
+    console.log('fetchEventDetailsList: called');
     setEventsLoading(true);
     getEventDetailsListApi()
       .then(res => {
+        console.log('Event list raw response:', res);
         const items = res?.data?.items || res?.data || [];
+        console.log('Event list data:', items);
         setEvents(Array.isArray(items) ? items : []);
       })
       .catch(err => {
+        console.log('Event list error:', err?.message, err);
         logger.error('Failed to load event details list:', err?.message);
         setEvents([]);
       })
       .finally(() => setEventsLoading(false));
   }, []);
 
-  const handleEventPress = useCallback(event => {
-    const eventId = event?.eventId ?? event?.id;
-    if (eventId === undefined || eventId === null) {
-      return;
-    }
-    getEventDetailsByIdApi(eventId)
-      .then(res => {
-        logger.log('Event details:', res?.data ?? res);
-      })
-      .catch(err =>
-        logger.error('Failed to load event details:', err?.message),
-      );
-  }, []);
+  const handleEventPress = useCallback(
+    event => {
+      console.log('EventCard onPress data:', event);
+      const eventId = event?.eventId ?? event?.id;
+      if (eventId === undefined || eventId === null) {
+        return;
+      }
+      navigation.navigate('EventDetailsScreen', { event, eventId });
+    },
+    [navigation],
+  );
 
   const handleTabChange = tabId => {
     if (tabId === TAB_IDS.EVENTS) {
@@ -348,6 +348,14 @@ const TicketLandingScreen = ({ navigation }) => {
           </Animated.View>
         </Reanimated.ScrollView>
       </AnimatedImageBackground>
+
+      <LinearGradient
+        colors={['rgba(0,0,0,0.55)', 'rgba(0,0,0,0)']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        pointerEvents="none"
+        style={[styles.statusBarGradient, { height: insets.top + 24 }]}
+      />
 
       <UdenTicketModal
         visible={modalVisible}

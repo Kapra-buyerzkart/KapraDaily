@@ -39,6 +39,7 @@ import MyAffilateScreen from '../screens/MyAffilateScreen/MyAffilateScreen';
 import ReferralLevelMembersScreen from '../screens/ReferralLevelMembersScreen/ReferralLevelMembersScreen';
 import TicketSplashScreen from '../screens/ticketScreen/TicketSplashScreen';
 import TicketLandingScreen from '../screens/ticketLandingScreen/TicketLandingScreen';
+import EventDetailsScreen from '../screens/EventDetailsScreen/EventDetailsScreen';
 import D2cScreen from '../screens/D2cScreen';
 import LegalContentScreen from '../screens/LegalContentScreen';
 const Stack = createNativeStackNavigator();
@@ -164,6 +165,11 @@ export default function RootNavigator() {
             animation: 'fade',
             contentStyle: { backgroundColor: '#000000' },
           }}
+        />
+        <Stack.Screen
+          name="EventDetailsScreen"
+          component={EventDetailsScreen}
+          options={{ contentStyle: { backgroundColor: '#000000' } }}
         />
         <Stack.Screen name="D2cScreen" component={D2cScreen} />
         <Stack.Screen

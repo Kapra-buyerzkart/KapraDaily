@@ -198,6 +198,6 @@ const images = {
   referBg: require('./referbg.png'),
   referIcon: require('./referImage.png'),
   shareNearn: require('../sharenearn.png'),
+  vineeth: require('./vineeth.jpeg'),
+  fallback: require('./noimages/fallback.png'),
 };
-
-export default images;

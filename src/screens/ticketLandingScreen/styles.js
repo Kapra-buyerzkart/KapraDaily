@@ -12,6 +12,12 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingBottom: 110,
   },
+  statusBarGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+  },
 });
 
 export default styles;
