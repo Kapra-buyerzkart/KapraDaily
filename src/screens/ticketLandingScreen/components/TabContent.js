@@ -17,6 +17,9 @@ const TabContent = ({
   onClaim,
   onGoToVouchers,
   onGoToSports,
+  popularEvents,
+  popularEventsLoading,
+  onEventPress,
 }) => {
   switch (activeTab) {
     case TAB_IDS.POPULAR:
@@ -31,6 +34,9 @@ const TabContent = ({
           onClaim={onClaim}
           onGoToVouchers={onGoToVouchers}
           onGoToSports={onGoToSports}
+          popularEvents={popularEvents}
+          popularEventsLoading={popularEventsLoading}
+          onEventPress={onEventPress}
         />
       );
     case TAB_IDS.VOUCHERS:

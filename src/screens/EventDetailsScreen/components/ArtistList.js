@@ -1,6 +1,8 @@
 import React from 'react';
 import { View, Text, Image, ScrollView } from 'react-native';
+import Animated, { FadeInRight } from 'react-native-reanimated';
 import { getVoucherImageSource } from '@/components/events/imageUtils';
+import { getStaggerDelay } from '@/utils/staggerDelay';
 import CONFIG from '@/globals/config';
 import styles from '../styles';
 import { PLACEHOLDER_HERO } from '../constants';
@@ -32,8 +34,11 @@ const ArtistList = ({ artists }) => {
           const role =
             artist?.specialization || artist?.role || artist?.type;
           return (
-            <View
+            <Animated.View
               key={artist?.eventArtistId ?? artist?.id ?? name ?? index}
+              entering={FadeInRight.delay(getStaggerDelay(index)).duration(
+                350,
+              )}
               style={styles.artistCard}
             >
               <Image
@@ -49,7 +54,7 @@ const ArtistList = ({ artists }) => {
                   {role}
                 </Text>
               )}
-            </View>
+            </Animated.View>
           );
         })}
       </ScrollView>

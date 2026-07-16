@@ -1,5 +1,8 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity, Dimensions, StyleSheet } from 'react-native';
+import { View, Text, Image, Dimensions, StyleSheet } from 'react-native';
+import { FadeInUp } from 'react-native-reanimated';
+import AnimatedPressable from '@/components/AnimatedPressable';
+import { getStaggerDelay } from '@/utils/staggerDelay';
 import CONFIG from '../../globals/config';
 
 const { width } = Dimensions.get('window');
@@ -7,10 +10,10 @@ const { width } = Dimensions.get('window');
 const toImageSource = value =>
   typeof value === 'string' ? { uri: CONFIG.image_base_url + value } : value;
 
-const VoucherCard = ({ item, onPress }) => (
-  <TouchableOpacity
+const VoucherCard = ({ item, onPress, index = 0 }) => (
+  <AnimatedPressable
     style={styles.card}
-    activeOpacity={0.85}
+    entering={FadeInUp.delay(getStaggerDelay(index))}
     onPress={() => onPress(item)}
   >
     <Image
@@ -24,7 +27,7 @@ const VoucherCard = ({ item, onPress }) => (
       </Text>
       <Text style={styles.desc}>₹{item.denomination} Voucher</Text>
     </View>
-  </TouchableOpacity>
+  </AnimatedPressable>
 );
 
 const styles = StyleSheet.create({

@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, Image } from 'react-native';
+import Animated, { FadeInUp } from 'react-native-reanimated';
 import icons from '@/assets/icons';
 import styles from '../styles';
 import { formatPrice } from '../utils';
@@ -14,7 +15,10 @@ const EventSummaryCard = ({
   venue,
   city,
 }) => (
-  <View style={styles.summaryCard}>
+  <Animated.View
+    entering={FadeInUp.delay(120).duration(400)}
+    style={styles.summaryCard}
+  >
     <Text style={styles.eventName}>{name}</Text>
 
     {(!!category || !!organizer) && (
@@ -70,7 +74,7 @@ const EventSummaryCard = ({
         </View>
       </View>
     )}
-  </View>
+  </Animated.View>
 );
 
 export default React.memo(EventSummaryCard);

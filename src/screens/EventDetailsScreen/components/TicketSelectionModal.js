@@ -22,6 +22,7 @@ import Animated, {
   runOnJS,
 } from 'react-native-reanimated';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import AnimatedPressable from '@/components/AnimatedPressable';
 import COLORS from '@/styles/colors';
 import icons from '@/assets/icons';
 import { wp, hp } from '../../../utils/responsive';
@@ -69,8 +70,7 @@ const TicketRow = React.memo(
         <View style={styles.divider} />
 
         <View style={styles.rowBottom}>
-          <TouchableOpacity
-            activeOpacity={0.7}
+          <AnimatedPressable
             style={styles.moreDetailsBtn}
             onPress={() => onToggleDetails(category.ticketCategoryId)}
             hitSlop={8}
@@ -81,13 +81,13 @@ const TicketRow = React.memo(
               size={14}
               color={COLORS.purple}
             />
-          </TouchableOpacity>
+          </AnimatedPressable>
 
           <Text style={styles.price}>{formatPrice(category.price)}</Text>
 
           {quantity > 0 ? (
             <View style={styles.stepper}>
-              <TouchableOpacity
+              <AnimatedPressable
                 style={[
                   styles.stepperBtn,
                   checking && styles.stepperBtnDisabled,
@@ -97,7 +97,7 @@ const TicketRow = React.memo(
                 hitSlop={8}
               >
                 <Text style={styles.stepperBtnText}>−</Text>
-              </TouchableOpacity>
+              </AnimatedPressable>
               {checking ? (
                 <ActivityIndicator
                   size="small"
@@ -107,7 +107,7 @@ const TicketRow = React.memo(
               ) : (
                 <Text style={styles.stepperValue}>{quantity}</Text>
               )}
-              <TouchableOpacity
+              <AnimatedPressable
                 style={[
                   styles.stepperBtn,
                   (quantity >= maxQty || checking) && styles.stepperBtnDisabled,
@@ -119,17 +119,16 @@ const TicketRow = React.memo(
                 hitSlop={8}
               >
                 <Text style={styles.stepperBtnText}>+</Text>
-              </TouchableOpacity>
+              </AnimatedPressable>
             </View>
           ) : (
-            <TouchableOpacity
+            <AnimatedPressable
               style={[
                 styles.addBtn,
                 (soldOut || checking) && styles.addBtnDisabled,
               ]}
               onPress={() => onAdd(category.ticketCategoryId)}
               disabled={soldOut || checking}
-              activeOpacity={0.8}
             >
               {checking ? (
                 <ActivityIndicator size="small" color={COLORS.purple} />
@@ -143,7 +142,7 @@ const TicketRow = React.memo(
                   {soldOut ? 'Sold out' : 'Add'}
                 </Text>
               )}
-            </TouchableOpacity>
+            </AnimatedPressable>
           )}
         </View>
 
@@ -384,13 +383,12 @@ const TicketSelectionModal = ({
                 )}
               </View>
 
-              <TouchableOpacity
+              <AnimatedPressable
                 style={[
                   styles.buyNowBtn,
                   (totalTickets === 0 || submitting) &&
                     styles.buyNowBtnDisabled,
                 ]}
-                activeOpacity={0.85}
                 onPress={handleBuyNow}
                 disabled={totalTickets === 0 || submitting}
               >
@@ -399,7 +397,7 @@ const TicketSelectionModal = ({
                 ) : (
                   <Text style={styles.buyNowText}>BUY NOW</Text>
                 )}
-              </TouchableOpacity>
+              </AnimatedPressable>
             </View>
           </ImageBackground>
 

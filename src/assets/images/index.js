@@ -202,6 +202,7 @@ const images = {
   fallback: require('./noimages/fallback.png'),
   claimbutton: require('./claimbutton.png'),
   claimbg: require('./Union.png'),
+  bookingtabbg: require('./movieTicket/bookingtabbg.png'),
 };
 
 export default images;

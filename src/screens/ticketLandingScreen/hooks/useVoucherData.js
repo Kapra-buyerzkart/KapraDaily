@@ -1,5 +1,5 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
-import { Image, Platform } from 'react-native';
+import { useState, useCallback, useEffect } from 'react';
+import { Image } from 'react-native';
 import {
   getVouchersApi,
   getVoucherByIdApi,
@@ -15,12 +15,10 @@ import CONFIG from '../../../globals/config';
 const useVoucherData = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [claimedVoucher, setClaimedVoucher] = useState(null);
-  const [selectedVoucher, setSelectedVoucher] = useState(null);
   const [carouselVouchers, setCarouselVouchers] = useState([]);
   const [carouselLoading, setCarouselLoading] = useState(true);
   const [myVouchers, setMyVouchers] = useState([]);
   const [myVouchersLoading, setMyVouchersLoading] = useState(false);
-  const [myBookingsVisible, setMyBookingsVisible] = useState(false);
   const [bCoins, setBCoins] = useState(0);
   const [claimedQuoteData, setClaimedQuoteData] = useState(null);
   const [giftQuote, setGiftQuote] = useState(null);
@@ -114,54 +112,25 @@ const useVoucherData = () => {
     [bCoins],
   );
 
-  const voucherPressTimeoutRef = useRef(null);
-  useEffect(() => () => clearTimeout(voucherPressTimeoutRef.current), []);
-
-  const handleVoucherPress = useCallback(voucher => {
-    setMyBookingsVisible(false);
-    voucherPressTimeoutRef.current = setTimeout(
-      () => setSelectedVoucher(voucher),
-      Platform.OS === 'ios' ? 400 : 250,
-    );
-  }, []);
-
   const handleCloseUdenModal = useCallback(() => {
     setModalVisible(false);
     setClaimedQuoteData(null);
   }, []);
-  const handleCloseVoucherSheet = useCallback(
-    () => setSelectedVoucher(null),
-    [],
-  );
-  const handleCloseMyBookings = useCallback(
-    () => setMyBookingsVisible(false),
-    [],
-  );
-  const handleOpenMyBookings = useCallback(
-    () => setMyBookingsVisible(true),
-    [],
-  );
 
   return {
     modalVisible,
     claimedVoucher,
     claimedQuoteData,
-    selectedVoucher,
     carouselVouchers,
     carouselLoading,
     myVouchers,
     myVouchersLoading,
-    myBookingsVisible,
     bCoins,
     giftQuote,
     giftQuoteLoading,
     refreshBCoins,
     handleClaim,
-    handleVoucherPress,
     handleCloseUdenModal,
-    handleCloseVoucherSheet,
-    handleCloseMyBookings,
-    handleOpenMyBookings,
   };
 };
 

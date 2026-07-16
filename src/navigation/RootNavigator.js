@@ -40,6 +40,7 @@ import ReferralLevelMembersScreen from '../screens/ReferralLevelMembersScreen/Re
 import TicketSplashScreen from '../screens/ticketScreen/TicketSplashScreen';
 import TicketLandingScreen from '../screens/ticketLandingScreen/TicketLandingScreen';
 import EventDetailsScreen from '../screens/EventDetailsScreen/EventDetailsScreen';
+import MyBookingsScreen from '../screens/MyBookingsScreen/MyBookingsScreen';
 import D2cScreen from '../screens/D2cScreen';
 import LegalContentScreen from '../screens/LegalContentScreen';
 const Stack = createNativeStackNavigator();
@@ -169,6 +170,11 @@ export default function RootNavigator() {
         <Stack.Screen
           name="EventDetailsScreen"
           component={EventDetailsScreen}
+          options={{ contentStyle: { backgroundColor: '#000000' } }}
+        />
+        <Stack.Screen
+          name="MyBookingsScreen"
+          component={MyBookingsScreen}
           options={{ contentStyle: { backgroundColor: '#000000' } }}
         />
         <Stack.Screen name="D2cScreen" component={D2cScreen} />

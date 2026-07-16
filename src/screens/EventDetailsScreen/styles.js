@@ -4,11 +4,19 @@ import COLORS from '@/styles/colors';
 const CARD_BG = 'rgba(255,255,255,0.04)';
 const CARD_BORDER = 'rgba(255,255,255,0.10)';
 const ICON_TILE_BG = 'rgba(110,52,192,0.25)';
+const BG_ASPECT_RATIO = 430 / 2078;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#000000',
+  },
+  bgImage: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    aspectRatio: BG_ASPECT_RATIO,
   },
   scrollContent: {
     paddingBottom: 160,
@@ -269,21 +277,12 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     alignItems: 'center',
-    justifyContent: 'flex-end',
-  },
-  claimBg: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    width: '100%',
-    height: 110,
+    paddingTop: 12,
   },
   claimButton: {
     width: 96,
     height: 96,
     borderRadius: 48,
-    marginBottom: 18,
     backgroundColor: '#F5C542',
     alignItems: 'center',
     justifyContent: 'center',

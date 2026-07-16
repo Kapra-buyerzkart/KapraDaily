@@ -35,6 +35,18 @@ export const SERVICES = [
   },
 
   {
+    id: 'quickDelivery',
+    title: '20 mins Deal',
+    description: 'Groceries, essentials and more, \n in minutes',
+    type: SERVICE_TYPES.INTERNAL,
+    route: 'MainTabs',
+    params: { screen: 'Home' },
+    icon: 'bag-handle-outline',
+    iconColor: '#F25000',
+    logo: require('../assets/images/modal/20minIcon.png'),
+    titleImage: require('../assets/images/modal/20minModal.png'),
+  },
+  {
     id: 'quickCommerce',
     title: 'D2C',
     description: 'Groceries & daily essentials',

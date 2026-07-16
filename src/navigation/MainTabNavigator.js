@@ -182,6 +182,7 @@ export default function MainTabNavigator() {
       <ServiceSwitcherModal
         visible={isServiceSwitcherVisible}
         onClose={() => setIsServiceSwitcherVisible(false)}
+        excludeServiceId="quickDelivery"
       />
     </>
   );

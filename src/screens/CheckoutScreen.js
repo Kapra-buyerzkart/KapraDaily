@@ -975,7 +975,7 @@ const styles = StyleSheet.create({
     color: '#000000',
   },
   scrollContent: {
-    paddingBottom: hp('15%'),
+    paddingBottom: hp('3'),
   },
   sectionContainer: {
     marginTop: hp('1.5%'),

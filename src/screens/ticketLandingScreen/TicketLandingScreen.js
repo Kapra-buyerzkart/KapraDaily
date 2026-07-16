@@ -9,9 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import styles from './styles';
 import TicketLandingList from './components/TicketLandingList';
 import UdenTicketModal from './components/UdenTicketModal';
-import VoucherBottomSheet from './components/VoucherBottomSheet';
 import BottomTabBar from './components/BottomTabBar';
-import MyBookingsModal from './components/MyBookingsModal';
 import ServiceSwitcherModal from '../../components/ServiceSwitcherModal';
 import useVoucherData from './hooks/useVoucherData';
 import useEventsData from './hooks/useEventsData';
@@ -60,17 +58,24 @@ const TicketLandingScreen = ({ navigation }) => {
       onClaim: voucherData.handleClaim,
       onGoToVouchers: tabNav.handleGoToVouchers,
       onGoToSports: tabNav.handleGoToSports,
+      popularEvents: eventsData.popularEvents,
+      popularEventsLoading: eventsData.popularEventsLoading,
+      onEventPress: eventsData.handleEventPress,
     }),
-    [fadeAnim, voucherData, tabNav.handleGoToVouchers, tabNav.handleGoToSports],
+    [
+      fadeAnim,
+      voucherData,
+      tabNav.handleGoToVouchers,
+      tabNav.handleGoToSports,
+      eventsData.popularEvents,
+      eventsData.popularEventsLoading,
+      eventsData.handleEventPress,
+    ],
   );
 
   return (
     <View style={styles.container}>
-      <StatusBar
-        barStyle="light-content"
-        translucent
-        backgroundColor="transparent"
-      />
+      <StatusBar barStyle="light-content" translucent backgroundColor="black" />
       <AnimatedImageBackground
         source={require('../../assets/images/movieTicket/ticketLandingBg.png')}
         style={imageBgStyle}
@@ -109,23 +114,10 @@ const TicketLandingScreen = ({ navigation }) => {
         onPurchaseSettled={voucherData.refreshBCoins}
         onClose={voucherData.handleCloseUdenModal}
       />
-      <VoucherBottomSheet
-        visible={!!voucherData.selectedVoucher}
-        voucher={voucherData.selectedVoucher}
-        onClose={voucherData.handleCloseVoucherSheet}
-      />
-      <MyBookingsModal
-        visible={voucherData.myBookingsVisible}
-        vouchers={voucherData.myVouchers}
-        loading={voucherData.myVouchersLoading}
-        onVoucherPress={voucherData.handleVoucherPress}
-        onClose={voucherData.handleCloseMyBookings}
-      />
-
       <BottomTabBar
         bookingsCount={voucherData.myVouchers.length}
         onHomePress={tabNav.handleGoHome}
-        onMyBookingsPress={voucherData.handleOpenMyBookings}
+        onMyBookingsPress={() => navigation.navigate('MyBookingsScreen')}
         onStorePress={storeSwitcher.open}
       />
 

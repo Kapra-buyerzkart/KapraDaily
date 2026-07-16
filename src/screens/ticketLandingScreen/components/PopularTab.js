@@ -4,6 +4,7 @@ import HeroCarousel from '@/components/events/HeroCarousel';
 import QuickActionCard from '@/components/events/QuickActionCard';
 import GiftCard from '@/components/events/GiftCard';
 import EventCard from '@/components/events/EventCard';
+import PopularEventCard from '@/components/events/PopularEventCard';
 import SectionTitle from '@/components/events/SectionTitle';
 import LoadingSkeleton from '@/components/events/LoadingSkeleton';
 import EmptyState from '@/components/events/EmptyState';
@@ -22,6 +23,9 @@ const PopularTab = ({
   onClaim,
   onGoToVouchers,
   onGoToSports,
+  popularEvents,
+  popularEventsLoading,
+  onEventPress,
 }) => {
   const featured = vouchers?.[0];
   const heroItems = useMemo(() => vouchers?.slice(0, 5) ?? [], [vouchers]);
@@ -91,6 +95,26 @@ const PopularTab = ({
             />
           ))}
         </>
+      )}
+
+      <SectionTitle title="Popular Events" />
+      {popularEventsLoading ? (
+        <LoadingSkeleton variant="card" count={3} />
+      ) : popularEvents && popularEvents.length > 0 ? (
+        popularEvents.map((event, index) => (
+          <PopularEventCard
+            key={event?.eventId ?? index}
+            item={event}
+            onPress={onEventPress}
+            index={index}
+          />
+        ))
+      ) : (
+        <EmptyState
+          icon={POPULAR_ICON}
+          title="No data available"
+          subtitle="Check back soon for popular events."
+        />
       )}
     </Animated.View>
   );

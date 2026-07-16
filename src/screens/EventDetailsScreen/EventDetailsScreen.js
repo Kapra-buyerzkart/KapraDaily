@@ -6,13 +6,14 @@ import {
   ScrollView,
   StatusBar,
   ActivityIndicator,
-  TouchableOpacity,
 } from 'react-native';
 import Toast from 'react-native-simple-toast';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated, { ZoomIn } from 'react-native-reanimated';
 import styles from './styles';
 import COLORS from '@/styles/colors';
 import images from '@/assets/images';
+import AnimatedPressable from '@/components/AnimatedPressable';
 import useEventDetails from './hooks/useEventDetails';
 import EventHero from './components/EventHero';
 import ClaimBanner from './components/ClaimBanner';
@@ -99,6 +100,11 @@ const EventDetailsScreen = ({ navigation, route }) => {
         translucent
         backgroundColor="transparent"
       />
+      <Image
+        source={images.bookingtabbg}
+        style={styles.bgImage}
+        resizeMode="cover"
+      />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -106,7 +112,7 @@ const EventDetailsScreen = ({ navigation, route }) => {
         bounces={false}
       >
         <EventHero event={event} insets={insets} onBack={handleBack} />
-        <ClaimBanner />
+        {/* <ClaimBanner /> */}
         <EventSummaryCard
           name={details?.name}
           category={details?.category}
@@ -123,13 +129,14 @@ const EventDetailsScreen = ({ navigation, route }) => {
       </ScrollView>
 
       <View style={claimWrapStyle}>
-        <TouchableOpacity
-          activeOpacity={0.85}
-          style={styles.claimButton}
-          onPress={openTicketModal}
-        >
-          <Text style={styles.claimText}>Claim</Text>
-        </TouchableOpacity>
+        <Animated.View entering={ZoomIn.delay(280).duration(360)}>
+          <AnimatedPressable
+            style={styles.claimButton}
+            onPress={openTicketModal}
+          >
+            <Text style={styles.claimText}>Claim</Text>
+          </AnimatedPressable>
+        </Animated.View>
       </View>
 
       <TicketSelectionModal

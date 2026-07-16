@@ -9,6 +9,7 @@ import {
   Platform,
   Image,
   ImageBackground,
+  StatusBar,
 } from 'react-native';
 import {
   widthPercentageToDP as wp,
@@ -150,6 +151,11 @@ const AuthSuccessScreen = ({ navigation }) => {
       resizeMode="cover"
       style={styles.container}
     >
+      <StatusBar
+        translucent
+        contentStyle="dark-content"
+        backgroundColor="transparent"
+      />
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}

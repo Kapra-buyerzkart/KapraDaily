@@ -18,7 +18,9 @@ const VoucherGrid = ({
   bottomInset = 0,
 }) => {
   const renderItem = useCallback(
-    ({ item }) => <VoucherCard item={item} onPress={onVoucherPress} />,
+    ({ item, index }) => (
+      <VoucherCard item={item} onPress={onVoucherPress} index={index} />
+    ),
     [onVoucherPress],
   );
 

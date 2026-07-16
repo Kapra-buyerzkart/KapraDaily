@@ -8,6 +8,10 @@ export const getEventDetailsByIdApi = async (eventId, config) => {
   return get(`eventdetails/${eventId}`, config);
 };
 
+export const getPopularListApi = async config => {
+  return get('popular/list', config);
+};
+
 export const getEventBookingListApi = async (
   { pageNumber = 1, pageSize = 10 } = {},
   config,
