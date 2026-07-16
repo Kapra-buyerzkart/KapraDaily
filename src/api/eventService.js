@@ -8,6 +8,17 @@ export const getEventDetailsByIdApi = async (eventId, config) => {
   return get(`eventdetails/${eventId}`, config);
 };
 
+export const getEventBookingListApi = async (
+  { pageNumber = 1, pageSize = 10 } = {},
+  config,
+) => {
+  return post(
+    'eventbooking/list',
+    { PageNumber: pageNumber, PageSize: pageSize },
+    config,
+  );
+};
+
 export const checkTicketAvailabilityApi = async (ticketCategoryId, quantity, config) => {
   return post('eventdetails/checkavailability', { ticketCategoryId, quantity }, config);
 };

@@ -4,7 +4,9 @@ import { FadeInUp } from 'react-native-reanimated';
 import { getVoucherImageSource } from './imageUtils';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { getStaggerDelay } from '@/utils/staggerDelay';
+import { formatDate } from '@/screens/EventDetailsScreen/utils';
 import COLORS from '@/styles/colors';
+import icons from '@/assets/icons';
 
 const EventCard = ({ item, onPress, index = 0 }) => (
   <AnimatedPressable
@@ -23,8 +25,14 @@ const EventCard = ({ item, onPress, index = 0 }) => (
       </Text>
       <View style={styles.pillsRow}>
         <View style={styles.pill}>
-          <Text style={styles.pillText}>From ₹{item?.denomination ?? 0}</Text>
+          <Text style={styles.pillText}>From ₹ {item?.MinPrice ?? 0}</Text>
         </View>
+
+        <View style={styles.pill}>
+          <Image source={icons.calendarTwo} />
+          <Text style={styles.pillText}>{formatDate(item?.SessionStart)}</Text>
+        </View>
+
         {!!item?.brand && (
           <View style={styles.pill}>
             <Text style={styles.pillText}>{item.brand}</Text>
@@ -63,9 +71,12 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   pill: {
+    flexDirection: 'row',
+    gap: 8,
+    alignItems: 'center',
     borderWidth: 1,
     borderColor: COLORS.purple,
-    borderRadius: 7.5,
+    borderRadius: 12,
     padding: 10,
   },
   pillText: {

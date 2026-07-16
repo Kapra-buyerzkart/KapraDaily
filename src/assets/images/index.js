@@ -201,4 +201,7 @@ const images = {
   vineeth: require('./vineeth.jpeg'),
   fallback: require('./noimages/fallback.png'),
   claimbutton: require('./claimbutton.png'),
+  claimbg: require('./Union.png'),
 };
+
+export default images;

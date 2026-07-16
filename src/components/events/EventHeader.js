@@ -4,6 +4,7 @@ import icons from '@/assets/icons';
 import CoinBalance from './CoinBalance';
 import { wp } from '../../utils/responsive';
 import { hp } from '@/styles/cartTheme';
+import images from '@/assets/images';
 
 const EventHeader = ({ navigation, insets, bCoins }) => {
   const paddingTop = insets?.top > 0 ? insets.top + 16 : 40;
@@ -11,19 +12,10 @@ const EventHeader = ({ navigation, insets, bCoins }) => {
   return (
     <View style={[styles.header, { paddingTop }]}>
       <View style={styles.left}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          hitSlop={40}
-          style={styles.backButton}
-        >
-          <Image source={icons.backArrowNew} style={styles.backIcon} />
-        </TouchableOpacity>
-
-        {/* <Image
-          style={{ height: hp('3.5%'), width: wp('18.5%') }}
-          source={require('../../assets/images/movieTicket/udendeallanding.png')}
-          resizeMode="contain"
-        /> */}
+        <Image
+          style={styles.udenticketconimage}
+          source={icons.udenticketconimage}
+        />
       </View>
       <CoinBalance bCoins={bCoins} />
     </View>
@@ -42,15 +34,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  backButton: {},
+  backButton: {
+    position: 'absolute',
+    left: 20,
+  },
   backIcon: {
     resizeMode: 'contain',
     tintColor: '#FFFFFF',
     resizeMode: 'contain',
-    width: 67,
-    height: 32,
   },
-  logo: {},
+
+  udenticketconimage: {
+    resizeMode: 'contain',
+    width: wp('16%'),
+    height: hp('5%'),
+    tintColor: '#ffffff',
+  },
 });
 
 export default React.memo(EventHeader);

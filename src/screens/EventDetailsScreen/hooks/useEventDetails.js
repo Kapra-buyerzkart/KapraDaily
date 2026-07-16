@@ -7,7 +7,11 @@ import { formatDate, formatTime } from '../utils';
 
 const deriveDetails = event => {
   const sessionStart =
-    event?.SessionStart || event?.sessionStart || event?.eventDate || event?.date || event?.startDate;
+    event?.SessionStart ||
+    event?.sessionStart ||
+    event?.eventDate ||
+    event?.date ||
+    event?.startDate;
 
   const sessions = Array.isArray(event?.sessions) ? event.sessions : [];
   const activeSession =
@@ -27,7 +31,12 @@ const deriveDetails = event => {
     bannerImage: event?.bannerImage || event?.thumbnailImage || null,
     dateText: formatDate(sessionStart),
     timeText: formatTime(sessionStart, event?.time),
-    venue: event?.venueName || event?.venue || event?.location || event?.address || '',
+    venue:
+      event?.venueName ||
+      event?.venue ||
+      event?.location ||
+      event?.address ||
+      '',
     city:
       [event?.city, event?.state].filter(Boolean).join(', ') ||
       event?.region ||
@@ -71,12 +80,12 @@ export default function useEventDetails(route) {
       .then(res => {
         const data = res?.data ?? res;
         if (data) {
-          // The detail API nests the core fields (description,
-          // termsAndConditions, venueName, etc.) under `eventDetails`.
-          // Flatten it so deriveDetails can read them at the top level,
-          // while keeping the sibling collections (artists, sessions, …).
           const { eventDetails, ...rest } = data;
-          setEvent(prev => ({ ...(prev || {}), ...rest, ...(eventDetails || {}) }));
+          setEvent(prev => ({
+            ...(prev || {}),
+            ...rest,
+            ...(eventDetails || {}),
+          }));
         }
       })
       .catch(err => logger.error('Failed to load event details:', err?.message))

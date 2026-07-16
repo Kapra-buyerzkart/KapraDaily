@@ -31,25 +31,27 @@ const getItemLayout = (_, index) => ({
 
 const keyExtractor = (item, index) => `${item?.voucherId ?? index}-${index}`;
 
-const PaginationDot = React.memo(({ scrollX, index, count, snap, infinite }) => {
-  const animatedStyle = useAnimatedStyle(() => {
-    const pos = scrollX.value / snap;
-    const realPos = infinite ? (((pos - 1) % count) + count) % count : pos;
-    let dist = Math.abs(realPos - index);
-    if (infinite) dist = Math.min(dist, count - dist);
-    dist = Math.min(dist, 1);
-    return {
-      width: interpolate(
-        dist,
-        [0, 1],
-        [DOT_ACTIVE_WIDTH, DOT_INACTIVE_WIDTH],
-        Extrapolation.CLAMP,
-      ),
-      opacity: interpolate(dist, [0, 1], [1, 0.35], Extrapolation.CLAMP),
-    };
-  });
-  return <Animated.View style={[styles.dot, animatedStyle]} />;
-});
+const PaginationDot = React.memo(
+  ({ scrollX, index, count, snap, infinite }) => {
+    const animatedStyle = useAnimatedStyle(() => {
+      const pos = scrollX.value / snap;
+      const realPos = infinite ? (((pos - 1) % count) + count) % count : pos;
+      let dist = Math.abs(realPos - index);
+      if (infinite) dist = Math.min(dist, count - dist);
+      dist = Math.min(dist, 1);
+      return {
+        width: interpolate(
+          dist,
+          [0, 1],
+          [DOT_ACTIVE_WIDTH, DOT_INACTIVE_WIDTH],
+          Extrapolation.CLAMP,
+        ),
+        opacity: interpolate(dist, [0, 1], [1, 0.35], Extrapolation.CLAMP),
+      };
+    });
+    return <Animated.View style={[styles.dot, animatedStyle]} />;
+  },
+);
 
 const Slide = React.memo(({ item, onPress }) => (
   <AnimatedPressable style={styles.slide} onPress={() => onPress?.(item)}>
@@ -57,11 +59,6 @@ const Slide = React.memo(({ item, onPress }) => (
       source={getVoucherImageSource(item)}
       style={styles.image}
       resizeMode="cover"
-    />
-    <LinearGradient
-      colors={['transparent', 'rgba(0,0,0,0.8)']}
-      style={styles.scrim}
-      pointerEvents="none"
     />
     <View style={styles.captionRow}>
       {!!item?.title && (

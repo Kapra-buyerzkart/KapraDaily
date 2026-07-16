@@ -2,6 +2,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import {
   View,
   Text,
+  Image,
   ScrollView,
   StatusBar,
   ActivityIndicator,
@@ -11,6 +12,7 @@ import Toast from 'react-native-simple-toast';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import styles from './styles';
 import COLORS from '@/styles/colors';
+import images from '@/assets/images';
 import useEventDetails from './hooks/useEventDetails';
 import EventHero from './components/EventHero';
 import ClaimBanner from './components/ClaimBanner';
