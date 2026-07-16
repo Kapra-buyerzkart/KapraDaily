@@ -203,6 +203,7 @@ const images = {
   claimbutton: require('./claimbutton.png'),
   claimbg: require('./Union.png'),
   bookingtabbg: require('./movieTicket/bookingtabbg.png'),
+  claimbgbutton: require('./claimbgbutton.png'),
 };
 
 export default images;

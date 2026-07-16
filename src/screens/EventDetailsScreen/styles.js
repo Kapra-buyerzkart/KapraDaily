@@ -5,6 +5,7 @@ const CARD_BG = 'rgba(255,255,255,0.04)';
 const CARD_BORDER = 'rgba(255,255,255,0.10)';
 const ICON_TILE_BG = 'rgba(110,52,192,0.25)';
 const BG_ASPECT_RATIO = 430 / 2078;
+const CLAIM_BAR_ASPECT_RATIO = 430 / 118;
 
 const styles = StyleSheet.create({
   container: {
@@ -62,29 +63,59 @@ const styles = StyleSheet.create({
     textShadowRadius: 6,
   },
 
-  /* Purple claim banner */
-  banner: {
-    paddingVertical: 10,
+  /* Claim banner — black metallic */
+  bannerWrap: {
+    marginHorizontal: 20,
+    marginTop: 16,
+    borderWidth: 0.5,
+    borderColor: '#E8E8E8',
+    borderRadius: 16,
+  },
+  bannerCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.18)',
+    paddingVertical: 12,
+    paddingHorizontal: 14,
     overflow: 'hidden',
   },
-  bannerBackgroundImage: {
-    resizeMode: 'contain',
+  bannerCoinWrap: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
   },
-  bannerText: {
-    color: COLORS.balck,
-    fontSize: 12,
-    fontFamily: 'Gilroy-Medium',
+  bannerCoinGlow: {
+    position: 'absolute',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F5C542',
   },
   bannerCoin: {
-    width: 16,
-    height: 16,
-    marginHorizontal: 4,
+    width: 34,
+    height: 34,
+  },
+  bannerText: {
+    flex: 1,
+    color: COLORS.white,
+    fontSize: 13,
+    lineHeight: 18,
+    fontFamily: 'Gilroy-Medium',
   },
   bannerHighlight: {
+    color: '#F5C542',
     fontFamily: 'Gilroy-Bold',
+  },
+  bannerShimmer: {
+    position: 'absolute',
+    top: -24,
+    bottom: -24,
+    left: 0,
+    width: 90,
   },
 
   /* Sections */
@@ -276,26 +307,13 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    alignItems: 'center',
-    paddingTop: 12,
   },
-  claimButton: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    backgroundColor: '#F5C542',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#F5C542',
-    shadowOpacity: 0.5,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 10,
+  claimBarImage: {
+    width: '100%',
+    aspectRatio: CLAIM_BAR_ASPECT_RATIO,
   },
-  claimText: {
-    color: '#1A1A1A',
-    fontSize: 16,
-    fontFamily: 'Gilroy-Bold',
+  claimSafeArea: {
+    backgroundColor: '#000000',
   },
 
   /* Loader */

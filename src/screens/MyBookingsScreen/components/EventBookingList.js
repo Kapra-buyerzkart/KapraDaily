@@ -1,32 +1,29 @@
 import React, { useCallback } from 'react';
 import {
-  View,
-  Text,
   ActivityIndicator,
   FlatList,
   RefreshControl,
   StyleSheet,
+  Text,
+  View,
 } from 'react-native';
-import VoucherCard from '@/components/events/VoucherCard';
+import EventBookingCard from './EventBookingCard';
 
 const keyExtractor = (item, index) =>
-  String(item?.purchaseId || item?.voucherId || item?.id || index);
+  String(item?.bookingId || item?.id || index);
 
-const VoucherGrid = ({
-  vouchers = [],
+const EventBookingList = ({
+  bookings = [],
   loading = false,
-  onVoucherPress,
+  loadingMore = false,
+  onEndReached,
   bottomInset = 0,
-  ListHeaderComponent,
-  emptyText = 'No vouchers yet',
   refreshing = false,
   onRefresh,
 }) => {
   const renderItem = useCallback(
-    ({ item, index }) => (
-      <VoucherCard item={item} onPress={onVoucherPress} index={index} />
-    ),
-    [onVoucherPress],
+    ({ item, index }) => <EventBookingCard item={item} index={index} />,
+    [],
   );
 
   if (loading) {
@@ -40,11 +37,9 @@ const VoucherGrid = ({
   return (
     <FlatList
       style={styles.list}
-      data={vouchers}
+      data={bookings}
       keyExtractor={keyExtractor}
       renderItem={renderItem}
-      numColumns={2}
-      columnWrapperStyle={styles.column}
       contentContainerStyle={[
         styles.content,
         { paddingBottom: bottomInset + 20 },
@@ -61,10 +56,16 @@ const VoucherGrid = ({
           />
         ) : undefined
       }
-      ListHeaderComponent={ListHeaderComponent}
+      onEndReached={onEndReached}
+      onEndReachedThreshold={0.5}
+      ListFooterComponent={
+        loadingMore ? (
+          <ActivityIndicator color="#9A5CFF" style={styles.footer} />
+        ) : null
+      }
       ListEmptyComponent={
         <View style={styles.centered}>
-          <Text style={styles.emptyText}>{emptyText}</Text>
+          <Text style={styles.emptyText}>No event bookings yet</Text>
         </View>
       }
     />
@@ -79,14 +80,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 20,
   },
-  column: {
-    gap: 12,
-    marginBottom: 12,
-  },
   centered: {
     justifyContent: 'center',
     alignItems: 'center',
     paddingVertical: 40,
+  },
+  footer: {
+    paddingVertical: 16,
   },
   emptyText: {
     color: 'rgba(255,255,255,0.4)',
@@ -95,4 +95,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default React.memo(VoucherGrid);
+export default React.memo(EventBookingList);

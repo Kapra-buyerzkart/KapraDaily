@@ -1,7 +1,6 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import {
   View,
-  Text,
   Image,
   ScrollView,
   StatusBar,
@@ -75,8 +74,8 @@ const EventDetailsScreen = ({ navigation, route }) => {
     [bookingInProgress, details?.sessionId],
   );
 
-  const claimWrapStyle = useMemo(
-    () => [styles.claimWrap, { paddingBottom: insets.bottom + 16 }],
+  const claimSafeAreaStyle = useMemo(
+    () => [styles.claimSafeArea, { height: insets.bottom }],
     [insets.bottom],
   );
 
@@ -112,7 +111,7 @@ const EventDetailsScreen = ({ navigation, route }) => {
         bounces={false}
       >
         <EventHero event={event} insets={insets} onBack={handleBack} />
-        {/* <ClaimBanner /> */}
+        <ClaimBanner />
         <EventSummaryCard
           name={details?.name}
           category={details?.category}
@@ -128,14 +127,20 @@ const EventDetailsScreen = ({ navigation, route }) => {
         <EventAccordions details={details.detailsText} terms={details.terms} />
       </ScrollView>
 
-      <View style={claimWrapStyle}>
+      <View style={styles.claimWrap} pointerEvents="box-none">
         <Animated.View entering={ZoomIn.delay(280).duration(360)}>
           <AnimatedPressable
-            style={styles.claimButton}
             onPress={openTicketModal}
+            accessibilityRole="button"
+            accessibilityLabel="Claim"
           >
-            <Text style={styles.claimText}>Claim</Text>
+            <Image
+              source={images.claimbgbutton}
+              style={styles.claimBarImage}
+              resizeMode="stretch"
+            />
           </AnimatedPressable>
+          <View style={claimSafeAreaStyle} />
         </Animated.View>
       </View>
 
