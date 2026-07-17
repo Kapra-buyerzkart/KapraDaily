@@ -16,15 +16,22 @@ export const getEventBookingListApi = async (
   { pageNumber = 1, pageSize = 10 } = {},
   config,
 ) => {
-  return post(
-    'eventbooking/list',
-    { PageNumber: pageNumber, PageSize: pageSize },
-    config,
-  );
+  return get('eventbooking/list', {
+    ...config,
+    params: { PageNumber: pageNumber, PageSize: pageSize, ...config?.params },
+  });
 };
 
-export const checkTicketAvailabilityApi = async (ticketCategoryId, quantity, config) => {
-  return post('eventdetails/checkavailability', { ticketCategoryId, quantity }, config);
+export const checkTicketAvailabilityApi = async (
+  ticketCategoryId,
+  quantity,
+  config,
+) => {
+  return post(
+    'eventdetails/checkavailability',
+    { ticketCategoryId, quantity },
+    config,
+  );
 };
 
 export const createEventBookingApi = async (
@@ -34,6 +41,24 @@ export const createEventBookingApi = async (
   return post(
     'eventbooking/create',
     { sessionId, bookingItems, bookingPlacedFrom },
+    config,
+  );
+};
+
+export const initiateEventBookingPaymentApi = async (
+  { bookingId, udCoinsRequested = 0 },
+  config,
+) => {
+  return post('eventbooking/initiate', { bookingId, udCoinsRequested }, config);
+};
+
+export const verifyEventBookingPaymentApi = async (
+  { bookingId, razorpayOrderId, razorpayPaymentId, razorpaySignature },
+  config,
+) => {
+  return post(
+    'eventbooking/verify',
+    { bookingId, razorpayOrderId, razorpayPaymentId, razorpaySignature },
     config,
   );
 };

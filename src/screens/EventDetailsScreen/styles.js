@@ -6,6 +6,7 @@ const CARD_BORDER = 'rgba(255,255,255,0.10)';
 const ICON_TILE_BG = 'rgba(110,52,192,0.25)';
 const BG_ASPECT_RATIO = 430 / 2078;
 const CLAIM_BAR_ASPECT_RATIO = 430 / 118;
+export const HERO_HEIGHT = 340;
 
 const styles = StyleSheet.create({
   container: {
@@ -26,9 +27,16 @@ const styles = StyleSheet.create({
   /* Hero */
   hero: {
     width: '100%',
-    height: 340,
+    height: HERO_HEIGHT,
     backgroundColor: '#111111',
     justifyContent: 'flex-start',
+    overflow: 'hidden',
+  },
+  heroImageWrap: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  heroImageBg: {
+    flex: 1,
   },
   heroImage: {
     resizeMode: 'cover',
@@ -39,6 +47,20 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     height: '55%',
+  },
+  scrollHint: {
+    position: 'absolute',
+    top: HERO_HEIGHT - 46,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  scrollHintChevron: {
+    marginTop: -14,
+    textShadowColor: 'rgba(0,0,0,0.6)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 6,
   },
   heroTopRow: {
     flexDirection: 'row',
@@ -67,7 +89,7 @@ const styles = StyleSheet.create({
   bannerWrap: {
     marginHorizontal: 20,
     marginTop: 16,
-    borderWidth: 0.5,
+    // borderWidth: 0.5,
     borderColor: '#E8E8E8',
     borderRadius: 16,
   },
@@ -77,6 +99,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.18)',
+    backgroundColor: '#1F1F24',
     paddingVertical: 12,
     paddingHorizontal: 14,
     overflow: 'hidden',
@@ -116,6 +139,10 @@ const styles = StyleSheet.create({
     bottom: -24,
     left: 0,
     width: 90,
+  },
+  bannerShimmerGradient: {
+    flex: 1,
+    transform: [{ rotate: '18deg' }],
   },
 
   /* Sections */

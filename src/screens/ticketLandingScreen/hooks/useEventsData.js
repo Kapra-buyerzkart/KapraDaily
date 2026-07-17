@@ -1,11 +1,10 @@
 import { useState, useCallback, useEffect } from 'react';
-import { getEventDetailsListApi, getPopularListApi } from '../../../api/eventService';
+import {
+  getEventDetailsListApi,
+  getPopularListApi,
+} from '../../../api/eventService';
 import logger from '../../../utils/logger';
 
-// Joins each event with its own eventimages entry (banner type preferred,
-// else the lowest displayOrder) so cards can resolve a real image without
-// guessing at other fields — everything besides `image` is passed through
-// from the API untouched.
 const mapPopularEvents = data => {
   const rawEvents = Array.isArray(data?.events) ? data.events : [];
   const eventImages = Array.isArray(data?.eventimages) ? data.eventimages : [];
@@ -32,6 +31,7 @@ const useEventsData = navigation => {
     setEventsLoading(true);
     getEventDetailsListApi()
       .then(res => {
+        console.log(res, 'eventdetails/list api response');
         const items = res?.data?.items || res?.data || [];
         setEvents(Array.isArray(items) ? items : []);
       })

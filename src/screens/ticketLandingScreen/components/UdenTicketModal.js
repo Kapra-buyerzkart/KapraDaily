@@ -657,7 +657,7 @@ const UdenTicketModal = ({
           resetPayment();
           onClose();
         }}
-        onMyVouchers={() => {
+        onSecondaryAction={() => {
           resetPayment();
           onClose();
         }}

@@ -23,12 +23,13 @@ export const asyncStoragePersister = createAsyncStoragePersister({
 // 'dashboard' (wallet/coin balance — financial, must not look "instant" off stale cache),
 // 'categoryProducts' (per-tap lazy fetch, cheap to refetch, low value to persist),
 // 'search' (keystroke/browse-driven, high-cardinality, low value once the app restarts).
+// 'myBookings' (booking/voucher status must reflect the server, not a stale persisted snapshot).
 export const queryPersistOptions = {
   persister: asyncStoragePersister,
   maxAge: 24 * 60 * 60 * 1000,
   dehydrateOptions: {
     shouldDehydrateQuery: (query) =>
       query.state.status === 'success' &&
-      !['dashboard', 'categoryProducts', 'search'].includes(query.queryKey[0]),
+      !['dashboard', 'categoryProducts', 'search', 'myBookings'].includes(query.queryKey[0]),
   },
 };

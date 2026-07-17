@@ -53,6 +53,7 @@ const icons = {
   udenticketconimage: require('./udenticketHeader.png'),
   min20: require('./20mins.png'),
   min20bag: require('./20minsCarrybag.png'),
+  tickmark: require('./tickMarrk.png'),
 };
 
 export default icons;

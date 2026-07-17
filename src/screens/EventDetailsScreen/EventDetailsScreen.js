@@ -2,40 +2,60 @@ import React, { useCallback, useMemo, useState } from 'react';
 import {
   View,
   Image,
-  ScrollView,
   StatusBar,
   ActivityIndicator,
+  Pressable,
 } from 'react-native';
 import Toast from 'react-native-simple-toast';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Animated, { ZoomIn } from 'react-native-reanimated';
+import Animated, {
+  ZoomIn,
+  useSharedValue,
+  useAnimatedScrollHandler,
+} from 'react-native-reanimated';
 import styles from './styles';
 import COLORS from '@/styles/colors';
 import images from '@/assets/images';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import useEventDetails from './hooks/useEventDetails';
 import EventHero from './components/EventHero';
+import ScrollHint from './components/ScrollHint';
 import ClaimBanner from './components/ClaimBanner';
 import EventSummaryCard from './components/EventSummaryCard';
 import MoreToKnow from './components/MoreToKnow';
 import ArtistList from './components/ArtistList';
 import EventAccordions from './components/EventAccordions';
 import TicketSelectionModal from './components/TicketSelectionModal';
-import { createEventBookingApi } from '../../api/eventService';
-import logger from '../../utils/logger';
+import RedeemSuccessModal from '../ticketLandingScreen/components/RedeemSuccessModal';
+import PaymentFailedModal from '../ticketLandingScreen/components/PaymentFailedModal';
+import { useEventPayment } from '../../hooks/useEventPayment';
 
 const EventDetailsScreen = ({ navigation, route }) => {
   const insets = useSafeAreaInsets();
   const { event, loading, details } = useEventDetails(route);
   const [ticketModalVisible, setTicketModalVisible] = useState(false);
-  const [bookingInProgress, setBookingInProgress] = useState(false);
+  const {
+    payForBooking,
+    processing,
+    successVisible,
+    failureVisible,
+    paidAmount,
+    ticketQuantity,
+    resetPayment,
+    dismissFailure,
+  } = useEventPayment();
+
+  const scrollY = useSharedValue(0);
+  const scrollHandler = useAnimatedScrollHandler(e => {
+    scrollY.value = e.contentOffset.y;
+  });
 
   const handleBack = useCallback(() => navigation.goBack(), [navigation]);
   const openTicketModal = useCallback(() => setTicketModalVisible(true), []);
   const closeTicketModal = useCallback(() => setTicketModalVisible(false), []);
   const handleBuyNow = useCallback(
     async selection => {
-      if (bookingInProgress) return;
+      if (processing) return;
 
       const bookingItems = (selection?.lines || []).map(({ cat, qty }) => ({
         ticketCategoryId: cat.ticketCategoryId,
@@ -47,32 +67,29 @@ const EventDetailsScreen = ({ navigation, route }) => {
         return;
       }
 
-      const payload = {
+      const result = await payForBooking({
         sessionId: details.sessionId,
         bookingItems,
         bookingPlacedFrom: 'app',
-      };
-      logger.log('Event booking payload:', payload);
+        eventName: details?.name,
+      });
 
-      setBookingInProgress(true);
-      try {
-        const responseData = await createEventBookingApi(payload);
-        console.log('Event booking response:', responseData);
-
+      if (result?.success || result?.pending || result?.failed) {
         setTicketModalVisible(false);
-        Toast.show('Booking placed successfully!', Toast.LONG);
-      } catch (err) {
-        logger.error('Failed to create event booking:', err?.message);
-        Toast.show(
-          err?.message || 'Failed to place booking. Please try again.',
-          Toast.LONG,
-        );
-      } finally {
-        setBookingInProgress(false);
       }
     },
-    [bookingInProgress, details?.sessionId],
+    [processing, details?.sessionId, details?.name, payForBooking],
   );
+  const handleSuccessBack = useCallback(() => resetPayment(), [resetPayment]);
+  const handleGoToBookings = useCallback(() => {
+    resetPayment();
+    navigation.navigate('MyBookingsScreen');
+  }, [resetPayment, navigation]);
+  const handleFailureBack = useCallback(() => dismissFailure(), [dismissFailure]);
+  const handleRetryPayment = useCallback(() => {
+    dismissFailure();
+    setTicketModalVisible(true);
+  }, [dismissFailure]);
 
   const claimSafeAreaStyle = useMemo(
     () => [styles.claimSafeArea, { height: insets.bottom }],
@@ -105,12 +122,19 @@ const EventDetailsScreen = ({ navigation, route }) => {
         resizeMode="cover"
       />
 
-      <ScrollView
+      <Animated.ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
-        bounces={false}
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}
+        bounces
       >
-        <EventHero event={event} insets={insets} onBack={handleBack} />
+        <EventHero
+          event={event}
+          insets={insets}
+          onBack={handleBack}
+          scrollY={scrollY}
+        />
         <ClaimBanner />
         <EventSummaryCard
           name={details?.name}
@@ -125,11 +149,11 @@ const EventDetailsScreen = ({ navigation, route }) => {
         <MoreToKnow ageLimit={details?.ageLimit} language={details?.language} />
         <ArtistList artists={details?.artists} />
         <EventAccordions details={details.detailsText} terms={details.terms} />
-      </ScrollView>
+      </Animated.ScrollView>
 
       <View style={styles.claimWrap} pointerEvents="box-none">
-        <Animated.View entering={ZoomIn.delay(280).duration(360)}>
-          <AnimatedPressable
+        <Animated.View>
+          <Pressable
             onPress={openTicketModal}
             accessibilityRole="button"
             accessibilityLabel="Claim"
@@ -139,7 +163,7 @@ const EventDetailsScreen = ({ navigation, route }) => {
               style={styles.claimBarImage}
               resizeMode="stretch"
             />
-          </AnimatedPressable>
+          </Pressable>
           <View style={claimSafeAreaStyle} />
         </Animated.View>
       </View>
@@ -149,7 +173,26 @@ const EventDetailsScreen = ({ navigation, route }) => {
         onClose={closeTicketModal}
         ticketCategories={details?.ticketCategories}
         onBuyNow={handleBuyNow}
-        submitting={bookingInProgress}
+        submitting={processing}
+      />
+
+      <RedeemSuccessModal
+        visible={successVisible}
+        quantity={ticketQuantity}
+        coinsUsed={0}
+        amountPaid={`₹${paidAmount}`}
+        itemLabel="ticket"
+        secondaryButtonLabel="My Bookings"
+        onBack={handleSuccessBack}
+        onSecondaryAction={handleGoToBookings}
+      />
+
+      <PaymentFailedModal
+        visible={failureVisible}
+        quantity={ticketQuantity}
+        eventName={details?.name}
+        onBack={handleFailureBack}
+        onRetry={handleRetryPayment}
       />
     </View>
   );

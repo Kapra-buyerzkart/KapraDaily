@@ -204,6 +204,7 @@ const images = {
   claimbg: require('./Union.png'),
   bookingtabbg: require('./movieTicket/bookingtabbg.png'),
   claimbgbutton: require('./claimbgbutton.png'),
+  errormodalbg: require('./errormodalbg.png'),
 };
 
 export default images;

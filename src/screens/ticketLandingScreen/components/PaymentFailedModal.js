@@ -1,135 +1,116 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-  Animated,
+  BackHandler,
   ImageBackground,
-  Modal,
+  Platform,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
+import Animated, {
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 import { wp, hp } from '../../../utils/responsive';
+import images from '@/assets/images';
 
-export const preloadRedeemSuccessAssets = () => {};
+const DASH = '____';
+const OPEN_SPRING = { damping: 14, stiffness: 180, mass: 0.9 };
 
-const Row = ({ label, value, valueStyle }) => (
+const Row = ({ label, value }) => (
   <View style={styles.row}>
     <Text style={styles.rowLabel}>{label}</Text>
-    <Text style={[styles.rowValue, valueStyle]}>{value}</Text>
+    <Text style={styles.rowValue}>{value}</Text>
   </View>
 );
 
-const RedeemSuccessModal = ({
+const PaymentFailedModal = ({
   visible,
   quantity = 1,
-  coinsUsed = 0,
-  amountPaid = '₹394',
-  itemLabel = 'voucher',
-  secondaryButtonLabel = 'My Vouchers',
+  eventName = '',
+  itemLabel = 'event ticket',
+  primaryButtonLabel = 'Try Again',
   onBack,
-  onSecondaryAction,
+  onRetry,
 }) => {
-  const scaleAnim = useRef(new Animated.Value(0.88)).current;
-  const opacityAnim = useRef(new Animated.Value(0)).current;
-  const [modalVisible, setModalVisible] = useState(false);
+  const scale = useSharedValue(0.88);
+  const opacity = useSharedValue(0);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     if (visible) {
-      setModalVisible(true);
-      Animated.parallel([
-        Animated.spring(scaleAnim, {
-          toValue: 1,
-          tension: 70,
-          friction: 10,
-          useNativeDriver: true,
-        }),
-        Animated.timing(opacityAnim, {
-          toValue: 1,
-          duration: 260,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    } else {
-      Animated.parallel([
-        Animated.timing(scaleAnim, {
-          toValue: 0.88,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.timing(opacityAnim, {
-          toValue: 0,
-          duration: 180,
-          useNativeDriver: true,
-        }),
-      ]).start(({ finished }) => {
-        if (finished) {
-          setModalVisible(false);
-          scaleAnim.setValue(0.88);
-          opacityAnim.setValue(0);
-        }
+      setMounted(true);
+      scale.value = withSpring(1, OPEN_SPRING);
+      opacity.value = withTiming(1, { duration: 260 });
+    } else if (mounted) {
+      scale.value = withTiming(0.88, { duration: 200 });
+      opacity.value = withTiming(0, { duration: 180 }, finished => {
+        if (finished) runOnJS(setMounted)(false);
       });
     }
+    // scale/opacity are stable shared values - only re-run when visibility flips.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
 
-  const dateStr = useMemo(
-    () =>
-      new Date().toLocaleDateString('en-GB', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-      }),
-    [],
-  );
+  // Plain overlay has no native surface of its own, so the hardware back
+  // button no longer gets swallowed for free the way RN's Modal did it.
+  useEffect(() => {
+    if (Platform.OS !== 'android' || !visible) return undefined;
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      onBack?.();
+      return true;
+    });
+    return () => sub.remove();
+  }, [visible, onBack]);
+
+  const backdropStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
+  const cardStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{ scale: scale.value }],
+  }));
+
+  if (!mounted) return null;
+
+  const plural = quantity > 1 ? 's' : '';
+  const subject = eventName ? `${eventName} ${itemLabel}` : itemLabel;
 
   return (
-    <Modal
-      transparent
-      visible={modalVisible}
-      animationType="none"
-      statusBarTranslucent
-      onRequestClose={onBack}
-    >
-      {/* Dark backdrop */}
-      <Animated.View style={[styles.backdrop, { opacity: opacityAnim }]} />
+    <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
+      <Animated.View style={[styles.backdrop, backdropStyle]} />
 
-      {/* Centered card */}
       <View style={styles.centeredWrapper} pointerEvents="box-none">
-        <Animated.View
-          style={[
-            styles.cardWrapper,
-            { transform: [{ scale: scaleAnim }], opacity: opacityAnim },
-          ]}
-        >
+        <Animated.View style={[styles.cardWrapper, cardStyle]}>
           <ImageBackground
-            source={require('../../../assets/images/movieTicket/successBg.png')}
+            source={images.errormodalbg}
             style={styles.card}
-            imageStyle={styles.cardImage}
-            resizeMode="cover"
+            resizeMode="stretch"
           >
-            {/* Purple checkmark circle */}
-            <View style={styles.checkCircle}>
-              <Text style={styles.checkMark}>✓</Text>
+            <View style={styles.crossCircle}>
+              <Text style={styles.crossMark}>✕</Text>
             </View>
 
-            <Text style={styles.successText}>SUCCESS</Text>
+            <Text style={styles.failedText}>Failed</Text>
             <Text style={styles.subtitleText}>
-              Your booking for {quantity} {itemLabel}
-              {quantity > 1 ? 's' : ''} has been{'\n'}successfully completed
+              Your booking for {quantity} {subject}
+              {plural} could not be completed. Please try again.
             </Text>
 
             <View style={styles.detailsBox}>
-              <Row label="Date" value={dateStr} />
-              <Row label="Total UD-Coins used" value={String(coinsUsed)} />
-              <Row label="Total Amount paid" value={amountPaid} />
+              <Row label="Date" value={DASH} />
+              <Row label="Total UD-Coins used" value={DASH} />
+              <Row label="Total Amount paid" value={DASH} />
               <View style={[styles.row, styles.rowLast]}>
                 <Text style={styles.rowLabel}>Status</Text>
                 <View style={styles.statusRow}>
                   <View style={styles.statusDot}>
-                    {/* <Image source={require('../../../assets/images/movieTicket/success.png')}/> */}
-                    <Text style={styles.statusDotCheck}>✓</Text>
+                    <Text style={styles.statusDotCross}>✕</Text>
                   </View>
                   <Text style={[styles.rowValue, styles.statusValue]}>
-                    Success
+                    Failed
                   </Text>
                 </View>
               </View>
@@ -146,21 +127,21 @@ const RedeemSuccessModal = ({
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={styles.vouchersBtn}
-                onPress={onSecondaryAction}
+                style={styles.retryBtn}
+                onPress={onRetry}
                 activeOpacity={0.85}
               >
-                <Text style={styles.vouchersBtnText}>
-                  {secondaryButtonLabel}
-                </Text>
+                <Text style={styles.retryBtnText}>{primaryButtonLabel}</Text>
               </TouchableOpacity>
             </View>
           </ImageBackground>
         </Animated.View>
       </View>
-    </Modal>
+    </View>
   );
 };
+
+const RED = '#F5222D';
 
 const styles = StyleSheet.create({
   backdrop: {
@@ -182,44 +163,39 @@ const styles = StyleSheet.create({
   },
 
   card: {
-    borderRadius: 22,
-    overflow: 'hidden',
     paddingHorizontal: wp(6),
     paddingTop: hp(4),
     paddingBottom: hp(3),
     alignItems: 'center',
   },
-  cardImage: {
-    borderRadius: 22,
-  },
 
-  checkCircle: {
+  crossCircle: {
     width: 84,
     height: 84,
     borderRadius: 42,
-    backgroundColor: '#5B2BE0',
+    backgroundColor: RED,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: hp(2),
-    shadowColor: '#5B2BE0',
+    shadowColor: RED,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.55,
     shadowRadius: 16,
     elevation: 12,
   },
-  checkMark: {
+  crossMark: {
     color: '#FFFFFF',
-    fontSize: 38,
+    fontSize: 36,
     fontWeight: '700',
-    lineHeight: 44,
+    lineHeight: 42,
   },
 
-  successText: {
+  failedText: {
     fontSize: 30,
     fontFamily: 'Gilroy-Bold',
-    color: '#6E34C0',
+    color: RED,
     textAlign: 'center',
-    letterSpacing: 4,
+    letterSpacing: 1,
     marginBottom: hp(0.8),
   },
   subtitleText: {
@@ -269,18 +245,18 @@ const styles = StyleSheet.create({
     width: 18,
     height: 18,
     borderRadius: 9,
-    backgroundColor: '#5B2BE0',
+    backgroundColor: RED,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  statusDotCheck: {
+  statusDotCross: {
     color: '#FFFFFF',
     fontSize: 10,
     fontWeight: '700',
     lineHeight: 14,
   },
   statusValue: {
-    color: '#7B5CE6',
+    color: RED,
     fontFamily: 'Gilroy-Bold',
   },
 
@@ -293,26 +269,28 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: hp(1.6),
     borderRadius: 12,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#3A0D0D',
+    borderWidth: 1,
+    borderColor: 'rgba(245,34,45,0.45)',
     alignItems: 'center',
   },
   backBtnText: {
     fontSize: 14,
     fontFamily: 'Gilroy-Medium',
-    color: '#555555',
+    color: '#FFFFFF',
   },
-  vouchersBtn: {
+  retryBtn: {
     flex: 1,
     paddingVertical: hp(1.6),
     borderRadius: 12,
-    backgroundColor: '#5B2BE0',
+    backgroundColor: RED,
     alignItems: 'center',
   },
-  vouchersBtnText: {
+  retryBtnText: {
     fontSize: 14,
     fontFamily: 'Gilroy-Bold',
     color: '#FFFFFF',
   },
 });
 
-export default React.memo(RedeemSuccessModal);
+export default React.memo(PaymentFailedModal);

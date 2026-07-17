@@ -21,3 +21,8 @@ export const searchKeys = {
 export const productKeys = {
   related: (productId, areaId) => ['product', 'related', productId ?? 'none', areaId ?? 'none'],
 };
+
+export const myBookingsKeys = {
+  vouchers: () => ['myBookings', 'vouchers'],
+  events: () => ['myBookings', 'events'],
+};

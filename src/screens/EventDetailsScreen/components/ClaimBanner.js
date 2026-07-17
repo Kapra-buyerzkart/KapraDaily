@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text, Dimensions } from 'react-native';
+import { View, Text, Dimensions, Platform } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Animated, {
   FadeInDown,
@@ -17,8 +17,6 @@ import styles from '../styles';
 const CARD_WIDTH = Dimensions.get('window').width - 40;
 const SHIMMER_START = -120;
 const SHIMMER_END = CARD_WIDTH + 40;
-
-const AnimatedGradient = Animated.createAnimatedComponent(LinearGradient);
 
 const ClaimBanner = () => {
   const flip = useSharedValue(0);
@@ -45,20 +43,22 @@ const ClaimBanner = () => {
       -1,
       true,
     );
-    sweep.value = withRepeat(
-      withSequence(
-        withDelay(
-          1600,
-          withTiming(SHIMMER_END, {
-            duration: 900,
-            easing: Easing.inOut(Easing.quad),
-          }),
+    if (Platform.OS !== 'ios') {
+      sweep.value = withRepeat(
+        withSequence(
+          withDelay(
+            1600,
+            withTiming(SHIMMER_END, {
+              duration: 900,
+              easing: Easing.inOut(Easing.quad),
+            }),
+          ),
+          withTiming(SHIMMER_START, { duration: 0 }),
         ),
-        withTiming(SHIMMER_START, { duration: 0 }),
-      ),
-      -1,
-      false,
-    );
+        -1,
+        false,
+      );
+    }
   }, [flip, glow, sweep]);
 
   const coinStyle = useAnimatedStyle(() => ({
@@ -71,7 +71,7 @@ const ClaimBanner = () => {
   }));
 
   const shimmerStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: sweep.value }, { rotate: '18deg' }],
+    transform: [{ translateX: sweep.value }],
   }));
 
   return (
@@ -79,23 +79,24 @@ const ClaimBanner = () => {
       entering={FadeInDown.delay(80).duration(400)}
       style={styles.bannerWrap}
     >
-      <LinearGradient
-        colors={['#35353C', '#17171B', '#2A2A31']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.bannerCard}
-      >
-        <AnimatedGradient
-          colors={[
-            'rgba(255,255,255,0)',
-            'rgba(255,255,255,0.14)',
-            'rgba(255,255,255,0)',
-          ]}
-          start={{ x: 0, y: 0.5 }}
-          end={{ x: 1, y: 0.5 }}
-          style={[styles.bannerShimmer, shimmerStyle]}
-          pointerEvents="none"
-        />
+      <Animated.View style={styles.bannerCard}>
+        {Platform.OS !== 'ios' && (
+          <Animated.View
+            style={[styles.bannerShimmer, shimmerStyle]}
+            pointerEvents="none"
+          >
+            <LinearGradient
+              colors={[
+                'rgba(255,255,255,0)',
+                'rgba(255,255,255,0.14)',
+                'rgba(255,255,255,0)',
+              ]}
+              start={{ x: 0, y: 0.5 }}
+              end={{ x: 1, y: 0.5 }}
+              style={styles.bannerShimmerGradient}
+            />
+          </Animated.View>
+        )}
         <View style={styles.bannerCoinWrap}>
           <Animated.View style={[styles.bannerCoinGlow, glowStyle]} />
           <Animated.Image
@@ -107,7 +108,7 @@ const ClaimBanner = () => {
           Use your <Text style={styles.bannerHighlight}>UD-Coin</Text> to claim
           your ticket
         </Text>
-      </LinearGradient>
+      </Animated.View>
     </Animated.View>
   );
 };
