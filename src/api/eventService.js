@@ -74,6 +74,10 @@ export const confirmEventPaymentApi = async (
   );
 };
 
+export const getEventTicketQrCodeApi = async (ticketId, config) => {
+  return get(`eventticket/qrcode/${ticketId}`, config);
+};
+
 export const failEventPaymentApi = async (
   { bookingId, paymentGateway, transactionId, gatewayReference, remarks },
   config,

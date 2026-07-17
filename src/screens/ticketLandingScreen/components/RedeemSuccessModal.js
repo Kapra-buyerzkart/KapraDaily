@@ -1,14 +1,17 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
+  BackHandler,
   ImageBackground,
-  Modal,
+  Platform,
   StyleSheet,
   Text,
+  Image,
   TouchableOpacity,
   View,
 } from 'react-native';
 import { wp, hp } from '../../../utils/responsive';
+import icons from '@/assets/icons';
 
 export const preloadRedeemSuccessAssets = () => {};
 
@@ -31,11 +34,11 @@ const RedeemSuccessModal = ({
 }) => {
   const scaleAnim = useRef(new Animated.Value(0.88)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
-  const [modalVisible, setModalVisible] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     if (visible) {
-      setModalVisible(true);
+      setMounted(true);
       Animated.parallel([
         Animated.spring(scaleAnim, {
           toValue: 1,
@@ -49,7 +52,7 @@ const RedeemSuccessModal = ({
           useNativeDriver: true,
         }),
       ]).start();
-    } else {
+    } else if (mounted) {
       Animated.parallel([
         Animated.timing(scaleAnim, {
           toValue: 0.88,
@@ -63,13 +66,25 @@ const RedeemSuccessModal = ({
         }),
       ]).start(({ finished }) => {
         if (finished) {
-          setModalVisible(false);
+          setMounted(false);
           scaleAnim.setValue(0.88);
           opacityAnim.setValue(0);
         }
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
+
+  // Plain overlay has no native surface of its own, so the hardware back
+  // button no longer gets swallowed for free the way RN's Modal did it.
+  useEffect(() => {
+    if (Platform.OS !== 'android' || !visible) return undefined;
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      onBack?.();
+      return true;
+    });
+    return () => sub.remove();
+  }, [visible, onBack]);
 
   const dateStr = useMemo(
     () =>
@@ -81,14 +96,10 @@ const RedeemSuccessModal = ({
     [],
   );
 
+  if (!mounted) return null;
+
   return (
-    <Modal
-      transparent
-      visible={modalVisible}
-      animationType="none"
-      statusBarTranslucent
-      onRequestClose={onBack}
-    >
+    <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
       {/* Dark backdrop */}
       <Animated.View style={[styles.backdrop, { opacity: opacityAnim }]} />
 
@@ -103,14 +114,14 @@ const RedeemSuccessModal = ({
           <ImageBackground
             source={require('../../../assets/images/movieTicket/successBg.png')}
             style={styles.card}
-            imageStyle={styles.cardImage}
-            resizeMode="cover"
+            resizeMode="stretch"
           >
             {/* Purple checkmark circle */}
-            <View style={styles.checkCircle}>
+            {/* <View style={styles.checkCircle}>
               <Text style={styles.checkMark}>✓</Text>
-            </View>
+            </View> */}
 
+            <Image source={icons.tickmark} style={styles.checkIcon} />
             <Text style={styles.successText}>SUCCESS</Text>
             <Text style={styles.subtitleText}>
               Your booking for {quantity} {itemLabel}
@@ -158,7 +169,7 @@ const RedeemSuccessModal = ({
           </ImageBackground>
         </Animated.View>
       </View>
-    </Modal>
+    </View>
   );
 };
 
@@ -182,15 +193,10 @@ const styles = StyleSheet.create({
   },
 
   card: {
-    borderRadius: 22,
-    overflow: 'hidden',
     paddingHorizontal: wp(6),
     paddingTop: hp(4),
     paddingBottom: hp(3),
     alignItems: 'center',
-  },
-  cardImage: {
-    borderRadius: 22,
   },
 
   checkCircle: {
@@ -219,8 +225,8 @@ const styles = StyleSheet.create({
     fontFamily: 'Gilroy-Bold',
     color: '#6E34C0',
     textAlign: 'center',
-    letterSpacing: 4,
-    marginBottom: hp(0.8),
+    letterSpacing: 2,
+    marginVertical: hp(1),
   },
   subtitleText: {
     fontSize: 13,

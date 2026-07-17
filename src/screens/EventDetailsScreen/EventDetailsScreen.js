@@ -85,7 +85,10 @@ const EventDetailsScreen = ({ navigation, route }) => {
     resetPayment();
     navigation.navigate('MyBookingsScreen');
   }, [resetPayment, navigation]);
-  const handleFailureBack = useCallback(() => dismissFailure(), [dismissFailure]);
+  const handleFailureBack = useCallback(
+    () => dismissFailure(),
+    [dismissFailure],
+  );
   const handleRetryPayment = useCallback(() => {
     dismissFailure();
     setTicketModalVisible(true);

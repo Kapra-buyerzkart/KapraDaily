@@ -85,11 +85,9 @@ const styles = StyleSheet.create({
     textShadowRadius: 6,
   },
 
-  /* Claim banner — black metallic */
   bannerWrap: {
     marginHorizontal: 20,
     marginTop: 16,
-    // borderWidth: 0.5,
     borderColor: '#E8E8E8',
     borderRadius: 16,
   },
@@ -99,7 +97,6 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.18)',
-    backgroundColor: '#1F1F24',
     paddingVertical: 12,
     paddingHorizontal: 14,
     overflow: 'hidden',

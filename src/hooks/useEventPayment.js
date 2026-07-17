@@ -7,6 +7,7 @@ import {
   verifyEventBookingPaymentApi,
   confirmEventPaymentApi,
   failEventPaymentApi,
+  getEventTicketQrCodeApi,
 } from '../api/eventService';
 import { AppContext } from '../context/appContext';
 import logger from '../utils/logger';
@@ -84,8 +85,6 @@ export const useEventPayment = () => {
         });
       } catch (err) {
         if (bookingId) {
-          // Booking already exists server-side but payment wasn't captured -
-          // record the failure so it isn't left dangling as unpaid.
           await failEventPaymentApi({
             bookingId,
             paymentGateway: PAYMENT_GATEWAY,
@@ -100,15 +99,10 @@ export const useEventPayment = () => {
           '[useEventPayment] Booking/payment failed:',
           err?.description || err?.message,
         );
-        // Payment was denied by the user or declined for any other reason
-        // before it could be captured - surface the failure modal instead of
-        // a backend error toast.
+
         setFailureVisible(true);
         return { success: false, failed: true, bookingId };
       }
-
-      // Razorpay has confirmed the payment at this point - any failure below is
-      // a verification/network issue, never a failed payment.
       try {
         const verifyRes = await verifyEventBookingPaymentApi({
           bookingId,
@@ -125,17 +119,22 @@ export const useEventPayment = () => {
           );
           return { success: false, pending: true, bookingId };
         }
-
-        // Signature verified - tell the backend the payment is settled so it
-        // can record the transaction and finalize the booking.
-        await confirmEventPaymentApi({
+        const confirmPayload = {
           bookingId,
           paymentGateway: PAYMENT_GATEWAY,
           transactionId: sdkResponse.razorpay_payment_id,
           gatewayReference: sdkResponse.razorpay_order_id,
-        });
+        };
+        await confirmEventPaymentApi(confirmPayload);
 
         setSuccessVisible(true);
+
+        getEventTicketQrCodeApi(bookingId)
+          .then(res => console.log('[useEventPayment] QR code response:', res))
+          .catch(err =>
+            console.log('[useEventPayment] QR code fetch failed:', err),
+          );
+
         return { success: true, bookingId };
       } catch (verifyError) {
         logger.error(
