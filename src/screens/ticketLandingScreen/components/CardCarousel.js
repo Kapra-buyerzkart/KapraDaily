@@ -22,9 +22,9 @@ import Reanimated, {
 } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import LinearGradient from 'react-native-linear-gradient';
 import { hp } from '../../../utils/responsive';
 import { getVoucherImageSource } from '@/components/events/imageUtils';
+import images from '@/assets/images';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -290,7 +290,7 @@ const CardCarousel = ({ fadeAnim, onClaim, vouchers }) => {
       <View
         style={[
           styles.arrowContainer,
-          { marginTop: Platform.OS === 'ios' ? hp(4) : hp(5) },
+          { marginTop: Platform.OS === 'ios' ? hp(11) : hp(10) },
         ]}
       >
         <View style={styles.arrowPill}>
@@ -308,14 +308,11 @@ const CardCarousel = ({ fadeAnim, onClaim, vouchers }) => {
           onPress={() => onClaim(cards[activeIndex])}
         >
           <Reanimated.View style={claimButtonStyle}>
-            <LinearGradient
-              colors={['#F5D680', '#D4A843', '#C49A38']}
-              start={{ x: 0.5, y: 0 }}
-              end={{ x: 0.5, y: 1 }}
+            <Image
+              source={images.claimbutton}
               style={styles.claimButton}
-            >
-              <Text style={styles.claimText}>Claim</Text>
-            </LinearGradient>
+              resizeMode="contain"
+            />
           </Reanimated.View>
         </TouchableOpacity>
       </View>
@@ -385,7 +382,7 @@ const styles = StyleSheet.create({
   arrowPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(0, 0, 0, 1)',
     borderRadius: 30,
     paddingHorizontal: 6,
   },
@@ -403,15 +400,7 @@ const styles = StyleSheet.create({
   },
   claimButton: {
     width: 96,
-    height: 96,
-    borderRadius: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  claimText: {
-    color: '#1A1200',
-    fontSize: 18,
-    fontFamily: 'Gilroy-Bold',
+    height: 100,
   },
 });
 

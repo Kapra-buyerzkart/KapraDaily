@@ -68,7 +68,8 @@ const styles = StyleSheet.create({
     borderBottomColor: 'rgba(255,255,255,0.08)',
   },
   content: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 30,
+    paddingTop: 10,
     gap: 28,
   },
   tab: {

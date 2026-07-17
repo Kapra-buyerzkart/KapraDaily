@@ -5,7 +5,7 @@ const CARD_BG = 'rgba(255,255,255,0.04)';
 const CARD_BORDER = 'rgba(255,255,255,0.10)';
 const ICON_TILE_BG = 'rgba(110,52,192,0.25)';
 const BG_ASPECT_RATIO = 430 / 2078;
-const CLAIM_BAR_ASPECT_RATIO = 430 / 118;
+// const CLAIM_BAR_ASPECT_RATIO = 430 / 118;
 export const HERO_HEIGHT = 340;
 
 const styles = StyleSheet.create({
@@ -334,7 +334,7 @@ const styles = StyleSheet.create({
   },
   claimBarImage: {
     width: '100%',
-    aspectRatio: CLAIM_BAR_ASPECT_RATIO,
+    // aspectRatio: CLAIM_BAR_ASPECT_RATIO,
   },
   claimSafeArea: {
     backgroundColor: '#000000',

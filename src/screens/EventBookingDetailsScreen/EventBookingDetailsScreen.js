@@ -196,22 +196,45 @@ const EventBookingDetailsScreen = ({ navigation, route }) => {
 
         <AccordionSection title="Details" defaultOpen>
           <View>
-            <DetailRow icon="calendar-outline" label="Date" value={dateText} first />
+            <DetailRow
+              icon="calendar-outline"
+              label="Date"
+              value={dateText}
+              first
+            />
             <DetailRow icon="time-outline" label="Time" value={timeText} />
-            <DetailRow icon="location-outline" label="Location" value={location} />
-            <DetailRow icon="language-outline" label="Language" value={language} />
-            <DetailRow icon="people-outline" label="Age limit" value={ageLimit} />
+            <DetailRow
+              icon="location-outline"
+              label="Location"
+              value={location}
+            />
+            <DetailRow
+              icon="language-outline"
+              label="Language"
+              value={language}
+            />
+            <DetailRow
+              icon="people-outline"
+              label="Age limit"
+              value={ageLimit}
+            />
           </View>
         </AccordionSection>
 
         <ArtistList artists={details?.artists} />
 
         <AccordionSection title="Terms & Conditions">
-          {details?.terms || 'Terms & conditions for this event will appear here.'}
+          {details?.terms ||
+            'Terms & conditions for this event will appear here.'}
         </AccordionSection>
       </ScrollView>
 
-      <View style={[styles.bottomBar, { paddingBottom: (insets.bottom || 12) + 12 }]}>
+      <View
+        style={[
+          styles.bottomBar,
+          { paddingBottom: (insets.bottom || 12) + 12 },
+        ]}
+      >
         <Pressable
           onPress={handleViewTicket}
           style={({ pressed }) => [
