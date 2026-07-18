@@ -8,6 +8,7 @@ import {
   View,
 } from 'react-native';
 import EventBookingCard from './EventBookingCard';
+import EventBookingSkeleton from './EventBookingSkeleton';
 
 const keyExtractor = (item, index) =>
   String(item?.bookingId || item?.id || index);
@@ -28,8 +29,8 @@ const EventBookingList = ({
 
   if (loading) {
     return (
-      <View style={[styles.list, styles.centered]}>
-        <ActivityIndicator color="#9A5CFF" />
+      <View style={styles.list}>
+        <EventBookingSkeleton />
       </View>
     );
   }

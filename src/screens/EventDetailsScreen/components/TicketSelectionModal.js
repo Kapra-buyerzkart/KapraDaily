@@ -316,7 +316,9 @@ const TicketSelectionModal = ({
   }, [selectedLines]);
 
   const handleBuyNow = useCallback(() => {
-    onBuyNow?.({ lines: selectedLines, totalPrice, totalTickets });
+    const payload = { lines: selectedLines, totalPrice, totalTickets };
+    logger.log('[TicketSelectionModal] onBuyNow payload:', payload);
+    onBuyNow?.(payload);
   }, [onBuyNow, selectedLines, totalPrice, totalTickets]);
 
   return (

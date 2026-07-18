@@ -29,6 +29,7 @@ import TicketSelectionModal from './components/TicketSelectionModal';
 import RedeemSuccessModal from '../ticketLandingScreen/components/RedeemSuccessModal';
 import PaymentFailedModal from '../ticketLandingScreen/components/PaymentFailedModal';
 import { useEventPayment } from '../../hooks/useEventPayment';
+import prefetchMyBookings from '../../queries/prefetchMyBookings';
 
 const EventDetailsScreen = ({ navigation, route }) => {
   const insets = useSafeAreaInsets();
@@ -83,6 +84,7 @@ const EventDetailsScreen = ({ navigation, route }) => {
   const handleSuccessBack = useCallback(() => resetPayment(), [resetPayment]);
   const handleGoToBookings = useCallback(() => {
     resetPayment();
+    prefetchMyBookings();
     navigation.navigate('MyBookingsScreen');
   }, [resetPayment, navigation]);
   const handleFailureBack = useCallback(

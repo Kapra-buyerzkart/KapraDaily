@@ -118,7 +118,6 @@ axiosInstance.interceptors.request.use(
     const fullUrl = config.baseURL
       ? `${config.baseURL}${config.url}`
       : config.url;
-    logger.log('API URL 👉', fullUrl, 'isAuthApi 👉', isAuthApi);
 
     if (!isAuthApi) {
       const token = await getAccessToken();

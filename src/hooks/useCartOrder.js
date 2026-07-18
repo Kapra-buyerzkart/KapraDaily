@@ -29,7 +29,6 @@ export const useCartOrder = ({
   const [statusMessage, setStatusMessage] = useState('');
 
   const finalizeOrder = async orderData => {
-    // Capture data BEFORE clearing cart
     const itemsCount = cartItems.length;
     const totalAmount = billCalculations.toPay;
     const mode = selectedDeliveryType === 'slot' ? 'slotted' : 'express';

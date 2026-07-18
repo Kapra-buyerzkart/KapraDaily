@@ -17,6 +17,7 @@ import useTabNavigation from './hooks/useTabNavigation';
 import useStatusBarFocus from './hooks/useStatusBarFocus';
 import useHeroFade from './hooks/useHeroFade';
 import useStoreSwitcher from './hooks/useStoreSwitcher';
+import prefetchMyBookings from '../../queries/prefetchMyBookings';
 
 const AnimatedImageBackground =
   Animated.createAnimatedComponent(ImageBackground);
@@ -117,7 +118,10 @@ const TicketLandingScreen = ({ navigation }) => {
       <BottomTabBar
         bookingsCount={voucherData.myVouchers.length}
         onHomePress={tabNav.handleGoHome}
-        onMyBookingsPress={() => navigation.navigate('MyBookingsScreen')}
+        onMyBookingsPress={() => {
+          prefetchMyBookings();
+          navigation.navigate('MyBookingsScreen');
+        }}
         onStorePress={storeSwitcher.open}
       />
 

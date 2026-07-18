@@ -36,11 +36,16 @@ export const useEventPayment = () => {
 
     try {
       try {
-        const bookingRes = await createEventBookingApi({
+        const bookingPayload = {
           sessionId,
           bookingItems,
           bookingPlacedFrom,
-        });
+        };
+        logger.log(
+          '[useEventPayment] createEventBookingApi payload:==========+++++++=====',
+          bookingPayload,
+        );
+        const bookingRes = await createEventBookingApi(bookingPayload);
         if (!bookingRes?.success || !bookingRes?.data) {
           throw new Error(bookingRes?.message || 'Failed to place booking.');
         }
@@ -125,7 +130,15 @@ export const useEventPayment = () => {
           transactionId: sdkResponse.razorpay_payment_id,
           gatewayReference: sdkResponse.razorpay_order_id,
         };
-        await confirmEventPaymentApi(confirmPayload);
+        logger.log(
+          '[useEventPayment] confirmEventPaymentApi payload:==========>',
+          confirmPayload,
+        );
+        const confirmRes = await confirmEventPaymentApi(confirmPayload);
+        logger.log(
+          '[useEventPayment] confirmEventPaymentApi response:',
+          confirmRes,
+        );
 
         setSuccessVisible(true);
 

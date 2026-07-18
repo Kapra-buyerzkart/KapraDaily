@@ -1,13 +1,7 @@
 import React, { useCallback } from 'react';
-import {
-  View,
-  Text,
-  ActivityIndicator,
-  FlatList,
-  RefreshControl,
-  StyleSheet,
-} from 'react-native';
+import { View, Text, FlatList, RefreshControl, StyleSheet } from 'react-native';
 import VoucherCard from '@/components/events/VoucherCard';
+import VoucherGridSkeleton from './VoucherGridSkeleton';
 
 const keyExtractor = (item, index) =>
   String(item?.purchaseId || item?.voucherId || item?.id || index);
@@ -31,8 +25,8 @@ const VoucherGrid = ({
 
   if (loading) {
     return (
-      <View style={[styles.list, styles.centered]}>
-        <ActivityIndicator color="#9A5CFF" />
+      <View style={styles.list}>
+        <VoucherGridSkeleton />
       </View>
     );
   }

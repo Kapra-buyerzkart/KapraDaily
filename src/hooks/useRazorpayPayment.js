@@ -54,7 +54,7 @@ export const useRazorpayPayment = ({
               selectedAddress?.phoneNo ||
               '',
           },
-          theme: { color: '#F25000' },
+          theme: { color: '#512eb0ff' },
         };
 
         // Increase timeout to ensure loader modality is fully dismissed before SDK opens

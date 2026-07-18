@@ -451,12 +451,13 @@ const OtpScreen = () => {
 
       <HelpSupportModal ref={helpSheetRef} />
 
+      {/* Email OTP sending disabled for now.
       <EmailOtpBottomSheet
         ref={emailOtpSheetRef}
         phone={phone}
         onSuccess={handleEmailOtpSuccess}
         onError={handleEmailOtpError}
-      />
+      /> */}
       <View style={styles.imagePreloader} pointerEvents="none">
         <Image
           source={require('../assets/images/splash/backgroundbg.png')}
@@ -590,20 +591,17 @@ const OtpScreen = () => {
                     </Text>
                   </>
                 ) : (
-                  !resendCount >= EMAIL_OTP_FALLBACK_RESEND_THRESHOLD && (
-                    <TouchableOpacity style={{}} onPress={handleResendOtp}>
-                      <Text style={[styles.usePwdText, { color: '#F25000' }]}>
-                        Resend OTP
-                      </Text>
-                    </TouchableOpacity>
-                  )
+                  <TouchableOpacity style={{}} onPress={handleResendOtp}>
+                    <Text style={[styles.usePwdText, { color: '#F25000' }]}>
+                      Resend OTP
+                    </Text>
+                  </TouchableOpacity>
                 )}
               </View>
             </View>
 
-            {/* Email OTP fallback: only offered for the login flow, and only
-                once the user has resent the SMS OTP at least
-                EMAIL_OTP_FALLBACK_RESEND_THRESHOLD times. */}
+            {/* Email OTP fallback disabled for now — users only use the
+                SMS/WhatsApp OTP resend below.
             {type === 'login' &&
               resendCount >= EMAIL_OTP_FALLBACK_RESEND_THRESHOLD && (
                 <TouchableOpacity
@@ -618,7 +616,7 @@ const OtpScreen = () => {
                     </Text>
                   </Text>
                 </TouchableOpacity>
-              )}
+              )} */}
 
             <TouchableOpacity
               style={styles.continueButton}
