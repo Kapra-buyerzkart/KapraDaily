@@ -59,31 +59,20 @@ const TicketQRModal = forwardRef(
     const { width, height } = useWindowDimensions();
     const insets = useSafeAreaInsets();
 
-    // Normalize to a list so single- and multi-ticket bookings share one path.
     const list = useMemo(
       () => (Array.isArray(tickets) && tickets.length ? tickets : [ticket]),
       [tickets, ticket],
     );
     const isCarousel = list.length > 1;
 
-    // Which card is centered (drives the scan line + counter) and which card's
-    // QR the zoom overlay shows.
     const [activeIndex, setActiveIndex] = useState(0);
     const [zoomIndex, setZoomIndex] = useState(0);
 
-    // 0 = ticket hidden, 1 = fully revealed. Layers a scale + upward drift on
-    // top of CustomModal's backdrop/content fade so the ticket feels lifted
-    // into view rather than just appearing.
     const ticketAnim = useSharedValue(0);
 
-    // Full-screen enlarged QR overlay. `qrZoomed` gates whether the overlay is
-    // mounted; `qrZoom` (0→1) drives its backdrop fade + card scale so it can
-    // still play a close animation before unmounting.
     const [qrZoomed, setQrZoomed] = useState(false);
     const qrZoom = useSharedValue(0);
 
-    // The enlarged QR fills most of the shorter screen axis so it stays square
-    // and comfortably scannable regardless of orientation.
     const qrZoomSize = Math.min(width * 0.72, height * 0.5);
 
     const openQrZoom = useCallback(
@@ -121,8 +110,6 @@ const TicketQRModal = forwardRef(
       ticketAnim.value = 0;
       setActiveIndex(0);
       modalRef.current?.open();
-      // Small delay so the ticket only starts easing once the portal node has
-      // mounted, then scales/drifts up as the backdrop blur fades in.
       ticketAnim.value = withDelay(
         40,
         withTiming(1, { duration: 360, easing: Easing.out(Easing.cubic) }),
@@ -133,7 +120,6 @@ const TicketQRModal = forwardRef(
 
     const handleClose = useCallback(() => {
       openRef.current = false;
-      // Drop the zoom overlay so it never lingers into the next open.
       setQrZoomed(false);
       qrZoom.value = 0;
       onClose?.();
@@ -225,9 +211,6 @@ const TicketQRModal = forwardRef(
             <Text style={styles.coinText}>{coinBalance}</Text>
           </View>
         </View>
-
-        {/* Ticket + QR card(s) — a plain paging FlatList: each ticket is one
-            full-width page that swipes left/right reliably. */}
         <Animated.View style={[styles.ticketArea, ticketAnimatedStyle]}>
           <FlatList
             ref={listRef}
