@@ -6,6 +6,7 @@ import {
   Image,
   Text,
   StyleSheet,
+  StatusBar,
 } from 'react-native';
 import Animated, {
   useAnimatedScrollHandler,
@@ -64,7 +65,7 @@ const selectedProducts = [
   { id: '6', image: require('../assets/images/product3.png') },
 ];
 
-export default function CategoriesScreen() {
+export default function () {
   // Navigation
   const navigation = useNavigation();
 
@@ -107,12 +108,6 @@ export default function CategoriesScreen() {
   } = useCategoriesData(catId, debouncedSearchText, filters);
 
   const { onScrollWorklet } = useTabBarAnimation();
-
-  // Sidebar auto-scroll-to-center: tapping a category scrolls the sidebar so
-  // the selected item eases toward the vertical center.
-  // Two shared values on purpose: `sidebarScrollY` mirrors the live native
-  // scroll position; `sidebarAutoScrollY` drives the programmatic scrollTo, so
-  // a user's manual drag never fights the imperative scroll from a tap.
   const sidebarListRef = useAnimatedRef();
   const sidebarScrollY = useSharedValue(0);
   const sidebarAutoScrollY = useSharedValue(0);
@@ -257,6 +252,7 @@ export default function CategoriesScreen() {
 
   return (
     <SafeAreaView style={styles.mainContainer} edges={['top', 'left', 'right']}>
+      <StatusBar translucent barStyle="dark-content" backgroundColor="transparent" />
       <View style={styles.newHeaderContainer}>
         <HeaderSearch
           title={categoryName}

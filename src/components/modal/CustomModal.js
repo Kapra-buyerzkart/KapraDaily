@@ -474,11 +474,11 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     alignItems: 'center',
   },
-  contentWrapper: {
-    // Width/height are applied inline (responsive, per-instance);
-    // this just keeps the shadow/elevation isolated to its own layer.
+  contentWrapper: {},
+  contentBox: {
+    backgroundColor: '#FFFFFF',
+    overflow: 'hidden',
   },
-  contentBox: {},
   scrollContent: {
     flexGrow: 1,
   },

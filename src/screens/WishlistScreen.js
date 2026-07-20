@@ -5,6 +5,7 @@ import {
   Image,
   TouchableOpacity,
   ActivityIndicator,
+  StatusBar,
 } from 'react-native';
 import React, { useState } from 'react';
 import Animated, {
@@ -135,6 +136,11 @@ export default function WishlistScreen() {
 
   return (
     <View style={[styles.mainContainer, { paddingTop: insets.top }]}>
+      <StatusBar
+        translucent
+        barStyle="dark-content"
+        backgroundColor="transparent"
+      />
       <View
         style={{
           paddingHorizontal: wp('4.65%'),
