@@ -328,7 +328,8 @@ const styles = StyleSheet.create({
   /* Claim button */
   claimWrap: {
     position: 'absolute',
-    bottom: 0,
+    // backgroundColor: 'black',
+    bottom: -3,
     left: 0,
     right: 0,
   },

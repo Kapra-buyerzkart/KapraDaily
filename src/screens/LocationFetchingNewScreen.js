@@ -114,8 +114,17 @@ const LocationFetchingNewScreen = ({ navigation }) => {
 
   const userInteractedRef = useRef(false);
   const timeoutRef = useRef(null);
+  // Guards against navigating twice — e.g. GPS resolving right as the 5s cap fires.
+  const hasNavigatedRef = useRef(false);
 
   const navigateAfterLocation = () => {
+    // Only ever leave this screen once, and cancel the pending 5s cap timer.
+    if (hasNavigatedRef.current) return;
+    hasNavigatedRef.current = true;
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
     if (profile?.custId) {
       navigation.reset({ index: 0, routes: [{ name: 'AuthSuccessScreen' }] });
     } else {
@@ -151,6 +160,10 @@ const LocationFetchingNewScreen = ({ navigation }) => {
         return;
       }
 
+      // Start the 5s cap the moment we begin fetching, so no matter which
+      // stage (GPS, geocode, or area lookup) is slow, we bail to the fallback.
+      startHardDeadline();
+
       if (Platform.OS === 'android') {
         const isGranted = await PermissionsAndroid.check(
           PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
@@ -164,7 +177,6 @@ const LocationFetchingNewScreen = ({ navigation }) => {
       } else {
         fetchLocation();
       }
-      startAutoNavigateTimer();
     };
 
     init();
@@ -300,14 +312,21 @@ const LocationFetchingNewScreen = ({ navigation }) => {
   //   return () => subscription.remove();
   // }, []);
 
-  const startAutoNavigateTimer = () => {
-    timeoutRef.current = setTimeout(() => {
-      // Navigate only if user has NOT interacted
-      setLocationNotFetched(false);
-      if (!userInteractedRef.current && showConfirm) {
-        navigateAfterLocation();
-      }
-    }, 10000); // 10 seconds
+  // Hard cap on the whole location-fetch flow: if GPS + reverse-geocode +
+  // area lookup haven't resolved within 5s, drop to the default area and go.
+  const startHardDeadline = () => {
+    timeoutRef.current = setTimeout(async () => {
+      if (hasNavigatedRef.current || userInteractedRef.current) return;
+      console.log('📍 [LOCATION] 5s cap reached — using fallback location');
+      await editPincode({
+        areaName: 'Panampilly Nagar',
+        pincodeAreaId: 262,
+        pincodeId: 32,
+        tags: null,
+      });
+      setLocationNotFetched(true);
+      navigateAfterLocation();
+    }, 5000); // 5 second hard cap
   };
 
   const stopAutoNavigateTimer = () => {
@@ -418,6 +437,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
     setLoading(true);
 
     const onSuccess = position => {
+      if (hasNavigatedRef.current) return; // 5s cap already fired
       console.log(
         '📍 [LOCATION] GPS success:',
         position.coords.latitude,
@@ -435,7 +455,8 @@ const LocationFetchingNewScreen = ({ navigation }) => {
     };
 
     const onFinalError = async error => {
-      console.log('📍 [LOCATION] All location attempts failed', error);
+      if (hasNavigatedRef.current) return; // 5s cap already handled the fallback
+      console.log('📍 [LOCATION] Location attempt failed', error);
       // Fallback auto navigation if location fails
       await editPincode({
         areaName: 'Panampilly Nagar',
@@ -443,40 +464,29 @@ const LocationFetchingNewScreen = ({ navigation }) => {
         pincodeId: 32,
         tags: null,
       });
-      setTimeout(() => {
-        setLocationNotFetched(true);
-        navigateAfterLocation();
-      }, 2000);
       setLoading(false);
+      setLocationNotFetched(true);
+      navigateAfterLocation();
     };
 
-    // Always request a high-accuracy (GPS) fix — retry once more on failure
-    // before giving up, since a single high-accuracy request can time out
-    // indoors/cold-start.
-    Geolocation.getCurrentPosition(
-      onSuccess,
-      error => {
-        console.log('📍 [LOCATION] High accuracy failed, retrying...', error);
-        Geolocation.getCurrentPosition(onSuccess, onFinalError, {
-          enableHighAccuracy: true,
-          timeout: 20000,
-          maximumAge: 0,
-        });
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 15000,
-        maximumAge: 0,
-      },
-    );
+    // Single fast fix to stay inside the 5s budget: allow a recently cached
+    // location (maximumAge) and skip high-accuracy GPS, which is slow to lock
+    // indoors/on cold start. Pincode-level accuracy is all we need here, and
+    // the 5s hard cap is the ultimate backstop if this still can't resolve.
+    Geolocation.getCurrentPosition(onSuccess, onFinalError, {
+      enableHighAccuracy: false,
+      timeout: 4000,
+      maximumAge: 60000,
+    });
   };
 
   const reverseGeocode = async (latitude, longitude) => {
+    if (hasNavigatedRef.current) return; // 5s cap already fired
     const apiKey = GOOGLE_MAPS_API_KEY;
     const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}`;
 
     try {
-      const response = await axios.get(url, { timeout: 10000 });
+      const response = await axios.get(url, { timeout: 4000 });
       console.log('📍 [GEOCODE] Response status:', response.data.status);
 
       const formattedAddress = response.data.results[0]?.formatted_address;
@@ -520,7 +530,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
       setTimeout(() => {
         setLocationNotFetched(true);
         navigateAfterLocation();
-      }, 2000);
+      }, 400);
     }
   };
 
@@ -616,7 +626,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
           setTimeout(() => {
             setLocationNotFetched(false);
             navigateAfterLocation();
-          }, 2000);
+          }, 400);
           return;
         }
         console.log(
@@ -639,7 +649,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
         setTimeout(() => {
           setLocationNotFetched(true);
           navigateAfterLocation();
-        }, 2000);
+        }, 400);
         return;
       }
 
@@ -670,7 +680,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
               setLocationNotFetched(false);
               navigateAfterLocation();
             }
-          }, 2000);
+          }, 400);
         } else {
           console.log('📍 [AREAS] Showing area picker modal...');
           setShowConfirm(true);
@@ -686,7 +696,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
         setTimeout(() => {
           setLocationNotFetched(false);
           navigateAfterLocation();
-        }, 2000);
+        }, 400);
       } else {
         // No areas found for this pincode (user is outside delivery zone)
         console.log(
@@ -704,7 +714,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
         setTimeout(() => {
           setLocationNotFetched(true);
           navigateAfterLocation();
-        }, 2000);
+        }, 400);
       }
     } catch (error) {
       console.log('📍 [AREAS] ❌ API error:', error);
@@ -718,7 +728,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
       setTimeout(() => {
         setLocationNotFetched(true);
         navigateAfterLocation();
-      }, 2000);
+      }, 400);
     }
   };
 

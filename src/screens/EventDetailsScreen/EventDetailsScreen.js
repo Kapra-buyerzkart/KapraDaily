@@ -166,10 +166,20 @@ const EventDetailsScreen = ({ navigation, route }) => {
             <Image
               source={images.claimbgbutton}
               style={styles.claimBarImage}
-              resizeMode="stretch"
+              resizeMode="contain"
             />
           </Pressable>
           <View style={claimSafeAreaStyle} />
+          <View
+            style={{
+              backgroundColor: 'black',
+              height: 40,
+              position: 'absolute',
+              left: 0,
+              right: 0,
+              bottom: 0,
+            }}
+          ></View>
         </Animated.View>
       </View>
 

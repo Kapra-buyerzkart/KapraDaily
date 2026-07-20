@@ -1,4 +1,5 @@
 import React from 'react';
+import { View } from 'react-native';
 import CartHeader from './CartHeader';
 import AddressSelector from './AddressSelector';
 import DeliveryHeader from './DeliveryHeader';
@@ -29,6 +30,7 @@ const CartHeaderSection = ({
         onChangePress={onAddressPress}
       />
     )}
+    <View style={{ marginTop: 20 }} />
     <DeliveryGroupCard position="top">
       <DeliveryHeader
         itemCount={itemCount}

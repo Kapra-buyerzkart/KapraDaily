@@ -21,6 +21,7 @@ const CartHeader = ({ onBack, onClearAll }) => {
       <Text style={styles.title}>Cart</Text>
 
       <TouchableOpacity
+        hitSlop={40}
         onPress={onClearAll}
         activeOpacity={0.8}
         style={styles.clearAllBtn}

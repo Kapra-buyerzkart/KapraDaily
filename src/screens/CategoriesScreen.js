@@ -252,7 +252,11 @@ export default function () {
 
   return (
     <SafeAreaView style={styles.mainContainer} edges={['top', 'left', 'right']}>
-      <StatusBar translucent barStyle="dark-content" backgroundColor="transparent" />
+      <StatusBar
+        translucent
+        barStyle="dark-content"
+        backgroundColor="transparent"
+      />
       <View style={styles.newHeaderContainer}>
         <HeaderSearch
           title={categoryName}
@@ -419,7 +423,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.06,
     shadowRadius: 14,
-    elevation: 3,
+    // elevation: 3,
   },
   rightContent: {
     flex: 1,

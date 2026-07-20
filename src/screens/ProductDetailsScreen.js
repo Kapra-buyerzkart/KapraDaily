@@ -11,7 +11,6 @@ import {
   ActivityIndicator,
   Share,
   Alert,
-  ImageBackground,
 } from 'react-native';
 import React, {
   useRef,
@@ -63,9 +62,6 @@ const HEART_SPRING = { damping: 10, stiffness: 340, mass: 0.5 };
 
 const SECTION_STAGGER_MS = 90;
 
-const AnimatedImageBackground =
-  ReanimatedView.createAnimatedComponent(ImageBackground);
-
 const scaleFadeIn =
   (delayMs = 0) =>
   () => {
@@ -93,11 +89,15 @@ const GalleryImage = ({ source, style, imageStyle }) => {
   const opacity = useSharedValue(0);
   const animatedStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
 
+  // Animate the Image directly (a Fabric host component) instead of wrapping
+  // ImageBackground with createAnimatedComponent. On the New Architecture,
+  // ImageBackground's ref resolves to the class instance — not a host view —
+  // so Reanimated can't attach the animated `opacity` prop and the screen
+  // crashes. ImageBackground had no children here, so Image is a drop-in.
   return (
-    <AnimatedImageBackground
+    <ReanimatedView.Image
       source={source}
-      style={[style, animatedStyle]}
-      imageStyle={imageStyle}
+      style={[style, imageStyle, animatedStyle]}
       onLoadEnd={() => {
         opacity.value = withTimingReanimated(1, { duration: 220 });
       }}
@@ -105,19 +105,17 @@ const GalleryImage = ({ source, style, imageStyle }) => {
   );
 };
 
-const PaginationDot = ({ isSelected }) => {
-  const animatedStyle = useAnimatedStyle(() => ({
-    width: withTimingReanimated(isSelected ? wp('5%') : wp('2%'), {
-      duration: 250,
-    }),
-    backgroundColor: withTimingReanimated(
-      isSelected ? COLORS.primary : 'rgba(255,255,255,0.55)',
-      { duration: 250 },
-    ),
-  }));
-
-  return <ReanimatedView.View style={[styles.paginationDot, animatedStyle]} />;
-};
+const PaginationDot = ({ isSelected }) => (
+  <View
+    style={[
+      styles.paginationDot,
+      {
+        width: wp(isSelected ? '5%' : '2%'),
+        backgroundColor: isSelected ? COLORS.primary : 'rgba(255,255,255,0.55)',
+      },
+    ]}
+  />
+);
 
 const ProductDetailsScreen = () => {
   const [selectedImage, setSelectedImage] = useState(null);
@@ -515,7 +513,9 @@ const ProductDetailsScreen = () => {
                   apiImages.map((_, index) => {
                     const isSelected =
                       selectedImage?.uri === apiImages[index]?.uri;
-                    return <PaginationDot key={index} isSelected={isSelected} />;
+                    return (
+                      <PaginationDot key={index} isSelected={isSelected} />
+                    );
                   })}
               </View>
             </ReanimatedView.View>

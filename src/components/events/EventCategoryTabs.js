@@ -1,11 +1,5 @@
-import React, { useCallback, useEffect } from 'react';
-import {
-  View,
-  Image,
-  FlatList,
-  TouchableOpacity,
-  StyleSheet,
-} from 'react-native';
+import React, { useEffect } from 'react';
+import { View, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import Reanimated, {
   useSharedValue,
   useAnimatedStyle,
@@ -43,12 +37,12 @@ const TABS = [
     icon: require('../../assets/events/Group 1000004802.png'),
     badgedIcon: require('../../assets/events/Group 1000004802 2.png'),
   },
-  {
-    id: TAB_IDS.SPORTS,
-    label: 'Sports',
-    icon: require('../../assets/events/Group 1000004803.png'),
-    badgedIcon: require('../../assets/events/Group 1000004803.png'),
-  },
+  // {
+  //   id: TAB_IDS.SPORTS,
+  //   label: 'Sports',
+  //   icon: require('../../assets/events/Group 1000004803.png'),
+  //   badgedIcon: require('../../assets/events/Group 1000004803.png'),
+  // },
   {
     id: TAB_IDS.BILLS,
     label: 'Bills & recharge',
@@ -60,8 +54,6 @@ const TABS = [
 const ICON_SIZE = 34;
 const STICKY_START = 40;
 const STICKY_END = 90;
-
-const keyExtractor = item => item.id;
 
 const TabIcon = React.memo(({ tab, active }) => {
   if (tab.id === TAB_IDS.POPULAR) {
@@ -155,17 +147,6 @@ const CategoryTab = React.memo(({ tab, isActive, onPress }) => {
 const EventCategoryTabs = ({ activeTab, onTabChange, scrollY, insets }) => {
   const topInset = insets?.top ?? 0;
 
-  const renderItem = useCallback(
-    ({ item }) => (
-      <CategoryTab
-        tab={item}
-        isActive={activeTab === item.id}
-        onPress={onTabChange}
-      />
-    ),
-    [activeTab, onTabChange],
-  );
-
   const containerStyle = useAnimatedStyle(() => {
     if (!scrollY) return {};
     return {
@@ -204,14 +185,16 @@ const EventCategoryTabs = ({ activeTab, onTabChange, scrollY, insets }) => {
   return (
     <Reanimated.View style={[styles.outer, containerStyle]}>
       <Reanimated.View style={[styles.glow, glowStyle]} pointerEvents="none" />
-      <FlatList
-        data={TABS}
-        horizontal
-        keyExtractor={keyExtractor}
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.listContent}
-        renderItem={renderItem}
-      />
+      <View style={styles.row}>
+        {TABS.map(tab => (
+          <CategoryTab
+            key={tab.id}
+            tab={tab}
+            isActive={activeTab === tab.id}
+            onPress={onTabChange}
+          />
+        ))}
+      </View>
     </Reanimated.View>
   );
 };
@@ -229,17 +212,20 @@ const styles = StyleSheet.create({
     backgroundColor: '#5B2A9E',
     borderRadius: 50,
   },
-  listContent: {
-    paddingHorizontal: 20,
+  row: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingHorizontal: 12,
     paddingVertical: 14,
-    gap: 22,
   },
   tab: {
+    flex: 1,
     alignItems: 'center',
+    paddingHorizontal: 4,
   },
   tabInner: {
     alignItems: 'center',
-    width: 64,
+    width: '100%',
   },
   iconImage: {
     width: ICON_SIZE,

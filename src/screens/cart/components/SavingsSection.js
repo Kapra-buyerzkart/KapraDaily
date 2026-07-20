@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
     paddingBottom: CART_SPACING.sm,
   },
   divider: {
-    height: 1,
+    // height: 1,
     backgroundColor: CART_COLORS.border,
     marginVertical: CART_SPACING.xs,
     marginHorizontal: CART_SPACING.md,
