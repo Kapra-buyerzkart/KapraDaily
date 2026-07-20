@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useMemo } from 'react';
-import { Animated } from 'react-native';
+import { Animated, BackHandler } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { TAB_IDS } from '@/components/events/EventCategoryTabs';
 
 // Owns the active-tab state and the fade/slide transition between tabs.
@@ -32,6 +33,28 @@ const useTabNavigation = fetchEventDetailsList => {
   const handleGoHome = useCallback(
     () => handleTabChange(TAB_IDS.POPULAR),
     [handleTabChange],
+  );
+
+  // Hardware back: when a non-Popular ("home") tab is selected, the first back
+  // press returns to the Popular tab and consumes the event. On the Popular tab
+  // it does nothing here, so the default back (leaving the screen) proceeds.
+  const activeTabRef = useRef(activeTab);
+  activeTabRef.current = activeTab;
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        if (activeTabRef.current !== TAB_IDS.POPULAR) {
+          handleGoHome();
+          return true;
+        }
+        return false;
+      };
+      const subscription = BackHandler.addEventListener(
+        'hardwareBackPress',
+        onBackPress,
+      );
+      return () => subscription.remove();
+    }, [handleGoHome]),
   );
   const handleGoToVouchers = useCallback(
     () => handleTabChange(TAB_IDS.VOUCHERS),
