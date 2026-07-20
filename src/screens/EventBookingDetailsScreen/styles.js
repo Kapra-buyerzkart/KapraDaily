@@ -119,6 +119,150 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.06)',
   },
 
+  /* Booking status chip */
+  statusChip: {
+    alignSelf: 'flex-start',
+    marginTop: 10,
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+  },
+  statusChipText: {
+    fontSize: 12,
+    fontFamily: 'Gilroy-Bold',
+    textTransform: 'capitalize',
+  },
+
+  /* Empty / loading / error states */
+  stateWrap: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 32,
+    gap: 14,
+  },
+  stateText: {
+    color: 'rgba(255,255,255,0.75)',
+    fontSize: 15,
+    fontFamily: 'Gilroy-Medium',
+    textAlign: 'center',
+  },
+  retryBtn: {
+    marginTop: 4,
+    backgroundColor: 'rgba(110,52,192,0.22)',
+    borderRadius: 14,
+    paddingHorizontal: 22,
+    paddingVertical: 11,
+  },
+  retryText: {
+    color: '#D9C4FF',
+    fontSize: 14,
+    fontFamily: 'Gilroy-Bold',
+  },
+
+  /* Ticket / booking-item rows */
+  itemRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  itemRowDivider: {
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.07)',
+  },
+  itemInfo: {
+    flex: 1,
+    marginRight: 12,
+  },
+  itemName: {
+    color: COLORS.white,
+    fontSize: 14,
+    fontFamily: 'Gilroy-SemiBold',
+    textTransform: 'capitalize',
+  },
+  itemMeta: {
+    color: 'rgba(255,255,255,0.55)',
+    fontSize: 12,
+    fontFamily: 'Gilroy-Medium',
+    marginTop: 3,
+  },
+  itemPrice: {
+    color: COLORS.white,
+    fontSize: 14,
+    fontFamily: 'Gilroy-Bold',
+  },
+  ticketNumbers: {
+    marginTop: 10,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.07)',
+    gap: 10,
+  },
+  ticketNumberRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  ticketNumberText: {
+    flex: 1,
+    color: 'rgba(255,255,255,0.85)',
+    fontSize: 13,
+    fontFamily: 'Gilroy-Medium',
+    letterSpacing: 0.3,
+  },
+  ticketNumberStatus: {
+    color: 'rgba(255,255,255,0.55)',
+    fontSize: 11,
+    fontFamily: 'Gilroy-SemiBold',
+  },
+
+  /* Payment summary rows */
+  summaryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 7,
+  },
+  summaryLabel: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 13,
+    fontFamily: 'Gilroy-Medium',
+    marginRight: 12,
+  },
+  summaryValue: {
+    flexShrink: 1,
+    color: 'rgba(255,255,255,0.9)',
+    fontSize: 13,
+    fontFamily: 'Gilroy-SemiBold',
+    textAlign: 'right',
+  },
+  summaryValueMuted: {
+    color: '#4CD98A',
+  },
+  summaryTotalRow: {
+    marginTop: 6,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.1)',
+  },
+  summaryTotalLabel: {
+    color: COLORS.white,
+    fontSize: 15,
+    fontFamily: 'Gilroy-Bold',
+  },
+  summaryTotalValue: {
+    color: COLORS.white,
+    fontSize: 16,
+    fontFamily: 'Gilroy-Bold',
+  },
+  paymentMeta: {
+    marginTop: 10,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.07)',
+  },
+
   /* Details accordion rows */
   detailRow: {
     flexDirection: 'row',

@@ -5,7 +5,6 @@ import {
   createEventBookingApi,
   initiateEventBookingPaymentApi,
   verifyEventBookingPaymentApi,
-  confirmEventPaymentApi,
   failEventPaymentApi,
   getEventTicketQrCodeApi,
 } from '../api/eventService';
@@ -124,21 +123,6 @@ export const useEventPayment = () => {
           );
           return { success: false, pending: true, bookingId };
         }
-        const confirmPayload = {
-          bookingId,
-          paymentGateway: PAYMENT_GATEWAY,
-          transactionId: sdkResponse.razorpay_payment_id,
-          gatewayReference: sdkResponse.razorpay_order_id,
-        };
-        logger.log(
-          '[useEventPayment] confirmEventPaymentApi payload:==========>',
-          confirmPayload,
-        );
-        const confirmRes = await confirmEventPaymentApi(confirmPayload);
-        logger.log(
-          '[useEventPayment] confirmEventPaymentApi response:',
-          confirmRes,
-        );
 
         setSuccessVisible(true);
 

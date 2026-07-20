@@ -33,8 +33,16 @@ import { BlurView } from '@react-native-community/blur';
 
 import { ModalManager, generateModalId } from './ModalManager';
 
-export const MODAL_POSITION = { CENTER: 'center', BOTTOM: 'bottom', TOP: 'top' };
-export const MODAL_ANIMATION_PRESET = { FADE: 'fade', SLIDE: 'slide', SCALE: 'scale' };
+export const MODAL_POSITION = {
+  CENTER: 'center',
+  BOTTOM: 'bottom',
+  TOP: 'top',
+};
+export const MODAL_ANIMATION_PRESET = {
+  FADE: 'fade',
+  SLIDE: 'slide',
+  SCALE: 'scale',
+};
 
 // Drag distance (px) / release velocity (px/s) past which a swipe is
 // treated as "let go" rather than "snap back" by the gesture-to-close handle.
@@ -106,9 +114,11 @@ const CustomModal = forwardRef((props, ref) => {
   const dragY = useSharedValue(0);
 
   const resolvedPreset = useMemo(
-    () => animationPreset ?? (position === MODAL_POSITION.CENTER
-      ? MODAL_ANIMATION_PRESET.SCALE
-      : MODAL_ANIMATION_PRESET.SLIDE),
+    () =>
+      animationPreset ??
+      (position === MODAL_POSITION.CENTER
+        ? MODAL_ANIMATION_PRESET.SCALE
+        : MODAL_ANIMATION_PRESET.SLIDE),
     [animationPreset, position],
   );
 
@@ -162,7 +172,11 @@ const CustomModal = forwardRef((props, ref) => {
     }
   }, [close, open]);
 
-  useImperativeHandle(ref, () => ({ open, close, toggle }), [open, close, toggle]);
+  useImperativeHandle(ref, () => ({ open, close, toggle }), [
+    open,
+    close,
+    toggle,
+  ]);
 
   // --- Android hardware back button -----------------------------------
 
@@ -179,7 +193,10 @@ const CustomModal = forwardRef((props, ref) => {
       return true;
     };
 
-    const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+    const subscription = BackHandler.addEventListener(
+      'hardwareBackPress',
+      onBackPress,
+    );
     return () => subscription.remove();
   }, [close, closeOnBackPress]);
 
@@ -195,37 +212,45 @@ const CustomModal = forwardRef((props, ref) => {
       return { transform: [{ translateY: 0 }] };
     }
     const shiftFactor = position === MODAL_POSITION.BOTTOM ? 1 : 0.5;
-    return { transform: [{ translateY: -keyboard.height.value * shiftFactor }] };
+    return {
+      transform: [{ translateY: -keyboard.height.value * shiftFactor }],
+    };
   });
 
   // --- Gesture-to-close (drag handle only, never the scrollable body) -
 
   const pan = useMemo(
-    () => Gesture.Pan()
-      .enabled(gestureEnabled && position !== MODAL_POSITION.CENTER)
-      .onUpdate(event => {
-        if (position === MODAL_POSITION.BOTTOM) {
-          dragY.value = Math.max(0, event.translationY);
-        } else if (position === MODAL_POSITION.TOP) {
-          dragY.value = Math.min(0, event.translationY);
-        }
-      })
-      .onEnd(event => {
-        const pastDistance = Math.abs(dragY.value) > DRAG_CLOSE_DISTANCE;
-        const pastVelocity = Math.abs(event.velocityY) > DRAG_CLOSE_VELOCITY;
-        if (pastDistance || pastVelocity) {
-          runOnJS(close)();
-        } else {
-          dragY.value = withSpring(0, { damping: 18, stiffness: 220 });
-        }
-      }),
+    () =>
+      Gesture.Pan()
+        .enabled(gestureEnabled && position !== MODAL_POSITION.CENTER)
+        .onUpdate(event => {
+          if (position === MODAL_POSITION.BOTTOM) {
+            dragY.value = Math.max(0, event.translationY);
+          } else if (position === MODAL_POSITION.TOP) {
+            dragY.value = Math.min(0, event.translationY);
+          }
+        })
+        .onEnd(event => {
+          const pastDistance = Math.abs(dragY.value) > DRAG_CLOSE_DISTANCE;
+          const pastVelocity = Math.abs(event.velocityY) > DRAG_CLOSE_VELOCITY;
+          if (pastDistance || pastVelocity) {
+            runOnJS(close)();
+          } else {
+            dragY.value = withSpring(0, { damping: 18, stiffness: 220 });
+          }
+        }),
     [close, dragY, gestureEnabled, position],
   );
 
   // --- Animated styles --------------------------------------------------
 
   const backdropAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(progress.value, [0, 1], [0, backdropOpacity], Extrapolation.CLAMP),
+    opacity: interpolate(
+      progress.value,
+      [0, 1],
+      [0, backdropOpacity],
+      Extrapolation.CLAMP,
+    ),
   }));
 
   const contentAnimatedStyle = useAnimatedStyle(() => {
@@ -233,12 +258,26 @@ const CustomModal = forwardRef((props, ref) => {
     const transform = [{ translateY: dragY.value }];
 
     if (resolvedPreset === MODAL_ANIMATION_PRESET.SLIDE) {
-      const offscreenDistance = position === MODAL_POSITION.TOP ? -windowHeight : windowHeight;
-      const distance = position === MODAL_POSITION.CENTER ? windowHeight * 0.25 : offscreenDistance;
-      const translateY = interpolate(progress.value, [0, 1], [distance, 0], Extrapolation.CLAMP);
+      const offscreenDistance =
+        position === MODAL_POSITION.TOP ? -windowHeight : windowHeight;
+      const distance =
+        position === MODAL_POSITION.CENTER
+          ? windowHeight * 0.25
+          : offscreenDistance;
+      const translateY = interpolate(
+        progress.value,
+        [0, 1],
+        [distance, 0],
+        Extrapolation.CLAMP,
+      );
       transform.push({ translateY });
     } else if (resolvedPreset === MODAL_ANIMATION_PRESET.SCALE) {
-      const scale = interpolate(progress.value, [0, 1], [0.85, 1], Extrapolation.CLAMP);
+      const scale = interpolate(
+        progress.value,
+        [0, 1],
+        [0.85, 1],
+        Extrapolation.CLAMP,
+      );
       transform.push({ scale });
     }
 
@@ -280,7 +319,9 @@ const CustomModal = forwardRef((props, ref) => {
     }
   }, [insets.bottom, insets.top, position]);
 
-  const resolvedWidth = width ?? (position === MODAL_POSITION.CENTER ? windowWidth * 0.88 : windowWidth);
+  const resolvedWidth =
+    width ??
+    (position === MODAL_POSITION.CENTER ? windowWidth * 0.88 : windowWidth);
   const resolvedMaxHeight = maxHeight ?? windowHeight * 0.85;
   const showDragHandle = gestureEnabled && position !== MODAL_POSITION.CENTER;
 
@@ -288,90 +329,113 @@ const CustomModal = forwardRef((props, ref) => {
   // Recreated only when something that affects what's drawn changes —
   // never on every animation frame, since Reanimated mutates shared
   // values on the UI thread without needing a JS re-render.
-  const renderModalNode = useCallback(() => (
-    <View style={StyleSheet.absoluteFill}>
-      <Animated.View style={[styles.backdrop, backdropAnimatedStyle]} pointerEvents="auto">
-        {blurBackdrop ? (
-          <BlurView style={StyleSheet.absoluteFill} blurType="dark" blurAmount={blurAmount} />
-        ) : (
-          <View style={[StyleSheet.absoluteFill, styles.backdropFill]} />
-        )}
-        <Pressable
-          style={StyleSheet.absoluteFill}
-          onPress={closeOnBackdropPress ? close : undefined}
-          accessibilityRole="button"
-          accessibilityLabel="Close modal"
-        />
-      </Animated.View>
-
-      <View style={[styles.container, containerPositionStyle]} pointerEvents="box-none">
-        <Animated.View style={keyboardAnimatedStyle}>
-          <Animated.View
-            style={[
-              styles.contentWrapper,
-              { width: resolvedWidth, maxHeight: resolvedMaxHeight },
-              contentAnimatedStyle,
-            ]}
-          >
-            {/* No-op press target: claims taps inside the content box so
-                they never fall through to the backdrop Pressable behind it. */}
-            <Pressable
-              onPress={() => {}}
-              style={[styles.contentBox, radiusStyle, safeAreaStyle, containerStyle]}
-            >
-              {showDragHandle && (
-                <GestureDetector gesture={pan}>
-                  <View style={styles.handleHitArea}>
-                    <View style={styles.handle} />
-                  </View>
-                </GestureDetector>
-              )}
-              {scrollable ? (
-                <ScrollView
-                  bounces={false}
-                  showsVerticalScrollIndicator={false}
-                  keyboardShouldPersistTaps="handled"
-                  contentContainerStyle={[styles.scrollContent, contentStyle]}
-                >
-                  {children}
-                </ScrollView>
-              ) : (
-                <View style={contentStyle}>{children}</View>
-              )}
-            </Pressable>
-          </Animated.View>
+  const renderModalNode = useCallback(
+    () => (
+      <View style={StyleSheet.absoluteFill}>
+        <Animated.View
+          style={[styles.backdrop, backdropAnimatedStyle]}
+          pointerEvents="auto"
+        >
+          {blurBackdrop ? (
+            <BlurView
+              style={StyleSheet.absoluteFill}
+              blurType="dark"
+              blurAmount={blurAmount}
+            />
+          ) : (
+            <View style={[StyleSheet.absoluteFill, styles.backdropFill]} />
+          )}
+          <Pressable
+            style={StyleSheet.absoluteFill}
+            onPress={closeOnBackdropPress ? close : undefined}
+            accessibilityRole="button"
+            accessibilityLabel="Close modal"
+          />
         </Animated.View>
+
+        <View
+          style={[styles.container, containerPositionStyle]}
+          pointerEvents="box-none"
+        >
+          <Animated.View style={keyboardAnimatedStyle}>
+            <Animated.View
+              style={[
+                styles.contentWrapper,
+                { width: resolvedWidth, maxHeight: resolvedMaxHeight },
+                contentAnimatedStyle,
+              ]}
+            >
+              {/* Content box. This sized layer sits above the backdrop, so it
+                already blocks taps from falling through to the backdrop's
+                close Pressable — it must be a plain View, NOT a Pressable/
+                Touchable: wrapping a ScrollView/FlatList in a touchable steals
+                the scroll gesture (no scrolling on iOS, erratic on Android). */}
+              <View
+                style={[
+                  styles.contentBox,
+                  radiusStyle,
+                  safeAreaStyle,
+                  containerStyle,
+                ]}
+              >
+                {showDragHandle && (
+                  <GestureDetector gesture={pan}>
+                    <View style={styles.handleHitArea}>
+                      <View style={styles.handle} />
+                    </View>
+                  </GestureDetector>
+                )}
+                {scrollable ? (
+                  <ScrollView
+                    bounces={false}
+                    showsVerticalScrollIndicator={false}
+                    keyboardShouldPersistTaps="handled"
+                    contentContainerStyle={[styles.scrollContent, contentStyle]}
+                  >
+                    {children}
+                  </ScrollView>
+                ) : (
+                  <View style={contentStyle}>{children}</View>
+                )}
+              </View>
+            </Animated.View>
+          </Animated.View>
+        </View>
       </View>
-    </View>
-  ), [
-    backdropAnimatedStyle,
-    blurAmount,
-    blurBackdrop,
-    children,
-    close,
-    closeOnBackdropPress,
-    containerPositionStyle,
-    containerStyle,
-    contentAnimatedStyle,
-    contentStyle,
-    keyboardAnimatedStyle,
-    pan,
-    radiusStyle,
-    resolvedMaxHeight,
-    resolvedWidth,
-    safeAreaStyle,
-    scrollable,
-    showDragHandle,
-  ]);
+    ),
+    [
+      backdropAnimatedStyle,
+      blurAmount,
+      blurBackdrop,
+      children,
+      close,
+      closeOnBackdropPress,
+      containerPositionStyle,
+      containerStyle,
+      contentAnimatedStyle,
+      contentStyle,
+      keyboardAnimatedStyle,
+      pan,
+      radiusStyle,
+      resolvedMaxHeight,
+      resolvedWidth,
+      safeAreaStyle,
+      scrollable,
+      showDragHandle,
+    ],
+  );
 
   // Presentation hints for the portal host — it can't paint behind
   // Android's status bar from inside the absolute-fill backdrop (the OS
   // owns that layer), so it tints the status bar itself instead.
-  const statusBarMeta = useMemo(() => ({
-    statusBarStyle,
-    statusBarBackgroundColor,
-    disableStatusBarTint,
-  }), [disableStatusBarTint, statusBarBackgroundColor, statusBarStyle]);
+  const statusBarMeta = useMemo(
+    () => ({
+      statusBarStyle,
+      statusBarBackgroundColor,
+      disableStatusBarTint,
+    }),
+    [disableStatusBarTint, statusBarBackgroundColor, statusBarStyle],
+  );
 
   // Push the latest node into the portal registry while open, so any prop
   // change (new children, resized window, etc.) is reflected immediately.
@@ -383,11 +447,14 @@ const CustomModal = forwardRef((props, ref) => {
   // Final safety net: if the owning component unmounts while a modal is
   // still registered (e.g. the parent screen unmounts mid-animation),
   // make sure it doesn't leak in the portal registry or block a queue.
-  useEffect(() => () => {
-    ModalManager.unmount(id);
-    ModalManager.cancelQueueRequest(queue, id);
-    ModalManager.releaseQueue(queue, id);
-  }, [id, queue]);
+  useEffect(
+    () => () => {
+      ModalManager.unmount(id);
+      ModalManager.cancelQueueRequest(queue, id);
+      ModalManager.releaseQueue(queue, id);
+    },
+    [id, queue],
+  );
 
   // CustomModal never renders anything in its own place in the tree —
   // its entire visual output lives in the portal (see renderModalNode).
@@ -411,15 +478,7 @@ const styles = StyleSheet.create({
     // Width/height are applied inline (responsive, per-instance);
     // this just keeps the shadow/elevation isolated to its own layer.
   },
-  contentBox: {
-    backgroundColor: '#FFFFFF',
-    overflow: 'hidden',
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.2,
-    shadowRadius: 16,
-    elevation: 20,
-  },
+  contentBox: {},
   scrollContent: {
     flexGrow: 1,
   },

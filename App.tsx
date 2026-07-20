@@ -23,7 +23,7 @@ import { LoaderContextProvider } from './src/context/loaderContext';
 import { AppContextProvider } from './src/context/appContext';
 import { CartProvider } from './src/context/CartContext';
 import { WishlistProvider } from './src/context/WishlistContext';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import RootNavigator from './src/navigation/RootNavigator';
 import { navigationRef } from './src/api/NavigationService';
 import ModalProvider from './src/components/modal/ModalProvider';
@@ -33,6 +33,22 @@ import {
   persistQueryClientSubscribe,
 } from '@tanstack/react-query-persist-client';
 import { queryClient, queryPersistOptions } from './src/queryClient';
+
+// Dark fallback background for the navigator's root layer. Without this, the
+// navigator uses React Navigation's DefaultTheme background (near-white), which
+// flashes through any screen presented with a transparent contentStyle — e.g.
+// ViewTicketScreen, which is transparent by design so TicketQRModal's black
+// backdrop can fade in over the previous screen. Making the fallback black
+// removes that white flash (and the same latent flash on the other dark,
+// faded/transparent screens) without affecting opaque screens, which paint
+// their own background over it.
+const navTheme = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    background: '#000000',
+  },
+};
 
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
@@ -76,7 +92,7 @@ function App() {
                   <CartProvider>
                     <WishlistProvider>
                       <LoaderContextProvider>
-                        <NavigationContainer ref={navigationRef}>
+                        <NavigationContainer ref={navigationRef} theme={navTheme}>
                           <RootNavigator />
                         </NavigationContainer>
                       </LoaderContextProvider>

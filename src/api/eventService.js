@@ -22,6 +22,10 @@ export const getEventBookingListApi = async (
   });
 };
 
+export const getEventBookingByIdApi = async (bookingId, config) => {
+  return get(`eventbooking/booking/${bookingId}`, config);
+};
+
 export const checkTicketAvailabilityApi = async (
   ticketCategoryId,
   quantity,

@@ -25,4 +25,5 @@ export const productKeys = {
 export const myBookingsKeys = {
   vouchers: () => ['myBookings', 'vouchers'],
   events: () => ['myBookings', 'events'],
+  eventDetail: (bookingId) => ['myBookings', 'eventDetail', bookingId ?? 'none'],
 };

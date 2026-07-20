@@ -1,5 +1,21 @@
-import React from 'react';
-import { Image, ImageBackground, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect } from 'react';
+import {
+  Image,
+  ImageBackground,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+import Animated, {
+  Easing,
+  interpolate,
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withRepeat,
+  withTiming,
+} from 'react-native-reanimated';
 import QRCode from 'react-native-qrcode-svg';
 import { wp, hp } from '../utils/responsive';
 import COLORS from '@/styles/colors';
@@ -16,16 +32,39 @@ const ConcertTicket = ({
   ticketId = 'SDFGDH2335BNN',
   qrCodeUri = null,
   qrValue = null,
+  showScanLine = false,
+  onQrPress = null,
   style,
 }) => {
   const qrSize = wp(20);
+
+  // Scanner-style sweep: a bright accent line runs top→bottom across the QR
+  // a couple of times shortly after the ticket has settled, evoking the code
+  // being read. Replays on every mount (i.e. every time the modal reopens).
+  const scan = useSharedValue(0);
+  useEffect(() => {
+    if (!showScanLine) return;
+    scan.value = 0;
+    scan.value = withDelay(
+      260,
+      withRepeat(
+        withTiming(1, { duration: 1100, easing: Easing.inOut(Easing.ease) }),
+        2,
+        false,
+      ),
+    );
+  }, [showScanLine, scan]);
+
+  const scanStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(scan.value, [0, 0.1, 0.9, 1], [0, 1, 1, 0]),
+    transform: [{ translateY: interpolate(scan.value, [0, 1], [0, qrSize]) }],
+  }));
 
   return (
     <View style={[styles.wrapper, style]}>
       <ImageBackground
         source={require('../assets/images/movieTicket/ticketbg.png')}
         style={styles.card}
-        imageStyle={styles.cardImage}
         resizeMode="stretch"
       >
         {/* Event thumbnail + title */}
@@ -77,17 +116,32 @@ const ConcertTicket = ({
             <Text style={styles.label}>TICKET ID</Text>
             <Text style={styles.value}>{ticketId}</Text>
           </View>
-          {qrCodeUri ? (
-            <Image
-              source={{ uri: qrCodeUri }}
-              style={{ width: qrSize, height: qrSize }}
-              resizeMode="contain"
-            />
-          ) : (
-            <View style={styles.qrBox}>
-              <QRCode value={qrValue || ticketId} size={qrSize} />
-            </View>
-          )}
+          <Pressable
+            style={styles.qrWrap}
+            onPress={onQrPress || undefined}
+            disabled={!onQrPress}
+            hitSlop={8}
+            accessibilityRole={onQrPress ? 'button' : undefined}
+            accessibilityLabel={onQrPress ? 'Enlarge QR code' : undefined}
+          >
+            {qrCodeUri ? (
+              <Image
+                source={{ uri: qrCodeUri }}
+                style={{ width: qrSize, height: qrSize }}
+                resizeMode="contain"
+              />
+            ) : (
+              <View style={styles.qrBox}>
+                <QRCode value={qrValue || ticketId} size={qrSize} />
+              </View>
+            )}
+            {showScanLine && (
+              <Animated.View
+                pointerEvents="none"
+                style={[styles.scanLine, { width: qrSize }, scanStyle]}
+              />
+            )}
+          </Pressable>
         </View>
       </ImageBackground>
     </View>
@@ -99,13 +153,8 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   card: {
-    borderRadius: 16,
-    overflow: 'hidden',
     paddingHorizontal: wp(5),
     paddingVertical: hp(2.5),
-  },
-  cardImage: {
-    borderRadius: 16,
   },
   headerRow: {
     flexDirection: 'row',
@@ -165,6 +214,24 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     padding: 2,
     borderRadius: 4,
+  },
+  qrWrap: {
+    position: 'relative',
+    overflow: 'hidden',
+    borderRadius: 4,
+  },
+  scanLine: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    height: 2,
+    borderRadius: 2,
+    backgroundColor: '#F25000',
+    shadowColor: '#F25000',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.9,
+    shadowRadius: 6,
+    elevation: 4,
   },
 });
 
