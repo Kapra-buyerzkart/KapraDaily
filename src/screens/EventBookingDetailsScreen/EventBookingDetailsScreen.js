@@ -439,7 +439,13 @@ const EventBookingDetailsScreen = ({ navigation, route }) => {
             />
             {!!details?.detailsText && (
               <View style={styles.detailHtml}>
-                <HtmlBody html={details.detailsText} />
+                <ScrollView
+                  style={styles.detailHtmlScroll}
+                  nestedScrollEnabled
+                  showsVerticalScrollIndicator
+                >
+                  <HtmlBody html={details.detailsText} />
+                </ScrollView>
               </View>
             )}
           </View>

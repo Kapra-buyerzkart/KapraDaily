@@ -1,12 +1,6 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
-import Animated, {
-  Easing,
-  useAnimatedStyle,
-  useSharedValue,
-  withRepeat,
-  withTiming,
-} from 'react-native-reanimated';
+import Shimmer from '@/components/events/Shimmer';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = (width - 52) / 2;
@@ -17,37 +11,21 @@ const PLACEHOLDER_COUNT = 6;
 
 const SkeletonCard = () => (
   <View style={styles.card}>
-    <View style={styles.image} />
+    <Shimmer style={styles.image} />
     <View style={styles.body}>
-      <View style={[styles.line, styles.title]} />
-      <View style={[styles.line, styles.desc]} />
+      <Shimmer style={[styles.line, styles.title]} />
+      <Shimmer style={[styles.line, styles.desc]} />
     </View>
   </View>
 );
 
-const VoucherGridSkeleton = ({ count = PLACEHOLDER_COUNT }) => {
-  const pulse = useSharedValue(0.4);
-
-  useEffect(() => {
-    pulse.value = withRepeat(
-      withTiming(0.8, { duration: 700, easing: Easing.inOut(Easing.ease) }),
-      -1,
-      true,
-    );
-  }, [pulse]);
-
-  const animatedStyle = useAnimatedStyle(() => ({ opacity: pulse.value }));
-
-  return (
-    <Animated.View style={[styles.container, animatedStyle]}>
-      {Array.from({ length: count }).map((_, index) => (
-        <SkeletonCard key={index} />
-      ))}
-    </Animated.View>
-  );
-};
-
-const BLOCK = 'rgba(255,255,255,0.09)';
+const VoucherGridSkeleton = ({ count = PLACEHOLDER_COUNT }) => (
+  <View style={styles.container}>
+    {Array.from({ length: count }).map((_, index) => (
+      <SkeletonCard key={index} />
+    ))}
+  </View>
+);
 
 const styles = StyleSheet.create({
   container: {
@@ -68,13 +46,11 @@ const styles = StyleSheet.create({
   image: {
     width: '100%',
     height: 110,
-    backgroundColor: BLOCK,
   },
   body: {
     padding: 10,
   },
   line: {
-    backgroundColor: BLOCK,
     borderRadius: 6,
   },
   title: {

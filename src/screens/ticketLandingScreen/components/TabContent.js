@@ -21,7 +21,6 @@ const TabContent = ({
   popularEventsLoading,
   onEventPress,
 }) => {
-  console.log('popularEvents======>', popularEvents);
   switch (activeTab) {
     case TAB_IDS.POPULAR:
       return (

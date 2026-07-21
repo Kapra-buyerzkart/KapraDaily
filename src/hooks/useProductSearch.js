@@ -7,14 +7,8 @@ import useProductSuggestionsQuery from '../queries/useProductSuggestionsQuery';
 import useCategorySearchQuery from '../queries/useCategorySearchQuery';
 import { getProductImageUri } from '../utils/imageUrl';
 
-// First screen of results plus a small buffer beyond the FlatList's render
-// window — enough to make scrolling feel instant without competing for
-// bandwidth with images that are still visible.
 const PREFETCH_LOOKAHEAD = 15;
 
-// Below this many (trimmed) characters we never hit the network — matches the
-// threshold recent-searches uses so "did this term actually search" stays consistent
-// app-wide (see useRecentSearches's MIN_KEYWORD_LENGTH).
 export const MIN_SEARCH_LENGTH = 3;
 
 const useProductSearch = (
@@ -24,10 +18,6 @@ const useProductSearch = (
 ) => {
   const { profile } = useContext(AppContext);
   const [searchTerm, setSearchTerm] = useState('');
-  // The term actually handed to the search query. Unlike `searchTerm` (which
-  // updates on every keystroke) this only advances when the user submits, or —
-  // as a fallback — after they've stopped typing for a while. That's what keeps
-  // partial words like "oni"/"onio" from each firing their own request.
   const [effectiveTerm, setEffectiveTerm] = useState('');
   const [catId, setCatId] = useState(initialCatId);
   const { showLoader } = useContext(LoaderContext);
@@ -41,23 +31,16 @@ const useProductSearch = (
 
   const trimmedRawTerm = searchTerm.trim();
 
-  // Live fallback: once typing has settled for this long, search automatically
-  // even if the user never pressed the return key / tapped the search icon.
-  const debouncedSearchTerm = useDebounce(searchTerm, 1200);
+  const debouncedSearchTerm = useDebounce(searchTerm, 1000);
   useEffect(() => {
     const settled = debouncedSearchTerm.trim();
     if (settled.length >= MIN_SEARCH_LENGTH) setEffectiveTerm(settled);
   }, [debouncedSearchTerm]);
 
-  // Backspacing/clearing below the searchable length instantly drops back to
-  // category / recent-search browsing instead of lingering on the last search.
   useEffect(() => {
     if (trimmedRawTerm.length < MIN_SEARCH_LENGTH) setEffectiveTerm('');
   }, [trimmedRawTerm]);
 
-  // Fire a search right now for the current (or an explicitly provided) term,
-  // bypassing the debounce — used by the return key, the search icon, and
-  // tapping a recent search.
   const submitSearch = useCallback(
     term => {
       const next = (typeof term === 'string' ? term : searchTerm).trim();
@@ -66,18 +49,12 @@ const useProductSearch = (
     [searchTerm],
   );
 
-  // A real search is currently active (drives global suggestions + the results
-  // header / empty state). Based on the submitted term, not on keystrokes.
   const isSearchActive = effectiveTerm.length >= MIN_SEARCH_LENGTH;
 
-  // Submitted search -> ALWAYS Global Search (show products from other
-  // categories too). useProductSuggestionsQuery refuses to fetch below
-  // MIN_SEARCH_LENGTH, so an empty effectiveTerm is a no-op.
   const suggestionsQuery = useProductSuggestionsQuery(
     effectiveTerm,
     activePincodeId,
   );
-  // Browsing category (no active search) -> Category specific
   const categoryQuery = useCategorySearchQuery(
     isSearchActive ? null : catId,
     activePincodeId,
@@ -87,8 +64,6 @@ const useProductSearch = (
   );
 
   const activeQuery = isSearchActive ? suggestionsQuery : categoryQuery;
-  // Reflects only a real in-flight request — no spinner while the user is still
-  // typing or waiting out the live-fallback window.
   const loading = activeQuery.isFetching && (isSearchActive || !!catId);
   const error = activeQuery.error || null;
 

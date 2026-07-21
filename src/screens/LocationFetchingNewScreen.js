@@ -17,6 +17,7 @@ import {
   ImageBackground,
 } from 'react-native';
 import Geolocation from '@react-native-community/geolocation';
+import Video from 'react-native-video';
 import axios from 'axios';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 import { BlurView } from '@react-native-community/blur';
@@ -701,19 +702,22 @@ const LocationFetchingNewScreen = ({ navigation }) => {
 
   if (!addressComponent) {
     return (
-      <SafeAreaView style={styles.loaderContainer}>
-        <Image
-          source={require('../assets/gifs/location-fetching.gif')}
-          style={styles.loaderGif}
+      <View style={styles.loaderContainer}>
+        <Video
+          source={require('../assets/videos/fetchLocation.mp4')}
+          style={StyleSheet.absoluteFill}
           resizeMode="cover"
+          repeat
+          muted
+          paused={false}
+          playInBackground={false}
         />
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
     <SafeAreaView style={styles.maninContainer}>
-      {/* {console.log('userInteractedRef', userInteractedRef)} */}
       <ImageBackground
         style={styles.backgroundImage}
         resizeMode="cover"
@@ -1338,7 +1342,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
     width: windowWidth,
     height: windowHeight,
   },

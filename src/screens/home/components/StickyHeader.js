@@ -63,6 +63,7 @@ const StickyHeader = ({
         <Animated.View style={etaAnimStyle}>
           <Text style={styles.timeText}>20 mins</Text>
           <TouchableOpacity
+            hitSlop={40}
             style={[styles.addressView, { marginTop: hp('0.4%') }]}
             onPress={onPressLocation}
           >

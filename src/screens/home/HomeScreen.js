@@ -24,6 +24,7 @@ import React, {
   useMemo,
   useState,
   useCallback,
+  useRef,
 } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -301,7 +302,10 @@ const HomeScreen = () => {
   const navigation = useNavigation();
   const { showLoader } = useContext(LoaderContext);
   const [isProfileLoaded, setIsProfileLoaded] = useState(false);
-  const [modalVisible, setModalVisible] = useState(false);
+  // Visibility is driven imperatively through the sheet's ref (open/close),
+  // not React state — so tapping the location doesn't re-render Home or
+  // remount the sheet, it just triggers the present animation.
+  const locationModalRef = useRef(null);
   const [selectedDiscoveryCategory, setSelectedDiscoveryCategory] =
     useState(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -489,13 +493,8 @@ const HomeScreen = () => {
         imageUrl={popupData?.uri}
         onPress={handlePopupPress}
       />
-      {modalVisible && (
-        <LocationModal
-          visible={modalVisible}
-          onClose={() => setModalVisible(false)}
-          onSelect={item => console.log(item)}
-        />
-      )}
+      <LocationModal ref={locationModalRef} />
+
 
       <StickyHeader
         top={top}
@@ -517,7 +516,7 @@ const HomeScreen = () => {
         profileAvatarSize={PROFILE_AVATAR_SIZE}
         onSearchPressIn={handleSearchPressIn}
         onSearchPressOut={handleSearchPressOut}
-        onPressLocation={() => setModalVisible(true)}
+        onPressLocation={() => locationModalRef.current?.open()}
       />
 
       <Animated.ScrollView
@@ -579,7 +578,7 @@ const HomeScreen = () => {
           <StoreUnavailable
             image={storeUnavailableData?.image}
             text={storeUnavailableData?.text}
-            onChangeLocation={() => setModalVisible(true)}
+            onChangeLocation={() => locationModalRef.current?.open()}
           />
         ) : (
           <>

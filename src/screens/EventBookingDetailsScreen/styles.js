@@ -302,6 +302,11 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: 'rgba(255,255,255,0.07)',
   },
+  // Caps the HTML details block so long copy scrolls internally instead of
+  // pushing the fixed detail rows off-screen.
+  detailHtmlScroll: {
+    maxHeight: 220,
+  },
 
   /* Bottom CTA */
   bottomBar: {

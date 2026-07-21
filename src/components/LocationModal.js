@@ -1,7 +1,9 @@
 import React, {
+  forwardRef,
   useCallback,
   useContext,
   useEffect,
+  useImperativeHandle,
   useRef,
   useState,
 } from 'react';
@@ -21,37 +23,45 @@ import {
 import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import { getAreasBySearch } from '../api';
 import { AppContext } from '../context/appContext';
+import { useDebounce } from '../hooks/useDebounce';
 import { FONTS } from '../styles/typography';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import CustomBottomModal from './CustomBottomModal';
 
-const SEARCH_DEBOUNCE_MS = 500;
+// Matches the reworked product search: typing settles for this long before an
+// automatic ("live fallback") search fires; pressing return / search fires now.
+const SEARCH_DEBOUNCE_MS = 1200;
 const MIN_SEARCH_LENGTH = 3;
 
-const LocationModal = ({
-  visible,
-  onClose,
-  // getAreasBySearch,
-  // onSelect,
-}) => {
+const LocationModal = forwardRef(({ onClose }, ref) => {
   const { editPincode } = useContext(AppContext);
 
   const sheetRef = useRef(null);
-  const debounceTimer = useRef(null);
+  const inputRef = useRef(null);
+  const focusRafRef = useRef(null);
+
+  // Imperative open/close so the parent controls visibility through this
+  // ref instead of a `visible` boolean. The sheet stays mounted; a tap just
+  // presents it, avoiding a Home re-render + full remount on every open.
+  useImperativeHandle(
+    ref,
+    () => ({
+      open: () => sheetRef.current?.open(),
+      close: () => sheetRef.current?.close(),
+    }),
+    [],
+  );
 
   const [search, setSearch] = useState('');
+  // The term actually handed to getAreasBySearch. Unlike `search` (which updates
+  // on every keystroke) this only advances when the user submits, or — as a
+  // fallback — after they've stopped typing for a while. That's what keeps
+  // partial words from each firing their own request.
+  const [effectiveTerm, setEffectiveTerm] = useState('');
   const [areas, setAreas] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Keeps the boolean prop contract every screen already relies on while
-  // visibility is actually driven by the BottomSheetModal ref underneath.
-  useEffect(() => {
-    if (visible) {
-      sheetRef.current?.open();
-    } else {
-      sheetRef.current?.close();
-    }
-  }, [visible]);
+  const trimmedRawTerm = search.trim();
 
   const runSearch = useCallback(async text => {
     try {
@@ -65,34 +75,39 @@ const LocationModal = ({
     }
   }, []);
 
-  const onSearch = useCallback(
-    text => {
-      setSearch(text);
+  // Live fallback: once typing has settled for this long, search automatically
+  // even if the user never pressed the return key / tapped the search icon.
+  const debouncedSearch = useDebounce(search, SEARCH_DEBOUNCE_MS);
+  useEffect(() => {
+    const settled = debouncedSearch.trim();
+    if (settled.length >= MIN_SEARCH_LENGTH) setEffectiveTerm(settled);
+  }, [debouncedSearch]);
 
-      if (debounceTimer.current) {
-        clearTimeout(debounceTimer.current);
-      }
+  // Backspacing/clearing below the searchable length instantly drops the
+  // results instead of lingering on the last search.
+  useEffect(() => {
+    if (trimmedRawTerm.length < MIN_SEARCH_LENGTH) setEffectiveTerm('');
+  }, [trimmedRawTerm]);
 
-      if (text.length < MIN_SEARCH_LENGTH) {
-        setAreas([]);
-        return;
-      }
-
-      debounceTimer.current = setTimeout(
-        () => runSearch(text),
-        SEARCH_DEBOUNCE_MS,
-      );
+  // Fire a search right now for the current (or an explicitly provided) term,
+  // bypassing the debounce — used by the return key / search submit.
+  const submitSearch = useCallback(
+    term => {
+      const next = (typeof term === 'string' ? term : search).trim();
+      if (next.length >= MIN_SEARCH_LENGTH) setEffectiveTerm(next);
     },
-    [runSearch],
+    [search],
   );
 
+  // The only place a request is actually issued: whenever the effective
+  // (settled or submitted) term changes. An empty term clears the list.
   useEffect(() => {
-    return () => {
-      if (debounceTimer.current) {
-        clearTimeout(debounceTimer.current);
-      }
-    };
-  }, []);
+    if (effectiveTerm.length >= MIN_SEARCH_LENGTH) {
+      runSearch(effectiveTerm);
+    } else {
+      setAreas([]);
+    }
+  }, [effectiveTerm, runSearch]);
 
   const onSelectLocation = useCallback(
     async item => {
@@ -104,15 +119,19 @@ const LocationModal = ({
   );
 
   // Fired by CustomBottomModal on backdrop tap / pan-down-to-close / Android
-  // back, so the parent's `visible` boolean stays in sync either way.
+  // back. Resets the search state and lets the parent react if it passed an
+  // optional onClose (no longer required now that visibility is ref-driven).
   const handleSheetClose = useCallback(() => {
     setSearch('');
+    setEffectiveTerm('');
     setAreas([]);
-    onClose();
+    onClose?.();
   }, [onClose]);
 
+  // Based on the term a search actually ran for, not on keystrokes — so the
+  // empty state never flashes while the user is still typing.
   const noResults =
-    search.length >= MIN_SEARCH_LENGTH &&
+    effectiveTerm.length >= MIN_SEARCH_LENGTH &&
     !loading &&
     (!areas?.data || areas.data.length === 0);
 
@@ -131,12 +150,14 @@ const LocationModal = ({
 
         {/* Search */}
         <BottomSheetTextInput
+          ref={inputRef}
           value={search}
-          onChangeText={onSearch}
+          onChangeText={setSearch}
           placeholder="Search location (Please enter at least 3 characters)"
           style={styles.input}
           placeholderTextColor={'#9CA3AF'}
-          autoFocus
+          returnKeyType="search"
+          onSubmitEditing={() => submitSearch()}
         />
 
         {/* Loader */}
@@ -175,7 +196,36 @@ const LocationModal = ({
         )}
       </View>
     ),
-    [search, areas, loading, noResults, onSearch, onSelectLocation],
+    [search, areas, loading, noResults, submitSearch, onSelectLocation],
+  );
+
+  // Defer the keyboard until the sheet has actually settled open (index >= 0),
+  // so the focus/keyboard animation doesn't fight the slide-in and cause the
+  // open to feel janky. Replaces the old autoFocus on the input. The extra
+  // requestAnimationFrame nudges focus to the next frame after settle —
+  // Android is sensitive to focusing mid-animation and can otherwise drop or
+  // delay the keyboard.
+  const handleSheetSettle = useCallback(index => {
+    if (focusRafRef.current != null) {
+      cancelAnimationFrame(focusRafRef.current);
+      focusRafRef.current = null;
+    }
+    if (index >= 0) {
+      focusRafRef.current = requestAnimationFrame(() => {
+        inputRef.current?.focus();
+        focusRafRef.current = null;
+      });
+    }
+  }, []);
+
+  // Cancel a pending focus frame if the sheet unmounts before it runs.
+  useEffect(
+    () => () => {
+      if (focusRafRef.current != null) {
+        cancelAnimationFrame(focusRafRef.current);
+      }
+    },
+    [],
   );
 
   return (
@@ -183,10 +233,13 @@ const LocationModal = ({
       ref={sheetRef}
       snapPoints={['50%', '50%']}
       onClose={handleSheetClose}
+      onChange={handleSheetSettle}
       renderContent={renderContent}
     />
   );
-};
+});
+
+LocationModal.displayName = 'LocationModal';
 
 export default LocationModal;
 

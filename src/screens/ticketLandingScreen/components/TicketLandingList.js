@@ -31,7 +31,6 @@ const TicketLandingList = ({
   refreshing,
   onRefresh,
 }) => {
-  console.log(events, 'events listing here');
   const listData = useMemo(() => {
     const base = [{ type: 'header' }, { type: 'tabs' }];
     if (activeTab === TAB_IDS.EVENTS) {
@@ -87,7 +86,7 @@ const TicketLandingList = ({
         case 'events-loading':
           return (
             <Animated.View style={tabContentStyle}>
-              <LoadingSkeleton />
+              <LoadingSkeleton count={3} />
             </Animated.View>
           );
         case 'events-empty':

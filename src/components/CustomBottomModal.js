@@ -31,6 +31,7 @@ const CustomBottomModal = forwardRef((props, ref) => {
     data,
     renderContent,
     onClose,
+    onChange,
     enablePanDownToClose = true,
     backgroundStyle,
     handleIndicatorStyle,
@@ -92,11 +93,14 @@ const CustomBottomModal = forwardRef((props, ref) => {
   const handleSheetChange = useCallback(
     index => {
       isOpenRef.current = index >= 0;
+      // Let the caller react to every settle (e.g. focus an input once the
+      // sheet is fully open); still fire onClose on full dismiss.
+      onChange?.(index);
       if (index === -1) {
         onClose?.();
       }
     },
-    [onClose],
+    [onChange, onClose],
   );
 
   // Backdrop with a fade animation; tapping it dismisses the sheet. When a

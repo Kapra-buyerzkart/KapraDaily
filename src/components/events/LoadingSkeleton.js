@@ -1,37 +1,39 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import Reanimated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withRepeat,
-  withTiming,
-} from 'react-native-reanimated';
+import Shimmer from './Shimmer';
 
-const Pulse = ({ style }) => {
-  const progress = useSharedValue(0.3);
+const PILL_WIDTHS = [72, 104, 60];
 
-  useEffect(() => {
-    progress.value = withRepeat(withTiming(0.7, { duration: 900 }), -1, true);
-  }, [progress]);
+// Card placeholder shaped like EventCard / PopularEventCard (image + title +
+// pill row) so the shimmer reads as "the content that's coming" instead of a
+// plain grey block while the list request is in flight.
+const CardSkeleton = () => (
+  <View style={styles.card}>
+    <Shimmer style={styles.image} />
+    <View style={styles.body}>
+      <Shimmer style={[styles.line, styles.title]} />
+      <View style={styles.pillsRow}>
+        {PILL_WIDTHS.map((width, index) => (
+          <Shimmer key={index} style={[styles.line, styles.pill, { width }]} />
+        ))}
+      </View>
+    </View>
+  </View>
+);
 
-  const animatedStyle = useAnimatedStyle(() => ({ opacity: progress.value }));
-
-  return <Reanimated.View style={[styles.block, style, animatedStyle]} />;
-};
-
-const LoadingSkeleton = ({ variant = 'card', count = 1 }) => {
+const LoadingSkeleton = ({ variant = 'card', count = 3 }) => {
   if (variant === 'hero') {
     return (
       <View style={styles.wrapper}>
-        <Pulse style={styles.hero} />
+        <Shimmer style={styles.hero} />
       </View>
     );
   }
 
   return (
-    <View style={styles.wrapper}>
+    <View>
       {Array.from({ length: count }).map((_, index) => (
-        <Pulse key={index} style={styles.card} />
+        <CardSkeleton key={index} />
       ))}
     </View>
   );
@@ -42,18 +44,41 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginTop: 8,
   },
-  block: {
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    borderRadius: 18,
-  },
   hero: {
     width: '100%',
     height: 220,
+    borderRadius: 18,
   },
   card: {
+    marginHorizontal: 20,
+    marginTop: 16,
+    borderRadius: 12,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  image: {
     width: '100%',
-    height: 160,
-    marginBottom: 16,
+    height: 170,
+  },
+  body: {
+    padding: 12,
+  },
+  line: {
+    borderRadius: 10,
+  },
+  title: {
+    height: 16,
+    width: '65%',
+    marginBottom: 12,
+  },
+  pillsRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  pill: {
+    height: 32,
   },
 });
 

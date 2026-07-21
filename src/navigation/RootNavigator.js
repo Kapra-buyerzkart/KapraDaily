@@ -199,17 +199,8 @@ export default function RootNavigator() {
           name="ViewTicketScreen"
           component={ViewTicketScreen}
           options={{
-            // Do NOT use presentation:'transparentModal' here. On iOS that
-            // presents a native modal view controller above the whole RN root
-            // view, which hides the app-root <ModalProvider /> portal that
-            // TicketQRModal teleports its visuals into — leaving only this
-            // screen's own (transparent) view, i.e. a black screen. A normal
-            // transparent card keeps the screen inside the RN root so the
-            // portal still paints on top; detachPreviousScreen:false keeps the
-            // screen underneath rendered so the modal's blur backdrop reads.
-            animation: 'none',
-            contentStyle: { backgroundColor: 'transparent' },
-            detachPreviousScreen: false,
+            animation: 'fade',
+            contentStyle: { backgroundColor: '#000000' },
           }}
         />
         <Stack.Screen name="D2cScreen" component={D2cScreen} />

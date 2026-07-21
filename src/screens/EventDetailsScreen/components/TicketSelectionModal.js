@@ -22,6 +22,7 @@ import Animated, {
   runOnJS,
 } from 'react-native-reanimated';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import Toast from 'react-native-simple-toast';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import COLORS from '@/styles/colors';
 import icons from '@/assets/icons';
@@ -262,12 +263,14 @@ const TicketSelectionModal = ({
   }, []);
 
   const applyIfAvailable = useCallback(
-    async (id, nextQty) => {
+    async (id, nextQty, notifyIfUnavailable = false) => {
       setCheckingIds(prev => ({ ...prev, [id]: true }));
       const available = await checkAvailability(id, nextQty);
       setCheckingIds(prev => ({ ...prev, [id]: false }));
       if (available) {
         setQuantities(prev => ({ ...prev, [id]: nextQty }));
+      } else if (notifyIfUnavailable) {
+        Toast.show('Requested quantity is not available.', Toast.LONG);
       }
     },
     [checkAvailability],
@@ -275,7 +278,7 @@ const TicketSelectionModal = ({
 
   const handleAdd = useCallback(
     id => {
-      applyIfAvailable(id, 1);
+      applyIfAvailable(id, 1, true);
     },
     [applyIfAvailable],
   );
@@ -284,7 +287,7 @@ const TicketSelectionModal = ({
     (id, maxQty, currentQty) => {
       const nextQty = Math.min(currentQty + 1, maxQty);
       if (nextQty === currentQty) return;
-      applyIfAvailable(id, nextQty);
+      applyIfAvailable(id, nextQty, true);
     },
     [applyIfAvailable],
   );
