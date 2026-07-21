@@ -45,6 +45,7 @@ import EventBookingDetailsScreen from '../screens/EventBookingDetailsScreen/Even
 import ViewTicketScreen from '../screens/ViewTicketScreen/ViewTicketScreen';
 import D2cScreen from '../screens/D2cScreen';
 import LegalContentScreen from '../screens/LegalContentScreen';
+import AppLoader from '../components/AppLoader';
 const Stack = createNativeStackNavigator();
 
 export default function RootNavigator() {
@@ -62,12 +63,22 @@ export default function RootNavigator() {
   }, []);
 
   if (!profile) {
-    return null; // or splash loader
+    // Branded loader instead of null (which rendered nothing and let the black
+    // native window show through) while loadProfile() restores/fetches profile.
+    return <AppLoader />;
   }
 
   return (
     <>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Navigator
+        screenOptions={{
+          headerShown: false,
+          // Default every screen to an opaque white background so no transparent
+          // React view lets the native screen background flash through while
+          // assets load. Screens that want black override this per-screen below.
+          contentStyle: { backgroundColor: '#fff' },
+        }}
+      >
         {/* <Stack.Screen name="LocationFetching" component={LocationFetchingScreen} /> */}
         {/* <Stack.Screen name="SplashScreen" component={SplashScreen} /> */}
         {/* <Stack.Screen name="LocationFetching" component={LocationFetchingScreen} /> */}

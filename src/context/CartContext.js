@@ -1397,6 +1397,7 @@ export const CartProvider = ({ children }) => {
           visible={!!confirmationConfig}
           onClose={() => setConfirmationConfig(null)}
           onConfirm={confirmationConfig.onConfirm}
+          onCancel={confirmationConfig.onCancel}
           title={confirmationConfig.title}
           message={confirmationConfig.message}
           confirmText={confirmationConfig.confirmText}

@@ -1,10 +1,4 @@
-import {
-  View,
-  Text,
-  StyleSheet,
-  Image,
-  ActivityIndicator,
-} from 'react-native';
+import { View, Text, StyleSheet, Image, ActivityIndicator } from 'react-native';
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import Animated, {
   useSharedValue,
@@ -105,7 +99,13 @@ const CartProductCard = props => {
     } else {
       setIsRemovalModalVisible(true);
     }
-  }, [quantity, isSoldOut, cartItemId, pincodeAreaIdOverride, updateCartItemQuantity]);
+  }, [
+    quantity,
+    isSoldOut,
+    cartItemId,
+    pincodeAreaIdOverride,
+    updateCartItemQuantity,
+  ]);
 
   const handleIncrease = useCallback(() => {
     setQuantity(quantity + 1);
@@ -199,9 +199,9 @@ const CartProductCard = props => {
                 <Text style={styles.btokenTextSmall}>{btokens} UD Token</Text>
               </View>
             )}
-            {!isSoldOut && (
+            {/* {!isSoldOut && (
               <Text style={styles.productCount}>{quantity} pcs</Text>
-            )}
+            )} */}
           </View>
 
           {!disableManage && (
@@ -396,6 +396,8 @@ const styles = StyleSheet.create({
   },
   btokenContainerSmall: {
     flexDirection: 'row',
+    marginBottom: CART_SPACING.xl,
+
     alignItems: 'center',
     // backgroundColor: '#F3E5F5',
     paddingHorizontal: wp('1.5%'),

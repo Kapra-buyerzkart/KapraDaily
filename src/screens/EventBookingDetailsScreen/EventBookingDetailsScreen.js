@@ -18,6 +18,7 @@ import CONFIG from '@/globals/config';
 import useEventDetails from '@/screens/EventDetailsScreen/hooks/useEventDetails';
 import ArtistList from '@/screens/EventDetailsScreen/components/ArtistList';
 import AccordionSection from '@/screens/EventDetailsScreen/components/AccordionSection';
+import HtmlBody from '@/components/HtmlBody';
 import { formatTime, formatPrice } from '@/screens/EventDetailsScreen/utils';
 import useEventBookingDetailQuery from '@/queries/useEventBookingDetailQuery';
 import logger from '@/utils/logger';
@@ -436,6 +437,11 @@ const EventBookingDetailsScreen = ({ navigation, route }) => {
               label="Booked on"
               value={formatFullDate(vm.bookedAt)}
             />
+            {!!details?.detailsText && (
+              <View style={styles.detailHtml}>
+                <HtmlBody html={details.detailsText} />
+              </View>
+            )}
           </View>
         </AccordionSection>
 
@@ -549,9 +555,15 @@ const EventBookingDetailsScreen = ({ navigation, route }) => {
 
         <ArtistList artists={details?.artists} />
 
-        <AccordionSection title="Terms & Conditions">
-          {details?.terms ||
-            'Terms & conditions for this event will appear here.'}
+        <AccordionSection
+          title="Terms & Conditions"
+          maxHeight={details?.terms ? 280 : undefined}
+        >
+          {details?.terms ? (
+            <HtmlBody html={details.terms} />
+          ) : (
+            'Terms & conditions for this event will appear here.'
+          )}
         </AccordionSection>
       </ScrollView>
 

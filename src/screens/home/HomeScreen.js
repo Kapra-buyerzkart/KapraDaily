@@ -69,6 +69,7 @@ import styles from './HomeScreen.styles';
 
 const HOME_BG = require('../../assets/images/homebg.png');
 const COMBO_BG = require('../../assets/images/combobg.png');
+const UDENDEAL_SEAL = require('../../assets/images/udendealSeal.png');
 
 const SeasonalFruitsShimmer = () => (
   <View style={styles.fruitsContainer}>
@@ -771,6 +772,22 @@ const HomeScreen = () => {
               source={require('../../assets/images/sealUD.png')}
               resizeMode="contain"
               style={{ width: wp('50%'), height: wp('50%') }}
+            />
+          </View>
+        )}
+
+        {!isStoreUnavailable && !!data && (
+          <View
+            style={{
+              alignItems: 'center',
+              justifyContent: 'center',
+              paddingBottom: hp('3%'),
+            }}
+          >
+            <Image
+              source={UDENDEAL_SEAL}
+              resizeMode="contain"
+              style={{ width: wp('45%'), height: wp('45%') }}
             />
           </View>
         )}

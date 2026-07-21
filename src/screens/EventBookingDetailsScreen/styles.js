@@ -296,6 +296,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: 'Gilroy-Medium',
   },
+  detailHtml: {
+    marginTop: 4,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.07)',
+  },
 
   /* Bottom CTA */
   bottomBar: {

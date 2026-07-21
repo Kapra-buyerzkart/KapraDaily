@@ -11,12 +11,15 @@ import {
 } from '../../../styles/cartTheme';
 import icons from '../../../assets/icons';
 
-const BillRow = ({ label, value, isGreen }) => (
+const BillRow = ({ label, value, isGreen, icon }) => (
   <View style={styles.row}>
     <Text style={styles.label}>{label}</Text>
-    <Text style={[styles.value, isGreen && { color: CART_COLORS.success }]}>
-      {value}
-    </Text>
+    <View style={styles.valueWrap}>
+      {icon && <Image source={icon} style={styles.valueIcon} />}
+      <Text style={[styles.value, isGreen && { color: CART_COLORS.success }]}>
+        {value}
+      </Text>
+    </View>
   </View>
 );
 
@@ -28,6 +31,7 @@ const BillSummary = ({ billCalculations }) => {
     couponDiscount = 0,
     giftCardAmount = 0,
     bcoinsAppliedValue = 0,
+    totalBtokens = 0,
     totalSavings = 0,
     toPay = 0,
   } = billCalculations;
@@ -55,6 +59,13 @@ const BillSummary = ({ billCalculations }) => {
           }
           isGreen={deliveryCharge === 0}
         />
+        {totalBtokens > 0 && (
+          <BillRow
+            label="Total UD Tokens"
+            value={`${totalBtokens}`}
+            icon={icons.tokenud}
+          />
+        )}
         {couponDiscount > 0 && (
           <BillRow
             label="Coupon discount"
@@ -144,6 +155,16 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3.4%'),
     color: CART_COLORS.textPrimary,
+  },
+  valueWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: wp('1.2%'),
+  },
+  valueIcon: {
+    width: wp('3.6%'),
+    height: wp('3.6%'),
+    resizeMode: 'contain',
   },
   savingsBanner: {
     flexDirection: 'row',

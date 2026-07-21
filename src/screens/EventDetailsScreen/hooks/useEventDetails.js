@@ -62,6 +62,7 @@ export default function useEventDetails(route) {
 
   const [event, setEvent] = useState(initialEvent);
   const [loading, setLoading] = useState(!initialEvent);
+  const [refreshing, setRefreshing] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -73,10 +74,9 @@ export default function useEventDetails(route) {
     }, []),
   );
 
-  useEffect(() => {
-    if (eventId === null || eventId === undefined) return;
-    setLoading(!initialEvent);
-    getEventDetailsByIdApi(eventId)
+  const loadDetails = useCallback(() => {
+    if (eventId === null || eventId === undefined) return Promise.resolve();
+    return getEventDetailsByIdApi(eventId)
       .then(res => {
         const data = res?.data ?? res;
         if (data) {
@@ -88,15 +88,27 @@ export default function useEventDetails(route) {
           }));
         }
       })
-      .catch(err => logger.error('Failed to load event details:', err?.message))
-      .finally(() => setLoading(false));
+      .catch(err =>
+        logger.error('Failed to load event details:', err?.message),
+      );
+  }, [eventId]);
+
+  useEffect(() => {
+    if (eventId === null || eventId === undefined) return;
+    setLoading(!initialEvent);
+    loadDetails().finally(() => setLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [eventId]);
+
+  const refresh = useCallback(() => {
+    setRefreshing(true);
+    loadDetails().finally(() => setRefreshing(false));
+  }, [loadDetails]);
 
   const details = useMemo(() => deriveDetails(event), [event]);
 
   return useMemo(
-    () => ({ event, loading, details }),
-    [event, loading, details],
+    () => ({ event, loading, details, refreshing, refresh }),
+    [event, loading, details, refreshing, refresh],
   );
 }

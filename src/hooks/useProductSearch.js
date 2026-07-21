@@ -24,6 +24,11 @@ const useProductSearch = (
 ) => {
   const { profile } = useContext(AppContext);
   const [searchTerm, setSearchTerm] = useState('');
+  // The term actually handed to the search query. Unlike `searchTerm` (which
+  // updates on every keystroke) this only advances when the user submits, or —
+  // as a fallback — after they've stopped typing for a while. That's what keeps
+  // partial words like "oni"/"onio" from each firing their own request.
+  const [effectiveTerm, setEffectiveTerm] = useState('');
   const [catId, setCatId] = useState(initialCatId);
   const { showLoader } = useContext(LoaderContext);
 
@@ -34,42 +39,60 @@ const useProductSearch = (
   const priceMin = filters.priceMin ?? 0;
   const priceMax = filters.priceMax ?? 5000;
 
-  // Debounce the search term to avoid excessive API calls
-  const debouncedSearchTerm = useDebounce(searchTerm, 650);
   const trimmedRawTerm = searchTerm.trim();
-  const trimmedTerm = debouncedSearchTerm.trim();
 
-  // Whether the CURRENT (undebounced) input already qualifies as a real query.
-  // Driven off the raw term so clearing/backspacing below the threshold instantly
-  // restores category browsing / recent searches instead of waiting out the debounce.
-  const isSearchingTerm = trimmedRawTerm.length >= MIN_SEARCH_LENGTH;
+  // Live fallback: once typing has settled for this long, search automatically
+  // even if the user never pressed the return key / tapped the search icon.
+  const debouncedSearchTerm = useDebounce(searchTerm, 1200);
+  useEffect(() => {
+    const settled = debouncedSearchTerm.trim();
+    if (settled.length >= MIN_SEARCH_LENGTH) setEffectiveTerm(settled);
+  }, [debouncedSearchTerm]);
 
-  // A qualifying keystroke landed but its debounce window hasn't elapsed yet —
-  // used to surface a pending state without ever firing the request early.
-  const isDebouncing = isSearchingTerm && trimmedRawTerm !== trimmedTerm;
+  // Backspacing/clearing below the searchable length instantly drops back to
+  // category / recent-search browsing instead of lingering on the last search.
+  useEffect(() => {
+    if (trimmedRawTerm.length < MIN_SEARCH_LENGTH) setEffectiveTerm('');
+  }, [trimmedRawTerm]);
 
-  // USER typing -> ALWAYS Global Search (per user request to show products from other categories)
-  // Only the debounced (settled) term is ever passed through, and useProductSuggestionsQuery
-  // itself refuses to fetch below MIN_SEARCH_LENGTH — belt and suspenders against extra calls.
+  // Fire a search right now for the current (or an explicitly provided) term,
+  // bypassing the debounce — used by the return key, the search icon, and
+  // tapping a recent search.
+  const submitSearch = useCallback(
+    term => {
+      const next = (typeof term === 'string' ? term : searchTerm).trim();
+      if (next.length >= MIN_SEARCH_LENGTH) setEffectiveTerm(next);
+    },
+    [searchTerm],
+  );
+
+  // A real search is currently active (drives global suggestions + the results
+  // header / empty state). Based on the submitted term, not on keystrokes.
+  const isSearchActive = effectiveTerm.length >= MIN_SEARCH_LENGTH;
+
+  // Submitted search -> ALWAYS Global Search (show products from other
+  // categories too). useProductSuggestionsQuery refuses to fetch below
+  // MIN_SEARCH_LENGTH, so an empty effectiveTerm is a no-op.
   const suggestionsQuery = useProductSuggestionsQuery(
-    trimmedTerm,
+    effectiveTerm,
     activePincodeId,
   );
-  // Browsing category (no search term) -> Category specific
+  // Browsing category (no active search) -> Category specific
   const categoryQuery = useCategorySearchQuery(
-    isSearchingTerm ? null : catId,
+    isSearchActive ? null : catId,
     activePincodeId,
     sortBy,
     priceMin,
     priceMax,
   );
 
-  const activeQuery = isSearchingTerm ? suggestionsQuery : categoryQuery;
-  const loading =
-    isDebouncing || (activeQuery.isFetching && (isSearchingTerm || !!catId));
+  const activeQuery = isSearchActive ? suggestionsQuery : categoryQuery;
+  // Reflects only a real in-flight request — no spinner while the user is still
+  // typing or waiting out the live-fallback window.
+  const loading = activeQuery.isFetching && (isSearchActive || !!catId);
   const error = activeQuery.error || null;
 
-  const isGlobalFallback = isSearchingTerm && !!catId;
+  const isGlobalFallback = isSearchActive && !!catId;
 
   useEffect(() => {
     if (!loading) return;
@@ -78,13 +101,13 @@ const useProductSearch = (
   }, [loading, showLoader]);
 
   const sortedSuggestions = useMemo(() => {
-    const suggestions = isSearchingTerm
+    const suggestions = isSearchActive
       ? suggestionsQuery.data || []
       : catId
       ? categoryQuery.data || []
       : [];
 
-    if (!isSearchingTerm || sortBy === 'relevance') return suggestions;
+    if (!isSearchActive || sortBy === 'relevance') return suggestions;
 
     const sorted = [...suggestions];
     switch (sortBy) {
@@ -120,19 +143,19 @@ const useProductSearch = (
     categoryQuery.data,
     catId,
     sortBy,
-    isSearchingTerm,
+    isSearchActive,
   ]);
 
   // Client-side price filter for general search
   const filteredSuggestions = useMemo(() => {
-    if (!isSearchingTerm) return sortedSuggestions; // Server handles filtering for catId
+    if (!isSearchActive) return sortedSuggestions; // Server handles filtering for catId
     if (priceMin === 0 && priceMax >= 5000) return sortedSuggestions;
 
     return sortedSuggestions.filter(item => {
       const price = item.sellingPrice || item.price || 0;
       return price >= priceMin && price <= priceMax;
     });
-  }, [sortedSuggestions, priceMin, priceMax, isSearchingTerm]);
+  }, [sortedSuggestions, priceMin, priceMax, isSearchActive]);
 
   useEffect(() => {
     const uris = filteredSuggestions
@@ -145,14 +168,17 @@ const useProductSearch = (
 
   const clearSearch = useCallback(() => {
     setSearchTerm('');
+    setEffectiveTerm('');
     setCatId(null);
   }, []);
 
   return {
     searchTerm,
     setSearchTerm,
+    submitSearch,
     catId,
     setCatId,
+    isSearchActive,
     suggestions: filteredSuggestions,
     loading,
     resultCount: filteredSuggestions.length,

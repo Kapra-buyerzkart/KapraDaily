@@ -5,6 +5,7 @@ import {
   StatusBar,
   ActivityIndicator,
   Pressable,
+  RefreshControl,
 } from 'react-native';
 import Toast from 'react-native-simple-toast';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -33,7 +34,8 @@ import prefetchMyBookings from '../../queries/prefetchMyBookings';
 
 const EventDetailsScreen = ({ navigation, route }) => {
   const insets = useSafeAreaInsets();
-  const { event, loading, details } = useEventDetails(route);
+  const { event, loading, details, refreshing, refresh } =
+    useEventDetails(route);
   const [ticketModalVisible, setTicketModalVisible] = useState(false);
   const {
     payForBooking,
@@ -101,6 +103,7 @@ const EventDetailsScreen = ({ navigation, route }) => {
     [insets.bottom],
   );
 
+  console.log(details, '======details');
   if (loading && !event) {
     return (
       <View style={styles.loader}>
@@ -133,6 +136,15 @@ const EventDetailsScreen = ({ navigation, route }) => {
         onScroll={scrollHandler}
         scrollEventThrottle={16}
         bounces
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={refresh}
+            tintColor={COLORS.white}
+            colors={[COLORS.purple]}
+            progressViewOffset={insets.top}
+          />
+        }
       >
         <EventHero
           event={event}

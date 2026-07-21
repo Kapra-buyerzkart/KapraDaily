@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 import { Animated, StatusBar, View, ImageBackground } from 'react-native';
 import {
   useSharedValue,
@@ -6,6 +6,8 @@ import {
 } from 'react-native-reanimated';
 import LinearGradient from 'react-native-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { TAB_IDS } from '@/components/events/EventCategoryTabs';
+import logger from '../../utils/logger';
 import styles from './styles';
 import TicketLandingList from './components/TicketLandingList';
 import UdenTicketModal from './components/UdenTicketModal';
@@ -38,6 +40,22 @@ const TicketLandingScreen = ({ navigation }) => {
       scrollY.value = event.contentOffset.y;
     },
   });
+
+  const [refreshing, setRefreshing] = useState(false);
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      const tasks = [voucherData.refresh(), eventsData.fetchPopularEvents()];
+      if (tabNav.activeTab === TAB_IDS.EVENTS) {
+        tasks.push(eventsData.fetchEventDetailsList());
+      }
+      await Promise.all(tasks);
+    } catch (error) {
+      logger.error('Ticket landing refresh failed:', error?.message);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [voucherData, eventsData, tabNav.activeTab]);
 
   const imageBgStyle = useMemo(
     () => [styles.imageBg, { opacity: imageOpacity }],
@@ -96,6 +114,8 @@ const TicketLandingScreen = ({ navigation }) => {
           eventsLoading={eventsData.eventsLoading}
           handleEventPress={eventsData.handleEventPress}
           tabContentProps={tabContentProps}
+          refreshing={refreshing}
+          onRefresh={onRefresh}
         />
       </AnimatedImageBackground>
 

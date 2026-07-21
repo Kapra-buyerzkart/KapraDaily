@@ -29,7 +29,7 @@ const useEventsData = navigation => {
 
   const fetchEventDetailsList = useCallback(() => {
     setEventsLoading(true);
-    getEventDetailsListApi()
+    return getEventDetailsListApi()
       .then(res => {
         console.log(res, 'eventdetails/list api response');
         const items = res?.data?.items || res?.data || [];
@@ -42,9 +42,9 @@ const useEventsData = navigation => {
       .finally(() => setEventsLoading(false));
   }, []);
 
-  useEffect(() => {
+  const fetchPopularEvents = useCallback(() => {
     setPopularEventsLoading(true);
-    getPopularListApi()
+    return getPopularListApi()
       .then(res => {
         setPopularEvents(mapPopularEvents(res?.data));
       })
@@ -54,6 +54,10 @@ const useEventsData = navigation => {
       })
       .finally(() => setPopularEventsLoading(false));
   }, []);
+
+  useEffect(() => {
+    fetchPopularEvents();
+  }, [fetchPopularEvents]);
 
   const handleEventPress = useCallback(
     event => {
@@ -72,6 +76,7 @@ const useEventsData = navigation => {
     popularEvents,
     popularEventsLoading,
     fetchEventDetailsList,
+    fetchPopularEvents,
     handleEventPress,
   };
 };

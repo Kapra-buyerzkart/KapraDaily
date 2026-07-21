@@ -22,9 +22,7 @@ import {
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import useProductSearch, {
-  MIN_SEARCH_LENGTH,
-} from '../../hooks/useProductSearch';
+import useProductSearch from '../../hooks/useProductSearch';
 import secureStore from '../../utils/secureStore';
 import { getStaggerDelay } from '../../utils/staggerDelay';
 import { AppContext } from '../../context/appContext';
@@ -70,6 +68,8 @@ const SearchScreen = () => {
   const {
     searchTerm,
     setSearchTerm,
+    submitSearch,
+    isSearchActive,
     suggestions,
     loading,
     resultCount,
@@ -81,8 +81,7 @@ const SearchScreen = () => {
   // show them as-is until the user actually starts typing/searching by category.
   const hasStaticProducts =
     Array.isArray(staticProducts) && staticProducts.length > 0;
-  const isBrowsingStaticList =
-    hasStaticProducts && !catId && searchTerm.trim().length < MIN_SEARCH_LENGTH;
+  const isBrowsingStaticList = hasStaticProducts && !catId && !isSearchActive;
   const displayedSuggestions = isBrowsingStaticList
     ? staticProducts
     : suggestions;
@@ -175,7 +174,9 @@ const SearchScreen = () => {
         </TouchableOpacity>
       </View>
       <Animated.View style={[styles.searchContainer, stickyShadowAnimStyle]}>
-        <Feather name="search" size={20} color="#F25000" />
+        <TouchableOpacity hitSlop={12} onPress={() => submitSearch()}>
+          <Feather name="search" size={20} color="#F25000" />
+        </TouchableOpacity>
         <TextInput
           placeholder="What are you looking for ?"
           placeholderTextColor={'#222222'}
@@ -183,6 +184,8 @@ const SearchScreen = () => {
           value={searchTerm}
           onChangeText={setSearchTerm}
           autoFocus={true}
+          returnKeyType="search"
+          onSubmitEditing={() => submitSearch()}
         />
         {searchTerm.length > 0 && (
           <TouchableOpacity
@@ -209,7 +212,7 @@ const SearchScreen = () => {
         />
       ) : (
         <>
-          {searchTerm.trim().length >= MIN_SEARCH_LENGTH && (
+          {isSearchActive && (
             <SearchResultsHeader
               loading={loading}
               resultCount={resultCount}
@@ -236,7 +239,10 @@ const SearchScreen = () => {
               <RecentSearches
                 searchTerm={searchTerm}
                 recentSearches={recentSearches}
-                onSelect={setSearchTerm}
+                onSelect={term => {
+                  setSearchTerm(term);
+                  submitSearch(term);
+                }}
               />
             }
             contentContainerStyle={{
@@ -247,16 +253,14 @@ const SearchScreen = () => {
             ListEmptyComponent={
               !loading &&
               displayedSuggestions.length === 0 &&
-              (searchTerm.trim().length >= MIN_SEARCH_LENGTH ||
-                catId ||
-                hasStaticProducts) && (
+              (isSearchActive || catId || hasStaticProducts) && (
                 <View style={styles.emptyContainer}>
                   <Image
                     source={require('../../assets/images/noimages/noproductfound.png')}
                     style={styles.emptyImage}
                   />
                   <Text style={styles.noResultsText}>
-                    {searchTerm.trim().length >= MIN_SEARCH_LENGTH
+                    {isSearchActive
                       ? `No products found for "${searchTerm}"`
                       : `No products found in this category`}
                   </Text>

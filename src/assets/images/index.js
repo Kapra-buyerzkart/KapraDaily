@@ -205,6 +205,7 @@ const images = {
   bookingtabbg: require('./movieTicket/bookingtabbg.png'),
   claimbgbutton: require('./claimbgbutton.png'),
   errormodalbg: require('./errormodalbg.png'),
+  udendealSeal: require('./udendealSeal.png'),
 };
 
 export default images;

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, LayoutAnimation } from 'react-native';
+import { View, Text, ScrollView, LayoutAnimation } from 'react-native';
 import Animated, {
   FadeIn,
   useAnimatedStyle,
@@ -11,7 +11,14 @@ import AnimatedPressable from '@/components/AnimatedPressable';
 import COLORS from '@/styles/colors';
 import styles from '../styles';
 
-const AccordionSection = ({ title, children, defaultOpen = false }) => {
+const AccordionSection = ({
+  title,
+  children,
+  defaultOpen = false,
+  // When set, the body is capped to this height and scrolls internally instead
+  // of growing the page — useful for long HTML (details / terms & conditions).
+  maxHeight,
+}) => {
   const [open, setOpen] = useState(defaultOpen);
   const rotation = useSharedValue(defaultOpen ? 1 : 0);
 
@@ -25,12 +32,16 @@ const AccordionSection = ({ title, children, defaultOpen = false }) => {
     transform: [{ rotate: `${rotation.value * 180}deg` }],
   }));
 
+  const body =
+    typeof children === 'string' ? (
+      <Text style={styles.accordionText}>{children}</Text>
+    ) : (
+      children
+    );
+
   return (
     <View style={styles.accordion}>
-      <AnimatedPressable
-        style={styles.accordionHeader}
-        onPress={toggle}
-      >
+      <AnimatedPressable style={styles.accordionHeader} onPress={toggle}>
         <Text style={styles.accordionTitle}>{title}</Text>
         <Animated.View style={chevronStyle}>
           <Ionicons name="chevron-down" size={20} color={COLORS.white} />
@@ -38,12 +49,17 @@ const AccordionSection = ({ title, children, defaultOpen = false }) => {
       </AnimatedPressable>
       {open && (
         <Animated.View entering={FadeIn.duration(200)}>
-          <View style={styles.divider} />
           <View style={styles.accordionBody}>
-            {typeof children === 'string' ? (
-              <Text style={styles.accordionText}>{children}</Text>
+            {maxHeight ? (
+              <ScrollView
+                style={{ maxHeight }}
+                nestedScrollEnabled
+                showsVerticalScrollIndicator
+              >
+                {body}
+              </ScrollView>
             ) : (
-              children
+              body
             )}
           </View>
         </Animated.View>

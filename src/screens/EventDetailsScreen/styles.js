@@ -48,6 +48,21 @@ const styles = StyleSheet.create({
     bottom: 0,
     height: '55%',
   },
+  heroDots: {
+    position: 'absolute',
+    bottom: 16,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  heroDot: {
+    height: 6,
+    borderRadius: 3,
+    marginHorizontal: 3,
+    backgroundColor: COLORS.white,
+  },
   scrollHint: {
     position: 'absolute',
     top: HERO_HEIGHT - 46,
@@ -63,6 +78,11 @@ const styles = StyleSheet.create({
     textShadowRadius: 6,
   },
   heroTopRow: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
@@ -320,7 +340,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Gilroy-Medium',
   },
   divider: {
-    height: 1,
+    // height: 1,
     backgroundColor: CARD_BORDER,
     marginHorizontal: 18,
   },

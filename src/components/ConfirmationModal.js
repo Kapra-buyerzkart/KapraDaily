@@ -12,16 +12,13 @@ const ConfirmationModal = ({
   visible,
   onClose,
   onConfirm,
+  onCancel,
   title,
   message,
   confirmText = 'Remove',
   cancelText = 'Cancel',
 }) => {
   const modalRef = useRef(null);
-
-  // Bridge the parent-controlled `visible` prop to CustomModal's imperative
-  // open/close API. RN's core <Modal> does not render on this build (New
-  // Architecture / Android), so all these modals go through the portal.
   useEffect(() => {
     if (visible) {
       modalRef.current?.open();
@@ -48,7 +45,10 @@ const ConfirmationModal = ({
       <View style={styles.buttonContainer}>
         <TouchableOpacity
           style={[styles.button, styles.cancelButton]}
-          onPress={onClose}
+          onPress={() => {
+            onClose();
+            onCancel?.();
+          }}
         >
           <Text
             style={styles.cancelButtonText}

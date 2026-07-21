@@ -18,18 +18,20 @@ export const useCartScreen = () => {
     const frontendBillCalculations = useMemo(() => {
         let mrpTotal = 0;
         let itemTotal = 0;
+        let totalBtokens = 0;
         cartItems.forEach(item => {
             const quantity = item.quantity || 1;
             const specialPrice = item.specialPrice || item.unitPrice || item.price || 0;
             const mrpPrice = item.mrp || item.mrpPrice || specialPrice;
             itemTotal += specialPrice * quantity;
             mrpTotal += mrpPrice * quantity;
+            totalBtokens += item.totalBtokens || item.bTokenValue || item.bTokens || 0;
         });
         const savings = mrpTotal - itemTotal;
         const deliveryCharge = 0;
         const totalSavings = savings;
         const toPay = itemTotal + deliveryCharge;
-        return { mrpTotal, itemTotal, savings, deliveryCharge, couponDiscount: 0, totalSavings, toPay };
+        return { mrpTotal, itemTotal, savings, deliveryCharge, couponDiscount: 0, totalBtokens, totalSavings, toPay };
     }, [cartItems]);
 
     const billCalculations = useMemo(() => {
@@ -43,7 +45,7 @@ export const useCartScreen = () => {
                 giftCardAmount: cartSummary.giftCardAmount ?? 0,
                 bcoinsAppliedValue: cartSummary.bcoinsAppliedValue ?? 0,
                 totalTax: cartSummary.totalTax ?? 0,
-                totalBtokens: cartSummary.totalBtokens ?? 0,
+                totalBtokens: cartSummary.totalBtokens ?? frontendBillCalculations.totalBtokens,
                 totalSavings: cartSummary.totalDiscount ?? 0,
                 toPay: cartSummary.grandTotal ?? frontendBillCalculations.toPay
             };

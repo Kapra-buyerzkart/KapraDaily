@@ -4,11 +4,19 @@ import { FadeInUp } from 'react-native-reanimated';
 import { getEventImageSource } from './imageUtils';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { getStaggerDelay } from '@/utils/staggerDelay';
+import { formatDate } from '@/screens/EventDetailsScreen/utils';
 import COLORS from '@/styles/colors';
 import icons from '@/assets/icons';
 
 const PopularEventCard = ({ item, onPress, index = 0 }) => {
   const location = [item?.venueName, item?.city].filter(Boolean).join(', ');
+  const dateText = formatDate(
+    item?.SessionStart ||
+      item?.sessionStart ||
+      item?.eventDate ||
+      item?.date ||
+      item?.startDate,
+  );
 
   return (
     <AnimatedPressable
@@ -40,6 +48,15 @@ const PopularEventCard = ({ item, onPress, index = 0 }) => {
               </Text>
             </View>
           )}
+
+          {!!dateText && (
+            <View style={styles.pill}>
+              <Image source={icons.calendar} style={styles.pillIcon} />
+              <Text style={styles.pillText} numberOfLines={1}>
+                {dateText}
+              </Text>
+            </View>
+          )}
         </View>
       </View>
     </AnimatedPressable>
@@ -58,7 +75,7 @@ const styles = StyleSheet.create({
   },
   image: {
     width: '100%',
-    height: 160,
+    height: 180,
   },
   body: {
     padding: 12,

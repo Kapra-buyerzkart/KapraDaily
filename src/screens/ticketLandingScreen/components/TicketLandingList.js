@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo } from 'react';
-import { Animated } from 'react-native';
+import { Animated, RefreshControl } from 'react-native';
 import Reanimated from 'react-native-reanimated';
 import EventHeader from '@/components/events/EventHeader';
 import EventCard from '@/components/events/EventCard';
@@ -28,6 +28,8 @@ const TicketLandingList = ({
   eventsLoading,
   handleEventPress,
   tabContentProps,
+  refreshing,
+  onRefresh,
 }) => {
   console.log(events, 'events listing here');
   const listData = useMemo(() => {
@@ -129,8 +131,15 @@ const TicketLandingList = ({
       scrollEventThrottle={16}
       contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
-      bounces={false}
       stickyHeaderIndices={STICKY_INDICES}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor="#ff6600ff"
+          colors={['#ff6600ff']}
+        />
+      }
     />
   );
 };

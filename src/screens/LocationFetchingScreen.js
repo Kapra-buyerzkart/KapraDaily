@@ -161,6 +161,7 @@ export default function LocationFetchingScreen() {
 const styles = StyleSheet.create({
   maninContainer: {
     flex: 1,
+    backgroundColor: 'white',
   },
   backgroundImage: {
     flex: 1,

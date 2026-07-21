@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   Dimensions,
-  PermissionsAndroid,
   Platform,
   Modal,
   KeyboardAvoidingView,
@@ -114,17 +113,8 @@ const LocationFetchingNewScreen = ({ navigation }) => {
 
   const userInteractedRef = useRef(false);
   const timeoutRef = useRef(null);
-  // Guards against navigating twice — e.g. GPS resolving right as the 5s cap fires.
-  const hasNavigatedRef = useRef(false);
 
   const navigateAfterLocation = () => {
-    // Only ever leave this screen once, and cancel the pending 5s cap timer.
-    if (hasNavigatedRef.current) return;
-    hasNavigatedRef.current = true;
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
-    }
     if (profile?.custId) {
       navigation.reset({ index: 0, routes: [{ name: 'AuthSuccessScreen' }] });
     } else {
@@ -133,6 +123,20 @@ const LocationFetchingNewScreen = ({ navigation }) => {
         routes: [{ name: 'LoginScreen', params: { type: 'login' } }],
       });
     }
+  };
+
+  // Fallback used whenever we cannot get a usable location (permission denied,
+  // GPS off, or fetch failure): seed a default area so the app stays usable and
+  // move the user off the loader instead of stranding them on it.
+  const navigateWithDefault = async () => {
+    await editPincode({
+      areaName: 'Panampilly Nagar',
+      pincodeAreaId: 262,
+      pincodeId: 32,
+      tags: null,
+    });
+    setLocationNotFetched(true);
+    navigateAfterLocation();
   };
 
   useEffect(() => {
@@ -160,23 +164,14 @@ const LocationFetchingNewScreen = ({ navigation }) => {
         return;
       }
 
-      // Start the 5s cap the moment we begin fetching, so no matter which
-      // stage (GPS, geocode, or area lookup) is slow, we bail to the fallback.
-      startHardDeadline();
-
-      if (Platform.OS === 'android') {
-        const isGranted = await PermissionsAndroid.check(
-          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-        );
-
-        if (isGranted) {
-          fetchLocation();
-        } else {
-          requestLocationPermission();
-        }
-      } else {
-        fetchLocation();
-      }
+      // Unified permission + GPS flow for BOTH platforms. Previously iOS
+      // skipped straight to fetchLocation() and relied on the geolocation lib
+      // to implicitly prompt — so on iOS the permission dialog often never
+      // appeared and the app fell straight through to AuthSuccess. Now both
+      // platforms go through checkLocationServicesAndPermission():
+      // check → request → GPS check → fetch, with a "Skip" fallback.
+      checkLocationServicesAndPermission();
+      startAutoNavigateTimer();
     };
 
     init();
@@ -206,20 +201,31 @@ const LocationFetchingNewScreen = ({ navigation }) => {
 
       let result = await check(permission);
 
-      // console.log('result', result)
-
+      // Not asked yet → show the native permission dialog (both platforms).
       if (result === RESULTS.DENIED) {
         result = await request(permission);
       }
 
+      // Permanently denied / unavailable → nudge to Settings, but let the user
+      // Skip so they land in the app with a default area instead of being
+      // stranded on the loader.
       if (result === RESULTS.BLOCKED || result === RESULTS.UNAVAILABLE) {
         showConfirmation({
           title: 'Location Permission Off',
           message:
-            'Please enable location permission for Kapra Daily to continue.',
+            'Please enable location permission for Kapra Daily to continue, or skip to browse with a default area.',
           confirmText: 'Open Settings',
           onConfirm: () => openSettings(),
+          cancelText: 'Skip',
+          onCancel: () => navigateWithDefault(),
         });
+        return false;
+      }
+
+      // User denied the dialog this time (e.g. Android soft-deny) → move on
+      // with the default area rather than blocking on the loader.
+      if (result !== RESULTS.GRANTED && result !== RESULTS.LIMITED) {
+        navigateWithDefault();
         return false;
       }
 
@@ -229,9 +235,13 @@ const LocationFetchingNewScreen = ({ navigation }) => {
       if (!gpsEnabled) {
         showConfirmation({
           title: 'Location Services Off',
-          message: 'Please enable GPS/location services to continue.',
+          message:
+            'Please enable GPS/location services to continue, or skip to browse with a default area.',
           confirmText: 'Open Settings',
-          onConfirm: () => openLocationSettings(),
+          onConfirm: () =>
+            Platform.OS === 'android' ? openLocationSettings() : openSettings(),
+          cancelText: 'Skip',
+          onCancel: () => navigateWithDefault(),
         });
         return false;
       }
@@ -241,6 +251,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
       return true;
     } catch (err) {
       console.log(err);
+      navigateWithDefault();
       return false;
     }
   };
@@ -258,18 +269,9 @@ const LocationFetchingNewScreen = ({ navigation }) => {
             return; // Skip auto-fetching: a location is already persisted/chosen
           }
 
-          const gpsEnabled = await DeviceInfo.isLocationEnabled();
-          const permission = await PermissionsAndroid.check(
-            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-          );
-          if (Platform.OS === 'ios') {
-            if (gpsEnabled) {
-              fetchLocation();
-            }
-          }
-          if (permission && gpsEnabled) {
-            fetchLocation();
-          }
+          // Returning from Settings → re-run the same unified permission + GPS
+          // flow so a freshly-granted permission is picked up on both platforms.
+          checkLocationServicesAndPermission();
         }
       },
     );
@@ -312,21 +314,14 @@ const LocationFetchingNewScreen = ({ navigation }) => {
   //   return () => subscription.remove();
   // }, []);
 
-  // Hard cap on the whole location-fetch flow: if GPS + reverse-geocode +
-  // area lookup haven't resolved within 5s, drop to the default area and go.
-  const startHardDeadline = () => {
-    timeoutRef.current = setTimeout(async () => {
-      if (hasNavigatedRef.current || userInteractedRef.current) return;
-      console.log('📍 [LOCATION] 5s cap reached — using fallback location');
-      await editPincode({
-        areaName: 'Panampilly Nagar',
-        pincodeAreaId: 262,
-        pincodeId: 32,
-        tags: null,
-      });
-      setLocationNotFetched(true);
-      navigateAfterLocation();
-    }, 5000); // 5 second hard cap
+  const startAutoNavigateTimer = () => {
+    timeoutRef.current = setTimeout(() => {
+      // Navigate only if user has NOT interacted
+      setLocationNotFetched(false);
+      if (!userInteractedRef.current && showConfirm) {
+        navigateAfterLocation();
+      }
+    }, 10000); // 10 seconds
   };
 
   const stopAutoNavigateTimer = () => {
@@ -351,53 +346,6 @@ const LocationFetchingNewScreen = ({ navigation }) => {
   //     }
   //   } catch (err) { }
   // };
-
-  const requestLocationPermission = async () => {
-    try {
-      // First ask permission
-      await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-        {
-          title: 'Location Access Required',
-          message: 'This app needs to access your location',
-        },
-      );
-
-      // 🔥 Now check the REAL final status (important!)
-      const isGranted = await PermissionsAndroid.check(
-        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-      );
-
-      // ----------------- ⛔ USER DENIED -----------------
-      if (!isGranted) {
-        showConfirmation({
-          title: 'Location Permission Required',
-          message:
-            'Please enable location permission for the app to function properly.',
-          confirmText: 'Open Settings',
-          onConfirm: () => openSettings(),
-        });
-        return;
-      }
-
-      // ----------------- 🔥 PERMISSION GRANTED -----------------
-      const gpsEnabled = await DeviceInfo.isLocationEnabled();
-
-      if (!gpsEnabled) {
-        showConfirmation({
-          title: 'Location Services Off',
-          message: 'Please enable GPS/location services to continue.',
-          confirmText: 'Open Location Settings',
-          onConfirm: () => openLocationSettings(),
-        });
-        return;
-      }
-
-      fetchLocation();
-    } catch (err) {
-      console.log(err);
-    }
-  };
 
   // const fetchLocation = () => {
   //     setLoading(true);
@@ -437,7 +385,6 @@ const LocationFetchingNewScreen = ({ navigation }) => {
     setLoading(true);
 
     const onSuccess = position => {
-      if (hasNavigatedRef.current) return; // 5s cap already fired
       console.log(
         '📍 [LOCATION] GPS success:',
         position.coords.latitude,
@@ -455,8 +402,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
     };
 
     const onFinalError = async error => {
-      if (hasNavigatedRef.current) return; // 5s cap already handled the fallback
-      console.log('📍 [LOCATION] Location attempt failed', error);
+      console.log('📍 [LOCATION] All location attempts failed', error);
       // Fallback auto navigation if location fails
       await editPincode({
         areaName: 'Panampilly Nagar',
@@ -464,29 +410,40 @@ const LocationFetchingNewScreen = ({ navigation }) => {
         pincodeId: 32,
         tags: null,
       });
+      setTimeout(() => {
+        setLocationNotFetched(true);
+        navigateAfterLocation();
+      }, 2000);
       setLoading(false);
-      setLocationNotFetched(true);
-      navigateAfterLocation();
     };
 
-    // Single fast fix to stay inside the 5s budget: allow a recently cached
-    // location (maximumAge) and skip high-accuracy GPS, which is slow to lock
-    // indoors/on cold start. Pincode-level accuracy is all we need here, and
-    // the 5s hard cap is the ultimate backstop if this still can't resolve.
-    Geolocation.getCurrentPosition(onSuccess, onFinalError, {
-      enableHighAccuracy: false,
-      timeout: 4000,
-      maximumAge: 60000,
-    });
+    // Always request a high-accuracy (GPS) fix — retry once more on failure
+    // before giving up, since a single high-accuracy request can time out
+    // indoors/cold-start.
+    Geolocation.getCurrentPosition(
+      onSuccess,
+      error => {
+        console.log('📍 [LOCATION] High accuracy failed, retrying...', error);
+        Geolocation.getCurrentPosition(onSuccess, onFinalError, {
+          enableHighAccuracy: true,
+          timeout: 20000,
+          maximumAge: 0,
+        });
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 0,
+      },
+    );
   };
 
   const reverseGeocode = async (latitude, longitude) => {
-    if (hasNavigatedRef.current) return; // 5s cap already fired
     const apiKey = GOOGLE_MAPS_API_KEY;
     const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}`;
 
     try {
-      const response = await axios.get(url, { timeout: 4000 });
+      const response = await axios.get(url, { timeout: 10000 });
       console.log('📍 [GEOCODE] Response status:', response.data.status);
 
       const formattedAddress = response.data.results[0]?.formatted_address;
@@ -530,7 +487,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
       setTimeout(() => {
         setLocationNotFetched(true);
         navigateAfterLocation();
-      }, 400);
+      }, 2000);
     }
   };
 
@@ -626,7 +583,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
           setTimeout(() => {
             setLocationNotFetched(false);
             navigateAfterLocation();
-          }, 400);
+          }, 2000);
           return;
         }
         console.log(
@@ -649,7 +606,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
         setTimeout(() => {
           setLocationNotFetched(true);
           navigateAfterLocation();
-        }, 400);
+        }, 2000);
         return;
       }
 
@@ -680,7 +637,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
               setLocationNotFetched(false);
               navigateAfterLocation();
             }
-          }, 400);
+          }, 2000);
         } else {
           console.log('📍 [AREAS] Showing area picker modal...');
           setShowConfirm(true);
@@ -696,7 +653,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
         setTimeout(() => {
           setLocationNotFetched(false);
           navigateAfterLocation();
-        }, 400);
+        }, 2000);
       } else {
         // No areas found for this pincode (user is outside delivery zone)
         console.log(
@@ -714,7 +671,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
         setTimeout(() => {
           setLocationNotFetched(true);
           navigateAfterLocation();
-        }, 400);
+        }, 2000);
       }
     } catch (error) {
       console.log('📍 [AREAS] ❌ API error:', error);
@@ -728,7 +685,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
       setTimeout(() => {
         setLocationNotFetched(true);
         navigateAfterLocation();
-      }, 400);
+      }, 2000);
     }
   };
 

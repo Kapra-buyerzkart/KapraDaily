@@ -93,12 +93,12 @@ export const buildMyAccountItems = ({ navigation, onLanguage }) => [
     icon: <Ionicons name="cart-outline" color={INK} size={wp('4%')} />,
     onPress: () => navigation.navigate('CartScreen'),
   },
-  {
-    key: 'language',
-    label: 'Language',
-    icon: <Ionicons name="language-outline" color={INK} size={wp('4%')} />,
-    onPress: onLanguage,
-  },
+  // {
+  //   key: 'language',
+  //   label: 'Language',
+  //   icon: <Ionicons name="language-outline" color={INK} size={wp('4%')} />,
+  //   onPress: onLanguage,
+  // },
 ];
 
 export const buildInformationItems = ({

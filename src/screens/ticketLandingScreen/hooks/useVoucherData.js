@@ -25,7 +25,7 @@ const useVoucherData = () => {
   const [giftQuoteLoading, setGiftQuoteLoading] = useState(false);
 
   const refreshBCoins = useCallback(() => {
-    getDashboardDataApi()
+    return getDashboardDataApi()
       .then(res => {
         if (res?.data?.wallet?.bCoins !== undefined) {
           setBCoins(res.data.wallet.bCoins);
@@ -34,9 +34,9 @@ const useVoucherData = () => {
       .catch(err => logger.error('Failed to refresh bCoins:', err?.message));
   }, []);
 
-  useEffect(() => {
+  const fetchCarouselVouchers = useCallback(() => {
     setCarouselLoading(true);
-    getVouchersApi()
+    return getVouchersApi()
       .then(res => {
         if (res?.data?.items) {
           setCarouselVouchers(res.data.items);
@@ -44,12 +44,11 @@ const useVoucherData = () => {
       })
       .catch(err => logger.error('Failed to load vouchers:', err?.message))
       .finally(() => setCarouselLoading(false));
-    refreshBCoins();
-  }, [refreshBCoins]);
+  }, []);
 
-  useEffect(() => {
+  const fetchMyVouchers = useCallback(() => {
     setMyVouchersLoading(true);
-    getMyVouchersApi()
+    return getMyVouchersApi()
       .then(res => {
         if (res?.data?.items) {
           setMyVouchers(res.data.items);
@@ -58,6 +57,25 @@ const useVoucherData = () => {
       .catch(err => logger.error('Failed to load my vouchers:', err?.message))
       .finally(() => setMyVouchersLoading(false));
   }, []);
+
+  const refresh = useCallback(
+    () =>
+      Promise.all([
+        fetchCarouselVouchers(),
+        fetchMyVouchers(),
+        refreshBCoins(),
+      ]),
+    [fetchCarouselVouchers, fetchMyVouchers, refreshBCoins],
+  );
+
+  useEffect(() => {
+    fetchCarouselVouchers();
+    refreshBCoins();
+  }, [fetchCarouselVouchers, refreshBCoins]);
+
+  useEffect(() => {
+    fetchMyVouchers();
+  }, [fetchMyVouchers]);
 
   useEffect(() => {
     const uris = [...carouselVouchers, ...myVouchers]
@@ -129,6 +147,7 @@ const useVoucherData = () => {
     giftQuote,
     giftQuoteLoading,
     refreshBCoins,
+    refresh,
     handleClaim,
     handleCloseUdenModal,
   };
