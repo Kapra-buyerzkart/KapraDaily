@@ -50,7 +50,7 @@ const AuthSuccessScreen = ({ navigation }) => {
     require('../assets/images/splash/Frame 1216249942 1.png'),
   );
   const d2c = useFallbackImage(
-    // d2cImagePath && getImageUrl(d2cImagePath),
+    d2cImagePath && getImageUrl(d2cImagePath),
     require('../assets/images/splash/Frame 1216249941 1.png'),
   );
   const kshope = useFallbackImage(

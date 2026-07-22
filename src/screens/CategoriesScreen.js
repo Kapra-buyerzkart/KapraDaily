@@ -103,6 +103,7 @@ export default function () {
     loading,
     isFetchingSubCategories,
     isFetchingProducts,
+    hasFetchedProducts,
     isFetchingMore,
     handleLoadMore,
   } = useCategoriesData(catId, debouncedSearchText, filters);
@@ -355,7 +356,9 @@ export default function () {
                 ListEmptyComponent={
                   loading || isFetchingProducts ? (
                     <CategoryProductGridShimmer rows={3} />
-                  ) : productsList.length === 0 && !isFetchingMore ? (
+                  ) : hasFetchedProducts &&
+                    productsList?.length === 0 &&
+                    !isFetchingMore ? (
                     <View style={styles.emptyContainer}>
                       <Image
                         source={require('../assets/images/udenDealNotfound.png')}

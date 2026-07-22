@@ -19,6 +19,7 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { FONTS } from '../../../styles/typography';
 import ProfileAvatarBadge from '../../../components/ProfileAvatarBadge';
 import RotatingPlaceholder from '../../../components/RotatingPlaceholder';
+import COLORS from '@/styles/colors';
 
 const INK = '#1A1A1A';
 const SEARCH_EXAMPLES = ['Basmati Rice', 'Milk', 'Sunflower Oil', 'Lemons'];
@@ -148,14 +149,12 @@ const StickyHeader = ({
     <Animated.View
       style={[
         {
-          backgroundColor: '#FFFFFF',
+          backgroundColor: COLORS.white,
           marginHorizontal: wp('4.7%'),
           paddingHorizontal: wp('4%'),
           flexDirection: 'row',
           alignItems: 'center',
           overflow: 'hidden',
-          shadowColor: '#000000',
-          shadowOffset: { width: 0, height: 3 },
         },
         searchWrapperAnimStyle,
       ]}

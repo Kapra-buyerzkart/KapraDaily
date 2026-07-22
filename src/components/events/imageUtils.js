@@ -26,25 +26,12 @@ export const getEventImageSource = event => {
 
 export const getEventGalleryImages = event => {
   const gallery = Array.isArray(event?.images) ? event.images : [];
-  const sources = gallery
+  return gallery
     .slice()
     .sort((a, b) => (a?.displayOrder ?? 0) - (b?.displayOrder ?? 0))
     .map(img => img?.imageUrl)
     .filter(Boolean)
     .map(url => ({ uri: CONFIG.image_base_url + url }));
-
-  // Seed the carousel with the banner already shown in the list so the first
-  // slide is the same (cached) image. Otherwise, when the details API adds the
-  // gallery, the hero swaps from a single image to a carousel whose first slide
-  // is a different, uncached URL — producing a blank flash where the banner
-  // briefly disappears before the carousel images load.
-  const banner = getEventImageSource(event);
-  const bannerUri = banner && typeof banner === 'object' ? banner.uri : null;
-  if (bannerUri && !sources.some(s => s.uri === bannerUri)) {
-    sources.unshift(banner);
-  }
-
-  return sources.length > 0 ? sources : [banner];
 };
 
 export const PLACEHOLDER_VOUCHER_IMAGE = PLACEHOLDER_IMAGE;

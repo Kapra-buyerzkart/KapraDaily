@@ -27,9 +27,6 @@ import { useDebounce } from '../hooks/useDebounce';
 import { FONTS } from '../styles/typography';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import CustomBottomModal from './CustomBottomModal';
-
-// Matches the reworked product search: typing settles for this long before an
-// automatic ("live fallback") search fires; pressing return / search fires now.
 const SEARCH_DEBOUNCE_MS = 1200;
 const MIN_SEARCH_LENGTH = 3;
 
@@ -39,10 +36,6 @@ const LocationModal = forwardRef(({ onClose }, ref) => {
   const sheetRef = useRef(null);
   const inputRef = useRef(null);
   const focusRafRef = useRef(null);
-
-  // Imperative open/close so the parent controls visibility through this
-  // ref instead of a `visible` boolean. The sheet stays mounted; a tap just
-  // presents it, avoiding a Home re-render + full remount on every open.
   useImperativeHandle(
     ref,
     () => ({
@@ -53,13 +46,13 @@ const LocationModal = forwardRef(({ onClose }, ref) => {
   );
 
   const [search, setSearch] = useState('');
-  // The term actually handed to getAreasBySearch. Unlike `search` (which updates
-  // on every keystroke) this only advances when the user submits, or — as a
-  // fallback — after they've stopped typing for a while. That's what keeps
-  // partial words from each firing their own request.
   const [effectiveTerm, setEffectiveTerm] = useState('');
   const [areas, setAreas] = useState([]);
   const [loading, setLoading] = useState(false);
+  // The row the user just tapped, held while editPincode persists it. Gives
+  // immediate feedback (spinner on that row) during the write, which can lag
+  // on slower devices, and blocks a second tap until it settles.
+  const [selectingItem, setSelectingItem] = useState(null);
 
   const trimmedRawTerm = search.trim();
 
@@ -75,22 +68,16 @@ const LocationModal = forwardRef(({ onClose }, ref) => {
     }
   }, []);
 
-  // Live fallback: once typing has settled for this long, search automatically
-  // even if the user never pressed the return key / tapped the search icon.
   const debouncedSearch = useDebounce(search, SEARCH_DEBOUNCE_MS);
   useEffect(() => {
     const settled = debouncedSearch.trim();
     if (settled.length >= MIN_SEARCH_LENGTH) setEffectiveTerm(settled);
   }, [debouncedSearch]);
 
-  // Backspacing/clearing below the searchable length instantly drops the
-  // results instead of lingering on the last search.
   useEffect(() => {
     if (trimmedRawTerm.length < MIN_SEARCH_LENGTH) setEffectiveTerm('');
   }, [trimmedRawTerm]);
 
-  // Fire a search right now for the current (or an explicitly provided) term,
-  // bypassing the debounce — used by the return key / search submit.
   const submitSearch = useCallback(
     term => {
       const next = (typeof term === 'string' ? term : search).trim();
@@ -99,8 +86,6 @@ const LocationModal = forwardRef(({ onClose }, ref) => {
     [search],
   );
 
-  // The only place a request is actually issued: whenever the effective
-  // (settled or submitted) term changes. An empty term clears the list.
   useEffect(() => {
     if (effectiveTerm.length >= MIN_SEARCH_LENGTH) {
       runSearch(effectiveTerm);
@@ -111,20 +96,24 @@ const LocationModal = forwardRef(({ onClose }, ref) => {
 
   const onSelectLocation = useCallback(
     async item => {
+      if (selectingItem) return;
       Keyboard.dismiss();
-      await editPincode(item);
-      sheetRef.current?.close();
+      setSelectingItem(item);
+      try {
+        await editPincode(item);
+        sheetRef.current?.close();
+      } finally {
+        setSelectingItem(null);
+      }
     },
-    [editPincode],
+    [editPincode, selectingItem],
   );
 
-  // Fired by CustomBottomModal on backdrop tap / pan-down-to-close / Android
-  // back. Resets the search state and lets the parent react if it passed an
-  // optional onClose (no longer required now that visibility is ref-driven).
   const handleSheetClose = useCallback(() => {
     setSearch('');
     setEffectiveTerm('');
     setAreas([]);
+    setSelectingItem(null);
     onClose?.();
   }, [onClose]);
 
@@ -133,8 +122,6 @@ const LocationModal = forwardRef(({ onClose }, ref) => {
     trimmedRawTerm !== effectiveTerm;
   const searching = loading || isAwaitingDebounce;
 
-  // Based on the term a search actually ran for, not on keystrokes — so the
-  // empty state never flashes while the user is still typing.
   const noResults =
     effectiveTerm.length >= MIN_SEARCH_LENGTH &&
     !searching &&
@@ -187,29 +174,48 @@ const LocationModal = forwardRef(({ onClose }, ref) => {
             data={areas.data}
             keyExtractor={(_, i) => i.toString()}
             keyboardShouldPersistTaps="handled"
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.item}
-                onPress={() => onSelectLocation(item)}
-              >
-                <Text style={styles.itemText}>
-                  {item.areaName} {item.pincode ? `(${item.pincode})` : ''}
-                </Text>
-              </TouchableOpacity>
-            )}
+            renderItem={({ item }) => {
+              const isSelecting = selectingItem === item;
+              return (
+                <TouchableOpacity
+                  style={styles.item}
+                  disabled={!!selectingItem}
+                  onPress={() => onSelectLocation(item)}
+                >
+                  <Text
+                    style={[
+                      styles.itemText,
+                      isSelecting && styles.itemTextActive,
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {item.areaName} {item.pincode ? `(${item.pincode})` : ''}
+                  </Text>
+                  {isSelecting && (
+                    <ActivityIndicator
+                      size="small"
+                      color="#FF7148"
+                      style={styles.itemSpinner}
+                    />
+                  )}
+                </TouchableOpacity>
+              );
+            }}
           />
         )}
       </View>
     ),
-    [search, areas, searching, noResults, submitSearch, onSelectLocation],
+    [
+      search,
+      areas,
+      searching,
+      noResults,
+      submitSearch,
+      onSelectLocation,
+      selectingItem,
+    ],
   );
 
-  // Defer the keyboard until the sheet has actually settled open (index >= 0),
-  // so the focus/keyboard animation doesn't fight the slide-in and cause the
-  // open to feel janky. Replaces the old autoFocus on the input. The extra
-  // requestAnimationFrame nudges focus to the next frame after settle —
-  // Android is sensitive to focusing mid-animation and can otherwise drop or
-  // delay the keyboard.
   const handleSheetSettle = useCallback(index => {
     if (focusRafRef.current != null) {
       cancelAnimationFrame(focusRafRef.current);
@@ -280,8 +286,12 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.gilroy.regular,
   },
   item: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingVertical: wp('4%'),
     paddingLeft: wp('7%'),
+    paddingRight: wp('5%'),
     borderBottomWidth: 1,
     borderBottomColor: '#EEE',
   },
@@ -315,8 +325,16 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   itemText: {
+    flex: 1,
     fontSize: wp('3.3%'),
     fontFamily: FONTS.gilroy.regular,
     color: '#000000',
+  },
+  itemTextActive: {
+    color: '#FF7148',
+    fontFamily: FONTS.gilroy.semiBold,
+  },
+  itemSpinner: {
+    marginLeft: wp('3%'),
   },
 });
