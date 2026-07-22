@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   TextInput,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -72,6 +73,7 @@ const SearchScreen = () => {
     isSearchActive,
     suggestions,
     loading,
+    searching,
     resultCount,
     isGlobalFallback,
   } = useProductSearch(currentPincodeId, catId, filters);
@@ -221,7 +223,7 @@ const SearchScreen = () => {
           )}
 
           <Animated.FlatList
-            data={loading ? [] : displayedSuggestions}
+            data={searching ? [] : displayedSuggestions}
             keyExtractor={(item, index) =>
               (item.productId || item.id || index).toString()
             }
@@ -251,20 +253,25 @@ const SearchScreen = () => {
               paddingBottom: hp('10%'),
             }}
             ListEmptyComponent={
-              !loading &&
-              displayedSuggestions.length === 0 &&
-              (isSearchActive || catId || hasStaticProducts) && (
-                <View style={styles.emptyContainer}>
-                  <Image
-                    source={require('../../assets/images/noimages/noproductfound.png')}
-                    style={styles.emptyImage}
-                  />
-                  <Text style={styles.noResultsText}>
-                    {isSearchActive
-                      ? `No products found for "${searchTerm}"`
-                      : `No products found in this category`}
-                  </Text>
+              searching ? (
+                <View style={styles.loaderContainer}>
+                  <ActivityIndicator size="large" color="#F25000" />
                 </View>
+              ) : (
+                displayedSuggestions.length === 0 &&
+                (isSearchActive || catId || hasStaticProducts) && (
+                  <View style={styles.emptyContainer}>
+                    <Image
+                      source={require('../../assets/images/noimages/noproductfound.png')}
+                      style={styles.emptyImage}
+                    />
+                    <Text style={styles.noResultsText}>
+                      {isSearchActive
+                        ? `No products found for "${searchTerm}"`
+                        : `No products found in this category`}
+                    </Text>
+                  </View>
+                )
               )
             }
           />

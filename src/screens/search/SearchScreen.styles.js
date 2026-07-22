@@ -129,6 +129,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingTop: hp('10%'),
   },
+  loaderContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: hp('15%'),
+  },
   emptyImage: {
     width: wp('50%'),
     height: wp('50%'),

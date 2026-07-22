@@ -17,6 +17,9 @@ const ConfirmationModal = ({
   message,
   confirmText = 'Remove',
   cancelText = 'Cancel',
+  // When false, the modal cannot be dismissed by the hardware back button or
+  // by tapping the backdrop — the user must pick one of the two buttons.
+  dismissible = true,
 }) => {
   const modalRef = useRef(null);
   useEffect(() => {
@@ -33,6 +36,8 @@ const ConfirmationModal = ({
       position={MODAL_POSITION.CENTER}
       width={wp('85%')}
       onClose={onClose}
+      closeOnBackdropPress={dismissible}
+      closeOnBackPress={dismissible}
       contentStyle={styles.content}
     >
       <View style={styles.iconContainer}>

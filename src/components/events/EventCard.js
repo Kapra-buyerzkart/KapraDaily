@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Image, Text, StyleSheet } from 'react-native';
 import { FadeInUp } from 'react-native-reanimated';
-import { getVoucherImageSource } from './imageUtils';
+import { getEventImageSource } from './imageUtils';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { getStaggerDelay } from '@/utils/staggerDelay';
 import { formatDate } from '@/screens/EventDetailsScreen/utils';
@@ -15,7 +15,7 @@ const EventCard = ({ item, onPress, index = 0 }) => (
     onPress={() => onPress?.(item)}
   >
     <Image
-      source={getVoucherImageSource(item)}
+      source={getEventImageSource(item)}
       style={styles.image}
       resizeMode="cover"
     />

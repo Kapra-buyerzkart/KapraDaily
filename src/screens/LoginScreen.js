@@ -291,8 +291,11 @@ const LoginScreen = () => {
 
   return (
     <View style={styles.mainContainer}>
-      <StatusBar translucent barStyle={'light-content'} />
-      {/* {logger.log('typeLOgondcc', type)} */}
+      <StatusBar
+        translucent
+        backgroundColor="transparent"
+        barStyle={'dark-content'}
+      />
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}

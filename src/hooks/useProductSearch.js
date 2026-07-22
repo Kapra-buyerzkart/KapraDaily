@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useContext, useMemo } from 'react';
 import { Image } from 'react-native';
 import { useDebounce } from './useDebounce';
 import { AppContext } from '../context/appContext';
-import { LoaderContext } from '../context/loaderContext';
 import useProductSuggestionsQuery from '../queries/useProductSuggestionsQuery';
 import useCategorySearchQuery from '../queries/useCategorySearchQuery';
 import { getProductImageUri } from '../utils/imageUrl';
@@ -20,7 +19,6 @@ const useProductSearch = (
   const [searchTerm, setSearchTerm] = useState('');
   const [effectiveTerm, setEffectiveTerm] = useState('');
   const [catId, setCatId] = useState(initialCatId);
-  const { showLoader } = useContext(LoaderContext);
 
   const activePincodeId = initialPincodeId || profile?.pincode;
 
@@ -69,11 +67,13 @@ const useProductSearch = (
 
   const isGlobalFallback = isSearchActive && !!catId;
 
-  useEffect(() => {
-    if (!loading) return;
-    showLoader(true);
-    return () => showLoader(false);
-  }, [loading, showLoader]);
+  // True while the user has typed a searchable term but the debounce hasn't
+  // settled into a query yet — so the list can show a loader immediately.
+  const isAwaitingDebounce =
+    trimmedRawTerm.length >= MIN_SEARCH_LENGTH &&
+    trimmedRawTerm !== effectiveTerm;
+
+  const searching = loading || isAwaitingDebounce;
 
   const sortedSuggestions = useMemo(() => {
     const suggestions = isSearchActive
@@ -156,6 +156,7 @@ const useProductSearch = (
     isSearchActive,
     suggestions: filteredSuggestions,
     loading,
+    searching,
     resultCount: filteredSuggestions.length,
     error,
     isGlobalFallback,

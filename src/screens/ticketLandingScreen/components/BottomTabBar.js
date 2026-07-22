@@ -7,8 +7,6 @@ import icons from '../../../assets/icons';
 
 const HOME_PURPLE = '#7C3AED';
 
-// Match the main app bottom tab bar's "Home" glyph size (MainTabNavigator's
-// iconImage uses wp('5.12%')) so the store icon lines up with it visually.
 const ICON_SIZE = wp('6.12%');
 
 const BottomTabBar = ({

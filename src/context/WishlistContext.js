@@ -6,7 +6,7 @@ export const WishlistContext = createContext();
 
 export const WishlistProvider = ({ children }) => {
     const [wishlistItems, setWishlistItems] = useState([]);
-    const [isLoading, setIsLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     const [lastFetched, setLastFetched] = useState(0); // Keeping for UI if needed, but logic moves to ref
     const lastFetchedRef = useRef(0);
     const loadRequestRef = useRef(null);

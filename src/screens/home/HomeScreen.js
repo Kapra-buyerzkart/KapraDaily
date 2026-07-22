@@ -368,6 +368,11 @@ const HomeScreen = () => {
       generalSettings: generalSettingsQuery.data,
     });
 
+  // No location chosen yet — mirrors the header's "Select Location" signal
+  // (StickyHeader gates on the same `profile?.pinAddress`), so header and body
+  // stay in sync and clear together the moment editPincode sets an address.
+  const noLocationSelected = !profile?.pinAddress;
+
   const popupData = data?.popup || homepageQuery.error?.popup || null;
   const { isHomePopupVisible, handleClose, handlePopupPress } =
     useHomePopup(popupData);
@@ -495,7 +500,6 @@ const HomeScreen = () => {
       />
       <LocationModal ref={locationModalRef} />
 
-
       <StickyHeader
         top={top}
         topSectionBanner={topSectionBanner}
@@ -568,13 +572,21 @@ const HomeScreen = () => {
         )}
 
         {!isStoreUnavailable &&
+          !noLocationSelected &&
           (isHomeLoading && categories.length === 0 ? (
             <CategoryShimmer />
           ) : (
             categories.length > 0 && <CategoryGrid categories={categories} />
           ))}
 
-        {isStoreUnavailable ? (
+        {noLocationSelected ? (
+          <StoreUnavailable
+            imageSource={storeUnavailableData?.image}
+            text="Select your location to see products and offers available near you."
+            buttonText="Select Location"
+            onChangeLocation={() => locationModalRef.current?.open()}
+          />
+        ) : isStoreUnavailable ? (
           <StoreUnavailable
             image={storeUnavailableData?.image}
             text={storeUnavailableData?.text}

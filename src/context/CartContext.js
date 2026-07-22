@@ -1402,6 +1402,7 @@ export const CartProvider = ({ children }) => {
           message={confirmationConfig.message}
           confirmText={confirmationConfig.confirmText}
           cancelText={confirmationConfig.cancelText}
+          dismissible={confirmationConfig.dismissible !== false}
         />
       )}
       {statusConfig && (

@@ -57,35 +57,57 @@ const StickyHeader = ({
     }
   };
 
+  const hasLocation = !!profile?.pinAddress;
+
   const renderCollapsibleInfo = () => (
     <Animated.View style={collapsibleHeaderStyle} onLayout={onHeaderInfoLayout}>
       <View style={styles.headerViewOne}>
         <Animated.View style={etaAnimStyle}>
-          <Text style={styles.timeText}>20 mins</Text>
-          <TouchableOpacity
-            hitSlop={40}
-            style={[styles.addressView, { marginTop: hp('0.4%') }]}
-            onPress={onPressLocation}
-          >
-            <Feather
-              name={'map-pin'}
-              size={wp('4%')}
-              color={'#FFFFFF'}
-              style={{ marginRight: wp('1%') }}
-            />
-            <Text
-              style={styles.addressText}
-              numberOfLines={1}
-              ellipsizeMode="tail"
+          {hasLocation ? (
+            <>
+              <Text style={styles.timeText}>20 mins</Text>
+              <TouchableOpacity
+                hitSlop={40}
+                style={[styles.addressView, { marginTop: hp('0.4%') }]}
+                onPress={onPressLocation}
+              >
+                <Feather
+                  name={'map-pin'}
+                  size={wp('4%')}
+                  color={'#FFFFFF'}
+                  style={{ marginRight: wp('1%') }}
+                />
+                <Text
+                  style={styles.addressText}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  {profile.pinAddress}
+                </Text>
+                <Entypo
+                  name={'chevron-right'}
+                  size={wp('3.6%')}
+                  color={'#FFFFFF'}
+                />
+              </TouchableOpacity>
+            </>
+          ) : (
+            <TouchableOpacity
+              hitSlop={20}
+              style={styles.selectLocationButton}
+              onPress={onPressLocation}
+              activeOpacity={0.85}
             >
-              {profile?.pinAddress || 'Select Location'}
-            </Text>
-            <Entypo
-              name={'chevron-right'}
-              size={wp('3.6%')}
-              color={'#FFFFFF'}
-            />
-          </TouchableOpacity>
+              <Feather
+                name={'map-pin'}
+                size={wp('4.4%')}
+                color={INK}
+                style={{ marginRight: wp('1.5%') }}
+              />
+              <Text style={styles.selectLocationText}>Select Location</Text>
+              <Entypo name={'chevron-down'} size={wp('4.4%')} color={INK} />
+            </TouchableOpacity>
+          )}
         </Animated.View>
         <View style={styles.headerRightWrapper}>
           <Animated.View style={etaAnimStyle}>
@@ -253,6 +275,21 @@ const styles = StyleSheet.create({
   addressView: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  selectLocationButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    paddingVertical: hp('0.9%'),
+    paddingHorizontal: wp('3.5%'),
+  },
+  selectLocationText: {
+    color: INK,
+    fontSize: wp('3.8%'),
+    fontFamily: FONTS.gilroy.semiBold,
+    marginRight: wp('1%'),
   },
   addressText: {
     color: '#FFFFFF',

@@ -128,11 +128,16 @@ const LocationModal = forwardRef(({ onClose }, ref) => {
     onClose?.();
   }, [onClose]);
 
+  const isAwaitingDebounce =
+    trimmedRawTerm.length >= MIN_SEARCH_LENGTH &&
+    trimmedRawTerm !== effectiveTerm;
+  const searching = loading || isAwaitingDebounce;
+
   // Based on the term a search actually ran for, not on keystrokes — so the
   // empty state never flashes while the user is still typing.
   const noResults =
     effectiveTerm.length >= MIN_SEARCH_LENGTH &&
-    !loading &&
+    !searching &&
     (!areas?.data || areas.data.length === 0);
 
   const renderContent = useCallback(
@@ -160,11 +165,11 @@ const LocationModal = forwardRef(({ onClose }, ref) => {
           onSubmitEditing={() => submitSearch()}
         />
 
-        {/* Loader */}
-        {loading && <ActivityIndicator color={'#FF7148'} size="small" />}
-
-        {/* Empty state */}
-        {!loading && noResults ? (
+        {searching ? (
+          <View style={styles.loaderContainer}>
+            <ActivityIndicator color={'#FF7148'} size="large" />
+          </View>
+        ) : noResults ? (
           <View style={styles.emptyState}>
             <MaterialIcons
               name="location-off"
@@ -196,7 +201,7 @@ const LocationModal = forwardRef(({ onClose }, ref) => {
         )}
       </View>
     ),
-    [search, areas, loading, noResults, submitSearch, onSelectLocation],
+    [search, areas, searching, noResults, submitSearch, onSelectLocation],
   );
 
   // Defer the keyboard until the sheet has actually settled open (index >= 0),
@@ -285,6 +290,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: wp('10%'),
+  },
+  loaderContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: wp('10%'),
   },
   emptyImage: {
     width: wp('40%'),

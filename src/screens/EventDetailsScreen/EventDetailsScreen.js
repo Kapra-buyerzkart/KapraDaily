@@ -185,7 +185,7 @@ const EventDetailsScreen = ({ navigation, route }) => {
           <View
             style={{
               backgroundColor: 'black',
-              height: 40,
+              height: 25,
               position: 'absolute',
               left: 0,
               right: 0,

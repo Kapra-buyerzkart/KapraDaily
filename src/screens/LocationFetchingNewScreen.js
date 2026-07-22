@@ -4,6 +4,7 @@ import {
   Text,
   StyleSheet,
   Dimensions,
+  PermissionsAndroid,
   Platform,
   Modal,
   KeyboardAvoidingView,
@@ -13,17 +14,14 @@ import {
   Alert,
   Linking,
   AppState,
-  Image,
   ImageBackground,
 } from 'react-native';
 import Geolocation from '@react-native-community/geolocation';
-import Video from 'react-native-video';
 import axios from 'axios';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 import { BlurView } from '@react-native-community/blur';
 
 import { getFontontSize } from '../globals/GroFunctions';
-import { GOOGLE_MAPS_API_KEY } from '../globals/secrets';
 import { AppContext } from '../context/appContext';
 import { useCart } from '../context/CartContext';
 import { areaListPincodeWise, getAreasByPincode } from '../api';
@@ -41,9 +39,10 @@ import {
 import DeviceInfo from 'react-native-device-info';
 import Toast from 'react-native-simple-toast';
 import { useFocusEffect } from '@react-navigation/native';
+import { Image } from 'react-native';
 import AuthButton from '../components/AuthButton';
+import FastImage from 'react-native-fast-image';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import secureStore from '../utils/secureStore';
 import { getAddressListApi } from '../api/addressService';
 const normalizeString = str => {
   if (!str) return '';
@@ -126,31 +125,19 @@ const LocationFetchingNewScreen = ({ navigation }) => {
     }
   };
 
-  // Fallback used whenever we cannot get a usable location (permission denied,
-  // GPS off, or fetch failure): seed a default area so the app stays usable and
-  // move the user off the loader instead of stranding them on it.
-  const navigateWithDefault = async () => {
-    await editPincode({
-      areaName: 'Panampilly Nagar',
-      pincodeAreaId: 262,
-      pincodeId: 32,
-      tags: null,
-    });
+  // Leave the location screen without a pincode so the app continues and the
+  // header shows "Select Location". Used when the user denies permission / GPS.
+  const continueWithoutLocation = () => {
+    stopAutoNavigateTimer();
+    setShowConfirm(false);
     setLocationNotFetched(true);
     navigateAfterLocation();
   };
 
   useEffect(() => {
     const init = async () => {
-      // Single source of truth for "do we already have a location?":
-      // `pincodeAreaId` is written by every location-picking path in the app
-      // (editPincode in appContext.js, used by both LocationModal and this
-      // screen's own flows), and is wiped by logout()'s secureStore clear.
-      // `manualOverride` is kept as an additional check to cover the brief
-      // window during an in-progress manual search (see onPress handler
-      // below) before editPincode has had a chance to persist the new pick.
       const savedOverride = await AsyncStorage.getItem('manualOverride');
-      const storedPincodeAreaId = await secureStore.getItem('pincodeAreaId');
+      const storedPincodeAreaId = await AsyncStorage.getItem('pincodeAreaId');
       if (savedOverride === 'true' || storedPincodeAreaId) {
         setManualOverride(true);
         const savedRegion = await AsyncStorage.getItem('manualRegion');
@@ -165,13 +152,19 @@ const LocationFetchingNewScreen = ({ navigation }) => {
         return;
       }
 
-      // Unified permission + GPS flow for BOTH platforms. Previously iOS
-      // skipped straight to fetchLocation() and relied on the geolocation lib
-      // to implicitly prompt — so on iOS the permission dialog often never
-      // appeared and the app fell straight through to AuthSuccess. Now both
-      // platforms go through checkLocationServicesAndPermission():
-      // check → request → GPS check → fetch, with a "Skip" fallback.
-      checkLocationServicesAndPermission();
+      if (Platform.OS === 'android') {
+        const isGranted = await PermissionsAndroid.check(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+        );
+
+        if (isGranted) {
+          fetchLocation();
+        } else {
+          requestLocationPermission();
+        }
+      } else {
+        fetchLocation();
+      }
       startAutoNavigateTimer();
     };
 
@@ -182,9 +175,20 @@ const LocationFetchingNewScreen = ({ navigation }) => {
     };
   }, []);
 
+  // useEffect(() => {
+  //   const subscription = AppState.addEventListener('change', nextState => {
+  //     if (nextState === 'active') {
+  //       setAppActive(prev => !prev);   // 🔥 toggle state → forces re-run of useEffect
+  //     }
+  //   });
+
+  //   return () => subscription.remove();
+  // }, []);
+
   const openLocationSettings = () => {
     if (Platform.OS !== 'android') return;
 
+    // Try all safe fallback options
     Linking.openSettings().catch(() => {});
     Linking.sendIntent('android.settings.LOCATION_SOURCE_SETTINGS').catch(
       () => {},
@@ -202,31 +206,20 @@ const LocationFetchingNewScreen = ({ navigation }) => {
 
       let result = await check(permission);
 
-      // Not asked yet → show the native permission dialog (both platforms).
+      // console.log('result', result)
+
       if (result === RESULTS.DENIED) {
         result = await request(permission);
       }
 
-      // Permanently denied / unavailable → nudge to Settings, but let the user
-      // Skip so they land in the app with a default area instead of being
-      // stranded on the loader.
       if (result === RESULTS.BLOCKED || result === RESULTS.UNAVAILABLE) {
         showConfirmation({
           title: 'Location Permission Off',
           message:
-            'Please enable location permission for Kapra Daily to continue, or skip to browse with a default area.',
+            'Please enable location permission for Kapra Daily to continue.',
           confirmText: 'Open Settings',
           onConfirm: () => openSettings(),
-          cancelText: 'Skip',
-          onCancel: () => navigateWithDefault(),
         });
-        return false;
-      }
-
-      // User denied the dialog this time (e.g. Android soft-deny) → move on
-      // with the default area rather than blocking on the loader.
-      if (result !== RESULTS.GRANTED && result !== RESULTS.LIMITED) {
-        navigateWithDefault();
         return false;
       }
 
@@ -236,13 +229,9 @@ const LocationFetchingNewScreen = ({ navigation }) => {
       if (!gpsEnabled) {
         showConfirmation({
           title: 'Location Services Off',
-          message:
-            'Please enable GPS/location services to continue, or skip to browse with a default area.',
+          message: 'Please enable GPS/location services to continue.',
           confirmText: 'Open Settings',
-          onConfirm: () =>
-            Platform.OS === 'android' ? openLocationSettings() : openSettings(),
-          cancelText: 'Skip',
-          onCancel: () => navigateWithDefault(),
+          onConfirm: () => openLocationSettings(),
         });
         return false;
       }
@@ -252,7 +241,6 @@ const LocationFetchingNewScreen = ({ navigation }) => {
       return true;
     } catch (err) {
       console.log(err);
-      navigateWithDefault();
       return false;
     }
   };
@@ -263,16 +251,25 @@ const LocationFetchingNewScreen = ({ navigation }) => {
       async nextState => {
         if (nextState === 'active') {
           const savedOverride = await AsyncStorage.getItem('manualOverride');
-          const storedPincodeAreaId = await secureStore.getItem(
+          const storedPincodeAreaId = await AsyncStorage.getItem(
             'pincodeAreaId',
           );
           if (savedOverride === 'true' || storedPincodeAreaId) {
             return; // Skip auto-fetching: a location is already persisted/chosen
           }
 
-          // Returning from Settings → re-run the same unified permission + GPS
-          // flow so a freshly-granted permission is picked up on both platforms.
-          checkLocationServicesAndPermission();
+          const gpsEnabled = await DeviceInfo.isLocationEnabled();
+          const permission = await PermissionsAndroid.check(
+            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+          );
+          if (Platform.OS === 'ios') {
+            if (gpsEnabled) {
+              fetchLocation();
+            }
+          }
+          if (permission && gpsEnabled) {
+            fetchLocation();
+          }
         }
       },
     );
@@ -348,6 +345,63 @@ const LocationFetchingNewScreen = ({ navigation }) => {
   //   } catch (err) { }
   // };
 
+  const requestLocationPermission = async () => {
+    try {
+      // First ask permission
+      await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+        {
+          title: 'Location Access Required',
+          message: 'This app needs to access your location',
+        },
+      );
+
+      // 🔥 Now check the REAL final status (important!)
+      const isGranted = await PermissionsAndroid.check(
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+      );
+
+      // ----------------- ⛔ USER DENIED -----------------
+      if (!isGranted) {
+        showConfirmation({
+          title: 'Location Permission Required',
+          message:
+            'You can continue without location, but enabling it lets us show nearby stores automatically.',
+          confirmText: 'Open Settings',
+          onConfirm: () => openSettings(),
+          cancelText: 'Continue without location',
+          onCancel: () => continueWithoutLocation(),
+          // Force a choice: back / tapping outside must not strand the user on
+          // the location-fetching GIF. Only the two buttons dismiss it.
+          dismissible: false,
+        });
+        return;
+      }
+
+      // ----------------- 🔥 PERMISSION GRANTED -----------------
+      const gpsEnabled = await DeviceInfo.isLocationEnabled();
+
+      if (!gpsEnabled) {
+        showConfirmation({
+          title: 'Location Services Off',
+          message: 'Please enable GPS/location services to continue.',
+          confirmText: 'Open Location Settings',
+          onConfirm: () => openLocationSettings(),
+          cancelText: 'Continue without location',
+          onCancel: () => continueWithoutLocation(),
+          // Force a choice: back / tapping outside must not strand the user on
+          // the location-fetching GIF. Only the two buttons dismiss it.
+          dismissible: false,
+        });
+        return;
+      }
+
+      fetchLocation();
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
   // const fetchLocation = () => {
   //     setLoading(true);
 
@@ -402,45 +456,41 @@ const LocationFetchingNewScreen = ({ navigation }) => {
       reverseGeocode(position.coords.latitude, position.coords.longitude);
     };
 
-    const onFinalError = async error => {
+    const onFinalError = error => {
       console.log('📍 [LOCATION] All location attempts failed', error);
-      // Fallback auto navigation if location fails
-      await editPincode({
-        areaName: 'Panampilly Nagar',
-        pincodeAreaId: 262,
-        pincodeId: 32,
-        tags: null,
-      });
-      setTimeout(() => {
-        setLocationNotFetched(true);
-        navigateAfterLocation();
-      }, 2000);
+      // No hard-coded fallback location: land on home with no pincode set so the
+      // header shows "Select Location" and the user can pick manually.
+      setLocationNotFetched(true);
       setLoading(false);
+      navigateAfterLocation();
     };
 
-    // Always request a high-accuracy (GPS) fix — retry once more on failure
-    // before giving up, since a single high-accuracy request can time out
-    // indoors/cold-start.
+    // 1️⃣ Cached / coarse location first (WiFi/cell — very fast on cold start)
     Geolocation.getCurrentPosition(
       onSuccess,
       error => {
-        console.log('📍 [LOCATION] High accuracy failed, retrying...', error);
+        console.log(
+          '📍 [LOCATION] Cached/coarse failed, trying high accuracy...',
+          error,
+        );
+        // 2️⃣ Escalate to high accuracy, but still accept a recent fix
+        //    (maximumAge: 0 forces a brand-new fix that times out indoors/cold-start)
         Geolocation.getCurrentPosition(onSuccess, onFinalError, {
           enableHighAccuracy: true,
           timeout: 20000,
-          maximumAge: 0,
+          maximumAge: 60000,
         });
       },
       {
-        enableHighAccuracy: true,
-        timeout: 15000,
-        maximumAge: 0,
+        enableHighAccuracy: false,
+        timeout: 5000,
+        maximumAge: 600000, // allow cached location up to 10 minutes old
       },
     );
   };
 
   const reverseGeocode = async (latitude, longitude) => {
-    const apiKey = GOOGLE_MAPS_API_KEY;
+    const apiKey = 'AIzaSyDhItv0zoWdQbDh-5jjKLAEjwRDDrFNc1Y';
     const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}`;
 
     try {
@@ -477,18 +527,11 @@ const LocationFetchingNewScreen = ({ navigation }) => {
       setLoading(false);
     } catch (error) {
       console.log('📍 [GEOCODE] Reverse geocode error:', error);
-      // Fallback: navigate with default area on geocode failure
+      // No hard-coded fallback: land on home with no pincode so the header
+      // shows "Select Location".
       setLoading(false);
-      await editPincode({
-        areaName: 'Panampilly Nagar',
-        pincodeAreaId: 262,
-        pincodeId: 32,
-        tags: null,
-      });
-      setTimeout(() => {
-        setLocationNotFetched(true);
-        navigateAfterLocation();
-      }, 2000);
+      setLocationNotFetched(true);
+      navigateAfterLocation();
     }
   };
 
@@ -569,7 +612,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
             matchingAddress.addressId ||
             matchingAddress.id;
           if (addressId) {
-            await secureStore.setItem('selectedAddressId', String(addressId));
+            await AsyncStorage.setItem('selectedAddressId', String(addressId));
           }
           await editPincode({
             pincodeAreaId: matchingAddress.pincodeAreaId,
@@ -595,19 +638,13 @@ const LocationFetchingNewScreen = ({ navigation }) => {
       // --- Step 2: Guard against null/empty postcode ---
       if (!postcode || String(postcode).trim().length === 0) {
         console.log(
-          '📍 [AREAS] ⚠️ Postcode is null/empty — cannot look up areas. Falling back to default.',
+          '📍 [AREAS] ⚠️ Postcode is null/empty — cannot look up areas.',
         );
+        // No hard-coded fallback: land on home with no pincode so the header
+        // shows "Select Location".
         setShowConfirm(false);
-        await editPincode({
-          areaName: 'Panampilly Nagar',
-          pincodeAreaId: 262,
-          pincodeId: 32,
-          tags: null,
-        });
-        setTimeout(() => {
-          setLocationNotFetched(true);
-          navigateAfterLocation();
-        }, 2000);
+        setLocationNotFetched(true);
+        navigateAfterLocation();
         return;
       }
 
@@ -656,37 +693,20 @@ const LocationFetchingNewScreen = ({ navigation }) => {
           navigateAfterLocation();
         }, 2000);
       } else {
-        // No areas found for this pincode (user is outside delivery zone)
-        console.log(
-          '📍 [AREAS] ❌ No areas found for postcode:',
-          postcode,
-          '— falling back to default.',
-        );
+        // No areas found for this pincode (user is outside delivery zone):
+        // land on home with no pincode so the header shows "Select Location".
+        console.log('📍 [AREAS] ❌ No areas found for postcode:', postcode);
         setShowConfirm(false);
-        await editPincode({
-          areaName: 'Panampilly Nagar',
-          pincodeAreaId: 262,
-          pincodeId: 32,
-          tags: null,
-        });
-        setTimeout(() => {
-          setLocationNotFetched(true);
-          navigateAfterLocation();
-        }, 2000);
+        setLocationNotFetched(true);
+        navigateAfterLocation();
       }
     } catch (error) {
       console.log('📍 [AREAS] ❌ API error:', error);
+      // No hard-coded fallback: land on home with no pincode so the header
+      // shows "Select Location".
       setShowConfirm(false);
-      await editPincode({
-        areaName: 'Panampilly Nagar',
-        pincodeAreaId: 262,
-        pincodeId: 32,
-        tags: null,
-      });
-      setTimeout(() => {
-        setLocationNotFetched(true);
-        navigateAfterLocation();
-      }, 2000);
+      setLocationNotFetched(true);
+      navigateAfterLocation();
     }
   };
 
@@ -702,22 +722,19 @@ const LocationFetchingNewScreen = ({ navigation }) => {
 
   if (!addressComponent) {
     return (
-      <View style={styles.loaderContainer}>
-        <Video
-          source={require('../assets/videos/fetchLocation.mp4')}
-          style={StyleSheet.absoluteFill}
-          resizeMode="cover"
-          repeat
-          muted
-          paused={false}
-          playInBackground={false}
+      <SafeAreaView style={styles.loaderContainer}>
+        <FastImage
+          source={require('../assets/gifs/location-fetching.gif')}
+          style={styles.loaderGif}
+          resizeMode={FastImage.resizeMode.cover}
         />
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
     <SafeAreaView style={styles.maninContainer}>
+      {/* {console.log('userInteractedRef', userInteractedRef)} */}
       <ImageBackground
         style={styles.backgroundImage}
         resizeMode="cover"
@@ -737,23 +754,12 @@ const LocationFetchingNewScreen = ({ navigation }) => {
           <AuthButton
             FirstColor={'#D80000'}
             SecondColor={'#FF7148'}
-            OnPress={async () => {
+            OnPress={() => {
               stopAutoNavigateTimer();
-              let areaToPass = null;
-              if (listOfLocations && listOfLocations.length > 0) {
-                areaToPass = listOfLocations[0];
-              } else {
-                areaToPass = {
-                  areaName: 'Panampilly Nagar',
-                  pincodeAreaId: 262,
-                  pincodeId: 32,
-                  tags: null,
-                };
-              }
-              if (areaToPass) {
-                await editPincode(areaToPass);
-              }
-              setLocationNotFetched(false);
+              // Skip without setting a location: land on home with no pincode so
+              // the header shows "Select Location".
+              setShowConfirm(false);
+              setLocationNotFetched(true);
               navigateAfterLocation();
             }}
             FSize={14}
@@ -945,7 +951,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
                     );
                   }}
                   query={{
-                    key: GOOGLE_MAPS_API_KEY,
+                    key: 'AIzaSyDhItv0zoWdQbDh-5jjKLAEjwRDDrFNc1Y',
                     language: 'en',
                     components: 'country:IN',
                   }}
@@ -1342,6 +1348,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#fff',
     width: windowWidth,
     height: windowHeight,
   },

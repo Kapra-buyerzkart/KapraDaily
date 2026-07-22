@@ -9,7 +9,13 @@ import { useNavigation } from '@react-navigation/native';
 import { FONTS } from '../styles/typography';
 import CONFIG from '../globals/config';
 
-const StoreUnavailable = ({ image, text, onChangeLocation }) => {
+const StoreUnavailable = ({
+  image,
+  imageSource,
+  text,
+  onChangeLocation,
+  buttonText = 'Change Location',
+}) => {
   const navigation = useNavigation();
 
   const handleChangeLocation = () => {
@@ -20,11 +26,19 @@ const StoreUnavailable = ({ image, text, onChangeLocation }) => {
     }
   };
 
+  // `imageSource` is a bundled require() (local asset); `image` is a remote
+  // path resolved against the CDN base url. Prefer the local source when given.
+  const resolvedSource = imageSource
+    ? imageSource
+    : image
+    ? { uri: `${CONFIG.image_base_url}${image}` }
+    : null;
+
   return (
     <View style={styles.unavailableContainer}>
-      {image ? (
+      {resolvedSource ? (
         <Image
-          source={{ uri: `${CONFIG.image_base_url}${image}` }}
+          source={resolvedSource}
           style={styles.unavailableImage}
           resizeMode="contain"
         />
@@ -45,7 +59,7 @@ const StoreUnavailable = ({ image, text, onChangeLocation }) => {
         style={styles.changeLocationButton}
         onPress={handleChangeLocation}
       >
-        <Text style={styles.changeLocationButtonText}>Change Location</Text>
+        <Text style={styles.changeLocationButtonText}>{buttonText}</Text>
       </TouchableOpacity>
     </View>
   );

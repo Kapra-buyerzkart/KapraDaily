@@ -551,6 +551,7 @@ const styles = StyleSheet.create({
   },
   stepperBtnDisabled: {
     borderColor: COLORS.gray400,
+    backgroundColor: COLORS.gray100,
   },
   stepperBtnText: {
     color: COLORS.purple,
