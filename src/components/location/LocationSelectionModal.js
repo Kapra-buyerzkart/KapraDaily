@@ -28,6 +28,7 @@ const LocationSelectionModal = ({
   onSelectArea,
   onSkip,
   onApply,
+  applyLoading,
 }) => (
   <Modal animationType="slide" visible={visible} transparent>
     <SafeAreaView style={{ flex: 1, justifyContent: 'flex-end' }}>
@@ -104,6 +105,7 @@ const LocationSelectionModal = ({
               ButtonText={'Apply'}
               ButtonWidth={44}
               ButtonHeight={5}
+              loading={applyLoading}
             />
           </View>
         )}

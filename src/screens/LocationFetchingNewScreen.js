@@ -17,6 +17,8 @@ const LocationFetchingNewScreen = ({ navigation }) => {
   const {
     addressComponent,
     showConfirm,
+    confirmLoading,
+    applyLoading,
     locationSelectionModal,
     locationSearchModal,
     listOfLocations,
@@ -63,6 +65,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
             ButtonText={'Confirm'}
             ButtonWidth={80}
             ButtonHeight={5}
+            loading={confirmLoading}
           />
         )}
 
@@ -80,6 +83,7 @@ const LocationFetchingNewScreen = ({ navigation }) => {
           onSelectArea={onSelectArea}
           onSkip={onSkipAreaSelection}
           onApply={onApplyArea}
+          applyLoading={applyLoading}
         />
       </ImageBackground>
     </SafeAreaView>

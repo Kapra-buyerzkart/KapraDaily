@@ -1,5 +1,11 @@
 import { useState, useEffect, useRef, useContext } from 'react';
-import { Platform, PermissionsAndroid, Linking, AppState, Alert } from 'react-native';
+import {
+  Platform,
+  PermissionsAndroid,
+  Linking,
+  AppState,
+  Alert,
+} from 'react-native';
 import Geolocation from '@react-native-community/geolocation';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -14,7 +20,8 @@ import { GOOGLE_MAPS_API_KEY } from '../globals/secrets';
 import { normalizeString, isFuzzyMatch } from '../utils/addressMatch';
 
 export const useLocationFetching = ({ navigation }) => {
-  const { profile, editPincode, setLocationNotFetched } = useContext(AppContext);
+  const { profile, editPincode, setLocationNotFetched } =
+    useContext(AppContext);
   const { showConfirmation } = useCart();
 
   const [addressComponent, setAddressComponent] = useState(null);
@@ -23,6 +30,8 @@ export const useLocationFetching = ({ navigation }) => {
   const [listOfLocations, setListOfLocations] = useState(null);
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [applyLoading, setApplyLoading] = useState(false);
   const [dummy, setDummy] = useState(false);
   const [manualOverride, setManualOverride] = useState(false);
 
@@ -429,7 +438,9 @@ export const useLocationFetching = ({ navigation }) => {
 
   const onConfirmPress = () => {
     stopAutoNavigateTimer();
+    setConfirmLoading(true);
     setLocationSelectionModal(true);
+    setTimeout(() => setConfirmLoading(false), 400);
   };
 
   const onCloseSearchModal = () => {
@@ -484,20 +495,30 @@ export const useLocationFetching = ({ navigation }) => {
   };
 
   const onApplyArea = async () => {
-    if (selectedLocation !== null) {
+    if (selectedLocation === null) {
+      Alert.alert('Alert', 'Please select an area');
+      return;
+    }
+    // Show a loader inside the Apply button while the pincode is saved. On
+    // success we navigate away (screen unmounts); on failure we restore it.
+    setApplyLoading(true);
+    try {
       await editPincode(selectedLocation);
       setSelectedLocation(null);
       setLocationSelectionModal(false);
       setLocationNotFetched(false);
       navigateAfterLocation();
-    } else {
-      Alert.alert('Alert', 'Please select an area');
+    } catch (error) {
+      setApplyLoading(false);
+      Alert.alert('Alert', 'Something went wrong. Please try again.');
     }
   };
 
   return {
     addressComponent,
     showConfirm,
+    confirmLoading,
+    applyLoading,
     locationSelectionModal,
     locationSearchModal,
     listOfLocations,
