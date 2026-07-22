@@ -9,8 +9,8 @@ import { INK, RED } from './styles';
 
 export const buildOffersItems = ({ onBCoin, onSmartPoint, onCoupons }) => [
   {
-    key: 'b-coin',
-    label: 'B - Coin',
+    key: 'UD-Wallet',
+    label: 'UD Wallet',
     icon: (
       <Image
         source={icons.udcoin}

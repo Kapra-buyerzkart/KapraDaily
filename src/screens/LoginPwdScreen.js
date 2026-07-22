@@ -6,11 +6,12 @@ import {
   Image,
   TextInput,
   TouchableOpacity,
-  KeyboardAvoidingView,
   ScrollView,
   Alert,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import React, { useState } from 'react';
 import logger from '../utils/logger';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -99,12 +100,10 @@ const LoginPwdScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.mainContainer}>
-      {/* {logger.log('kkkkkk', phone)} */}
+    <View style={styles.mainContainer}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        // keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
         <ScrollView
           contentContainerStyle={{ flexGrow: 1 }}
@@ -194,7 +193,7 @@ const LoginPwdScreen = () => {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 };
 

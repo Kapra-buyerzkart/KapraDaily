@@ -9,6 +9,7 @@ import COLORS from '@/styles/colors';
 import icons from '@/assets/icons';
 
 const PopularEventCard = ({ item, onPress, index = 0 }) => {
+  console.log(item, 'item==== item here===>');
   const location = [item?.venueName, item?.city].filter(Boolean).join(', ');
   const dateText = formatDate(
     item?.SessionStart ||
@@ -22,7 +23,11 @@ const PopularEventCard = ({ item, onPress, index = 0 }) => {
     <AnimatedPressable
       style={styles.card}
       entering={FadeInUp.delay(getStaggerDelay(index))}
-      onPress={() => onPress?.(item)}
+      onPress={() => {
+        if (item?.isActive === 1) {
+          onPress?.(item);
+        }
+      }}
     >
       <Image
         source={getEventImageSource(item)}

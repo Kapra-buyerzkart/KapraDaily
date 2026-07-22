@@ -258,9 +258,9 @@ const HomeScreen = () => {
         [0, 1],
         [SEARCH_RADIUS_START, SEARCH_RADIUS_END],
       ),
-      shadowOpacity: interpolate(progress, [0, 1], [0, 0.12]),
-      shadowRadius: interpolate(progress, [0, 1], [0, 8]),
-      elevation: interpolate(progress, [0, 1], [0, 4]),
+      // shadowOpacity: interpolate(progress, [0, 1], [0, 0.12]),
+      // shadowRadius: interpolate(progress, [0, 1], [0, 8]),
+      // elevation: interpolate(progress, [0, 1], [0, 4]),
       transform: [{ scale: searchPressScale.value }],
     };
   });
@@ -399,7 +399,12 @@ const HomeScreen = () => {
   const thirdProductBlock = data?.thirdProductBlock;
   const categoryDiscovery = data?.categoryDiscovery;
 
-  const isHomeLoading = refreshing;
+  // True during pull-to-refresh, and also while the homepage query is fetching
+  // a freshly-selected area for which we have no cached data yet — so the body
+  // shows its shimmers (instead of a blank screen) right after the user picks a
+  // location, giving feedback that the new area's data is on its way.
+  const isHomeLoading =
+    refreshing || (!noLocationSelected && homepageQuery.isLoading);
   const fruits = bottomBanner;
 
   const firstBlockItems = useMemo(

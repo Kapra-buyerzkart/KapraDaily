@@ -7,9 +7,6 @@ import { shuffle } from '../utils/shuffle';
 
 const PAGE_SIZE = 20;
 
-// Owns categories/sub-categories/products fetching + pagination for
-// CategoriesScreen. Re-fetches products whenever the selected
-// category/sub-category, debounced search text, or filters change.
 const useCategoriesData = (catId, debouncedSearchText, filters) => {
   const { profile, setStoreUnavailable } = useContext(AppContext);
 
@@ -20,7 +17,8 @@ const useCategoriesData = (catId, debouncedSearchText, filters) => {
   const [productsList, setProductsList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isFetchingSubCategories, setIsFetchingSubCategories] = useState(false);
-  const [isFetchingProducts, setIsFetchingProducts] = useState(false);
+  const [isFetchingProducts, setIsFetchingProducts] = useState(true);
+  const [hasFetchedProducts, setHasFetchedProducts] = useState(false);
   const [pincodeAreaId, setPincodeAreaId] = useState(null);
   const [pageNumber, setPageNumber] = useState(1);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
@@ -84,7 +82,10 @@ const useCategoriesData = (catId, debouncedSearchText, filters) => {
       if (page === 1) setProductsList([]);
       setHasMoreData(false);
     } finally {
-      if (page === 1) setIsFetchingProducts(false);
+      if (page === 1) {
+        setIsFetchingProducts(false);
+        setHasFetchedProducts(true);
+      }
       setIsFetchingMore(false);
     }
   };
