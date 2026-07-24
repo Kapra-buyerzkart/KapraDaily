@@ -1,11 +1,5 @@
 import React from 'react';
-import {
-  Image,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { wp, hp } from '../../../utils/responsive';
 import icons from '@/assets/icons';
 import COLORS from '@/styles/colors';
@@ -39,7 +33,7 @@ const TicketHeader = ({ onBack, coinBalance = COIN_BALANCE }) => (
       <View style={styles.backBtn} />
     </View>
 
-    <View style={styles.subHeader}>
+    {/* <View style={styles.subHeader}>
       <Text style={styles.hintText}>Use UD-Coins to Book Your Tickets</Text>
       <View style={styles.coinChip}>
         <Image
@@ -49,7 +43,7 @@ const TicketHeader = ({ onBack, coinBalance = COIN_BALANCE }) => (
         />
         <Text style={styles.coinText}>{coinBalance}</Text>
       </View>
-    </View>
+    </View> */}
   </>
 );
 

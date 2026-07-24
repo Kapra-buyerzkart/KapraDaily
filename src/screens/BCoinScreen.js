@@ -59,7 +59,7 @@ const BCoinScreen = () => {
   const [showModal, setShowModal] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [walletData, setWalletData] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [bCoinValueHistory, setBCoinValueHistory] = useState([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
@@ -103,6 +103,8 @@ const BCoinScreen = () => {
   useEffect(() => {
     if (profile?.custId) {
       fetchWalletData();
+    } else {
+      setIsLoading(false);
     }
   }, [profile?.custId]);
 
@@ -517,6 +519,11 @@ const BCoinScreen = () => {
               })}
             </View>
           ))}
+          {isLoading && historyGroups.length === 0 && (
+            <View style={{ alignItems: 'center', marginTop: hp('5%') }}>
+              <ActivityIndicator size="large" color="#F25000" />
+            </View>
+          )}
           {!isLoading && historyGroups.length === 0 && (
             <View style={{ alignItems: 'center', marginTop: hp('5%') }}>
               <Text style={styles.emptyText}>No history available</Text>

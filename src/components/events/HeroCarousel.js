@@ -7,7 +7,6 @@ import Animated, {
   interpolate,
   Extrapolation,
 } from 'react-native-reanimated';
-import LinearGradient from 'react-native-linear-gradient';
 import { wp, hp } from '../../utils/responsive';
 import { getVoucherImageSource } from './imageUtils';
 import AnimatedPressable from '@/components/AnimatedPressable';
@@ -33,29 +32,6 @@ const getItemLayout = (_, index) => ({
 
 const keyExtractor = (item, index) => `${item?.voucherId ?? index}-${index}`;
 
-const MONTHS = [
-  'Jan',
-  'Feb',
-  'Mar',
-  'Apr',
-  'May',
-  'Jun',
-  'Jul',
-  'Aug',
-  'Sep',
-  'Oct',
-  'Nov',
-  'Dec',
-];
-
-// "2025-08-24T..." -> "24 Aug 2025". Returns '' for missing/invalid dates.
-const formatEventDate = value => {
-  if (!value) return '';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '';
-  return `${date.getDate()} ${MONTHS[date.getMonth()]} ${date.getFullYear()}`;
-};
-
 const PaginationDot = React.memo(
   ({ scrollX, index, count, snap, infinite }) => {
     const animatedStyle = useAnimatedStyle(() => {
@@ -80,8 +56,6 @@ const PaginationDot = React.memo(
 
 const Slide = React.memo(({ item, onPress }) => {
   const isEvent = !!item?.isEvent;
-  const dateLabel = formatEventDate(item?.eventStartDate);
-  const metaParts = [dateLabel, item?.venue].filter(Boolean);
 
   return (
     <View style={styles.slide}>
@@ -92,41 +66,16 @@ const Slide = React.memo(({ item, onPress }) => {
           resizeMode="cover"
         />
         {isEvent && (
-          <>
-            <LinearGradient
-              colors={['rgba(0,0,0,0.88)', 'rgba(0,0,0,0.55)', 'rgba(0,0,0,0)']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.scrim}
-            />
-            <View style={styles.content}>
-              <Text style={styles.eyebrow}>FEATURED EVENT</Text>
-              {!!item?.title && (
-                <Text style={styles.title} numberOfLines={2}>
-                  {item.title}
-                </Text>
-              )}
-
-              {!!item?.subtitle && (
-                <Text style={styles.subtitle} numberOfLines={1}>
-                  {item.subtitle}
-                </Text>
-              )}
-              {metaParts.length > 0 && (
-                <Text style={styles.meta} numberOfLines={1}>
-                  {metaParts.join('  •  ')}
-                </Text>
-              )}
-              <ImageBackground
-                source={icons.selectionPillTwo}
-                style={styles.bookButton}
-                imageStyle={styles.bookButtonImage}
-                resizeMode="stretch"
-              >
-                <Text style={styles.bookButtonText}>Book Now</Text>
-              </ImageBackground>
-            </View>
-          </>
+          <View style={styles.content}>
+            <ImageBackground
+              source={icons.selectionPillTwo}
+              style={styles.bookButton}
+              imageStyle={styles.bookButtonImage}
+              resizeMode="stretch"
+            >
+              <Text style={styles.bookButtonText}>Book Now</Text>
+            </ImageBackground>
+          </View>
         )}
       </AnimatedPressable>
     </View>
@@ -270,59 +219,15 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  scrim: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: '80%',
-  },
   content: {
     position: 'absolute',
     left: 0,
-    top: 0,
     bottom: 0,
-    width: '80%',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    justifyContent: 'center',
-  },
-  eyebrow: {
-    color: '#C9A9FF',
-    fontSize: 11,
-    fontFamily: 'Gilroy-Bold',
-    letterSpacing: 1.5,
-  },
-  title: {
-    color: '#FFFFFF',
-    fontSize: 22,
-    lineHeight: 26,
-    fontFamily: 'Gilroy-Heavy',
-    textTransform: 'uppercase',
-    marginTop: 8,
-  },
-  titleAccent: {
-    width: 90,
-    height: 3,
-    borderRadius: 2,
-    marginTop: 8,
-  },
-  subtitle: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontFamily: 'Gilroy-SemiBold',
-    marginTop: 10,
-  },
-  meta: {
-    color: '#D8D8D8',
-    fontSize: 12,
-    fontFamily: 'Gilroy-Medium',
-    marginTop: 8,
+    padding: 16,
   },
   bookButton: {
     width: 132,
     height: 46,
-    marginTop: 16,
     alignItems: 'center',
     justifyContent: 'center',
   },

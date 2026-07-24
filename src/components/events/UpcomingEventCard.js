@@ -53,16 +53,16 @@ const UpcomingEventCard = ({ item, onPress, index = 0 }) => {
     item?.startDate;
   const dateParts = getDateParts(eventStart);
   const timeText = formatTime(eventStart);
+  // isActive === 0 (or false) means the event is no longer bookable. Block the
+  // press and dim the card with a "Not Available" badge so it reads as disabled.
+  const unavailable = item?.isActive === 0 || item?.isActive === false;
 
   return (
     <AnimatedPressable
       style={styles.card}
       entering={FadeInUp.delay(getStaggerDelay(index))}
-      onPress={() => {
-        if (item?.isActive === 1) {
-          onPress?.(item);
-        }
-      }}
+      disabled={unavailable}
+      onPress={() => !unavailable && onPress?.(item)}
     >
       <LinearGradient
         colors={GIFT_CARD_BORDER_GRADIENT}
@@ -71,49 +71,59 @@ const UpcomingEventCard = ({ item, onPress, index = 0 }) => {
         style={StyleSheet.absoluteFill}
       />
       <View style={styles.inner}>
-        <Image
-          source={getEventImageSource(item)}
-          style={styles.image}
-          resizeMode="cover"
-        />
-        <View style={styles.body}>
-          <View style={styles.infoRow}>
-            {!!dateParts && (
-              <View style={styles.dateBadge}>
-                <Text style={styles.dateMonth}>{dateParts.month}</Text>
-                <Text style={styles.dateDay}>{dateParts.day}</Text>
-              </View>
-            )}
-            <View style={styles.infoCol}>
-              <Text style={styles.title} numberOfLines={2}>
-                {item?.eventName}
-              </Text>
-              {!!location && (
-                <View style={styles.locationRow}>
-                  <Image
-                    source={icons.locationtwo}
-                    style={styles.locationIcon}
-                  />
-                  <Text style={styles.locationText} numberOfLines={1}>
-                    {location}
-                  </Text>
+        <View style={unavailable && styles.dimmed}>
+          <Image
+            source={getEventImageSource(item)}
+            style={styles.image}
+            resizeMode="cover"
+          />
+          <View style={styles.body}>
+            <View style={styles.infoRow}>
+              {!!dateParts && (
+                <View style={styles.dateBadge}>
+                  <Text style={styles.dateMonth}>{dateParts.month}</Text>
+                  <Text style={styles.dateDay}>{dateParts.day}</Text>
                 </View>
               )}
-              {!!timeText && (
-                <Text style={styles.timeText} numberOfLines={1}>
-                  {timeText}
+              <View style={styles.infoCol}>
+                <Text style={styles.title} numberOfLines={1}>
+                  {item?.eventName}
                 </Text>
-              )}
+                {!!location && (
+                  <View style={styles.locationRow}>
+                    <Image
+                      source={icons.locationtwo}
+                      style={styles.locationIcon}
+                    />
+                    <Text style={styles.locationText} numberOfLines={1}>
+                      {location}
+                    </Text>
+                  </View>
+                )}
+                {!!timeText && (
+                  <Text style={styles.timeText} numberOfLines={1}>
+                    {timeText}
+                  </Text>
+                )}
+              </View>
+            </View>
+            <ImageBackground
+              source={icons.selectionPillthree}
+              style={styles.bookButton}
+              resizeMode="stretch"
+            >
+              <Text style={styles.bookButtonText}>Book Now</Text>
+            </ImageBackground>
+          </View>
+        </View>
+
+        {unavailable && (
+          <View style={styles.unavailableOverlay} pointerEvents="none">
+            <View style={styles.unavailableBadge}>
+              <Text style={styles.unavailableText}>Not Available</Text>
             </View>
           </View>
-          <ImageBackground
-            source={icons.selectionPillthree}
-            style={styles.bookButton}
-            resizeMode="stretch"
-          >
-            <Text style={styles.bookButtonText}>Book Now</Text>
-          </ImageBackground>
-        </View>
+        )}
       </View>
     </AnimatedPressable>
   );
@@ -202,6 +212,28 @@ const styles = StyleSheet.create({
   bookButtonText: {
     color: '#FFFFFF',
     fontSize: 12,
+    fontFamily: 'Gilroy-Bold',
+  },
+  dimmed: {
+    opacity: 0.45,
+  },
+  unavailableOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  unavailableBadge: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#FFFFFF',
+    backgroundColor: 'rgba(0,0,0,0.55)',
+  },
+  unavailableText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    letterSpacing: 0.5,
     fontFamily: 'Gilroy-Bold',
   },
 });

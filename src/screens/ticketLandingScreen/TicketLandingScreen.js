@@ -94,6 +94,7 @@ const TicketLandingScreen = ({ navigation }) => {
       vouchers: voucherData.carouselVouchers,
       loading: voucherData.carouselLoading,
       bCoins: voucherData.bCoins,
+      bCoinsLoading: voucherData.bCoinsLoading,
       giftQuote: voucherData.giftQuote,
       giftQuoteLoading: voucherData.giftQuoteLoading,
       onClaim: voucherData.handleClaim,

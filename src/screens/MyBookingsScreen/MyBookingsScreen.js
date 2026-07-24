@@ -12,6 +12,7 @@ import EventBookingList from './components/EventBookingList';
 import MyBookingsHeader from './components/MyBookingsHeader';
 import AllTabListHeader from './components/AllTabListHeader';
 import useMyBookingsData from './hooks/useMyBookingsData';
+import { getHeaderPaddingTop } from '@/utils/headerLayout';
 import COLORS from '@/styles/colors';
 
 const BG_ASPECT_RATIO = 430 / 2078;
@@ -27,7 +28,6 @@ const MyBookingsScreen = () => {
     eventsLoading,
     eventsLoadingMore,
     refreshing,
-    bCoins,
     selectedVoucher,
     activeTab,
     setActiveTab,
@@ -56,8 +56,7 @@ const MyBookingsScreen = () => {
           resizeMode="cover"
         /> */}
         <MyBookingsHeader
-          topInset={insets.top || 20}
-          bCoins={bCoins}
+          topInset={getHeaderPaddingTop(insets)}
           onBack={handleBack}
         />
 

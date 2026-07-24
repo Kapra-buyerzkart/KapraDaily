@@ -8,6 +8,29 @@ export const SERVICE_TYPES = {
 
 export const SERVICES = [
   {
+    id: 'movie',
+    title: 'Movie Tickets',
+    description: 'Movies & Entertainments',
+    type: SERVICE_TYPES.INTERNAL,
+    route: 'TicketSplashScreen',
+    icon: 'film-outline',
+    iconColor: '#5B2BE0',
+    logo: require('../assets/images/modal/movieIcon.png'),
+    titleImage: require('../assets/images/modal/udentcketModal.png'),
+  },
+  {
+    id: 'quickDelivery',
+    title: '20 mins Deal',
+    description: 'Groceries, essentials and more, \n in minutes',
+    type: SERVICE_TYPES.INTERNAL,
+    route: 'MainTabs',
+    params: { screen: 'Home' },
+    icon: 'bag-handle-outline',
+    iconColor: '#F25000',
+    logo: require('../assets/images/modal/20minIcon.png'),
+    titleImage: require('../assets/images/modal/20minModal.png'),
+  },
+  {
     id: 'partner',
     title: '48hrs Deals',
     description: 'Electronics, kitchen Appliances \n & More',
@@ -21,30 +44,10 @@ export const SERVICES = [
     iconColor: '#00BCD4',
     logo: require('../assets/images/modal/48hrDealIcon.png'),
     titleImage: require('../assets/images/modal/48hrImage.png'),
-  },
-  {
-    id: 'movie',
-    title: 'Movie Tickets',
-    description: 'Movies & Entertainments',
-    type: SERVICE_TYPES.INTERNAL,
-    route: 'TicketSplashScreen',
-    icon: 'film-outline',
-    iconColor: '#5B2BE0',
-    logo: require('../assets/images/modal/movieIcon.png'),
-    titleImage: require('../assets/images/modal/udentcketModal.png'),
-  },
-
-  {
-    id: 'quickDelivery',
-    title: '20 mins Deal',
-    description: 'Groceries, essentials and more, \n in minutes',
-    type: SERVICE_TYPES.INTERNAL,
-    route: 'MainTabs',
-    params: { screen: 'Home' },
-    icon: 'bag-handle-outline',
-    iconColor: '#F25000',
-    logo: require('../assets/images/modal/20minIcon.png'),
-    titleImage: require('../assets/images/modal/20minModal.png'),
+    // Gated behind the `showkshope` general-settings flag. When the flag is not
+    // enabled ('1'), this service shows the Coming Soon modal instead of opening
+    // the partner app — matching the initial service picker (AuthSuccessScreen).
+    enabledSettingKey: 'showkshope',
   },
   {
     id: 'quickCommerce',

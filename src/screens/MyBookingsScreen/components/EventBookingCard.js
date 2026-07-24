@@ -26,8 +26,8 @@ const OPENABLE_STATUSES = ['confirmed', 'completed'];
 
 const getBookingImageSource = item => {
   const value =
-    item?.bannerImage ||
     item?.thumbnailImage ||
+    item?.bannerImage ||
     item?.imageUrl ||
     item?.eventImage ||
     item?.image;

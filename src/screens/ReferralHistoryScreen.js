@@ -107,9 +107,7 @@ const ReferralHistoryScreen = () => {
       const shareUrl = `${CONFIG.referalUrl}refer/register?custrefcd=${
         profile?.referralCode || ''
       }`;
-      const message = `Hey! Download UdenDeal and get fresh groceries delivered to your doorstep. Join me using my referral code: ${
-        profile?.referalCode || 'WELCOME'
-      } and enjoy exclusive rewards! Download now: ${shareUrl}`;
+      const message = `Hey! Download UdenDeal and get fresh groceries delivered to your doorstep. Join me using my referral link.  Download now: ${shareUrl}`;
       await Share.share({ message });
     } catch (error) {
       console.error('Error sharing:', error.message);

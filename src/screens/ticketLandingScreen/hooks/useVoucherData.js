@@ -20,18 +20,21 @@ const useVoucherData = () => {
   const [myVouchers, setMyVouchers] = useState([]);
   const [myVouchersLoading, setMyVouchersLoading] = useState(false);
   const [bCoins, setBCoins] = useState(0);
+  const [bCoinsLoading, setBCoinsLoading] = useState(true);
   const [claimedQuoteData, setClaimedQuoteData] = useState(null);
   const [giftQuote, setGiftQuote] = useState(null);
   const [giftQuoteLoading, setGiftQuoteLoading] = useState(false);
 
   const refreshBCoins = useCallback(() => {
+    setBCoinsLoading(true);
     return getDashboardDataApi()
       .then(res => {
         if (res?.data?.wallet?.bCoins !== undefined) {
           setBCoins(res.data.wallet.bCoins);
         }
       })
-      .catch(err => logger.error('Failed to refresh bCoins:', err?.message));
+      .catch(err => logger.error('Failed to refresh bCoins:', err?.message))
+      .finally(() => setBCoinsLoading(false));
   }, []);
 
   const fetchCarouselVouchers = useCallback(() => {
@@ -144,6 +147,7 @@ const useVoucherData = () => {
     myVouchers,
     myVouchersLoading,
     bCoins,
+    bCoinsLoading,
     giftQuote,
     giftQuoteLoading,
     refreshBCoins,

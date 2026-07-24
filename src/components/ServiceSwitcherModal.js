@@ -1,4 +1,11 @@
-import React, { useEffect, useRef, useState, useCallback, memo } from 'react';
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+  useContext,
+  memo,
+} from 'react';
 import {
   View,
   Text,
@@ -36,10 +43,15 @@ import {
 } from '../config/services';
 import ConfirmationModal from './ConfirmationModal';
 import ComingSoonModal from './ComingSoonModal';
+import { AppContext } from '../context/appContext';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-const ServiceCard = memo(({ service, isActive, onPress }) => {
+// General-settings flags come back as string/number "1" when enabled.
+const isSettingEnabled = value =>
+  value === '1' || value === 1 || value === true;
+
+const ServiceCard = memo(({ service, isActive, comingSoon, onPress }) => {
   const scale = useSharedValue(1);
 
   const cardStyle = useAnimatedStyle(() => ({
@@ -55,9 +67,7 @@ const ServiceCard = memo(({ service, isActive, onPress }) => {
   };
 
   return (
-    <Animated.View
-      style={[cardStyle, service.comingSoon && styles.cardDisabled]}
-    >
+    <Animated.View style={[cardStyle, comingSoon && styles.cardDisabled]}>
       <Pressable
         onPress={() => onPress(service)}
         onPressIn={onPressIn}
@@ -66,7 +76,7 @@ const ServiceCard = memo(({ service, isActive, onPress }) => {
         accessible
         accessibilityRole="button"
         accessibilityLabel={`${service.title}. ${service.description}${
-          service.comingSoon ? '. Coming soon' : ''
+          comingSoon ? '. Coming soon' : ''
         }`}
       >
         <View
@@ -119,6 +129,19 @@ const ServiceCard = memo(({ service, isActive, onPress }) => {
 const ServiceSwitcherModal = ({ visible, onClose, excludeServiceId }) => {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
+  const { generalSettings } = useContext(AppContext);
+
+  // A service is "coming soon" when it opts in statically (`comingSoon`) or when
+  // its backend flag (`enabledSettingKey`, e.g. 48hrs -> `showkshope`) is off.
+  const isComingSoon = useCallback(
+    service =>
+      Boolean(
+        service.comingSoon ||
+          (service.enabledSettingKey &&
+            !isSettingEnabled(generalSettings?.[service.enabledSettingKey])),
+      ),
+    [generalSettings],
+  );
 
   // Hide the service the user is already on (e.g. Uden Tickets on the movie
   // ticket landing screen) so the switcher only offers other destinations.
@@ -209,7 +232,7 @@ const ServiceSwitcherModal = ({ visible, onClose, excludeServiceId }) => {
 
   const handleServicePress = useCallback(
     service => {
-      if (service.comingSoon) {
+      if (isComingSoon(service)) {
         setComingSoonService(service);
         return;
       }
@@ -231,7 +254,7 @@ const ServiceSwitcherModal = ({ visible, onClose, excludeServiceId }) => {
         requestClose(() => openPartnerApp(service));
       }
     },
-    [navigation, openPartnerApp, requestClose],
+    [navigation, openPartnerApp, requestClose, isComingSoon],
   );
 
   const handleInstallConfirm = useCallback(() => {
@@ -318,6 +341,7 @@ const ServiceSwitcherModal = ({ visible, onClose, excludeServiceId }) => {
                   key={service.id}
                   service={service}
                   isActive={activeServiceId === service.id}
+                  comingSoon={isComingSoon(service)}
                   onPress={handleServicePress}
                 />
               ))}

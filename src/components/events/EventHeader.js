@@ -3,6 +3,7 @@ import { View, Image, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import icons from '@/assets/icons';
 import ProfileAvatarBadge from '@/components/ProfileAvatarBadge';
 import { getGreeting } from '@/utils/greeting';
+import { getHeaderPaddingTop } from '@/utils/headerLayout';
 import { wp } from '../../utils/responsive';
 import { hp } from '@/styles/cartTheme';
 
@@ -12,7 +13,7 @@ const getFirstName = fullName => {
 };
 
 const EventHeader = ({ navigation, insets, profile }) => {
-  const paddingTop = insets?.top > 0 ? insets.top + 16 : 40;
+  const paddingTop = getHeaderPaddingTop(insets);
   const greeting = useMemo(() => getGreeting(), []);
   const firstName = useMemo(
     () => getFirstName(profile?.custName),
@@ -81,7 +82,7 @@ const styles = StyleSheet.create({
   },
   nameText: {
     color: '#FFFFFF',
-    fontSize: 32,
+    fontSize: 17,
     fontFamily: 'Gilroy-Bold',
     maxWidth: wp('32%'),
   },

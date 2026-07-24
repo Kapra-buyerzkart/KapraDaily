@@ -22,6 +22,7 @@ import HtmlBody from '@/components/HtmlBody';
 import { formatTime, formatPrice } from '@/screens/EventDetailsScreen/utils';
 import useEventBookingDetailQuery from '@/queries/useEventBookingDetailQuery';
 import logger from '@/utils/logger';
+import { getHeaderPaddingTop } from '@/utils/headerLayout';
 import styles from './styles';
 
 const STATUS_COLORS = {
@@ -97,12 +98,12 @@ const buildViewModel = (data, passed) => {
   const payment = data?.payment || null;
 
   const bannerImage =
+    eventDetails.thumbnailImage ||
+    p.thumbnailImage ||
     eventDetails.bannerImage ||
     eventImages.find(img => img?.imageType === 'banner')?.imageUrl ||
     eventImages[0]?.imageUrl ||
-    eventDetails.thumbnailImage ||
     p.bannerImage ||
-    p.thumbnailImage ||
     null;
 
   const ticketCount =
@@ -269,7 +270,7 @@ const EventBookingDetailsScreen = ({ navigation, route }) => {
     vm.grandTotal != null;
 
   const renderHeader = () => (
-    <View style={[styles.header, { paddingTop: (insets.top || 20) + 8 }]}>
+    <View style={[styles.header, { paddingTop: getHeaderPaddingTop(insets) }]}>
       <Pressable
         onPress={handleBack}
         hitSlop={16}

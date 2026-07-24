@@ -22,6 +22,7 @@ const PopularTab = ({
   vouchers,
   loading,
   bCoins,
+  bCoinsLoading,
   giftQuote,
   giftQuoteLoading,
   onClaim,
@@ -94,7 +95,11 @@ const PopularTab = ({
         <HeroCarousel data={heroItems} onItemPress={handleBannerPress} />
       )}
 
-      <RewardsCard bCoins={bCoins} onPress={handleViewRewards} />
+      <RewardsCard
+        bCoins={bCoins}
+        loading={bCoinsLoading}
+        onPress={handleViewRewards}
+      />
       {/* 
       <View style={styles.quickActionsRow}>
         <QuickActionCard

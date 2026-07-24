@@ -116,7 +116,6 @@ const images = {
   loginContent: require('./login_content.png'),
   logo: require('./logo.png'),
   logofinal: require('./logofinal.png'),
-  logoo: require('./logoo.png'),
   loudSpeaker: require('./loud-speaker.png'),
   mangoBanner: require('./mango_banner.png'),
   mango: require('./mango.jpg'),
@@ -206,6 +205,7 @@ const images = {
   claimbgbutton: require('./claimbgbutton.png'),
   errormodalbg: require('./errormodalbg.png'),
   udendealSeal: require('./udendealSeal.png'),
+  login_landing: require('./login_landing.png'),
 };
 
 export default images;

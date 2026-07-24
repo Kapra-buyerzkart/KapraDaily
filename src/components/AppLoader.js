@@ -1,10 +1,11 @@
 import React from 'react';
 import { View, Image, StyleSheet } from 'react-native';
+import { COLORS } from '../styles/colors';
 
 const AppLoader = () => (
   <View style={styles.container}>
     <Image
-      source={require('../assets/images/logoo.png')}
+      source={require('../assets/images/kapra_logo.png')}
       style={styles.logo}
       resizeMode="contain"
     />
@@ -14,13 +15,13 @@ const AppLoader = () => (
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
   logo: {
-    width: 160,
-    height: 160,
+    width: 220,
+    height: 126,
   },
 });
 

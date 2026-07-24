@@ -29,6 +29,7 @@ import { setTokens } from '../api/tokenService';
 import LoaderComponent from '../components/LoaderComponent';
 import { LoaderContext } from '../context/loaderContext';
 import { validatePhoneNumbers } from '../utils/validation';
+import images from '../assets/images';
 
 const LoginScreen = () => {
   const navigation = useNavigation();
@@ -306,18 +307,9 @@ const LoginScreen = () => {
         >
           <ImageBackground
             style={styles.backgroundImage}
-            source={require('../assets/images/login_background_image.jpg')}
+            source={images.login_landing}
           >
-            <Animated.Image
-              style={[
-                styles.kapraLogo,
-                {
-                  opacity: logoOpacity,
-                  transform: [{ translateY: logoTranslate }],
-                },
-              ]}
-              source={require('../assets/images/kapra_logo.png')}
-            />
+            <View />
             <Animated.Image
               style={[
                 styles.tagLine,
@@ -438,7 +430,7 @@ const styles = StyleSheet.create({
   },
   kapraLogo: {
     width: wp('47%'),
-    height: hp('10%'),
+    height: hp('20%'),
     resizeMode: 'cover',
   },
   tagLine: {

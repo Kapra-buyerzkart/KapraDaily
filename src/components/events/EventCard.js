@@ -8,40 +8,59 @@ import { formatDate } from '@/screens/EventDetailsScreen/utils';
 import COLORS from '@/styles/colors';
 import icons from '@/assets/icons';
 
-const EventCard = ({ item, onPress, index = 0 }) => (
-  <AnimatedPressable
-    style={styles.card}
-    entering={FadeInUp.delay(getStaggerDelay(index))}
-    onPress={() => onPress?.(item)}
-  >
-    <Image
-      source={getEventImageSource(item)}
-      style={styles.image}
-      resizeMode="cover"
-    />
-    <View style={styles.body}>
-      <Text style={styles.title} numberOfLines={1}>
-        {item?.title}
-      </Text>
-      <View style={styles.pillsRow}>
-        <View style={styles.pill}>
-          <Text style={styles.pillText}>From ₹ {item?.MinPrice ?? 0}</Text>
-        </View>
+const EventCard = ({ item, onPress, index = 0 }) => {
+  // isActive === 0 (or false) means the event is no longer bookable. Block the
+  // press and dim the card with a "Not Available" badge so it reads as disabled.
+  const unavailable = item?.isActive === 0 || item?.isActive === false;
 
-        <View style={styles.pill}>
-          <Image source={icons.calendarTwo} />
-          <Text style={styles.pillText}>{formatDate(item?.SessionStart)}</Text>
-        </View>
+  return (
+    <AnimatedPressable
+      style={styles.card}
+      entering={FadeInUp.delay(getStaggerDelay(index))}
+      disabled={unavailable}
+      onPress={() => !unavailable && onPress?.(item)}
+    >
+      <View style={unavailable && styles.dimmed}>
+        <Image
+          source={getEventImageSource(item)}
+          style={styles.image}
+          resizeMode="cover"
+        />
+        <View style={styles.body}>
+          <Text style={styles.title} numberOfLines={1}>
+            {item?.title}
+          </Text>
+          <View style={styles.pillsRow}>
+            <View style={styles.pill}>
+              <Text style={styles.pillText}>From ₹ {item?.MinPrice ?? 0}</Text>
+            </View>
 
-        {!!item?.brand && (
-          <View style={styles.pill}>
-            <Text style={styles.pillText}>{item.brand}</Text>
+            <View style={styles.pill}>
+              <Image source={icons.calendarTwo} />
+              <Text style={styles.pillText}>
+                {formatDate(item?.SessionStart)}
+              </Text>
+            </View>
+
+            {!!item?.brand && (
+              <View style={styles.pill}>
+                <Text style={styles.pillText}>{item.brand}</Text>
+              </View>
+            )}
           </View>
-        )}
+        </View>
       </View>
-    </View>
-  </AnimatedPressable>
-);
+
+      {unavailable && (
+        <View style={styles.unavailableOverlay} pointerEvents="none">
+          <View style={styles.unavailableBadge}>
+            <Text style={styles.unavailableText}>Not Available</Text>
+          </View>
+        </View>
+      )}
+    </AnimatedPressable>
+  );
+};
 
 const styles = StyleSheet.create({
   card: {
@@ -83,6 +102,28 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontSize: 11,
     fontFamily: 'Gilroy-Medium',
+  },
+  dimmed: {
+    opacity: 0.45,
+  },
+  unavailableOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  unavailableBadge: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#FFFFFF',
+    backgroundColor: 'rgba(0,0,0,0.55)',
+  },
+  unavailableText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    letterSpacing: 0.5,
+    fontFamily: 'Gilroy-Bold',
   },
 });
 

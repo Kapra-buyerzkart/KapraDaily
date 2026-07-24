@@ -129,7 +129,16 @@ const TabIcon = React.memo(({ tab, active }) => {
   );
 });
 
+const SoonBadge = React.memo(() => (
+  <View style={styles.soonBadge}>
+    <Text style={styles.soonBadgeText}>Soon</Text>
+  </View>
+));
+
 const CategoryTab = React.memo(({ tab, isActive, onPress }) => {
+  // The category is flagged inactive by the API (isActive === false): it's a
+  // "coming soon" tab, so surface a badge and don't let it be selected.
+  const comingSoon = tab.isActive === false;
   const activeProgress = useSharedValue(isActive ? 1 : 0);
   const scale = useSharedValue(1);
 
@@ -150,6 +159,7 @@ const CategoryTab = React.memo(({ tab, isActive, onPress }) => {
   }));
 
   const handlePress = () => {
+    if (comingSoon) return;
     scale.value = withTiming(0.94, { duration: 80 }, () => {
       scale.value = withTiming(1, { duration: 80 });
     });
@@ -170,6 +180,7 @@ const CategoryTab = React.memo(({ tab, isActive, onPress }) => {
             <Text style={styles.activeLabel} numberOfLines={1}>
               {tab.label}
             </Text>
+            {comingSoon && <SoonBadge />}
           </ImageBackground>
         </TouchableOpacity>
       </Reanimated.View>
@@ -177,13 +188,20 @@ const CategoryTab = React.memo(({ tab, isActive, onPress }) => {
   }
 
   return (
-    <TouchableOpacity activeOpacity={0.85} onPress={handlePress}>
-      <Reanimated.View style={[styles.pill, wrapStyle]}>
+    <TouchableOpacity
+      activeOpacity={0.85}
+      onPress={handlePress}
+      disabled={comingSoon}
+    >
+      <Reanimated.View
+        style={[styles.pill, comingSoon && styles.pillSoon, wrapStyle]}
+      >
         <View style={styles.pillInactiveBg} />
         <TabIcon tab={tab} active={isActive} />
         <Reanimated.Text style={[styles.label, textStyle]} numberOfLines={1}>
           {tab.label}
         </Reanimated.Text>
+        {comingSoon && <SoonBadge />}
       </Reanimated.View>
     </TouchableOpacity>
   );
@@ -284,6 +302,22 @@ const styles = StyleSheet.create({
   pillInactiveBg: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(255,255,255,0.06)',
+  },
+  pillSoon: {
+    opacity: 0.7,
+  },
+  soonBadge: {
+    marginLeft: 2,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+    backgroundColor: 'rgba(154,92,255,0.18)',
+  },
+  soonBadgeText: {
+    color: '#C9A6FF',
+    fontSize: 9,
+    fontFamily: 'Gilroy-Bold',
+    letterSpacing: 0.3,
   },
   iconImage: {
     width: ICON_SIZE,

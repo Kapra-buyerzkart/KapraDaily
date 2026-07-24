@@ -2,9 +2,10 @@ import React from 'react';
 import { View, Image, Text, ImageBackground, TouchableOpacity, StyleSheet } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import icons from '@/assets/icons';
+import Shimmer from '@/components/events/Shimmer';
 import COLORS from '@/styles/colors';
 
-const RewardsCard = ({ bCoins, onPress }) => (
+const RewardsCard = ({ bCoins, loading, onPress }) => (
   <View style={styles.card}>
     <View style={styles.left}>
       <Image
@@ -14,9 +15,13 @@ const RewardsCard = ({ bCoins, onPress }) => (
       />
       <View>
         <Text style={styles.label}>UDEN REWARDS</Text>
-        <Text style={styles.amount}>
-          {(bCoins || 0).toLocaleString('en-IN')}
-        </Text>
+        {loading ? (
+          <Shimmer style={styles.amountShimmer} />
+        ) : (
+          <Text style={styles.amount}>
+            {(bCoins || 0).toLocaleString('en-IN')}
+          </Text>
+        )}
       </View>
     </View>
 
@@ -27,7 +32,7 @@ const RewardsCard = ({ bCoins, onPress }) => (
         imageStyle={styles.pillImage}
         resizeMode="stretch"
       >
-        <Text style={styles.pillText}>View Rewards</Text>
+        <Text style={styles.pillText}>View Wallet</Text>
         <MaterialIcons name="open-in-new" size={14} color="#FFFFFF" />
       </ImageBackground>
     </TouchableOpacity>
@@ -67,6 +72,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontFamily: 'Gilroy-Bold',
     marginTop: 2,
+  },
+  amountShimmer: {
+    width: 72,
+    height: 20,
+    borderRadius: 6,
+    marginTop: 4,
   },
   pillButton: {
     flexDirection: 'row',

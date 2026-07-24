@@ -1,15 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  Cold-start splash used as android:windowBackground so the very first frame
-  Android paints (before the JS bundle loads and React renders) shows the brand
-  logo on white instead of a black void. Keep this visually in sync with the JS
-  AppLoader (src/components/AppLoader.js), which covers the profile-load gap.
--->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:drawable="@color/bootsplash_background" />
-    <item>
+    <item
+        android:width="220dp"
+        android:height="126dp"
+        android:gravity="center">
         <bitmap
-            android:gravity="center"
-            android:src="@drawable/ic_launcher_logo" />
+            android:gravity="fill"
+            android:src="@drawable/kapra_logo" />
     </item>
 </layer-list>
