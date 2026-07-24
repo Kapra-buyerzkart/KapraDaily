@@ -1,5 +1,13 @@
 import React, { useEffect } from 'react';
-import { View, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import {
+  View,
+  Image,
+  ImageBackground,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+} from 'react-native';
 import Reanimated, {
   useSharedValue,
   useAnimatedStyle,
@@ -9,6 +17,7 @@ import Reanimated, {
   Extrapolation,
 } from 'react-native-reanimated';
 import LinearGradient from 'react-native-linear-gradient';
+import icons from '@/assets/icons';
 
 export const TAB_IDS = {
   POPULAR: 'popular',
@@ -22,20 +31,20 @@ const TABS = [
   {
     id: TAB_IDS.POPULAR,
     label: 'Popular',
-    icon: require('../../assets/events/popular.png'),
-    badgedIcon: require('../../assets/events/Group 1000004801.png'),
+    icon: icons.lighting,
+    badgedIcon: icons.lighting,
   },
   {
     id: TAB_IDS.EVENTS,
     label: 'Events',
-    icon: require('../../assets/events/Group 1000004805 3.png'),
-    badgedIcon: require('../../assets/events/Group 1000004805.png'),
+    icon: icons.calendar,
+    badgedIcon: icons.calendar,
   },
   {
     id: TAB_IDS.VOUCHERS,
     label: 'Vouchers',
-    icon: require('../../assets/events/Group 1000004802.png'),
-    badgedIcon: require('../../assets/events/Group 1000004802 2.png'),
+    icon: icons.voucher,
+    badgedIcon: icons.voucher,
   },
   // {
   //   id: TAB_IDS.SPORTS,
@@ -46,55 +55,29 @@ const TABS = [
   {
     id: TAB_IDS.BILLS,
     label: 'Bills & recharge',
-    icon: require('../../assets/events/Group 1000004804.png'),
-    badgedIcon: require('../../assets/events/Group 1000004804.png'),
+    icon: icons.coin,
+    badgedIcon: icons.coin,
   },
 ];
 
-const ICON_SIZE = 34;
+const ICON_SIZE = 18;
 const STICKY_START = 40;
 const STICKY_END = 90;
 
 const TabIcon = React.memo(({ tab, active }) => {
-  if (tab.id === TAB_IDS.POPULAR) {
-    return (
-      <Image
-        source={active ? tab.icon : tab.badgedIcon}
-        style={[]}
-        resizeMode="contain"
-      />
-    );
-  }
-
-  if (tab.badgedIcon) {
-    return (
-      <Image
-        source={active ? tab.badgedIcon : tab.icon}
-        style={[]}
-        resizeMode="contain"
-      />
-    );
-  }
+  const source =
+    tab.id === TAB_IDS.POPULAR
+      ? active
+        ? tab.icon
+        : tab.badgedIcon
+      : tab.badgedIcon
+      ? active
+        ? tab.badgedIcon
+        : tab.icon
+      : tab.icon;
 
   return (
-    <View style={styles.iconBadgeWrap}>
-      {active && (
-        <LinearGradient
-          colors={['#9A5CFF', '#5B2A9E']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.iconBadgeGradient}
-        />
-      )}
-      <Image
-        source={tab.icon}
-        style={[
-          styles.iconGlyph,
-          // active ? styles.iconGlyphActive : styles.iconGlyphInactive,
-        ]}
-        resizeMode="contain"
-      />
-    </View>
+    <Image source={source} style={styles.iconImage} resizeMode="contain" />
   );
 });
 
@@ -110,7 +93,7 @@ const CategoryTab = React.memo(({ tab, isActive, onPress }) => {
     color: interpolateColor(
       activeProgress.value,
       [0, 1],
-      ['rgba(255,255,255,0.45)', '#FFFFFF'],
+      ['rgba(255,255,255,0.55)', '#FFFFFF'],
     ),
   }));
 
@@ -125,18 +108,32 @@ const CategoryTab = React.memo(({ tab, isActive, onPress }) => {
     onPress(tab.id);
   };
 
+  if (isActive) {
+    return (
+      <Reanimated.View style={wrapStyle}>
+        <TouchableOpacity activeOpacity={0.85} onPress={handlePress}>
+          <ImageBackground
+            source={icons.selectionPill}
+            style={styles.activePill}
+            imageStyle={styles.activePillImage}
+            resizeMode="stretch"
+          >
+            <TabIcon tab={tab} active />
+            <Text style={styles.activeLabel} numberOfLines={1}>
+              {tab.label}
+            </Text>
+          </ImageBackground>
+        </TouchableOpacity>
+      </Reanimated.View>
+    );
+  }
+
   return (
-    <TouchableOpacity
-      activeOpacity={0.85}
-      onPress={handlePress}
-      style={styles.tab}
-    >
-      <Reanimated.View style={[styles.tabInner, wrapStyle]}>
+    <TouchableOpacity activeOpacity={0.85} onPress={handlePress}>
+      <Reanimated.View style={[styles.pill, wrapStyle]}>
+        <View style={styles.pillInactiveBg} />
         <TabIcon tab={tab} active={isActive} />
-        <Reanimated.Text
-          style={[styles.label, isActive && styles.labelActive, textStyle]}
-          numberOfLines={1}
-        >
+        <Reanimated.Text style={[styles.label, textStyle]} numberOfLines={1}>
           {tab.label}
         </Reanimated.Text>
       </Reanimated.View>
@@ -170,22 +167,13 @@ const EventCategoryTabs = ({ activeTab, onTabChange, scrollY, insets }) => {
     };
   });
 
-  const glowStyle = useAnimatedStyle(() => {
-    if (!scrollY) return { opacity: 0 };
-    return {
-      opacity: interpolate(
-        scrollY.value,
-        [STICKY_START, STICKY_END],
-        [0, 0.18],
-        Extrapolation.CLAMP,
-      ),
-    };
-  });
-
   return (
     <Reanimated.View style={[styles.outer, containerStyle]}>
-      <Reanimated.View style={[styles.glow, glowStyle]} pointerEvents="none" />
-      <View style={styles.row}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.row}
+      >
         {TABS.map(tab => (
           <CategoryTab
             key={tab.id}
@@ -194,7 +182,7 @@ const EventCategoryTabs = ({ activeTab, onTabChange, scrollY, insets }) => {
             onPress={onTabChange}
           />
         ))}
-      </View>
+      </ScrollView>
     </Reanimated.View>
   );
 };
@@ -203,66 +191,59 @@ const styles = StyleSheet.create({
   outer: {
     overflow: 'hidden',
   },
-  glow: {
-    position: 'absolute',
-    right: -20,
-    top: -10,
-    bottom: -10,
-    width: 100,
-    backgroundColor: '#5B2A9E',
-    borderRadius: 50,
-  },
   row: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    paddingHorizontal: 12,
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 20,
     paddingVertical: 14,
   },
-  tab: {
-    flex: 1,
+  pill: {
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 4,
+    gap: 7,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 24,
+    overflow: 'hidden',
   },
-  tabInner: {
-    alignItems: 'center',
-    width: '100%',
+  pillGradient: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  pillInactiveBg: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255,255,255,0.06)',
   },
   iconImage: {
     width: ICON_SIZE,
     height: ICON_SIZE,
   },
-  iconInactive: {
-    opacity: 0.45,
-  },
-  iconBadgeWrap: {
-    width: ICON_SIZE,
-    height: ICON_SIZE,
-    borderRadius: ICON_SIZE / 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-  },
-  iconBadgeGradient: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  iconGlyph: {
-    width: ICON_SIZE * 0.55,
-    height: ICON_SIZE * 0.55,
-  },
-  iconGlyphActive: {
-    tintColor: '#FFFFFF',
-  },
-  iconGlyphInactive: {
-    tintColor: 'rgba(255,255,255,0.45)',
-  },
   label: {
-    marginTop: 6,
-    fontSize: 12,
+    fontSize: 13,
     fontFamily: 'Gilroy-Medium',
-    textAlign: 'center',
   },
   labelActive: {
     fontFamily: 'Gilroy-Bold',
+  },
+  activePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    minHeight: 40,
+    justifyContent: 'center',
+  },
+  activePillImage: {
+    borderRadius: 24,
+  },
+  activeLabel: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontFamily: 'Gilroy-SemiBold',
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
   },
 });
 

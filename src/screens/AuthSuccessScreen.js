@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -10,6 +10,7 @@ import {
   Image,
   ImageBackground,
   StatusBar,
+  ActivityIndicator,
 } from 'react-native';
 import {
   widthPercentageToDP as wp,
@@ -25,9 +26,12 @@ const { width } = Dimensions.get('window');
 
 const findImage = (images, name) => images?.find(path => path.endsWith(name));
 
+const IMAGE_KEYS = ['bg', 'kapra', 'tickets', 'd2c', 'kshope'];
+
 const AuthSuccessScreen = ({ navigation }) => {
   const { generalSettings } = useContext(AppContext);
   const [isComingSoonVisible, setIsComingSoonVisible] = useState(false);
+  const [loadedMap, setLoadedMap] = useState({});
   const { data: landingPages } = useLandingPagesQuery();
   const landingPageImages = landingPages?.landingPageImages;
 
@@ -36,6 +40,15 @@ const AuthSuccessScreen = ({ navigation }) => {
   const ticketsImagePath = findImage(landingPageImages, 'udentickets.png');
   const d2cImagePath = findImage(landingPageImages, 'd2c.png');
   const kshopeImagePath = findImage(landingPageImages, '48hrs.png');
+
+  // Primitive URI strings (not the {uri} objects useFallbackImage returns)
+  // so the reveal-reset effect only reruns when the actual remote path
+  // changes, not when an onError later swaps a source over to its fallback.
+  const bgUri = bgImagePath && getImageUrl(bgImagePath)?.uri;
+  const kapraUri = kapraImagePath && getImageUrl(kapraImagePath)?.uri;
+  const ticketsUri = ticketsImagePath && getImageUrl(ticketsImagePath)?.uri;
+  const d2cUri = d2cImagePath && getImageUrl(d2cImagePath)?.uri;
+  const kshopeUri = kshopeImagePath && getImageUrl(kshopeImagePath)?.uri;
 
   const bg = useFallbackImage(
     bgImagePath && getImageUrl(bgImagePath),
@@ -65,6 +78,34 @@ const AuthSuccessScreen = ({ navigation }) => {
     d2c: d2c.source?.uri,
     kshope: kshope.source?.uri,
   });
+
+  // Reset the reveal gate whenever the underlying remote paths actually
+  // change (e.g. a query refetch swaps in new landing-page images), so a
+  // new batch of images gets its own synchronized reveal.
+  useEffect(() => {
+    setLoadedMap({});
+  }, [bgUri, kapraUri, ticketsUri, d2cUri, kshopeUri]);
+
+  // Safety valve: if some image's onLoad/onError never fires for any reason,
+  // don't leave the user staring at the spinner forever.
+  const [revealTimedOut, setRevealTimedOut] = useState(false);
+  useEffect(() => {
+    setRevealTimedOut(false);
+    const timer = setTimeout(() => setRevealTimedOut(true), 6000);
+    return () => clearTimeout(timer);
+  }, [bgUri, kapraUri, ticketsUri, d2cUri, kshopeUri]);
+
+  const markLoaded = key =>
+    setLoadedMap(prev => (prev[key] ? prev : { ...prev, [key]: true }));
+
+  // Every rendered <Image>/<ImageBackground> reports its own onLoad — the
+  // only event that actually correlates with pixels being on screen — so
+  // gating on this (rather than a separate Image.prefetch call, which can
+  // warm a cache the real component doesn't end up hitting) is what
+  // guarantees all the cards visually appear together instead of the
+  // smaller ones (like d2c) popping in first.
+  const allImagesLoaded = IMAGE_KEYS.every(key => loadedMap[key]);
+  const revealCards = allImagesLoaded || revealTimedOut;
 
   const handleKapra = () => {
     navigation.reset({
@@ -144,102 +185,123 @@ const AuthSuccessScreen = ({ navigation }) => {
   };
 
   return (
-    // <View style={styles.container}>
-    <ImageBackground
-      source={bg.source}
-      onError={bg.onError}
-      resizeMode="cover"
-      style={styles.container}
-    >
-      <StatusBar
-        translucent
-        contentStyle="dark-content"
-        backgroundColor="transparent"
-      />
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
+    <View style={styles.screen}>
+      <ImageBackground
+        source={bg.source}
+        onError={bg.onError}
+        onLoad={() => markLoaded('bg')}
+        resizeMode="cover"
+        style={[styles.container, { opacity: revealCards ? 1 : 0 }]}
       >
-        {/* Logo Section */}
-        <View style={styles.logoContainer}>
-          <Image
-            source={require('../assets/images/splash/header.png')}
-            style={styles.logo}
-            resizeMode="contain"
-          />
-        </View>
-
-        {/* Deal Cards Section */}
-        <View style={styles.cardsContainer}>
-          {/* 20 minss deal - Large Card (Kapra) */}
-          <TouchableOpacity activeOpacity={0.9} onPress={handleKapra}>
+        <StatusBar
+          translucent
+          contentStyle="dark-content"
+          backgroundColor="transparent"
+        />
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Logo Section */}
+          <View style={styles.logoContainer}>
             <Image
-              source={kapra.source}
-              onError={kapra.onError}
-              style={styles.largeCard}
+              source={require('../assets/images/splash/header.png')}
+              style={styles.logo}
               resizeMode="contain"
             />
-          </TouchableOpacity>
-
-          {/* Uden Tickets - Large Card */}
-          <TouchableOpacity
-            activeOpacity={0.9}
-            onPress={handleTicketCollection}
-          >
-            <Image
-              source={tickets.source}
-              onError={tickets.onError}
-              style={styles.largeCard}
-              resizeMode="contain"
-            />
-          </TouchableOpacity>
-          {/* Small Cards Row */}
-          <View style={styles.row}>
-            {/* D2C */}
-            <TouchableOpacity activeOpacity={0.9} onPress={handleD2c}>
-              <Image
-                source={d2c.source}
-                onError={d2c.onError}
-                style={styles.smallCard}
-                resizeMode="contain"
-              />
-            </TouchableOpacity>
-            {/* 48 Hrs Deal */}
-            <TouchableOpacity activeOpacity={0.9} onPress={handleKshope}>
-              <Image
-                source={kshope.source}
-                onError={kshope.onError}
-                style={styles.smallCard}
-                resizeMode="contain"
-              />
-            </TouchableOpacity>
           </View>
-        </View>
-      </ScrollView>
 
-      {/* Bottom Section (Skyline) */}
-      {/* <View style={styles.bottomSection}>
+          {/* Deal Cards Section */}
+          <View style={styles.cardsContainer}>
+            {/* 20 minss deal - Large Card (Kapra) */}
+            <TouchableOpacity activeOpacity={0.9} onPress={handleKapra}>
+              <Image
+                source={kapra.source}
+                onError={kapra.onError}
+                onLoad={() => markLoaded('kapra')}
+                style={styles.largeCard}
+                resizeMode="contain"
+              />
+            </TouchableOpacity>
+
+            {/* Uden Tickets - Large Card */}
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={handleTicketCollection}
+            >
+              <Image
+                source={tickets.source}
+                onError={tickets.onError}
+                onLoad={() => markLoaded('tickets')}
+                style={styles.largeCard}
+                resizeMode="contain"
+              />
+            </TouchableOpacity>
+            {/* Small Cards Row */}
+            <View style={styles.row}>
+              {/* D2C */}
+              <TouchableOpacity activeOpacity={0.9} onPress={handleD2c}>
                 <Image
-                    source={require('../assets/images/splash/Vancouver.png')}
-                    style={styles.skylineImage}
-                    resizeMode="stretch"
+                  source={d2c.source}
+                  onError={d2c.onError}
+                  onLoad={() => markLoaded('d2c')}
+                  style={styles.smallCard}
+                  resizeMode="contain"
                 />
-            </View> */}
+              </TouchableOpacity>
+              {/* 48 Hrs Deal */}
+              <TouchableOpacity activeOpacity={0.9} onPress={handleKshope}>
+                <Image
+                  source={kshope.source}
+                  onError={kshope.onError}
+                  onLoad={() => markLoaded('kshope')}
+                  style={styles.smallCard}
+                  resizeMode="contain"
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </ScrollView>
 
-      {/* Custom Coming Soon Popup */}
-      <ComingSoonModal
-        visible={isComingSoonVisible}
-        onClose={() => setIsComingSoonVisible(false)}
-      />
-    </ImageBackground>
-    // </View>
+        {/* Bottom Section (Skyline) */}
+        {/* <View style={styles.bottomSection}>
+                  <Image
+                      source={require('../assets/images/splash/Vancouver.png')}
+                      style={styles.skylineImage}
+                      resizeMode="stretch"
+                  />
+              </View> */}
+
+        {/* Custom Coming Soon Popup */}
+        <ComingSoonModal
+          visible={isComingSoonVisible}
+          onClose={() => setIsComingSoonVisible(false)}
+        />
+      </ImageBackground>
+
+      {!revealCards && (
+        <View style={styles.loadingOverlay} pointerEvents="none">
+          <ActivityIndicator size="large" color="#F25000" />
+        </View>
+      )}
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',
+  },
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   scrollContent: {
     alignItems: 'center',

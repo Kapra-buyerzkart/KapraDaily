@@ -12,6 +12,7 @@ import EventBookingList from './components/EventBookingList';
 import MyBookingsHeader from './components/MyBookingsHeader';
 import AllTabListHeader from './components/AllTabListHeader';
 import useMyBookingsData from './hooks/useMyBookingsData';
+import COLORS from '@/styles/colors';
 
 const BG_ASPECT_RATIO = 430 / 2078;
 
@@ -48,56 +49,59 @@ const MyBookingsScreen = () => {
         translucent
         backgroundColor="transparent"
       />
-      <Image
-        source={images.bookingtabbg}
-        style={styles.bgImage}
-        resizeMode="cover"
-      />
-
-      <MyBookingsHeader
-        topInset={insets.top || 20}
-        bCoins={bCoins}
-        onBack={handleBack}
-      />
-
-      <BookingCategoryTabs activeTab={activeTab} onTabChange={setActiveTab} />
-
-      {isEventsTab ? (
-        <EventBookingList
-          bookings={eventBookings}
-          loading={eventsLoading}
-          loadingMore={eventsLoadingMore}
-          onEndReached={handleLoadMoreEvents}
-          bottomInset={insets.bottom}
-          refreshing={refreshing}
-          onRefresh={handleRefresh}
+      <View style={{ flex: 1, backgroundColor: COLORS.bg }}>
+        {/* <Image
+          source={images.bookingtabbg}
+          style={styles.bgImage}
+          resizeMode="cover"
+        /> */}
+        <MyBookingsHeader
+          topInset={insets.top || 20}
+          bCoins={bCoins}
+          onBack={handleBack}
         />
-      ) : (
-        <VoucherGrid
-          vouchers={vouchers}
-          loading={
-            isAllTab ? vouchersLoading || eventsLoading : vouchersLoading
-          }
-          onVoucherPress={handleVoucherPress}
-          bottomInset={insets.bottom}
-          refreshing={refreshing}
-          onRefresh={handleRefresh}
-          ListHeaderComponent={
-            isAllTab ? <AllTabListHeader eventBookings={eventBookings} /> : null
-          }
-          emptyText={
-            isAllTab && eventBookings.length === 0
-              ? 'No bookings yet'
-              : 'No vouchers yet'
-          }
-        />
-      )}
 
-      <VoucherBottomSheet
-        visible={!!selectedVoucher}
-        voucher={selectedVoucher}
-        onClose={handleCloseVoucherSheet}
-      />
+        <BookingCategoryTabs activeTab={activeTab} onTabChange={setActiveTab} />
+
+        {isEventsTab ? (
+          <EventBookingList
+            bookings={eventBookings}
+            loading={eventsLoading}
+            loadingMore={eventsLoadingMore}
+            onEndReached={handleLoadMoreEvents}
+            bottomInset={insets.bottom}
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+          />
+        ) : (
+          <VoucherGrid
+            vouchers={vouchers}
+            loading={
+              isAllTab ? vouchersLoading || eventsLoading : vouchersLoading
+            }
+            onVoucherPress={handleVoucherPress}
+            bottomInset={insets.bottom}
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            ListHeaderComponent={
+              isAllTab ? (
+                <AllTabListHeader eventBookings={eventBookings} />
+              ) : null
+            }
+            emptyText={
+              isAllTab && eventBookings.length === 0
+                ? 'No bookings yet'
+                : 'No vouchers yet'
+            }
+          />
+        )}
+
+        <VoucherBottomSheet
+          visible={!!selectedVoucher}
+          voucher={selectedVoucher}
+          onClose={handleCloseVoucherSheet}
+        />
+      </View>
     </View>
   );
 };

@@ -3,7 +3,6 @@ import {
   View,
   Image,
   StatusBar,
-  ActivityIndicator,
   Pressable,
   RefreshControl,
 } from 'react-native';
@@ -26,6 +25,7 @@ import EventSummaryCard from './components/EventSummaryCard';
 import MoreToKnow from './components/MoreToKnow';
 import ArtistList from './components/ArtistList';
 import EventAccordions from './components/EventAccordions';
+import EventDetailsSkeleton from './components/EventDetailsSkeleton';
 import TicketSelectionModal from './components/TicketSelectionModal';
 import RedeemSuccessModal from '../ticketLandingScreen/components/RedeemSuccessModal';
 import PaymentFailedModal from '../ticketLandingScreen/components/PaymentFailedModal';
@@ -103,18 +103,8 @@ const EventDetailsScreen = ({ navigation, route }) => {
     [insets.bottom],
   );
 
-  console.log(details, '======details');
   if (loading && !event) {
-    return (
-      <View style={styles.loader}>
-        <StatusBar
-          barStyle="light-content"
-          translucent
-          backgroundColor="transparent"
-        />
-        <ActivityIndicator color={COLORS.purple} size="large" />
-      </View>
-    );
+    return <EventDetailsSkeleton />;
   }
 
   return (

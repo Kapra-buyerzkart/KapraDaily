@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef } from 'react';
-import { View, Image, Text, StyleSheet } from 'react-native';
+import { View, Image, ImageBackground, Text, StyleSheet } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useAnimatedScrollHandler,
@@ -11,25 +11,50 @@ import LinearGradient from 'react-native-linear-gradient';
 import { wp, hp } from '../../utils/responsive';
 import { getVoucherImageSource } from './imageUtils';
 import AnimatedPressable from '@/components/AnimatedPressable';
+import icons from '../../assets/icons';
 
 const AUTOPLAY_INTERVAL_MS = 4000;
-const BANNER_WIDTH = wp(88);
+// Each slide fills the full screen width so exactly ONE banner is visible at a
+// time — no sliver of the neighbouring slide peeking in. The rounded card sits
+// centered inside that full-width cell, keeping the card look without the peek.
+const PAGE_WIDTH = wp(100);
+const CARD_WIDTH = wp(88);
 const BANNER_HEIGHT = hp(26);
-const BANNER_SPACING = wp(4);
-const ITEM_MARGIN = BANNER_SPACING / 2;
-const SNAP_INTERVAL = BANNER_WIDTH + BANNER_SPACING;
-const CONTENT_PADDING = (wp(100) - BANNER_WIDTH) / 2 - ITEM_MARGIN;
+const SNAP_INTERVAL = PAGE_WIDTH;
 
 const DOT_ACTIVE_WIDTH = 18;
 const DOT_INACTIVE_WIDTH = 6;
 
 const getItemLayout = (_, index) => ({
   length: SNAP_INTERVAL,
-  offset: CONTENT_PADDING + SNAP_INTERVAL * index,
+  offset: SNAP_INTERVAL * index,
   index,
 });
 
 const keyExtractor = (item, index) => `${item?.voucherId ?? index}-${index}`;
+
+const MONTHS = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+];
+
+// "2025-08-24T..." -> "24 Aug 2025". Returns '' for missing/invalid dates.
+const formatEventDate = value => {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  return `${date.getDate()} ${MONTHS[date.getMonth()]} ${date.getFullYear()}`;
+};
 
 const PaginationDot = React.memo(
   ({ scrollX, index, count, snap, infinite }) => {
@@ -53,25 +78,60 @@ const PaginationDot = React.memo(
   },
 );
 
-const Slide = React.memo(({ item, onPress }) => (
-  <AnimatedPressable style={styles.slide} onPress={() => onPress?.(item)}>
-    <Image
-      source={getVoucherImageSource(item)}
-      style={styles.image}
-      resizeMode="cover"
-    />
-    <View style={styles.captionRow}>
-      {!!item?.title && (
-        <Text style={styles.title} numberOfLines={2}>
-          {item.title}
-        </Text>
-      )}
-      <View style={styles.pricePill}>
-        <Text style={styles.priceText}>From ₹{item?.denomination ?? 0}</Text>
-      </View>
+const Slide = React.memo(({ item, onPress }) => {
+  const isEvent = !!item?.isEvent;
+  const dateLabel = formatEventDate(item?.eventStartDate);
+  const metaParts = [dateLabel, item?.venue].filter(Boolean);
+
+  return (
+    <View style={styles.slide}>
+      <AnimatedPressable style={styles.card} onPress={() => onPress?.(item)}>
+        <Image
+          source={getVoucherImageSource(item)}
+          style={styles.image}
+          resizeMode="cover"
+        />
+        {isEvent && (
+          <>
+            <LinearGradient
+              colors={['rgba(0,0,0,0.88)', 'rgba(0,0,0,0.55)', 'rgba(0,0,0,0)']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.scrim}
+            />
+            <View style={styles.content}>
+              <Text style={styles.eyebrow}>FEATURED EVENT</Text>
+              {!!item?.title && (
+                <Text style={styles.title} numberOfLines={2}>
+                  {item.title}
+                </Text>
+              )}
+
+              {!!item?.subtitle && (
+                <Text style={styles.subtitle} numberOfLines={1}>
+                  {item.subtitle}
+                </Text>
+              )}
+              {metaParts.length > 0 && (
+                <Text style={styles.meta} numberOfLines={1}>
+                  {metaParts.join('  •  ')}
+                </Text>
+              )}
+              <ImageBackground
+                source={icons.selectionPillTwo}
+                style={styles.bookButton}
+                imageStyle={styles.bookButtonImage}
+                resizeMode="stretch"
+              >
+                <Text style={styles.bookButtonText}>Book Now</Text>
+              </ImageBackground>
+            </View>
+          </>
+        )}
+      </AnimatedPressable>
     </View>
-  </AnimatedPressable>
-));
+  );
+});
 
 const HeroCarousel = ({ data, onItemPress }) => {
   const flatListRef = useRef(null);
@@ -170,7 +230,6 @@ const HeroCarousel = ({ data, onItemPress }) => {
         initialScrollIndex={1}
         scrollEventThrottle={16}
         keyExtractor={keyExtractor}
-        contentContainerStyle={styles.listContent}
         renderItem={renderSlide}
       />
       <View style={styles.pagination}>
@@ -193,16 +252,16 @@ const styles = StyleSheet.create({
   wrapper: {
     marginTop: 8,
   },
-  listContent: {
-    paddingHorizontal: CONTENT_PADDING,
-  },
   singleWrapper: {
     alignItems: 'center',
   },
   slide: {
-    width: BANNER_WIDTH,
+    width: PAGE_WIDTH,
+    alignItems: 'center',
+  },
+  card: {
+    width: CARD_WIDTH,
     height: BANNER_HEIGHT,
-    marginHorizontal: ITEM_MARGIN,
     borderRadius: 20,
     overflow: 'hidden',
     backgroundColor: '#161616',
@@ -214,36 +273,67 @@ const styles = StyleSheet.create({
   scrim: {
     position: 'absolute',
     left: 0,
-    right: 0,
+    top: 0,
     bottom: 0,
-    height: '55%',
+    width: '80%',
   },
-  captionRow: {
+  content: {
     position: 'absolute',
-    left: 16,
-    right: 16,
-    bottom: 14,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: '80%',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    justifyContent: 'center',
+  },
+  eyebrow: {
+    color: '#C9A9FF',
+    fontSize: 11,
+    fontFamily: 'Gilroy-Bold',
+    letterSpacing: 1.5,
   },
   title: {
-    flex: 1,
     color: '#FFFFFF',
-    fontSize: 18,
-    fontFamily: 'Gilroy-Bold',
-    marginRight: 10,
+    fontSize: 22,
+    lineHeight: 26,
+    fontFamily: 'Gilroy-Heavy',
+    textTransform: 'uppercase',
+    marginTop: 8,
   },
-  pricePill: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    paddingHorizontal: 14,
-    paddingVertical: 7,
+  titleAccent: {
+    width: 90,
+    height: 3,
+    borderRadius: 2,
+    marginTop: 8,
   },
-  priceText: {
-    color: '#000000',
+  subtitle: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontFamily: 'Gilroy-SemiBold',
+    marginTop: 10,
+  },
+  meta: {
+    color: '#D8D8D8',
     fontSize: 12,
+    fontFamily: 'Gilroy-Medium',
+    marginTop: 8,
+  },
+  bookButton: {
+    width: 132,
+    height: 46,
+    marginTop: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bookButtonImage: {
+    borderRadius: 12,
+  },
+  bookButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
     fontFamily: 'Gilroy-Bold',
+    letterSpacing: 0.3,
   },
   pagination: {
     flexDirection: 'row',

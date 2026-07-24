@@ -4,6 +4,9 @@ const PLACEHOLDER_IMAGE = require('../../assets/images/movieTicket/voucher.png')
 const PLACEHOLDER_EVENT_IMAGE = require('../../assets/images/noimages/fallback.png');
 
 export const getVoucherImageSource = item => {
+  if (item?.shortImageUrl) {
+    return { uri: CONFIG.image_base_url + item.shortImageUrl };
+  }
   if (item?.imageUrl) return { uri: CONFIG.image_base_url + item.imageUrl };
   if (item?.cardImage) return item.cardImage;
   if (item?.image) {
@@ -15,8 +18,8 @@ export const getVoucherImageSource = item => {
 };
 
 export const getEventImageSource = event => {
-  if (event?.bannerImage) {
-    return { uri: CONFIG.image_base_url + event.bannerImage };
+  if (event?.shortImageUrl) {
+    return { uri: CONFIG.image_base_url + event.shortImageUrl };
   }
   if (event?.thumbnailImage) {
     return { uri: CONFIG.image_base_url + event.thumbnailImage };

@@ -12,6 +12,10 @@ export const getPopularListApi = async config => {
   return get('popular/list', config);
 };
 
+export const getPopularCategoriesApi = async config => {
+  return get('popular/categories', config);
+};
+
 export const getEventBookingListApi = async (
   { pageNumber = 1, pageSize = 10 } = {},
   config,

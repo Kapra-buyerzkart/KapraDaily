@@ -14,6 +14,12 @@ export const COLORS = {
   warning: '#F2994A',
   info: '#00BCD4',
   purple: '#6E34C0',
+  lavender: '#BDAEDD',
+  lavenderBorder: '#7C4FA8',
+  lavenderText: '#4B2170',
+  bg: '#08081A',
+  uddenGiftCardtext: '#6B1AAA',
+  bgGiftCard: '#1E1E2E',
 
   pink: '#FF0066',
   darkRed: '#FF0000',

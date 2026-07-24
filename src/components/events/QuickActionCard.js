@@ -1,25 +1,11 @@
 import COLORS from '@/styles/colors';
 import React from 'react';
-import {
-  View,
-  Image,
-  Text,
-  TouchableOpacity,
-  ImageBackground,
-  StyleSheet,
-} from 'react-native';
+import { View, Image, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-
-const bgQuickAction = require('../../assets/events/bgQucikAction.png');
 
 const QuickActionCard = ({ icon, title, onPress }) => (
   <TouchableOpacity activeOpacity={0.85} style={styles.card} onPress={onPress}>
-    <ImageBackground
-      source={bgQuickAction}
-      style={styles.background}
-      imageStyle={styles.backgroundImage}
-      resizeMode="contain"
-    >
+    <View style={styles.background}>
       <View style={styles.container}>
         <View style={styles.titleContainer}>
           <Image source={icon} style={styles.icon} resizeMode="contain" />
@@ -32,7 +18,7 @@ const QuickActionCard = ({ icon, title, onPress }) => (
           <MaterialIcons name="arrow-forward-ios" size={16} color="#FFFFFF" />
         </View>
       </View>
-    </ImageBackground>
+    </View>
   </TouchableOpacity>
 );
 
@@ -46,8 +32,8 @@ const styles = StyleSheet.create({
   background: {
     padding: 16,
     justifyContent: 'space-between',
+    backgroundColor: '#08081A',
   },
-  backgroundImage: {},
   titleContainer: {
     flexDirection: 'row',
     alignItems: 'center',

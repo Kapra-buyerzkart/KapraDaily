@@ -9,6 +9,7 @@ const BILLS_ICON = require('../../../assets/events/Group 1000004804.png');
 const TabContent = ({
   activeTab,
   fadeAnim,
+  navigation,
   vouchers,
   loading,
   bCoins,
@@ -19,13 +20,19 @@ const TabContent = ({
   onGoToSports,
   popularEvents,
   popularEventsLoading,
+  banners,
+  bannersLoading,
+  popularVouchers,
+  moreToExplore,
   onEventPress,
 }) => {
+  console.log('[DEBUG TabContent] activeTab=', activeTab, 'POPULAR=', TAB_IDS.POPULAR);
   switch (activeTab) {
     case TAB_IDS.POPULAR:
       return (
         <PopularTab
           fadeAnim={fadeAnim}
+          navigation={navigation}
           vouchers={vouchers}
           loading={loading}
           bCoins={bCoins}
@@ -36,6 +43,10 @@ const TabContent = ({
           onGoToSports={onGoToSports}
           popularEvents={popularEvents}
           popularEventsLoading={popularEventsLoading}
+          banners={banners}
+          bannersLoading={bannersLoading}
+          popularVouchers={popularVouchers}
+          moreToExplore={moreToExplore}
           onEventPress={onEventPress}
         />
       );

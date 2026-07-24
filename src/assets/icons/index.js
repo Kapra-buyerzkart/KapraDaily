@@ -54,6 +54,22 @@ const icons = {
   min20: require('./20mins.png'),
   min20bag: require('./20minsCarrybag.png'),
   tickmark: require('./tickMarrk.png'),
+  coin: require('./coin.png'),
+  filmstrip: require('./film-strip (1) 1.png'),
+  lighting: require('./lighting 1.png'),
+  resort: require('./resort.png'),
+  trophy: require('./trophy 1.png'),
+  calendar: require('./calendar 1.png'),
+  lighningspree: require('./lighningspree.png'),
+  resorttwo: require('./resorttwo.png'),
+  plance: require('./plance.png'),
+  voucher: require('./voucher.png'),
+  buttonBackground: require('./buttonBackground.png'),
+  selectionPill: require('./selectionPill.png'),
+  selectionPillTwo: require('./selectionPilltwo.png'),
+  selectionPillthree: require('./selectionPillthree.png'),
+  selectionPillfour: require('./selectionPillfour.png'),
+  store: require('./store.png'),
 };
 
 export default icons;

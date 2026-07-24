@@ -1,12 +1,15 @@
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useState, useCallback, useContext } from 'react';
 import { Animated, StatusBar, View, ImageBackground } from 'react-native';
 import {
   useSharedValue,
   useAnimatedScrollHandler,
 } from 'react-native-reanimated';
 import LinearGradient from 'react-native-linear-gradient';
+import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { TAB_IDS } from '@/components/events/EventCategoryTabs';
+import { TICKET_LANDING_GRADIENT } from '@/styles/gradients';
+import { AppContext } from '../../context/appContext';
 import logger from '../../utils/logger';
 import styles from './styles';
 import TicketLandingList from './components/TicketLandingList';
@@ -20,12 +23,25 @@ import useStatusBarFocus from './hooks/useStatusBarFocus';
 import useHeroFade from './hooks/useHeroFade';
 import useStoreSwitcher from './hooks/useStoreSwitcher';
 import prefetchMyBookings from '../../queries/prefetchMyBookings';
+import COLORS from '@/styles/colors';
 
 const AnimatedImageBackground =
   Animated.createAnimatedComponent(ImageBackground);
 
 const TicketLandingScreen = ({ navigation }) => {
   const insets = useSafeAreaInsets();
+  const { profile, loadProfile } = useContext(AppContext);
+
+  // The context profile can still be a guest/stale object when we land here
+  // (this screen doesn't own the initial load). Refresh it on focus so the
+  // header greets the logged-in user by name instead of falling back to "Guest".
+  useFocusEffect(
+    useCallback(() => {
+      if (!profile?.custName) {
+        loadProfile();
+      }
+    }, [profile?.custName, loadProfile]),
+  );
 
   const applyStatusBar = useStatusBarFocus();
   const { fadeAnim, imageOpacity, handleImageLoad } = useHeroFade();
@@ -34,6 +50,7 @@ const TicketLandingScreen = ({ navigation }) => {
   const tabNav = useTabNavigation(eventsData.fetchEventDetailsList);
   const storeSwitcher = useStoreSwitcher(applyStatusBar);
 
+  console.log(eventsData, '====eventsdata');
   const scrollY = useSharedValue(0);
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: event => {
@@ -45,7 +62,11 @@ const TicketLandingScreen = ({ navigation }) => {
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      const tasks = [voucherData.refresh(), eventsData.fetchPopularEvents()];
+      const tasks = [
+        voucherData.refresh(),
+        eventsData.fetchPopularEvents(),
+        eventsData.fetchPopularCategories(),
+      ];
       if (tabNav.activeTab === TAB_IDS.EVENTS) {
         tasks.push(eventsData.fetchEventDetailsList());
       }
@@ -69,6 +90,7 @@ const TicketLandingScreen = ({ navigation }) => {
   const tabContentProps = useMemo(
     () => ({
       fadeAnim,
+      navigation,
       vouchers: voucherData.carouselVouchers,
       loading: voucherData.carouselLoading,
       bCoins: voucherData.bCoins,
@@ -79,15 +101,28 @@ const TicketLandingScreen = ({ navigation }) => {
       onGoToSports: tabNav.handleGoToSports,
       popularEvents: eventsData.popularEvents,
       popularEventsLoading: eventsData.popularEventsLoading,
+      banners: eventsData.banners,
+      bannersLoading: eventsData.bannersLoading,
+      popularVouchers: eventsData.popularVouchers,
+      moreToExplore: eventsData.moreToExplore,
+      popularCategories: eventsData.popularCategories,
+      popularCategoriesLoading: eventsData.popularCategoriesLoading,
       onEventPress: eventsData.handleEventPress,
     }),
     [
       fadeAnim,
+      navigation,
       voucherData,
       tabNav.handleGoToVouchers,
       tabNav.handleGoToSports,
       eventsData.popularEvents,
       eventsData.popularEventsLoading,
+      eventsData.banners,
+      eventsData.bannersLoading,
+      eventsData.popularVouchers,
+      eventsData.moreToExplore,
+      eventsData.popularCategories,
+      eventsData.popularCategoriesLoading,
       eventsData.handleEventPress,
     ],
   );
@@ -95,28 +130,31 @@ const TicketLandingScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" translucent backgroundColor="black" />
+
       <AnimatedImageBackground
         source={require('../../assets/images/movieTicket/ticketLandingBg.png')}
         style={imageBgStyle}
         onLoad={handleImageLoad}
         resizeMode="cover"
       >
-        <TicketLandingList
-          navigation={navigation}
-          insets={insets}
-          bCoins={voucherData.bCoins}
-          activeTab={tabNav.activeTab}
-          handleTabChange={tabNav.handleTabChange}
-          scrollY={scrollY}
-          scrollHandler={scrollHandler}
-          tabContentStyle={tabNav.tabContentStyle}
-          events={eventsData.events}
-          eventsLoading={eventsData.eventsLoading}
-          handleEventPress={eventsData.handleEventPress}
-          tabContentProps={tabContentProps}
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-        />
+        <View style={{ backgroundColor: COLORS.bg }}>
+          <TicketLandingList
+            navigation={navigation}
+            insets={insets}
+            profile={profile}
+            activeTab={tabNav.activeTab}
+            handleTabChange={tabNav.handleTabChange}
+            scrollY={scrollY}
+            scrollHandler={scrollHandler}
+            tabContentStyle={tabNav.tabContentStyle}
+            events={eventsData.events}
+            eventsLoading={eventsData.eventsLoading}
+            handleEventPress={eventsData.handleEventPress}
+            tabContentProps={tabContentProps}
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+          />
+        </View>
       </AnimatedImageBackground>
 
       <LinearGradient

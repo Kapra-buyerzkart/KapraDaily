@@ -8,6 +8,9 @@ const styles = StyleSheet.create({
   imageBg: {
     flex: 1,
   },
+  backdropGradient: {
+    ...StyleSheet.absoluteFillObject,
+  },
   scrollContent: {
     flexGrow: 1,
     paddingBottom: 110,

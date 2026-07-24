@@ -25,7 +25,6 @@ export const prefetchProductImages = (items, limit) => {
     .map(getProductImageUri)
     .filter(Boolean)
     .forEach(uri => {
-      // Swallow failures — a missing image must not throw into the cart flow.
       Image.prefetch(uri).catch(() => {});
     });
 };
@@ -34,9 +33,6 @@ export const getImageUrl = imagePath => {
   if (!imagePath) return require('../assets/images/fv.png');
   if (imagePath.startsWith('http')) return { uri: imagePath };
   return {
-    uri: `${CONFIG.image_base_url}/${imagePath}`.replace(
-      /([^:]\/)\/+/g,
-      '$1',
-    ),
+    uri: `${CONFIG.image_base_url}/${imagePath}`.replace(/([^:]\/)\/+/g, '$1'),
   }; // Simple clean of double slashes
 };

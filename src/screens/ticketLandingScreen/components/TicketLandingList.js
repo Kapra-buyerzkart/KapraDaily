@@ -18,7 +18,7 @@ const STICKY_INDICES = [1];
 const TicketLandingList = ({
   navigation,
   insets,
-  bCoins,
+  profile,
   activeTab,
   handleTabChange,
   scrollY,
@@ -62,7 +62,7 @@ const TicketLandingList = ({
             <EventHeader
               navigation={navigation}
               insets={insets}
-              bCoins={bCoins}
+              profile={profile}
             />
           );
         case 'tabs':
@@ -112,7 +112,7 @@ const TicketLandingList = ({
     [
       navigation,
       insets,
-      bCoins,
+      profile,
       activeTab,
       handleTabChange,
       scrollY,
