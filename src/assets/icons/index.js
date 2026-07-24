@@ -70,6 +70,9 @@ const icons = {
   selectionPillthree: require('./selectionPillthree.png'),
   selectionPillfour: require('./selectionPillfour.png'),
   store: require('./store.png'),
+  hometicket: require('./hometicket.png'),
+  calendarticket: require('./calendarticket.png'),
+  storeticketStore: require('./ticketStore 1.png'),
 };
 
 export default icons;

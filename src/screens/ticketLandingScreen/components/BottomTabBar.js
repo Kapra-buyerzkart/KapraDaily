@@ -2,7 +2,6 @@ import React from 'react';
 import { Text, TouchableOpacity, View, Image, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import icons from '../../../assets/icons';
 
 const HOME_PURPLE = '#7C3AED';
@@ -27,7 +26,11 @@ const BottomTabBar = ({
           activeOpacity={0.8}
           onPress={onHomePress}
         >
-          <MaterialIcons name="home" size={ICON_SIZE} color={HOME_PURPLE} />
+          <Image
+            source={icons.hometicket}
+            style={styles.tabImage}
+            resizeMode="contain"
+          />
           <Text style={styles.label}>Home</Text>
         </TouchableOpacity>
 
@@ -37,7 +40,11 @@ const BottomTabBar = ({
           onPress={onMyBookingsPress}
         >
           <View>
-            <MaterialIcons name="event" size={ICON_SIZE} color="#FFFFFF" />
+            <Image
+              source={icons.calendarticket}
+              style={styles.tabImage}
+              resizeMode="contain"
+            />
             {bookingsCount > 0 && (
               <View style={styles.badge}>
                 <Text style={styles.badgeText} numberOfLines={1}>
@@ -55,10 +62,11 @@ const BottomTabBar = ({
           onPress={onStorePress}
         >
           <Image
-            source={icons.objects}
+            source={icons.storeticketStore}
             style={styles.storeImage}
             resizeMode="contain"
           />
+          <Text style={styles.label}>Store</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -91,6 +99,10 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: 'Gilroy-Medium',
     color: '#FFFFFF',
+  },
+  tabImage: {
+    width: ICON_SIZE,
+    height: ICON_SIZE,
   },
   storeImage: {
     // width: ICON_SIZE,

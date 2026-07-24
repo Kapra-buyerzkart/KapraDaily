@@ -74,6 +74,22 @@ const TabContent = ({
           subtitle="Pay bills and recharge with UD-Coins, coming soon."
         />
       );
+    case TAB_IDS.HOLIDAYS:
+      return (
+        <EmptyState
+          icon={SPORTS_ICON}
+          title="Holidays"
+          subtitle="Plan your next getaway with UD-Coins, coming soon."
+        />
+      );
+    case TAB_IDS.TRAVEL:
+      return (
+        <EmptyState
+          icon={SPORTS_ICON}
+          title="Travel"
+          subtitle="Book travel with UD-Coins, coming soon."
+        />
+      );
     default:
       return null;
   }

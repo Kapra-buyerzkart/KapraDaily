@@ -21,6 +21,7 @@ const TicketLandingList = ({
   profile,
   activeTab,
   handleTabChange,
+  popularCategories,
   scrollY,
   scrollHandler,
   tabContentStyle,
@@ -70,6 +71,7 @@ const TicketLandingList = ({
             <EventCategoryTabs
               activeTab={activeTab}
               onTabChange={handleTabChange}
+              categories={popularCategories}
               scrollY={scrollY}
               insets={insets}
             />
@@ -115,6 +117,7 @@ const TicketLandingList = ({
       profile,
       activeTab,
       handleTabChange,
+      popularCategories,
       scrollY,
       tabContentStyle,
       handleEventPress,

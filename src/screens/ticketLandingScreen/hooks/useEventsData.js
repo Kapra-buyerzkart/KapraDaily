@@ -5,6 +5,7 @@ import {
   getPopularCategoriesApi,
 } from '../../../api/eventService';
 import logger from '../../../utils/logger';
+import CONFIG from '../../../globals/config';
 
 const mapPopularEvents = data => {
   const rawEvents = Array.isArray(data?.events) ? data.events : [];
@@ -61,6 +62,20 @@ const mapMoreToExplore = data => {
   }));
 };
 
+// Prefer the highest-resolution icon; remote images aren't auto-@2x/@3x'd.
+const CATEGORY_ICON_KEYS = ['iconImage3x', 'iconImage2x', 'iconImage1x'];
+
+const buildCategoryIconUri = item => {
+  const path =
+    CATEGORY_ICON_KEYS.map(key => item?.[key]).find(Boolean) ??
+    item?.catImageUrl ??
+    item?.imageUrl;
+  if (!path) return null;
+  // The API returns server-relative asset paths; prefix the CDN base unless
+  // it's already an absolute URL.
+  return /^https?:\/\//.test(path) ? path : CONFIG.image_base_url + path;
+};
+
 const mapPopularCategories = data => {
   const rawItems = Array.isArray(data)
     ? data
@@ -73,8 +88,8 @@ const mapPopularCategories = data => {
   return rawItems.map(item => ({
     catId: item?.catId ?? item?.categoryId ?? item?.id,
     catName: item?.catName ?? item?.categoryName ?? item?.name,
-    catImageUrl: item?.catImageUrl ?? item?.imageUrl,
-    isActive: item?.isActive,
+    iconUri: buildCategoryIconUri(item),
+    isActive: Boolean(item?.isActive),
   }));
 };
 
@@ -130,6 +145,7 @@ const useEventsData = navigation => {
     setPopularCategoriesLoading(true);
     return getPopularCategoriesApi()
       .then(res => {
+        console.log(res, 'popular/categories api response');
         setPopularCategories(mapPopularCategories(res?.data ?? res));
       })
       .catch(err => {

@@ -144,6 +144,7 @@ const TicketLandingScreen = ({ navigation }) => {
             profile={profile}
             activeTab={tabNav.activeTab}
             handleTabChange={tabNav.handleTabChange}
+            popularCategories={eventsData.popularCategories}
             scrollY={scrollY}
             scrollHandler={scrollHandler}
             tabContentStyle={tabNav.tabContentStyle}

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import {
   View,
   Image,
@@ -25,9 +25,12 @@ export const TAB_IDS = {
   VOUCHERS: 'vouchers',
   SPORTS: 'sports',
   BILLS: 'bills',
+  HOLIDAYS: 'holidays',
+  TRAVEL: 'travel',
 };
 
-const TABS = [
+// Shown until the popular/categories API responds (and as a hard fallback).
+const DEFAULT_TABS = [
   {
     id: TAB_IDS.POPULAR,
     label: 'Popular',
@@ -46,12 +49,6 @@ const TABS = [
     icon: icons.voucher,
     badgedIcon: icons.voucher,
   },
-  // {
-  //   id: TAB_IDS.SPORTS,
-  //   label: 'Sports',
-  //   icon: require('../../assets/events/Group 1000004803.png'),
-  //   badgedIcon: require('../../assets/events/Group 1000004803.png'),
-  // },
   {
     id: TAB_IDS.BILLS,
     label: 'Bills & recharge',
@@ -60,11 +57,62 @@ const TABS = [
   },
 ];
 
+// Maps a server category name onto the stable tab id the content switch
+// understands, plus a local icon fallback if the API sends no image.
+const CATEGORY_ALIASES = {
+  popular: { id: TAB_IDS.POPULAR, icon: icons.lighting },
+  events: { id: TAB_IDS.EVENTS, icon: icons.calendar },
+  event: { id: TAB_IDS.EVENTS, icon: icons.calendar },
+  vouchers: { id: TAB_IDS.VOUCHERS, icon: icons.voucher },
+  voucher: { id: TAB_IDS.VOUCHERS, icon: icons.voucher },
+  bills: { id: TAB_IDS.BILLS, icon: icons.coin },
+  'bills-recharge': { id: TAB_IDS.BILLS, icon: icons.coin },
+  'bills-recharges': { id: TAB_IDS.BILLS, icon: icons.coin },
+  holidays: { id: TAB_IDS.HOLIDAYS, icon: icons.resort },
+  travel: { id: TAB_IDS.TRAVEL, icon: icons.resort },
+  sports: { id: TAB_IDS.SPORTS, icon: icons.lighting },
+};
+
+const slugify = name =>
+  String(name || '')
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, ' ')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+// Turn a popular/categories entry into the shape a tab renders with.
+const categoryToTab = category => {
+  const slug = slugify(category?.catName);
+  const alias = CATEGORY_ALIASES[slug];
+  const icon = alias?.icon ?? icons.lighting;
+  return {
+    id: alias?.id ?? slug,
+    label: category?.catName ?? '',
+    icon,
+    badgedIcon: icon,
+    iconUri: category?.iconUri ?? null,
+    isActive: category?.isActive !== false,
+  };
+};
+
 const ICON_SIZE = 18;
 const STICKY_START = 40;
 const STICKY_END = 90;
 
 const TabIcon = React.memo(({ tab, active }) => {
+  // API-driven tabs carry a remote icon URL; static/fallback tabs use the
+  // bundled active/inactive icon pair.
+  if (tab.iconUri) {
+    return (
+      <Image
+        source={{ uri: tab.iconUri }}
+        style={styles.iconImage}
+        resizeMode="contain"
+      />
+    );
+  }
+
   const source =
     tab.id === TAB_IDS.POPULAR
       ? active
@@ -141,8 +189,31 @@ const CategoryTab = React.memo(({ tab, isActive, onPress }) => {
   );
 });
 
-const EventCategoryTabs = ({ activeTab, onTabChange, scrollY, insets }) => {
+const EventCategoryTabs = ({
+  activeTab,
+  onTabChange,
+  scrollY,
+  insets,
+  categories,
+}) => {
   const topInset = insets?.top ?? 0;
+
+  // Drive the bar from the popular/categories API; fall back to the static
+  // set while it loads (or if it comes back empty). Popular always leads,
+  // regardless of the order the API returns.
+  const tabs = useMemo(() => {
+    if (Array.isArray(categories) && categories.length > 0) {
+      const mapped = categories
+        .map(categoryToTab)
+        .filter(tab => tab.id && tab.label);
+      return [...mapped].sort((a, b) => {
+        if (a.id === TAB_IDS.POPULAR) return -1;
+        if (b.id === TAB_IDS.POPULAR) return 1;
+        return 0;
+      });
+    }
+    return DEFAULT_TABS;
+  }, [categories]);
 
   const containerStyle = useAnimatedStyle(() => {
     if (!scrollY) return {};
@@ -174,7 +245,7 @@ const EventCategoryTabs = ({ activeTab, onTabChange, scrollY, insets }) => {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.row}
       >
-        {TABS.map(tab => (
+        {tabs.map(tab => (
           <CategoryTab
             key={tab.id}
             tab={tab}
