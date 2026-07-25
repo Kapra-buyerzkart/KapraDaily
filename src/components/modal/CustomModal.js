@@ -106,6 +106,19 @@ const CustomModal = forwardRef((props, ref) => {
   // Stays true for the full duration of the close animation so the exit
   // transition can play before the node is actually removed.
   const [isMounted, setIsMounted] = useState(false);
+  // Whether the backdrop/content should still capture touches. Flips to
+  // false the instant close() is called — separate from isMounted, which
+  // stays true until the exit animation finishes — so a modal that's
+  // mid-close never blocks taps to whatever is behind/above it. Guards
+  // against e.g. a native <Modal> (a loading spinner shown right after
+  // confirming) mounting concurrently and starving the Reanimated
+  // withTiming completion callback below, which would otherwise leave a
+  // full-screen, invisible, touch-absorbing backdrop mounted indefinitely.
+  const [isInteractive, setIsInteractive] = useState(false);
+  // Guards finalizeClose against running twice (once from the animation's
+  // finished callback, once from the fallback timer below).
+  const hasFinalizedRef = useRef(true);
+  const closeTimeoutRef = useRef(null);
 
   // 0 = fully closed, 1 = fully open. Drives every animated style below.
   const progress = useSharedValue(0);
@@ -125,6 +138,12 @@ const CustomModal = forwardRef((props, ref) => {
   // --- Imperative open / close / toggle -------------------------------
 
   const finalizeClose = useCallback(() => {
+    if (hasFinalizedRef.current) return;
+    hasFinalizedRef.current = true;
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+    }
     setIsMounted(false);
     ModalManager.unmount(id);
     ModalManager.releaseQueue(queue, id);
@@ -134,6 +153,7 @@ const CustomModal = forwardRef((props, ref) => {
   const close = useCallback(() => {
     if (!isOpenRef.current) return;
     isOpenRef.current = false;
+    setIsInteractive(false);
     progress.value = withTiming(
       0,
       { duration: animationDuration, easing: Easing.in(Easing.cubic) },
@@ -143,6 +163,13 @@ const CustomModal = forwardRef((props, ref) => {
         }
       },
     );
+    // Fallback: guarantee the portal node is torn down even if the
+    // animation above never reports finished:true (e.g. interrupted by a
+    // concurrently-mounting native <Modal>).
+    closeTimeoutRef.current = setTimeout(
+      finalizeClose,
+      animationDuration + 50,
+    );
   }, [animationDuration, finalizeClose, progress]);
 
   const open = useCallback(() => {
@@ -151,8 +178,18 @@ const CustomModal = forwardRef((props, ref) => {
       // the enter animation or stacking duplicate portal entries.
       if (isOpenRef.current) return;
       isOpenRef.current = true;
+      hasFinalizedRef.current = false;
+      // Cancel any fallback teardown timer left over from a close() that
+      // was interrupted by this reopen — otherwise it fires later and
+      // force-unmounts this fresh open with no animation and no user
+      // action, since finalizeClose's re-entrancy guard was just reset above.
+      if (closeTimeoutRef.current) {
+        clearTimeout(closeTimeoutRef.current);
+        closeTimeoutRef.current = null;
+      }
       dragY.value = 0;
       setIsMounted(true);
+      setIsInteractive(true);
       progress.value = withTiming(1, {
         duration: animationDuration,
         easing: Easing.out(Easing.cubic),
@@ -331,7 +368,10 @@ const CustomModal = forwardRef((props, ref) => {
   // values on the UI thread without needing a JS re-render.
   const renderModalNode = useCallback(
     () => (
-      <View style={StyleSheet.absoluteFill}>
+      <View
+        style={StyleSheet.absoluteFill}
+        pointerEvents={isInteractive ? 'box-none' : 'none'}
+      >
         <Animated.View
           style={[styles.backdrop, backdropAnimatedStyle]}
           pointerEvents="auto"
@@ -414,6 +454,7 @@ const CustomModal = forwardRef((props, ref) => {
       containerStyle,
       contentAnimatedStyle,
       contentStyle,
+      isInteractive,
       keyboardAnimatedStyle,
       pan,
       radiusStyle,
@@ -449,6 +490,7 @@ const CustomModal = forwardRef((props, ref) => {
   // make sure it doesn't leak in the portal registry or block a queue.
   useEffect(
     () => () => {
+      if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
       ModalManager.unmount(id);
       ModalManager.cancelQueueRequest(queue, id);
       ModalManager.releaseQueue(queue, id);

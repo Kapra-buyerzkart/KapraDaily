@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import {
   widthPercentageToDP as wp,
@@ -21,6 +21,36 @@ const AddressConfirmationModal = ({
   onChangeAddress,
 }) => {
   const modalRef = useRef(null);
+
+  // Freeze the displayed content while the exit animation plays. Callers
+  // often clear/reset these props in the same tick they trigger the close
+  // (e.g. submitOrder() nulls addressConfirmationData before the modal has
+  // finished animating out), which would otherwise flip this modal to a
+  // different conditional render (e.g. "Delivery Unavailable") for the
+  // ~300ms it's still visible and closing.
+  const [display, setDisplay] = useState({
+    pincode,
+    areaName,
+    isServiceable,
+    unavailableMessage,
+    isPlacingOrder,
+  });
+  if (
+    visible &&
+    (display.pincode !== pincode ||
+      display.areaName !== areaName ||
+      display.isServiceable !== isServiceable ||
+      display.unavailableMessage !== unavailableMessage ||
+      display.isPlacingOrder !== isPlacingOrder)
+  ) {
+    setDisplay({
+      pincode,
+      areaName,
+      isServiceable,
+      unavailableMessage,
+      isPlacingOrder,
+    });
+  }
 
   // Bridge the parent-controlled `visible` prop to CustomModal's imperative
   // open/close API (RN core <Modal> does not render on this build).
@@ -46,47 +76,48 @@ const AddressConfirmationModal = ({
       <View
         style={[
           styles.iconContainer,
-          !isServiceable && styles.iconContainerWarning,
+          !display.isServiceable && styles.iconContainerWarning,
         ]}
       >
         <Ionicons
-          name={isServiceable ? 'location' : 'warning'}
+          name={display.isServiceable ? 'location' : 'warning'}
           size={wp('8%')}
-          color={isServiceable ? '#F25000' : '#FF0000'}
+          color={display.isServiceable ? '#F25000' : '#FF0000'}
         />
       </View>
 
       <Text style={styles.title}>
-        {isServiceable ? 'Delivery Confirmation' : 'Delivery Unavailable'}
+        {display.isServiceable ? 'Delivery Confirmation' : 'Delivery Unavailable'}
       </Text>
 
-      {isServiceable ? (
+      {display.isServiceable ? (
         <Text style={styles.message}>
           <Text style={styles.messageRegular}>
             Your order will be delivered to pincode{' '}
           </Text>
           <Text style={styles.messageHighlight}>
-            {pincode} {areaName}
+            {display.pincode} {display.areaName}
           </Text>
         </Text>
       ) : (
         <Text style={styles.message}>
           <Text style={styles.messageRegular}>
-            {unavailableMessage || 'We currently do not serve this area: '}
+            {display.unavailableMessage ||
+              'We currently do not serve this area: '}
           </Text>
         </Text>
       )}
 
-      {isServiceable && (
+      {display.isServiceable && (
         <Text style={styles.warningMessage}>
-          {isPlacingOrder
+          {display.isPlacingOrder
             ? 'Clicking Confirm will finalize your order.'
             : 'Note: your cart might have been updated due to address change'}
         </Text>
       )}
 
       <View style={styles.buttonContainer}>
-        {isServiceable ? (
+        {display.isServiceable ? (
           <TouchableOpacity
             style={{ width: '100%' }}
             activeOpacity={0.8}
@@ -105,7 +136,9 @@ const AddressConfirmationModal = ({
               style={styles.gradientButton}
             >
               <Text style={styles.buttonText}>
-                {isPlacingOrder ? 'Confirm & Place Order' : 'Confirm Delivery'}
+                {display.isPlacingOrder
+                  ? 'Confirm & Place Order'
+                  : 'Confirm Delivery'}
               </Text>
             </LinearGradient>
           </TouchableOpacity>

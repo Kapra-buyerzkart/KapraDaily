@@ -77,6 +77,15 @@ export const useCartOrder = ({
     setStatusModalVisible,
   });
 
+  // The loader is a native <Modal>; opening the (Reanimated-based) address
+  // confirmation modal in the same tick that it dismisses races its close
+  // transition and makes the confirmation modal flash and immediately
+  // disappear. Give the native modal a moment to fully tear down first —
+  // same fix already applied to the popup in CartContext's onSelectAddress.
+  const openAddressConfirmation = data => {
+    setTimeout(() => setAddressConfirmationData(data), 350);
+  };
+
   const handleConfirmOrder = async () => {
     if (!selectedAddress) {
       setShowAddressModal(true);
@@ -135,7 +144,7 @@ export const useCartOrder = ({
         // Rely on the banner UI; no popup needed
         return;
       } else {
-        setAddressConfirmationData({
+        openAddressConfirmation({
           pincode,
           areaName: area,
           isPlacingOrder: true,
@@ -163,7 +172,7 @@ export const useCartOrder = ({
         errorMsg.toLowerCase().includes('closed') ||
         errorMsg.toLowerCase().includes('pincode area')
       ) {
-        setAddressConfirmationData({
+        openAddressConfirmation({
           pincode,
           areaName: area,
           isPlacingOrder: true,
@@ -172,7 +181,7 @@ export const useCartOrder = ({
             errorMsg || 'Delivery currently not available in this area.',
         });
       } else {
-        setAddressConfirmationData({
+        openAddressConfirmation({
           pincode,
           areaName: area,
           isPlacingOrder: true,

@@ -4,7 +4,6 @@ import {
   StyleSheet,
   Image,
   TouchableOpacity,
-  ActivityIndicator,
   StatusBar,
 } from 'react-native';
 import React, { useState } from 'react';
@@ -35,6 +34,7 @@ import { useContext } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import SelectedProducts from '../components/SelectedProducts';
 import StoreUnavailable from '../components/StoreUnavailable';
+import WishlistGridShimmer from '../components/WishlistGridShimmer';
 import LocationModal from '../components/LocationModal';
 import { AppContext } from '../context/appContext';
 import images from '@/assets/images';
@@ -42,8 +42,8 @@ import COLORS from '@/styles/colors';
 
 export default function WishlistScreen() {
   const navigation = useNavigation();
-  const { bottom } = useSafeAreaInsets();
-  const { wishlistItems, removeFromWishlist, loadWishlist, isLoading } =
+  const insets = useSafeAreaInsets();
+  const { wishlistItems, removeFromWishlist, loadWishlist, isLoading, error } =
     useWishlist();
   const { addToCart, cartItems } = useCart();
   const { isStoreUnavailable, storeUnavailableData } = useContext(AppContext);
@@ -52,11 +52,9 @@ export default function WishlistScreen() {
   const [confirmationVisible, setConfirmationVisible] = useState(false);
   const [itemToRemove, setItemToRemove] = useState(null);
 
-  const tabBarClearance = getTabBarClearance(bottom);
+  const tabBarClearance = getTabBarClearance(insets.bottom);
   const lastScrollY = useSharedValue(0);
   const cartTranslateY = useSharedValue(0);
-
-  const insets = useSafeAreaInsets();
 
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: event => {
@@ -122,11 +120,6 @@ export default function WishlistScreen() {
     );
   };
 
-  const renderFooter = () => (
-    <View style={styles.footerContainer}>
-      <Text style={styles.footerText}>NO MORE ITEMS</Text>
-    </View>
-  );
   const renderNoitem = () => (
     <View style={styles.footerContainer}>
       <Image source={images.noWishlist} style={styles.footerImage} />
@@ -173,9 +166,14 @@ export default function WishlistScreen() {
             onChangeLocation={() => setIsLocationModalVisible(true)}
           />
         ) : isLoading && wishlistItems.length === 0 ? (
-          <View style={styles.footerContainer}>
-            <ActivityIndicator size="large" color={COLORS.primary} />
-          </View>
+          <WishlistGridShimmer />
+        ) : error && wishlistItems.length === 0 ? (
+          <StoreUnavailable
+            imageSource={images.noWishlist}
+            text="Something went wrong while loading your wishlist. Please try again."
+            buttonText="Retry"
+            onChangeLocation={() => loadWishlist(true)}
+          />
         ) : (
           <Animated.FlatList
             data={wishlistItems}

@@ -26,7 +26,7 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const HELPLINE_PHONE = '+91 9048801110';
-const HELPLINE_EMAIL = 'support@udendeal.in';
+const HELPLINE_EMAIL = 'support@udendeal.com';
 
 const HelpSupportModal = forwardRef((_props, ref) => {
   const sheetRef = useRef(null);

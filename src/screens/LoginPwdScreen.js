@@ -25,6 +25,7 @@ import { useCart } from '../context/CartContext';
 import { loginWithPassword, sendLoginOtp } from '../api';
 import secureStore from '../utils/secureStore';
 import { setTokens } from '../api/tokenService';
+import images from '@/assets/images';
 
 const mergeCustomerIdIntoProfile = async custId => {
   logger.log('????????', custId);
@@ -111,12 +112,9 @@ const LoginPwdScreen = () => {
         >
           <ImageBackground
             style={styles.backgroundImage}
-            source={require('../assets/images/login_background_image.jpg')}
+            source={images.login_landing}
           >
-            <Image
-              style={styles.kapraLogo}
-              source={require('../assets/images/kapra_logo.png')}
-            />
+            <View />
             <Image
               style={styles.tagLine}
               source={require('../assets/images/login_content.png')}

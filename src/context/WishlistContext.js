@@ -7,7 +7,7 @@ export const WishlistContext = createContext();
 export const WishlistProvider = ({ children }) => {
     const [wishlistItems, setWishlistItems] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [lastFetched, setLastFetched] = useState(0); // Keeping for UI if needed, but logic moves to ref
+    const [error, setError] = useState(null);
     const lastFetchedRef = useRef(0);
     const loadRequestRef = useRef(null);
 
@@ -28,18 +28,13 @@ export const WishlistProvider = ({ children }) => {
                 const storedPincodeAreaId = await secureStore.getItem('pincodeAreaId');
                 const areaId = storedPincodeAreaId ? parseInt(storedPincodeAreaId) : null;
                 const response = await getWishlistApi(areaId);
-                if (response && response.data && response.data.items) {
-                    const items = Array.isArray(response.data.items) ? response.data.items : [];
-                    setWishlistItems(items);
-                    const timestamp = Date.now();
-                    lastFetchedRef.current = timestamp;
-                    setLastFetched(timestamp); // Update state for potential UI usage
-                } else {
-                    setWishlistItems([]);
-                }
-            } catch (error) {
-                console.error('Error loading wishlist:', error);
-                setWishlistItems([]);
+                const items = Array.isArray(response?.data?.items) ? response.data.items : [];
+                setWishlistItems(items);
+                setError(null);
+                lastFetchedRef.current = Date.now();
+            } catch (err) {
+                console.error('Error loading wishlist:', err);
+                setError(err);
             } finally {
                 setIsLoading(false);
                 loadRequestRef.current = null;
@@ -63,8 +58,8 @@ export const WishlistProvider = ({ children }) => {
 
         try {
             await addToWishlistApi(productId);
-        } catch (error) {
-            console.error('Error adding to wishlist API:', error);
+        } catch (err) {
+            console.error('Error adding to wishlist API:', err);
             // Revert on failure
             setWishlistItems(prevItems => prevItems.filter(i => (i.productId || i.id) !== productId));
             loadWishlist(true); // Retry fetch
@@ -81,8 +76,8 @@ export const WishlistProvider = ({ children }) => {
 
         try {
             await removeFromWishlistApi(itemId);
-        } catch (error) {
-            console.error('Error removing from wishlist API:', error);
+        } catch (err) {
+            console.error('Error removing from wishlist API:', err);
             // Revert on failure
             if (removedItem) {
                 setWishlistItems(prevItems => [...prevItems, removedItem]);
@@ -107,12 +102,13 @@ export const WishlistProvider = ({ children }) => {
     const value = useMemo(() => ({
         wishlistItems,
         isLoading,
+        error,
         addToWishlist,
         removeFromWishlist,
         isInWishlist,
         toggleWishlist,
         loadWishlist
-    }), [wishlistItems, isLoading, addToWishlist, removeFromWishlist, isInWishlist, toggleWishlist, loadWishlist]);
+    }), [wishlistItems, isLoading, error, addToWishlist, removeFromWishlist, isInWishlist, toggleWishlist, loadWishlist]);
 
     return (
         <WishlistContext.Provider value={value}>

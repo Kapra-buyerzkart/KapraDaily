@@ -41,6 +41,7 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import HelpSupportModal from '../components/HelpSupportModal';
 import EmailOtpBottomSheet from '../components/EmailOtpBottomSheet';
 import { setTokens } from '../api/tokenService';
+import images from '@/assets/images';
 
 const EMAIL_OTP_FALLBACK_RESEND_THRESHOLD = 1;
 
@@ -502,12 +503,9 @@ const OtpScreen = () => {
         >
           <ImageBackground
             style={styles.backgroundImage}
-            source={require('../assets/images/login_background_image.jpg')}
+            source={images.login_landing}
           >
-            <Image
-              style={styles.kapraLogo}
-              source={require('../assets/images/kapra_logo.png')}
-            />
+            <View />
             <Image
               style={styles.tagLine}
               source={require('../assets/images/login_content.png')}
