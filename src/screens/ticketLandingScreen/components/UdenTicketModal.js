@@ -515,11 +515,11 @@ const UdenTicketModal = ({
                     </View>
                   )}
 
-                  <View style={styles.noCoinsContainer}>
+                  {/* <View style={styles.noCoinsContainer}>
                     <Text style={styles.noCoins}>
                       * You dont have enough coins to redeem this card
                     </Text>
-                  </View>
+                  </View> */}
                 </View>
               )}
 

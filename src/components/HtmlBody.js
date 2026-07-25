@@ -28,7 +28,13 @@ const tagsStyles = {
 
 const sanitizeHtml = html =>
   typeof html === 'string'
-    ? html.replace(/\sstyle="[^"]*"/gi, '').replace(/\sclass="[^"]*"/gi, '')
+    ? html
+        // Backend sometimes returns HTML with CSV/Excel-escaped quotes (""
+        // instead of "). Collapse them first so the tag is valid markup and the
+        // style/class stripping below actually matches.
+        .replace(/""/g, '"')
+        .replace(/\sstyle="[^"]*"/gi, '')
+        .replace(/\sclass="[^"]*"/gi, '')
     : '';
 
 const HtmlBody = ({ html, contentWidth = DEFAULT_CONTENT_WIDTH }) => {

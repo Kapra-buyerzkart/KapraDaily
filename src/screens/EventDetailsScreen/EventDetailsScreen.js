@@ -107,6 +107,7 @@ const EventDetailsScreen = ({ navigation, route }) => {
     return <EventDetailsSkeleton />;
   }
 
+  console.log(details, 'what is the details===>');
   return (
     <View style={styles.container}>
       <StatusBar

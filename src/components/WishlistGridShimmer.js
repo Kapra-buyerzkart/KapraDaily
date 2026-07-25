@@ -9,21 +9,25 @@ import ShimmerPlaceholder from './ShimmerPlaceholder';
 const WishlistCardShimmer = () => (
   <View style={styles.cardContainer}>
     <View style={styles.cardSurface}>
-      <View style={styles.topRow}>
-        <ShimmerPlaceholder style={styles.heartPlaceholder} />
+      <View style={styles.topCardBox}>
+        <View style={styles.topRow}>
+          <ShimmerPlaceholder style={styles.heartPlaceholder} />
+        </View>
       </View>
 
-      <View style={styles.imageWrapper}>
-        <ShimmerPlaceholder style={styles.imagePlaceholder} />
-        <ShimmerPlaceholder style={styles.actionPlaceholder} />
-      </View>
+      <View style={styles.imageContainer}>
+        <View style={styles.imageWrapper}>
+          <ShimmerPlaceholder style={styles.imagePlaceholder} />
+          <ShimmerPlaceholder style={styles.actionPlaceholder} />
+        </View>
 
-      <View style={styles.bottomSection}>
-        <ShimmerPlaceholder style={styles.pricePlaceholder} />
-        <ShimmerPlaceholder style={styles.offerPlaceholder} />
-        <ShimmerPlaceholder style={styles.nameLinePlaceholder} />
-        <ShimmerPlaceholder style={styles.nameLineShortPlaceholder} />
-        <ShimmerPlaceholder style={styles.weightPlaceholder} />
+        <View style={styles.bottomSection}>
+          <ShimmerPlaceholder style={styles.pricePlaceholder} />
+          <ShimmerPlaceholder style={styles.offerPlaceholder} />
+          <ShimmerPlaceholder style={styles.nameLinePlaceholder} />
+          <ShimmerPlaceholder style={styles.nameLineShortPlaceholder} />
+          <ShimmerPlaceholder style={styles.weightPlaceholder} />
+        </View>
       </View>
     </View>
   </View>
@@ -58,16 +62,22 @@ const styles = StyleSheet.create({
     borderColor: '#F3F4F6',
     overflow: 'hidden',
   },
+  topCardBox: {
+    paddingVertical: hp('0.5%'),
+  },
   topRow: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    paddingVertical: hp('0.5%'),
     paddingHorizontal: wp('2%'),
   },
   heartPlaceholder: {
     width: wp('4.6%'),
     height: wp('4.6%'),
     borderRadius: wp('2.3%'),
+  },
+  imageContainer: {
+    marginTop: hp('0.5%'),
+    paddingHorizontal: wp('2%'),
   },
   imageWrapper: {
     alignItems: 'center',
@@ -81,11 +91,11 @@ const styles = StyleSheet.create({
   },
   actionPlaceholder: {
     position: 'absolute',
-    right: wp('2%'),
+    right: 3,
     bottom: 0,
-    width: wp('6%'),
-    height: wp('6%'),
-    borderRadius: wp('1.6%'),
+    width: wp('7%'),
+    height: wp('7%'),
+    borderRadius: 8,
   },
   bottomSection: {
     padding: hp(1),

@@ -84,7 +84,7 @@ const TicketRow = React.memo(
             />
           </AnimatedPressable>
 
-          <Text style={styles.price}>{formatPrice(category.price)}</Text>
+          <Text style={styles.price}>{formatPrice(category.totalAmount)}</Text>
 
           {quantity > 0 ? (
             <View style={styles.stepper}>
@@ -255,6 +255,8 @@ const TicketSelectionModal = ({
     try {
       const res = await checkTicketAvailabilityApi(id, quantity);
       const data = res?.data ?? res;
+
+      console.log(data, 'data=====>');
       return data?.available ?? data?.isAvailable ?? true;
     } catch (err) {
       logger.error('Failed to check ticket availability:', err?.message);
@@ -312,7 +314,7 @@ const TicketSelectionModal = ({
   const { totalTickets, totalPrice } = useMemo(() => {
     const tickets = selectedLines.reduce((sum, { qty }) => sum + qty, 0);
     const price = selectedLines.reduce(
-      (sum, { cat, qty }) => sum + cat.price * qty,
+      (sum, { cat, qty }) => sum + cat.totalAmount * qty,
       0,
     );
     return { totalTickets: tickets, totalPrice: price };

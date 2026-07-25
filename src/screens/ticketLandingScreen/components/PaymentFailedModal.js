@@ -95,8 +95,8 @@ const PaymentFailedModal = ({
 
             <Text style={styles.failedText}>Failed</Text>
             <Text style={styles.subtitleText}>
-              Your booking for {quantity} {subject}
-              {plural} could not be completed. Please try again.
+              Your booking for {subject} could not be completed. Please try
+              again.
             </Text>
 
             <View style={styles.detailsBox}>
