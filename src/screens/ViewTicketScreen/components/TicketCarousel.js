@@ -39,6 +39,17 @@ const TicketCarousel = ({ tickets, entranceStyle, onQrPress }) => {
     [width, activeIndex, onQrPress],
   );
 
+  if (tickets.length === 0) {
+    return (
+      <Animated.View style={[styles.ticketArea, styles.empty, entranceStyle]}>
+        <Text style={styles.emptyTitle}>No tickets available</Text>
+        <Text style={styles.emptySubtitle}>
+          Your tickets for this booking will appear here once they're issued.
+        </Text>
+      </Animated.View>
+    );
+  }
+
   return (
     <>
       <Animated.View style={[styles.ticketArea, entranceStyle]}>
@@ -77,6 +88,24 @@ const styles = StyleSheet.create({
   ticketArea: {
     flex: 1,
     justifyContent: 'center',
+  },
+  empty: {
+    alignItems: 'center',
+    paddingHorizontal: wp(10),
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontFamily: 'Gilroy-Bold',
+    color: '#FFFFFF',
+    marginBottom: hp(1),
+    textAlign: 'center',
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    fontFamily: 'Gilroy-Medium',
+    color: 'rgba(255,255,255,0.6)',
+    textAlign: 'center',
+    lineHeight: 20,
   },
   // Fill the ticket area so the horizontal list has a definite height and a
   // large touch target. The negative margins cancel the screen's horizontal

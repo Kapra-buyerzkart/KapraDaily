@@ -257,6 +257,7 @@ const EventBookingDetailsScreen = ({ navigation, route }) => {
         sessionName: vm.sessionName,
         startDateTime: vm.startDateTime,
         endDateTime: vm.endDateTime,
+        thumbnailImage: vm.bannerImage,
       },
       tickets: vm.tickets,
       bookingItems: vm.items,

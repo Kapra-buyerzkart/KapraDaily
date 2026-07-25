@@ -15,3 +15,11 @@ export const resolveQr = path => {
   if (!path || typeof path !== 'string') return null;
   return /^https?:\/\//i.test(path) ? path : CONFIG.image_base_url + path;
 };
+
+// Turns a backend image path (e.g. `thumbnailImage`) into an <Image> source.
+// Returns undefined when there's nothing to show so ConcertTicket falls back to
+// its bundled placeholder (default props only apply for `undefined`, not null).
+export const resolveImageSource = path => {
+  const uri = resolveQr(path);
+  return uri ? { uri } : undefined;
+};

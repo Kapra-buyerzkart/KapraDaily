@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
 import { formatTime } from '../../EventDetailsScreen/utils';
-import { formatTicketDate, resolveQr } from '../utils';
+import { formatTicketDate, resolveImageSource, resolveQr } from '../utils';
 
 // Normalizes the raw booking/ticket route params into a uniform list of ticket
-// view models. Falls back to a single placeholder ticket when none are passed.
+// view models. Returns an empty list when the backend passes no tickets.
 const useTicketList = (booking, rawTickets) =>
   useMemo(() => {
     const shared = {
@@ -12,20 +12,10 @@ const useTicketList = (booking, rawTickets) =>
       location: booking?.eventVenue,
       date: formatTicketDate(booking?.startDateTime),
       time: formatTime(booking?.startDateTime),
+      eventImage: resolveImageSource(booking?.thumbnailImage),
     };
 
     const list = Array.isArray(rawTickets) ? rawTickets : [];
-    if (list.length === 0) {
-      return [
-        {
-          ...shared,
-          ticketType: 'Gold Chair',
-          seatNo: 'S4',
-          ticketId: booking?.bookingNumber || 'SDFGDH2335BNN',
-          id: 'dummy',
-        },
-      ];
-    }
 
     return list.map((t, i) => ({
       ...shared,

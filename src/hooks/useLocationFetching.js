@@ -44,8 +44,33 @@ export const useLocationFetching = ({ navigation }) => {
 
   const userInteractedRef = useRef(false);
   const timeoutRef = useRef(null);
+  // Single-flight + mount guards. Async work here (geolocation callbacks,
+  // network promises, timers, the AppState re-fetch) can resolve AFTER the user
+  // has already left this screen. Without these guards a late resolution calls
+  // navigateAfterLocation() again and resets the stack back to AuthSuccessScreen
+  // even though the user is now on Home — the "app jumps to AuthSuccess" bug.
+  const hasNavigatedRef = useRef(false);
+  const isMountedRef = useRef(true);
+  const pendingTimeoutsRef = useRef([]);
+
+  // setTimeout wrapper that (a) is tracked so it can be cleared on unmount and
+  // (b) no-ops its callback if the screen has already unmounted.
+  const registerTimeout = (fn, delay) => {
+    const id = setTimeout(() => {
+      pendingTimeoutsRef.current = pendingTimeoutsRef.current.filter(
+        t => t !== id,
+      );
+      if (isMountedRef.current) fn();
+    }, delay);
+    pendingTimeoutsRef.current.push(id);
+    return id;
+  };
 
   const navigateAfterLocation = () => {
+    // Bail if we've already navigated away or the screen has unmounted, so a
+    // stale async callback can't pull the user back to AuthSuccessScreen.
+    if (hasNavigatedRef.current || !isMountedRef.current) return;
+    hasNavigatedRef.current = true;
     if (profile?.custId) {
       navigation.reset({ index: 0, routes: [{ name: 'AuthSuccessScreen' }] });
     } else {
@@ -198,7 +223,7 @@ export const useLocationFetching = ({ navigation }) => {
           });
 
           setShowConfirm(false);
-          setTimeout(() => {
+          registerTimeout(() => {
             setLocationNotFetched(false);
             navigateAfterLocation();
           }, 2000);
@@ -222,7 +247,7 @@ export const useLocationFetching = ({ navigation }) => {
       if (area?.data?.length > 1) {
         // Multiple stores/areas — check if user's current pincodeAreaId is among them
         if (area?.data?.find(obj => obj?.pincodeAreaId == profile?.pincode)) {
-          setTimeout(() => {
+          registerTimeout(() => {
             if (!userInteractedRef.current) {
               setLocationNotFetched(false);
               navigateAfterLocation();
@@ -235,7 +260,7 @@ export const useLocationFetching = ({ navigation }) => {
       } else if (area?.data?.length == 1) {
         setShowConfirm(false);
         await editPincode(area.data[0]);
-        setTimeout(() => {
+        registerTimeout(() => {
           setLocationNotFetched(false);
           navigateAfterLocation();
         }, 2000);
@@ -358,7 +383,7 @@ export const useLocationFetching = ({ navigation }) => {
         if (savedRegion) setRegion(JSON.parse(savedRegion));
         if (savedAddress) setAddressComponent(JSON.parse(savedAddress));
 
-        setTimeout(() => {
+        registerTimeout(() => {
           setLocationNotFetched(false);
           navigateAfterLocation();
         }, 1000);
@@ -384,7 +409,10 @@ export const useLocationFetching = ({ navigation }) => {
     init();
 
     return () => {
+      isMountedRef.current = false;
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      pendingTimeoutsRef.current.forEach(clearTimeout);
+      pendingTimeoutsRef.current = [];
     };
   }, []);
 
@@ -393,6 +421,9 @@ export const useLocationFetching = ({ navigation }) => {
       'change',
       async nextState => {
         if (nextState === 'active') {
+          // Already navigated away (or unmounting): don't start another location
+          // flow that would reset back to AuthSuccessScreen from Home.
+          if (hasNavigatedRef.current || !isMountedRef.current) return;
           const savedOverride = await AsyncStorage.getItem('manualOverride');
           const storedPincodeAreaId = await AsyncStorage.getItem(
             'pincodeAreaId',

@@ -11,6 +11,7 @@ import SectionTitle from '@/components/events/SectionTitle';
 import LoadingSkeleton from '@/components/events/LoadingSkeleton';
 import EmptyState from '@/components/events/EmptyState';
 import ExploreMoreRow from '@/components/events/ExploreMoreRow';
+import TicketLandingSkeleton from './TicketLandingSkeleton';
 
 const VOUCHERS_ICON = require('../../../assets/events/Frame 1216250138.png');
 const SPORTS_ICON = require('../../../assets/events/Group 1000004808.png');
@@ -76,6 +77,17 @@ const PopularTab = ({
     popularEventsLoading,
     popularEventsLen: popularEvents?.length,
   });
+
+  // First load: the popular API drives the hero, gift cards and upcoming
+  // events, so show one cohesive full-screen shimmer until it lands instead of
+  // letting each section pop in on its own.
+  if (popularEventsLoading) {
+    return (
+      <Animated.View style={containerStyle}>
+        <TicketLandingSkeleton />
+      </Animated.View>
+    );
+  }
 
   if (!loading && (!vouchers || vouchers.length === 0)) {
     return (

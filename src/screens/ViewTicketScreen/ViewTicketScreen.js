@@ -14,6 +14,11 @@ const ViewTicketScreen = ({ navigation, route }) => {
   const booking = route?.params?.booking ?? null;
   const rawTickets = route?.params?.tickets ?? null;
 
+  console.log(
+    'ViewTicketScreen backend tickets:',
+    JSON.stringify(rawTickets, null, 2),
+  );
+
   const insets = useSafeAreaInsets();
 
   const tickets = useTicketList(booking, rawTickets);
