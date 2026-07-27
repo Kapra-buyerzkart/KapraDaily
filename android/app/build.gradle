@@ -86,8 +86,8 @@ android {
         applicationId "com.buyerskart.customer"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 25044
-        versionName "4.2.1"
+        versionCode 25045
+        versionName "5.0.0"
 
         // Google Maps SDK key is injected from a Gradle property (set in
         // ~/.gradle/gradle.properties or CI secrets), never hardcoded in the
