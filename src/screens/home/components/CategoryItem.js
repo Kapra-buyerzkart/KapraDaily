@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, Image } from 'react-native';
 import { FadeInUp } from 'react-native-reanimated';
 import { useNavigation } from '@react-navigation/native';
@@ -11,6 +11,12 @@ import { getStaggerDelay } from '../../../utils/staggerDelay';
 const CategoryItem = React.memo(({ item, index = 0 }) => {
   const navigation = useNavigation();
   const [imageError, setImageError] = useState(false);
+
+  // Reset the error latch when the image changes so a recycled chip does not
+  // keep showing the placeholder from a previous category.
+  useEffect(() => {
+    setImageError(false);
+  }, [item.image, item.imageUrl]);
 
   let imageSource;
   if (imageError || (!item.image && !item.imageUrl)) {

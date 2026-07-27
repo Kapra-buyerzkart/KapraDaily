@@ -7,6 +7,8 @@ import {
 } from '../api/voucherService';
 import { useCart } from '../context/CartContext';
 import { AppContext } from '../context/appContext';
+import { isPaymentAlreadyCompleted } from '../utils/paymentStatus';
+import logger from '../utils/logger';
 
 export const useVoucherPayment = onBalanceChange => {
   const { showStatus } = useCart();
@@ -104,8 +106,12 @@ export const useVoucherPayment = onBalanceChange => {
         razorpaySignature: sdkResponse?.razorpay_signature,
         amount: amountPayable * 100,
       });
+      logger.warn('[useVoucherPayment] verify response:', verifyRes);
 
-      if (verifyRes?.success) {
+      // The purchase may already be settled by the backend (e.g. via a
+      // webhook), in which case verify reports "already processed" /
+      // "completed successfully" — treat that as a success.
+      if (verifyRes?.success || isPaymentAlreadyCompleted(verifyRes)) {
         setSuccessVisible(true);
       } else {
         showStatus({
@@ -117,10 +123,15 @@ export const useVoucherPayment = onBalanceChange => {
         });
       }
     } catch (err) {
-      console.log(
-        '[useVoucherPayment] verification failed:',
-        err?.response?.data || err,
-      );
+      logger.error('[useVoucherPayment] verify error:', {
+        status: err?.status,
+        message: err?.message,
+        data: err?.data || err?.response?.data,
+      });
+      if (isPaymentAlreadyCompleted(err)) {
+        setSuccessVisible(true);
+        return;
+      }
       showStatus({
         type: 'error',
         title: 'Payment Pending',

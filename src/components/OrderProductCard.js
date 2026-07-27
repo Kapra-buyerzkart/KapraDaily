@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
@@ -10,6 +10,21 @@ import AppButton from './AppButton';
 
 const OrderProductCard = ({ item, orderStatus, onReturn }) => {
   const [imageError, setImageError] = useState(false);
+
+  const rawImage =
+    item.image ||
+    item.prImage ||
+    item.productImage ||
+    item.product_image ||
+    item.featuredImage ||
+    item.img ||
+    item?.productImg;
+
+  // Reset the error latch when the image changes so a recycled row does not
+  // keep showing the "not found" placeholder from a previous item.
+  useEffect(() => {
+    setImageError(false);
+  }, [rawImage]);
 
   // Helper to resolve image source
   const getImageSource = img => {
@@ -22,15 +37,7 @@ const OrderProductCard = ({ item, orderStatus, onReturn }) => {
     return img;
   };
 
-  const imageSource = getImageSource(
-    item.image ||
-      item.prImage ||
-      item.productImage ||
-      item.product_image ||
-      item.featuredImage ||
-      item.img ||
-      item?.productImg,
-  );
+  const imageSource = getImageSource(rawImage);
 
   // Determine Status Eligibility for Return
   const canReturn =

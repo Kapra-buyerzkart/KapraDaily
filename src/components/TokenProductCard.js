@@ -12,6 +12,7 @@ import Animated, {
   useSharedValue,
   withSequence,
   withSpring,
+  withTiming,
 } from 'react-native-reanimated';
 import Entypo from 'react-native-vector-icons/Entypo';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -24,6 +25,7 @@ import CONFIG from '../globals/config';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import AnimatedPressable from './AnimatedPressable';
+import ShimmerPlaceholder from './ShimmerPlaceholder';
 
 // Constants
 const DEFAULT_TOKEN_VALUE = '1';
@@ -147,14 +149,24 @@ const styles = StyleSheet.create({
   },
 
   // Images
-  productImage: {
+  imageBox: {
     width: wp('28%'),
     height: wp('26%'),
-    resizeMode: 'contain',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  productImageThreeColumn: {
+  imageBoxThreeColumn: {
     width: wp('22%'),
     height: wp('20%'),
+  },
+  productImageFill: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'contain',
+  },
+  imageShimmer: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 10,
   },
   productImageOutOfStock: {
     opacity: 0.5,
@@ -324,22 +336,56 @@ const WishlistButton = React.memo(function WishlistButton({
 
 const ProductImage = React.memo(function ProductImage({
   imageSource,
+  isPlaceholder,
   isThreeColumn,
   isOutOfStock,
   onError,
 }) {
+  // `isPlaceholder` means we're intentionally showing the "not found" art
+  // (genuine load error or a product with no image). Only real remote images
+  // get the shimmer-then-fade treatment so users never see the placeholder
+  // flash while an image is still downloading.
+  const [loaded, setLoaded] = useState(false);
+  const opacity = useSharedValue(isPlaceholder ? 1 : 0);
+
+  // Reset the fade/shimmer whenever the source changes — a card recycled by
+  // the FlatList for a new product, or an optimistic item swapped for server
+  // data, must shimmer again rather than flash the previous image.
+  useEffect(() => {
+    if (isPlaceholder) {
+      setLoaded(true);
+      opacity.value = 1;
+    } else {
+      setLoaded(false);
+      opacity.value = 0;
+    }
+  }, [imageSource, isPlaceholder, opacity]);
+
+  const handleLoad = useCallback(() => {
+    setLoaded(true);
+    opacity.value = withTiming(1, { duration: 220 });
+  }, [opacity]);
+
+  const imageAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+  }));
+
+  const showShimmer = !isPlaceholder && !loaded;
+
   return (
-    <>
-      <Image
+    <View style={[styles.imageBox, isThreeColumn && styles.imageBoxThreeColumn]}>
+      <Animated.Image
         source={imageSource}
         style={[
-          styles.productImage,
-          isThreeColumn && styles.productImageThreeColumn,
+          styles.productImageFill,
           isOutOfStock && styles.productImageOutOfStock,
+          imageAnimatedStyle,
         ]}
         resizeMode="contain"
+        onLoad={handleLoad}
         onError={onError}
       />
+      {showShimmer && <ShimmerPlaceholder style={styles.imageShimmer} />}
       {isOutOfStock && (
         <View style={styles.outOfStockOverlay}>
           <Text
@@ -352,7 +398,7 @@ const ProductImage = React.memo(function ProductImage({
           </Text>
         </View>
       )}
-    </>
+    </View>
   );
 });
 
@@ -516,27 +562,34 @@ const TokenProductCard = ({
     [propIsInWishlist, isInWishlist, productId],
   );
 
-  const imageSource = useMemo(() => {
-    const img =
-      item?.featuredImage ||
-      item?.productImage ||
-      item?.image ||
-      item?.img ||
-      item?.imageUrl;
+  const rawImage =
+    item?.featuredImage ||
+    item?.productImage ||
+    item?.image ||
+    item?.img ||
+    item?.imageUrl;
 
-    if (!img || imageError) {
+  // Reset the error latch whenever the underlying image changes. Without this
+  // a card that is virtualized/reused by the FlatList for a new product would
+  // keep showing the "not found" placeholder from a previous (failed) image.
+  useEffect(() => {
+    setImageError(false);
+  }, [rawImage]);
+
+  const imageSource = useMemo(() => {
+    if (!rawImage || imageError) {
       return NO_IMAGE_SOURCE;
     }
 
-    if (typeof img === 'string') {
-      const uri = img.startsWith('http')
-        ? img
-        : `${CONFIG.image_base_url}${img}`;
+    if (typeof rawImage === 'string') {
+      const uri = rawImage.startsWith('http')
+        ? rawImage
+        : `${CONFIG.image_base_url}${rawImage}`;
       return { uri };
     }
 
-    return img;
-  }, [item, imageError]);
+    return rawImage;
+  }, [rawImage, imageError]);
 
   // Callbacks
   const handleImageError = useCallback(() => setImageError(true), []);
@@ -621,6 +674,7 @@ const TokenProductCard = ({
           <View style={styles.imageWrapper}>
             <ProductImage
               imageSource={imageSource}
+              isPlaceholder={!rawImage || imageError}
               isThreeColumn={isThreeColumn}
               isOutOfStock={isOutOfStock}
               onError={handleImageError}

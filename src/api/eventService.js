@@ -4,6 +4,8 @@ export const getEventDetailsListApi = async config => {
   return get('eventdetails/list', config);
 };
 
+//APi used in eventDetailsScreen
+
 export const getEventDetailsByIdApi = async (eventId, config) => {
   return get(`eventdetails/${eventId}`, config);
 };
@@ -26,6 +28,7 @@ export const getEventBookingListApi = async (
   });
 };
 
+//API used in eventBooking details Screen
 export const getEventBookingByIdApi = async (bookingId, config) => {
   return get(`eventbooking/booking/${bookingId}`, config);
 };

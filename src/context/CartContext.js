@@ -938,7 +938,9 @@ export const CartProvider = ({ children }) => {
         clearTimeout(debounceTimersRef.current[cartItemIdStr]);
       }
 
-      setUpdatingItems(prev => [...prev, cartItemIdStr]);
+      setUpdatingItems(prev =>
+        prev.includes(cartItemIdStr) ? prev : [...prev, cartItemIdStr],
+      );
 
       debounceTimersRef.current[cartItemIdStr] = setTimeout(async () => {
         try {

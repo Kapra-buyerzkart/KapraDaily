@@ -1,15 +1,34 @@
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   View,
   Text,
-  Image,
   ScrollView,
   Pressable,
   StatusBar,
   ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated, {
+  FadeIn,
+  FadeInDown,
+  ZoomIn,
+  Extrapolation,
+  interpolate,
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import AnimatedPressable from '@/components/AnimatedPressable';
 import Clipboard from '@react-native-clipboard/clipboard';
 import Toast from 'react-native-simple-toast';
 import images from '@/assets/images';
@@ -176,6 +195,51 @@ const SummaryRow = ({ label, value, total, muted }) => {
   );
 };
 
+// Copy-to-clipboard control with its own micro feedback: the icon pops and
+// morphs into a green checkmark on tap, then eases back to the copy glyph.
+const CopyButton = ({ value }) => {
+  const [copied, setCopied] = useState(false);
+  const scale = useSharedValue(1);
+  const timer = useRef(null);
+
+  useEffect(() => () => clearTimeout(timer.current), []);
+
+  const iconStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const handleCopy = useCallback(() => {
+    if (!value) return;
+    Clipboard.setString(value);
+    Toast.show('Booking number copied', Toast.SHORT);
+    setCopied(true);
+    scale.value = withSequence(
+      withTiming(1.3, { duration: 110 }),
+      withSpring(1, { damping: 6, stiffness: 220 }),
+    );
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => setCopied(false), 1600);
+  }, [value, scale]);
+
+  return (
+    <Pressable
+      onPress={handleCopy}
+      hitSlop={10}
+      style={styles.copyButton}
+      accessibilityRole="button"
+      accessibilityLabel="Copy booking number"
+    >
+      <Animated.View style={iconStyle}>
+        <Ionicons
+          name={copied ? 'checkmark' : 'copy-outline'}
+          size={18}
+          color={copied ? '#4CD98A' : '#B98CFF'}
+        />
+      </Animated.View>
+    </Pressable>
+  );
+};
+
 const EventBookingDetailsScreen = ({ navigation, route }) => {
   const insets = useSafeAreaInsets();
   const passed = route?.params?.booking ?? null;
@@ -241,11 +305,26 @@ const EventBookingDetailsScreen = ({ navigation, route }) => {
 
   const handleBack = useCallback(() => navigation.goBack(), [navigation]);
 
-  const handleCopy = useCallback(() => {
-    if (!vm.bookingNumber) return;
-    Clipboard.setString(vm.bookingNumber);
-    Toast.show('Booking number copied', Toast.SHORT);
-  }, [vm.bookingNumber]);
+  // Drives a gentle parallax + pull-to-zoom on the banner as the page scrolls.
+  const scrollY = useSharedValue(0);
+  const scrollHandler = useAnimatedScrollHandler(e => {
+    scrollY.value = e.contentOffset.y;
+  });
+  const bannerAnimStyle = useAnimatedStyle(() => {
+    const scale = interpolate(
+      scrollY.value,
+      [-140, 0],
+      [1.3, 1.12],
+      Extrapolation.CLAMP,
+    );
+    const translateY = interpolate(
+      scrollY.value,
+      [0, 260],
+      [0, 12],
+      Extrapolation.CLAMP,
+    );
+    return { transform: [{ translateY }, { scale }] };
+  });
 
   const handleViewTicket = useCallback(() => {
     navigation.navigate('ViewTicketScreen', {
@@ -272,7 +351,7 @@ const EventBookingDetailsScreen = ({ navigation, route }) => {
 
   const renderHeader = () => (
     <View style={[styles.header, { paddingTop: getHeaderPaddingTop(insets) }]}>
-      <Pressable
+      <AnimatedPressable
         onPress={handleBack}
         hitSlop={16}
         style={styles.backButton}
@@ -280,7 +359,7 @@ const EventBookingDetailsScreen = ({ navigation, route }) => {
         accessibilityLabel="Go back"
       >
         <Ionicons name="arrow-back" size={24} color={COLORS.white} />
-      </Pressable>
+      </AnimatedPressable>
       <Text style={styles.headerTitle} numberOfLines={1}>
         {eventName}
       </Text>
@@ -360,28 +439,36 @@ const EventBookingDetailsScreen = ({ navigation, route }) => {
 
       {renderHeader()}
 
-      <ScrollView
+      <Animated.ScrollView
         contentContainerStyle={[
           styles.scrollContent,
           { paddingBottom: (insets.bottom || 12) + 96 },
         ]}
         showsVerticalScrollIndicator={false}
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}
       >
-        <View style={styles.banner}>
-          <Image
+        <Animated.View style={styles.banner} entering={FadeIn.duration(450)}>
+          <Animated.Image
             source={bannerSource}
-            style={styles.bannerImage}
+            style={[styles.bannerImage, bannerAnimStyle]}
             resizeMode="cover"
           />
-        </View>
+        </Animated.View>
 
         {!!daysLeft && (
-          <View style={styles.daysPill}>
+          <Animated.View
+            style={styles.daysPill}
+            entering={ZoomIn.delay(150).springify().mass(0.6)}
+          >
             <Text style={styles.daysPillText}>{daysLeft}</Text>
-          </View>
+          </Animated.View>
         )}
 
-        <View style={styles.titleBlock}>
+        <Animated.View
+          style={styles.titleBlock}
+          entering={FadeInDown.delay(120).duration(380)}
+        >
           <Text style={styles.title}>{title}</Text>
           {!!subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
           {!!vm.statusKey && (
@@ -391,26 +478,22 @@ const EventBookingDetailsScreen = ({ navigation, route }) => {
               </Text>
             </View>
           )}
-        </View>
+        </Animated.View>
 
         {!!vm.bookingNumber && (
-          <View style={styles.bookingPill}>
+          <Animated.View
+            style={styles.bookingPill}
+            entering={FadeInDown.delay(200).duration(380)}
+          >
             <Text style={styles.bookingNumber} numberOfLines={1}>
               {vm.bookingNumber}
             </Text>
-            <Pressable
-              onPress={handleCopy}
-              hitSlop={10}
-              style={styles.copyButton}
-              accessibilityRole="button"
-              accessibilityLabel="Copy booking number"
-            >
-              <Ionicons name="copy-outline" size={18} color="#B98CFF" />
-            </Pressable>
-          </View>
+            <CopyButton value={vm.bookingNumber} />
+          </Animated.View>
         )}
 
-        <AccordionSection title="Details" defaultOpen>
+        <Animated.View entering={FadeInDown.delay(260).duration(380)}>
+          <AccordionSection title="Details" defaultOpen>
           <View>
             <DetailRow
               icon="calendar-outline"
@@ -451,9 +534,11 @@ const EventBookingDetailsScreen = ({ navigation, route }) => {
               </View>
             )}
           </View>
-        </AccordionSection>
+          </AccordionSection>
+        </Animated.View>
 
         {vm.items.length > 0 && (
+          <Animated.View entering={FadeInDown.delay(320).duration(380)}>
           <AccordionSection
             title={`Tickets${vm.ticketCount ? ` (${vm.ticketCount})` : ''}`}
             defaultOpen
@@ -507,9 +592,11 @@ const EventBookingDetailsScreen = ({ navigation, route }) => {
               )}
             </View>
           </AccordionSection>
+          </Animated.View>
         )}
 
         {hasPricing && (
+          <Animated.View entering={FadeInDown.delay(380).duration(380)}>
           <AccordionSection title="Payment summary">
             <View>
               <SummaryRow label="Subtotal" value={formatPrice(vm.subTotal)} />
@@ -559,41 +646,44 @@ const EventBookingDetailsScreen = ({ navigation, route }) => {
               )}
             </View>
           </AccordionSection>
+          </Animated.View>
         )}
 
-        <ArtistList artists={details?.artists} />
+        <Animated.View entering={FadeInDown.delay(440).duration(380)}>
+          <ArtistList artists={details?.artists} />
+        </Animated.View>
 
-        <AccordionSection
-          title="Terms & Conditions"
-          maxHeight={details?.terms ? 280 : undefined}
-        >
-          {details?.terms ? (
-            <HtmlBody html={details.terms} />
-          ) : (
-            'Terms & conditions for this event will appear here.'
-          )}
-        </AccordionSection>
-      </ScrollView>
+        <Animated.View entering={FadeInDown.delay(500).duration(380)}>
+          <AccordionSection
+            title="Terms & Conditions"
+            maxHeight={details?.terms ? 280 : undefined}
+          >
+            {details?.terms ? (
+              <HtmlBody html={details.terms} />
+            ) : (
+              'Terms & conditions for this event will appear here.'
+            )}
+          </AccordionSection>
+        </Animated.View>
+      </Animated.ScrollView>
 
-      <View
+      <Animated.View
+        entering={FadeInDown.delay(300).duration(420)}
         style={[
           styles.bottomBar,
           { paddingBottom: (insets.bottom || 12) + 12 },
         ]}
       >
-        <Pressable
+        <AnimatedPressable
           onPress={handleViewTicket}
-          style={({ pressed }) => [
-            styles.viewTicketBtn,
-            pressed && { opacity: 0.7 },
-          ]}
+          style={styles.viewTicketBtn}
           accessibilityRole="button"
           accessibilityLabel="View ticket"
         >
           <Ionicons name="ticket-outline" size={20} color="#B98CFF" />
           <Text style={styles.viewTicketText}>View ticket</Text>
-        </Pressable>
-      </View>
+        </AnimatedPressable>
+      </Animated.View>
     </View>
   );
 };

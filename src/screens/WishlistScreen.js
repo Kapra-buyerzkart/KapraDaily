@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   StatusBar,
 } from 'react-native';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import Animated, {
   useSharedValue,
   useAnimatedScrollHandler,
@@ -52,6 +52,23 @@ export default function WishlistScreen() {
   const [confirmationVisible, setConfirmationVisible] = useState(false);
   const [itemToRemove, setItemToRemove] = useState(null);
 
+  // Drop malformed entries and de-duplicate by product so the FlatList never
+  // renders ghost/duplicate cards while virtualizing during scroll.
+  const wishlistData = useMemo(() => {
+    if (!Array.isArray(wishlistItems)) {
+      return [];
+    }
+    const seen = new Set();
+    return wishlistItems.filter(item => {
+      const id = item?.wishlistItemId ?? item?.productId;
+      if (id == null || seen.has(id)) {
+        return false;
+      }
+      seen.add(id);
+      return true;
+    });
+  }, [wishlistItems]);
+
   const tabBarClearance = getTabBarClearance(insets.bottom);
   const lastScrollY = useSharedValue(0);
   const cartTranslateY = useSharedValue(0);
@@ -94,8 +111,18 @@ export default function WishlistScreen() {
     const mappedItem = {
       ...item,
       productId: item.productId,
-      prName: item.productName,
-      featuredImage: item.productImage,
+      prName: item.productName || item.prName || item.name,
+      // Optimistically-added items carry the product-listing image fields
+      // (featuredImage/img/imageUrl), while server wishlist items use
+      // productImage. Fall back across all of them so a freshly added card
+      // shows its real image (shimmer -> image) instead of flashing the
+      // "not found" placeholder before the server refetch lands.
+      featuredImage:
+        item.productImage ||
+        item.featuredImage ||
+        item.image ||
+        item.img ||
+        item.imageUrl,
       unitPrice: item.unitPrice,
       specialPrice: item.specialPrice,
       stockQty: item.stockQty,
@@ -176,9 +203,13 @@ export default function WishlistScreen() {
           />
         ) : (
           <Animated.FlatList
-            data={wishlistItems}
-            keyExtractor={item =>
-              item.wishlistItemId?.toString() || item.productId?.toString()
+            data={wishlistData}
+            keyExtractor={(item, index) =>
+              (
+                item.wishlistItemId ??
+                item.productId ??
+                `wishlist-${index}`
+              ).toString()
             }
             renderItem={renderItem}
             numColumns={3}

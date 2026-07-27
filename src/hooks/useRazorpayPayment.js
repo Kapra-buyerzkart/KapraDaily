@@ -3,6 +3,8 @@ import {
   createRazorpayOrderApi,
   verifyRazorpayPaymentApi,
 } from '../api/paymentService';
+import { isPaymentAlreadyCompleted } from '../utils/paymentStatus';
+import logger from '../utils/logger';
 
 export const useRazorpayPayment = ({
   profile,
@@ -72,21 +74,39 @@ export const useRazorpayPayment = ({
             };
 
             let verifyResponse;
+            let verifyError = null;
             let retryCount = 0;
             const maxRetries = 2;
 
             const attemptVerification = async () => {
               try {
-                return await verifyRazorpayPaymentApi(verifyPayload);
+                verifyError = null;
+                const res = await verifyRazorpayPaymentApi(verifyPayload);
+                logger.warn('[useRazorpayPayment] verify response:', res);
+                return res;
               } catch (e) {
+                verifyError = e;
+                logger.error('[useRazorpayPayment] verify error:', {
+                  status: e?.status,
+                  message: e?.message,
+                  data: e?.data || e?.response?.data,
+                });
                 return null;
               }
             };
+
+            // The payment may have been settled by the backend asynchronously
+            // (e.g. via a webhook), so verify can report "already processed" /
+            // "completed successfully" either in the response or as an error.
+            const isSettled = () =>
+              isPaymentAlreadyCompleted(verifyResponse) ||
+              isPaymentAlreadyCompleted(verifyError);
 
             verifyResponse = await attemptVerification();
             while (
               (!verifyResponse?.success ||
                 verifyResponse?.status === 'pending') &&
+              !isSettled() &&
               retryCount < maxRetries
             ) {
               retryCount++;
@@ -94,7 +114,7 @@ export const useRazorpayPayment = ({
               verifyResponse = await attemptVerification();
             }
 
-            if (verifyResponse?.success) {
+            if (verifyResponse?.success || isSettled()) {
               await finalizeOrder({ orderId, orderNumber });
             } else {
               showLoader(false);

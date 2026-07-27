@@ -1,5 +1,5 @@
-import { View, Text, StyleSheet, Image, ActivityIndicator } from 'react-native';
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import { View, Text, StyleSheet, Image } from 'react-native';
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -55,11 +55,18 @@ const CartProductCard = props => {
   const [imageError, setImageError] = useState(false);
   const [quantity, setQuantity] = useState(item.addedQty || item.quantity || 1);
   const [isRemovalModalVisible, setIsRemovalModalVisible] = useState(false);
+  // Mirror of `quantity` so rapid taps read the latest value synchronously,
+  // even before React has re-rendered with the new state. Without this, two
+  // quick taps both read the same stale `quantity` closure and send the same
+  // value to the server.
+  const quantityRef = useRef(quantity);
   const imageOpacity = useSharedValue(0);
   const qtyScale = useSharedValue(1);
 
   useEffect(() => {
-    setQuantity(item.addedQty || item.quantity || 1);
+    const synced = item.addedQty || item.quantity || 1;
+    setQuantity(synced);
+    quantityRef.current = synced;
     qtyScale.value = withSequence(
       withTiming(1.18, { duration: 100 }),
       withSpring(1, BUMP_SPRING),
@@ -91,26 +98,25 @@ const CartProductCard = props => {
     return { uri: `${CONFIG.image_base_url}${featuredImage}` };
   }, [featuredImage, imageError]);
 
-  // Handle quantity change
+  // Handle quantity change. Read/advance the ref (not the `quantity` closure)
+  // so several taps fired before the next render still increment correctly.
   const handleDecrease = useCallback(() => {
-    if (quantity > 1 && !isSoldOut) {
-      setQuantity(quantity - 1);
-      updateCartItemQuantity(cartItemId, quantity - 1, pincodeAreaIdOverride);
+    if (quantityRef.current > 1 && !isSoldOut) {
+      const next = quantityRef.current - 1;
+      quantityRef.current = next;
+      setQuantity(next);
+      updateCartItemQuantity(cartItemId, next, pincodeAreaIdOverride);
     } else {
       setIsRemovalModalVisible(true);
     }
-  }, [
-    quantity,
-    isSoldOut,
-    cartItemId,
-    pincodeAreaIdOverride,
-    updateCartItemQuantity,
-  ]);
+  }, [isSoldOut, cartItemId, pincodeAreaIdOverride, updateCartItemQuantity]);
 
   const handleIncrease = useCallback(() => {
-    setQuantity(quantity + 1);
-    updateCartItemQuantity(cartItemId, quantity + 1, pincodeAreaIdOverride);
-  }, [quantity, cartItemId, pincodeAreaIdOverride, updateCartItemQuantity]);
+    const next = quantityRef.current + 1;
+    quantityRef.current = next;
+    setQuantity(next);
+    updateCartItemQuantity(cartItemId, next, pincodeAreaIdOverride);
+  }, [cartItemId, pincodeAreaIdOverride, updateCartItemQuantity]);
 
   const handleDelete = useCallback(() => {
     setIsRemovalModalVisible(true);
@@ -205,39 +211,40 @@ const CartProductCard = props => {
           </View>
 
           {!disableManage && (
-            <View style={styles.countContainer}>
-              {isUpdating ? (
-                <View style={styles.loaderWrapper}>
-                  <ActivityIndicator size="small" color={CART_COLORS.primary} />
-                </View>
-              ) : (
-                <>
-                  <AnimatedPressable
-                    style={styles.stepperBtn}
-                    onPress={handleDecrease}
-                  >
-                    <Entypo
-                      name="minus"
-                      size={wp('3.6%')}
-                      color={CART_COLORS.primary}
-                    />
-                  </AnimatedPressable>
-                  <Animated.Text style={[styles.countText, qtyAnimatedStyle]}>
-                    {quantity}
-                  </Animated.Text>
-                  <AnimatedPressable
-                    style={styles.stepperBtn}
-                    onPress={handleIncrease}
-                    disabled={isSoldOut}
-                  >
-                    <Entypo
-                      name="plus"
-                      size={wp('3.6%')}
-                      color={CART_COLORS.primary}
-                    />
-                  </AnimatedPressable>
-                </>
-              )}
+            // Steppers stay mounted and tappable while a change syncs — we only
+            // dim them to signal "saving". Swapping them for a spinner used to
+            // lock the user out for the whole 500ms debounce + network trip and
+            // defeated the debounce's rapid-tap batching.
+            <View
+              style={[
+                styles.countContainer,
+                isUpdating && styles.countContainerUpdating,
+              ]}
+            >
+              <AnimatedPressable
+                style={styles.stepperBtn}
+                onPress={handleDecrease}
+              >
+                <Entypo
+                  name="minus"
+                  size={wp('3.6%')}
+                  color={CART_COLORS.primary}
+                />
+              </AnimatedPressable>
+              <Animated.Text style={[styles.countText, qtyAnimatedStyle]}>
+                {quantity}
+              </Animated.Text>
+              <AnimatedPressable
+                style={styles.stepperBtn}
+                onPress={handleIncrease}
+                disabled={isSoldOut}
+              >
+                <Entypo
+                  name="plus"
+                  size={wp('3.6%')}
+                  color={CART_COLORS.primary}
+                />
+              </AnimatedPressable>
             </View>
           )}
         </View>
@@ -381,6 +388,9 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 1,
   },
+  countContainerUpdating: {
+    opacity: 0.55,
+  },
   stepperBtn: {
     width: wp('6.5%'),
     height: wp('6.5%'),
@@ -415,12 +425,6 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.lexend.medium,
     fontSize: wp('2.5%'),
     color: '#5E3568',
-  },
-  loaderWrapper: {
-    width: wp('20%'),
-    height: wp('6.5%'),
-    justifyContent: 'center',
-    alignItems: 'center',
   },
 });
 

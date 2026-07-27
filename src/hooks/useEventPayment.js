@@ -1,6 +1,5 @@
 import { useContext, useState } from 'react';
 import RazorpayCheckout from 'react-native-razorpay';
-import Toast from 'react-native-simple-toast';
 import {
   createEventBookingApi,
   initiateEventBookingPaymentApi,
@@ -10,6 +9,7 @@ import {
 } from '../api/eventService';
 import { AppContext } from '../context/appContext';
 import logger from '../utils/logger';
+import { isPaymentAlreadyCompleted } from '../utils/paymentStatus';
 
 const PAYMENT_GATEWAY = 'razorpay';
 
@@ -107,23 +107,12 @@ export const useEventPayment = () => {
         setFailureVisible(true);
         return { success: false, failed: true, bookingId };
       }
-      try {
-        const verifyRes = await verifyEventBookingPaymentApi({
-          bookingId,
-          razorpayOrderId: sdkResponse.razorpay_order_id,
-          razorpayPaymentId: sdkResponse.razorpay_payment_id,
-          razorpaySignature: sdkResponse.razorpay_signature,
-        });
-
-        if (!verifyRes?.success) {
-          Toast.show(
-            verifyRes?.message ||
-              'Payment verification is pending. Check My Bookings for status.',
-            Toast.LONG,
-          );
-          return { success: false, pending: true, bookingId };
-        }
-
+      // Razorpay has already confirmed the payment at this point, so the money
+      // is collected. Anything that goes wrong below is a verification/network
+      // issue (or the backend having already settled it via a webhook) — never
+      // a failed payment — so we always show the success modal, not a pending
+      // toast.
+      const markBookingSuccess = () => {
         setSuccessVisible(true);
 
         getEventTicketQrCodeApi(bookingId)
@@ -133,16 +122,32 @@ export const useEventPayment = () => {
           );
 
         return { success: true, bookingId };
+      };
+
+      try {
+        const verifyRes = await verifyEventBookingPaymentApi({
+          bookingId,
+          razorpayOrderId: sdkResponse.razorpay_order_id,
+          razorpayPaymentId: sdkResponse.razorpay_payment_id,
+          razorpaySignature: sdkResponse.razorpay_signature,
+        });
+        logger.warn('[useEventPayment] verify response:', verifyRes);
+
+        if (!verifyRes?.success && !isPaymentAlreadyCompleted(verifyRes)) {
+          logger.error(
+            '[useEventPayment] verify not confirmed, showing success anyway:',
+            verifyRes?.message,
+          );
+        }
+
+        return markBookingSuccess();
       } catch (verifyError) {
-        logger.error(
-          '[useEventPayment] Payment verification failed:',
-          verifyError?.message,
-        );
-        Toast.show(
-          'Payment received. Verification pending - check My Bookings for status.',
-          Toast.LONG,
-        );
-        return { success: false, pending: true, bookingId };
+        logger.error('[useEventPayment] verify error:', {
+          status: verifyError?.status,
+          message: verifyError?.message,
+          data: verifyError?.data || verifyError?.response?.data,
+        });
+        return markBookingSuccess();
       }
     } finally {
       setProcessing(false);

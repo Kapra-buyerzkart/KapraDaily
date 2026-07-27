@@ -18,8 +18,8 @@ export const getVoucherImageSource = item => {
 };
 
 export const getEventImageSource = event => {
-  if (event?.banner) {
-    return { uri: CONFIG.image_base_url + event.banner };
+  if (event?.shortImageUrl) {
+    return { uri: CONFIG.image_base_url + event.shortImageUrl };
   }
   return PLACEHOLDER_EVENT_IMAGE;
 };
