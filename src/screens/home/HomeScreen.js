@@ -11,6 +11,8 @@ import Animated, {
   useSharedValue,
   useAnimatedScrollHandler,
   useAnimatedStyle,
+  useAnimatedReaction,
+  runOnJS,
   interpolate,
   interpolateColor,
   Extrapolation,
@@ -282,6 +284,22 @@ const HomeScreen = () => {
     ),
   }));
 
+  // Flip the status bar icons to dark once the header background has gone light,
+  // so they stay legible against the white sticky header. Driven off the same
+  // scrollY as `fallbackHeaderBgStyle`; `useAnimatedReaction` only hops to JS on
+  // a threshold crossing, so there's no per-frame re-render.
+  const [statusBarStyle, setStatusBarStyle] = useState('light-content');
+  useAnimatedReaction(
+    () => scrollY.value > SCROLL_RANGE * 0.5,
+    (isHeaderLight, prev) => {
+      if (isHeaderLight !== prev) {
+        runOnJS(setStatusBarStyle)(
+          isHeaderLight ? 'dark-content' : 'light-content',
+        );
+      }
+    },
+  );
+
   const stickyBorderAnimStyle = useAnimatedStyle(() => ({
     opacity: interpolate(
       scrollY.value,
@@ -496,7 +514,11 @@ const HomeScreen = () => {
 
   return (
     <View style={styles.mainContainer}>
-      <StatusBar translucent backgroundColor="transparent" />
+      <StatusBar
+        translucent
+        backgroundColor="transparent"
+        barStyle={statusBarStyle}
+      />
       <HomePopupModal
         visible={isHomePopupVisible}
         onClose={handleClose}

@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext, useRef } from 'react';
 import secureStore from '../utils/secureStore';
 import { getCategoriesApi } from '../api/categoryService';
 import { searchProductsApi } from '../api/productService';
@@ -23,8 +23,14 @@ const useCategoriesData = (catId, debouncedSearchText, filters) => {
   const [pageNumber, setPageNumber] = useState(1);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [hasMoreData, setHasMoreData] = useState(true);
+  const [locationInitialized, setLocationInitialized] = useState(false);
+  // Monotonic id so only the latest in-flight products request applies its
+  // result — protects against out-of-order responses when the user rapidly
+  // switches category/subcategory/search/filters.
+  const requestIdRef = useRef(0);
 
   const fetchProducts = async (categoryId, page = 1) => {
+    const requestId = ++requestIdRef.current;
     try {
       if (page === 1) {
         setProductsList([]); // Clear previous products immediately to show local loader
@@ -51,6 +57,12 @@ const useCategoriesData = (catId, debouncedSearchText, filters) => {
       );
       const response = await searchProductsApi(payload);
       console.log('Products Response:', JSON.stringify(response, null, 2));
+
+      // A newer request superseded this one while it was in flight — drop the
+      // stale result so it can't overwrite the current category's products.
+      if (requestId !== requestIdRef.current) {
+        return;
+      }
 
       if (
         response &&
@@ -79,14 +91,17 @@ const useCategoriesData = (catId, debouncedSearchText, filters) => {
       }
     } catch (error) {
       console.error('Error fetching products:', error);
+      if (requestId !== requestIdRef.current) return;
       if (page === 1) setProductsList([]);
       setHasMoreData(false);
     } finally {
-      if (page === 1) {
-        setIsFetchingProducts(false);
-        setHasFetchedProducts(true);
+      if (requestId === requestIdRef.current) {
+        if (page === 1) {
+          setIsFetchingProducts(false);
+          setHasFetchedProducts(true);
+        }
+        setIsFetchingMore(false);
       }
-      setIsFetchingMore(false);
     }
   };
 
@@ -174,6 +189,8 @@ const useCategoriesData = (catId, debouncedSearchText, filters) => {
           'Error in initializeLocationAndSettings in CategoriesScreen:',
           error,
         );
+      } finally {
+        setLocationInitialized(true);
       }
     };
 
@@ -194,6 +211,9 @@ const useCategoriesData = (catId, debouncedSearchText, filters) => {
   }, [selectedId]);
 
   useEffect(() => {
+    // Wait until the stored pincode/location has been resolved so the first
+    // product fetch uses the correct pincodeAreaId instead of a null value.
+    if (!locationInitialized) return;
     const catIdToFetch = selectedSubCatId || selectedId;
     if (catIdToFetch) {
       console.log(
@@ -204,7 +224,14 @@ const useCategoriesData = (catId, debouncedSearchText, filters) => {
       );
       fetchProducts(catIdToFetch, 1);
     }
-  }, [selectedSubCatId, debouncedSearchText, selectedId, filters]);
+  }, [
+    selectedSubCatId,
+    debouncedSearchText,
+    selectedId,
+    filters,
+    locationInitialized,
+    pincodeAreaId,
+  ]);
 
   return {
     selectedId,
@@ -217,6 +244,7 @@ const useCategoriesData = (catId, debouncedSearchText, filters) => {
     loading,
     isFetchingSubCategories,
     isFetchingProducts,
+    hasFetchedProducts,
     isFetchingMore,
     handleLoadMore,
   };

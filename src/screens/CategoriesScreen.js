@@ -65,6 +65,31 @@ const selectedProducts = [
   { id: '6', image: require('../assets/images/product3.png') },
 ];
 
+// Stable, module-level component so its *type* never changes between renders.
+// Passing it as an element to ListHeaderComponent lets React reconcile it in
+// place (props update, no remount), which preserves the horizontal pill scroll
+// offset when a pill is tapped. A fresh inline function would be a new type on
+// every render and force VirtualizedList to remount it, resetting the scroll.
+const SubCategoriesHeader = React.memo(function SubCategoriesHeader({
+  data,
+  renderItem,
+  loading,
+}) {
+  if (loading) {
+    return <SubCategoryPillsShimmer />;
+  }
+  return (
+    <FlatList
+      data={data}
+      keyExtractor={(item, index) => (item?.catId || index).toString()}
+      renderItem={renderItem}
+      horizontal={true}
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={styles.subCatListContent}
+    />
+  );
+});
+
 export default function () {
   // Navigation
   const navigation = useNavigation();
@@ -135,10 +160,22 @@ export default function () {
       if (!layout) return;
       const viewportH = sidebarViewportHeight.value;
       const contentH = sidebarContentHeight.value;
+      const scrollY = sidebarScrollY.value;
+
+      // Only auto-scroll when the tapped item isn't already fully visible.
+      // Without this, every press re-centers the item — and for items in the
+      // upper part of the list the clamped target is 0, snapping the sidebar
+      // back to the top (perceived as a "reset").
+      const itemTop = layout.y;
+      const itemBottom = layout.y + layout.height;
+      if (itemTop >= scrollY && itemBottom <= scrollY + viewportH) {
+        return;
+      }
+
       const maxScroll = Math.max(contentH - viewportH, 0);
       const rawTarget = layout.y + layout.height / 2 - viewportH / 2;
       const target = Math.max(0, Math.min(rawTarget, maxScroll));
-      sidebarAutoScrollY.value = sidebarScrollY.value;
+      sidebarAutoScrollY.value = scrollY;
       sidebarAutoScrollY.value = withTiming(target, {
         duration: 400,
         easing: Easing.out(Easing.cubic),
@@ -157,8 +194,8 @@ export default function () {
   const floatingBottomOffset = hp('0.2%') + tabBarClearance;
 
   const categoryName =
-    categoriesList.find(cat => cat.catId.toString() === selectedId)?.catName ||
-    '';
+    categoriesList.find(cat => cat?.catId?.toString() === selectedId)
+      ?.catName || '';
 
   // Animated styles / scroll handler
   const scrollHandler = useAnimatedScrollHandler({
@@ -228,28 +265,6 @@ export default function () {
     },
     [selectedSubCatId, setSelectedSubCatId],
   );
-
-  const renderHeader = useCallback(() => {
-    if (loading || isFetchingSubCategories) {
-      return <SubCategoryPillsShimmer />;
-    }
-    return (
-      <FlatList
-        data={subCategoriesList}
-        keyExtractor={(item, index) => (item?.catId || index).toString()}
-        renderItem={renderSubCategory}
-        horizontal={true}
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{
-          paddingLeft: wp('3%'),
-          paddingRight: wp('3%'),
-          marginTop: hp('0.8%'),
-          paddingBottom: hp('1.5%'),
-          gap: wp('2.5%'),
-        }}
-      />
-    );
-  }, [subCategoriesList, renderSubCategory, isFetchingSubCategories, loading]);
 
   return (
     <SafeAreaView style={styles.mainContainer} edges={['top', 'left', 'right']}>
@@ -345,7 +360,13 @@ export default function () {
                   paddingBottom: hp('8.5%') + tabBarClearance,
                   paddingTop: hp('0.5%'),
                 }}
-                ListHeaderComponent={renderHeader}
+                ListHeaderComponent={
+                  <SubCategoriesHeader
+                    data={subCategoriesList}
+                    renderItem={renderSubCategory}
+                    loading={loading || isFetchingSubCategories}
+                  />
+                }
                 onEndReached={handleLoadMore}
                 onEndReachedThreshold={0.5}
                 ListFooterComponent={
@@ -432,6 +453,13 @@ const styles = StyleSheet.create({
     flex: 1,
     overflow: 'visible',
     backgroundColor: '#FFF',
+  },
+  subCatListContent: {
+    paddingLeft: wp('3%'),
+    paddingRight: wp('3%'),
+    marginTop: hp('0.8%'),
+    paddingBottom: hp('1.5%'),
+    gap: wp('2.5%'),
   },
   newHeaderContainer: {
     flexDirection: 'row',
