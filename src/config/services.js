@@ -34,12 +34,10 @@ export const SERVICES = [
     id: 'partner',
     title: '48hrs Deals',
     description: 'Electronics, kitchen Appliances \n & More',
-    type: SERVICE_TYPES.EXTERNAL,
-    deeplink: 'udmv://',
-    storeUrl: {
-      ios: 'https://apps.apple.com/in/app/uden-deal/id6448085736',
-      android: 'https://play.google.com/store/apps/details?id=com.kshope',
-    },
+    // Served in-process by src/modules/deals48 now, instead of deep-linking out
+    // to the standalone udmv:// app.
+    type: SERVICE_TYPES.INTERNAL,
+    route: 'Deals48',
     icon: 'apps-outline',
     iconColor: '#00BCD4',
     logo: require('../assets/images/modal/48hrDealIcon.png'),

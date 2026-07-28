@@ -5,8 +5,6 @@ import {
   ScrollView,
   Dimensions,
   TouchableOpacity,
-  Linking,
-  Platform,
   Image,
   ImageBackground,
   StatusBar,
@@ -109,30 +107,10 @@ const AuthSuccessScreen = ({ navigation }) => {
       return;
     }
 
-    const deepLink = 'udmv://';
-    const storeUrl =
-      Platform.OS === 'ios'
-        ? generalSettings?.kshope_ios_url ||
-          'https://apps.apple.com/in/app/uden-deal/id6448085736'
-        : generalSettings?.kshope_android_url ||
-          'https://play.google.com/store/apps/details?id=com.kshope';
-
-    try {
-      console.log('[Kshope] Attempting to open deep link:', deepLink);
-      await Linking.openURL(deepLink);
-      console.log('[Kshope] Deep link opened successfully');
-    } catch (deepLinkErr) {
-      console.warn(
-        '[Kshope] Deep link failed, app not installed. Redirecting to store:',
-        storeUrl,
-      );
-      try {
-        await Linking.openURL(storeUrl);
-      } catch (storeErr) {
-        console.error('[Kshope] Store URL also failed:', storeErr);
-        handleComingSoon();
-      }
-    }
+    // 48hrs Deals is served in-process now (src/modules/deals48), so this no
+    // longer deep-links out to the standalone udmv:// app or falls back to its
+    // store listing. The showkshope gate above still applies.
+    navigation.navigate('Deals48');
   };
 
   return (

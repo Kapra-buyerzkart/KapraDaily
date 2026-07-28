@@ -33,6 +33,7 @@ import TicketDetailsScreen from '../screens/TicketDetailsScreen';
 import AppUpdateModal from '../components/AppUpdateModal';
 import AuthSuccessScreen from '../screens/AuthSuccessScreen';
 import KshopeScreen from '../screens/KshopeScreen';
+import { Deals48Stack } from '../modules/deals48';
 import CoPartnerDashboardScreen from '../screens/CoPartnerDashboardScreen';
 import CoPartnerListScreen from '../screens/CoPartnerListScreen';
 import MyAffilateScreen from '../screens/MyAffilateScreen/MyAffilateScreen';
@@ -208,6 +209,9 @@ export default function RootNavigator() {
           name="LegalContentScreen"
           component={LegalContentScreen}
         />
+        {/* 48hrs Deals runs as a self-contained module with its own backend and
+            session; everything it owns lives behind this single route. */}
+        <Stack.Screen name="Deals48" component={Deals48Stack} />
       </Stack.Navigator>
 
       {/* <AppUpdateModal

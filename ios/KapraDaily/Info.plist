@@ -59,9 +59,6 @@
 	<false/>
 	<key>UIAppFonts</key>
 	<array>
-		<string>gilroy-ExtraBold.ttf</string>
-		<string>gilroy-Italic.ttf</string>
-		<string>gilroy-Medium.ttf</string>
 		<string>AntDesign.ttf</string>
 		<string>Entypo.ttf</string>
 		<string>EvilIcons.ttf</string>
@@ -81,16 +78,12 @@
 		<string>Octicons.ttf</string>
 		<string>Zocial.ttf</string>
 		<string>Fontisto.ttf</string>
-		<string>gilroy-Bold.ttf</string>
-		<string>gilroy-Light.ttf</string>
 		<string>Outfit-Medium.ttf</string>
 		<string>Outfit-Regular.ttf</string>
 		<string>Outfit-SemiBold.ttf</string>
 		<string>Outfit-Light.ttf</string>
 		<string>Inter_18pt-Regular.ttf</string>
 		<string>Italiana-Regular.ttf</string>
-		<string>gilroy-Regular.ttf</string>
-		<string>gilroy-SemiBold.ttf</string>
 		<string>Lexend-Medium.ttf</string>
 		<string>Lexend-SemiBold.ttf</string>
 		<string>Outfit-Bold.ttf</string>
@@ -103,6 +96,14 @@
 		<string>Gilroy-Bold.ttf</string>
 		<string>Gilroy-Heavy.ttf</string>
 		<string>Gilroy-SemiBold.ttf</string>
+		<string>Poppins-Light.ttf</string>
+		<string>Poppins-Medium.ttf</string>
+		<string>Poppins-ExtraBold.ttf</string>
+		<string>Gilroy-ExtraBold.ttf</string>
+		<string>Poppins-Regular.ttf</string>
+		<string>Poppins-Bold.ttf</string>
+		<string>Poppins-SemiBold.ttf</string>
+		<string>Poppins-Italic.ttf</string>
 	</array>
 	<key>UIBackgroundModes</key>
 	<array>
