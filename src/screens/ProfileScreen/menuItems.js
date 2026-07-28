@@ -94,6 +94,14 @@ export const buildMyAccountItems = ({ navigation, onLanguage }) => [
     onPress: () => navigation.navigate('CartScreen'),
   },
   // {
+  //   key: 'scan-qr',
+  //   label: 'Scan QR Code',
+  //   icon: (
+  //     <MaterialCommunityIcons name="qrcode-scan" color={INK} size={wp('4%')} />
+  //   ),
+  //   onPress: () => navigation.navigate('QRScannerScreen'),
+  // },
+  // {
   //   key: 'language',
   //   label: 'Language',
   //   icon: <Ionicons name="language-outline" color={INK} size={wp('4%')} />,

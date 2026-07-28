@@ -1,27 +1,20 @@
-import { useState, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Animated } from 'react-native';
 
-// Cross-fades the background image in, then the content on top of it, once
-// the hero background image finishes loading.
+// Fades the content in on mount. The screen paints a flat background colour now
+// (no hero image to wait on), so the fade starts as soon as we render.
 const useHeroFade = () => {
   const [fadeAnim] = useState(() => new Animated.Value(0));
-  const [imageOpacity] = useState(() => new Animated.Value(0));
 
-  const handleImageLoad = useCallback(() => {
-    Animated.timing(imageOpacity, {
+  useEffect(() => {
+    Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 600,
       useNativeDriver: true,
-    }).start(() => {
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 600,
-        useNativeDriver: true,
-      }).start();
-    });
-  }, [imageOpacity, fadeAnim]);
+    }).start();
+  }, [fadeAnim]);
 
-  return { fadeAnim, imageOpacity, handleImageLoad };
+  return { fadeAnim };
 };
 
 export default useHeroFade;

@@ -64,7 +64,7 @@ export const useVoucherPayment = onBalanceChange => {
 
         sdkResponse = await RazorpayCheckout.open(options);
       } else {
-        // Fully coin-funded - backend already deducted UD-Coins on
+        // Fully coin-funded - backend already deducted UD Coins on
         // initiate, so there's nothing to collect or verify.
         setSuccessVisible(true);
         onBalanceChange?.();

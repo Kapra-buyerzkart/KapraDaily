@@ -13,6 +13,7 @@ import useQrZoom from './hooks/useQrZoom';
 const ViewTicketScreen = ({ navigation, route }) => {
   const booking = route?.params?.booking ?? null;
   const rawTickets = route?.params?.tickets ?? null;
+  const bookingItems = route?.params?.bookingItems ?? null;
 
   console.log(
     'ViewTicketScreen backend tickets:',
@@ -21,7 +22,7 @@ const ViewTicketScreen = ({ navigation, route }) => {
 
   const insets = useSafeAreaInsets();
 
-  const tickets = useTicketList(booking, rawTickets);
+  const tickets = useTicketList(booking, rawTickets, bookingItems);
   const entranceStyle = useTicketEntrance();
   const qrZoom = useQrZoom();
 

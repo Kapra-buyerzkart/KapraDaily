@@ -35,6 +35,8 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>We need camera access so you can scan QR codes</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>We need your location to show your address</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>

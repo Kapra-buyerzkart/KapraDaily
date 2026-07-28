@@ -23,12 +23,17 @@ const deriveDetails = event => {
     ? ticketCategoriesMap[String(activeSession.sessionId)] || []
     : Object.values(ticketCategoriesMap)[0] || [];
 
+  // "Starts from" price is the cheapest ticket category on the session.
+  const categoryPrices = ticketCategories
+    .map(category => Number(category?.totalAmount))
+    .filter(Number.isFinite);
+
   return {
     name: event?.eventName || event?.title || event?.name || 'Event',
     category: event?.categoryName || event?.category || '',
     organizer: event?.organizerName || event?.organizer || '',
-    minPrice: event?.MinPrice ?? event?.minPrice ?? null,
-    bannerImage: event?.bannerImage || event?.thumbnailImage || null,
+    minPrice: categoryPrices.length ? Math.min(...categoryPrices) : null,
+    bannerImage: event?.ticketImage || event?.thumbnailImage || null,
     dateText: formatDate(sessionStart),
     timeText: formatTime(sessionStart, event?.time),
     venue:

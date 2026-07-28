@@ -88,7 +88,7 @@ const BillSection = ({ billCalculations }) => {
           />
         )}
 
-        {/* UD-coins */}
+        {/* UD Coins */}
         {bcoinsAppliedValue > 0 && (
           <BillRow
             label="Bcoins Applied"

@@ -17,7 +17,7 @@ export const getWalletDataApi = async () => {
 };
 
 /**
- * Redeems UD-coins using the specified amount and method.
+ * Redeems UD Coins using the specified amount and method.
  * @param {Object} payload The redemption details (requestedCoins, preferredMethod).
  * @returns {Promise<Object>} The API response.
  */
@@ -131,7 +131,7 @@ export const requestProductApi = async payload => {
 };
 
 /**
- * Fetches the history of UD-coin value changes.
+ * Fetches the history of UD Coin value changes.
  * @returns {Promise<Object>} The API response.
  */
 export const getBCoinValueChangesApi = async () => {

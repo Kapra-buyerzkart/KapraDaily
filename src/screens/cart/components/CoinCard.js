@@ -5,8 +5,8 @@ import icons from '../../../assets/icons';
 const CoinCard = ({ bcoinsApplied, availableBCoins, onApply, onRemove }) => (
   <OfferRow
     iconSource={icons.udCoinNew}
-    title="UD-coin"
-    subtitle={`Available UD-coins : ${availableBCoins || 0}`}
+    title="UD Coin"
+    subtitle={`Available UD Coins : ${availableBCoins || 0}`}
     isApplied={bcoinsApplied > 0}
     onPress={bcoinsApplied > 0 ? onRemove : onApply}
   />

@@ -130,7 +130,7 @@ const RedeemSuccessModal = ({
 
             <View style={styles.detailsBox}>
               <Row label="Date" value={dateStr} />
-              <Row label="Total UD-Coins used" value={String(coinsUsed)} />
+              <Row label="Total UD Coins used" value={String(coinsUsed)} />
               <Row label="Total Amount paid" value={amountPaid} />
               <View style={[styles.row, styles.rowLast]}>
                 <Text style={styles.rowLabel}>Status</Text>

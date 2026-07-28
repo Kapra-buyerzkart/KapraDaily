@@ -221,7 +221,7 @@ const UdenTicketModal = ({
     ? 'This voucher is currently out of stock.'
     : coinEligible === false
     ? quoteData?.message ||
-      "You don't have enough UD-Coins to redeem this voucher."
+      "You don't have enough UD Coins to redeem this voucher."
     : null;
 
   useEffect(() => {
@@ -405,7 +405,7 @@ const UdenTicketModal = ({
                 </AnimatedButton>
               </View>
 
-              {/* UD-Coin banner */}
+              {/* UD Coin banner */}
               <ImageBackground
                 source={require('../../../assets/icons/wrap.png')}
                 style={styles.coinBanner}
@@ -423,7 +423,7 @@ const UdenTicketModal = ({
                   resizeMode="contain"
                 />
 
-                <Text style={styles.coinBannerHighlight}>UD-Coin</Text>
+                <Text style={styles.coinBannerHighlight}>UD Coin</Text>
                 <Text style={styles.coinBannerText}>to claim your ticket</Text>
               </ImageBackground>
 
@@ -797,7 +797,7 @@ const styles = StyleSheet.create({
     paddingVertical: hp(2),
   },
 
-  // UD-Coin banner
+  // UD Coin banner
   coinBanner: {
     overflow: 'hidden',
     paddingVertical: hp(0.9),

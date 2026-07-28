@@ -26,7 +26,12 @@ const TabContent = ({
   moreToExplore,
   onEventPress,
 }) => {
-  console.log('[DEBUG TabContent] activeTab=', activeTab, 'POPULAR=', TAB_IDS.POPULAR);
+  console.log(
+    '[DEBUG TabContent] activeTab=',
+    activeTab,
+    'POPULAR=',
+    TAB_IDS.POPULAR,
+  );
   switch (activeTab) {
     case TAB_IDS.POPULAR:
       return (
@@ -71,7 +76,7 @@ const TabContent = ({
         <EmptyState
           icon={BILLS_ICON}
           title="Bills & Recharge"
-          subtitle="Pay bills and recharge with UD-Coins, coming soon."
+          subtitle="Pay bills and recharge with UD Coins, coming soon."
         />
       );
     case TAB_IDS.HOLIDAYS:
@@ -79,7 +84,7 @@ const TabContent = ({
         <EmptyState
           icon={SPORTS_ICON}
           title="Holidays"
-          subtitle="Plan your next getaway with UD-Coins, coming soon."
+          subtitle="Plan your next getaway with UD Coins, coming soon."
         />
       );
     case TAB_IDS.TRAVEL:
@@ -87,7 +92,7 @@ const TabContent = ({
         <EmptyState
           icon={SPORTS_ICON}
           title="Travel"
-          subtitle="Book travel with UD-Coins, coming soon."
+          subtitle="Book travel with UD Coins, coming soon."
         />
       );
     default:

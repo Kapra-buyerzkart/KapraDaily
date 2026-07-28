@@ -1,5 +1,15 @@
 import { StyleSheet } from 'react-native';
 import COLORS from '@/styles/colors';
+import {
+  AVATAR_GAP,
+  AVATAR_SIZE,
+  BACK_BUTTON_GAP,
+  BACK_BUTTON_SIZE,
+  BANNER_HEIGHT,
+  BANNER_RADIUS,
+  HEADER_H_PADDING,
+  HEADER_PADDING_BOTTOM,
+} from './constants';
 
 const CARD_BG = 'rgba(255,255,255,0.04)';
 const CARD_BORDER = 'rgba(255,255,255,0.10)';
@@ -20,16 +30,16 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingBottom: 12,
+    paddingHorizontal: HEADER_H_PADDING,
+    paddingBottom: HEADER_PADDING_BOTTOM,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: BACK_BUTTON_SIZE,
+    height: BACK_BUTTON_SIZE,
+    borderRadius: BACK_BUTTON_SIZE / 2,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 6,
+    marginRight: BACK_BUTTON_GAP,
   },
   headerTitle: {
     flex: 1,
@@ -37,18 +47,37 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontFamily: 'Gilroy-Bold',
   },
+  // Leaves a permanent slot for the docked banner circle. The title is
+  // invisible while the banner is expanded, so the gap costs nothing there.
+  headerTitleDocked: {
+    paddingLeft: AVATAR_SIZE + AVATAR_GAP,
+    fontSize: 18,
+  },
+  headerDivider: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+  },
 
+  scroll: {
+    flex: 1,
+  },
   scrollContent: {
+    // Reserves the space the (overlaid) banner occupies while expanded.
+    paddingTop: BANNER_HEIGHT,
     paddingBottom: 40,
   },
 
-  /* Banner */
+  /* Banner — overlaid on the scroll view so it can dock into the header */
   banner: {
-    marginHorizontal: 20,
-    height: 210,
-    borderRadius: 20,
+    position: 'absolute',
+    borderRadius: BANNER_RADIUS,
     overflow: 'hidden',
     backgroundColor: '#141414',
+    zIndex: 5,
   },
   bannerImage: {
     width: '100%',

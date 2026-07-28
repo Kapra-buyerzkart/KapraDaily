@@ -46,6 +46,7 @@ import EventBookingDetailsScreen from '../screens/EventBookingDetailsScreen/Even
 import ViewTicketScreen from '../screens/ViewTicketScreen/ViewTicketScreen';
 import D2cScreen from '../screens/D2cScreen';
 import LegalContentScreen from '../screens/LegalContentScreen';
+import QRScannerScreen from '../screens/QRScannerScreen/QRScannerScreen';
 import AppLoader from '../components/AppLoader';
 const Stack = createNativeStackNavigator();
 
@@ -208,6 +209,11 @@ export default function RootNavigator() {
         <Stack.Screen
           name="LegalContentScreen"
           component={LegalContentScreen}
+        />
+        <Stack.Screen
+          name="QRScannerScreen"
+          component={QRScannerScreen}
+          options={{ contentStyle: { backgroundColor: '#000000' } }}
         />
         {/* 48hrs Deals runs as a self-contained module with its own backend and
             session; everything it owns lives behind this single route. */}

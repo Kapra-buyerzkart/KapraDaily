@@ -25,7 +25,7 @@ const DEFAULT_OFFERS = [
   },
   {
     id: '3',
-    name: 'UD-coin',
+    name: 'UD Coin',
     content: '1000.00',
     applyCliked: false,
     image: require('../assets/images/bcoin_two.png'),
@@ -100,7 +100,7 @@ export const useOffers = (deliveryHook, addressHook) => {
     fetchRewards();
   }, [fetchRewards]);
 
-  // Fetch wallet data and update UD-coin offer content
+  // Fetch wallet data and update UD Coin offer content
   useEffect(() => {
     const fetchWalletData = async () => {
       try {
@@ -112,7 +112,7 @@ export const useOffers = (deliveryHook, addressHook) => {
               offer.id === '3'
                 ? {
                     ...offer,
-                    content: `Available UD-coin: ${parseFloat(bCoins).toFixed(
+                    content: `Available UD Coin: ${parseFloat(bCoins).toFixed(
                       2,
                     )}`,
                     applyCliked: cartSummary?.bcoinsAppliedValue > 0,
@@ -128,7 +128,7 @@ export const useOffers = (deliveryHook, addressHook) => {
     fetchWalletData();
   }, []);
 
-  // Sync UD-coin applied state with cart summary
+  // Sync UD Coin applied state with cart summary
   useEffect(() => {
     if (cartSummary) {
       setOffers(prev =>
@@ -161,14 +161,14 @@ export const useOffers = (deliveryHook, addressHook) => {
 
       if (offerId === '3') {
         const bCoinOffer = offers.find(o => o.id === '3');
-        // Extract numerical value from content string (e.g., "Available UD-coin: 100.00")
+        // Extract numerical value from content string (e.g., "Available UD Coin: 100.00")
         const contentValue = bCoinOffer?.content || '0';
         const availableBCoinsMatch = contentValue.match(/(\d+\.?\d*)/);
         const availableBCoins = availableBCoinsMatch
           ? parseFloat(availableBCoinsMatch[0])
           : 0;
         if (availableBCoins <= 0) {
-          alert('No UD-coins available to apply');
+          alert('No UD Coins available to apply');
           return;
         }
         try {
@@ -186,7 +186,7 @@ export const useOffers = (deliveryHook, addressHook) => {
             );
           } else {
             Toast.show(
-              result.message || 'Failed to apply UD-coins',
+              result.message || 'Failed to apply UD Coins',
               Toast.LONG,
             );
           }
@@ -260,13 +260,13 @@ export const useOffers = (deliveryHook, addressHook) => {
             );
           } else {
             Toast.show(
-              result.message || 'Failed to remove UD-coins',
+              result.message || 'Failed to remove UD Coins',
               Toast.LONG,
             );
           }
         } catch (error) {
           showLoader(false);
-          Toast.show('Failed to remove UD-coins', Toast.LONG);
+          Toast.show('Failed to remove UD Coins', Toast.LONG);
         }
         return;
       }

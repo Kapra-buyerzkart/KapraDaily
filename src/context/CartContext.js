@@ -1159,7 +1159,7 @@ export const CartProvider = ({ children }) => {
           await refreshCart();
           return {
             success: true,
-            message: response.message || 'UD-coins applied successfully',
+            message: response.message || 'UD Coins applied successfully',
           };
         } else {
           if (msg?.toLowerCase().includes('modified')) {
@@ -1174,7 +1174,7 @@ export const CartProvider = ({ children }) => {
         const msg =
           error.message ||
           error.Message ||
-          (typeof error === 'string' ? error : 'Failed to apply UD-coins');
+          (typeof error === 'string' ? error : 'Failed to apply UD Coins');
         if (
           error?.response?.data?.status === 'CART_VERSION_MISMATCH' ||
           error?.data?.status === 'CART_VERSION_MISMATCH'
@@ -1213,7 +1213,7 @@ export const CartProvider = ({ children }) => {
       const msg =
         error.message ||
         error.Message ||
-        (typeof error === 'string' ? error : 'Failed to remove UD-coins');
+        (typeof error === 'string' ? error : 'Failed to remove UD Coins');
       if (
         error?.response?.data?.status === 'CART_VERSION_MISMATCH' ||
         error?.data?.status === 'CART_VERSION_MISMATCH'

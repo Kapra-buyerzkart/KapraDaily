@@ -82,7 +82,7 @@ const BillSummary = ({ billCalculations }) => {
         )}
         {bcoinsAppliedValue > 0 && (
           <BillRow
-            label="UD-coins applied"
+            label="UD Coins applied"
             value={`- ₹${bcoinsAppliedValue.toFixed(2)}`}
             isGreen
           />

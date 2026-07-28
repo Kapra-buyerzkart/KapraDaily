@@ -7,6 +7,10 @@ end
 node_require('react-native/scripts/react_native_pods.rb')
 node_require('react-native-permissions/scripts/setup.rb')
 
+# VisionCamera is only used for QR scanning, so skip the frame-processor
+# (worklets/skia) integration entirely.
+$VCEnableFrameProcessors = false
+
 platform :ios, min_ios_version_supported
 prepare_react_native_project!
 

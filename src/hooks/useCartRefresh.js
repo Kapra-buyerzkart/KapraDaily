@@ -1,10 +1,14 @@
 import React, { useCallback, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 
-export const useCartRefresh = ({ getCartSummary, fetchAddresses, loadProfile }) => {
+export const useCartRefresh = ({
+  getCartSummary,
+  fetchAddresses,
+  loadProfile,
+}) => {
   const [refreshing, setRefreshing] = useState(false);
 
-  // Refresh addresses and UD-coin balance whenever the screen gains focus
+  // Refresh addresses and UD Coin balance whenever the screen gains focus
   useFocusEffect(
     React.useCallback(() => {
       fetchAddresses();

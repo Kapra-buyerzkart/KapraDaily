@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useCallback, useContext } from 'react';
-import { Animated, StatusBar, View, ImageBackground } from 'react-native';
+import { ImageBackground, StatusBar, View } from 'react-native';
 import {
   useSharedValue,
   useAnimatedScrollHandler,
@@ -8,7 +8,6 @@ import LinearGradient from 'react-native-linear-gradient';
 import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { TAB_IDS } from '@/components/events/EventCategoryTabs';
-import { TICKET_LANDING_GRADIENT } from '@/styles/gradients';
 import { AppContext } from '../../context/appContext';
 import logger from '../../utils/logger';
 import styles from './styles';
@@ -23,10 +22,8 @@ import useStatusBarFocus from './hooks/useStatusBarFocus';
 import useHeroFade from './hooks/useHeroFade';
 import useStoreSwitcher from './hooks/useStoreSwitcher';
 import prefetchMyBookings from '../../queries/prefetchMyBookings';
-import COLORS from '@/styles/colors';
 
-const AnimatedImageBackground =
-  Animated.createAnimatedComponent(ImageBackground);
+const SCREEN_BG = require('../../assets/images/movieTicket/ticketLandingBg.png');
 
 const TicketLandingScreen = ({ navigation }) => {
   const insets = useSafeAreaInsets();
@@ -44,7 +41,7 @@ const TicketLandingScreen = ({ navigation }) => {
   );
 
   const applyStatusBar = useStatusBarFocus();
-  const { fadeAnim, imageOpacity, handleImageLoad } = useHeroFade();
+  const { fadeAnim } = useHeroFade();
   const voucherData = useVoucherData();
   const eventsData = useEventsData(navigation);
   const tabNav = useTabNavigation(eventsData.fetchEventDetailsList);
@@ -78,13 +75,19 @@ const TicketLandingScreen = ({ navigation }) => {
     }
   }, [voucherData, eventsData, tabNav.activeTab]);
 
-  const imageBgStyle = useMemo(
-    () => [styles.imageBg, { opacity: imageOpacity }],
-    [imageOpacity],
-  );
   const gradientStyle = useMemo(
     () => [styles.statusBarGradient, { height: insets.top + 24 }],
     [insets.top],
+  );
+
+  // The artwork backdrop belongs to the Vouchers tab only; every other tab
+  // sits on the flat background. Hide the image instead of swapping the
+  // wrapper so the list isn't remounted (and scrolled back to top) on tab
+  // changes.
+  const backdropImageStyle = useMemo(
+    () =>
+      tabNav.activeTab === TAB_IDS.VOUCHERS ? undefined : styles.hiddenBackdrop,
+    [tabNav.activeTab],
   );
 
   const tabContentProps = useMemo(
@@ -132,32 +135,30 @@ const TicketLandingScreen = ({ navigation }) => {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" translucent backgroundColor="black" />
 
-      <AnimatedImageBackground
-        source={require('../../assets/images/movieTicket/ticketLandingBg.png')}
-        style={imageBgStyle}
-        onLoad={handleImageLoad}
+      <ImageBackground
+        source={SCREEN_BG}
+        style={styles.contentBg}
+        imageStyle={backdropImageStyle}
         resizeMode="cover"
       >
-        <View style={{ backgroundColor: COLORS.bg }}>
-          <TicketLandingList
-            navigation={navigation}
-            insets={insets}
-            profile={profile}
-            activeTab={tabNav.activeTab}
-            handleTabChange={tabNav.handleTabChange}
-            popularCategories={eventsData.popularCategories}
-            scrollY={scrollY}
-            scrollHandler={scrollHandler}
-            tabContentStyle={tabNav.tabContentStyle}
-            events={eventsData.events}
-            eventsLoading={eventsData.eventsLoading}
-            handleEventPress={eventsData.handleEventPress}
-            tabContentProps={tabContentProps}
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-          />
-        </View>
-      </AnimatedImageBackground>
+        <TicketLandingList
+          navigation={navigation}
+          insets={insets}
+          profile={profile}
+          activeTab={tabNav.activeTab}
+          handleTabChange={tabNav.handleTabChange}
+          popularCategories={eventsData.popularCategories}
+          scrollY={scrollY}
+          scrollHandler={scrollHandler}
+          tabContentStyle={tabNav.tabContentStyle}
+          events={eventsData.events}
+          eventsLoading={eventsData.eventsLoading}
+          handleEventPress={eventsData.handleEventPress}
+          tabContentProps={tabContentProps}
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+        />
+      </ImageBackground>
 
       <LinearGradient
         colors={['rgba(0,0,0,0.55)', 'rgba(0,0,0,0)']}

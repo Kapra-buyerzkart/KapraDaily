@@ -9,10 +9,6 @@ import {
 import Animated from 'react-native-reanimated';
 import ConcertTicket from '../../../components/ConcertTicket';
 import { wp, hp } from '../../../utils/responsive';
-
-// Horizontal, paged list of tickets with dot indicators + a position counter.
-// Owns the active page index; `entranceStyle` animates the ticket area in and
-// `onQrPress(index)` bubbles a QR tap up to the zoom overlay.
 const TicketCarousel = ({ tickets, entranceStyle, onQrPress }) => {
   const { width } = useWindowDimensions();
   const [activeIndex, setActiveIndex] = useState(0);

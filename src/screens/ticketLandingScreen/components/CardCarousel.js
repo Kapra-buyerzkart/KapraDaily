@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
   View,
   Image,
@@ -26,7 +26,7 @@ import { hp } from '../../../utils/responsive';
 import { getVoucherImageSource } from '@/components/events/imageUtils';
 import images from '@/assets/images';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 const STACK_VISIBLE = 3;
 const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.28;
@@ -35,13 +35,16 @@ const STACK_Y_STEP = 16;
 const CARD_WIDTH = SCREEN_WIDTH * 0.72;
 const CARD_HEIGHT = CARD_WIDTH * 0.62;
 
+const CURVE_APEX_RATIO = 610 / 932;
+const ARROW_PILL_HEIGHT = 48;
+const ARROW_MIN_GAP = 16;
+const CLAIM_GAP = 28;
+const ARROW_PILL_OVERLAP = hp((60 / 932) * 100);
+
 const StackCard = React.memo(({ item, stackIndex, dragX, dragY, isTop }) => {
   const imageSource = getVoucherImageSource(item);
   const zIndex = isTop ? 10 : STACK_VISIBLE - stackIndex;
 
-  // Transform lives on its own inner view (never on the view that also carries
-  // `entering`) — Reanimated warns that a layout-mount animation and a
-  // per-frame transform style fight over the same `transform` prop otherwise.
   const transformStyle = useAnimatedStyle(() => {
     if (isTop) {
       const rotate = interpolate(
@@ -164,6 +167,19 @@ const CardCarousel = ({ fadeAnim, onClaim, vouchers }) => {
   const cardCount = cards.length;
   const [activeIndex, setActiveIndex] = useState(0);
 
+  // Distance from the bottom of the card stack down to the curve apex. Measured
+  // in window coordinates because the stack's screen position depends on the
+  // safe-area inset and the header/tab heights above it.
+  const stackRef = useRef(null);
+  const [arrowMarginTop, setArrowMarginTop] = useState(null);
+  const handleStackLayout = useCallback(() => {
+    stackRef.current?.measureInWindow((x, y, width, height) => {
+      if (!height) return;
+      const pillTop = SCREEN_HEIGHT * CURVE_APEX_RATIO - ARROW_PILL_HEIGHT / 2;
+      setArrowMarginTop(Math.max(ARROW_MIN_GAP, pillTop - (y + height)));
+    });
+  }, []);
+
   const dragX = useSharedValue(0);
   const dragY = useSharedValue(0);
   const claimScale = useSharedValue(1);
@@ -284,13 +300,22 @@ const CardCarousel = ({ fadeAnim, onClaim, vouchers }) => {
   return (
     <Animated.View style={{ opacity: fadeAnim }}>
       <View style={styles.carouselWrapper}>
-        <View style={styles.stackContainer}>{stackSlots}</View>
+        <View
+          ref={stackRef}
+          onLayout={handleStackLayout}
+          style={styles.stackContainer}
+        >
+          {stackSlots}
+        </View>
       </View>
 
       <View
         style={[
           styles.arrowContainer,
-          { marginTop: Platform.OS === 'ios' ? hp(11) : hp(10) },
+          {
+            marginTop:
+              arrowMarginTop ?? (Platform.OS === 'ios' ? hp(11) : hp(10)),
+          },
         ]}
       >
         <View style={styles.arrowPill}>
@@ -382,9 +407,10 @@ const styles = StyleSheet.create({
   arrowPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 1)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     borderRadius: 30,
     paddingHorizontal: 6,
+    top: -ARROW_PILL_OVERLAP,
   },
   arrowButton: {
     padding: 10,
@@ -396,7 +422,7 @@ const styles = StyleSheet.create({
   },
   claimWrapper: {
     alignItems: 'center',
-    marginTop: hp(4),
+    marginTop: CLAIM_GAP,
   },
   claimButton: {
     width: 96,

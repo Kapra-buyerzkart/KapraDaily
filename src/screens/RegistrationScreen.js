@@ -356,14 +356,26 @@ const RegistrationScreen = () => {
                 onPress={() =>
                   setTermsAndConditionsClicked(!termsAndConditionsClicked)
                 }
-                style={styles.termsAndConditionsRadioOuter}
+                style={styles.termsAndConditionsToggle}
+                hitSlop={{ top: 12, bottom: 12, left: 12, right: 8 }}
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: termsAndConditionsClicked }}
+                accessibilityLabel="I have read and agree to the terms and conditions"
+                accessibilityHint="Double tap to accept or decline the terms and conditions"
               >
-                {termsAndConditionsClicked && (
-                  <View style={styles.termsAndConditionsRadioInner} />
-                )}
+                <View style={styles.termsAndConditionsRadioOuter}>
+                  {termsAndConditionsClicked && (
+                    <View style={styles.termsAndConditionsRadioInner} />
+                  )}
+                </View>
+                <Text style={styles.agreeText}>I have read and agree to</Text>
               </TouchableOpacity>
-              <Text style={styles.agreeText}>I have read and agree to</Text>
-              <TouchableOpacity>
+              <TouchableOpacity
+                style={styles.termsAndConditionsLink}
+                hitSlop={{ top: 12, bottom: 12, left: 8, right: 12 }}
+                accessibilityRole="link"
+                accessibilityLabel="Terms and conditions"
+              >
                 <Text style={styles.termsAndConditionsText}>
                   Terms and conditions
                   <Text style={styles.mandatoryStar}>*</Text>
@@ -554,12 +566,21 @@ const styles = StyleSheet.create({
   },
   termsAndConditionsContainer: {
     flexDirection: 'row',
-    marginTop: hp('1.7%'),
+    marginTop: hp('0.6%'),
     alignItems: 'center',
+    flexWrap: 'wrap',
+  },
+  termsAndConditionsToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: hp('1.1%'),
+  },
+  termsAndConditionsLink: {
+    paddingVertical: hp('1.1%'),
   },
   termsAndConditionsRadioOuter: {
-    width: wp('3%'),
-    height: wp('3%'),
+    width: wp('4.3%'),
+    height: wp('4.3%'),
     borderRadius: 30,
     borderWidth: 1,
     borderColor: '#F25000',
@@ -567,13 +588,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   termsAndConditionsRadioInner: {
-    width: wp('2%'),
-    height: wp('2%'),
+    width: wp('2.6%'),
+    height: wp('2.6%'),
     backgroundColor: '#F25000',
     borderRadius: 30,
   },
   agreeText: {
-    color: '#00000033',
+    color: '#616161',
     fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3.25%'),
     marginLeft: wp('2%'),

@@ -18,9 +18,6 @@ import Animated, {
   FadeIn,
   FadeInDown,
   ZoomIn,
-  Extrapolation,
-  interpolate,
-  useAnimatedScrollHandler,
   useAnimatedStyle,
   useSharedValue,
   withSequence,
@@ -41,7 +38,7 @@ import HtmlBody from '@/components/HtmlBody';
 import { formatTime, formatPrice } from '@/screens/EventDetailsScreen/utils';
 import useEventBookingDetailQuery from '@/queries/useEventBookingDetailQuery';
 import logger from '@/utils/logger';
-import { getHeaderPaddingTop } from '@/utils/headerLayout';
+import useCollapsibleBanner from './hooks/useCollapsibleBanner';
 import styles from './styles';
 
 const STATUS_COLORS = {
@@ -102,10 +99,6 @@ const formatFullDate = value => {
   });
 };
 
-// Flattens the nested booking-detail response (booking / eventDetails / session
-// / bookingItems / tickets / payment) into the shape the UI consumes. The list
-// item passed on navigation is used as a fallback so the header/banner render
-// instantly while the detail request is in flight.
 const buildViewModel = (data, passed) => {
   const p = passed || {};
   const booking = data?.booking || {};
@@ -124,6 +117,11 @@ const buildViewModel = (data, passed) => {
     eventImages[0]?.imageUrl ||
     p.bannerImage ||
     null;
+
+  // The event carries dedicated ticket artwork; fall back to the banner chain
+  // for older events that were created before that field existed.
+  const ticketImage =
+    eventDetails.ticketImage || p.ticketImage || bannerImage || null;
 
   const ticketCount =
     tickets.length ||
@@ -145,6 +143,7 @@ const buildViewModel = (data, passed) => {
     language: eventDetails.language ?? p.language ?? null,
     ageLimit: eventDetails.ageLimit ?? p.ageLimit ?? null,
     bannerImage,
+    ticketImage,
     subTotal: booking.subTotal,
     tax: booking.tax,
     bookingFee: booking.bookingFee,
@@ -175,7 +174,7 @@ const DetailRow = ({ icon, label, value, first }) => {
   );
 };
 
-const SummaryRow = ({ label, value, total, muted }) => {
+const SummaryRow = ({ subtext, label, value, total, muted }) => {
   if (!value && value !== 0) return null;
   return (
     <View style={[styles.summaryRow, total && styles.summaryTotalRow]}>
@@ -245,7 +244,7 @@ const EventBookingDetailsScreen = ({ navigation, route }) => {
   const passed = route?.params?.booking ?? null;
   const bookingId =
     route?.params?.bookingId ?? passed?.bookingId ?? passed?.id ?? null;
-
+  console.log(bookingId, 'bookingIdbookingIdbookingIdbookingId====>');
   const { data, isLoading, isError, error, refetch } =
     useEventBookingDetailQuery(bookingId);
 
@@ -268,8 +267,6 @@ const EventBookingDetailsScreen = ({ navigation, route }) => {
     }
   }, [isError, error]);
 
-  // Artists + terms aren't part of the booking response, so keep pulling them
-  // from the event-details endpoint using the resolved eventId.
   const detailRoute = useMemo(
     () => ({ params: { eventId: vm.eventId } }),
     [vm.eventId],
@@ -300,31 +297,20 @@ const EventBookingDetailsScreen = ({ navigation, route }) => {
 
   const statusColor =
     STATUS_COLORS[String(vm.statusKey).toLowerCase()] || '#C9A6FF';
-
-  const bannerSource = resolveImage(vm.bannerImage);
+  const ticketImage = useMemo(
+    () => resolveImage(vm.ticketImage),
+    [vm.ticketImage],
+  );
 
   const handleBack = useCallback(() => navigation.goBack(), [navigation]);
 
-  // Drives a gentle parallax + pull-to-zoom on the banner as the page scrolls.
-  const scrollY = useSharedValue(0);
-  const scrollHandler = useAnimatedScrollHandler(e => {
-    scrollY.value = e.contentOffset.y;
-  });
-  const bannerAnimStyle = useAnimatedStyle(() => {
-    const scale = interpolate(
-      scrollY.value,
-      [-140, 0],
-      [1.3, 1.12],
-      Extrapolation.CLAMP,
-    );
-    const translateY = interpolate(
-      scrollY.value,
-      [0, 260],
-      [0, 12],
-      Extrapolation.CLAMP,
-    );
-    return { transform: [{ translateY }, { scale }] };
-  });
+  const {
+    headerTop,
+    scrollHandler,
+    bannerStyle,
+    headerTitleStyle,
+    headerDividerStyle,
+  } = useCollapsibleBanner(insets);
 
   const handleViewTicket = useCallback(() => {
     navigation.navigate('ViewTicketScreen', {
@@ -337,11 +323,12 @@ const EventBookingDetailsScreen = ({ navigation, route }) => {
         startDateTime: vm.startDateTime,
         endDateTime: vm.endDateTime,
         thumbnailImage: vm.bannerImage,
+        ticketImage,
       },
       tickets: vm.tickets,
       bookingItems: vm.items,
     });
-  }, [navigation, passed, bookingId, vm]);
+  }, [navigation, passed, bookingId, vm, ticketImage]);
 
   const hasPricing =
     vm.subTotal != null ||
@@ -349,8 +336,11 @@ const EventBookingDetailsScreen = ({ navigation, route }) => {
     vm.bookingFee != null ||
     vm.grandTotal != null;
 
-  const renderHeader = () => (
-    <View style={[styles.header, { paddingTop: getHeaderPaddingTop(insets) }]}>
+  // `docked` is the scrollable variant: its title stays hidden until the banner
+  // has collapsed into the circle beside it. The plain variant is used by the
+  // loading/error states, which have nothing to scroll.
+  const renderHeader = ({ docked } = {}) => (
+    <View style={[styles.header, { paddingTop: headerTop }]}>
       <AnimatedPressable
         onPress={handleBack}
         hitSlop={16}
@@ -360,9 +350,28 @@ const EventBookingDetailsScreen = ({ navigation, route }) => {
       >
         <Ionicons name="arrow-back" size={24} color={COLORS.white} />
       </AnimatedPressable>
-      <Text style={styles.headerTitle} numberOfLines={1}>
-        {eventName}
-      </Text>
+      {docked ? (
+        <Animated.Text
+          style={[
+            styles.headerTitle,
+            styles.headerTitleDocked,
+            headerTitleStyle,
+          ]}
+          numberOfLines={1}
+        >
+          {eventName}
+        </Animated.Text>
+      ) : (
+        <Text style={styles.headerTitle} numberOfLines={1}>
+          {eventName}
+        </Text>
+      )}
+      {docked && (
+        <Animated.View
+          style={[styles.headerDivider, headerDividerStyle]}
+          pointerEvents="none"
+        />
+      )}
     </View>
   );
 
@@ -437,9 +446,10 @@ const EventBookingDetailsScreen = ({ navigation, route }) => {
         backgroundColor="transparent"
       />
 
-      {renderHeader()}
+      {renderHeader({ docked: true })}
 
       <Animated.ScrollView
+        style={styles.scroll}
         contentContainerStyle={[
           styles.scrollContent,
           { paddingBottom: (insets.bottom || 12) + 96 },
@@ -448,14 +458,6 @@ const EventBookingDetailsScreen = ({ navigation, route }) => {
         onScroll={scrollHandler}
         scrollEventThrottle={16}
       >
-        <Animated.View style={styles.banner} entering={FadeIn.duration(450)}>
-          <Animated.Image
-            source={bannerSource}
-            style={[styles.bannerImage, bannerAnimStyle]}
-            resizeMode="cover"
-          />
-        </Animated.View>
-
         {!!daysLeft && (
           <Animated.View
             style={styles.daysPill}
@@ -486,7 +488,7 @@ const EventBookingDetailsScreen = ({ navigation, route }) => {
             entering={FadeInDown.delay(200).duration(380)}
           >
             <Text style={styles.bookingNumber} numberOfLines={1}>
-              {vm.bookingNumber}
+              Booking Number - {vm?.bookingNumber}
             </Text>
             <CopyButton value={vm.bookingNumber} />
           </Animated.View>
@@ -494,158 +496,172 @@ const EventBookingDetailsScreen = ({ navigation, route }) => {
 
         <Animated.View entering={FadeInDown.delay(260).duration(380)}>
           <AccordionSection title="Details" defaultOpen>
-          <View>
-            <DetailRow
-              icon="calendar-outline"
-              label="Date"
-              value={dateText}
-              first
-            />
-            <DetailRow icon="time-outline" label="Time" value={timeText} />
-            <DetailRow
-              icon="location-outline"
-              label="Location"
-              value={location}
-            />
-            <DetailRow
-              icon="language-outline"
-              label="Language"
-              value={language}
-            />
-            <DetailRow
-              icon="people-outline"
-              label="Age limit"
-              value={ageLimit}
-            />
-            <DetailRow
-              icon="pricetag-outline"
-              label="Booked on"
-              value={formatFullDate(vm.bookedAt)}
-            />
-            {!!details?.detailsText && (
-              <View style={styles.detailHtml}>
-                <ScrollView
-                  style={styles.detailHtmlScroll}
-                  nestedScrollEnabled
-                  showsVerticalScrollIndicator
-                >
-                  <HtmlBody html={details.detailsText} />
-                </ScrollView>
-              </View>
-            )}
-          </View>
+            <View>
+              <DetailRow
+                icon="calendar-outline"
+                label="Date"
+                value={dateText}
+                first
+              />
+              <DetailRow icon="time-outline" label="Time" value={timeText} />
+              <DetailRow
+                icon="location-outline"
+                label="Location"
+                value={location}
+              />
+              <DetailRow
+                icon="language-outline"
+                label="Language"
+                value={language}
+              />
+              <DetailRow
+                icon="people-outline"
+                label="Age limit"
+                value={ageLimit}
+              />
+              <DetailRow
+                icon="pricetag-outline"
+                label="Booked on"
+                value={formatFullDate(vm.bookedAt)}
+              />
+              {!!details?.detailsText && (
+                <View style={styles.detailHtml}>
+                  <ScrollView
+                    style={styles.detailHtmlScroll}
+                    nestedScrollEnabled
+                    showsVerticalScrollIndicator
+                  >
+                    <HtmlBody html={details.detailsText} />
+                  </ScrollView>
+                </View>
+              )}
+            </View>
           </AccordionSection>
         </Animated.View>
 
         {vm.items.length > 0 && (
           <Animated.View entering={FadeInDown.delay(320).duration(380)}>
-          <AccordionSection
-            title={`Tickets${vm.ticketCount ? ` (${vm.ticketCount})` : ''}`}
-            defaultOpen
-          >
-            <View>
-              {vm.items.map((item, index) => (
-                <View
-                  key={item.bookingItemId ?? item.ticketCategoryId ?? index}
-                  style={[styles.itemRow, index > 0 && styles.itemRowDivider]}
-                >
-                  <View style={styles.itemInfo}>
-                    <Text style={styles.itemName} numberOfLines={1}>
-                      {item.categoryName || 'Ticket'}
-                    </Text>
-                    <Text style={styles.itemMeta}>
-                      {`${item.quantity || 1} × ${
-                        formatPrice(item.unitPrice) || '—'
-                      }`}
-                    </Text>
-                  </View>
-                  <Text style={styles.itemPrice}>
-                    {formatPrice(item.total ?? item.subTotal)}
-                  </Text>
-                </View>
-              ))}
-
-              {vm.tickets.length > 0 && (
-                <View style={styles.ticketNumbers}>
-                  {vm.tickets.map(ticket => (
-                    <View key={ticket.ticketId} style={styles.ticketNumberRow}>
-                      <Ionicons
-                        name={
-                          ticket.checkedInAt
-                            ? 'checkmark-circle'
-                            : 'ticket-outline'
-                        }
-                        size={14}
-                        color={ticket.checkedInAt ? '#4CD98A' : '#B98CFF'}
-                      />
-                      <Text style={styles.ticketNumberText} numberOfLines={1}>
-                        {ticket.ticketNumber}
+            <AccordionSection
+              title={`Tickets${vm.ticketCount ? ` (${vm.ticketCount})` : ''}`}
+              defaultOpen
+            >
+              <View>
+                {vm.items.map((item, index) => (
+                  <View
+                    key={item.bookingItemId ?? item.ticketCategoryId ?? index}
+                    style={[styles.itemRow, index > 0 && styles.itemRowDivider]}
+                  >
+                    <View style={styles.itemInfo}>
+                      <Text style={styles.itemName} numberOfLines={1}>
+                        {item.categoryName || 'Ticket'}
                       </Text>
-                      <Text style={styles.ticketNumberStatus}>
-                        {ticket.checkedInAt
-                          ? 'Checked in'
-                          : titleCase(ticket.statusKey)}
+                      <Text style={styles.itemMeta}>
+                        {`${item.quantity || 1} × ${
+                          formatPrice(item.unitPrice) || '—'
+                        }`}
                       </Text>
                     </View>
-                  ))}
-                </View>
-              )}
-            </View>
-          </AccordionSection>
+                    <Text style={styles.itemPrice}>
+                      {formatPrice(item.total ?? item.subTotal)}
+                    </Text>
+                  </View>
+                ))}
+
+                {vm.tickets.length > 0 && (
+                  <View style={styles.ticketNumbers}>
+                    {vm.tickets.map(ticket => (
+                      <View
+                        key={ticket.ticketId}
+                        style={styles.ticketNumberRow}
+                      >
+                        <Ionicons
+                          name={
+                            ticket.checkedInAt
+                              ? 'checkmark-circle'
+                              : 'ticket-outline'
+                          }
+                          size={14}
+                          color={ticket.checkedInAt ? '#4CD98A' : '#B98CFF'}
+                        />
+                        <Text style={styles.ticketNumberText} numberOfLines={1}>
+                          {ticket.ticketNumber}
+                        </Text>
+                        <Text style={styles.ticketNumberStatus}>
+                          {ticket.checkedInAt
+                            ? 'Checked in'
+                            : titleCase(ticket.statusKey)}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
+              </View>
+            </AccordionSection>
           </Animated.View>
         )}
 
         {hasPricing && (
           <Animated.View entering={FadeInDown.delay(380).duration(380)}>
-          <AccordionSection title="Payment summary">
-            <View>
-              <SummaryRow label="Subtotal" value={formatPrice(vm.subTotal)} />
-              <SummaryRow label="Tax" value={formatPrice(vm.tax)} />
-              <SummaryRow
-                label="Booking fee"
-                value={formatPrice(vm.bookingFee)}
-              />
-              {vm.discount > 0 && (
+            <AccordionSection title="Payment summary">
+              <View>
+                <SummaryRow label="Subtotal" value={formatPrice(vm.subTotal)} />
+                {/* <SummaryRow label="Tax" value={formatPrice(vm.tax)} /> */}
                 <SummaryRow
-                  label="Discount"
-                  value={`- ${formatPrice(vm.discount)}`}
-                  muted
+                  label="
+                  Convenience fee"
+                  value={formatPrice(vm.bookingFee)}
                 />
-              )}
-              {vm.coinsUsed > 0 && (
+                {vm.discount > 0 && (
+                  <SummaryRow
+                    label="Discount"
+                    value={`- ${formatPrice(vm.discount)}`}
+                    muted
+                  />
+                )}
+                {vm.coinsUsed > 0 && (
+                  <SummaryRow
+                    label="Coins used"
+                    value={`- ${formatPrice(vm.coinsUsed)}`}
+                    muted
+                  />
+                )}
                 <SummaryRow
-                  label="Coins used"
-                  value={`- ${formatPrice(vm.coinsUsed)}`}
-                  muted
+                  label="Total paid"
+                  value={formatPrice(vm.grandTotal)}
+                  total
                 />
-              )}
-              <SummaryRow
-                label="Total paid"
-                value={formatPrice(vm.grandTotal)}
-                total
-              />
-              {!!vm.payment && (
-                <View style={styles.paymentMeta}>
-                  <SummaryRow
-                    label="Method"
-                    value={
-                      vm.payment.paymentGateway?.toLowerCase() === 'razorpay'
-                        ? 'Online'
-                        : titleCase(vm.payment.paymentGateway)
-                    }
-                  />
-                  <SummaryRow
-                    label="Transaction"
-                    value={vm.payment.transactionId}
-                  />
-                  <SummaryRow
-                    label="Paid on"
-                    value={formatFullDate(vm.payment.paidAt)}
-                  />
-                </View>
-              )}
-            </View>
-          </AccordionSection>
+
+                <Text
+                  style={{
+                    color: 'white',
+                    fontFamily: 'Gilroy-Regular',
+                    fontSize: 13,
+                  }}
+                >
+                  (Inclusive of GST)
+                </Text>
+                {!!vm.payment && (
+                  <View style={styles.paymentMeta}>
+                    <SummaryRow
+                      label="Method"
+                      value={
+                        vm.payment.paymentGateway?.toLowerCase() === 'razorpay'
+                          ? 'Online'
+                          : titleCase(vm.payment.paymentGateway)
+                      }
+                    />
+                    <SummaryRow
+                      label="Transaction"
+                      value={vm.payment.transactionId}
+                    />
+                    <SummaryRow
+                      label="Paid on"
+                      value={formatFullDate(vm.payment.paidAt)}
+                    />
+                  </View>
+                )}
+              </View>
+            </AccordionSection>
           </Animated.View>
         )}
 
@@ -666,6 +682,17 @@ const EventBookingDetailsScreen = ({ navigation, route }) => {
           </AccordionSection>
         </Animated.View>
       </Animated.ScrollView>
+
+      {/* Sits above both the scroll view and the header so it can travel from
+          the page body into the header row without being clipped. */}
+      <Animated.View style={[styles.banner, bannerStyle]} pointerEvents="none">
+        <Animated.Image
+          source={ticketImage}
+          style={styles.bannerImage}
+          resizeMode="cover"
+          entering={FadeIn.duration(450)}
+        />
+      </Animated.View>
 
       <Animated.View
         entering={FadeInDown.delay(300).duration(420)}

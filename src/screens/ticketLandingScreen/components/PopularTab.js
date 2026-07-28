@@ -41,8 +41,6 @@ const PopularTab = ({
   const heroItems = useMemo(() => banners ?? [], [banners]);
   const giftCardItems = useMemo(() => {
     const list = popularVouchers ?? [];
-    // Active gift cards first, sold-out (inactive) ones after. Sort is
-    // stable so the original order is preserved within each group.
     const sorted = [...list].sort(
       (a, b) => (b?.isActive ? 1 : 0) - (a?.isActive ? 1 : 0),
     );

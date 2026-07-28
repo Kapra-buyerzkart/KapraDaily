@@ -105,7 +105,7 @@ const ClaimBanner = () => {
           />
         </View>
         <Text style={styles.bannerText}>
-          Use your <Text style={styles.bannerHighlight}>UD-Coin</Text> to claim
+          Use your <Text style={styles.bannerHighlight}>UD Coin</Text> to claim
           your ticket
         </Text>
       </Animated.View>

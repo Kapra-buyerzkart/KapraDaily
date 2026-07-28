@@ -101,7 +101,7 @@ const PaymentFailedModal = ({
 
             <View style={styles.detailsBox}>
               <Row label="Date" value={DASH} />
-              <Row label="Total UD-Coins used" value={DASH} />
+              <Row label="Total UD Coins used" value={DASH} />
               <Row label="Total Amount paid" value={DASH} />
               <View style={[styles.row, styles.rowLast]}>
                 <Text style={styles.rowLabel}>Status</Text>

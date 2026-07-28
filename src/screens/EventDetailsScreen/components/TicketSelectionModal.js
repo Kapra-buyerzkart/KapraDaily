@@ -587,7 +587,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Gilroy-Bold',
   },
   footerEmptyText: {
-    color: COLORS.gray600,
+    color: COLORS.black,
     fontSize: 14,
     fontFamily: 'Gilroy-Medium',
   },

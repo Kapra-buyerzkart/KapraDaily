@@ -10,16 +10,16 @@ export const formatTicketDate = value => {
     .toLowerCase();
   return `${month} ${date.getDate()}, ${weekday}`;
 };
+export const titleCaseWords = value => {
+  if (typeof value !== 'string') return undefined;
+  const trimmed = value.trim().replace(/\s+/g, ' ');
+  if (!trimmed) return undefined;
+  return trimmed.replace(/[^\s\-/]+/g, word =>
+    /[A-Z]/.test(word) ? word : word.charAt(0).toUpperCase() + word.slice(1),
+  );
+};
 
 export const resolveQr = path => {
   if (!path || typeof path !== 'string') return null;
   return /^https?:\/\//i.test(path) ? path : CONFIG.image_base_url + path;
-};
-
-// Turns a backend image path (e.g. `thumbnailImage`) into an <Image> source.
-// Returns undefined when there's nothing to show so ConcertTicket falls back to
-// its bundled placeholder (default props only apply for `undefined`, not null).
-export const resolveImageSource = path => {
-  const uri = resolveQr(path);
-  return uri ? { uri } : undefined;
 };
