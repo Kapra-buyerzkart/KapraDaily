@@ -7,12 +7,13 @@ import AccordionSection from './AccordionSection';
 
 const BODY_MAX_HEIGHT = 280;
 
-const EventAccordions = ({ details, terms }) => (
+const EventAccordions = ({ details, terms, onExpand }) => (
   <View style={styles.accordionGroup}>
     <Animated.View entering={FadeInUp.delay(200).duration(400)}>
       <AccordionSection
         title="Details"
         maxHeight={details ? BODY_MAX_HEIGHT : undefined}
+        onExpand={onExpand}
       >
         {details ? (
           <HtmlBody html={details} />
@@ -25,6 +26,7 @@ const EventAccordions = ({ details, terms }) => (
       <AccordionSection
         title="Terms & Conditions"
         maxHeight={terms ? BODY_MAX_HEIGHT : undefined}
+        onExpand={onExpand}
       >
         {terms ? (
           <HtmlBody html={terms} />

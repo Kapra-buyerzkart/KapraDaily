@@ -207,6 +207,7 @@ const images = {
   udendealSeal: require('./udendealSeal.png'),
   login_landing: require('./login_landing.png'),
   no_location: require('./noimages/no_location.png'),
+  claimticketBtn: require('./claimticketBtn.png'),
 };
 
 export default images;

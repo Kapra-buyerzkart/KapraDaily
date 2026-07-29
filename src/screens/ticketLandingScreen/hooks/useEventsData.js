@@ -22,9 +22,6 @@ const mapPopularEvents = data => {
   });
 };
 
-// Main banners can point at either an event (has a start date) or a
-// voucher (no start date) - flagged with `isEvent` so callers know how
-// to route a press.
 const mapBanners = data => {
   const rawBanners = Array.isArray(data?.banners) ? data.banners : [];
 
@@ -62,7 +59,6 @@ const mapMoreToExplore = data => {
   }));
 };
 
-// Prefer the highest-resolution icon; remote images aren't auto-@2x/@3x'd.
 const CATEGORY_ICON_KEYS = ['iconImage3x', 'iconImage2x', 'iconImage1x'];
 
 const buildCategoryIconUri = item => {
@@ -71,8 +67,6 @@ const buildCategoryIconUri = item => {
     item?.catImageUrl ??
     item?.imageUrl;
   if (!path) return null;
-  // The API returns server-relative asset paths; prefix the CDN base unless
-  // it's already an absolute URL.
   return /^https?:\/\//.test(path) ? path : CONFIG.image_base_url + path;
 };
 

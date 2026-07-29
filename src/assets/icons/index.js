@@ -73,6 +73,7 @@ const icons = {
   hometicket: require('./hometicket.png'),
   calendarticket: require('./calendarticket.png'),
   storeticketStore: require('./ticketStore 1.png'),
+  claimtick: require('./claimtick.png'),
 };
 
 export default icons;

@@ -122,7 +122,7 @@ const EventHero = ({ event, insets, onBack, scrollY }) => {
         >
           <Ionicons name="arrow-back" size={22} color={COLORS.white} />
         </AnimatedPressable>
-        <Text style={styles.heroTitle}>Events</Text>
+        {/* <Text style={styles.heroTitle}>Events</Text> */}
       </View>
     </View>
   );

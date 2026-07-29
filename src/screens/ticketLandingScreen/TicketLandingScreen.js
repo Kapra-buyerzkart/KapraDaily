@@ -79,10 +79,6 @@ const TicketLandingScreen = ({ navigation }) => {
     [insets.top],
   );
 
-  // The artwork backdrop belongs to the Vouchers tab only; every other tab
-  // sits on the flat background. Hide the image instead of swapping the
-  // wrapper so the list isn't remounted (and scrolled back to top) on tab
-  // changes.
   const backdropImageStyle = useMemo(
     () =>
       tabNav.activeTab === TAB_IDS.VOUCHERS ? undefined : styles.hiddenBackdrop,

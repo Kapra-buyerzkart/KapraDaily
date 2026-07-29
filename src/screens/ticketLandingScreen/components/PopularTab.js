@@ -183,9 +183,6 @@ const PopularTab = ({
           contentContainerStyle={styles.upcomingRow}
           keyExtractor={upcomingKeyExtractor}
           renderItem={renderUpcomingEvent}
-          // The row lives inside the screen's vertical scroll, so keep it
-          // unvirtualized: windowing here would unmount cards mid-swipe and
-          // replay their entrance animation.
           initialNumToRender={popularEvents.length}
           removeClippedSubviews={false}
         />

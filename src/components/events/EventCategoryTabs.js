@@ -81,7 +81,6 @@ const slugify = name =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
 
-// Turn a popular/categories entry into the shape a tab renders with.
 const categoryToTab = category => {
   const slug = slugify(category?.catName);
   const alias = CATEGORY_ALIASES[slug];
@@ -101,8 +100,6 @@ const STICKY_START = 40;
 const STICKY_END = 90;
 
 const TabIcon = React.memo(({ tab, active }) => {
-  // API-driven tabs carry a remote icon URL; static/fallback tabs use the
-  // bundled active/inactive icon pair.
   if (tab.iconUri) {
     return (
       <Image
