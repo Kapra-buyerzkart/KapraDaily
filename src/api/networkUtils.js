@@ -39,6 +39,17 @@ const checkAuthApi = url => {
   );
 };
 
+// axios keeps the outgoing body on `config.data` as a serialized string; parse it
+// back so it logs as an object instead of one long escaped line.
+const safeParse = value => {
+  if (typeof value !== 'string') return value;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return value;
+  }
+};
+
 /* -------------------- ERROR HANDLER -------------------- */
 const errorHandler = error => {
   logger.log(
@@ -47,6 +58,18 @@ const errorHandler = error => {
     error?.config?.url,
     error?.message,
   );
+
+  // Dev-only body dump. `logger.log` is a no-op in production, so the response
+  // payload (which can carry PII) never reaches release logs. Status + URL alone
+  // don't say *which* field a 400 rejected — the body does.
+  if (error?.response) {
+    logger.log(' [API ERROR BODY]:', {
+      url: error?.config?.url,
+      status: error?.response?.status,
+      requestBody: safeParse(error?.config?.data),
+      responseBody: error?.response?.data,
+    });
+  }
 
   if (error.message === 'Network Error') {
     throw 'Network Error. Ensure you are connected to internet.';
@@ -62,7 +85,10 @@ const errorHandler = error => {
     error?.response?.data?.message ||
     (error?.response?.data?.errors
       ? Object.values(error?.response?.data?.errors).flat().join(', ')
-      : null);
+      : null) ||
+    // ASP.NET ProblemDetails 400s often carry only these two.
+    error?.response?.data?.detail ||
+    error?.response?.data?.title;
 
   const isAuthApi = checkAuthApi(error?.config?.url);
 

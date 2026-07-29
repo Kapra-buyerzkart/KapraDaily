@@ -206,6 +206,7 @@ const images = {
   errormodalbg: require('./errormodalbg.png'),
   udendealSeal: require('./udendealSeal.png'),
   login_landing: require('./login_landing.png'),
+  no_location: require('./noimages/no_location.png'),
 };
 
 export default images;

@@ -381,7 +381,7 @@ const BCoinScreen = () => {
             source={require('../assets/icons/udcoinUpdated.png')}
           />
           <Text style={styles.valueEq}>
-            1 = ₹{walletData?.wallet?.bCoinValue || '0.00'}
+            1 = ₹{walletData?.wallet?.bCoinValue}
           </Text>
         </TouchableOpacity>
 

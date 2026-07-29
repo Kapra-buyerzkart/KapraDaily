@@ -12,6 +12,7 @@ import Animated, {
 import LinearGradient from 'react-native-linear-gradient';
 import QRCode from 'react-native-qrcode-svg';
 import { wp, hp } from '../utils/responsive';
+import logger from '../utils/logger';
 import COLORS from '@/styles/colors';
 
 const DASHES = Array.from({ length: 22 });
@@ -46,6 +47,8 @@ const ConcertTicket = ({
   const qrSize = wp(28);
   const qrBoxSize = qrSize + QR_PADDING * 2;
 
+  console.log(qrValue, 'qrValue=======>');
+
   // Scanner-style sweep: a bright accent line runs top→bottom across the QR
   // a couple of times shortly after the ticket has settled, evoking the code
   // being read. Replays on every mount (i.e. every time the modal reopens).
@@ -69,6 +72,26 @@ const ConcertTicket = ({
       { translateY: interpolate(scan.value, [0, 1], [0, qrBoxSize]) },
     ],
   }));
+
+  // The exact payload this card puts on screen, logged where it is drawn rather
+  // than where it is built - the two can drift, and it is the drawn one the
+  // scanner reads back.
+  useEffect(() => {
+    if (qrCodeUri) {
+      logger.log('[ConcertTicket] qr rendered from server image:', {
+        ticketId,
+        qrCodeUri,
+      });
+      return;
+    }
+    const encoded = qrValue || ticketId;
+    logger.log('[ConcertTicket] qr encoded locally:', {
+      ticketId,
+      encodedValue: encoded,
+      encodedLength: String(encoded ?? '').length,
+      usedTicketIdFallback: !qrValue,
+    });
+  }, [qrCodeUri, qrValue, ticketId]);
 
   return (
     <View style={[styles.wrapper, style]}>

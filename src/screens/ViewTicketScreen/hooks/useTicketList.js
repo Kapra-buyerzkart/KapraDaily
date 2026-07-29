@@ -1,11 +1,7 @@
 import { useMemo } from 'react';
 import { formatTime } from '../../EventDetailsScreen/utils';
+import logger from '../../../utils/logger';
 import { formatTicketDate, resolveQr, titleCaseWords } from '../utils';
-
-// Each ticket in the booking-detail response references its category by id
-// (`ticketCategoryId` / `bookingItemId`); the human-readable name ("Gold Chair",
-// "Silver Chair", …) lives on the matching `bookingItems` entry. This builds the
-// id -> name lookup so a ticket can resolve its own type.
 const buildCategoryNames = bookingItems => {
   const map = new Map();
   (Array.isArray(bookingItems) ? bookingItems : []).forEach(item => {
@@ -18,9 +14,6 @@ const buildCategoryNames = bookingItems => {
   return map;
 };
 
-// Prefers a name carried on the ticket itself, then falls back to the booking
-// item it belongs to. Returns undefined when the backend gives us nothing, so
-// the card hides the field instead of inventing a category.
 const rawTicketType = (ticket, categoryNames) =>
   ticket?.ticketCategoryName ||
   ticket?.categoryName ||
@@ -50,12 +43,32 @@ const resolveTicketType = (ticket, categoryNames) =>
 const formatTimeRange = (start, end) =>
   [formatTime(start), formatTime(end)].filter(Boolean).join(' - ');
 
+// Describes what will actually end up inside the rendered QR, so a code that
+// fails at the gate can be traced back to how it was produced. The card prefers
+// the server-rendered image and only encodes a string itself when there is no
+// `qrImagePath`, and those two paths fail for completely different reasons.
+const describeQr = (raw, view) => {
+  const serverImage = Boolean(view.qrCodeUri);
+  const encoded = view.qrValue || view.ticketId;
+  return {
+    id: view.id,
+    source: serverImage ? 'server-image' : 'local-encode',
+    qrImagePath: raw?.qrImagePath ?? null,
+    qrCodeUri: view.qrCodeUri,
+    encodedValue: serverImage ? null : encoded,
+    encodedLength: serverImage ? null : String(encoded).length,
+    rawTicketNumber: raw?.ticketNumber ?? null,
+    rawTicketId: raw?.ticketId ?? null,
+
+    synthetic:
+      !serverImage && raw?.ticketNumber == null && raw?.ticketId == null,
+  };
+};
+
 // Normalizes the raw booking/ticket route params into a uniform list of ticket
 // view models. Returns an empty list when the backend passes no tickets.
 const useTicketList = (booking, rawTickets, bookingItems) =>
   useMemo(() => {
-    console.log(booking, 'booking====>');
-
     const shared = {
       eventTitle: booking?.eventName || booking?.sessionName,
       eventCategory: booking?.sessionName,
@@ -69,7 +82,7 @@ const useTicketList = (booking, rawTickets, bookingItems) =>
     const list = Array.isArray(rawTickets) ? rawTickets : [];
     const categoryNames = buildCategoryNames(bookingItems);
 
-    return list.map((t, i) => ({
+    const tickets = list.map((t, i) => ({
       ...shared,
       ticketType: resolveTicketType(t, categoryNames),
       seatNo: t.seatNumber || t.seatNo || t.seat || '-',
@@ -79,6 +92,15 @@ const useTicketList = (booking, rawTickets, bookingItems) =>
       qrValue: t.ticketNumber || t.ticketId || null,
       id: String(t.ticketId ?? t.ticketNumber ?? i),
     }));
+
+    logger.log(
+      '[useTicketList] booking:',
+      booking?.bookingNumber,
+      'qr per ticket:',
+      tickets.map((view, i) => describeQr(list[i], view)),
+    );
+
+    return tickets;
   }, [booking, rawTickets, bookingItems]);
 
 export default useTicketList;

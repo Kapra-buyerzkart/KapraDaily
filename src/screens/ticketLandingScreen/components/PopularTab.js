@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo } from 'react';
-import { Animated, View, ScrollView, StyleSheet } from 'react-native';
+import { Animated, View, FlatList, StyleSheet } from 'react-native';
 import HeroCarousel from '@/components/events/HeroCarousel';
 import RewardsCard from '@/components/events/RewardsCard';
 import QuickActionCard from '@/components/events/QuickActionCard';
@@ -67,6 +67,16 @@ const PopularTab = ({
       }
     },
     [onEventPress, onClaim],
+  );
+  const renderUpcomingEvent = useCallback(
+    ({ item, index }) => (
+      <UpcomingEventCard item={item} onPress={onEventPress} index={index} />
+    ),
+    [onEventPress],
+  );
+  const upcomingKeyExtractor = useCallback(
+    (item, index) => String(item?.eventId ?? index),
+    [],
   );
 
   console.log('[DEBUG PopularTab]', {
@@ -166,20 +176,19 @@ const PopularTab = ({
       {popularEventsLoading ? (
         <LoadingSkeleton variant="card" count={3} />
       ) : popularEvents && popularEvents.length > 0 ? (
-        <ScrollView
+        <FlatList
+          data={popularEvents}
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.upcomingRow}
-        >
-          {popularEvents.map((event, index) => (
-            <UpcomingEventCard
-              key={event?.eventId ?? index}
-              item={event}
-              onPress={onEventPress}
-              index={index}
-            />
-          ))}
-        </ScrollView>
+          keyExtractor={upcomingKeyExtractor}
+          renderItem={renderUpcomingEvent}
+          // The row lives inside the screen's vertical scroll, so keep it
+          // unvirtualized: windowing here would unmount cards mid-swipe and
+          // replay their entrance animation.
+          initialNumToRender={popularEvents.length}
+          removeClippedSubviews={false}
+        />
       ) : (
         <EmptyState
           icon={POPULAR_ICON}

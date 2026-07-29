@@ -91,7 +91,7 @@ const styles = StyleSheet.create({
     fontSize: wp('3.7%'),
     color: '#333',
     textAlign: 'center',
-    marginHorizontal: wp('5%'),
+    marginHorizontal: wp('14%'),
   },
   changeLocationButton: {
     marginTop: hp('3%'),

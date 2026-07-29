@@ -22,9 +22,12 @@ export const useTicketValidation = () => {
           deviceInfo: 'app',
           remarks,
         };
+        // Full, unredacted qRCode on purpose: verifying a code means seeing the
+        // whole string. `logger.log` is stripped from release builds.
         logger.log('[useTicketValidation] validate payload:', {
           ...payload,
-          qRCode: `${String(qRCode).slice(0, 12)}…`,
+          qRCodeLength: String(qRCode).length,
+          checkedInByResolved: checkedInBy != null,
         });
 
         const res = await validateEventTicketApi(payload);
@@ -40,14 +43,12 @@ export const useTicketValidation = () => {
         setResult(next);
         return next;
       } catch (error) {
-        logger.error(
-          '[useTicketValidation] validate failed:',
-          error?.status,
-          error?.message,
-        );
-        // A transport failure is NOT a rejected ticket. Reporting it as one
-        // would have gate staff turning away valid holders whenever the venue
-        // connection drops, so it gets its own status and a retry.
+        const isStringError = typeof error === 'string';
+        logger.error('[useTicketValidation] eventticket/validate failed:', {
+          status: error?.status ?? error?.response?.status,
+          message: isStringError ? error : error?.message,
+          data: error?.data ?? error?.response?.data,
+        });
         const next = {
           status: 'error',
           message:

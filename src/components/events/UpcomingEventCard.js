@@ -157,18 +157,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 10,
     paddingHorizontal: 10,
-    paddingVertical: 6,
   },
   dateMonth: {
     color: COLORS.white,
-    fontSize: 10,
+    fontSize: 14,
     fontFamily: 'Gilroy-Bold',
     letterSpacing: 0.5,
   },
   dateDay: {
     color: '#FFFFFF',
-    fontSize: 16,
-    fontFamily: 'Gilroy-Bold',
+    fontSize: 18,
+    fontFamily: 'Gilroy-Heavy',
     lineHeight: 18,
   },
   infoCol: {

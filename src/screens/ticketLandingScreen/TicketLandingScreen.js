@@ -47,7 +47,6 @@ const TicketLandingScreen = ({ navigation }) => {
   const tabNav = useTabNavigation(eventsData.fetchEventDetailsList);
   const storeSwitcher = useStoreSwitcher(applyStatusBar);
 
-  console.log(eventsData, '====eventsdata');
   const scrollY = useSharedValue(0);
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: event => {

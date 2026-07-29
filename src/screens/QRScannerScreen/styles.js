@@ -10,6 +10,10 @@ import COLORS from '@/styles/colors';
 // matches how QR codes are actually shaped.
 export const FRAME_SIZE = wp('68%');
 
+// Intrinsic size of kapra_logo.png. Kept as a ratio so the wordmark is only
+// ever sized by width and can never come out stretched.
+const LOGO_ASPECT = 246 / 141;
+
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -22,10 +26,8 @@ export const styles = StyleSheet.create({
     paddingHorizontal: wp('5%'),
     paddingVertical: hp('1.5%'),
   },
-  headerTitle: {
-    fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('4.6%'),
-    color: COLORS.white,
+  headerSpacer: {
+    flex: 1,
   },
   iconButton: {
     width: wp('10%'),
@@ -69,35 +71,35 @@ export const styles = StyleSheet.create({
     position: 'absolute',
     width: wp('8%'),
     height: wp('8%'),
-    borderColor: COLORS.primary,
+    borderColor: COLORS.white,
   },
   cornerTopLeft: {
     top: 0,
     left: 0,
     borderTopWidth: wp('1%'),
     borderLeftWidth: wp('1%'),
-    borderTopLeftRadius: wp('4%'),
+    // borderTopLeftRadius: wp('4%'),
   },
   cornerTopRight: {
     top: 0,
     right: 0,
     borderTopWidth: wp('1%'),
     borderRightWidth: wp('1%'),
-    borderTopRightRadius: wp('4%'),
+    // borderTopRightRadius: wp('4%'),
   },
   cornerBottomLeft: {
     bottom: 0,
     left: 0,
     borderBottomWidth: wp('1%'),
     borderLeftWidth: wp('1%'),
-    borderBottomLeftRadius: wp('4%'),
+    // borderBottomLeftRadius: wp('4%'),
   },
   cornerBottomRight: {
     bottom: 0,
     right: 0,
     borderBottomWidth: wp('1%'),
     borderRightWidth: wp('1%'),
-    borderBottomRightRadius: wp('4%'),
+    // borderBottomRightRadius: wp('4%'),
   },
   hintText: {
     fontFamily: FONTS.gilroy.medium,
@@ -106,6 +108,43 @@ export const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: hp('3%'),
     paddingHorizontal: wp('12%'),
+  },
+
+  // Brand lockup. It hangs off the bottom of the top scrim so it reads as a
+  // masthead for the viewfinder instead of floating in the middle of nowhere,
+  // and it stays clear of the frame the user is aiming with.
+  brandZone: {
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    paddingBottom: hp('3%'),
+  },
+  brandLockup: {
+    alignItems: 'center',
+  },
+  brandLogo: {
+    width: wp('30%'),
+    aspectRatio: LOGO_ASPECT,
+    resizeMode: 'contain',
+  },
+  // A rule on either side of the caps label turns the wordmark and the screen
+  // name into one piece rather than two stacked labels.
+  brandKickerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: wp('2.5%'),
+    marginTop: hp('0.4%'),
+  },
+  brandRule: {
+    width: wp('7%'),
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.35)',
+  },
+  brandKicker: {
+    fontFamily: FONTS.gilroy.semiBold,
+    fontSize: wp('2.8%'),
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+    color: 'rgba(255,255,255,0.75)',
   },
 
   // Result sheet shown once a code is decoded. The shadow lives on the wrapper
@@ -148,6 +187,21 @@ export const styles = StyleSheet.create({
     gap: wp('3%'),
     paddingHorizontal: wp('5%'),
     paddingVertical: hp('1.8%'),
+  },
+  // The wordmark as a watermark on the accent band - the only light-surface
+  // sighting of the logo on this screen, and it works because the band behind
+  // it is solid colour. Kept faint so the verdict still leads.
+  verdictWatermarkWrap: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+    paddingRight: wp('4%'),
+  },
+  verdictWatermark: {
+    width: wp('22%'),
+    aspectRatio: LOGO_ASPECT,
+    resizeMode: 'contain',
+    opacity: 0.22,
   },
   verdictIconWrap: {
     width: wp('9%'),
@@ -292,6 +346,19 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: wp('10%'),
+  },
+  messageBrand: {
+    marginBottom: hp('5%'),
+  },
+  messageIconRing: {
+    width: wp('22%'),
+    height: wp('22%'),
+    borderRadius: wp('11%'),
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.16)',
   },
   messageTitle: {
     fontFamily: FONTS.gilroy.bold,
