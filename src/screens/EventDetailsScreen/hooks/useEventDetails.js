@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, StatusBar } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { getEventDetailsByIdApi } from '../../../api/eventService';
-import logger from '../../../utils/logger';
 import { formatDate, formatTime } from '../utils';
 
 const deriveDetails = event => {
@@ -76,13 +75,12 @@ export default function useEventDetails(route) {
   const eventId =
     route?.params?.eventId ?? initialEvent?.eventId ?? initialEvent?.id ?? null;
 
-  const [state, setState] = useState(() => stateForEvent(eventId, initialEvent));
+  const [state, setState] = useState(() =>
+    stateForEvent(eventId, initialEvent),
+  );
   const [refreshing, setRefreshing] = useState(false);
   const requestIdRef = useRef(0);
 
-  // Reset during render rather than in an effect: an effect runs *after* the
-  // commit, which leaves one painted frame showing the previous event's hero
-  // images before the new event takes over.
   const current =
     state.id === eventId ? state : stateForEvent(eventId, initialEvent);
   if (current !== state) {
@@ -130,7 +128,7 @@ export default function useEventDetails(route) {
         );
       })
       .catch(err =>
-        logger.error('Failed to load event details:', err?.message),
+        console.error('Failed to load event details:', err?.message),
       );
   }, [eventId]);
 
@@ -138,7 +136,9 @@ export default function useEventDetails(route) {
     if (!hasId(eventId)) return;
     loadDetails().finally(() =>
       setState(prev =>
-        prev.id === eventId && prev.loading ? { ...prev, loading: false } : prev,
+        prev.id === eventId && prev.loading
+          ? { ...prev, loading: false }
+          : prev,
       ),
     );
   }, [eventId, loadDetails]);

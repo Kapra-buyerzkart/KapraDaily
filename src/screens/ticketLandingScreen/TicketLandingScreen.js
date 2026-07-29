@@ -44,7 +44,30 @@ const TicketLandingScreen = ({ navigation }) => {
   const { fadeAnim } = useHeroFade();
   const voucherData = useVoucherData();
   const eventsData = useEventsData(navigation);
-  const tabNav = useTabNavigation(eventsData.fetchEventDetailsList);
+
+  // Every tab press refetches that tab's data, so switching tabs is enough to
+  // get fresh content — pull-to-refresh stays as a manual extra.
+  const fetchTabData = useCallback(
+    tabId => {
+      switch (tabId) {
+        case TAB_IDS.POPULAR:
+          return Promise.all([
+            eventsData.fetchPopularEvents(),
+            eventsData.fetchPopularCategories(),
+            voucherData.refresh(),
+          ]);
+        case TAB_IDS.EVENTS:
+          return eventsData.fetchEventDetailsList();
+        case TAB_IDS.VOUCHERS:
+          return voucherData.refresh();
+        default:
+          return Promise.resolve();
+      }
+    },
+    [eventsData, voucherData],
+  );
+
+  const tabNav = useTabNavigation(fetchTabData);
   const storeSwitcher = useStoreSwitcher(applyStatusBar);
 
   const scrollY = useSharedValue(0);

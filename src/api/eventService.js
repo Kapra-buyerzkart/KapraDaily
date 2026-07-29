@@ -1,4 +1,5 @@
 import { get, post } from './networkUtils';
+import logger from '../utils/logger';
 
 export const getEventDetailsListApi = async config => {
   return get('eventdetails/list', config);
@@ -28,7 +29,6 @@ export const getEventBookingListApi = async (
   });
 };
 
-//API used in eventBooking details Screen
 export const getEventBookingByIdApi = async (bookingId, config) => {
   return get(`eventbooking/booking/${bookingId}`, config);
 };
@@ -60,7 +60,15 @@ export const initiateEventBookingPaymentApi = async (
   { bookingId, udCoinsRequested = 0 },
   config,
 ) => {
-  return post('eventbooking/initiate', { bookingId, udCoinsRequested }, config);
+  const payload = {
+    bookingId,
+    udCoinsRequested,
+    udcoinsrequested: udCoinsRequested,
+  };
+
+  const res = await post('eventbooking/initiate', payload, config);
+
+  return res;
 };
 
 export const verifyEventBookingPaymentApi = async (
@@ -89,8 +97,6 @@ export const getEventTicketQrCodeApi = async (ticketId, config) => {
   return get(`eventticket/qrcode/${ticketId}`, config);
 };
 
-// Checks a scanned ticket in at the venue. `qRCode` is the raw payload decoded
-// from the QR image.
 export const validateEventTicketApi = async (
   { qRCode, checkedInBy, deviceInfo, remarks },
   config,

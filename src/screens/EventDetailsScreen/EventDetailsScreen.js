@@ -55,6 +55,7 @@ const EventDetailsScreen = ({ navigation, route }) => {
     successVisible,
     failureVisible,
     paidAmount,
+    coinsUsed,
     ticketQuantity,
     resetPayment,
     dismissFailure,
@@ -114,6 +115,7 @@ const EventDetailsScreen = ({ navigation, route }) => {
         bookingItems,
         bookingPlacedFrom: 'app',
         eventName: details?.name,
+        udCoinsRequested: selection?.udCoinsRequested ?? 0,
       });
 
       if (result?.success || result?.pending || result?.failed) {
@@ -241,7 +243,7 @@ const EventDetailsScreen = ({ navigation, route }) => {
       <RedeemSuccessModal
         visible={successVisible}
         quantity={ticketQuantity}
-        coinsUsed={0}
+        coinsUsed={coinsUsed}
         amountPaid={`₹${paidAmount}`}
         itemLabel="ticket"
         secondaryButtonLabel="My Bookings"
