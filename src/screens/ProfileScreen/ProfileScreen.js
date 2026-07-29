@@ -60,6 +60,7 @@ export default function ProfileScreen() {
   const myAccountItems = buildMyAccountItems({
     navigation,
     onLanguage: () => setIsLanguageModalVisible(true),
+    isTicketValidationVisible: profile?.isTicketValidationVisible,
   });
   const informationItems = buildInformationItems({
     navigation,
