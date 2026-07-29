@@ -89,6 +89,19 @@ export const getEventTicketQrCodeApi = async (ticketId, config) => {
   return get(`eventticket/qrcode/${ticketId}`, config);
 };
 
+// Checks a scanned ticket in at the venue. `qRCode` is the raw payload decoded
+// from the QR image.
+export const validateEventTicketApi = async (
+  { qRCode, checkedInBy, deviceInfo, remarks },
+  config,
+) => {
+  return post(
+    'eventticket/validate',
+    { qRCode, checkedInBy, deviceInfo, remarks },
+    config,
+  );
+};
+
 export const failEventPaymentApi = async (
   { bookingId, paymentGateway, transactionId, gatewayReference, remarks },
   config,

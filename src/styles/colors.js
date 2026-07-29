@@ -12,6 +12,7 @@ export const COLORS = {
   error: '#FF0000',
   errorTint: '#FFEBEE',
   warning: '#F2994A',
+  warningTint: '#FEF3E7',
   info: '#00BCD4',
   purple: '#6E34C0',
   lavender: '#BDAEDD',

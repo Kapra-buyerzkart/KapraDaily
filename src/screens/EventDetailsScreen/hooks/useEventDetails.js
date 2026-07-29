@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, StatusBar } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { getEventDetailsByIdApi } from '../../../api/eventService';
@@ -60,14 +60,36 @@ const deriveDetails = event => {
   };
 };
 
+const hasId = id => id !== null && id !== undefined;
+
+// The payload is always stored next to the id it belongs to. Anything rendered
+// from a mismatched pair would be the *previous* event's artwork and copy, so
+// the two are only ever swapped together.
+const stateForEvent = (id, seedEvent) => ({
+  id,
+  event: seedEvent ?? null,
+  loading: hasId(id),
+});
+
 export default function useEventDetails(route) {
   const initialEvent = route?.params?.event ?? null;
   const eventId =
     route?.params?.eventId ?? initialEvent?.eventId ?? initialEvent?.id ?? null;
 
-  const [event, setEvent] = useState(initialEvent);
-  const [loading, setLoading] = useState(!initialEvent);
+  const [state, setState] = useState(() => stateForEvent(eventId, initialEvent));
   const [refreshing, setRefreshing] = useState(false);
+  const requestIdRef = useRef(0);
+
+  // Reset during render rather than in an effect: an effect runs *after* the
+  // commit, which leaves one painted frame showing the previous event's hero
+  // images before the new event takes over.
+  const current =
+    state.id === eventId ? state : stateForEvent(eventId, initialEvent);
+  if (current !== state) {
+    setState(current);
+  }
+
+  const { event, loading } = current;
 
   useFocusEffect(
     useCallback(() => {
@@ -80,18 +102,32 @@ export default function useEventDetails(route) {
   );
 
   const loadDetails = useCallback(() => {
-    if (eventId === null || eventId === undefined) return Promise.resolve();
+    if (!hasId(eventId)) return Promise.resolve();
+    const requestId = (requestIdRef.current += 1);
+
     return getEventDetailsByIdApi(eventId)
       .then(res => {
+        // Another event was opened (or another refresh fired) while this call
+        // was in flight. Dropping the answer stops a slow response for the
+        // event the user already left from landing on top of the current one.
+        if (requestIdRef.current !== requestId) return;
+
         const data = res?.data ?? res;
-        if (data) {
-          const { eventDetails, ...rest } = data;
-          setEvent(prev => ({
-            ...(prev || {}),
-            ...rest,
-            ...(eventDetails || {}),
-          }));
-        }
+        if (!data) return;
+
+        const { eventDetails, ...rest } = data;
+        setState(prev =>
+          prev.id === eventId
+            ? {
+                ...prev,
+                event: {
+                  ...(prev.event || {}),
+                  ...rest,
+                  ...(eventDetails || {}),
+                },
+              }
+            : prev,
+        );
       })
       .catch(err =>
         logger.error('Failed to load event details:', err?.message),
@@ -99,11 +135,13 @@ export default function useEventDetails(route) {
   }, [eventId]);
 
   useEffect(() => {
-    if (eventId === null || eventId === undefined) return;
-    setLoading(!initialEvent);
-    loadDetails().finally(() => setLoading(false));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [eventId]);
+    if (!hasId(eventId)) return;
+    loadDetails().finally(() =>
+      setState(prev =>
+        prev.id === eventId && prev.loading ? { ...prev, loading: false } : prev,
+      ),
+    );
+  }, [eventId, loadDetails]);
 
   const refresh = useCallback(() => {
     setRefreshing(true);
@@ -113,7 +151,7 @@ export default function useEventDetails(route) {
   const details = useMemo(() => deriveDetails(event), [event]);
 
   return useMemo(
-    () => ({ event, loading, details, refreshing, refresh }),
-    [event, loading, details, refreshing, refresh],
+    () => ({ event, eventId, loading, details, refreshing, refresh }),
+    [event, eventId, loading, details, refreshing, refresh],
   );
 }

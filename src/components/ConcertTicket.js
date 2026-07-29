@@ -19,8 +19,6 @@ const QR_PADDING = 10;
 const NOTCH = 22;
 const CARD_RADIUS = 20;
 
-// Android does not clip child Images to an ancestor's border radius, so the
-// banner has to round its own top corners to sit flush inside the card.
 const HERO_CORNERS = {
   borderTopLeftRadius: CARD_RADIUS,
   borderTopRightRadius: CARD_RADIUS,
@@ -32,7 +30,6 @@ const ConcertTicket = ({
   eventCategory = 'Musical concert',
   location = 'Edapally , kochi ,kerala',
   date = 'July 25, monday',
-  // Start–end window for the session, e.g. "9:00 AM - 4:00 AM".
   time = '9:00 AM - 4:00 AM',
   ticketType,
   seatNo = 'S4',
@@ -233,11 +230,12 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     ...HERO_CORNERS,
   },
-  // The poster itself: never cropped, never upscaled past its own size.
+  // The poster fills the banner edge to edge so it meets the card's rounded
+  // corners; portrait art is cropped top/bottom rather than letterboxed.
   hero: {
     width: '100%',
     height: '100%',
-    resizeMode: 'contain',
+    resizeMode: 'cover',
     ...HERO_CORNERS,
   },
   heroScrim: {

@@ -34,7 +34,7 @@ import prefetchMyBookings from '../../queries/prefetchMyBookings';
 
 const EventDetailsScreen = ({ navigation, route }) => {
   const insets = useSafeAreaInsets();
-  const { event, loading, details, refreshing, refresh } =
+  const { event, eventId, loading, details, refreshing, refresh } =
     useEventDetails(route);
   const [ticketModalVisible, setTicketModalVisible] = useState(false);
   const {
@@ -107,7 +107,6 @@ const EventDetailsScreen = ({ navigation, route }) => {
     return <EventDetailsSkeleton />;
   }
 
-  console.log(details, 'what is the details===>');
   return (
     <View style={styles.container}>
       <StatusBar
@@ -137,7 +136,11 @@ const EventDetailsScreen = ({ navigation, route }) => {
           />
         }
       >
+        {/* Keyed by event so a different event always gets brand new image
+            views - a reused Image keeps the old bitmap on screen until the new
+            url finishes downloading, which reads as the last event flashing. */}
         <EventHero
+          key={eventId ?? 'event'}
           event={event}
           insets={insets}
           onBack={handleBack}
