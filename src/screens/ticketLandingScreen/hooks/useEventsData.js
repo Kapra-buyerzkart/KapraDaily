@@ -106,6 +106,7 @@ const useEventsData = navigation => {
       .then(res => {
         console.log(res, 'eventdetails/list api response');
         const items = res?.data?.items || res?.data || [];
+        console.log('[DEBUG eventdetails/list] parsed items:', JSON.stringify(items, null, 2));
         setEvents(Array.isArray(items) ? items : []);
       })
       .catch(err => {

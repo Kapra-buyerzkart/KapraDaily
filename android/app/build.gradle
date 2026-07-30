@@ -86,13 +86,10 @@ android {
         applicationId "com.buyerskart.customer"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 25046
-        versionName "5.1.0"
+        versionCode 25047
+        versionName "5.2.0"
 
-        // Google Maps SDK key is injected from a Gradle property (set in
-        // ~/.gradle/gradle.properties or CI secrets), never hardcoded in the
-        // manifest. Falls back to empty so debug builds without a key still build.
-        manifestPlaceholders = [
+              manifestPlaceholders = [
             GOOGLE_MAPS_API_KEY: (project.findProperty('GOOGLE_MAPS_API_KEY') ?: "")
         ]
 
