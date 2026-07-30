@@ -28,10 +28,8 @@ const SCREEN_BG = require('../../assets/images/movieTicket/ticketLandingBg.png')
 const TicketLandingScreen = ({ navigation }) => {
   const insets = useSafeAreaInsets();
   const { profile, loadProfile } = useContext(AppContext);
+  // console.log(profile?.custId, 'custid');
 
-  // The context profile can still be a guest/stale object when we land here
-  // (this screen doesn't own the initial load). Refresh it on focus so the
-  // header greets the logged-in user by name instead of falling back to "Guest".
   useFocusEffect(
     useCallback(() => {
       if (!profile?.custName) {
@@ -45,8 +43,6 @@ const TicketLandingScreen = ({ navigation }) => {
   const voucherData = useVoucherData();
   const eventsData = useEventsData(navigation);
 
-  // Every tab press refetches that tab's data, so switching tabs is enough to
-  // get fresh content — pull-to-refresh stays as a manual extra.
   const fetchTabData = useCallback(
     tabId => {
       switch (tabId) {

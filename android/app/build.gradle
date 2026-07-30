@@ -57,7 +57,7 @@ react {
 /**
  * Set this to true to Run Proguard on Release builds to minify the Java bytecode.
  */
-def enableProguardInReleaseBuilds = false
+def enableProguardInReleaseBuilds = true
 
 /**
  * The preferred build flavor of JavaScriptCore (JSC)
@@ -127,6 +127,7 @@ android {
             // see https://reactnative.dev/docs/signed-apk-android.
             signingConfig signingConfigs.release
             minifyEnabled enableProguardInReleaseBuilds
+            shrinkResources enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
     }
@@ -142,6 +143,20 @@ dependencies {
         implementation jscFlavor
     }
 }
+
+// Only bundle the icon fonts actually imported in src/. Adding a new
+// `react-native-vector-icons/<Family>` import requires adding it here too.
+project.ext.vectoricons = [
+    iconFontNames: [
+        'AntDesign.ttf',
+        'Entypo.ttf',
+        'Feather.ttf',
+        'FontAwesome.ttf',
+        'Ionicons.ttf',
+        'MaterialCommunityIcons.ttf',
+        'MaterialIcons.ttf'
+    ]
+]
 
 apply from: file("../../node_modules/react-native-vector-icons/fonts.gradle")
 // Workaround for CMake restricted method warning
