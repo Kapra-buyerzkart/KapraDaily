@@ -50,11 +50,6 @@ const MyBookingsScreen = () => {
         backgroundColor="transparent"
       />
       <View style={{ flex: 1, backgroundColor: COLORS.bg }}>
-        {/* <Image
-          source={images.bookingtabbg}
-          style={styles.bgImage}
-          resizeMode="cover"
-        /> */}
         <MyBookingsHeader
           topInset={getHeaderPaddingTop(insets)}
           onBack={handleBack}

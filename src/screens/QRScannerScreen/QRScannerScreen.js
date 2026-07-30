@@ -39,15 +39,12 @@ export default function QRScannerScreen() {
 
   useEffect(() => {
     if (hasPermission) return;
-    // Ask once on mount; if the user says no we fall back to the settings prompt.
     requestPermission().finally(() => setPermissionAsked(true));
   }, [hasPermission, requestPermission]);
 
   const handleCodeScanned = useCallback(codes => {
     const value = codes?.[0]?.value;
     if (!value) return;
-    // Freeze on the first readable code - the camera keeps firing this callback
-    // several times a second otherwise.
     setScannedValue(prev => prev ?? value);
   }, []);
 
@@ -119,7 +116,6 @@ export default function QRScannerScreen() {
   );
 
   if (!hasPermission) {
-    // Until the OS dialog has been answered there is nothing useful to show.
     if (!permissionAsked) return <View style={styles.container} />;
     return renderMessage(
       'Camera access needed',
@@ -142,8 +138,6 @@ export default function QRScannerScreen() {
       <Camera
         style={styles.fill}
         device={device}
-        // Stop the camera while the screen is in the background or while a
-        // result is on screen.
         isActive={isFocused && !scannedValue}
         torch={torchOn ? 'on' : 'off'}
         codeScanner={codeScanner}
