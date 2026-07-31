@@ -5,14 +5,11 @@ import {
   TouchableOpacity,
   FlatList,
   RefreshControl,
-  StatusBar,
 } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedScrollHandler,
   useAnimatedStyle,
-  useAnimatedReaction,
-  runOnJS,
   interpolate,
   interpolateColor,
   Extrapolation,
@@ -59,6 +56,7 @@ import useCategoryDiscoveryProductsQuery from '../../queries/useCategoryDiscover
 import { deriveStoreUnavailableState } from '../../queries/transformHomepageResponse';
 
 import useHomePopup from './hooks/useHomePopup';
+import HomeStatusBar from './components/HomeStatusBar';
 import StickyHeader from './components/StickyHeader';
 import PlacementBannerCarousel from './components/PlacementBannerCarousel';
 import CategoryGrid, { CategoryShimmer } from './components/CategoryGrid';
@@ -285,22 +283,9 @@ const HomeScreen = () => {
     ),
   }));
 
-  // Flip the status bar icons to dark once the header background has gone light,
-  // so they stay legible against the white sticky header. Driven off the same
-  // scrollY as `fallbackHeaderBgStyle`; `useAnimatedReaction` only hops to JS on
-  // a threshold crossing, so there's no per-frame re-render.
-  const [statusBarStyle, setStatusBarStyle] = useState('light-content');
-  useAnimatedReaction(
-    () => scrollY.value > SCROLL_RANGE * 0.5,
-    (isHeaderLight, prev) => {
-      if (isHeaderLight !== prev) {
-        runOnJS(setStatusBarStyle)(
-          isHeaderLight ? 'dark-content' : 'light-content',
-        );
-      }
-    },
-  );
-
+  // Status-bar icon flipping lives in <HomeStatusBar/> (a leaf component) so a
+  // threshold crossing mid-scroll re-renders one StatusBar instead of this
+  // entire screen.
   const stickyBorderAnimStyle = useAnimatedStyle(() => ({
     opacity: interpolate(
       scrollY.value,
@@ -310,12 +295,13 @@ const HomeScreen = () => {
     ),
   }));
 
-  const handleSearchPressIn = () => {
+  // Stable identities — both are handed to the (now memoised) StickyHeader.
+  const handleSearchPressIn = useCallback(() => {
     searchPressScale.value = withTiming(0.98, { duration: 75 });
-  };
-  const handleSearchPressOut = () => {
+  }, [searchPressScale]);
+  const handleSearchPressOut = useCallback(() => {
     searchPressScale.value = withSpring(1, { damping: 20, stiffness: 200 });
-  };
+  }, [searchPressScale]);
   // ────────────────────────────────────────────────────────────────────────
 
   const navigation = useNavigation();
@@ -380,12 +366,18 @@ const HomeScreen = () => {
   }, [profile?.pincode]);
 
   const data = homepageQuery.data;
-  const { isStoreUnavailable, storeUnavailableData } =
-    deriveStoreUnavailableState({
-      homepageData: data,
-      error: homepageQuery.error,
-      generalSettings: generalSettingsQuery.data,
-    });
+  // Memoised: this rebuilt its result object on every render (including every
+  // scroll-driven one), so `storeUnavailableData` was a fresh reference each
+  // time and defeated memoisation in everything it was passed to.
+  const { isStoreUnavailable, storeUnavailableData } = useMemo(
+    () =>
+      deriveStoreUnavailableState({
+        homepageData: data,
+        error: homepageQuery.error,
+        generalSettings: generalSettingsQuery.data,
+      }),
+    [data, homepageQuery.error, generalSettingsQuery.data],
+  );
 
   // No location chosen yet — mirrors the header's "Select Location" signal
   // (StickyHeader gates on the same `profile?.pinAddress`), so header and body
@@ -396,7 +388,10 @@ const HomeScreen = () => {
   const { isHomePopupVisible, handleClose, handlePopupPress } =
     useHomePopup(popupData);
 
-  const categories = data?.categories || [];
+  // Memoised so it is not a brand-new array each render: it is a dependency of
+  // handleBannerPress, and an unstable identity there would have given that
+  // callback a new identity every render anyway.
+  const categories = useMemo(() => data?.categories || [], [data]);
   const topBanner = data?.banners?.topBanner || [];
   const midBanner = data?.banners?.midBanner || [];
   const bottomBanner = data?.banners?.bottomBanner || [];
@@ -470,10 +465,10 @@ const HomeScreen = () => {
   const isDiscoveryLoading =
     !useEmbeddedDiscoveryProducts && categoryProductsQuery.isLoading;
 
-  const handleSelectDiscoveryCategory = category => {
+  const handleSelectDiscoveryCategory = useCallback(category => {
     setUseEmbeddedDiscoveryProducts(false);
     setSelectedDiscoveryCategory(category);
-  };
+  }, []);
 
   useEffect(() => {
     if (discoveryCategories.length > 0 && !selectedDiscoveryCategory) {
@@ -482,29 +477,40 @@ const HomeScreen = () => {
     }
   }, [categoryDiscovery]);
 
-  const handleBannerPress = banner => {
-    if (!banner) return;
-    const linkType = (banner.linkType || banner.LinkType || '').toLowerCase();
-    const linkValue = banner.linkValue || banner.LinkValue;
+  // Passed to StickyHeader, both PlacementBannerCarousels, the bottom showcase
+  // list and CategoryDiscoverySection. As a bare function it got a new identity
+  // on every render, so none of those could ever skip re-rendering.
+  const handleBannerPress = useCallback(
+    banner => {
+      if (!banner) return;
+      const linkType = (banner.linkType || banner.LinkType || '').toLowerCase();
+      const linkValue = banner.linkValue || banner.LinkValue;
 
-    if (linkType === 'product') {
-      navigation.navigate('ProductDetailsScreen', { productId: linkValue });
-    } else if (linkType === 'category') {
-      let actualCatName = '';
-      if (categories.length > 0) {
-        const foundCat = categories.find(
-          c => String(c.catId || c.id) === String(linkValue),
-        );
-        if (foundCat) actualCatName = foundCat.catName || foundCat.name;
+      if (linkType === 'product') {
+        navigation.navigate('ProductDetailsScreen', { productId: linkValue });
+      } else if (linkType === 'category') {
+        let actualCatName = '';
+        if (categories.length > 0) {
+          const foundCat = categories.find(
+            c => String(c.catId || c.id) === String(linkValue),
+          );
+          if (foundCat) actualCatName = foundCat.catName || foundCat.name;
+        }
+        navigation.navigate('SearchScreen', {
+          catId: linkValue,
+          catName: actualCatName || 'Category',
+        });
+      } else if ((linkType === 'external' || linkType === 'url') && linkValue) {
+        openExternalUrl(linkValue);
       }
-      navigation.navigate('SearchScreen', {
-        catId: linkValue,
-        catName: actualCatName || 'Category',
-      });
-    } else if ((linkType === 'external' || linkType === 'url') && linkValue) {
-      openExternalUrl(linkValue);
-    }
-  };
+    },
+    [navigation, categories],
+  );
+
+  const handleOpenLocationModal = useCallback(
+    () => locationModalRef.current?.open(),
+    [],
+  );
 
   const [statusModal, setStatusModal] = useState({
     visible: false,
@@ -515,11 +521,7 @@ const HomeScreen = () => {
 
   return (
     <View style={styles.mainContainer}>
-      <StatusBar
-        translucent
-        backgroundColor="transparent"
-        barStyle={statusBarStyle}
-      />
+      <HomeStatusBar scrollY={scrollY} threshold={SCROLL_RANGE * 0.5} />
       <HomePopupModal
         visible={isHomePopupVisible}
         onClose={handleClose}
@@ -548,7 +550,7 @@ const HomeScreen = () => {
         profileAvatarSize={PROFILE_AVATAR_SIZE}
         onSearchPressIn={handleSearchPressIn}
         onSearchPressOut={handleSearchPressOut}
-        onPressLocation={() => locationModalRef.current?.open()}
+        onPressLocation={handleOpenLocationModal}
       />
 
       <Animated.ScrollView
@@ -612,13 +614,13 @@ const HomeScreen = () => {
             imageSource={images.no_location}
             text={`Select your location to see products and offers available near you.`}
             buttonText="Select Location"
-            onChangeLocation={() => locationModalRef.current?.open()}
+            onChangeLocation={handleOpenLocationModal}
           />
         ) : isStoreUnavailable ? (
           <StoreUnavailable
             image={storeUnavailableData?.image}
             text={storeUnavailableData?.text}
-            onChangeLocation={() => locationModalRef.current?.open()}
+            onChangeLocation={handleOpenLocationModal}
           />
         ) : (
           <>

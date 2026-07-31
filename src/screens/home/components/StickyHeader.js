@@ -339,4 +339,9 @@ const styles = StyleSheet.create({
   },
 });
 
-export default StickyHeader;
+// Memoised: the header sits above the scroll view and its content only depends
+// on profile/dashboard/banner data, but it was re-rendering on every HomeScreen
+// render — including the scroll-driven ones. Its animated styles are shared
+// values, so the collapse/fade animations keep running on the UI thread
+// regardless of whether this component re-renders.
+export default React.memo(StickyHeader);
