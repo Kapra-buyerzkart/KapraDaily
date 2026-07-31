@@ -38,7 +38,7 @@ const MyOrdersScreen = () => {
     try {
       showLoader(true);
       const response = await getMyOrdersApi();
-      logger.log('My Orders Response:', JSON.stringify(response, null, 2));
+      logger.log('My Orders Response:', response);
       // Assuming response structure: { success: true, data: { items: [...] } } or similar
       // User did not provide response example for list, but usually consistent.
       if (

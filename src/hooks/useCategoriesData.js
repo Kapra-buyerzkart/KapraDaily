@@ -53,10 +53,10 @@ const useCategoriesData = (catId, debouncedSearchText, filters) => {
       };
       console.log(
         'Fetching Products Payload:',
-        JSON.stringify(payload, null, 2),
+        payload,
       );
       const response = await searchProductsApi(payload);
-      console.log('Products Response:', JSON.stringify(response, null, 2));
+      console.log('Products Response:', response);
 
       // A newer request superseded this one while it was in flight — drop the
       // stale result so it can't overwrite the current category's products.
@@ -109,7 +109,7 @@ const useCategoriesData = (catId, debouncedSearchText, filters) => {
     try {
       setLoading(true);
       const response = await getCategoriesApi(1); // Fetch root categories to find 105
-      console.log('Categories Response:', JSON.stringify(response, null, 2));
+      console.log('Categories Response:', response);
       if (
         response &&
         response.success &&
@@ -146,7 +146,7 @@ const useCategoriesData = (catId, debouncedSearchText, filters) => {
     try {
       setIsFetchingSubCategories(true);
       const response = await getCategoriesApi(parentId);
-      console.log('SubCategories Response:', JSON.stringify(response, null, 2));
+      console.log('SubCategories Response:', response);
       if (
         response &&
         response.success &&

@@ -143,20 +143,20 @@ const CoPartnerDashboardScreen = () => {
 
       console.log(
         '📊 [CoPartner] summaryRes:',
-        JSON.stringify(summaryRes, null, 2),
+        summaryRes,
       );
-      console.log('📋 [CoPartner] listRes:', JSON.stringify(listRes, null, 2));
+      console.log('📋 [CoPartner] listRes:', listRes);
       console.log(
         '👥 [CoPartner] customersRes:',
-        JSON.stringify(customersRes, null, 2),
+        customersRes,
       );
       console.log(
         '🛒 [CoPartner] ordersRes:',
-        JSON.stringify(ordersRes, null, 2),
+        ordersRes,
       );
       console.log(
         '💰 [CoPartner] payoutsRes:',
-        JSON.stringify(payoutsRes, null, 2),
+        payoutsRes,
       );
 
       if (summaryRes?.success && summaryRes?.data) setSummary(summaryRes.data);
@@ -203,7 +203,7 @@ const CoPartnerDashboardScreen = () => {
       const response = await getCoPartnerAreasApi();
       console.log(
         '📍 [CoPartner] areasRes:',
-        JSON.stringify(response, null, 2),
+        response,
       );
       if (response && response.success && response.data) {
         const fetchedAreas = Array.isArray(response.data)
@@ -211,7 +211,7 @@ const CoPartnerDashboardScreen = () => {
           : response.data.items || [];
         console.log(
           '📍 [CoPartner] fetchedAreas:',
-          JSON.stringify(fetchedAreas, null, 2),
+          fetchedAreas,
         );
         setAreas(fetchedAreas);
         if (fetchedAreas.length > 0) {

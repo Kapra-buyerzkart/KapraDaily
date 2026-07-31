@@ -50,7 +50,7 @@ const DeliverySlotModal = ({
     try {
       setLoading(true);
       const response = await getDeliverySlotsApi(pincodeAreaId);
-      console.log('🕐 [SLOTS] Response:', JSON.stringify(response, null, 2));
+      console.log('🕐 [SLOTS] Response:', response);
       if (response?.success && response?.data?.items) {
         setSlotGroups(response.data.items);
         setSelectedDay(0);

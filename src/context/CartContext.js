@@ -149,7 +149,7 @@ export const CartProvider = ({ children }) => {
       const response = await getAddressListApi();
       logger.log(
         '📍 [ADDRESS] Raw API Response:',
-        JSON.stringify(response, null, 2),
+        response,
       );
 
       // Handle both formats: data as array or data as object with items
@@ -283,7 +283,7 @@ export const CartProvider = ({ children }) => {
           const loadRes = await loadCart(selectedAddr.pincodeAreaId);
           logger.log(
             '📍 [ADDRESS] Selection List Response:',
-            JSON.stringify(loadRes, null, 2),
+            loadRes,
           );
 
           const isUnserviceable = loadRes?.isUnserviceable;
@@ -411,7 +411,7 @@ export const CartProvider = ({ children }) => {
           const response = await getCartApi(pincodeAreaIdOverride);
           logger.log(
             '🛒 [CART] API Response:',
-            JSON.stringify(response, null, 2),
+            response,
           );
           let fetchedCartVersion = null;
           let normalizedItems = []; // Defined here for function scope
@@ -535,7 +535,7 @@ export const CartProvider = ({ children }) => {
           );
           logger.log(
             '📊 [SUMMARY] Response:',
-            JSON.stringify(response, null, 2),
+            response,
           );
 
           if (response && response.success && response.data) {
@@ -782,7 +782,7 @@ export const CartProvider = ({ children }) => {
         );
         logger.log(
           '➕ [ADD TO CART] API Response:',
-          JSON.stringify(response, null, 2),
+          response,
         );
 
         if (response && response.success === false) {
@@ -954,7 +954,7 @@ export const CartProvider = ({ children }) => {
           );
           logger.log(
             '🔄 [UPDATE QTY] API Response:',
-            JSON.stringify(response, null, 2),
+            response,
           );
 
           if (response && response.success) {

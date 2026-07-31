@@ -182,7 +182,13 @@ export const AppContextProvider = ({ children }) => {
     setProfile(updatedProfile);
   }, []);
 
-  const logout = async (isExpired = false) => {
+  // useCallback is load-bearing here, not decoration: `logout` is in the
+  // dependency array of the context-value useMemo below. As a bare function it
+  // got a new identity every render, so the memo never hit, every AppContext
+  // consumer re-rendered on every provider render, and the setLogoutHandler
+  // effect below re-ran each time. Deps are empty because everything this
+  // closes over is either a ref, a module import, or a stable state setter.
+  const logout = useCallback(async (isExpired = false) => {
     if (isLoggingOutRef.current) return;
     isLoggingOutRef.current = true;
     setTimeout(() => { isLoggingOutRef.current = false; }, 3000);
@@ -232,7 +238,7 @@ export const AppContextProvider = ({ children }) => {
     } catch (error) {
       logger.log('Logout error:', error);
     }
-  };
+  }, []);
 
 
   useEffect(() => {

@@ -81,7 +81,7 @@ const OrderSuccessScreen = () => {
       const response = await getOrderDetailsApi(orderId);
       logger.log(
         '📦 [ORDER SUCCESS] Details:',
-        JSON.stringify(response, null, 2),
+        response,
       );
       if (response?.success && response?.data) {
         setOrderDetails(response.data);

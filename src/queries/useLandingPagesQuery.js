@@ -20,7 +20,7 @@ const useLandingPagesQuery = () =>
     select: response => {
       console.log(
         '[useLandingPagesQuery] Response:',
-        JSON.stringify(response, null, 2),
+        response,
       );
       return response?.success ? response.data : undefined;
     },

@@ -17,7 +17,7 @@ const ViewTicketScreen = ({ navigation, route }) => {
 
   console.log(
     'ViewTicketScreen backend tickets:',
-    JSON.stringify(rawTickets, null, 2),
+    rawTickets,
   );
 
   const insets = useSafeAreaInsets();

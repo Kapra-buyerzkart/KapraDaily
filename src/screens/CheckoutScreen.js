@@ -181,7 +181,7 @@ const CheckoutScreen = () => {
         const response = await getPaymentModesApi();
         logger.log(
           '💳 [CHECKOUT] Fetched Payment Modes:',
-          JSON.stringify(response?.data, null, 2),
+          response?.data,
         );
 
         if (response?.success && response?.data) {
@@ -283,12 +283,12 @@ const CheckoutScreen = () => {
 
       logger.log(
         '📦 [CHECKOUT] Creating Order Payload:',
-        JSON.stringify(createPayload, null, 2),
+        createPayload,
       );
       const createResponse = await createOrderApi(createPayload);
       logger.log(
         '📦 [CHECKOUT] Create Response:',
-        JSON.stringify(createResponse, null, 2),
+        createResponse,
       );
       if (createResponse?.success && createResponse?.data?.orderId) {
         const orderId = createResponse.data.orderId;
@@ -355,7 +355,7 @@ const CheckoutScreen = () => {
         const rzpCreateResponse = await createRazorpayOrderApi({ orderId });
         logger.log(
           '💳 [RAZORPAY] Create Response:',
-          JSON.stringify(rzpCreateResponse, null, 2),
+          rzpCreateResponse,
         );
 
         if (rzpCreateResponse?.success && rzpCreateResponse?.data) {

@@ -102,7 +102,7 @@ const useHomeData = () => {
             }
 
             const response = await getHomepageData(areaId, 100);
-            console.log('🏠 [HOME API] Raw Response Data:', JSON.stringify(response, null, 2));
+            console.log('🏠 [HOME API] Raw Response Data:', response);
 
             // Check for STORE_NOT_FOUND or STORE_CLOSED_FOR_DELIVERY
             let storeNotFound = false;
