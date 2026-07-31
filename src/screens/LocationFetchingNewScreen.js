@@ -1,7 +1,6 @@
 import React from 'react';
-import { StyleSheet, Dimensions, ImageBackground } from 'react-native';
+import { StyleSheet, Dimensions, Image, ImageBackground } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import FastImage from 'react-native-fast-image';
 
 import AuthButton from '../components/AuthButton';
 import LocationHeaderActions from '../components/location/LocationHeaderActions';
@@ -37,10 +36,10 @@ const LocationFetchingNewScreen = ({ navigation }) => {
   if (!addressComponent) {
     return (
       <SafeAreaView style={styles.loaderContainer}>
-        <FastImage
+        <Image
           source={require('../assets/gifs/location-fetching.gif')}
           style={styles.loaderGif}
-          resizeMode={FastImage.resizeMode.cover}
+          resizeMode="cover"
         />
       </SafeAreaView>
     );

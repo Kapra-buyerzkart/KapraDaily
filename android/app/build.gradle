@@ -137,6 +137,15 @@ dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
 
+    // Animated GIF support for React Native's <Image>. RN bundles Fresco but
+    // not its animated-image decoders, so without this Android renders a GIF
+    // as a single static frame (iOS decodes GIFs natively and needs nothing).
+    // Required by src/screens/LocationFetchingNewScreen.js,
+    // LocationFetchingScreen.js and components/EmptySection.js.
+    // Keep this version in sync with the `fresco` entry in
+    // node_modules/react-native/gradle/libs.versions.toml.
+    implementation("com.facebook.fresco:animated-gif:3.6.0")
+
     if (hermesEnabled.toBoolean()) {
         implementation("com.facebook.react:hermes-android")
     } else {
