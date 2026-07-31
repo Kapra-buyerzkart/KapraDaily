@@ -20,12 +20,13 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { FONTS } from '../styles/typography';
 import { useCart } from '../context/CartContext';
-import { CART_COLORS } from '../styles/cartTheme';
 import CONFIG from '../globals/config';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { cartPillSlideIn, cartPillSlideOut } from '../animations/cartItemPop';
 
 const ARROW_BUTTON_BG = '#F57333';
+// Brand-orange capsule so the pill stays readable over light screen backgrounds
+const CAPSULE_BG = '#F25000';
 const MAX_VISIBLE_THUMBNAILS = 3;
 
 // Compact capsule size (icon/thumbnails + badge only, no text)
@@ -337,12 +338,12 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     height: CAPSULE_HEIGHT,
     borderRadius: 16,
-    backgroundColor: CART_COLORS.card,
-    shadowColor: '#b40000ff',
+    backgroundColor: CAPSULE_BG,
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
+    shadowOpacity: 0.25,
     shadowRadius: 9,
-    elevation: 2,
+    elevation: 4,
   },
   clip: {
     flex: 1,
@@ -373,12 +374,12 @@ const styles = StyleSheet.create({
     marginLeft: -13,
   },
   extraBadge: {
-    backgroundColor: ARROW_BUTTON_BG,
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
   },
   extraBadgeText: {
-    color: '#FFFFFF',
+    color: CAPSULE_BG,
     fontFamily: FONTS.gilroy.semiBold,
     fontSize: 12,
   },
@@ -390,14 +391,14 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 10,
     paddingHorizontal: 3,
-    backgroundColor: ARROW_BUTTON_BG,
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: CART_COLORS.primary,
+    borderColor: CAPSULE_BG,
   },
   compactBadgeText: {
-    color: '#FFFFFF',
+    color: CAPSULE_BG,
     fontFamily: FONTS.gilroy.semiBold,
     fontSize: 11,
   },
@@ -407,11 +408,11 @@ const styles = StyleSheet.create({
   },
   viewCartText: {
     fontSize: 18,
-    color: 'black',
+    color: '#FFFFFF',
     fontFamily: FONTS.gilroy.semiBold,
   },
   itemsText: {
-    color: 'black',
+    color: '#FFFFFF',
     fontFamily: FONTS.gilroy.regular,
     fontSize: 14,
     opacity: 0.9,

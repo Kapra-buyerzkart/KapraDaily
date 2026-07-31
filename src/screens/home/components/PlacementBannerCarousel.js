@@ -1,11 +1,12 @@
 import React, { useEffect, useRef } from 'react';
 import {
   View,
-  FlatList,
   Image,
   TouchableOpacity,
   StyleSheet,
+  AppState,
 } from 'react-native';
+import { useIsFocused } from '@react-navigation/native';
 import Animated, {
   useAnimatedStyle,
   useAnimatedScrollHandler,
@@ -57,6 +58,8 @@ const PlacementBannerCarousel = ({
   const currentIndexRef = useRef(1);
   const isDraggingRef = useRef(false);
   const scrollX = useSharedValue(0);
+  const isFocused = useIsFocused();
+  const appStateRef = useRef(AppState.currentState);
 
   const isInfinite = infinite && !!banners && banners.length > 1;
 
@@ -75,6 +78,19 @@ const PlacementBannerCarousel = ({
     scrollX.value = event.contentOffset.x;
   });
 
+  // Track foreground/background so a tick that fires while the app is buried
+  // (its scroll animation would never run, and never report back) is skipped
+  // instead of walking the index forward blindly.
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', nextState => {
+      appStateRef.current = nextState;
+    });
+    return () => sub.remove();
+  }, []);
+
+  // Start on the first real banner (index 0 is the leading clone). Keyed on
+  // the banner count rather than the array identity, so a parent that rebuilds
+  // the array each render does not keep resetting the carousel.
   useEffect(() => {
     if (!isInfinite) return undefined;
 
@@ -84,19 +100,39 @@ const PlacementBannerCarousel = ({
       flatListRef.current?.scrollToIndex({ index: 1, animated: false });
     }, 0);
 
+    return () => clearTimeout(resetTimer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isInfinite, banners?.length]);
+
+  // Autoplay only runs while this screen is focused: a blurred screen is frozen
+  // (see freezeOnBlur), so its scroll animations never complete and never fire
+  // onMomentumScrollEnd — which is what used to leave the index desynced.
+  useEffect(() => {
+    if (!isInfinite || !isFocused) return undefined;
+
+    // Index 0 is the leading clone, 1..banners.length are real, and
+    // banners.length + 1 is the trailing clone.
+    const lastIndex = banners.length + 1;
+
     const autoplayTimer = setInterval(() => {
-      if (isDraggingRef.current) return;
+      if (isDraggingRef.current || appStateRef.current !== 'active') return;
+
       const next = currentIndexRef.current + 1;
+      if (next > lastIndex) {
+        // The wrap-around never landed (interrupted animation, or a momentum
+        // callback we never got). Recover by snapping back to the first real
+        // banner rather than scrolling past the end of the list.
+        flatListRef.current?.scrollToIndex({ index: 1, animated: false });
+        currentIndexRef.current = 1;
+        return;
+      }
+
       flatListRef.current?.scrollToIndex({ index: next, animated: true });
       currentIndexRef.current = next;
     }, AUTOPLAY_INTERVAL_MS);
 
-    return () => {
-      clearTimeout(resetTimer);
-      clearInterval(autoplayTimer);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isInfinite, banners]);
+    return () => clearInterval(autoplayTimer);
+  }, [isInfinite, isFocused, banners?.length]);
 
   if (!banners || banners.length === 0) return null;
 

@@ -24,16 +24,16 @@ const getEventCardImageUri = event => {
   return null;
 };
 
+const VOUCHER_IMAGE_KEYS = ['shortImageUrl', 'imageUrl', 'cardImage', 'image'];
+
 export const getVoucherImageSource = item => {
-  if (item?.shortImageUrl) {
-    return { uri: CONFIG.image_base_url + item.shortImageUrl };
-  }
-  if (item?.imageUrl) return { uri: CONFIG.image_base_url + item.imageUrl };
-  if (item?.cardImage) return item.cardImage;
-  if (item?.image) {
-    return typeof item.image === 'string'
-      ? { uri: CONFIG.image_base_url + item.image }
-      : item.image;
+  for (const key of VOUCHER_IMAGE_KEYS) {
+    const value = item?.[key];
+    if (!value) continue;
+    // cardImage / image may already be a resolved source (require(...) or {uri}).
+    if (typeof value !== 'string') return value;
+    const source = toImageUri(value);
+    if (source) return source;
   }
   return PLACEHOLDER_IMAGE;
 };
@@ -44,10 +44,15 @@ export const getEventImageSource = event =>
 export const getEventGalleryImages = event => {
   const gallery = Array.isArray(event?.images) ? event.images : [];
   const sources = gallery
-    .slice()
-    .sort((a, b) => (a?.displayOrder ?? 0) - (b?.displayOrder ?? 0))
-    .map(img => toImageUri(img?.imageUrl))
-    .filter(Boolean);
+    .map((img, index) => ({ source: toImageUri(img?.imageUrl), img, index }))
+    .filter(entry => entry.source)
+    // Keep the payload order when displayOrder ties or is missing.
+    .sort(
+      (a, b) =>
+        (a.img?.displayOrder ?? 0) - (b.img?.displayOrder ?? 0) ||
+        a.index - b.index,
+    )
+    .map(entry => entry.source);
 
   if (sources.length) return sources;
 
