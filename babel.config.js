@@ -21,4 +21,12 @@ module.exports = {
     // react-native-reanimated/plugin must remain LAST in the plugins list.
     'react-native-reanimated/plugin',
   ],
+  env: {
+    // Metro handles `import()` natively for lazy loading, but Jest's CJS runtime
+    // rejects it without --experimental-vm-modules. App.tsx lazy-loads
+    // OneSignalService this way, so tests need it lowered to a require.
+    test: {
+      plugins: ['@babel/plugin-transform-dynamic-import'],
+    },
+  },
 };

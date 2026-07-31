@@ -6,8 +6,8 @@
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
     "create-screen": "node scripts/createScreen.js",
-    "cleanup": "node scripts/cleanupCode.js",
     "start": "react-native start",
     "test": "jest",
     "postinstall": "patch-package"
@@ -62,6 +62,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
+    "@babel/plugin-transform-dynamic-import": "8.0.1",
     "@babel/preset-env": "^7.25.3",
     "@babel/runtime": "^7.28.6",
     "@react-native-community/cli": "20.0.0",

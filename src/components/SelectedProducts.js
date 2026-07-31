@@ -23,9 +23,9 @@ import { useCart } from '../context/CartContext';
 import CONFIG from '../globals/config';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { cartPillSlideIn, cartPillSlideOut } from '../animations/cartItemPop';
+import COLORS from '@/styles/colors';
 
 const ARROW_BUTTON_BG = '#F57333';
-// Brand-orange capsule so the pill stays readable over light screen backgrounds
 const CAPSULE_BG = '#F25000';
 const MAX_VISIBLE_THUMBNAILS = 3;
 
@@ -301,7 +301,11 @@ const SelectedProducts = () => {
                 onPress={goToCart}
                 style={styles.arrowButton}
               >
-                <MaterialIcons name="chevron-right" size={26} color="#FFFFFF" />
+                <MaterialIcons
+                  name="chevron-right"
+                  size={26}
+                  color={COLORS.primary}
+                />
               </TouchableOpacity>
             </Animated.View>
           </View>
@@ -339,11 +343,11 @@ const styles = StyleSheet.create({
     height: CAPSULE_HEIGHT,
     borderRadius: 16,
     backgroundColor: CAPSULE_BG,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.25,
-    shadowRadius: 9,
-    elevation: 4,
+    // shadowColor: '#000000',
+    // shadowOffset: { width: 0, height: 8 },
+    // shadowOpacity: 0.25,
+    // shadowRadius: 9,
+    // elevation: 4,
   },
   clip: {
     flex: 1,
@@ -422,7 +426,7 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 10,
-    backgroundColor: ARROW_BUTTON_BG,
+    backgroundColor: 'white',
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: 10,

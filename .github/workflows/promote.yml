@@ -1,0 +1,70 @@
+name: Promote to production
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: Platform to promote
+        required: true
+        type: choice
+        options: [ios, android, both]
+      version:
+        description: Marketing version already on TestFlight / internal (e.g. 5.2.1)
+        required: true
+        type: string
+      build:
+        description: Build number / versionCode to promote
+        required: true
+        type: string
+
+jobs:
+  ios:
+    if: inputs.platform == 'ios' || inputs.platform == 'both'
+    runs-on: macos-15
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+
+      - name: Submit for App Store review
+        run: bundle exec fastlane ios promote_to_production version:"${{ inputs.version }}" build:"${{ inputs.build }}"
+        env:
+          APP_VERSION_NAME: ${{ inputs.version }}
+          APP_VERSION_CODE: ${{ inputs.build }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          IOS_BUNDLE_ID: ${{ secrets.IOS_BUNDLE_ID }}
+          FASTLANE_SKIP_UPDATE_CHECK: 1
+
+  android:
+    if: inputs.platform == 'android' || inputs.platform == 'both'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+
+      - name: Materialize Play credentials
+        run: |
+          echo '${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}' > "$RUNNER_TEMP/play-service-account.json"
+          echo "PLAY_SERVICE_ACCOUNT_JSON_PATH=$RUNNER_TEMP/play-service-account.json" >> "$GITHUB_ENV"
+
+      - name: Promote internal track to production
+        run: bundle exec fastlane android promote_to_production version_code:"${{ inputs.build }}"
+        env:
+          APP_VERSION_NAME: ${{ inputs.version }}
+          APP_VERSION_CODE: ${{ inputs.build }}
+          ANDROID_PACKAGE_NAME: ${{ secrets.ANDROID_PACKAGE_NAME }}
+          FASTLANE_SKIP_UPDATE_CHECK: 1
+
+      - name: Remove Play credentials
+        if: always()
+        run: rm -f "$RUNNER_TEMP/play-service-account.json"

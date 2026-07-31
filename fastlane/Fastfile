@@ -1,0 +1,159 @@
+XCODE_PROJECT = "ios/KapraDaily.xcodeproj"
+XCODE_WORKSPACE = "ios/KapraDaily.xcworkspace"
+XCODE_SCHEME = "KapraDaily"
+OUTPUT_DIR = "build"
+
+def required_env(*names)
+  missing = names.select { |name| ENV[name].to_s.strip.empty? }
+  UI.user_error!("Missing required environment variables: #{missing.join(', ')}") unless missing.empty?
+end
+
+def app_version
+  version = ENV["APP_VERSION_NAME"].to_s.strip
+  UI.user_error!("APP_VERSION_NAME is not set (expected e.g. 1.2.3)") if version.empty?
+  UI.user_error!("APP_VERSION_NAME '#{version}' is not semver") unless version =~ /\A\d+\.\d+\.\d+\z/
+  version
+end
+
+def build_number
+  code = ENV["APP_VERSION_CODE"].to_s.strip
+  UI.user_error!("APP_VERSION_CODE is not set") if code.empty?
+  code
+end
+
+def asc_api_key
+  app_store_connect_api_key(
+    key_id: ENV.fetch("ASC_KEY_ID"),
+    issuer_id: ENV.fetch("ASC_ISSUER_ID"),
+    key_content: ENV.fetch("ASC_KEY_P8"),
+    in_house: false
+  )
+end
+
+platform :ios do
+  desc "Build and upload a signed build to TestFlight"
+  lane :beta do
+    required_env("ASC_KEY_ID", "ASC_ISSUER_ID", "ASC_KEY_P8", "APPLE_TEAM_ID",
+                 "IOS_BUNDLE_ID", "MATCH_GIT_URL", "MATCH_PASSWORD")
+
+    api_key = asc_api_key
+
+    match(type: "appstore", readonly: true, api_key: api_key)
+
+    increment_version_number_in_xcodeproj(
+      version_number: app_version,
+      xcodeproj: XCODE_PROJECT,
+      target: XCODE_SCHEME
+    )
+    increment_build_number_in_xcodeproj(
+      build_number: build_number,
+      xcodeproj: XCODE_PROJECT,
+      target: XCODE_SCHEME
+    )
+
+    build_app(
+      workspace: XCODE_WORKSPACE,
+      scheme: XCODE_SCHEME,
+      configuration: "Release",
+      export_method: "app-store",
+      output_directory: OUTPUT_DIR,
+      clean: true,
+      # DEVELOPMENT_TEAM is $(APPLE_TEAM_ID) in the project so no team ID is committed.
+      xcargs: "DEVELOPMENT_TEAM=#{ENV.fetch('APPLE_TEAM_ID')}",
+      export_options: {
+        provisioningProfiles: {
+          ENV.fetch("IOS_BUNDLE_ID") => "match AppStore #{ENV.fetch('IOS_BUNDLE_ID')}"
+        }
+      }
+    )
+
+    upload_to_testflight(
+      api_key: api_key,
+      skip_waiting_for_build_processing: true,
+      skip_submission: true
+    )
+  end
+
+  desc "Submit an existing TestFlight build for App Store review"
+  lane :promote_to_production do |options|
+    required_env("ASC_KEY_ID", "ASC_ISSUER_ID", "ASC_KEY_P8", "IOS_BUNDLE_ID")
+
+    version = options[:version] || app_version
+    build = options[:build] || build_number
+
+    upload_to_app_store(
+      api_key: asc_api_key,
+      app_identifier: ENV.fetch("IOS_BUNDLE_ID"),
+      app_version: version,
+      build_number: build,
+      skip_binary_upload: true,
+      skip_screenshots: true,
+      skip_metadata: true,
+      submit_for_review: true,
+      automatic_release: false,
+      precheck_include_in_app_purchases: false,
+      force: true,
+      submission_information: {
+        add_id_info_uses_idfa: false,
+        export_compliance_uses_encryption: false
+      }
+    )
+  end
+end
+
+platform :android do
+  desc "Build a signed AAB and upload it to the Play internal testing track"
+  lane :internal do
+    required_env("ANDROID_PACKAGE_NAME", "PLAY_SERVICE_ACCOUNT_JSON_PATH",
+                 "MYAPP_UPLOAD_STORE_FILE", "MYAPP_UPLOAD_STORE_PASSWORD",
+                 "MYAPP_UPLOAD_KEY_ALIAS", "MYAPP_UPLOAD_KEY_PASSWORD")
+
+    gradle(task: "clean", project_dir: "android")
+
+    gradle(
+      task: "bundle",
+      build_type: "Release",
+      project_dir: "android",
+      properties: {
+        "APP_VERSION_NAME" => app_version,
+        "APP_VERSION_CODE" => build_number,
+        "MYAPP_UPLOAD_STORE_FILE" => ENV.fetch("MYAPP_UPLOAD_STORE_FILE"),
+        "MYAPP_UPLOAD_STORE_PASSWORD" => ENV.fetch("MYAPP_UPLOAD_STORE_PASSWORD"),
+        "MYAPP_UPLOAD_KEY_ALIAS" => ENV.fetch("MYAPP_UPLOAD_KEY_ALIAS"),
+        "MYAPP_UPLOAD_KEY_PASSWORD" => ENV.fetch("MYAPP_UPLOAD_KEY_PASSWORD"),
+        "GOOGLE_MAPS_API_KEY" => ENV.fetch("GOOGLE_MAPS_API_KEY", "")
+      }
+    )
+
+    upload_to_play_store(
+      track: "internal",
+      aab: lane_context[SharedValues::GRADLE_AAB_OUTPUT_PATH],
+      json_key: ENV.fetch("PLAY_SERVICE_ACCOUNT_JSON_PATH"),
+      package_name: ENV.fetch("ANDROID_PACKAGE_NAME"),
+      mapping_paths: [lane_context[SharedValues::GRADLE_MAPPING_TXT_OUTPUT_PATH]].compact,
+      release_status: "completed",
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true
+    )
+  end
+
+  desc "Promote the internal track build to production"
+  lane :promote_to_production do |options|
+    required_env("ANDROID_PACKAGE_NAME", "PLAY_SERVICE_ACCOUNT_JSON_PATH")
+
+    upload_to_play_store(
+      track: "internal",
+      track_promote_to: "production",
+      version_code: options[:version_code] || build_number,
+      json_key: ENV.fetch("PLAY_SERVICE_ACCOUNT_JSON_PATH"),
+      package_name: ENV.fetch("ANDROID_PACKAGE_NAME"),
+      skip_upload_changelogs: true,
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+      skip_upload_aab: true,
+      skip_upload_apk: true
+    )
+  end
+end

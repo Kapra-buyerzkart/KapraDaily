@@ -86,8 +86,8 @@ android {
         applicationId "com.buyerskart.customer"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 25047
-        versionName "5.2.0"
+        versionCode (project.findProperty('APP_VERSION_CODE') ?: '25047').toString().toInteger()
+        versionName project.findProperty('APP_VERSION_NAME') ?: '5.2.0'
 
               manifestPlaceholders = [
             GOOGLE_MAPS_API_KEY: (project.findProperty('GOOGLE_MAPS_API_KEY') ?: "")
@@ -110,11 +110,19 @@ android {
             keyPassword 'android'
         }
         release {
-            if (project.hasProperty('MYAPP_UPLOAD_STORE_FILE')) {
-                storeFile file(MYAPP_UPLOAD_STORE_FILE)
+            // An empty signingConfig makes Gradle fall back to the debug key silently, so a
+            // release build with no credentials must fail here rather than ship a debug-signed AAB.
+            def uploadStoreFile = project.findProperty('MYAPP_UPLOAD_STORE_FILE')
+            if (uploadStoreFile) {
+                storeFile file(uploadStoreFile)
                 storePassword MYAPP_UPLOAD_STORE_PASSWORD
                 keyAlias MYAPP_UPLOAD_KEY_ALIAS
                 keyPassword MYAPP_UPLOAD_KEY_PASSWORD
+            } else if (gradle.startParameter.taskNames.any { it.toLowerCase().contains('release') }) {
+                throw new GradleException(
+                    'Release signing properties are missing. Set MYAPP_UPLOAD_STORE_FILE, ' +
+                    'MYAPP_UPLOAD_STORE_PASSWORD, MYAPP_UPLOAD_KEY_ALIAS and MYAPP_UPLOAD_KEY_PASSWORD. ' +
+                    'See android/gradle.properties.example.')
             }
         }
     }

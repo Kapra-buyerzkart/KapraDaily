@@ -52,6 +52,14 @@ yarn-error.log
 **/fastlane/Preview.html
 **/fastlane/screenshots
 **/fastlane/test_output
+**/fastlane/README.md
+
+# Release credentials — never commit
+*.p8
+*.p12
+*.mobileprovision
+ios/Signing.xcconfig
+play-store-service-account.json
 
 # Bundle artifact
 *.jsbundle
