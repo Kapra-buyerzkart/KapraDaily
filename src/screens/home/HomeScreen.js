@@ -73,6 +73,28 @@ const HOME_BG = require('../../assets/images/homebg.png');
 const COMBO_BG = require('../../assets/images/combobg.png');
 const UDENDEAL_SEAL = require('../../assets/images/udendealSeal.png');
 
+// Hoisted out of the render path: these are props on the (memoised)
+// ProductBlock, so rebuilding them inline meant ProductBlock's memo could
+// never hit and all three product rails re-rendered on every home render.
+const BLOCK1_CONTENT_STYLE = {
+  paddingLeft: wp('2%'),
+  paddingRight: wp('1%'),
+  paddingTop: hp('1%'),
+};
+const BLOCK2_CONTENT_STYLE = {
+  paddingLeft: wp('5%'),
+  paddingRight: wp('1%'),
+  paddingTop: hp('1%'),
+};
+const BLOCK3_CONTENT_STYLE = {
+  paddingHorizontal: wp('4.6%'),
+  paddingTop: hp('1%'),
+};
+const BLOCK2_TITLE_STYLE = { marginTop: hp('2%') };
+const BLOCK2_SEE_ALL_STYLE = { alignSelf: 'center', marginTop: hp('1%') };
+const seeAllOverThree = count => count > 3;
+const seeAllAtLeastThree = count => count >= 3;
+
 const SeasonalFruitsShimmer = () => (
   <View style={styles.fruitsContainer}>
     <View style={styles.fruitsHeaderView}>
@@ -413,6 +435,23 @@ const HomeScreen = () => {
   const thirdProductBlock = data?.thirdProductBlock;
   const categoryDiscovery = data?.categoryDiscovery;
 
+  // resolveTitleImageSource() builds a fresh { uri } object each call, so
+  // calling it inline in JSX handed ProductBlock a new prop identity on every
+  // render (and a "changed" source to the underlying image view).
+  const firstTitleImageSource = useMemo(
+    () => resolveTitleImageSource(firstProductBlock, firstProductBlockTitleImage),
+    [firstProductBlock, firstProductBlockTitleImage],
+  );
+  const secondTitleImageSource = useMemo(
+    () =>
+      resolveTitleImageSource(secondProductBlock, secondProductBlockTitleImage),
+    [secondProductBlock, secondProductBlockTitleImage],
+  );
+  const thirdTitleImageSource = useMemo(
+    () => resolveTitleImageSource(thirdProductBlock, thirdProductBlockTitleImage),
+    [thirdProductBlock, thirdProductBlockTitleImage],
+  );
+
   // True during pull-to-refresh, and also while the homepage query is fetching
   // a freshly-selected area for which we have no cached data yet — so the body
   // shows its shimmers (instead of a blank screen) right after the user picks a
@@ -653,18 +692,11 @@ const HomeScreen = () => {
                   firstProductBlock?.image
                 )
               }
-              titleImageSource={resolveTitleImageSource(
-                firstProductBlock,
-                firstProductBlockTitleImage,
-              )}
+              titleImageSource={firstTitleImageSource}
               title={firstProductBlock?.Title || firstProductBlock?.title}
               items={firstBlockItems}
-              contentContainerStyle={{
-                paddingLeft: wp('2%'),
-                paddingRight: wp('1%'),
-                paddingTop: hp('1%'),
-              }}
-              shouldShowSeeAll={count => count > 3}
+              contentContainerStyle={BLOCK1_CONTENT_STYLE}
+              shouldShowSeeAll={seeAllOverThree}
               navigation={navigation}
             />
 
@@ -676,20 +708,13 @@ const HomeScreen = () => {
                 secondProductBlock?.image !== null &&
                 secondProductBlock?.image !== undefined
               }
-              titleImageSource={resolveTitleImageSource(
-                secondProductBlock,
-                secondProductBlockTitleImage,
-              )}
+              titleImageSource={secondTitleImageSource}
               title={secondProductBlock?.Title || secondProductBlock?.title}
-              titleExtraStyle={{ marginTop: hp('2%') }}
+              titleExtraStyle={BLOCK2_TITLE_STYLE}
               items={secondBlockItems}
-              contentContainerStyle={{
-                paddingLeft: wp('5%'),
-                paddingRight: wp('1%'),
-                paddingTop: hp('1%'),
-              }}
-              shouldShowSeeAll={count => count >= 3}
-              seeAllButtonStyle={{ alignSelf: 'center', marginTop: hp('1%') }}
+              contentContainerStyle={BLOCK2_CONTENT_STYLE}
+              shouldShowSeeAll={seeAllAtLeastThree}
+              seeAllButtonStyle={BLOCK2_SEE_ALL_STYLE}
               navigation={navigation}
             />
 
@@ -725,18 +750,12 @@ const HomeScreen = () => {
                   thirdProductBlock?.image
                 )
               }
-              titleImageSource={resolveTitleImageSource(
-                thirdProductBlock,
-                thirdProductBlockTitleImage,
-              )}
+              titleImageSource={thirdTitleImageSource}
               titleImageResizeMode="contain"
               title={thirdProductBlock?.Title || thirdProductBlock?.title}
               items={thirdBlockItems}
-              contentContainerStyle={{
-                paddingHorizontal: wp('4.6%'),
-                paddingTop: hp('1%'),
-              }}
-              shouldShowSeeAll={count => count > 3}
+              contentContainerStyle={BLOCK3_CONTENT_STYLE}
+              shouldShowSeeAll={seeAllOverThree}
               trailingSpacer
               navigation={navigation}
             />
