@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -19,8 +19,17 @@ import { FONTS } from '../styles/typography';
 import { useNavigation } from '@react-navigation/native';
 
 import CONFIG from '../globals/config';
-import { useCart } from '../context/CartContext';
+import { useCart, useCartEntry } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
+
+// Hoisted: require() is cached, but calling it inside the render path meant a
+// module-registry lookup per card per render.
+const NOT_FOUND_IMAGE = require('../assets/images/udenDealNotfound.png');
+const COUNTER_HIT_SLOP = { top: 8, bottom: 8, left: 8, right: 8 };
+const PLUS_HIT_SLOP = { top: 15, bottom: 15, left: 15, right: 15 };
+const PLUS_GRADIENT_COLORS = ['rgba(255,255,255,0.85)', 'rgba(242,80,0,0.55)'];
+const GRADIENT_START = { x: 0, y: 0 };
+const GRADIENT_END = { x: 1, y: 0 };
 
 const ProductCard = props => {
   const [imageError, setImageError] = useState(false);
@@ -29,8 +38,7 @@ const ProductCard = props => {
 
   // Hooks
   const navigation = useNavigation();
-  const { addToCart, cartItems, updateCartItemQuantity, removeFromCart } =
-    useCart();
+  const { addToCart, updateCartItemQuantity, removeFromCart } = useCart();
   const { isInWishlist, toggleWishlist } = useWishlist();
 
   const { item, hideWishlist } = props;
@@ -39,21 +47,8 @@ const ProductCard = props => {
   const isOutOfStock =
     item.stockQty === 0 || item.stockQty === '0' || item.isAvailable === false;
 
-  const cartItem = cartItems.find(
-    i => String(i.productId || i.id) === String(itemId),
-  );
-  const quantity = cartItem?.quantity || cartItem?.addedQty || 0;
-  const cartItemId = cartItem?.cartItemId || itemId;
-
-  const getImageSource = img => {
-    if (!img || imageError)
-      return require('../assets/images/udenDealNotfound.png'); // Fallback on error or empty
-    if (typeof img === 'string') {
-      if (img.startsWith('http')) return { uri: img };
-      return { uri: `${CONFIG.image_base_url}${img}` };
-    }
-    return img;
-  };
+  // Indexed lookup instead of scanning the whole cart array per card.
+  const { quantity, cartItemId } = useCartEntry(itemId);
 
   const name = item.prName || item.name || '';
   const price = item.specialPrice || item.price || '';
@@ -64,9 +59,18 @@ const ProductCard = props => {
   if (!offer && mrp && price && mrp > price) {
     offer = Math.round(((mrp - price) / mrp) * 100);
   }
-  const imageSource = getImageSource(
-    item.featuredImage || item.img || item.imageUrl,
-  );
+  // Memoised so the `source` prop keeps a stable identity across re-renders.
+  // Rebuilding `{ uri }` every render handed Animated.Image a "changed" prop
+  // each time, pushing a needless update across to the native image view.
+  const rawImage = item.featuredImage || item.img || item.imageUrl;
+  const imageSource = useMemo(() => {
+    if (!rawImage || imageError) return NOT_FOUND_IMAGE; // Fallback on error or empty
+    if (typeof rawImage === 'string') {
+      if (rawImage.startsWith('http')) return { uri: rawImage };
+      return { uri: `${CONFIG.image_base_url}${rawImage}` };
+    }
+    return rawImage;
+  }, [rawImage, imageError]);
 
   const imageAnimatedStyle = useAnimatedStyle(
     () => ({
@@ -92,18 +96,45 @@ const ProductCard = props => {
     imageOpacity.value = 0;
   }, [item.featuredImage, item.img, imageOpacity]);
 
+  // Stable handler identities so the TouchableOpacity/Image children below are
+  // not handed a new onPress on every cart tick.
+  const handleOpenDetails = useCallback(
+    () =>
+      navigation.navigate('ProductDetailsScreen', {
+        productId: itemId,
+        product: item,
+      }),
+    [navigation, itemId, item],
+  );
+
+  const handleDecrement = useCallback(() => {
+    if (quantity === 1) {
+      removeFromCart(cartItemId);
+    } else {
+      updateCartItemQuantity(cartItemId, quantity - 1);
+    }
+  }, [quantity, cartItemId, removeFromCart, updateCartItemQuantity]);
+
+  const handleIncrement = useCallback(
+    () => updateCartItemQuantity(cartItemId, quantity + 1),
+    [cartItemId, quantity, updateCartItemQuantity],
+  );
+
+  const handleAddToCart = useCallback(() => addToCart(item), [addToCart, item]);
+
+  const handleImageLoadEnd = useCallback(() => {
+    imageOpacity.value = withTiming(1, { duration: 220 });
+  }, [imageOpacity]);
+
+  const handleImageError = useCallback(() => {
+    setImageError(true);
+    imageOpacity.value = withTiming(1, { duration: 220 });
+  }, [imageOpacity]);
+
   // console.log('ProductCard Render', item.id || item.productId);
 
   return (
-    <TouchableOpacity
-      onPress={() =>
-        navigation.navigate('ProductDetailsScreen', {
-          productId: itemId,
-          product: item,
-        })
-      }
-      style={styles.productCard}
-    >
+    <TouchableOpacity onPress={handleOpenDetails} style={styles.productCard}>
       <View style={styles.productCardViewOne}>
         {!hideWishlist && (
           <TouchableOpacity onPress={handleWishlistToggle}>
@@ -120,23 +151,17 @@ const ProductCard = props => {
         {quantity > 0 ? (
           <View style={styles.counterContainer}>
             <TouchableOpacity
-              onPress={() => {
-                if (quantity === 1) {
-                  removeFromCart(cartItemId);
-                } else {
-                  updateCartItemQuantity(cartItemId, quantity - 1);
-                }
-              }}
+              onPress={handleDecrement}
               style={styles.counterButton}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              hitSlop={COUNTER_HIT_SLOP}
             >
               <Entypo name="minus" size={wp('3.5%')} color="#F04B1B" />
             </TouchableOpacity>
             <Text style={styles.quantityText}>{quantity}</Text>
             <TouchableOpacity
-              onPress={() => updateCartItemQuantity(cartItemId, quantity + 1)}
+              onPress={handleIncrement}
               style={styles.counterButton}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              hitSlop={COUNTER_HIT_SLOP}
             >
               <Entypo name="plus" size={wp('3.5%')} color="#F04B1B" />
             </TouchableOpacity>
@@ -147,15 +172,15 @@ const ProductCard = props => {
           </View>
         ) : (
           <LinearGradient
-            colors={['rgba(255,255,255,0.85)', 'rgba(242,80,0,0.55)']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
+            colors={PLUS_GRADIENT_COLORS}
+            start={GRADIENT_START}
+            end={GRADIENT_END}
             style={styles.plusIconGradient}
           >
             <TouchableOpacity
               style={styles.plusIconInner}
-              onPress={() => addToCart(item)}
-              hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+              onPress={handleAddToCart}
+              hitSlop={PLUS_HIT_SLOP}
               activeOpacity={0.8}
             >
               <Entypo name="plus" color="#F25000" size={wp('6%')} />
@@ -168,13 +193,8 @@ const ProductCard = props => {
           source={imageSource}
           style={[styles.productCardImage, imageAnimatedStyle]}
           resizeMode="contain"
-          onLoadEnd={() => {
-            imageOpacity.value = withTiming(1, { duration: 220 });
-          }}
-          onError={() => {
-            setImageError(true);
-            imageOpacity.value = withTiming(1, { duration: 220 });
-          }}
+          onLoadEnd={handleImageLoadEnd}
+          onError={handleImageError}
         />
         {isOutOfStock && (
           <View style={styles.outOfStockOverlay}>
@@ -268,18 +288,6 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
     marginTop: hp('1.5%'),
-    // alignItems:'center'
-    // width: wp('34%'),
-    // height: hp('23%'),
-    // backgroundColor: '#FFFFFF',
-    // borderRadius: 20,
-    // padding: wp('3%'),
-    // marginRight: wp('4%'),
-    // shadowColor: '#000',
-    // shadowOpacity: 0.10,
-    // shadowOffset: { width: 0, height: 2 },
-    // shadowRadius: 4,
-    // elevation: 3,
   },
   productCardViewOne: {
     flexDirection: 'row',

@@ -22,7 +22,7 @@ import {
 } from 'react-native-responsive-screen';
 import { FONTS } from '../styles/typography';
 import CONFIG from '../globals/config';
-import { useCart } from '../context/CartContext';
+import { useCart, useCartEntry } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import AnimatedPressable from './AnimatedPressable';
 import ShimmerPlaceholder from './ShimmerPlaceholder';
@@ -515,8 +515,7 @@ const TokenProductCard = ({
   // State
   const [imageError, setImageError] = useState(false);
 
-  const { addToCart, cartItems, updateCartItemQuantity, removeFromCart } =
-    useCart();
+  const { addToCart, updateCartItemQuantity, removeFromCart } = useCart();
   const { isInWishlist, toggleWishlist } = useWishlist();
 
   // Derived values
@@ -548,13 +547,10 @@ const TokenProductCard = ({
       };
     }, [item]);
 
-  const cartItem = useMemo(
-    () =>
-      cartItems.find(i => String(i.productId || i.id) === String(productId)),
-    [cartItems, productId],
-  );
-  const quantity = cartItem?.quantity || cartItem?.addedQty || 0;
-  const cartItemId = cartItem?.cartItemId || productId;
+  // Indexed lookup instead of an O(cartLines) scan per card. The memo above it
+  // only cached the scan per render — the scan still re-ran for every card on
+  // every cart mutation, because `cartItems` was a new array each time.
+  const { quantity, cartItemId } = useCartEntry(productId);
 
   const liked = useMemo(
     () =>

@@ -1310,9 +1310,34 @@ export const CartProvider = ({ children }) => {
     }, 0);
   }, [cartItems]);
 
+  // Product-id -> { quantity, cartItemId } index, built once per cart change.
+  //
+  // Every product card needs "how many of this product are in the cart", and
+  // each one used to answer that with its own `cartItems.find(...)`. That is
+  // O(cards x cartLines) work on every single cart mutation — ~800 string
+  // comparisons for a 40-card grid against a 20-line cart, repeated for each
+  // quantity tap. Indexing once turns each card's lookup into a Map hit.
+  //
+  // Keys are stringified because ids arrive as both numbers and strings
+  // depending on the endpoint, which is exactly what the old String(...)
+  // comparison in each card was normalising.
+  const cartEntryById = useMemo(() => {
+    const index = new Map();
+    for (const item of cartItems) {
+      const id = item.productId ?? item.id;
+      if (id === undefined || id === null) continue;
+      index.set(String(id), {
+        quantity: item.quantity || item.addedQty || 0,
+        cartItemId: item.cartItemId,
+      });
+    }
+    return index;
+  }, [cartItems]);
+
   const value = useMemo(
     () => ({
       cartItems,
+      cartEntryById,
       cartCount,
       cartTotal,
       cartSummary,
@@ -1353,6 +1378,7 @@ export const CartProvider = ({ children }) => {
     }),
     [
       cartItems,
+      cartEntryById,
       cartCount,
       cartTotal,
       cartSummary,
@@ -1424,3 +1450,26 @@ export const CartProvider = ({ children }) => {
 };
 
 export const useCart = () => useContext(CartContext);
+
+// Stable empty entry so a card that is not in the cart gets the same object
+// identity every render, keeping downstream useMemo/useCallback deps stable.
+const EMPTY_CART_ENTRY = { quantity: 0, cartItemId: undefined };
+
+/**
+ * O(1) "is this product in the cart, and how many" lookup for product cards.
+ *
+ * Replaces the per-card `cartItems.find(...)` scan. Returns
+ * `{ quantity, cartItemId }`; `cartItemId` falls back to the product id, which
+ * is what the cards already did when no cart line existed yet.
+ */
+export const useCartEntry = itemId => {
+  const { cartEntryById } = useContext(CartContext);
+  return useMemo(() => {
+    const entry = cartEntryById?.get(String(itemId));
+    if (!entry) return EMPTY_CART_ENTRY;
+    return {
+      quantity: entry.quantity,
+      cartItemId: entry.cartItemId ?? itemId,
+    };
+  }, [cartEntryById, itemId]);
+};
