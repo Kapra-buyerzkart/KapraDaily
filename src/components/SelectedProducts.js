@@ -339,11 +339,9 @@ const styles = StyleSheet.create({
     height: CAPSULE_HEIGHT,
     borderRadius: 16,
     backgroundColor: CAPSULE_BG,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.25,
-    shadowRadius: 9,
-    elevation: 4,
+    // Flat, to match the home screen: the solid orange already separates the
+    // capsule from the white page, and the old 25%-black/9pt shadow pooled a
+    // grey haze across the bottom of the screen.
   },
   clip: {
     flex: 1,

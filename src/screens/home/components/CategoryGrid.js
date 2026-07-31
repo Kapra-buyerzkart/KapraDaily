@@ -1,32 +1,29 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import {
-  widthPercentageToDP as wp,
-  heightPercentageToDP as hp,
-} from 'react-native-responsive-screen';
-import { FONTS } from '../../../styles/typography';
+import { View, StyleSheet } from 'react-native';
+import { heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import ShimmerPlaceholder from '../../../components/ShimmerPlaceholder';
 import CategoryItem from './CategoryItem';
+import SectionHeader from './SectionHeader';
+import categoryChipStyles from './categoryChipStyles';
+import { GUTTER, SPACE } from '../homeTheme';
 
 export const CategoryShimmer = () => (
-  <View style={styles.categoryMainView}>
-    <Text style={styles.categoryHeaderText}>Category</Text>
+  <View style={styles.section}>
+    <SectionHeader
+      title="Shop by"
+      titleAccent="category"
+      subtitle="Everyday essentials, delivered in minutes"
+      style={styles.header}
+    />
     <View style={styles.categoriesContainer}>
       {[1, 2, 3, 4, 5, 6, 7, 8].map((_, i) => (
-        <View key={i} style={styles.item}>
-          <View style={styles.categoryItemContainer}>
-            <ShimmerPlaceholder
-              style={{ width: wp('17%'), height: wp('17%'), borderRadius: 15 }}
-            />
+        <View key={i} style={categoryChipStyles.item}>
+          {/* Reuses the real tile's box so the shimmer occupies exactly the
+              grid's geometry and nothing shifts when categories arrive. */}
+          <View style={categoryChipStyles.categoryItemContainer}>
+            <ShimmerPlaceholder style={styles.shimmerFill} />
           </View>
-          <ShimmerPlaceholder
-            style={{
-              marginTop: hp('1%'),
-              width: wp('15%'),
-              height: hp('1.5%'),
-              borderRadius: 4,
-            }}
-          />
+          <ShimmerPlaceholder style={styles.shimmerLabel} />
         </View>
       ))}
     </View>
@@ -34,8 +31,13 @@ export const CategoryShimmer = () => (
 );
 
 const CategoryGrid = ({ categories }) => (
-  <View style={styles.categoryMainView}>
-    <Text style={styles.categoryHeaderText}>Category</Text>
+  <View style={styles.section}>
+    <SectionHeader
+      title="Shop by"
+      titleAccent="category"
+      subtitle="Everyday essentials, delivered in minutes"
+      style={styles.header}
+    />
     <View style={styles.categoriesContainer}>
       {categories.map((item, index) => (
         <CategoryItem
@@ -49,31 +51,33 @@ const CategoryGrid = ({ categories }) => (
 );
 
 const styles = StyleSheet.create({
-  categoryMainView: {
-    marginHorizontal: wp('4.6%'),
-    marginTop: hp('1.5%'),
+  // Flat section on the page — spacing and the header's type hierarchy do the
+  // separating, not a surface change.
+  section: {
+    paddingBottom: SPACE.sm,
   },
-  categoryHeaderText: {
-    fontFamily: FONTS.gilroy.regular,
-    fontSize: wp('4.2%'),
-    marginBottom: hp('1%'),
+  header: {
+    paddingHorizontal: GUTTER,
   },
   categoriesContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    // flex-start, not space-between: a final row with 2 or 3 tiles must stay
+    // left-aligned under the rows above it rather than spreading to the edges.
+    // The cells divide this box exactly (see categoryChipStyles), so the grid
+    // lines up with the header's gutter instead of drifting left.
     justifyContent: 'flex-start',
+    paddingHorizontal: GUTTER,
   },
-  // Used only by the shimmer's placeholder grid items (matches categoryChipStyles
-  // shapes so the loading state lines up with the real grid).
-  item: {
-    width: wp('22%'),
-    alignItems: 'center',
-    marginBottom: hp('.5%'),
+  shimmerFill: {
+    width: '100%',
+    height: '100%',
   },
-  categoryItemContainer: {
-    borderColor: '#F3F4F6',
-    borderRadius: 15,
-    borderWidth: 1,
+  shimmerLabel: {
+    marginTop: hp('0.9%'),
+    width: '64%',
+    height: hp('1.4%'),
+    borderRadius: 4,
   },
 });
 

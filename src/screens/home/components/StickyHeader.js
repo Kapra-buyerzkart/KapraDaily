@@ -66,16 +66,31 @@ const StickyHeader = ({
         <Animated.View style={etaAnimStyle}>
           {hasLocation ? (
             <>
-              <Text style={styles.timeText}>20 mins</Text>
+              {/* Delivery promise is the header's headline, so it reads as a
+                  labelled claim ("Delivery in / 20 mins") rather than a bare
+                  number floating above the address. */}
+              <View style={styles.etaRow}>
+                <View style={styles.etaBolt}>
+                  <MaterialIcons
+                    name="bolt"
+                    size={wp('4.4%')}
+                    color={'#F25000'}
+                  />
+                </View>
+                <View>
+                  <Text style={styles.etaLabel}>Delivery in</Text>
+                  <Text style={styles.timeText}>20 mins</Text>
+                </View>
+              </View>
               <TouchableOpacity
                 hitSlop={40}
-                style={[styles.addressView, { marginTop: hp('0.4%') }]}
+                style={[styles.addressView, { marginTop: hp('0.5%') }]}
                 onPress={onPressLocation}
               >
                 <Feather
                   name={'map-pin'}
-                  size={wp('4%')}
-                  color={'#FFFFFF'}
+                  size={wp('3.6%')}
+                  color={'rgba(255,255,255,0.9)'}
                   style={{ marginRight: wp('1%') }}
                 />
                 <Text
@@ -86,7 +101,7 @@ const StickyHeader = ({
                   {profile.pinAddress}
                 </Text>
                 <Entypo
-                  name={'chevron-right'}
+                  name={'chevron-down'}
                   size={wp('3.6%')}
                   color={'#FFFFFF'}
                 />
@@ -147,17 +162,7 @@ const StickyHeader = ({
 
   const renderSearchBar = () => (
     <Animated.View
-      style={[
-        {
-          backgroundColor: COLORS.white,
-          marginHorizontal: wp('4.7%'),
-          paddingHorizontal: wp('4%'),
-          flexDirection: 'row',
-          alignItems: 'center',
-          overflow: 'hidden',
-        },
-        searchWrapperAnimStyle,
-      ]}
+      style={[styles.searchWrapper, searchWrapperAnimStyle]}
     >
       <TouchableOpacity
         onPress={() =>
@@ -171,7 +176,7 @@ const StickyHeader = ({
         ]}
         activeOpacity={isStoreUnavailable ? 1 : 0.85}
       >
-        <Feather name="search" color={'black'} size={wp('6%')} />
+        <Feather name="search" color={INK} size={wp('5.2%')} />
         <View style={styles.searchProductContainer}>
           <RotatingPlaceholder
             examples={SEARCH_EXAMPLES}
@@ -180,10 +185,11 @@ const StickyHeader = ({
             style={styles.searchProductText}
           />
         </View>
+        <View style={styles.searchDivider} />
         <Feather
           name="clipboard"
-          color={'black'}
-          size={wp('5%')}
+          color={'#F25000'}
+          size={wp('4.8%')}
           style={styles.clipboardIcon}
         />
       </TouchableOpacity>
@@ -266,10 +272,31 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === 'ios' ? 0 : 5,
     alignItems: 'center',
   },
+  etaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  etaBolt: {
+    width: wp('6.6%'),
+    height: wp('6.6%'),
+    borderRadius: wp('3.3%'),
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: wp('2%'),
+  },
+  etaLabel: {
+    fontFamily: FONTS.gilroy.medium,
+    color: 'rgba(255,255,255,0.85)',
+    fontSize: wp('2.9%'),
+    letterSpacing: 0.2,
+  },
   timeText: {
     fontFamily: FONTS.gilroy.bold,
     color: '#FFFFFF',
-    fontSize: wp('5.5%'),
+    fontSize: wp('5.2%'),
+    letterSpacing: -0.4,
+    marginTop: -hp('0.2%'),
   },
   addressView: {
     flexDirection: 'row',
@@ -291,18 +318,18 @@ const styles = StyleSheet.create({
     marginRight: wp('1%'),
   },
   addressText: {
-    color: '#FFFFFF',
-    fontSize: wp('3%'),
+    color: 'rgba(255,255,255,0.92)',
+    fontSize: wp('3.1%'),
     fontFamily: FONTS.gilroy.medium,
-    maxWidth: wp('53%'),
+    maxWidth: wp('50%'),
   },
   bcoinContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    paddingVertical: hp('0.6%'),
-    paddingHorizontal: wp('2.5%'),
+    borderRadius: 999,
+    paddingVertical: hp('0.7%'),
+    paddingHorizontal: wp('2.8%'),
     gap: wp('1.5%'),
   },
   bcoinIcon: {
@@ -320,22 +347,39 @@ const styles = StyleSheet.create({
     fontSize: wp('3.2%'),
     color: INK,
   },
+  // A hairline border (no shadow) is what keeps the field legible against the
+  // white collapsed header, where a borderless white pill would disappear.
+  searchWrapper: {
+    backgroundColor: COLORS.white,
+    marginHorizontal: wp('4.7%'),
+    paddingHorizontal: wp('4%'),
+    flexDirection: 'row',
+    alignItems: 'center',
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(17,19,26,0.10)',
+  },
   searchProductContainer: {
-    borderRightColor: '#8F8F8F',
     height: hp('3.65%'),
     justifyContent: 'center',
-    marginLeft: wp('2%'),
-    width: wp('65%'),
+    marginLeft: wp('2.5%'),
+    flex: 1,
     top: Platform.OS == 'ios' ? 0 : 2,
     overflow: 'hidden',
   },
   searchProductText: {
-    fontFamily: FONTS.gilroy.light,
-    fontSize: wp('3.72%'),
-    color: '#3A3A3A',
+    fontFamily: FONTS.gilroy.medium,
+    fontSize: wp('3.6%'),
+    color: '#6B7280',
+  },
+  searchDivider: {
+    width: 1,
+    height: hp('2.2%'),
+    backgroundColor: 'rgba(17,19,26,0.12)',
+    marginLeft: wp('2%'),
   },
   clipboardIcon: {
-    marginLeft: wp('4%'),
+    marginLeft: wp('3%'),
   },
 });
 

@@ -3,7 +3,6 @@ import {
   View,
   Text,
   Image,
-  ImageBackground,
   ScrollView,
   FlatList,
   TouchableOpacity,
@@ -23,79 +22,42 @@ import {
 import { FONTS } from '../../../styles/typography';
 import CONFIG from '../../../globals/config';
 import TokenProductCard from '../../../components/TokenProductCard';
-import SeeAllButton from '../../../components/SeeAllButton';
 import ShimmerPlaceholder from '../../../components/ShimmerPlaceholder';
-import sectionCardStyles from './sectionCardStyles';
-import categoryChipStyles from './categoryChipStyles';
 import ProductBlockShimmer from './ProductBlockShimmer';
+import SectionHeader from './SectionHeader';
 import { getStaggerDelay } from '../../../utils/staggerDelay';
+import {
+  INK,
+  ACCENT,
+  SURFACE,
+  RADIUS,
+  SPACE,
+  GUTTER,
+  HAIRLINE,
+  divider,
+} from '../homeTheme';
 
-const HOME_BG = require('../../../assets/images/homebg.png');
+const CHIP_ICON = wp('6.4%');
 
 const ExploreShimmer = () => (
-  <View style={sectionCardStyles.headerBackgroundbg}>
-    <View
-      style={{
-        paddingHorizontal: wp('5%'),
-        paddingTop: hp('3%'),
-        paddingBottom: hp('3%'),
-      }}
-    >
-      <ShimmerPlaceholder
-        style={{
-          width: wp('30%'),
-          height: hp('3%'),
-          borderRadius: 5,
-          marginBottom: hp('2%'),
-        }}
-      />
-      <View style={{ flexDirection: 'row', marginBottom: hp('3%') }}>
-        {[1, 2, 4].map((_, i) => (
-          <View
-            key={i}
-            style={{
-              marginRight: wp('4%'),
-              alignItems: 'center',
-              width: wp('22.7%'),
-            }}
-          >
-            <View style={categoryChipStyles.categoryItemContainer}>
-              <ShimmerPlaceholder
-                style={{
-                  width: wp('17%'),
-                  height: wp('17%'),
-                  borderRadius: 15,
-                }}
-              />
-            </View>
-            <ShimmerPlaceholder
-              style={{
-                width: wp('15%'),
-                height: hp('1.2%'),
-                borderRadius: 3,
-                marginTop: hp('1%'),
-              }}
-            />
-          </View>
-        ))}
-      </View>
-      <View style={{ flexDirection: 'row' }}>
-        {[1, 2].map((_, i) => (
-          <ShimmerPlaceholder
-            key={i}
-            style={{
-              width: wp('35%'),
-              height: hp('22%'),
-              borderRadius: 20,
-              marginRight: wp('4%'),
-            }}
-          />
-        ))}
-      </View>
+  <View style={styles.section}>
+    <View style={styles.shimmerHeader}>
+      <ShimmerPlaceholder style={styles.shimmerEyebrow} />
+      <ShimmerPlaceholder style={styles.shimmerTitle} />
     </View>
+    <View style={styles.shimmerChipRow}>
+      {[1, 2, 3].map((_, i) => (
+        <ShimmerPlaceholder key={i} style={styles.shimmerChip} />
+      ))}
+    </View>
+    <ProductBlockShimmer />
   </View>
 );
 
+// The discovery categories used to repeat the exact tile-and-label shape of the
+// grid higher up the page, so the two sections read as the same control twice.
+// As inline pills they are unmistakably a filter for the rail beneath them, and
+// a row of them fits far more categories in the same vertical space.
 const DiscoveryChip = React.memo(function DiscoveryChip({
   item,
   isActive,
@@ -111,40 +73,40 @@ const DiscoveryChip = React.memo(function DiscoveryChip({
     backgroundColor: interpolateColor(
       activeProgress.value,
       [0, 1],
-      ['#FFFFFF', '#FFE9E0'],
+      [SURFACE.base, ACCENT.primary],
     ),
     borderColor: interpolateColor(
       activeProgress.value,
       [0, 1],
-      ['#F3F4F6', '#F25000'],
+      [HAIRLINE, ACCENT.primary],
     ),
   }));
 
-  const underlineAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: activeProgress.value,
-    transform: [{ scaleX: activeProgress.value }],
+  const labelAnimatedStyle = useAnimatedStyle(() => ({
+    color: interpolateColor(
+      activeProgress.value,
+      [0, 1],
+      [INK.base, INK.onDark],
+    ),
   }));
 
   return (
-    <TouchableOpacity style={categoryChipStyles.item} onPress={onPress}>
-      <Animated.View
-        style={[categoryChipStyles.categoryItemContainer, containerAnimatedStyle]}
-      >
-        <Image
-          source={{ uri: `${CONFIG.image_base_url}${item.imageUrl}` }}
-          style={categoryChipStyles.image}
-          resizeMode="contain"
-        />
+    <TouchableOpacity activeOpacity={0.85} onPress={onPress}>
+      <Animated.View style={[styles.chip, containerAnimatedStyle]}>
+        <View style={styles.chipIconWell}>
+          <Image
+            source={{ uri: `${CONFIG.image_base_url}${item.imageUrl}` }}
+            style={styles.chipIcon}
+            resizeMode="contain"
+          />
+        </View>
+        <Animated.Text
+          style={[styles.chipLabel, labelAnimatedStyle]}
+          numberOfLines={1}
+        >
+          {item.catName || item.name}
+        </Animated.Text>
       </Animated.View>
-
-      <Text
-        style={[categoryChipStyles.label, isActive && styles.activeLabel]}
-        numberOfLines={2}
-      >
-        {item.catName || item.name}
-      </Text>
-
-      <Animated.View style={[styles.chipUnderline, underlineAnimatedStyle]} />
     </TouchableOpacity>
   );
 });
@@ -153,7 +115,6 @@ const CategoryDiscoverySection = ({
   isHomeLoading,
   categoryDiscovery,
   shouldShow,
-  categoryDiscoveryBackgroundImage,
   discoveryCategories,
   selectedDiscoveryCategory,
   onSelectCategory,
@@ -164,118 +125,160 @@ const CategoryDiscoverySection = ({
   if (isHomeLoading && !categoryDiscovery) return <ExploreShimmer />;
   if (!shouldShow) return null;
 
+  const activeName =
+    selectedDiscoveryCategory?.catName || selectedDiscoveryCategory?.name;
+
   return (
     <>
-      <ImageBackground
-        source={
-          categoryDiscoveryBackgroundImage
-            ? categoryDiscoveryBackgroundImage.uri
-            : HOME_BG
-        }
-        style={sectionCardStyles.headerBackgroundbg}
-        imageStyle={sectionCardStyles.headerBackgroundbgImage}
-      >
-        <View style={sectionCardStyles.headerBackgroundbgContent}>
-          {discoveryCategories.length > 0 && (
-            <>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginTop: hp('2%'),
-                  paddingHorizontal: wp('5%'),
-                }}
-              >
-                <Text
-                  style={[
-                    sectionCardStyles.featuredProductsText,
-                    { marginLeft: 0, marginVertical: 0, marginTop: 0 },
-                  ]}
-                >
-                  Explore
-                </Text>
-              </View>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{
-                  paddingHorizontal: wp('4.6%'),
-                  paddingTop: hp('1%'),
-                }}
-              >
-                {discoveryCategories.map((item, index) => (
-                  <DiscoveryChip
-                    key={(item.catId || item.id || index).toString()}
-                    item={item}
-                    isActive={selectedDiscoveryCategory?.catId === item.catId}
-                    onPress={() => onSelectCategory(item)}
-                  />
-                ))}
-              </ScrollView>
-            </>
-          )}
+      <View style={styles.divider} />
+      <View style={styles.section}>
+        <SectionHeader
+          eyebrow="Handpicked for you"
+          title="Explore"
+          titleAccent="deals"
+          subtitle={
+            activeName ? `Top picks in ${activeName}` : 'Pick a category to shop'
+          }
+          onAction={
+            selectedDiscoveryCategory
+              ? () =>
+                  navigation.navigate('SearchScreen', {
+                    catId: selectedDiscoveryCategory.catId,
+                    catName: selectedDiscoveryCategory.catName,
+                  })
+              : undefined
+          }
+        />
 
-          {isDiscoveryLoading ? (
-            <View style={{ height: hp('30%') }}>
-              <ProductBlockShimmer />
-            </View>
-          ) : (
-            discoveryProducts.length > 0 && (
-              <View>
-                <FlatList
-                  horizontal
-                  data={discoveryProducts}
-                  keyExtractor={(item, index) =>
-                    (item.productId || item.id || index).toString()
-                  }
-                  renderItem={({ item, index }) => (
-                    <TokenProductCard
-                      item={item}
-                      entering={FadeInUp.delay(getStaggerDelay(index))}
-                      onPress={() =>
-                        navigation.navigate('ProductDetailsScreen', {
-                          productId: item.productId || item.id,
-                          product: item,
-                        })
-                      }
-                    />
-                  )}
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={{ paddingHorizontal: wp('4.6%') }}
-                />
-              </View>
-            )
-          )}
-          {shouldShow && selectedDiscoveryCategory && (
-            <SeeAllButton
-              onPress={() =>
-                navigation.navigate('SearchScreen', {
-                  catId: selectedDiscoveryCategory.catId,
-                  catName: selectedDiscoveryCategory.catName,
-                })
+        {discoveryCategories.length > 0 && (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.chipRow}
+          >
+            {discoveryCategories.map((item, index) => (
+              <DiscoveryChip
+                key={(item.catId || item.id || index).toString()}
+                item={item}
+                isActive={selectedDiscoveryCategory?.catId === item.catId}
+                onPress={() => onSelectCategory(item)}
+              />
+            ))}
+          </ScrollView>
+        )}
+
+        {isDiscoveryLoading ? (
+          <View style={styles.railLoading}>
+            <ProductBlockShimmer />
+          </View>
+        ) : (
+          discoveryProducts.length > 0 && (
+            <FlatList
+              horizontal
+              data={discoveryProducts}
+              keyExtractor={(item, index) =>
+                (item.productId || item.id || index).toString()
               }
-              style={{ alignSelf: 'center' }}
+              renderItem={({ item, index }) => (
+                <TokenProductCard
+                  item={item}
+                  entering={FadeInUp.delay(getStaggerDelay(index))}
+                  onPress={() =>
+                    navigation.navigate('ProductDetailsScreen', {
+                      productId: item.productId || item.id,
+                      product: item,
+                    })
+                  }
+                />
+              )}
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.railContent}
+              initialNumToRender={4}
+              maxToRenderPerBatch={4}
+              windowSize={5}
             />
-          )}
-        </View>
-      </ImageBackground>
-      <View style={{ height: hp('2%') }} />
+          )
+        )}
+      </View>
     </>
   );
 };
 
 const styles = StyleSheet.create({
-  activeLabel: {
-    color: '#F25000',
-    fontFamily: FONTS.gilroy.semiBold,
+  divider,
+  section: {
+    paddingTop: SPACE.xs,
+    paddingBottom: SPACE.md,
   },
-  chipUnderline: {
-    height: 2,
-    backgroundColor: '#F25000',
-    width: '80%',
-    marginTop: 4,
-    borderRadius: 2,
+  chipRow: {
+    paddingHorizontal: GUTTER,
+    paddingBottom: SPACE.sm,
+    gap: wp('2.4%'),
+  },
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    paddingVertical: hp('0.7%'),
+    paddingLeft: wp('1.6%'),
+    paddingRight: wp('3.6%'),
+  },
+  // A white well behind the icon so transparent category PNGs stay legible
+  // once the chip fills with orange in its active state.
+  chipIconWell: {
+    width: CHIP_ICON,
+    height: CHIP_ICON,
+    borderRadius: CHIP_ICON / 2,
+    backgroundColor: SURFACE.sunken,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: wp('2%'),
+    overflow: 'hidden',
+  },
+  chipIcon: {
+    width: '78%',
+    height: '78%',
+  },
+  chipLabel: {
+    fontFamily: FONTS.gilroy.semiBold,
+    fontSize: wp('3.3%'),
+    maxWidth: wp('34%'),
+  },
+  railContent: {
+    paddingLeft: wp('3.2%'),
+    paddingRight: wp('2%'),
+  },
+  railLoading: {
+    minHeight: hp('28%'),
+  },
+
+  // Shimmer
+  shimmerHeader: {
+    paddingHorizontal: GUTTER,
+    paddingTop: hp('2%'),
+    paddingBottom: hp('1.2%'),
+  },
+  shimmerEyebrow: {
+    width: wp('30%'),
+    height: hp('1.3%'),
+    borderRadius: 4,
+    marginBottom: hp('0.8%'),
+  },
+  shimmerTitle: {
+    width: wp('24%'),
+    height: hp('2.4%'),
+    borderRadius: 6,
+  },
+  shimmerChipRow: {
+    flexDirection: 'row',
+    paddingHorizontal: GUTTER,
+    gap: wp('2.4%'),
+  },
+  shimmerChip: {
+    width: wp('26%'),
+    height: hp('4.4%'),
+    borderRadius: RADIUS.pill,
   },
 });
 

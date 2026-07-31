@@ -4,7 +4,7 @@ import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
-import Entypo from 'react-native-vector-icons/Entypo';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { FONTS } from '../styles/typography';
 
 const SeeAllButton = ({ onPress, style, label }) => {
@@ -12,15 +12,17 @@ const SeeAllButton = ({ onPress, style, label }) => {
 
   return (
     <TouchableOpacity
-      activeOpacity={0.9}
+      activeOpacity={0.88}
       onPress={onPress}
       style={[styles.button, style]}
     >
-      <Text style={styles.text}>{title}</Text>
-      <Entypo
-        name="controller-play"
-        size={wp('4%')}
-        color="#000000"
+      <Text style={styles.text} numberOfLines={1}>
+        {title}
+      </Text>
+      <MaterialIcons
+        name="arrow-forward"
+        size={wp('4.4%')}
+        color="#FFFFFF"
         style={styles.icon}
       />
     </TouchableOpacity>
@@ -30,28 +32,27 @@ const SeeAllButton = ({ onPress, style, label }) => {
 export default SeeAllButton;
 
 const styles = StyleSheet.create({
+  // Was a white pill with a heavy orange glow and a media "play" triangle —
+  // it read as a video control, not a navigation CTA. Now a flat solid pill so
+  // it's unambiguously the section's action.
   button: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    width: wp('90%'),
-    height: hp('4.7%'),
-    borderRadius: wp('9%'),
-    backgroundColor: '#FFFFFF',
-    // Soft orange drop shadow like the design
-    shadowColor: '#F25000',
-    shadowOpacity: 0.4,
-    shadowOffset: { width: 0, height: 3 },
-    shadowRadius: 2,
-    elevation: 4,
+    width: wp('78%'),
+    maxWidth: '88%',
+    paddingVertical: hp('1.5%'),
+    paddingHorizontal: wp('5%'),
+    borderRadius: 999,
+    backgroundColor: '#F25000',
   },
   text: {
     fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('4%'),
-    color: '#000000',
-    fontWeight: '600',
+    fontSize: wp('3.8%'),
+    color: '#FFFFFF',
+    letterSpacing: 0.1,
   },
   icon: {
-    marginLeft: wp('1.5%'),
+    marginLeft: wp('2%'),
   },
 });

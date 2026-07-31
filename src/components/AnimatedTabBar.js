@@ -177,11 +177,11 @@ const styles = StyleSheet.create({
     bottom: 0,
     flexDirection: 'row',
     backgroundColor: '#FFFFFF',
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 6,
+    // Flat: a hairline top rule instead of the wide 25%-opacity black shadow,
+    // which bled a grey haze up over the page and read as a gradient against
+    // the (now fully white) home screen.
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: 'rgba(17,19,26,0.10)',
   },
   tabButton: {
     flex: 1,

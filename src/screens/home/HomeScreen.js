@@ -30,7 +30,6 @@ import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
-import LinearGradient from 'react-native-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 
 import SelectedProducts from '../../components/SelectedProducts';
@@ -59,37 +58,25 @@ import HomeStatusBar from './components/HomeStatusBar';
 import StickyHeader from './components/StickyHeader';
 import PlacementBannerCarousel from './components/PlacementBannerCarousel';
 import CategoryGrid, { CategoryShimmer } from './components/CategoryGrid';
-import ProductBlock, {
-  resolveTitleImageSource,
-} from './components/ProductBlock';
+import ProductBlock from './components/ProductBlock';
 import CategoryDiscoverySection from './components/CategoryDiscoverySection';
 import ShimmerPlaceholder from '../../components/ShimmerPlaceholder';
-import sectionCardStyles from './components/sectionCardStyles';
 import styles from './HomeScreen.styles';
 import images from '@/assets/images';
 
-const HOME_BG = require('../../assets/images/homebg.png');
-const COMBO_BG = require('../../assets/images/combobg.png');
 const UDENDEAL_SEAL = require('../../assets/images/udendealSeal.png');
 
 // Hoisted out of the render path: these are props on the (memoised)
 // ProductBlock, so rebuilding them inline meant ProductBlock's memo could
 // never hit and all three product rails re-rendered on every home render.
-const BLOCK1_CONTENT_STYLE = {
-  paddingLeft: wp('2%'),
-  paddingRight: wp('1%'),
-  paddingTop: hp('1%'),
+// All three rails now share one content inset. They previously each declared a
+// different paddingLeft (2% / 5% / 4.6%), so the first card in each rail started
+// at a different x — the single most visible source of "unfinished" on the old
+// screen, since the rails stack directly on top of each other.
+const RAIL_CONTENT_STYLE = {
+  paddingLeft: wp('3.2%'),
+  paddingRight: wp('2%'),
 };
-const BLOCK2_CONTENT_STYLE = {
-  paddingLeft: wp('5%'),
-  paddingRight: wp('1%'),
-  paddingTop: hp('1%'),
-};
-const BLOCK3_CONTENT_STYLE = {
-  paddingHorizontal: wp('4.6%'),
-  paddingTop: hp('1%'),
-};
-const BLOCK2_TITLE_STYLE = { marginTop: hp('2%') };
 const BLOCK2_SEE_ALL_STYLE = { alignSelf: 'center', marginTop: hp('1%') };
 const seeAllOverThree = count => count > 3;
 const seeAllAtLeastThree = count => count >= 3;
@@ -97,26 +84,11 @@ const seeAllAtLeastThree = count => count >= 3;
 const SeasonalFruitsShimmer = () => (
   <View style={styles.fruitsContainer}>
     <View style={styles.fruitsHeaderView}>
-      <ShimmerPlaceholder
-        style={{
-          width: wp('40%'),
-          height: hp('2.5%'),
-          borderRadius: 5,
-          marginLeft: wp('5%'),
-        }}
-      />
+      <ShimmerPlaceholder style={styles.shimmerTitle} />
     </View>
-    <View style={{ flexDirection: 'row', marginLeft: wp('5%') }}>
+    <View style={styles.shimmerBannerRow}>
       {[1, 2].map((_, i) => (
-        <ShimmerPlaceholder
-          key={i}
-          style={{
-            width: wp('74.88%'),
-            height: hp('19.35%'),
-            borderRadius: wp('4.65%'),
-            marginRight: wp('5%'),
-          }}
-        />
+        <ShimmerPlaceholder key={i} style={styles.shimmerBanner} />
       ))}
     </View>
   </View>
@@ -425,37 +397,12 @@ const HomeScreen = () => {
   const topSectionBanner = data?.banners?.topSectionBanner || [];
   const topAnnouncementBanner = data?.banners?.topAnnouncementBanner || [];
   const topSideBySide = data?.banners?.topSideBySide || [];
-  const firstProductBlockTitleImage =
-    data?.banners?.firstProductBlockTitleImage;
-  const secondProductBlockTitleImage =
-    data?.banners?.secondProductBlockTitleImage;
-  const thirdProductBlockTitleImage =
-    data?.banners?.thirdProductBlockTitleImage;
-  const categoryDiscoveryBackgroundImage =
-    data?.banners?.categoryDiscoveryBackgroundImage;
   const bottomShowcaseBanner = data?.banners?.bottomShowcaseBanner;
   const bottomShowcaseProducts = data?.banners?.bottomShowcaseProducts || [];
   const firstProductBlock = data?.firstProductBlock;
   const secondProductBlock = data?.secondProductBlock;
   const thirdProductBlock = data?.thirdProductBlock;
   const categoryDiscovery = data?.categoryDiscovery;
-
-  // resolveTitleImageSource() builds a fresh { uri } object each call, so
-  // calling it inline in JSX handed ProductBlock a new prop identity on every
-  // render (and a "changed" source to the underlying image view).
-  const firstTitleImageSource = useMemo(
-    () => resolveTitleImageSource(firstProductBlock, firstProductBlockTitleImage),
-    [firstProductBlock, firstProductBlockTitleImage],
-  );
-  const secondTitleImageSource = useMemo(
-    () =>
-      resolveTitleImageSource(secondProductBlock, secondProductBlockTitleImage),
-    [secondProductBlock, secondProductBlockTitleImage],
-  );
-  const thirdTitleImageSource = useMemo(
-    () => resolveTitleImageSource(thirdProductBlock, thirdProductBlockTitleImage),
-    [thirdProductBlock, thirdProductBlockTitleImage],
-  );
 
   // True during pull-to-refresh, and also while the homepage query is fetching
   // a freshly-selected area for which we have no cached data yet — so the body
@@ -668,12 +615,8 @@ const HomeScreen = () => {
           />
         ) : (
           <>
-            <View style={{ paddingTop: hp('4%') }}></View>
-
             {midBanner?.length > 0 && (
-              <View
-                style={{ marginVertical: hp('1%'), marginBottom: hp('2%') }}
-              >
+              <View style={styles.carouselBleed}>
                 <PlacementBannerCarousel
                   banners={midBanner}
                   onBannerPress={handleBannerPress}
@@ -688,19 +631,9 @@ const HomeScreen = () => {
             <ProductBlock
               isLoading={isHomeLoading && firstBlockItems.length === 0}
               shouldShow={shouldShowFirstBlock}
-              backgroundImage={HOME_BG}
-              discountBadge={50}
-              showTitleImage={
-                !!(
-                  firstProductBlockTitleImage?.uri ||
-                  firstProductBlock?.Image ||
-                  firstProductBlock?.image
-                )
-              }
-              titleImageSource={firstTitleImageSource}
               title={firstProductBlock?.Title || firstProductBlock?.title}
               items={firstBlockItems}
-              contentContainerStyle={BLOCK1_CONTENT_STYLE}
+              contentContainerStyle={RAIL_CONTENT_STYLE}
               shouldShowSeeAll={seeAllOverThree}
               navigation={navigation}
             />
@@ -708,16 +641,9 @@ const HomeScreen = () => {
             <ProductBlock
               isLoading={isHomeLoading && secondBlockItems.length === 0}
               shouldShow={shouldShowSecondBlock}
-              backgroundImage={HOME_BG}
-              showTitleImage={
-                secondProductBlock?.image !== null &&
-                secondProductBlock?.image !== undefined
-              }
-              titleImageSource={secondTitleImageSource}
               title={secondProductBlock?.Title || secondProductBlock?.title}
-              titleExtraStyle={BLOCK2_TITLE_STYLE}
               items={secondBlockItems}
-              contentContainerStyle={BLOCK2_CONTENT_STYLE}
+              contentContainerStyle={RAIL_CONTENT_STYLE}
               shouldShowSeeAll={seeAllAtLeastThree}
               seeAllButtonStyle={BLOCK2_SEE_ALL_STYLE}
               navigation={navigation}
@@ -727,12 +653,7 @@ const HomeScreen = () => {
               <SeasonalFruitsShimmer />
             ) : (
               fruits.length > 0 && (
-                <View
-                  style={{
-                    marginVertical: hp('0.5%'),
-                    marginBottom: hp('0.2%'),
-                  }}
-                >
+                <View style={styles.carouselBleed}>
                   <PlacementBannerCarousel
                     banners={fruits}
                     onBannerPress={handleBannerPress}
@@ -747,79 +668,53 @@ const HomeScreen = () => {
             <ProductBlock
               isLoading={isHomeLoading && thirdBlockItems.length === 0}
               shouldShow={shouldShowThirdBlock}
-              backgroundImage={COMBO_BG}
-              showTitleImage={
-                !!(
-                  thirdProductBlockTitleImage?.uri ||
-                  thirdProductBlock?.Image ||
-                  thirdProductBlock?.image
-                )
-              }
-              titleImageSource={thirdTitleImageSource}
-              titleImageResizeMode="contain"
               title={thirdProductBlock?.Title || thirdProductBlock?.title}
               items={thirdBlockItems}
-              contentContainerStyle={BLOCK3_CONTENT_STYLE}
+              contentContainerStyle={RAIL_CONTENT_STYLE}
               shouldShowSeeAll={seeAllOverThree}
               trailingSpacer
               navigation={navigation}
             />
 
             {bottomShowcaseBanner && bottomShowcaseProducts.length > 0 && (
-              <>
-                <TouchableOpacity
-                  activeOpacity={0.9}
-                  onPress={() => handleBannerPress(bottomShowcaseBanner)}
+              <TouchableOpacity
+                activeOpacity={0.9}
+                onPress={() => handleBannerPress(bottomShowcaseBanner)}
+              >
+                <ImageBackground
+                  source={bottomShowcaseBanner.uri}
+                  style={styles.showcaseCard}
+                  imageStyle={styles.showcaseCardImage}
                 >
-                  <ImageBackground
-                    source={bottomShowcaseBanner.uri}
-                    style={sectionCardStyles.headerBackgroundbg2}
-                    imageStyle={sectionCardStyles.headerBackgroundbgImage2}
-                  >
-                    <View style={sectionCardStyles.headerBackgroundbgContent}>
-                      <FlatList
-                        horizontal
-                        data={bottomShowcaseProducts}
-                        keyExtractor={(item, index) =>
-                          (item.bannerId || item.id || index).toString()
-                        }
-                        renderItem={({ item }) => (
-                          <TouchableOpacity
-                            onPress={() => handleBannerPress(item)}
-                            style={{ marginRight: wp('1%') }}
-                          >
-                            <Image
-                              source={item.uri}
-                              style={{
-                                width: wp('33%'),
-                                height: wp('33%'),
-                                borderRadius: wp('4%'),
-                                marginTop: hp('14%'),
-                              }}
-                              resizeMode="contain"
-                            />
-                          </TouchableOpacity>
-                        )}
-                        showsHorizontalScrollIndicator={false}
-                        contentContainerStyle={{
-                          paddingHorizontal: wp('3.6%'),
-                          paddingTop: hp('2%'),
-                        }}
-                      />
-                    </View>
-                  </ImageBackground>
-                </TouchableOpacity>
-                <View style={{ height: hp('2%') }} />
-              </>
+                  <FlatList
+                    horizontal
+                    data={bottomShowcaseProducts}
+                    keyExtractor={(item, index) =>
+                      (item.bannerId || item.id || index).toString()
+                    }
+                    renderItem={({ item }) => (
+                      <TouchableOpacity
+                        onPress={() => handleBannerPress(item)}
+                        style={styles.showcaseItem}
+                      >
+                        <Image
+                          source={item.uri}
+                          style={styles.showcaseItemImage}
+                          resizeMode="contain"
+                        />
+                      </TouchableOpacity>
+                    )}
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.showcaseListContent}
+                  />
+                </ImageBackground>
+              </TouchableOpacity>
             )}
 
             <CategoryDiscoverySection
               isHomeLoading={isHomeLoading}
               categoryDiscovery={categoryDiscovery}
               shouldShow={shouldShowCategoryDiscovery}
-              categoryDiscoveryBackgroundImage={
-                categoryDiscoveryBackgroundImage
-              }
               discoveryCategories={discoveryCategories}
               selectedDiscoveryCategory={selectedDiscoveryCategory}
               onSelectCategory={handleSelectDiscoveryCategory}
@@ -829,30 +724,24 @@ const HomeScreen = () => {
             />
           </>
         )}
-        <View style={{ height: hp('4%') }} />
+        <View style={styles.sectionGapLarge} />
 
         {isStoreUnavailable && isHomeLoading && (
-          <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+          <View style={styles.sealWrap}>
             <Image
               source={require('../../assets/images/sealUD.png')}
               resizeMode="contain"
-              style={{ width: wp('50%'), height: wp('50%') }}
+              style={styles.sealImage}
             />
           </View>
         )}
 
         {!isStoreUnavailable && !!data && (
-          <View
-            style={{
-              alignItems: 'center',
-              justifyContent: 'center',
-              paddingBottom: hp('3%'),
-            }}
-          >
+          <View style={styles.sealWrap}>
             <Image
               source={UDENDEAL_SEAL}
               resizeMode="contain"
-              style={{ width: wp('45%'), height: wp('45%') }}
+              style={styles.sealImage}
             />
           </View>
         )}

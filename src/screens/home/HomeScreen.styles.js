@@ -3,11 +3,12 @@ import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
+import { CANVAS, RADIUS, SPACE, GUTTER } from './homeTheme';
 
 const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: CANVAS,
   },
   floatingContainer: {
     position: 'absolute',
@@ -15,11 +16,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     alignItems: 'center',
-  },
-  footerBranding: {
-    alignItems: 'flex-start',
-    paddingVertical: hp('2%'),
-    marginBottom: 0,
   },
   // Main top banner section (below the sticky header, top of the scroll content)
   topShowcaseContainer: {
@@ -53,6 +49,60 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '65%',
   },
+
+  // ── Section rhythm ──────────────────────────────────────────────────────
+  // One spacer token instead of the per-section hp('4%') / hp('2%') / hp('0.5%')
+  // margins the sections each used to declare for themselves.
+  sectionGapLarge: {
+    height: SPACE.xl,
+  },
+  carouselBleed: {
+    marginTop: SPACE.lg,
+    marginBottom: SPACE.xs,
+  },
+
+  // Bottom showcase banner. Inset to the gutter and rounded so it reads as
+  // artwork placed on the page, not as a panel bolted to the screen edges.
+  showcaseCard: {
+    width: wp('94%'),
+    height: hp('32%'),
+    alignSelf: 'center',
+    marginTop: SPACE.lg,
+    borderRadius: RADIUS.lg,
+    overflow: 'hidden',
+  },
+  showcaseCardImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+    borderRadius: RADIUS.lg,
+  },
+  showcaseItem: {
+    marginRight: wp('1%'),
+  },
+  showcaseItemImage: {
+    width: wp('31%'),
+    height: wp('31%'),
+    borderRadius: RADIUS.md,
+    marginTop: hp('14%'),
+  },
+  showcaseListContent: {
+    paddingHorizontal: wp('3.6%'),
+    paddingTop: hp('2%'),
+  },
+
+  // Footer seal
+  sealWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingBottom: hp('3%'),
+    opacity: 0.9,
+  },
+  sealImage: {
+    width: wp('42%'),
+    height: wp('42%'),
+  },
+
   // Seasonal-fruits shimmer (mirrors the bottomBanner carousel section)
   fruitsContainer: {
     paddingVertical: hp('1%'),
@@ -62,6 +112,22 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: hp('1%'),
     marginBottom: hp('1%'),
+  },
+  shimmerTitle: {
+    width: wp('40%'),
+    height: hp('2.5%'),
+    borderRadius: 6,
+    marginLeft: GUTTER,
+  },
+  shimmerBannerRow: {
+    flexDirection: 'row',
+    marginLeft: GUTTER,
+  },
+  shimmerBanner: {
+    width: wp('74.88%'),
+    height: hp('19.35%'),
+    borderRadius: RADIUS.lg,
+    marginRight: wp('5%'),
   },
 });
 

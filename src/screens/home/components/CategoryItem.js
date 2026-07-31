@@ -7,6 +7,7 @@ import getCategoryPlaceholder from './getCategoryPlaceholder';
 import categoryChipStyles from './categoryChipStyles';
 import AnimatedPressable from '../../../components/AnimatedPressable';
 import { getStaggerDelay } from '../../../utils/staggerDelay';
+import { categoryTint } from '../homeTheme';
 
 const CategoryItem = React.memo(({ item, index = 0 }) => {
   const navigation = useNavigation();
@@ -38,7 +39,12 @@ const CategoryItem = React.memo(({ item, index = 0 }) => {
         })
       }
     >
-      <View style={categoryChipStyles.categoryItemContainer}>
+      <View
+        style={[
+          categoryChipStyles.categoryItemContainer,
+          { backgroundColor: categoryTint(index) },
+        ]}
+      >
         <Image
           source={imageSource}
           style={categoryChipStyles.image}
