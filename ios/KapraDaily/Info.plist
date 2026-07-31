@@ -63,49 +63,21 @@
 	<array>
 		<string>AntDesign.ttf</string>
 		<string>Entypo.ttf</string>
-		<string>EvilIcons.ttf</string>
 		<string>Feather.ttf</string>
 		<string>FontAwesome.ttf</string>
-		<string>FontAwesome5_Brands.ttf</string>
-		<string>FontAwesome5_Regular.ttf</string>
-		<string>FontAwesome5_Solid.ttf</string>
-		<string>FontAwesome6_Brands.ttf</string>
-		<string>FontAwesome6_Regular.ttf</string>
-		<string>FontAwesome6_Solid.ttf</string>
-		<string>Foundation.ttf</string>
 		<string>Ionicons.ttf</string>
 		<string>MaterialIcons.ttf</string>
 		<string>MaterialCommunityIcons.ttf</string>
-		<string>SimpleLineIcons.ttf</string>
-		<string>Octicons.ttf</string>
-		<string>Zocial.ttf</string>
-		<string>Fontisto.ttf</string>
-		<string>Outfit-Medium.ttf</string>
-		<string>Outfit-Regular.ttf</string>
-		<string>Outfit-SemiBold.ttf</string>
-		<string>Outfit-Light.ttf</string>
 		<string>Inter_18pt-Regular.ttf</string>
-		<string>Italiana-Regular.ttf</string>
 		<string>Lexend-Medium.ttf</string>
 		<string>Lexend-SemiBold.ttf</string>
-		<string>Outfit-Bold.ttf</string>
-		<string>Inter_18pt-ExtraBold.ttf</string>
-		<string>Inter_18pt-BoldItalic.ttf</string>
-		<string>Inter_28pt-ExtraBold.ttf</string>
 		<string>Gilroy-Medium.ttf</string>
 		<string>Gilroy-Regular.ttf</string>
 		<string>Gilroy-Light.ttf</string>
 		<string>Gilroy-Bold.ttf</string>
 		<string>Gilroy-Heavy.ttf</string>
 		<string>Gilroy-SemiBold.ttf</string>
-		<string>Poppins-Light.ttf</string>
-		<string>Poppins-Medium.ttf</string>
-		<string>Poppins-ExtraBold.ttf</string>
 		<string>Gilroy-ExtraBold.ttf</string>
-		<string>Poppins-Regular.ttf</string>
-		<string>Poppins-Bold.ttf</string>
-		<string>Poppins-SemiBold.ttf</string>
-		<string>Poppins-Italic.ttf</string>
 	</array>
 	<key>UIBackgroundModes</key>
 	<array>

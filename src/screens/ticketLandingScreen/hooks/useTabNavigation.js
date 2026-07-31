@@ -4,14 +4,21 @@ import { useFocusEffect } from '@react-navigation/native';
 import { TAB_IDS } from '@/components/events/EventCategoryTabs';
 
 // Owns the active-tab state and the fade/slide transition between tabs.
-const useTabNavigation = fetchEventDetailsList => {
+// `fetchTabData(tabId)` is fired on every tab press so each tab lands with
+// fresh data without the user having to pull-to-refresh. Requests already in
+// flight for that tab are skipped so rapid tapping can't stack them up.
+const useTabNavigation = fetchTabData => {
   const [activeTab, setActiveTab] = useState(TAB_IDS.POPULAR);
   const tabAnim = useRef(new Animated.Value(1)).current;
+  const inFlightTabs = useRef(new Set()).current;
 
   const handleTabChange = useCallback(
     tabId => {
-      if (tabId === TAB_IDS.EVENTS) {
-        fetchEventDetailsList();
+      if (!inFlightTabs.has(tabId)) {
+        inFlightTabs.add(tabId);
+        Promise.resolve(fetchTabData?.(tabId))
+          .catch(() => {})
+          .finally(() => inFlightTabs.delete(tabId));
       }
       Animated.timing(tabAnim, {
         toValue: 0,
@@ -27,7 +34,7 @@ const useTabNavigation = fetchEventDetailsList => {
         }).start();
       });
     },
-    [fetchEventDetailsList, tabAnim],
+    [fetchTabData, inFlightTabs, tabAnim],
   );
 
   const handleGoHome = useCallback(

@@ -1,15 +1,12 @@
 // src/components/icons/CustomIcons.tsx
 import React from 'react';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import MaterialDesignIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Feather from 'react-native-vector-icons/Feather';
 import Entypo from 'react-native-vector-icons/Entypo';
-import Fontisto from 'react-native-vector-icons/Fontisto';
-import SimpleLineIcons from 'react-native-vector-icons/SimpleLineIcons';
 import { ViewStyle, StyleProp } from 'react-native';
 import { colors } from '../theme/colours';
 
@@ -36,10 +33,6 @@ const Delete = ({ size = defaultSize, color = colors.primary, style }: IconProps
 
 const Group = ({ size = defaultSize, color = colors.primary, style }: IconProps) => (
     <MaterialIcons name="group" size={size} color={color} style={style} />
-);
-
-const PeopleCarry = ({ size = defaultSize, color = colors.primary, style }: IconProps) => (
-    <FontAwesome5 name="people-carry" size={size} color={color} style={style} />
 );
 
 const Back = ({ size = defaultSize, color = colors.primary, style }: IconProps) => (
@@ -159,10 +152,6 @@ const Calendar = ({ size = defaultSize, color = colors.primary, style }: IconPro
     <MaterialIcons name="calendar-today" size={size} color={color} style={style} />
 );
 
-const Users = ({ size = defaultSize, color = colors.primary, style }: IconProps) => (
-    <FontAwesome5 name="users" size={size} color={color} style={style} />
-);
-
 const EyeOpen = ({ size = defaultSize, color = colors.primary, style }: IconProps) => (
     <Ionicons name="eye" size={size} color={color} style={style} />
 );
@@ -202,11 +191,11 @@ const Microphone = ({ size = defaultSize, color = colors.primary, style }: IconP
 );
 
 const BookmarkOutline = ({ size = defaultSize, color = colors.primary, style }: IconProps) => (
-    <Fontisto name="bookmark" size={size} color={color} style={style} />
+    <MaterialIcons name="bookmark-border" size={size} color={color} style={style} />
 );
 
 const BookmarkFilled = ({ size = defaultSize, color = colors.primary, style }: IconProps) => (
-    <Fontisto name="bookmark-alt" size={size} color={color} style={style} />
+    <MaterialIcons name="bookmark" size={size} color={color} style={style} />
 );
 
 const TrippleRight = ({ size = defaultSize, color = colors.primary, style }: IconProps) => (
@@ -287,12 +276,10 @@ export const AppIcons = {
     Filter,
     X,
     Food,
-    PeopleCarry,
     CreditCard,
     UserCircle,
     Calendar,
     Edit,
-    Users,
     EyeOpen,
     EyeClose,
     Bookmark,

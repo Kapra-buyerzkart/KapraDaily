@@ -220,11 +220,11 @@ export default function RootNavigator() {
         <Stack.Screen name="Deals48" component={Deals48Stack} />
       </Stack.Navigator>
 
-      {/* <AppUpdateModal
+      <AppUpdateModal
         visible={isUpdateModalVisible}
         updateInfo={updateInfo}
         onLater={() => setIsUpdateModalVisible(false)}
-      /> */}
+      />
     </>
   );
 }

@@ -12,6 +12,7 @@ import Animated, {
 import LinearGradient from 'react-native-linear-gradient';
 import QRCode from 'react-native-qrcode-svg';
 import { wp, hp } from '../utils/responsive';
+import logger from '../utils/logger';
 import COLORS from '@/styles/colors';
 
 const DASHES = Array.from({ length: 22 });
@@ -19,8 +20,6 @@ const QR_PADDING = 10;
 const NOTCH = 22;
 const CARD_RADIUS = 20;
 
-// Android does not clip child Images to an ancestor's border radius, so the
-// banner has to round its own top corners to sit flush inside the card.
 const HERO_CORNERS = {
   borderTopLeftRadius: CARD_RADIUS,
   borderTopRightRadius: CARD_RADIUS,
@@ -32,7 +31,6 @@ const ConcertTicket = ({
   eventCategory = 'Musical concert',
   location = 'Edapally , kochi ,kerala',
   date = 'July 25, monday',
-  // Start–end window for the session, e.g. "9:00 AM - 4:00 AM".
   time = '9:00 AM - 4:00 AM',
   ticketType,
   seatNo = 'S4',
@@ -48,6 +46,8 @@ const ConcertTicket = ({
 }) => {
   const qrSize = wp(28);
   const qrBoxSize = qrSize + QR_PADDING * 2;
+
+  console.log(qrValue, 'qrValue=======>');
 
   // Scanner-style sweep: a bright accent line runs top→bottom across the QR
   // a couple of times shortly after the ticket has settled, evoking the code
@@ -72,6 +72,26 @@ const ConcertTicket = ({
       { translateY: interpolate(scan.value, [0, 1], [0, qrBoxSize]) },
     ],
   }));
+
+  // The exact payload this card puts on screen, logged where it is drawn rather
+  // than where it is built - the two can drift, and it is the drawn one the
+  // scanner reads back.
+  useEffect(() => {
+    if (qrCodeUri) {
+      logger.log('[ConcertTicket] qr rendered from server image:', {
+        ticketId,
+        qrCodeUri,
+      });
+      return;
+    }
+    const encoded = qrValue || ticketId;
+    logger.log('[ConcertTicket] qr encoded locally:', {
+      ticketId,
+      encodedValue: encoded,
+      encodedLength: String(encoded ?? '').length,
+      usedTicketIdFallback: !qrValue,
+    });
+  }, [qrCodeUri, qrValue, ticketId]);
 
   return (
     <View style={[styles.wrapper, style]}>
@@ -233,11 +253,12 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     ...HERO_CORNERS,
   },
-  // The poster itself: never cropped, never upscaled past its own size.
+  // The poster fills the banner edge to edge so it meets the card's rounded
+  // corners; portrait art is cropped top/bottom rather than letterboxed.
   hero: {
     width: '100%',
     height: '100%',
-    resizeMode: 'contain',
+    resizeMode: 'cover',
     ...HERO_CORNERS,
   },
   heroScrim: {

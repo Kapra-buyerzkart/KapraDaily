@@ -108,7 +108,6 @@ export const setupInterceptors = (axiosInstance: AxiosInstance): void => {
           console.error('🔄 [API] Token Refresh Failed:', err);
           processQueue(err);
           await clearTokens();
-          // Force back to login if refresh fails on an auth-required route
           NavigationService.reset(NavigationService.AUTH_FALLBACK_ROUTE);
           throw err;
         } finally {

@@ -7,7 +7,6 @@
 
 import { useEffect } from 'react';
 import './src/config/i18n';
-import { NewAppScreen } from '@react-native/new-app-screen';
 import {
   LogBox,
   StatusBar,

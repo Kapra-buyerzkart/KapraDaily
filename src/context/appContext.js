@@ -106,6 +106,7 @@ export const AppContextProvider = ({ children }) => {
   const loadProfile = useCallback(async () => {
     try {
       const response = await getProfile();
+      logger.log('me response', response);
 
       if (response?.success && response?.data) {
         const storedProfile = await secureStore.getItem('profile');

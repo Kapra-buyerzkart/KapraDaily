@@ -10,72 +10,40 @@
 		1078BEE6CB014739BB4BCF97 /* Gilroy-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1149EB5D8CE54E43B471CCC6 /* Gilroy-SemiBold.ttf */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		14334B413E2B4C59AFD928BC /* Gilroy-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 63CAC06FB886468EB2F1D6E9 /* Gilroy-Regular.ttf */; };
-		1DFAAD124EF2F1B6211DFF9B /* Outfit-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 574BF55C8EFBB8EB29343430 /* Outfit-Bold.ttf */; };
 		26CF7B3EA7006334AE66808C /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
-		532CCF1C4062821153DC14EF /* Inter_28pt-ExtraBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 5269A0CFF98CD5C489EE54D7 /* Inter_28pt-ExtraBold.ttf */; };
-		55C09DB59810CCB69497B536 /* Inter_18pt-ExtraBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1ABEF1D8CAECD4FE987D152E /* Inter_18pt-ExtraBold.ttf */; };
-		6001FB72A6EC48B48719F7F4 /* Poppins-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 4008C73D00334A53822A86D8 /* Poppins-Bold.ttf */; };
-		63B951ECA80903B851A450E2 /* Italiana-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 16A8BB0EAD55320A48BA2A80 /* Italiana-Regular.ttf */; };
 		6B330C37E6CE83043BD65C56 /* Inter_18pt-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = FE1C4802475046C3C5A0DB7F /* Inter_18pt-Regular.ttf */; };
-		72AFADE8E8DC469A87138696 /* Poppins-Italic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 404736D47900400683551A1C /* Poppins-Italic.ttf */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
-		76341F653C1DF06D822015C0 /* Inter_18pt-BoldItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 111B5ED39B4E384FB08C0EDE /* Inter_18pt-BoldItalic.ttf */; };
-		7F155AC0F17546CBBFA8F3EF /* Poppins-ExtraBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 6276934E048441569CE6E87A /* Poppins-ExtraBold.ttf */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		852E2FF53F0740E44762C207 /* Lexend-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 0B2EC2C2CDF0D6F6CDA433DF /* Lexend-Medium.ttf */; };
-		881E558A4E9879642C425D50 /* Outfit-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = CD6DA4AE08D79A0071410E3A /* Outfit-SemiBold.ttf */; };
 		9D7C1E78B49220F6DD2A9477 /* Pods_KapraDaily.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 728C4BD6C67F75CFF3B958A4 /* Pods_KapraDaily.framework */; };
 		A7E520F5633F4AF88E0AE7BD /* Gilroy-Heavy.ttf in Resources */ = {isa = PBXBuildFile; fileRef = BA83BE26BCFF4639ADF0AAD8 /* Gilroy-Heavy.ttf */; };
 		AE0557EEF5F6B6891B127D47 /* Lexend-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2340152ACEA4132460CC4AAC /* Lexend-SemiBold.ttf */; };
 		B50DC67281664E35A9286C34 /* Gilroy-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = AF461670181F4D1696D8E7FD /* Gilroy-Bold.ttf */; };
 		C375A994139443DC839F6D00 /* Gilroy-ExtraBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = C69DFCD89C1A440489DA8C48 /* Gilroy-ExtraBold.ttf */; };
-		C734C6745DFA4F5F82ED3A92 /* Poppins-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = D540A36B3E70466DB510C125 /* Poppins-Medium.ttf */; };
 		C8A79CDDBC594031BA85DB93 /* Gilroy-Light.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 36B24D680B9B4588A3A18172 /* Gilroy-Light.ttf */; };
 		D1BAEB3755EA426B95EE3BB1 /* Gilroy-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 9EE15EF6737F4FFCBD1BF239 /* Gilroy-Medium.ttf */; };
-		D23E8283AE2B4F85A8F4FA60 /* Poppins-Light.ttf in Resources */ = {isa = PBXBuildFile; fileRef = F317FB1CC9DA4E50BDE4832C /* Poppins-Light.ttf */; };
-		DC79C0AD22404E726BF3CA40 /* Outfit-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1C7E47BD51B42213DF7EE585 /* Outfit-Medium.ttf */; };
-		DE795C518EBA4374BD55C4D6 /* Poppins-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = D57902B8C20743ED82D04522 /* Poppins-Regular.ttf */; };
-		E5C16F63F3A4423583F30E9C /* Poppins-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = BA4A4A9AE8244A11968E73E3 /* Poppins-SemiBold.ttf */; };
-		E6FCB45A25CCEC002F78D856 /* Outfit-Light.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 230AAF03515F4DF78F349B95 /* Outfit-Light.ttf */; };
-		FEF3C09680E42C88402FE73B /* Outfit-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 0B43BC60119899D6CF9AA45A /* Outfit-Regular.ttf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		0B2EC2C2CDF0D6F6CDA433DF /* Lexend-Medium.ttf */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = file; path = "Lexend-Medium.ttf"; sourceTree = "<group>"; };
-		0B43BC60119899D6CF9AA45A /* Outfit-Regular.ttf */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = file; path = "Outfit-Regular.ttf"; sourceTree = "<group>"; };
-		111B5ED39B4E384FB08C0EDE /* Inter_18pt-BoldItalic.ttf */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = file; path = "Inter_18pt-BoldItalic.ttf"; sourceTree = "<group>"; };
 		1149EB5D8CE54E43B471CCC6 /* Gilroy-SemiBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Gilroy-SemiBold.ttf"; path = "../src/assets/fonts/Gilroy-SemiBold.ttf"; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* KapraDaily.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KapraDaily.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = KapraDaily/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = KapraDaily/Info.plist; sourceTree = "<group>"; };
 		13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = PrivacyInfo.xcprivacy; path = KapraDaily/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		16A8BB0EAD55320A48BA2A80 /* Italiana-Regular.ttf */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = file; path = "Italiana-Regular.ttf"; sourceTree = "<group>"; };
-		1ABEF1D8CAECD4FE987D152E /* Inter_18pt-ExtraBold.ttf */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = file; path = "Inter_18pt-ExtraBold.ttf"; sourceTree = "<group>"; };
-		1C7E47BD51B42213DF7EE585 /* Outfit-Medium.ttf */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = file; path = "Outfit-Medium.ttf"; sourceTree = "<group>"; };
-		230AAF03515F4DF78F349B95 /* Outfit-Light.ttf */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = file; path = "Outfit-Light.ttf"; sourceTree = "<group>"; };
 		2340152ACEA4132460CC4AAC /* Lexend-SemiBold.ttf */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = file; path = "Lexend-SemiBold.ttf"; sourceTree = "<group>"; };
 		34BB4C6739422E6A9F06564B /* Pods-KapraDaily.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-KapraDaily.release.xcconfig"; path = "Target Support Files/Pods-KapraDaily/Pods-KapraDaily.release.xcconfig"; sourceTree = "<group>"; };
 		36B24D680B9B4588A3A18172 /* Gilroy-Light.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Gilroy-Light.ttf"; path = "../src/assets/fonts/Gilroy-Light.ttf"; sourceTree = "<group>"; };
-		4008C73D00334A53822A86D8 /* Poppins-Bold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-Bold.ttf"; path = "../src/assets/fonts/Poppins-Bold.ttf"; sourceTree = "<group>"; };
-		404736D47900400683551A1C /* Poppins-Italic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-Italic.ttf"; path = "../src/assets/fonts/Poppins-Italic.ttf"; sourceTree = "<group>"; };
-		5269A0CFF98CD5C489EE54D7 /* Inter_28pt-ExtraBold.ttf */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = file; path = "Inter_28pt-ExtraBold.ttf"; sourceTree = "<group>"; };
-		574BF55C8EFBB8EB29343430 /* Outfit-Bold.ttf */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = file; path = "Outfit-Bold.ttf"; sourceTree = "<group>"; };
-		6276934E048441569CE6E87A /* Poppins-ExtraBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-ExtraBold.ttf"; path = "../src/assets/fonts/Poppins-ExtraBold.ttf"; sourceTree = "<group>"; };
 		63CAC06FB886468EB2F1D6E9 /* Gilroy-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Gilroy-Regular.ttf"; path = "../src/assets/fonts/Gilroy-Regular.ttf"; sourceTree = "<group>"; };
 		728C4BD6C67F75CFF3B958A4 /* Pods_KapraDaily.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_KapraDaily.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = KapraDaily/AppDelegate.swift; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = KapraDaily/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		9EE15EF6737F4FFCBD1BF239 /* Gilroy-Medium.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Gilroy-Medium.ttf"; path = "../src/assets/fonts/Gilroy-Medium.ttf"; sourceTree = "<group>"; };
 		AF461670181F4D1696D8E7FD /* Gilroy-Bold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Gilroy-Bold.ttf"; path = "../src/assets/fonts/Gilroy-Bold.ttf"; sourceTree = "<group>"; };
-		BA4A4A9AE8244A11968E73E3 /* Poppins-SemiBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-SemiBold.ttf"; path = "../src/assets/fonts/Poppins-SemiBold.ttf"; sourceTree = "<group>"; };
 		BA83BE26BCFF4639ADF0AAD8 /* Gilroy-Heavy.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Gilroy-Heavy.ttf"; path = "../src/assets/fonts/Gilroy-Heavy.ttf"; sourceTree = "<group>"; };
 		C69DFCD89C1A440489DA8C48 /* Gilroy-ExtraBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Gilroy-ExtraBold.ttf"; path = "../src/assets/fonts/Gilroy-ExtraBold.ttf"; sourceTree = "<group>"; };
-		CD6DA4AE08D79A0071410E3A /* Outfit-SemiBold.ttf */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = file; path = "Outfit-SemiBold.ttf"; sourceTree = "<group>"; };
-		D540A36B3E70466DB510C125 /* Poppins-Medium.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-Medium.ttf"; path = "../src/assets/fonts/Poppins-Medium.ttf"; sourceTree = "<group>"; };
-		D57902B8C20743ED82D04522 /* Poppins-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-Regular.ttf"; path = "../src/assets/fonts/Poppins-Regular.ttf"; sourceTree = "<group>"; };
 		E2C6A6755816DC93C626B519 /* Pods-KapraDaily.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-KapraDaily.debug.xcconfig"; path = "Target Support Files/Pods-KapraDaily/Pods-KapraDaily.debug.xcconfig"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
-		F317FB1CC9DA4E50BDE4832C /* Poppins-Light.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-Light.ttf"; path = "../src/assets/fonts/Poppins-Light.ttf"; sourceTree = "<group>"; };
 		FE1C4802475046C3C5A0DB7F /* Inter_18pt-Regular.ttf */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = file; path = "Inter_18pt-Regular.ttf"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -122,14 +90,7 @@
 				AF461670181F4D1696D8E7FD /* Gilroy-Bold.ttf */,
 				BA83BE26BCFF4639ADF0AAD8 /* Gilroy-Heavy.ttf */,
 				1149EB5D8CE54E43B471CCC6 /* Gilroy-SemiBold.ttf */,
-				F317FB1CC9DA4E50BDE4832C /* Poppins-Light.ttf */,
-				D540A36B3E70466DB510C125 /* Poppins-Medium.ttf */,
-				6276934E048441569CE6E87A /* Poppins-ExtraBold.ttf */,
 				C69DFCD89C1A440489DA8C48 /* Gilroy-ExtraBold.ttf */,
-				D57902B8C20743ED82D04522 /* Poppins-Regular.ttf */,
-				4008C73D00334A53822A86D8 /* Poppins-Bold.ttf */,
-				BA4A4A9AE8244A11968E73E3 /* Poppins-SemiBold.ttf */,
-				404736D47900400683551A1C /* Poppins-Italic.ttf */,
 			);
 			name = Resources;
 			path = "";
@@ -168,18 +129,9 @@
 		AC81D3D59BF101097840D5A8 /* Fonts */ = {
 			isa = PBXGroup;
 			children = (
-				111B5ED39B4E384FB08C0EDE /* Inter_18pt-BoldItalic.ttf */,
-				1ABEF1D8CAECD4FE987D152E /* Inter_18pt-ExtraBold.ttf */,
 				FE1C4802475046C3C5A0DB7F /* Inter_18pt-Regular.ttf */,
-				5269A0CFF98CD5C489EE54D7 /* Inter_28pt-ExtraBold.ttf */,
-				16A8BB0EAD55320A48BA2A80 /* Italiana-Regular.ttf */,
 				0B2EC2C2CDF0D6F6CDA433DF /* Lexend-Medium.ttf */,
 				2340152ACEA4132460CC4AAC /* Lexend-SemiBold.ttf */,
-				574BF55C8EFBB8EB29343430 /* Outfit-Bold.ttf */,
-				230AAF03515F4DF78F349B95 /* Outfit-Light.ttf */,
-				1C7E47BD51B42213DF7EE585 /* Outfit-Medium.ttf */,
-				0B43BC60119899D6CF9AA45A /* Outfit-Regular.ttf */,
-				CD6DA4AE08D79A0071410E3A /* Outfit-SemiBold.ttf */,
 			);
 			name = Fonts;
 			path = KapraDaily/Fonts;
@@ -257,32 +209,16 @@
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				26CF7B3EA7006334AE66808C /* PrivacyInfo.xcprivacy in Resources */,
-				76341F653C1DF06D822015C0 /* Inter_18pt-BoldItalic.ttf in Resources */,
-				55C09DB59810CCB69497B536 /* Inter_18pt-ExtraBold.ttf in Resources */,
 				6B330C37E6CE83043BD65C56 /* Inter_18pt-Regular.ttf in Resources */,
-				532CCF1C4062821153DC14EF /* Inter_28pt-ExtraBold.ttf in Resources */,
-				63B951ECA80903B851A450E2 /* Italiana-Regular.ttf in Resources */,
 				852E2FF53F0740E44762C207 /* Lexend-Medium.ttf in Resources */,
 				AE0557EEF5F6B6891B127D47 /* Lexend-SemiBold.ttf in Resources */,
-				1DFAAD124EF2F1B6211DFF9B /* Outfit-Bold.ttf in Resources */,
-				E6FCB45A25CCEC002F78D856 /* Outfit-Light.ttf in Resources */,
-				DC79C0AD22404E726BF3CA40 /* Outfit-Medium.ttf in Resources */,
-				FEF3C09680E42C88402FE73B /* Outfit-Regular.ttf in Resources */,
-				881E558A4E9879642C425D50 /* Outfit-SemiBold.ttf in Resources */,
 				D1BAEB3755EA426B95EE3BB1 /* Gilroy-Medium.ttf in Resources */,
 				14334B413E2B4C59AFD928BC /* Gilroy-Regular.ttf in Resources */,
 				C8A79CDDBC594031BA85DB93 /* Gilroy-Light.ttf in Resources */,
 				B50DC67281664E35A9286C34 /* Gilroy-Bold.ttf in Resources */,
 				A7E520F5633F4AF88E0AE7BD /* Gilroy-Heavy.ttf in Resources */,
 				1078BEE6CB014739BB4BCF97 /* Gilroy-SemiBold.ttf in Resources */,
-				D23E8283AE2B4F85A8F4FA60 /* Poppins-Light.ttf in Resources */,
-				C734C6745DFA4F5F82ED3A92 /* Poppins-Medium.ttf in Resources */,
-				7F155AC0F17546CBBFA8F3EF /* Poppins-ExtraBold.ttf in Resources */,
 				C375A994139443DC839F6D00 /* Gilroy-ExtraBold.ttf in Resources */,
-				DE795C518EBA4374BD55C4D6 /* Poppins-Regular.ttf in Resources */,
-				6001FB72A6EC48B48719F7F4 /* Poppins-Bold.ttf in Resources */,
-				E5C16F63F3A4423583F30E9C /* Poppins-SemiBold.ttf in Resources */,
-				72AFADE8E8DC469A87138696 /* Poppins-Italic.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -386,7 +322,7 @@
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 3A58K3LMU2;
 				ENABLE_BITCODE = NO;
 				GCC_WARN_INHIBIT_ALL_WARNINGS = NO;
@@ -396,7 +332,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 5.0.0;
+				MARKETING_VERSION = 5.2.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -423,7 +359,7 @@
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 3A58K3LMU2;
 				GCC_WARN_INHIBIT_ALL_WARNINGS = NO;
 				INFOPLIST_FILE = KapraDaily/Info.plist;
@@ -432,7 +368,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 5.0.0;
+				MARKETING_VERSION = 5.2.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",

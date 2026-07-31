@@ -51,6 +51,13 @@ const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const isSettingEnabled = value =>
   value === '1' || value === 1 || value === true;
 
+const clearTimer = ref => {
+  if (ref.current) {
+    clearTimeout(ref.current);
+    ref.current = null;
+  }
+};
+
 const ServiceCard = memo(({ service, isActive, comingSoon, onPress }) => {
   const scale = useSharedValue(1);
 
@@ -157,23 +164,50 @@ const ServiceSwitcherModal = ({ visible, onClose, excludeServiceId }) => {
   const translateY = useSharedValue(SCREEN_HEIGHT);
   const backdropOpacity = useSharedValue(0);
   const pendingActionRef = useRef(null);
+  const unmountTimerRef = useRef(null);
+  const fallbackTimerRef = useRef(null);
+  // Read inside the [visible]-only effect below, where `modalVisible` state
+  // would be a stale closure.
+  const modalVisibleRef = useRef(false);
+  modalVisibleRef.current = modalVisible;
+
+  // Runs whatever was queued for "after the sheet is gone", exactly once.
+  const runPendingAction = useCallback(() => {
+    clearTimer(fallbackTimerRef);
+    const action = pendingActionRef.current;
+    if (!action) return;
+    pendingActionRef.current = null;
+    action();
+  }, []);
 
   const onCloseAnimationComplete = useCallback(() => {
+    clearTimer(unmountTimerRef);
     setModalVisible(false);
-    if (pendingActionRef.current) {
-      const action = pendingActionRef.current;
-      pendingActionRef.current = null;
-      // Run after the native Modal has actually torn down its window.
-      // Firing navigation in the same tick as setModalVisible(false) races
-      // the Modal's dismissal with the screen transition on iOS, which can
-      // leave a dead, invisible overlay intercepting touches on the tab bar
-      // once the user navigates back here.
-      requestAnimationFrame(() => requestAnimationFrame(action));
+    if (!pendingActionRef.current) return;
+
+    // The queued action (navigate / deep link) must not run until the native
+    // Modal window is genuinely torn down. On iOS that moment is the Modal's
+    // `onDismiss`; anything earlier races the dismissal against the screen
+    // transition and can strand a transparent, full-screen modal window that
+    // swallows every touch — the UI still renders but nothing responds. That
+    // only bites when the Modal's host is itself a stack screen being detached
+    // (the movie ticket landing screen), which is why the home screen — whose
+    // host tab navigator outlives the navigation — never showed it.
+    //
+    // Android has no `onDismiss`, so fall back to two frames there. The timer
+    // is a safety net so the action is never stranded if `onDismiss` is missed.
+    if (Platform.OS === 'ios') {
+      clearTimer(fallbackTimerRef);
+      fallbackTimerRef.current = setTimeout(runPendingAction, 500);
+    } else {
+      requestAnimationFrame(() => requestAnimationFrame(runPendingAction));
     }
-  }, []);
+  }, [runPendingAction]);
 
   useEffect(() => {
     if (visible) {
+      clearTimer(unmountTimerRef);
+
       AsyncStorage.getItem(LAST_SELECTED_SERVICE_KEY)
         .then(id => {
           if (id) setActiveServiceId(id);
@@ -186,7 +220,7 @@ const ServiceSwitcherModal = ({ visible, onClose, excludeServiceId }) => {
         easing: Easing.out(Easing.cubic),
       });
       backdropOpacity.value = withTiming(1, { duration: 250 });
-    } else if (modalVisible) {
+    } else if (modalVisibleRef.current) {
       translateY.value = withTiming(
         SCREEN_HEIGHT,
         { duration: 220 },
@@ -197,9 +231,23 @@ const ServiceSwitcherModal = ({ visible, onClose, excludeServiceId }) => {
         },
       );
       backdropOpacity.value = withTiming(0, { duration: 200 });
+
+      // An interrupted animation never invokes its callback, which would leave
+      // the Modal mounted and off-screen — again a full-screen touch trap. Tear
+      // down on a timer regardless; reopening clears it in the branch above.
+      clearTimer(unmountTimerRef);
+      unmountTimerRef.current = setTimeout(onCloseAnimationComplete, 400);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
+
+  useEffect(
+    () => () => {
+      clearTimer(unmountTimerRef);
+      clearTimer(fallbackTimerRef);
+    },
+    [],
+  );
 
   const sheetStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: translateY.value }],
@@ -232,8 +280,11 @@ const ServiceSwitcherModal = ({ visible, onClose, excludeServiceId }) => {
 
   const handleServicePress = useCallback(
     service => {
+      // Close the sheet first: presenting Coming Soon while this Modal is still
+      // up stacks two native modals, which iOS refuses ("already presenting")
+      // and which leaves the UI wedged.
       if (isComingSoon(service)) {
-        setComingSoonService(service);
+        requestClose(() => setComingSoonService(service));
         return;
       }
 
@@ -274,6 +325,7 @@ const ServiceSwitcherModal = ({ visible, onClose, excludeServiceId }) => {
         animationType="none"
         statusBarTranslucent
         onRequestClose={() => requestClose()}
+        onDismiss={runPendingAction}
       >
         <View style={StyleSheet.absoluteFill}>
           <Pressable

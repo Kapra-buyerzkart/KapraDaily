@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { View, Text, ImageBackground, Dimensions } from 'react-native';
+import React, { useEffect, useMemo } from 'react';
+import { View, Image, ImageBackground, Dimensions } from 'react-native';
 import Animated, {
   FadeIn,
   Extrapolation,
@@ -22,6 +22,7 @@ const HeroImage = ({ source }) => (
   <ImageBackground
     source={source}
     defaultSource={FALLBACK_IMAGE}
+    fadeDuration={0}
     style={styles.heroImageBg}
     imageStyle={styles.heroImage}
   >
@@ -51,6 +52,12 @@ const EventHero = ({ event, insets, onBack, scrollY }) => {
   const gallery = useMemo(() => getEventGalleryImages(event), [event]);
   const progress = useSharedValue(0);
   const hasCarousel = gallery.length > 1;
+
+  useEffect(() => {
+    gallery.forEach(src => {
+      if (src?.uri) Image.prefetch(src.uri);
+    });
+  }, [gallery]);
 
   const parallaxStyle = useAnimatedStyle(() => {
     const y = scrollY?.value ?? 0;
@@ -89,7 +96,7 @@ const EventHero = ({ event, insets, onBack, scrollY }) => {
             data={gallery}
             scrollAnimationDuration={600}
             onProgressChange={progress}
-            renderItem={({ item }) => <HeroImage source={item} />}
+            renderItem={({ item, index }) => <HeroImage key={index} source={item} />}
           />
           <View style={styles.heroDots} pointerEvents="none">
             {gallery.map((_, i) => (
@@ -122,7 +129,7 @@ const EventHero = ({ event, insets, onBack, scrollY }) => {
         >
           <Ionicons name="arrow-back" size={22} color={COLORS.white} />
         </AnimatedPressable>
-        <Text style={styles.heroTitle}>Events</Text>
+        {/* <Text style={styles.heroTitle}>Events</Text> */}
       </View>
     </View>
   );

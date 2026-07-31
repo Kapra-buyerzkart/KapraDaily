@@ -29,7 +29,6 @@ import icons from '@/assets/icons';
 import { wp, hp } from '../../../utils/responsive';
 import { getDashboardDataApi } from '../../../api/userService';
 import { checkTicketAvailabilityApi } from '../../../api/eventService';
-import logger from '../../../utils/logger';
 import { formatPrice } from '../utils';
 
 const { width, height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -190,7 +189,7 @@ const TicketSelectionModal = ({
           setBCoins(res.data.wallet.bCoins);
         }
       })
-      .catch(err => logger.error('Failed to fetch bCoins:', err?.message));
+      .catch(err => console.error('Failed to fetch bCoins:', err?.message));
   }, [visible]);
 
   const handleAnimatedClose = useCallback(() => {
@@ -248,18 +247,14 @@ const TicketSelectionModal = ({
     setExpandedId(prev => (prev === id ? null : id));
   }, []);
 
-  // Every stepper action re-checks live availability for the target quantity
-  // before the count actually changes, so a sold-out-in-the-meantime category
-  // can never be over-selected.
   const checkAvailability = useCallback(async (id, quantity) => {
     try {
       const res = await checkTicketAvailabilityApi(id, quantity);
       const data = res?.data ?? res;
 
-      console.log(data, 'data=====>');
       return data?.available ?? data?.isAvailable ?? true;
     } catch (err) {
-      logger.error('Failed to check ticket availability:', err?.message);
+      console.error('Failed to check ticket availability:', err?.message);
       return false;
     }
   }, []);
@@ -321,10 +316,17 @@ const TicketSelectionModal = ({
   }, [selectedLines]);
 
   const handleBuyNow = useCallback(() => {
-    const payload = { lines: selectedLines, totalPrice, totalTickets };
-    logger.log('[TicketSelectionModal] onBuyNow payload:', payload);
+    const payload = {
+      lines: selectedLines,
+      totalPrice,
+      totalTickets,
+      // The footer promises "Using <bCoins>", so redeem the whole balance and
+      // let the backend cap it against the bill.
+      udCoinsRequested: bCoins,
+    };
+    console.log('[TicketSelectionModal] onBuyNow payload:', payload);
     onBuyNow?.(payload);
-  }, [onBuyNow, selectedLines, totalPrice, totalTickets]);
+  }, [onBuyNow, selectedLines, totalPrice, totalTickets, bCoins]);
 
   return (
     <Modal

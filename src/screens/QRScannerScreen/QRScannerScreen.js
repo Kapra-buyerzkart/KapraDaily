@@ -1,200 +1,133 @@
-import {
-  View,
-  Text,
-  Image,
-  Linking,
-  StatusBar,
-  TouchableOpacity,
-} from 'react-native';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback } from 'react';
+import { StatusBar, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
-import {
-  Camera,
-  useCameraDevice,
-  useCameraPermission,
-  useCodeScanner,
-} from 'react-native-vision-camera';
-import Ionicons from 'react-native-vector-icons/Ionicons';
-import Clipboard from '@react-native-clipboard/clipboard';
-import Toast from 'react-native-simple-toast';
+import { Camera } from 'react-native-vision-camera';
 import { openSettings } from 'react-native-permissions';
-import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
-import icons from '@/assets/icons';
 import COLORS from '@/styles/colors';
-import logger from '../../utils/logger';
 import { styles } from './styles';
-
-const isLink = value => /^https?:\/\//i.test(value?.trim() ?? '');
+import ScannerHeader from './components/ScannerHeader';
+import ScannerFrame from './components/ScannerFrame';
+import MessageView from './components/MessageView';
+import ResultSheet from './components/ResultSheet';
+import useScannerCamera from './hooks/useScannerCamera';
+import useTicketScanner from './hooks/useTicketScanner';
+import useResultAnimations from './hooks/useResultAnimations';
 
 export default function QRScannerScreen() {
   const navigation = useNavigation();
   const isFocused = useIsFocused();
 
-  const device = useCameraDevice('back');
-  const { hasPermission, requestPermission } = useCameraPermission();
-  const [permissionAsked, setPermissionAsked] = useState(false);
-  const [torchOn, setTorchOn] = useState(false);
-  const [scannedValue, setScannedValue] = useState(null);
+  const {
+    device,
+    hasPermission,
+    permissionAsked,
+    torchOn,
+    toggleTorch,
+    cameraError,
+    handleCameraError,
+    clearCameraError,
+  } = useScannerCamera();
 
-  useEffect(() => {
-    if (hasPermission) return;
-    requestPermission().finally(() => setPermissionAsked(true));
-  }, [hasPermission, requestPermission]);
+  const {
+    scannedValue,
+    codeScanner,
+    validating,
+    result,
+    resultStyle,
+    showVerdict,
+    ticketInfo,
+    scanAgain,
+    retryValidation,
+  } = useTicketScanner();
 
-  const handleCodeScanned = useCallback(codes => {
-    const value = codes?.[0]?.value;
-    if (!value) return;
-    setScannedValue(prev => prev ?? value);
-  }, []);
-
-  const codeScanner = useCodeScanner({
-    codeTypes: ['qr'],
-    onCodeScanned: handleCodeScanned,
+  const { cardAnim, iconAnim, progressAnim } = useResultAnimations({
+    scannedValue,
+    showVerdict,
+    isValid: showVerdict && result?.status === 'valid',
   });
 
-  const openScannedLink = useCallback(async () => {
-    try {
-      await Linking.openURL(scannedValue);
-    } catch (error) {
-      logger.error('Failed to open scanned link:', error?.message);
-      Toast.show('Could not open this link', Toast.SHORT);
-    }
-  }, [scannedValue]);
+  const goBack = useCallback(() => navigation.goBack(), [navigation]);
 
-  const copyScannedValue = useCallback(() => {
-    Clipboard.setString(scannedValue);
-    Toast.show('Copied', Toast.SHORT);
-  }, [scannedValue]);
+  // The torch can only be driven while the capture session is running, so it
+  // has to follow `isActive` rather than the toggle alone.
+  const isCameraActive = isFocused && !scannedValue;
 
-  const header = useMemo(
-    () => (
-      <View style={styles.header}>
-        <TouchableOpacity
-          hitSlop={20}
-          onPress={() => navigation.goBack()}
-          style={styles.iconButton}
-        >
-          <Image source={icons.backArrowNew} style={styles.backIcon} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Scan QR Code</Text>
-        {device?.hasTorch ? (
-          <TouchableOpacity
-            hitSlop={20}
-            onPress={() => setTorchOn(prev => !prev)}
-            style={styles.iconButton}
-          >
-            <Ionicons
-              name={torchOn ? 'flash' : 'flash-off'}
-              color={COLORS.white}
-              size={wp('5%')}
-            />
-          </TouchableOpacity>
-        ) : (
-          <View style={styles.iconButton} />
-        )}
-      </View>
-    ),
-    [device?.hasTorch, navigation, torchOn],
-  );
-
-  const renderMessage = (title, message, actionLabel, onAction) => (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={COLORS.black} />
-      {header}
-      <View style={styles.messageContainer}>
-        <Ionicons name="camera-outline" color={COLORS.white} size={wp('14%')} />
-        <Text style={styles.messageTitle}>{title}</Text>
-        <Text style={styles.messageText}>{message}</Text>
-        {actionLabel ? (
-          <TouchableOpacity style={styles.messageButton} onPress={onAction}>
-            <Text style={styles.primaryButtonText}>{actionLabel}</Text>
-          </TouchableOpacity>
-        ) : null}
-      </View>
-    </SafeAreaView>
+  const header = (
+    <ScannerHeader
+      onBack={goBack}
+      hasTorch={Boolean(device?.hasTorch)}
+      torchOn={torchOn}
+      onToggleTorch={toggleTorch}
+    />
   );
 
   if (!hasPermission) {
     if (!permissionAsked) return <View style={styles.container} />;
-    return renderMessage(
-      'Camera access needed',
-      'Allow camera access to scan QR codes. You can turn it on from your device settings.',
-      'Open Settings',
-      () => openSettings(),
+    return (
+      <MessageView
+        header={header}
+        title="Camera access needed"
+        message="Allow camera access to scan QR codes. You can turn it on from your device settings."
+        actionLabel="Open Settings"
+        onAction={() => openSettings()}
+      />
     );
   }
 
   if (!device) {
-    return renderMessage(
-      'No camera found',
-      'This device does not have a camera we can use for scanning.',
+    return (
+      <MessageView
+        header={header}
+        title="No camera found"
+        message="This device does not have a camera we can use for scanning."
+      />
+    );
+  }
+
+  if (cameraError) {
+    return (
+      <MessageView
+        header={header}
+        title="Camera unavailable"
+        message={cameraError}
+        actionLabel="Try Again"
+        onAction={clearCameraError}
+      />
     );
   }
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.black} />
+
       <Camera
         style={styles.fill}
         device={device}
-        isActive={isFocused && !scannedValue}
-        torch={torchOn ? 'on' : 'off'}
+        isActive={isCameraActive}
+        torch={torchOn && isCameraActive ? 'on' : 'off'}
         codeScanner={codeScanner}
+        onError={handleCameraError}
       />
 
-      <View style={styles.overlay} pointerEvents="none">
-        <View style={styles.scrimFill} />
-        <View style={styles.overlayMiddleRow}>
-          <View style={styles.scrimFill} />
-          <View style={styles.frame}>
-            <View style={[styles.corner, styles.cornerTopLeft]} />
-            <View style={[styles.corner, styles.cornerTopRight]} />
-            <View style={[styles.corner, styles.cornerBottomLeft]} />
-            <View style={[styles.corner, styles.cornerBottomRight]} />
-          </View>
-          <View style={styles.scrimFill} />
-        </View>
-        <View style={styles.scrimFill}>
-          {!scannedValue && (
-            <Text style={styles.hintText}>
-              Point your camera at a QR code to scan it
-            </Text>
-          )}
-        </View>
-      </View>
+      <ScannerFrame showHint={!scannedValue} />
 
       <SafeAreaView edges={['top']} style={styles.headerOverlay}>
         {header}
       </SafeAreaView>
 
       {scannedValue ? (
-        <View style={styles.resultCard}>
-          <Text style={styles.resultLabel}>Scanned result</Text>
-          <Text style={styles.resultValue} numberOfLines={3}>
-            {scannedValue}
-          </Text>
-          <View style={styles.resultActions}>
-            <TouchableOpacity
-              style={styles.secondaryButton}
-              onPress={() => {
-                setScannedValue(null);
-              }}
-            >
-              <Text style={styles.secondaryButtonText}>Scan Again</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.primaryButton}
-              onPress={
-                isLink(scannedValue) ? openScannedLink : copyScannedValue
-              }
-            >
-              <Text style={styles.primaryButtonText}>
-                {isLink(scannedValue) ? 'Open Link' : 'Copy'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+        <ResultSheet
+          validating={validating}
+          result={result}
+          resultStyle={resultStyle}
+          ticketInfo={ticketInfo}
+          cardAnim={cardAnim}
+          iconAnim={iconAnim}
+          progressAnim={progressAnim}
+          onRetry={retryValidation}
+          onScanAgain={scanAgain}
+        />
       ) : null}
     </View>
   );

@@ -1,21 +1,28 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
   View,
+  Text,
   Image,
+  ImageBackground,
   StatusBar,
-  Pressable,
   RefreshControl,
+  useWindowDimensions,
 } from 'react-native';
 import Toast from 'react-native-simple-toast';
+import LinearGradient from 'react-native-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
   ZoomIn,
   useSharedValue,
   useAnimatedScrollHandler,
 } from 'react-native-reanimated';
-import styles from './styles';
+import styles, {
+  CLAIM_GRADIENT_COLORS,
+  CLAIM_GRADIENT_LOCATIONS,
+} from './styles';
 import COLORS from '@/styles/colors';
 import images from '@/assets/images';
+import icons from '@/assets/icons';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import useEventDetails from './hooks/useEventDetails';
 import EventHero from './components/EventHero';
@@ -32,9 +39,14 @@ import PaymentFailedModal from '../ticketLandingScreen/components/PaymentFailedM
 import { useEventPayment } from '../../hooks/useEventPayment';
 import prefetchMyBookings from '../../queries/prefetchMyBookings';
 
+// Breathing room kept below an expanded accordion / above the screen top when
+// scrolling it into view.
+const EXPAND_SCROLL_PADDING = 16;
+
 const EventDetailsScreen = ({ navigation, route }) => {
   const insets = useSafeAreaInsets();
-  const { event, loading, details, refreshing, refresh } =
+  const { height: windowHeight } = useWindowDimensions();
+  const { event, eventId, loading, details, refreshing, refresh } =
     useEventDetails(route);
   const [ticketModalVisible, setTicketModalVisible] = useState(false);
   const {
@@ -43,6 +55,7 @@ const EventDetailsScreen = ({ navigation, route }) => {
     successVisible,
     failureVisible,
     paidAmount,
+    coinsUsed,
     ticketQuantity,
     resetPayment,
     dismissFailure,
@@ -52,6 +65,33 @@ const EventDetailsScreen = ({ navigation, route }) => {
   const scrollHandler = useAnimatedScrollHandler(e => {
     scrollY.value = e.contentOffset.y;
   });
+
+  const scrollRef = useRef(null);
+  const claimBarHeight = useRef(0);
+  const handleClaimBarLayout = useCallback(e => {
+    claimBarHeight.current = e.nativeEvent.layout.height;
+  }, []);
+
+  // When an accordion opens, nudge the page down just enough to bring the
+  // revealed body above the floating claim bar — without pushing its header off
+  // the top of the screen.
+  const handleAccordionExpand = useCallback(
+    ({ y, height }) => {
+      const visibleBottom = windowHeight - claimBarHeight.current;
+      const hidden = y + height + EXPAND_SCROLL_PADDING - visibleBottom;
+      if (hidden <= 0) return;
+
+      const headroom = Math.max(0, y - insets.top - EXPAND_SCROLL_PADDING);
+      const delta = Math.min(hidden, headroom);
+      if (delta <= 0) return;
+
+      scrollRef.current?.scrollTo({
+        y: scrollY.value + delta,
+        animated: true,
+      });
+    },
+    [windowHeight, insets.top, scrollY],
+  );
 
   const handleBack = useCallback(() => navigation.goBack(), [navigation]);
   const openTicketModal = useCallback(() => setTicketModalVisible(true), []);
@@ -75,6 +115,7 @@ const EventDetailsScreen = ({ navigation, route }) => {
         bookingItems,
         bookingPlacedFrom: 'app',
         eventName: details?.name,
+        udCoinsRequested: selection?.udCoinsRequested ?? 0,
       });
 
       if (result?.success || result?.pending || result?.failed) {
@@ -107,7 +148,6 @@ const EventDetailsScreen = ({ navigation, route }) => {
     return <EventDetailsSkeleton />;
   }
 
-  console.log(details, 'what is the details===>');
   return (
     <View style={styles.container}>
       <StatusBar
@@ -122,6 +162,7 @@ const EventDetailsScreen = ({ navigation, route }) => {
       />
 
       <Animated.ScrollView
+        ref={scrollRef}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         onScroll={scrollHandler}
@@ -138,6 +179,7 @@ const EventDetailsScreen = ({ navigation, route }) => {
         }
       >
         <EventHero
+          key={eventId ?? 'event'}
           event={event}
           insets={insets}
           onBack={handleBack}
@@ -156,35 +198,39 @@ const EventDetailsScreen = ({ navigation, route }) => {
         />
         <MoreToKnow ageLimit={details?.ageLimit} language={details?.language} />
         <ArtistList artists={details?.artists} />
-        <EventAccordions details={details.detailsText} terms={details.terms} />
+        <EventAccordions
+          details={details.detailsText}
+          terms={details.terms}
+          onExpand={handleAccordionExpand}
+        />
       </Animated.ScrollView>
 
-      <View style={styles.claimWrap} pointerEvents="box-none">
-        <Animated.View>
-          <Pressable
-            onPress={openTicketModal}
-            accessibilityRole="button"
-            accessibilityLabel="Claim"
+      <LinearGradient
+        colors={CLAIM_GRADIENT_COLORS}
+        locations={CLAIM_GRADIENT_LOCATIONS}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        style={styles.claimWrap}
+        onLayout={handleClaimBarLayout}
+      >
+        <AnimatedPressable
+          onPress={openTicketModal}
+          accessibilityRole="button"
+          accessibilityLabel="Claim tickets"
+        >
+          <ImageBackground
+            source={images.claimticketBtn}
+            style={styles.claimBarImage}
+            resizeMode="contain"
           >
-            <Image
-              source={images.claimbgbutton}
-              style={styles.claimBarImage}
-              resizeMode="contain"
-            />
-          </Pressable>
-          <View style={claimSafeAreaStyle} />
-          <View
-            style={{
-              backgroundColor: 'black',
-              height: 25,
-              position: 'absolute',
-              left: 0,
-              right: 0,
-              bottom: 0,
-            }}
-          ></View>
-        </Animated.View>
-      </View>
+            <View style={styles.claimLabelWrap}>
+              <Image source={icons.claimtick} style={styles.claimTick} />
+              <Text style={styles.claimLabel}>Claim Tickets</Text>
+            </View>
+          </ImageBackground>
+        </AnimatedPressable>
+        <View style={claimSafeAreaStyle} />
+      </LinearGradient>
 
       <TicketSelectionModal
         visible={ticketModalVisible}
@@ -197,7 +243,7 @@ const EventDetailsScreen = ({ navigation, route }) => {
       <RedeemSuccessModal
         visible={successVisible}
         quantity={ticketQuantity}
-        coinsUsed={0}
+        coinsUsed={coinsUsed}
         amountPaid={`₹${paidAmount}`}
         itemLabel="ticket"
         secondaryButtonLabel="My Bookings"

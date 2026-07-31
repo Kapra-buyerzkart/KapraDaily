@@ -2,9 +2,6 @@ import React from 'react';
 import { View, Text, StyleSheet, Image } from 'react-native';
 import CONFIG from '../../globals/config';
 
-// Presentational-only teaser tiles for upcoming, not-yet-built features —
-// no navigation/data behind these until the corresponding screens exist.
-// Data is driven by the `moreToExplore` list from the popular/list API.
 const ExploreMoreRow = ({ items }) => {
   if (!items || items.length === 0) return null;
 
@@ -42,7 +39,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'flex-start',
     borderRadius: 14,
-    padding: 12,
+    padding: 10,
     backgroundColor: 'rgba(255,255,255,0.05)',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.08)',
@@ -54,7 +51,7 @@ const styles = StyleSheet.create({
   soonBadge: {
     position: 'absolute',
     top: 10,
-    right: 10,
+    right: 5,
     backgroundColor: 'rgba(154,92,255,0.18)',
     borderRadius: 10,
     paddingHorizontal: 8,

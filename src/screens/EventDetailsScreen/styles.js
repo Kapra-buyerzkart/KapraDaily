@@ -5,8 +5,20 @@ const CARD_BG = 'rgba(255,255,255,0.04)';
 const CARD_BORDER = 'rgba(255,255,255,0.10)';
 const ICON_TILE_BG = 'rgba(110,52,192,0.25)';
 const BG_ASPECT_RATIO = 430 / 2078;
-// const CLAIM_BAR_ASPECT_RATIO = 430 / 118;
+
+const CLAIM_BTN_ASPECT_RATIO = 424 / 105;
+const CLAIM_BTN_PILL_TOP = 2 / 105;
+const CLAIM_BTN_PILL_BOTTOM = 54 / 105;
+const CLAIM_BTN_PILL_LEFT = 14 / 424;
+const CLAIM_BTN_PILL_RIGHT = 410 / 424;
 export const HERO_HEIGHT = 340;
+export const CLAIM_GRADIENT_COLORS = [
+  'rgba(0,0,0,0)',
+  'rgba(0,0,0,0.55)',
+  'rgba(0,0,0,0.9)',
+  '#000000',
+];
+export const CLAIM_GRADIENT_LOCATIONS = [0, 0.35, 0.65, 1];
 
 const styles = StyleSheet.create({
   container: {
@@ -91,7 +103,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(0,0,0,0.45)',
+    backgroundColor: 'rgba(0,0,0,0.70)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -348,14 +360,42 @@ const styles = StyleSheet.create({
   /* Claim button */
   claimWrap: {
     position: 'absolute',
-    // backgroundColor: 'black',
-    bottom: -3,
+    bottom: -10,
     left: 0,
     right: 0,
+    paddingTop: 28,
   },
   claimBarImage: {
     width: '100%',
-    // aspectRatio: CLAIM_BAR_ASPECT_RATIO,
+    aspectRatio: CLAIM_BTN_ASPECT_RATIO,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  claimLabelWrap: {
+    position: 'absolute',
+    left: `${CLAIM_BTN_PILL_LEFT * 100}%`,
+    right: `${(1 - CLAIM_BTN_PILL_RIGHT) * 100}%`,
+    top: `${CLAIM_BTN_PILL_TOP * 100}%`,
+    bottom: `${(1 - CLAIM_BTN_PILL_BOTTOM) * 100}%`,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  // Out of flow so the label stays centred on the pill regardless of the tick.
+  claimTick: {
+    position: 'absolute',
+    left: 18,
+    resizeMode: 'contain',
+  },
+  claimLabel: {
+    color: COLORS.white,
+    fontSize: 16,
+    fontFamily: 'Gilroy-Bold',
+    letterSpacing: 0.3,
+    textAlign: 'center',
+    // Android otherwise reserves extra room above/below the glyphs, which
+    // renders the label lower on the pill than it sits on iOS.
+    textAlignVertical: 'center',
+    includeFontPadding: false,
   },
   claimSafeArea: {
     backgroundColor: '#000000',

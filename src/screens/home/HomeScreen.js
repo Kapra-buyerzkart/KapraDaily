@@ -69,6 +69,7 @@ import CategoryDiscoverySection from './components/CategoryDiscoverySection';
 import ShimmerPlaceholder from '../../components/ShimmerPlaceholder';
 import sectionCardStyles from './components/sectionCardStyles';
 import styles from './HomeScreen.styles';
+import images from '@/assets/images';
 
 const HOME_BG = require('../../assets/images/homebg.png');
 const COMBO_BG = require('../../assets/images/combobg.png');
@@ -608,8 +609,8 @@ const HomeScreen = () => {
 
         {noLocationSelected ? (
           <StoreUnavailable
-            imageSource={storeUnavailableData?.image}
-            text="Select your location to see products and offers available near you."
+            imageSource={images.no_location}
+            text={`Select your location to see products and offers available near you.`}
             buttonText="Select Location"
             onChangeLocation={() => locationModalRef.current?.open()}
           />
