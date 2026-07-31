@@ -40,7 +40,6 @@ import StoreUnavailable from '../../components/StoreUnavailable';
 import HomePopupModal from '../../components/HomePopupModal';
 import { openExternalUrl } from '../../utils/safeUrl';
 import { shuffle } from '../../utils/shuffle';
-import { LoaderContext } from '../../context/loaderContext';
 import { AppContext } from '../../context/appContext';
 import useTabBarAnimation from '../../hooks/useTabBarAnimation';
 import {
@@ -327,7 +326,6 @@ const HomeScreen = () => {
   // ────────────────────────────────────────────────────────────────────────
 
   const navigation = useNavigation();
-  const { showLoader } = useContext(LoaderContext);
   const [isProfileLoaded, setIsProfileLoaded] = useState(false);
   // Visibility is driven imperatively through the sheet's ref (open/close),
   // not React state — so tapping the location doesn't re-render Home or
@@ -338,15 +336,22 @@ const HomeScreen = () => {
   const [refreshing, setRefreshing] = useState(false);
   const { profile, loadProfileTwo } = useContext(AppContext);
 
+  // Reconciles the locally-stored profile (guestId, pincode) on mount. This no
+  // longer raises the global blocking loader: by the time HomeScreen mounts,
+  // RootNavigator has already resolved `profile`, so the overlay was covering a
+  // screen that was ready to paint and delaying first meaningful content by the
+  // duration of two Keychain reads.
+  //
+  // The loadProfileTwo() call itself is kept: it is what mints a guestId and
+  // normalises pincodeAreaId for guest sessions, and dropping it would change
+  // who the login-redirect below fires for.
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        showLoader(true);
         await loadProfileTwo();
       } catch (error) {
         console.error('Profile load error:', error);
       } finally {
-        showLoader(false);
         setIsProfileLoaded(true);
       }
     };
