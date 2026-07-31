@@ -1,8 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback, useContext } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import CategoriesScreen from '../screens/CategoriesScreen';
-import WishlistScreen from '../screens/WishlistScreen';
-import KshopeScreen from '../screens/KshopeScreen';
 import { Image, Platform, StyleSheet, Text } from 'react-native';
 import {
   widthPercentageToDP as wp,
@@ -10,24 +7,157 @@ import {
 } from 'react-native-responsive-screen';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import HomeStack from './HomeStack';
+import lazyScreen from './lazyScreen';
 import icons from '../assets/icons';
 import { FONTS } from '../styles/typography';
-import { useContext } from 'react';
 import { AppContext } from '../context/appContext';
-import { useNavigation } from '@react-navigation/native';
 import Toast from 'react-native-simple-toast';
 import ServiceSwitcherModal from '../components/ServiceSwitcherModal';
 import AnimatedTabBar from '../components/AnimatedTabBar';
 
+// HomeStack is the initial tab and is required eagerly. The other three tabs
+// are deferred: bottom-tabs already renders them lazily, but naming them
+// directly in `component={...}` still executed their modules the moment this
+// navigator first rendered.
+const CategoriesScreen = lazyScreen(() =>
+  require('../screens/CategoriesScreen'),
+);
+const WishlistScreen = lazyScreen(() => require('../screens/WishlistScreen'));
+const KshopeScreen = lazyScreen(() => require('../screens/KshopeScreen'));
+
 const Tab = createBottomTabNavigator();
+
+const STORE_ICON = require('../assets/icons/OBJECTS.png');
+
+// ── Hoisted tab option objects ────────────────────────────────────────────
+// These used to be rebuilt inline on every MainTabNavigator render. The
+// navigator re-renders whenever AppContext changes (isStoreUnavailable, and
+// every profile update), and a fresh `options` object invalidates React
+// Navigation's per-screen options memoisation, re-rendering the whole tab bar.
+const renderHomeIcon = ({ focused }) => (
+  <Image
+    source={focused ? icons.homeFilled : icons.home}
+    style={[styles.iconImage, focused ? styles.iconActive : styles.iconMuted]}
+  />
+);
+const renderCategoriesIcon = ({ focused }) => (
+  <Image
+    source={focused ? icons.catFilld : icons.cat}
+    style={[styles.iconImage, focused ? styles.iconActive : styles.iconMuted]}
+  />
+);
+const renderWishlistIcon = ({ focused }) => (
+  <Image
+    source={focused ? icons.heartFilled : icons.heart}
+    style={[
+      styles.wishlistIconImage,
+      focused ? styles.iconActive : styles.iconMuted,
+    ]}
+  />
+);
+const renderStoreIcon = ({ focused }) => (
+  <Image
+    source={STORE_ICON}
+    style={[styles.iconStoreImage, focused ? styles.storeIconActive : null]}
+  />
+);
+
+const renderHomeLabel = () => <Text style={styles.iconLabel}>Home</Text>;
+const renderCategoriesLabel = () => (
+  <Text style={styles.iconLabel}>Grocery & more</Text>
+);
+const renderWishlistLabel = () => <Text style={styles.iconLabel}>Wishlist</Text>;
+const renderStoreLabel = () => <Text style={styles.iconLabel}>Switch Store</Text>;
+
+const HOME_OPTIONS = {
+  headerShown: false,
+  tabBarIcon: renderHomeIcon,
+  tabBarLabel: renderHomeLabel,
+};
+const CATEGORIES_OPTIONS = {
+  headerShown: false,
+  tabBarIcon: renderCategoriesIcon,
+  tabBarLabel: renderCategoriesLabel,
+};
+const WISHLIST_OPTIONS = {
+  headerShown: false,
+  tabBarIcon: renderWishlistIcon,
+  tabBarLabel: renderWishlistLabel,
+};
+const KSHOPE_OPTIONS = {
+  headerShown: false,
+  tabBarIcon: renderStoreIcon,
+  tabBarLabel: renderStoreLabel,
+};
+
+const homeListeners = ({ navigation }) => ({
+  tabPress: e => {
+    e.preventDefault();
+    navigation.navigate('Home', { screen: 'HomeScreen' });
+  },
+});
+
+const renderTabBar = props => <AnimatedTabBar {...props} />;
 
 export default function MainTabNavigator() {
   const { isStoreUnavailable } = useContext(AppContext);
-  const navigation = useNavigation();
   const [isServiceSwitcherVisible, setIsServiceSwitcherVisible] =
     useState(false);
 
   const insets = useSafeAreaInsets();
+
+  // Depends only on the inset, so it is stable across the AppContext-driven
+  // re-renders that previously handed the navigator a brand-new object.
+  const screenOptions = useMemo(
+    () => ({
+      tabBarShowLabel: true,
+      tabBarActiveTintColor: '#000000ff',
+      tabBarInactiveTintColor: null,
+      tabBarStyle: {
+        height:
+          Platform.OS === 'android' ? hp('7%') + insets.bottom : hp('8%'),
+        backgroundColor: '#FFFFFF',
+        paddingTop: hp('0.2%'),
+        shadowColor: '#000000',
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+        elevation: 6,
+      },
+    }),
+    [insets.bottom],
+  );
+
+  const storeUnavailableListeners = useMemo(
+    () => ({
+      tabPress: e => {
+        if (isStoreUnavailable) {
+          e.preventDefault();
+          Toast.show(
+            'Store is currently unavailable in your location',
+            Toast.SHORT,
+          );
+        }
+      },
+    }),
+    [isStoreUnavailable],
+  );
+
+  const kshopeListeners = useMemo(
+    () => ({
+      tabPress: e => {
+        e.preventDefault();
+        setIsServiceSwitcherVisible(true);
+      },
+    }),
+    [],
+  );
+
+  const closeServiceSwitcher = useCallback(
+    () => setIsServiceSwitcherVisible(false),
+    [],
+  );
+
   return (
     <>
       <Tab.Navigator
@@ -36,152 +166,42 @@ export default function MainTabNavigator() {
         // Tab.Screen options (tabBarIcon/tabBarLabel) and listeners
         // (tabPress) are untouched and still drive AnimatedTabBar's
         // rendering/press behavior via `descriptors` — see AnimatedTabBar.js.
-        tabBar={props => <AnimatedTabBar {...props} />}
-        screenOptions={{
-          tabBarShowLabel: true,
-          tabBarActiveTintColor: '#000000ff',
-          tabBarInactiveTintColor: null,
-
-          tabBarStyle: {
-            height:
-              Platform.OS === 'android' ? hp('7%') + insets.bottom : hp('8%'),
-            backgroundColor: '#FFFFFF',
-            paddingTop: hp('0.2%'),
-            shadowColor: '#000000',
-            shadowOffset: { width: 0, height: 0 },
-            shadowOpacity: 0.25,
-            shadowRadius: 4,
-            elevation: 6,
-          },
-        }}
+        tabBar={renderTabBar}
+        screenOptions={screenOptions}
       >
         <Tab.Screen
           name="Home"
           component={HomeStack}
-          listeners={({ navigation }) => ({
-            tabPress: e => {
-              e.preventDefault();
-              navigation.navigate('Home', {
-                screen: 'HomeScreen',
-              });
-            },
-          })}
-          options={{
-            headerShown: false,
-
-            tabBarIcon: ({ focused }) => (
-              <Image
-                source={focused ? icons.homeFilled : icons.home}
-                style={[
-                  styles.iconImage,
-                  { tintColor: focused ? '#000000ff' : '#8E8E8E' },
-                ]}
-              />
-            ),
-
-            tabBarLabel: () => <Text style={styles.iconLabel}>Home</Text>,
-          }}
+          listeners={homeListeners}
+          options={HOME_OPTIONS}
         />
 
         <Tab.Screen
           name="Categories"
           component={CategoriesScreen}
-          listeners={{
-            tabPress: e => {
-              if (isStoreUnavailable) {
-                e.preventDefault();
-                Toast.show(
-                  'Store is currently unavailable in your location',
-                  Toast.SHORT,
-                );
-              }
-            },
-          }}
-          options={{
-            headerShown: false,
-
-            tabBarIcon: ({ focused }) => (
-              <Image
-                source={focused ? icons.catFilld : icons.cat}
-                style={[
-                  styles.iconImage,
-                  { tintColor: focused ? '#000000ff' : '#8E8E8E' },
-                ]}
-              />
-            ),
-
-            tabBarLabel: () => (
-              <Text style={styles.iconLabel}>Grocery & more</Text>
-            ),
-          }}
+          listeners={storeUnavailableListeners}
+          options={CATEGORIES_OPTIONS}
         />
 
         {/* ---------------- WISHLIST ---------------- */}
         <Tab.Screen
           name="Wishlist"
           component={WishlistScreen}
-          listeners={{
-            tabPress: e => {
-              if (isStoreUnavailable) {
-                e.preventDefault();
-                Toast.show(
-                  'Store is currently unavailable in your location',
-                  Toast.SHORT,
-                );
-              }
-            },
-          }}
-          options={{
-            headerShown: false,
-
-            tabBarIcon: ({ focused }) => (
-              <Image
-                source={focused ? icons.heartFilled : icons.heart}
-                style={{
-                  height: wp('5.4%'),
-                  width: wp('5.4%'),
-                  tintColor: focused ? '#000000ff' : '#8E8E8E',
-                  resizeMode: 'contain',
-                }}
-              />
-            ),
-
-            tabBarLabel: () => <Text style={styles.iconLabel}>Wishlist</Text>,
-          }}
+          listeners={storeUnavailableListeners}
+          options={WISHLIST_OPTIONS}
         />
 
         <Tab.Screen
           name="Kshope"
           component={KshopeScreen}
-          listeners={{
-            tabPress: e => {
-              e.preventDefault();
-              setIsServiceSwitcherVisible(true);
-            },
-          }}
-          options={{
-            headerShown: false,
-
-            tabBarIcon: ({ focused }) => (
-              <Image
-                source={require('../assets/icons/OBJECTS.png')}
-                style={[
-                  styles.iconStoreImage,
-                  { tintColor: focused ? '#F25000' : null },
-                ]}
-              />
-            ),
-
-            tabBarLabel: () => (
-              <Text style={styles.iconLabel}>Switch Store</Text>
-            ),
-          }}
+          listeners={kshopeListeners}
+          options={KSHOPE_OPTIONS}
         />
       </Tab.Navigator>
 
       <ServiceSwitcherModal
         visible={isServiceSwitcherVisible}
-        onClose={() => setIsServiceSwitcherVisible(false)}
+        onClose={closeServiceSwitcher}
         excludeServiceId="quickDelivery"
       />
     </>
@@ -205,6 +225,21 @@ const styles = StyleSheet.create({
     height: wp('5.12%'),
     width: wp('5.12%'),
     resizeMode: 'contain',
+  },
+  // Was an inline object literal on the Wishlist icon; identical values.
+  wishlistIconImage: {
+    height: wp('5.4%'),
+    width: wp('5.4%'),
+    resizeMode: 'contain',
+  },
+  iconActive: {
+    tintColor: '#000000ff',
+  },
+  iconMuted: {
+    tintColor: '#8E8E8E',
+  },
+  storeIconActive: {
+    tintColor: '#F25000',
   },
   iconStoreImage: {
     height: wp('8%'),

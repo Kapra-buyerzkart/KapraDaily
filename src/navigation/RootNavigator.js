@@ -1,58 +1,143 @@
 import React, { useContext, useEffect } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import LocationFetchingScreen from '../screens/LocationFetchingScreen';
-import LocationFetchingNewScreen from '../screens/LocationFetchingNewScreen';
-import MainTabNavigator from './MainTabNavigator';
-import CartScreen from '../screens/CartScreen';
-import ProfileScreen from '../screens/ProfileScreen/ProfileScreen';
-import AddLocationScreen from '../screens/AddLocationScreen';
-import ProductDetailsScreen from '../screens/ProductDetailsScreen';
-import OrderTrackingScreen from '../screens/OrderTrackingScreen';
-import LoginScreen from '../screens/LoginScreen';
-import RegistraionScreen from '../screens/RegistrationScreen';
-import OtpScreen from '../screens/OtpScreen';
-import ChangePwdScreen from '../screens/ChangePwdScreen';
-import BCoinScreen from '../screens/BCoinScreen';
-import SearchScreen from '../screens/search/SearchScreen';
-import OrderSuccessScreen from '../screens/OrderSuccessScreen';
-import OrderFailedScreen from '../screens/OrderFailedScreen';
-import OrderPendingScreen from '../screens/OrderPendingScreen';
-import LoginPwdScreen from '../screens/LoginPwdScreen';
-import SavedAddressScreen from '../screens/SavedAddressScreen';
-import ReferralScreen from '../screens/ReferralScreen';
-import ReferralHistoryScreen from '../screens/ReferralHistoryScreen';
 import { AppContext } from '../context/appContext';
-import EditProfileScreen from '../screens/EditProfileScreen/EditProfileScreen';
-import ChangePasswordScreen from '../screens/ChangePasswordScreen';
-import UpdateContactScreen from '../screens/UpdateContactScreen';
-import CheckoutScreen from '../screens/CheckoutScreen';
-import ProductListScreen from '../screens/ProductListScreen';
-import SupportTicketScreen from '../screens/SupportTicketScreen';
-import SupportTicketsListScreen from '../screens/SupportTicketsListScreen';
-import TicketDetailsScreen from '../screens/TicketDetailsScreen';
-import AppUpdateModal from '../components/AppUpdateModal';
-import AuthSuccessScreen from '../screens/AuthSuccessScreen';
-import KshopeScreen from '../screens/KshopeScreen';
-import { Deals48Stack } from '../modules/deals48';
-import CoPartnerDashboardScreen from '../screens/CoPartnerDashboardScreen';
-import CoPartnerListScreen from '../screens/CoPartnerListScreen';
-import MyAffilateScreen from '../screens/MyAffilateScreen/MyAffilateScreen';
-import ReferralLevelMembersScreen from '../screens/ReferralLevelMembersScreen/ReferralLevelMembersScreen';
-import TicketSplashScreen from '../screens/ticketScreen/TicketSplashScreen';
-import TicketLandingScreen from '../screens/ticketLandingScreen/TicketLandingScreen';
-import EventDetailsScreen from '../screens/EventDetailsScreen/EventDetailsScreen';
-import MyBookingsScreen from '../screens/MyBookingsScreen/MyBookingsScreen';
-import EventBookingDetailsScreen from '../screens/EventBookingDetailsScreen/EventBookingDetailsScreen';
-import ViewTicketScreen from '../screens/ViewTicketScreen/ViewTicketScreen';
-import D2cScreen from '../screens/D2cScreen';
-import LegalContentScreen from '../screens/LegalContentScreen';
-import QRScannerScreen from '../screens/QRScannerScreen/QRScannerScreen';
 import AppLoader from '../components/AppLoader';
+import lazyScreen, { lazyNamedScreen } from './lazyScreen';
+
+// AppUpdateModal is required eagerly because it renders unconditionally
+// alongside the navigator. Every screen below is deferred via `lazyScreen` so
+// its module body only runs when that route first renders — see lazyScreen.js
+// for why plain static imports (even with Metro's inlineRequires) end up
+// executing all ~50 screen modules on this navigator's first render.
+import AppUpdateModal from '../components/AppUpdateModal';
+
+const MainTabNavigator = lazyScreen(() => require('./MainTabNavigator'));
+const LocationFetchingNewScreen = lazyScreen(() =>
+  require('../screens/LocationFetchingNewScreen'),
+);
+const CartScreen = lazyScreen(() => require('../screens/CartScreen'));
+const AddLocationScreen = lazyScreen(() =>
+  require('../screens/AddLocationScreen'),
+);
+const ProductDetailsScreen = lazyScreen(() =>
+  require('../screens/ProductDetailsScreen'),
+);
+const OrderTrackingScreen = lazyScreen(() =>
+  require('../screens/OrderTrackingScreen'),
+);
+const LoginScreen = lazyScreen(() => require('../screens/LoginScreen'));
+const RegistraionScreen = lazyScreen(() =>
+  require('../screens/RegistrationScreen'),
+);
+const OtpScreen = lazyScreen(() => require('../screens/OtpScreen'));
+const ChangePwdScreen = lazyScreen(() => require('../screens/ChangePwdScreen'));
+const BCoinScreen = lazyScreen(() => require('../screens/BCoinScreen'));
+const SearchScreen = lazyScreen(() => require('../screens/search/SearchScreen'));
+const OrderSuccessScreen = lazyScreen(() =>
+  require('../screens/OrderSuccessScreen'),
+);
+const OrderFailedScreen = lazyScreen(() =>
+  require('../screens/OrderFailedScreen'),
+);
+const OrderPendingScreen = lazyScreen(() =>
+  require('../screens/OrderPendingScreen'),
+);
+const LoginPwdScreen = lazyScreen(() => require('../screens/LoginPwdScreen'));
+const SavedAddressScreen = lazyScreen(() =>
+  require('../screens/SavedAddressScreen'),
+);
+const ReferralScreen = lazyScreen(() => require('../screens/ReferralScreen'));
+const ReferralHistoryScreen = lazyScreen(() =>
+  require('../screens/ReferralHistoryScreen'),
+);
+const EditProfileScreen = lazyScreen(() =>
+  require('../screens/EditProfileScreen/EditProfileScreen'),
+);
+const ChangePasswordScreen = lazyScreen(() =>
+  require('../screens/ChangePasswordScreen'),
+);
+const UpdateContactScreen = lazyScreen(() =>
+  require('../screens/UpdateContactScreen'),
+);
+const CheckoutScreen = lazyScreen(() => require('../screens/CheckoutScreen'));
+const ProductListScreen = lazyScreen(() =>
+  require('../screens/ProductListScreen'),
+);
+const SupportTicketScreen = lazyScreen(() =>
+  require('../screens/SupportTicketScreen'),
+);
+const SupportTicketsListScreen = lazyScreen(() =>
+  require('../screens/SupportTicketsListScreen'),
+);
+const TicketDetailsScreen = lazyScreen(() =>
+  require('../screens/TicketDetailsScreen'),
+);
+const AuthSuccessScreen = lazyScreen(() =>
+  require('../screens/AuthSuccessScreen'),
+);
+const KshopeScreen = lazyScreen(() => require('../screens/KshopeScreen'));
+const CoPartnerDashboardScreen = lazyScreen(() =>
+  require('../screens/CoPartnerDashboardScreen'),
+);
+const CoPartnerListScreen = lazyScreen(() =>
+  require('../screens/CoPartnerListScreen'),
+);
+const MyAffilateScreen = lazyScreen(() =>
+  require('../screens/MyAffilateScreen/MyAffilateScreen'),
+);
+const ReferralLevelMembersScreen = lazyScreen(() =>
+  require('../screens/ReferralLevelMembersScreen/ReferralLevelMembersScreen'),
+);
+const TicketSplashScreen = lazyScreen(() =>
+  require('../screens/ticketScreen/TicketSplashScreen'),
+);
+const TicketLandingScreen = lazyScreen(() =>
+  require('../screens/ticketLandingScreen/TicketLandingScreen'),
+);
+const EventDetailsScreen = lazyScreen(() =>
+  require('../screens/EventDetailsScreen/EventDetailsScreen'),
+);
+const MyBookingsScreen = lazyScreen(() =>
+  require('../screens/MyBookingsScreen/MyBookingsScreen'),
+);
+const EventBookingDetailsScreen = lazyScreen(() =>
+  require('../screens/EventBookingDetailsScreen/EventBookingDetailsScreen'),
+);
+const ViewTicketScreen = lazyScreen(() =>
+  require('../screens/ViewTicketScreen/ViewTicketScreen'),
+);
+const D2cScreen = lazyScreen(() => require('../screens/D2cScreen'));
+const LegalContentScreen = lazyScreen(() =>
+  require('../screens/LegalContentScreen'),
+);
+const QRScannerScreen = lazyScreen(() =>
+  require('../screens/QRScannerScreen/QRScannerScreen'),
+);
+const Deals48Stack = lazyNamedScreen(
+  () => require('../modules/deals48'),
+  'Deals48Stack',
+);
+
 const Stack = createNativeStackNavigator();
+
+// Hoisted to module scope so the navigator and its screens are not handed a
+// freshly-allocated options object on every RootNavigator render.
+const SCREEN_OPTIONS = {
+  headerShown: false,
+  // Default every screen to an opaque white background so no transparent
+  // React view lets the native screen background flash through while
+  // assets load. Screens that want black override this per-screen below.
+  contentStyle: { backgroundColor: '#fff' },
+};
+const NO_GESTURE = { gestureEnabled: false };
+const BLACK_CONTENT = { contentStyle: { backgroundColor: '#000000' } };
+const BLACK_CONTENT_FADE = {
+  animation: 'fade',
+  contentStyle: { backgroundColor: '#000000' },
+};
 
 export default function RootNavigator() {
   const {
-    loadProfileTwo,
     profile,
     loadProfile,
     isUpdateModalVisible,
@@ -72,18 +157,7 @@ export default function RootNavigator() {
 
   return (
     <>
-      <Stack.Navigator
-        screenOptions={{
-          headerShown: false,
-          // Default every screen to an opaque white background so no transparent
-          // React view lets the native screen background flash through while
-          // assets load. Screens that want black override this per-screen below.
-          contentStyle: { backgroundColor: '#fff' },
-        }}
-      >
-        {/* <Stack.Screen name="LocationFetching" component={LocationFetchingScreen} /> */}
-        {/* <Stack.Screen name="SplashScreen" component={SplashScreen} /> */}
-        {/* <Stack.Screen name="LocationFetching" component={LocationFetchingScreen} /> */}
+      <Stack.Navigator screenOptions={SCREEN_OPTIONS}>
         <Stack.Screen
           name="LocationFetchingNew"
           component={LocationFetchingNewScreen}
@@ -106,21 +180,20 @@ export default function RootNavigator() {
         />
         <Stack.Screen name="BCoinScreen" component={BCoinScreen} />
         <Stack.Screen name="SearchScreen" component={SearchScreen} />
-        {/* <Stack.Screen name="ProfileScreen" component={ProfileScreen} /> */}
         <Stack.Screen
           name="OrderSuccessScreen"
           component={OrderSuccessScreen}
-          options={{ gestureEnabled: false }}
+          options={NO_GESTURE}
         />
         <Stack.Screen
           name="OrderFailedScreen"
           component={OrderFailedScreen}
-          options={{ gestureEnabled: false }}
+          options={NO_GESTURE}
         />
         <Stack.Screen
           name="OrderPendingScreen"
           component={OrderPendingScreen}
-          options={{ gestureEnabled: false }}
+          options={NO_GESTURE}
         />
         <Stack.Screen
           name="SavedAddressScreen"
@@ -172,38 +245,32 @@ export default function RootNavigator() {
         <Stack.Screen
           name="TicketSplashScreen"
           component={TicketSplashScreen}
-          options={{ contentStyle: { backgroundColor: '#000000' } }}
+          options={BLACK_CONTENT}
         />
         <Stack.Screen
           name="TicketLanding"
           component={TicketLandingScreen}
-          options={{
-            animation: 'fade',
-            contentStyle: { backgroundColor: '#000000' },
-          }}
+          options={BLACK_CONTENT_FADE}
         />
         <Stack.Screen
           name="EventDetailsScreen"
           component={EventDetailsScreen}
-          options={{ contentStyle: { backgroundColor: '#000000' } }}
+          options={BLACK_CONTENT}
         />
         <Stack.Screen
           name="MyBookingsScreen"
           component={MyBookingsScreen}
-          options={{ contentStyle: { backgroundColor: '#000000' } }}
+          options={BLACK_CONTENT}
         />
         <Stack.Screen
           name="EventBookingDetailsScreen"
           component={EventBookingDetailsScreen}
-          options={{ contentStyle: { backgroundColor: '#000000' } }}
+          options={BLACK_CONTENT}
         />
         <Stack.Screen
           name="ViewTicketScreen"
           component={ViewTicketScreen}
-          options={{
-            animation: 'fade',
-            contentStyle: { backgroundColor: '#000000' },
-          }}
+          options={BLACK_CONTENT_FADE}
         />
         <Stack.Screen name="D2cScreen" component={D2cScreen} />
         <Stack.Screen
@@ -213,7 +280,7 @@ export default function RootNavigator() {
         <Stack.Screen
           name="QRScannerScreen"
           component={QRScannerScreen}
-          options={{ contentStyle: { backgroundColor: '#000000' } }}
+          options={BLACK_CONTENT}
         />
         {/* 48hrs Deals runs as a self-contained module with its own backend and
             session; everything it owns lives behind this single route. */}
