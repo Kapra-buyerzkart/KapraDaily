@@ -128,6 +128,12 @@ const SCREEN_OPTIONS = {
   // React view lets the native screen background flash through while
   // assets load. Screens that want black override this per-screen below.
   contentStyle: { backgroundColor: '#fff' },
+  // AppContext, CartContext and WishlistContext all sit above the navigator,
+  // so any cart mutation or profile update re-rendered every screen still
+  // mounted in the stack, not just the visible one. freezeOnBlur suspends
+  // rendering for blurred screens (via react-freeze in react-native-screens);
+  // they still receive state updates and simply render them on unfreeze.
+  freezeOnBlur: true,
 };
 const NO_GESTURE = { gestureEnabled: false };
 const BLACK_CONTENT = { contentStyle: { backgroundColor: '#000000' } };

@@ -113,6 +113,9 @@ export default function MainTabNavigator() {
       tabBarShowLabel: true,
       tabBarActiveTintColor: '#000000ff',
       tabBarInactiveTintColor: null,
+      // Background tabs stay mounted, so without this each one re-rendered on
+      // every cart/profile change. See RootNavigator.
+      freezeOnBlur: true,
       tabBarStyle: {
         height:
           Platform.OS === 'android' ? hp('7%') + insets.bottom : hp('8%'),

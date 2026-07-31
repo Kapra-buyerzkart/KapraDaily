@@ -16,7 +16,9 @@ const MyOrdersScreen = lazyScreen(() => require('../screens/MyOrdersScreen'));
 
 const Stack = createNativeStackNavigator();
 
-const SCREEN_OPTIONS = { headerShown: false };
+// freezeOnBlur: see RootNavigator — stops blurred screens re-rendering on
+// every root-context change.
+const SCREEN_OPTIONS = { headerShown: false, freezeOnBlur: true };
 
 export default function HomeStack() {
   return (
