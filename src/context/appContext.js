@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import logger from '../utils/logger';
 import secureStore from '../utils/secureStore';
-import { Platform } from 'react-native';
+import { InteractionManager, Platform } from 'react-native';
 import DeviceInfo from 'react-native-device-info';
 import { getProfile } from '../api';
 import { clearTokens } from '../api/tokenService';
@@ -102,16 +102,63 @@ export const AppContextProvider = ({ children }) => {
     return {};
   }, []);
 
+  /* ---------------- LOAD / CREATE GUEST PROFILE ---------------- */
+  // Declared before `loadProfile` because `loadProfile` closes over it AND
+  // lists it in its dependency array. As a `const` declared afterwards, that
+  // dependency array read hit the temporal dead zone.
+  const loadProfileTwo = useCallback(async () => {
+    const storedProfile = await secureStore.getItem('profile');
+    const storedPincodeAreaId = await secureStore.getItem('pincodeAreaId');
+
+    const defaultProfile = {
+      guestId: Math.floor(Math.random() * 9000000000) + 1000000000,
+      pincode: storedPincodeAreaId ? parseInt(storedPincodeAreaId) : null,
+      pinAddress: null,
+    };
+
+    const mergedProfile = storedProfile
+      ? { ...defaultProfile, ...JSON.parse(storedProfile) }
+      : defaultProfile;
+
+    await secureStore.setItem('profile', JSON.stringify(mergedProfile));
+    if (mergedProfile.pincode) {
+      await secureStore.setItem('pincodeAreaId', mergedProfile.pincode.toString());
+    }
+    setProfile(prev => {
+      if (JSON.stringify(prev) === JSON.stringify(mergedProfile)) return prev;
+      return mergedProfile;
+    });
+  }, []);
+
   /* ---------------- LOAD PROFILE FROM API + MERGE ---------------- */
+  // Startup path. RootNavigator holds the whole app on a loader until `profile`
+  // is set, so anything awaited here is directly on the cold-start critical
+  // path. The locally-persisted profile is therefore published FIRST (a local
+  // Keychain read, sub-millisecond once the access token cache is warm) so the
+  // UI can paint, and the network refresh is folded in when it lands. The
+  // merge, persistence and fallback semantics below are unchanged.
   const loadProfile = useCallback(async () => {
+    // ── Fast path: paint from the last known profile ──────────────────────
+    let localProfile = {};
+    try {
+      const storedProfile = await secureStore.getItem('profile');
+      if (storedProfile) {
+        localProfile = JSON.parse(storedProfile);
+        // Only unblock early for a profile that already carries an identity.
+        // A partial/guest snapshot is left for the API round-trip to resolve,
+        // so a logged-in user is never briefly shown as logged out.
+        if (localProfile?.custId) setProfile(localProfile);
+      }
+    } catch (error) {
+      logger.log('Stored profile hydrate failed:', error);
+      localProfile = {};
+    }
+
     try {
       const response = await getProfile();
       logger.log('me response', response);
 
       if (response?.success && response?.data) {
-        const storedProfile = await secureStore.getItem('profile');
-        const localProfile = storedProfile ? JSON.parse(storedProfile) : {};
-
         const mergedProfile = {
           ...localProfile,
           ...response.data, // API data overrides local
@@ -139,31 +186,6 @@ export const AppContextProvider = ({ children }) => {
       await loadProfileTwo(); // Fallback to guest profile
     }
   }, [loadProfileTwo]);
-
-  /* ---------------- LOAD / CREATE GUEST PROFILE ---------------- */
-  const loadProfileTwo = useCallback(async () => {
-    const storedProfile = await secureStore.getItem('profile');
-    const storedPincodeAreaId = await secureStore.getItem('pincodeAreaId');
-
-    const defaultProfile = {
-      guestId: Math.floor(Math.random() * 9000000000) + 1000000000,
-      pincode: storedPincodeAreaId ? parseInt(storedPincodeAreaId) : null,
-      pinAddress: null,
-    };
-
-    const mergedProfile = storedProfile
-      ? { ...defaultProfile, ...JSON.parse(storedProfile) }
-      : defaultProfile;
-
-    await secureStore.setItem('profile', JSON.stringify(mergedProfile));
-    if (mergedProfile.pincode) {
-      await secureStore.setItem('pincodeAreaId', mergedProfile.pincode.toString());
-    }
-    setProfile(prev => {
-      if (JSON.stringify(prev) === JSON.stringify(mergedProfile)) return prev;
-      return mergedProfile;
-    });
-  }, []);
 
   /* ---------------- EDIT PINCODE (SAFE MERGE) ---------------- */
   const editPincode = useCallback(async (item) => {
@@ -262,9 +284,18 @@ export const AppContextProvider = ({ children }) => {
     }
   }, [profile?.custId]);
 
+  // Neither of these gates first paint: general settings only refine an
+  // already-rendered store state, and the update modal is deliberately shown
+  // late. Running them on mount put two network calls (plus DeviceInfo, plus
+  // their JSON parsing and state commits) in direct contention with the
+  // profile fetch and the homepage query that DO gate first paint.
+  // InteractionManager defers them until after the first frames have settled.
   useEffect(() => {
-    loadSettings();
-    checkForUpdates();
+    const task = InteractionManager.runAfterInteractions(() => {
+      loadSettings();
+      checkForUpdates();
+    });
+    return () => task.cancel();
   }, [loadSettings, checkForUpdates]);
 
   const value = useMemo(() => ({
