@@ -15,6 +15,16 @@ import {
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
 import { FONTS } from '../styles/typography';
+import {
+  INK,
+  ACCENT,
+  SURFACE,
+  HAIRLINE,
+  RADIUS,
+  SPACE,
+  TYPE,
+  MAX_FONT_SCALE,
+} from '@/styles/homeTheme';
 import { useNavigation } from '@react-navigation/native';
 import { reorderApi } from '../api/orderService';
 import { useCart } from '../context/CartContext';
@@ -70,12 +80,7 @@ const MyOrdersProductCard = props => {
   const navigation = useNavigation();
 
   return (
-    <View
-      style={{
-        marginBottom: hp('2%'),
-        alignSelf: 'center',
-      }}
-    >
+    <View style={styles.cardWrapper}>
       <View style={styles.orderInnerContainer}>
         <View style={styles.orderTopView}>
           <View style={styles.orderTopInnerView}>
@@ -127,7 +132,7 @@ const MyOrdersProductCard = props => {
                   <AntDesign
                     name="checkcircle"
                     size={wp('3%')}
-                    color="#27AE60"
+                    color={ACCENT.success}
                   />
                 );
               } else if (
@@ -226,14 +231,7 @@ const MyOrdersProductCard = props => {
               #{itemData.orderNumber || itemData.orderId || itemData.id}
             </Text>
 
-            <Text
-              style={[
-                styles.orderNumberText,
-                {
-                  marginTop: hp('0.2%'),
-                },
-              ]}
-            >
+            <Text style={styles.orderMetaText}>
               Total item : {itemData.totalOrderItems || productList.length}
             </Text>
           </View>
@@ -257,19 +255,15 @@ const MyOrdersProductCard = props => {
             <TouchableOpacity
               style={[
                 styles.button,
-                { backgroundColor: '#F25000' },
+                styles.buttonPrimary,
                 isStoreUnavailable && { opacity: 0.6 },
               ]}
               onPress={() => !isStoreUnavailable && setShowReorderModal(true)}
               activeOpacity={isStoreUnavailable ? 1 : 0.7}
             >
               <Text
-                style={[
-                  styles.buttonText,
-                  {
-                    color: '#FFFFFF',
-                  },
-                ]}
+                style={[styles.buttonText, styles.buttonPrimaryText]}
+                maxFontSizeMultiplier={MAX_FONT_SCALE}
               >
                 Reorder
               </Text>
@@ -285,20 +279,13 @@ const MyOrdersProductCard = props => {
             }
             style={[
               styles.button,
-              {
-                borderWidth: 1,
-                borderColor: '#DADADA',
-              },
-              !itemData.canReorder && { width: wp('85%') },
+              styles.buttonGhost,
+              !itemData.canReorder && { width: '100%' },
             ]}
           >
             <Text
-              style={[
-                styles.buttonText,
-                {
-                  color: '#616161',
-                },
-              ]}
+              style={[styles.buttonText, styles.buttonGhostText]}
+              maxFontSizeMultiplier={MAX_FONT_SCALE}
             >
               Details
             </Text>
@@ -339,30 +326,33 @@ const MyOrdersProductCard = props => {
 export default MyOrdersProductCard;
 
 const styles = StyleSheet.create({
+  cardWrapper: {
+    marginBottom: SPACE.md,
+    alignSelf: 'center',
+  },
   productImage: {
     height: wp('13.5%'),
     width: wp('13.5%'),
-    borderRadius: 100,
+    borderRadius: RADIUS.sm,
     borderWidth: 1,
-    borderColor: '#00000040',
-    backgroundColor: '#fff',
+    borderColor: HAIRLINE,
+    backgroundColor: SURFACE.base,
   },
   orderInnerContainer: {
     width: wp('90.7%'),
-    height: hp('19%'),
+    backgroundColor: SURFACE.base,
     borderWidth: 1,
-    borderColor: '#DADADA',
-    borderRadius: wp('2.33%'),
-    paddingVertical: hp('0.7%'),
+    borderColor: HAIRLINE,
+    borderRadius: RADIUS.md,
+    padding: SPACE.md,
   },
   orderTopView: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    borderStyle: 'dashed',
+    alignItems: 'center',
     borderBottomWidth: 1,
-    paddingHorizontal: wp('2.5%'),
-    paddingBottom: hp('1%'),
-    borderColor: '#DADADA',
+    borderColor: HAIRLINE,
+    paddingBottom: SPACE.sm,
   },
   orderTopInnerView: {
     flexDirection: 'row',
@@ -377,59 +367,79 @@ const styles = StyleSheet.create({
     height: hp('1.4%'),
   },
   homeText: {
-    fontFamily: FONTS.gilroy.regular,
-    fontSize: wp('3.25%'),
-    color: '#000000',
-    marginLeft: wp('1.5%'),
+    ...TYPE.caption,
+    fontFamily: FONTS.gilroy.medium,
+    color: INK.muted,
+    marginLeft: SPACE.xs + 2,
   },
   orderMiddleView: {
     flexDirection: 'row',
-    marginTop: hp('1.5%'),
+    marginTop: SPACE.md,
     justifyContent: 'space-between',
-    paddingHorizontal: wp('2.5%'),
     alignItems: 'center',
   },
   orderNumberText: {
+    ...TYPE.label,
+    fontFamily: FONTS.gilroy.semiBold,
+    color: INK.base,
+  },
+  orderMetaText: {
+    ...TYPE.caption,
     fontFamily: FONTS.gilroy.regular,
-    fontSize: wp('3.72%'),
-    color: '#000000',
+    color: INK.muted,
+    marginTop: 2,
   },
   priceText: {
-    color: '#0CA201',
-    fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('5.11%'),
+    ...TYPE.heading,
+    lineHeight: undefined,
+    color: INK.strong,
+    fontFamily: FONTS.gilroy.bold,
     alignSelf: 'flex-end',
   },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginHorizontal: wp('2.5%'),
-    marginTop: hp('1.5%'),
+    marginTop: SPACE.md,
   },
   button: {
-    width: wp('41%'),
+    width: '48%',
     height: hp('4.3%'),
-    borderRadius: wp('20%'),
+    borderRadius: RADIUS.xs,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  buttonPrimary: {
+    backgroundColor: ACCENT.primary,
+  },
+  buttonPrimaryText: {
+    color: INK.onDark,
+  },
+  buttonGhost: {
+    backgroundColor: SURFACE.base,
+    borderWidth: 1.2,
+    borderColor: ACCENT.primary,
+  },
+  buttonGhostText: {
+    color: ACCENT.primary,
+  },
   buttonText: {
-    fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('3.95%'),
+    ...TYPE.label,
+    lineHeight: undefined,
+    fontFamily: FONTS.gilroy.bold,
+    letterSpacing: 0.4,
   },
   placedOrderText: {
-    fontFamily: FONTS.gilroy.regular,
-    fontSize: wp('3.25%'),
-    color: '#616161',
+    ...TYPE.micro,
+    fontFamily: FONTS.gilroy.medium,
+    color: INK.faint,
   },
   orderBottomView: {
-    paddingTop: hp('0.5%'),
-    paddingLeft: wp('2.7%'),
+    paddingTop: SPACE.xs + 2,
+    paddingLeft: SPACE.xs,
   },
   stackContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
   },
   statusIcon: {
     width: wp('3.5%'),

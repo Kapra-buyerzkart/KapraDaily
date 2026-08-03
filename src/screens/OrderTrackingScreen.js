@@ -32,7 +32,16 @@ import {
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
 import { FONTS } from '../styles/typography';
+import {
+  INK,
+  ACCENT,
+  HAIRLINE,
+  RADIUS,
+  SURFACE,
+  SPACE,
+} from '../styles/homeTheme';
 import OrderProductCard from '../components/OrderProductCard';
+import OrderStatusBanner from '../components/OrderStatusBanner';
 import ConfirmationModal from '../components/ConfirmationModal';
 import ReturnItemModal from '../components/ReturnItemModal';
 import { useOrderDetails } from '../hooks/useOrderDetails';
@@ -98,6 +107,8 @@ const OrderTrackingScreen = () => {
     formattedOrderDate,
     bill,
     invoiceUrl,
+    invoiceFileUrl,
+    invoiceNumber,
     canMarkDeliveryReview,
     canMarkOverallReview,
     canShowDeliveryAgent,
@@ -105,10 +116,36 @@ const OrderTrackingScreen = () => {
     hasOnlinePaid,
     paymentStatus,
     rawOrderStatus,
+    formattedCancelledAt,
+    formattedDeliveredAt,
+    cancellationReason,
     razorpayOrderId,
     razorpayAmount,
     razorpayKeyId,
   } = useOrderDetails(orderId, initialOrderData);
+
+  // The header only carries `invoiceFileUrl` once the PDF has actually been
+  // generated, so it doubles as the flag for showing the View Invoice entry.
+  const resolvedInvoiceUrl = React.useMemo(() => {
+    if (!invoiceFileUrl) {
+      return null;
+    }
+    return invoiceFileUrl.startsWith('http')
+      ? invoiceFileUrl
+      : `${CONFIG.image_base_url}${invoiceFileUrl}`;
+  }, [invoiceFileUrl]);
+
+  const handleViewInvoice = useCallback(() => {
+    if (!resolvedInvoiceUrl) {
+      Toast.show('Invoice not available yet', Toast.SHORT);
+      return;
+    }
+    navigation.navigate('InvoiceViewerScreen', {
+      invoiceUrl: resolvedInvoiceUrl,
+      invoiceNumber,
+      title: 'Invoice',
+    });
+  }, [resolvedInvoiceUrl, invoiceNumber, navigation]);
 
   const handleBackPress = useCallback(() => {
     navigation.dispatch(
@@ -438,6 +475,13 @@ const OrderTrackingScreen = () => {
     return method;
   };
 
+  const openSupportTicket = React.useCallback(() => {
+    navigation.navigate('SupportTicketScreen', {
+      orderId: orderId,
+      orderNumber: displayOrderId,
+    });
+  }, [navigation, orderId, displayOrderId]);
+
   const BillRow = ({ label, value, isGreen }) => (
     <View style={styles.billBreakdownRow}>
       <Text style={styles.billBreakdownLabel}>{label}</Text>
@@ -467,12 +511,7 @@ const OrderTrackingScreen = () => {
         <View style={styles.headerInnerView}>
           <TouchableOpacity
             style={styles.helpContainer}
-            onPress={() =>
-              navigation.navigate('SupportTicketScreen', {
-                orderId: orderId,
-                orderNumber: displayOrderId,
-              })
-            }
+            onPress={openSupportTicket}
           >
             <Image
               style={styles.headPhoneImage}
@@ -493,27 +532,15 @@ const OrderTrackingScreen = () => {
           }}
         >
           {effectiveOrderStatus === 'pending' && (
-            <View
-              style={{
-                width: wp('72%'),
-                height: hp('3%'),
-                backgroundColor: '#F2994A',
-                borderRadius: 20,
-                justifyContent: 'center',
-                alignItems: 'center',
-                marginBottom: hp('1%'),
-              }}
-            >
-              <Text
-                style={{
-                  color: '#FFFFFF',
-                  fontFamily: FONTS.gilroy.bold,
-                  fontSize: wp('3.5%'),
-                }}
-              >
-                ORDER PENDING
-              </Text>
-            </View>
+            <OrderStatusBanner
+              variant="pending"
+              timestampLabel={
+                formattedOrderDate ? `Placed on ${formattedOrderDate}` : null
+              }
+              amount={Number(grandTotal) || 0}
+              canRetryPayment={canRetryPayment && !hasOnlinePaid}
+              onHelpPress={openSupportTicket}
+            />
           )}
           {effectiveOrderStatus === 'placed' && (
             <Image
@@ -566,131 +593,137 @@ const OrderTrackingScreen = () => {
             />
           )}
           {effectiveOrderStatus === 'delivered' && (
-            <Image
-              style={{
-                width: wp('72%'),
-                height: hp('3%'),
-                resizeMode: 'contain',
-              }}
-              source={require('../assets/images/delivered.png')}
+            <OrderStatusBanner
+              variant="delivered"
+              timestampLabel={
+                formattedDeliveredAt
+                  ? `Delivered on ${formattedDeliveredAt}`
+                  : formattedOrderDate
+                  ? `Ordered on ${formattedOrderDate}`
+                  : null
+              }
+              amount={Number(grandTotal) || 0}
+              paymentLabel={getPaymentLabel(paymentMethod)}
+              itemCount={itemCount}
+              onHelpPress={openSupportTicket}
             />
           )}
           {effectiveOrderStatus === 'cancelled' && (
-            <View
-              style={{
-                width: wp('72%'),
-                height: hp('3%'),
-                backgroundColor: '#EB5757',
-                borderRadius: 20,
-                justifyContent: 'center',
-                alignItems: 'center',
-              }}
-            >
-              <Text
-                style={{
-                  color: '#FFFFFF',
-                  fontFamily: FONTS.gilroy.bold,
-                  fontSize: wp('3.5%'),
-                }}
-              >
-                ORDER CANCELLED
-              </Text>
+            <OrderStatusBanner
+              variant="cancelled"
+              timestampLabel={
+                formattedCancelledAt
+                  ? `Cancelled on ${formattedCancelledAt}`
+                  : formattedOrderDate
+                  ? `Ordered on ${formattedOrderDate}`
+                  : null
+              }
+              reason={cancellationReason}
+              amount={Number(grandTotal) || 0}
+              isRefundApplicable={hasOnlinePaid}
+              onHelpPress={openSupportTicket}
+            />
+          )}
+          {/* A cancelled order has no journey left to show, so the placed →
+              out for delivery → delivered stepper is dropped for it. */}
+          {effectiveOrderStatus !== 'cancelled' && (
+            <View style={styles.statusContainer}>
+              <View style={styles.statusView}>
+                <View
+                  style={
+                    Platform.OS === 'android'
+                      ? [
+                          styles.statusNumberView,
+                          effectiveOrderStatus !== 'pending' && {
+                            backgroundColor: '#0CA201',
+                          },
+                          { bottom: hp('0.15%') },
+                        ]
+                      : [
+                          styles.statusNumberView,
+                          effectiveOrderStatus !== 'pending' && {
+                            backgroundColor: '#0CA201',
+                          },
+                        ]
+                  }
+                >
+                  <Text style={styles.statusNumberText}>1</Text>
+                </View>
+                <Text
+                  style={[
+                    styles.statusNameText,
+                    effectiveOrderStatus !== 'pending' && { color: '#0CA201' },
+                  ]}
+                >
+                  Order placed
+                </Text>
+              </View>
+              <View style={[styles.statusView, { left: wp('-2%') }]}>
+                <View
+                  style={
+                    Platform.OS === 'android'
+                      ? [
+                          styles.statusNumberView,
+                          ['assigned', 'dispatched', 'delivered'].includes(
+                            effectiveOrderStatus,
+                          ) && { backgroundColor: '#0CA201' },
+                          { bottom: hp('0.15%') },
+                        ]
+                      : [
+                          styles.statusNumberView,
+                          ['assigned', 'dispatched', 'delivered'].includes(
+                            effectiveOrderStatus,
+                          ) && { backgroundColor: '#0CA201' },
+                        ]
+                  }
+                >
+                  <Text style={styles.statusNumberText}>2</Text>
+                </View>
+                <Text
+                  style={[
+                    styles.statusNameText,
+                    ['assigned', 'dispatched', 'delivered'].includes(
+                      effectiveOrderStatus,
+                    ) && { color: '#0CA201' },
+                  ]}
+                >
+                  Out for delivery
+                </Text>
+              </View>
+              <View style={styles.statusView}>
+                <View
+                  style={
+                    Platform.OS === 'android'
+                      ? [
+                          styles.statusNumberView,
+                          effectiveOrderStatus === 'delivered' && {
+                            backgroundColor: '#0CA201',
+                          },
+                          { bottom: hp('0.15%') },
+                        ]
+                      : [
+                          styles.statusNumberView,
+                          effectiveOrderStatus === 'delivered' && {
+                            backgroundColor: '#0CA201',
+                          },
+                        ]
+                  }
+                >
+                  <Text style={styles.statusNumberText}>3</Text>
+                </View>
+                <Text
+                  style={[
+                    styles.statusNameText,
+                    effectiveOrderStatus === 'delivered' && {
+                      color: '#0CA201',
+                    },
+                  ]}
+                >
+                  Delivered
+                </Text>
+              </View>
             </View>
           )}
-          <View style={styles.statusContainer}>
-            <View style={styles.statusView}>
-              <View
-                style={
-                  Platform.OS === 'android'
-                    ? [
-                        styles.statusNumberView,
-                        effectiveOrderStatus !== 'pending' && {
-                          backgroundColor: '#0CA201',
-                        },
-                        { bottom: hp('0.15%') },
-                      ]
-                    : [
-                        styles.statusNumberView,
-                        effectiveOrderStatus !== 'pending' && {
-                          backgroundColor: '#0CA201',
-                        },
-                      ]
-                }
-              >
-                <Text style={styles.statusNumberText}>1</Text>
-              </View>
-              <Text
-                style={[
-                  styles.statusNameText,
-                  effectiveOrderStatus !== 'pending' && { color: '#0CA201' },
-                ]}
-              >
-                Order placed
-              </Text>
-            </View>
-            <View style={[styles.statusView, { left: wp('-2%') }]}>
-              <View
-                style={
-                  Platform.OS === 'android'
-                    ? [
-                        styles.statusNumberView,
-                        ['assigned', 'dispatched', 'delivered'].includes(
-                          effectiveOrderStatus,
-                        ) && { backgroundColor: '#0CA201' },
-                        { bottom: hp('0.15%') },
-                      ]
-                    : [
-                        styles.statusNumberView,
-                        ['assigned', 'dispatched', 'delivered'].includes(
-                          effectiveOrderStatus,
-                        ) && { backgroundColor: '#0CA201' },
-                      ]
-                }
-              >
-                <Text style={styles.statusNumberText}>2</Text>
-              </View>
-              <Text
-                style={[
-                  styles.statusNameText,
-                  ['assigned', 'dispatched', 'delivered'].includes(
-                    effectiveOrderStatus,
-                  ) && { color: '#0CA201' },
-                ]}
-              >
-                Out for delivery
-              </Text>
-            </View>
-            <View style={styles.statusView}>
-              <View
-                style={
-                  Platform.OS === 'android'
-                    ? [
-                        styles.statusNumberView,
-                        effectiveOrderStatus === 'delivered' && {
-                          backgroundColor: '#0CA201',
-                        },
-                        { bottom: hp('0.15%') },
-                      ]
-                    : [
-                        styles.statusNumberView,
-                        effectiveOrderStatus === 'delivered' && {
-                          backgroundColor: '#0CA201',
-                        },
-                      ]
-                }
-              >
-                <Text style={styles.statusNumberText}>3</Text>
-              </View>
-              <Text
-                style={[
-                  styles.statusNameText,
-                  effectiveOrderStatus === 'delivered' && { color: '#0CA201' },
-                ]}
-              >
-                Delivered
-              </Text>
-            </View>
-          </View>
           {['placed', 'pending'].includes(effectiveOrderStatus) && (
             <ImageBackground
               style={styles.placedImageStyle}
@@ -1309,6 +1342,18 @@ const OrderTrackingScreen = () => {
               <BillSection billCalculations={billCalculations} />
             )}
           </View>
+          {!!resolvedInvoiceUrl && (
+            <TouchableOpacity
+              style={styles.viewInvoiceContainer}
+              onPress={handleViewInvoice}
+            >
+              <Image
+                style={styles.downloadBillIcon}
+                source={require('../assets/images/bill_icon_two.png')}
+              />
+              <Text style={styles.viewInvoiceText}>View Invoice</Text>
+            </TouchableOpacity>
+          )}
           {['packed', 'assigned', 'dispatched', 'delivered'].includes(
             effectiveOrderStatus,
           ) && (
@@ -1518,20 +1563,25 @@ export default OrderTrackingScreen;
 const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: SURFACE.base,
   },
   headerContainer: {
     flexDirection: 'row',
     paddingHorizontal: wp('4.65%'),
     justifyContent: 'space-between',
+    alignItems: 'center',
     paddingTop: hp('1.5%'),
+    paddingBottom: hp('1.5%'),
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: HAIRLINE,
   },
   headerText: {
     fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('4.65%'),
-    color: '#000000',
+    color: INK.strong,
     flex: 1,
     marginLeft: wp('4%'),
+    letterSpacing: -0.3,
   },
   headerInnerView: {
     flexDirection: 'row',
@@ -1540,11 +1590,10 @@ const styles = StyleSheet.create({
   helpContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#DADADA',
-    borderRadius: 10,
-    width: wp('13.02%'),
-    height: hp('1.93%'),
+    backgroundColor: SURFACE.sunken,
+    borderRadius: RADIUS.pill,
+    paddingHorizontal: wp('3%'),
+    height: hp('3.2%'),
     justifyContent: 'center',
   },
   headPhoneImage: {
@@ -1553,10 +1602,10 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
   },
   helpText: {
-    fontFamily: FONTS.gilroy.light,
-    color: '#616161',
+    fontFamily: FONTS.gilroy.medium,
+    color: INK.base,
     fontSize: wp('2.79%'),
-    marginLeft: wp('1%'),
+    marginLeft: wp('1.5%'),
   },
   homeIcon: {
     width: wp('7.9%'),
@@ -1571,16 +1620,16 @@ const styles = StyleSheet.create({
   paidBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#E6FAF0',
+    backgroundColor: ACCENT.successSoft,
     alignSelf: 'flex-end',
     paddingHorizontal: wp('2.5%'),
     paddingVertical: hp('0.4%'),
-    borderRadius: 20,
+    borderRadius: RADIUS.pill,
   },
   paidBadgeText: {
-    fontFamily: FONTS.gilroy.medium,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('3%'),
-    color: '#27AE60',
+    color: ACCENT.successText,
     marginLeft: wp('1%'),
   },
   statusContainer: {
@@ -1593,22 +1642,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   statusNumberView: {
-    backgroundColor: '#616161',
-    width: wp('3%'),
-    height: wp('3%'),
+    backgroundColor: '#C2C6CE',
+    width: wp('3.4%'),
+    height: wp('3.4%'),
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 10,
-    // bottom: hp('0.1%')
+    borderRadius: RADIUS.pill,
   },
   statusNumberText: {
-    fontFamily: FONTS.gilroy.medium,
-    color: '#FFFFFF',
+    fontFamily: FONTS.gilroy.bold,
+    color: INK.onDark,
     fontSize: wp('2.09%'),
   },
   statusNameText: {
-    color: '#616161',
-    fontFamily: FONTS.gilroy.regular,
+    color: INK.muted,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('2.79%'),
     marginLeft: wp('1.5%'),
   },
@@ -1644,7 +1692,7 @@ const styles = StyleSheet.create({
   placedDescription: {
     fontFamily: FONTS.gilroy.medium,
     fontSize: wp('2.79%'),
-    color: '#616161',
+    color: INK.muted,
     marginLeft: wp('1.5%'),
   },
   assignedContainer: {
@@ -1660,31 +1708,21 @@ const styles = StyleSheet.create({
   containerTwo: {
     paddingVertical: hp('2%'),
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: wp('9.3%'),
-    borderTopRightRadius: wp('9.3%'),
-    // iOS shadow
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-
-    // Android shadow
-    elevation: 6,
+    backgroundColor: SURFACE.base,
+    borderTopLeftRadius: RADIUS.xl,
+    borderTopRightRadius: RADIUS.xl,
+    borderTopWidth: 1,
+    borderColor: HAIRLINE,
     marginTop: hp('2%'),
     flex: 1,
   },
   deliveryAgentContainer: {
     width: wp('90.7%'),
-    // height: hp('6.44%'),
     paddingVertical: hp('1.5%'),
-    borderRadius: wp('4.65%'),
-    backgroundColor: '#FFFFFF',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.1,
-    shadowRadius: 20,
-    elevation: 8,
+    borderRadius: RADIUS.md,
+    backgroundColor: SURFACE.base,
+    borderWidth: 1,
+    borderColor: HAIRLINE,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -1692,21 +1730,21 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   deliveryAgentNameText: {
-    fontFamily: FONTS.gilroy.regular,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('3.95%'),
-    color: '#000000',
+    color: INK.strong,
   },
   deliveryAgentTextTwo: {
-    fontFamily: FONTS.gilroy.light,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('2.79%'),
-    color: '#696969',
+    color: INK.muted,
     marginTop: hp('0.3%'),
   },
   callContainer: {
     width: wp('11.63%'),
     height: wp('11.63%'),
-    backgroundColor: '#F2F2F2',
-    borderRadius: 50,
+    backgroundColor: ACCENT.successSoft,
+    borderRadius: RADIUS.pill,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1741,14 +1779,14 @@ const styles = StyleSheet.create({
   },
   addressHeaderText: {
     fontSize: wp('2.79%'),
-    fontFamily: FONTS.gilroy.regular,
-    color: '#000000',
+    fontFamily: FONTS.gilroy.semiBold,
+    color: INK.strong,
     marginLeft: wp('1.5%'),
   },
   addressLineText: {
-    fontFamily: FONTS.gilroy.light,
-    fontSize: wp('2.55%'), // ✅ FIXED
-    color: '#606060',
+    fontFamily: FONTS.gilroy.regular,
+    fontSize: wp('2.55%'),
+    color: INK.muted,
     width: '85%',
   },
   rightArrowIcon: {
@@ -1757,13 +1795,14 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
   },
   paymentMethodText: {
-    fontFamily: FONTS.gilroy.medium,
-    color: '#000000',
+    fontFamily: FONTS.gilroy.semiBold,
+    color: INK.strong,
     fontSize: wp('3.72%'),
     alignSelf: 'flex-start',
     marginLeft: wp('6%'),
-    marginTop: hp('1.5%'),
-    marginBottom: hp('0.5%'),
+    marginTop: hp('2%'),
+    marginBottom: hp('1%'),
+    letterSpacing: -0.2,
   },
   paymentImage: {
     width: wp('9.3%'),
@@ -1771,34 +1810,29 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
   },
   paymentText: {
-    fontFamily: FONTS.gilroy.regular,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3.02%'),
-    color: '#000000',
+    color: INK.base,
     flex: 1,
     marginLeft: wp('4%'),
   },
   paymnetPrice: {
-    color: '#0CA201',
+    color: INK.strong,
     fontFamily: FONTS.inter.semiBold,
     fontSize: wp('4.65%'),
   },
   productsContainer: {
     width: wp('90.7%'),
-    // height: hp('19%'),
-    borderRadius: wp('4.65%'),
-    // justifyContent: 'center',
-    // alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.1,
-    shadowRadius: 20,
-    elevation: 8,
+    borderTopLeftRadius: RADIUS.md,
+    borderTopRightRadius: RADIUS.md,
+    backgroundColor: SURFACE.base,
+    borderWidth: 1,
+    borderBottomWidth: 0,
+    borderColor: HAIRLINE,
     alignSelf: 'center',
     paddingHorizontal: wp('3%'),
     paddingTop: hp('0.5%'),
     paddingBottom: hp('0.5%'),
-    // justifyContent: 'space-between',
     zIndex: 1,
   },
   productsContainerTwo: {
@@ -1820,26 +1854,27 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   productsMainContainer: {
-    marginTop: hp('1.5%'),
-    backgroundColor: '#FFFFFF',
+    marginTop: hp('2%'),
   },
   productsHeaderView: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     width: '100%',
-    paddingLeft: wp('8.5%'),
-    marginBottom: hp('0.7%'),
-    paddingRight: wp('5%'),
+    paddingLeft: wp('6%'),
+    marginBottom: hp('1%'),
+    paddingRight: wp('6%'),
   },
   productsHeaderText: {
-    fontFamily: FONTS.gilroy.medium,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('3.72%'),
+    color: INK.strong,
+    letterSpacing: -0.2,
   },
   productsHeaderCount: {
     fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('3.72%'),
-    color: '#616161',
+    fontSize: wp('3.25%'),
+    color: INK.muted,
   },
   productView: {
     flexDirection: 'row',
@@ -1893,59 +1928,73 @@ const styles = StyleSheet.create({
   productTotalView: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginHorizontal: wp('8.5%'),
-    marginTop: hp('0.7%'),
-    backgroundColor: '#FFFFFF',
-    backgroundColor: '#FFFFFF',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.1,
-    shadowRadius: 20,
-    elevation: 8,
-    width: wp('89%'),
-    paddingTop: hp('1.2%'),
+    alignItems: 'center',
+    alignSelf: 'center',
+    backgroundColor: SURFACE.base,
+    borderWidth: 1,
+    borderTopWidth: 1,
+    borderColor: HAIRLINE,
+    width: wp('90.7%'),
+    paddingVertical: hp('1.4%'),
     paddingHorizontal: wp('3%'),
-    borderBottomLeftRadius: wp('4.65%'),
-    borderBottomRightRadius: wp('4.65%'),
-    //  marginTop: hp('-0.5%'), // Pull it up slightly to attach to the products container
+    borderBottomLeftRadius: RADIUS.md,
+    borderBottomRightRadius: RADIUS.md,
   },
   totalText: {
-    fontFamily: FONTS.inter.semiBold,
-    fontSize: wp('5.11%'),
-    color: '#616161',
+    fontFamily: FONTS.gilroy.semiBold,
+    fontSize: wp('4.2%'),
+    color: INK.base,
   },
   viewBillContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: SURFACE.tint,
+    borderRadius: RADIUS.xs,
+    paddingHorizontal: SPACE.sm,
+    paddingVertical: 4,
   },
   viewBillText: {
-    fontFamily: FONTS.gilroy.regular,
-    fontSize: wp('3.02%'),
-    color: '#000000',
+    fontFamily: FONTS.gilroy.semiBold,
+    fontSize: wp('2.9%'),
+    color: ACCENT.primary,
   },
   viewBillIcon: {
-    marginLeft: wp('3%'),
+    marginLeft: wp('1.5%'),
+    color: ACCENT.primary,
   },
   totalPriceText: {
-    fontFamily: FONTS.gilroy.medium,
-    color: '#616161',
-    fontSize: wp('5.11%'),
+    fontFamily: FONTS.gilroy.bold,
+    color: INK.strong,
+    fontSize: wp('4.65%'),
+  },
+  viewInvoiceContainer: {
+    flexDirection: 'row',
+    width: wp('90.7%'),
+    borderRadius: RADIUS.sm,
+    alignItems: 'center',
+    backgroundColor: SURFACE.base,
+    borderWidth: 1,
+    borderColor: HAIRLINE,
+    paddingHorizontal: wp('4%'),
+    paddingVertical: hp('1.4%'),
+    marginTop: hp('1.5%'),
+  },
+  viewInvoiceText: {
+    fontFamily: FONTS.gilroy.semiBold,
+    fontSize: wp('3.02%'),
+    color: ACCENT.primary,
+    marginLeft: wp('3%'),
   },
   downloadBillContainer: {
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
     width: wp('90.7%'),
-    height: hp('3.97%'),
-    borderRadius: wp('1.86%'),
-    // justifyContent: 'center',
+    borderRadius: RADIUS.sm,
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.1,
-    shadowRadius: 20,
-    elevation: 8,
-    paddingHorizontal: wp('5%'),
+    backgroundColor: SURFACE.base,
+    borderWidth: 1,
+    borderColor: HAIRLINE,
+    paddingHorizontal: wp('4%'),
+    paddingVertical: hp('1.4%'),
     marginTop: hp('1.5%'),
   },
   downloadBillIcon: {
@@ -1954,40 +2003,38 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
   },
   downloadBillText: {
-    fontFamily: FONTS.gilroy.regular,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3.02%'),
-    color: '#616161',
+    color: INK.base,
     marginLeft: wp('3%'),
   },
   orderDetailsText: {
-    color: '#000000',
-    fontFamily: FONTS.gilroy.medium,
+    color: INK.strong,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('3.72%'),
     alignSelf: 'flex-start',
     marginLeft: wp('6%'),
     marginTop: hp('0.5%'),
+    marginBottom: hp('1%'),
+    letterSpacing: -0.2,
   },
   orderDetailsContainer: {
     width: wp('90.7%'),
     height: hp('25.54%'),
-    borderRadius: wp('4.65%'),
-    // justifyContent: 'center',
-    // alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.1,
-    shadowRadius: 20,
-    elevation: 8,
+    borderRadius: RADIUS.md,
+    backgroundColor: SURFACE.base,
+    borderWidth: 1,
+    borderColor: HAIRLINE,
     marginTop: hp('0.5%'),
-    paddingLeft: wp('3%'),
+    paddingHorizontal: wp('4%'),
     paddingVertical: hp('2%'),
     justifyContent: 'space-between',
   },
   orderDetailsKeyText: {
-    fontFamily: FONTS.gilroy.light,
-    fontSize: wp('3.25%'),
-    color: '#8A8A8A',
+    fontFamily: FONTS.gilroy.medium,
+    fontSize: wp('2.9%'),
+    color: INK.muted,
+    marginBottom: 2,
   },
   retryContainerWrapper: {
     width: wp('90.7%'),
@@ -1995,22 +2042,23 @@ const styles = StyleSheet.create({
     marginTop: hp('1%'),
   },
   orderDetailsValueText: {
-    color: '#2B2B2B',
-    fontFamily: FONTS.gilroy.regular,
+    color: INK.strong,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('3.25%'),
   },
   cancelButtonGradient: {
     width: wp('90.7%'),
-    height: hp('5.36%'),
-    borderRadius: wp('2.33%'),
+    height: hp('5.86%'),
+    borderRadius: RADIUS.sm,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: hp('2%'),
   },
   cancelButtonText: {
-    fontFamily: FONTS.gilroy.semiBold,
-    color: '#FFFFFF',
-    fontSize: wp('4.65%'),
+    fontFamily: FONTS.gilroy.bold,
+    color: INK.onDark,
+    fontSize: wp('4.2%'),
+    letterSpacing: 0.3,
   },
   retryHintText: {
     fontFamily: FONTS.gilroy.medium,
@@ -2034,9 +2082,9 @@ const styles = StyleSheet.create({
     marginBottom: hp('0.5%'),
   },
   ratingText: {
-    fontFamily: FONTS.gilroy.regular,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('3.72%'),
-    color: '#000000',
+    color: INK.strong,
   },
   starContainer: {
     flexDirection: 'row',
@@ -2104,17 +2152,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     width: wp('90.7%'),
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: wp('4.65%'),
-    borderTopRightRadius: wp('4.65%'),
+    backgroundColor: SURFACE.base,
+    borderTopLeftRadius: RADIUS.md,
+    borderTopRightRadius: RADIUS.md,
+    borderWidth: 1,
+    borderBottomWidth: 0,
+    borderColor: HAIRLINE,
     paddingVertical: hp('2%'),
     justifyContent: 'space-between',
     paddingHorizontal: wp('16%'),
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.1,
-    shadowRadius: 20,
-    elevation: 8,
   },
   deliveryAgentIcon: {
     width: wp('11.6%'),
@@ -2125,27 +2171,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   deliveryAgentRatingText: {
-    fontFamily: FONTS.gilroy.regular,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('3.72%'),
-    color: '#000000',
+    color: INK.strong,
   },
   deliveryAgentInnerContainerTwo: {
     width: wp('90.7%'),
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.1,
-    shadowRadius: 20,
-    elevation: 8,
-    backgroundColor: '#FFFFFF',
-    paddingVertical: hp('0.7%'),
+    backgroundColor: SURFACE.sunken,
+    borderWidth: 1,
+    borderColor: HAIRLINE,
+    paddingVertical: hp('0.9%'),
     paddingHorizontal: wp('5%'),
-    borderBottomLeftRadius: wp('4.65%'),
-    borderBottomRightRadius: wp('4.65%'),
+    borderBottomLeftRadius: RADIUS.md,
+    borderBottomRightRadius: RADIUS.md,
   },
   deliveryAgentRatingName: {
-    fontFamily: FONTS.gilroy.light,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('2.79%'),
-    color: '#696969',
+    color: INK.muted,
   },
   billBreakdownContainer: {
     paddingHorizontal: wp('8.5%'),
@@ -2163,12 +2206,12 @@ const styles = StyleSheet.create({
   billBreakdownLabel: {
     fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3.25%'),
-    color: '#616161',
+    color: INK.muted,
   },
   billBreakdownValue: {
-    fontFamily: FONTS.gilroy.medium,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('3.25%'),
-    color: '#000000',
+    color: INK.strong,
   },
   billRowDivider: {
     borderWidth: 0.5,
@@ -2185,11 +2228,11 @@ const styles = StyleSheet.create({
   finalTotalLabel: {
     fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('4.2%'),
-    color: '#000000',
+    color: INK.strong,
   },
   finalTotalValue: {
     fontFamily: FONTS.gilroy.bold,
     fontSize: wp('4.5%'),
-    color: '#0CA201',
+    color: ACCENT.successText,
   },
 });

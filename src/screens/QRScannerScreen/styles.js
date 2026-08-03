@@ -382,6 +382,6 @@ export const styles = StyleSheet.create({
     borderRadius: wp('2.5%'),
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: COLORS.primary,
+    backgroundColor: COLORS.black,
   },
 });

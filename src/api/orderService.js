@@ -7,7 +7,9 @@ export const getMyOrdersApi = async () => {
 
 
 export const getOrderDetailsApi = async (orderId) => {
-    return get(`order/${orderId}`);
+    const response = await get(`order/${orderId}`);
+    console.log('getOrderDetailsApi', orderId, JSON.stringify(response, null, 2));
+    return response;
 };
 
 

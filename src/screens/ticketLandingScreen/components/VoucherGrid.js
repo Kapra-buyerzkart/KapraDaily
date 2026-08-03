@@ -1,5 +1,13 @@
 import React, { useCallback } from 'react';
-import { View, Text, FlatList, RefreshControl, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  Image,
+  FlatList,
+  RefreshControl,
+  StyleSheet,
+} from 'react-native';
+import images from '@/assets/images';
 import VoucherCard from '@/components/events/VoucherCard';
 import VoucherGridSkeleton from './VoucherGridSkeleton';
 
@@ -58,6 +66,11 @@ const VoucherGrid = ({
       ListHeaderComponent={ListHeaderComponent}
       ListEmptyComponent={
         <View style={styles.centered}>
+          <Image
+            source={images.no_vocher_booking}
+            style={styles.emptyImage}
+            resizeMode="contain"
+          />
           <Text style={styles.emptyText}>{emptyText}</Text>
         </View>
       }
@@ -81,6 +94,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingVertical: 40,
+    gap: 16,
+  },
+  emptyImage: {
+    width: 152,
+    height: 103,
   },
   emptyText: {
     color: 'rgba(255,255,255,0.4)',

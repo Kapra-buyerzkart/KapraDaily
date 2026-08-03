@@ -25,6 +25,9 @@ const ProductDetailsScreen = lazyScreen(() =>
 const OrderTrackingScreen = lazyScreen(() =>
   require('../screens/OrderTrackingScreen'),
 );
+const InvoiceViewerScreen = lazyScreen(() =>
+  require('../screens/InvoiceViewerScreen'),
+);
 const LoginScreen = lazyScreen(() => require('../screens/LoginScreen'));
 const RegistraionScreen = lazyScreen(() =>
   require('../screens/RegistrationScreen'),
@@ -183,6 +186,10 @@ export default function RootNavigator() {
         <Stack.Screen
           name="OrderTrackingScreen"
           component={OrderTrackingScreen}
+        />
+        <Stack.Screen
+          name="InvoiceViewerScreen"
+          component={InvoiceViewerScreen}
         />
         <Stack.Screen name="BCoinScreen" component={BCoinScreen} />
         <Stack.Screen name="SearchScreen" component={SearchScreen} />

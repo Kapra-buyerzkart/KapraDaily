@@ -1,25 +1,23 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import {
-  widthPercentageToDP as wp,
-  heightPercentageToDP as hp,
-} from 'react-native-responsive-screen';
+import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { FONTS } from '../../../styles/typography';
-import { INK, ACCENT, RADIUS, GUTTER } from '../homeTheme';
+import {
+  INK,
+  ACCENT,
+  RADIUS,
+  GUTTER,
+  SPACE,
+  TYPE,
+  MAX_FONT_SCALE,
+  hitSlopTo,
+} from '@/styles/homeTheme';
 
-// One header shape for every home section: an optional eyebrow, a bold title,
-// an optional one-line subtitle, and a pill CTA on the right. Previously each
-// section rolled its own row (different font sizes, different "View All" vs
-// "See All" treatments), which is what made the screen read as several apps
-// stitched together.
+const ACTION_HIT_SLOP = hitSlopTo(28);
 const SectionHeader = ({
   eyebrow,
   title,
-  // A trailing word set in the logo's script face, the way "Deal" runs across
-  // "UDEN" in the lockup. Optional and deliberately short — it carries the
-  // brand nod so the title itself can stay in Gilroy and stay legible. Left
-  // unset for server-driven titles, whose length we do not control.
   titleAccent,
   subtitle,
   actionLabel = 'View all',
@@ -34,22 +32,23 @@ const SectionHeader = ({
     <View style={[styles.row, style]}>
       <View style={styles.textColumn}>
         {!!eyebrow && (
-          <Text style={[styles.eyebrow, onDark && styles.eyebrowOnDark]}>
+          <Text
+            style={[styles.eyebrow, onDark && styles.eyebrowOnDark]}
+            maxFontSizeMultiplier={MAX_FONT_SCALE}
+          >
             {eyebrow}
           </Text>
         )}
         {!!title && (
           <Text
-            style={[styles.title, onDark && styles.titleOnDark, titleStyle]}
+            style={[styles.title, titleStyle]}
             numberOfLines={1}
+            accessibilityRole="header"
           >
             {title}
             {!!titleAccent && (
               <Text
-                style={[
-                  styles.titleAccent,
-                  onDark && styles.titleAccentOnDark,
-                ]}
+                style={[styles.titleAccent, onDark && styles.titleAccentOnDark]}
               >
                 {` ${titleAccent}`}
               </Text>
@@ -60,6 +59,7 @@ const SectionHeader = ({
           <Text
             style={[styles.subtitle, onDark && styles.subtitleOnDark]}
             numberOfLines={1}
+            maxFontSizeMultiplier={MAX_FONT_SCALE}
           >
             {subtitle}
           </Text>
@@ -69,15 +69,22 @@ const SectionHeader = ({
       {!!onAction && (
         <TouchableOpacity
           onPress={onAction}
-          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          hitSlop={ACTION_HIT_SLOP}
           activeOpacity={0.75}
           style={styles.actionPill}
+          accessibilityRole="button"
+          accessibilityLabel={`${actionLabel}${title ? ` in ${title}` : ''}`}
         >
-          <Text style={styles.actionText}>{actionLabel}</Text>
+          <Text
+            style={styles.actionText}
+            maxFontSizeMultiplier={MAX_FONT_SCALE}
+          >
+            {actionLabel}
+          </Text>
           <MaterialIcons
             name="arrow-forward-ios"
             size={wp('2.7%')}
-            color={ACCENT.primary}
+            color={'black'}
             style={styles.actionChevron}
           />
         </TouchableOpacity>
@@ -92,41 +99,39 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: GUTTER,
-    paddingTop: hp('2%'),
-    paddingBottom: hp('1.2%'),
+    paddingTop: SPACE.base,
+    paddingBottom: SPACE.md,
   },
   textColumn: {
     flex: 1,
-    paddingRight: wp('3%'),
+    paddingRight: SPACE.md,
   },
   eyebrow: {
+    ...TYPE.micro,
     fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('2.9%'),
     letterSpacing: 0.8,
     textTransform: 'uppercase',
     color: ACCENT.primary,
-    marginBottom: hp('0.3%'),
+    marginBottom: 2,
   },
   eyebrowOnDark: {
     color: '#FFD9C7',
   },
   title: {
+    ...TYPE.title,
     fontFamily: FONTS.gilroy.bold,
-    fontSize: wp('4.8%'),
-    // The script accent is set larger than the title it sits beside, so the
-    // line box has to be sized for the accent rather than for Gilroy — without
-    // this the loops and descenders clip under the single-line clamp.
-    lineHeight: wp('7.2%'),
+    // The script accent is set larger than the title beside it, so the line box
+    // is sized for the accent rather than for Gilroy — otherwise the loops and
+    // descenders clip under the single-line clamp.
+    lineHeight: Math.round(TYPE.title.fontSize * 1.5),
     color: INK.strong,
     letterSpacing: -0.3,
   },
-  // Script faces carry a much smaller x-height than Gilroy, so the accent needs
-  // to run a few points larger just to look the same size as the word before
-  // it. Colour separates it further, and the negative tracking of the title is
-  // dropped here — kerning a script tight only collides the letters.
+  // Script faces carry a much smaller x-height than Gilroy, so the accent runs
+  // a few points larger just to look the same size as the word before it.
   titleAccent: {
+    fontSize: Math.round(TYPE.title.fontSize * 1.25),
     fontFamily: FONTS.script.regular,
-    fontSize: wp('6%'),
     color: ACCENT.primary,
     letterSpacing: 0,
   },
@@ -137,10 +142,10 @@ const styles = StyleSheet.create({
     color: INK.onDark,
   },
   subtitle: {
+    ...TYPE.caption,
     fontFamily: FONTS.gilroy.regular,
-    fontSize: wp('3.1%'),
     color: INK.muted,
-    marginTop: hp('0.3%'),
+    marginTop: 2,
   },
   subtitleOnDark: {
     color: 'rgba(255,255,255,0.78)',
@@ -148,18 +153,19 @@ const styles = StyleSheet.create({
   actionPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: ACCENT.primarySoft,
     borderRadius: RADIUS.pill,
-    paddingVertical: hp('0.7%'),
-    paddingHorizontal: wp('3.2%'),
+    paddingVertical: SPACE.sm,
+    paddingHorizontal: SPACE.md,
+    // Aligns the CTA's text with the gutter the section's content sits on,
+    // cancelling the pill's own right padding.
+    marginRight: -SPACE.md,
   },
   actionText: {
     fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('3.1%'),
-    color: ACCENT.primary,
+    color: 'black',
   },
   actionChevron: {
-    marginLeft: wp('1.4%'),
+    marginLeft: SPACE.xs + 1,
   },
 });
 

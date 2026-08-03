@@ -1,43 +1,47 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import { heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import ShimmerPlaceholder from '../../../components/ShimmerPlaceholder';
 import CategoryItem from './CategoryItem';
 import SectionHeader from './SectionHeader';
-import categoryChipStyles from './categoryChipStyles';
-import { GUTTER, SPACE } from '../homeTheme';
+import useCategoryTileStyles, { COLUMNS } from './useCategoryTileStyles';
+import { GUTTER, SPACE } from '@/styles/homeTheme';
 
-export const CategoryShimmer = () => (
-  <View style={styles.section}>
-    <SectionHeader
-      title="Shop by"
-      titleAccent="category"
-      subtitle="Everyday essentials, delivered in minutes"
-      style={styles.header}
-    />
-    <View style={styles.categoriesContainer}>
-      {[1, 2, 3, 4, 5, 6, 7, 8].map((_, i) => (
-        <View key={i} style={categoryChipStyles.item}>
-          {/* Reuses the real tile's box so the shimmer occupies exactly the
-              grid's geometry and nothing shifts when categories arrive. */}
-          <View style={categoryChipStyles.categoryItemContainer}>
-            <ShimmerPlaceholder style={styles.shimmerFill} />
-          </View>
-          <ShimmerPlaceholder style={styles.shimmerLabel} />
-        </View>
-      ))}
-    </View>
-  </View>
+const SHIMMER_TILES = Array.from({ length: COLUMNS * 2 }, (_, i) => i);
+
+const GridHeader = () => (
+  <SectionHeader
+    title="Shop by"
+    titleAccent="category"
+    subtitle="Everyday essentials, delivered in minutes"
+    style={styles.header}
+  />
 );
+
+export const CategoryShimmer = () => {
+  const tile = useCategoryTileStyles();
+
+  return (
+    <View style={styles.section}>
+      <GridHeader />
+      <View style={styles.categoriesContainer}>
+        {SHIMMER_TILES.map(i => (
+          <View key={i} style={tile.item}>
+            {/* Reuses the real tile's box so the shimmer occupies exactly the
+                grid's geometry and nothing shifts when categories arrive. */}
+            <View style={tile.categoryItemContainer}>
+              <ShimmerPlaceholder style={tile.shimmerFill} />
+            </View>
+            <ShimmerPlaceholder style={tile.shimmerLabel} />
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+};
 
 const CategoryGrid = ({ categories }) => (
   <View style={styles.section}>
-    <SectionHeader
-      title="Shop by"
-      titleAccent="category"
-      subtitle="Everyday essentials, delivered in minutes"
-      style={styles.header}
-    />
+    <GridHeader />
     <View style={styles.categoriesContainer}>
       {categories.map((item, index) => (
         <CategoryItem
@@ -64,21 +68,11 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     // flex-start, not space-between: a final row with 2 or 3 tiles must stay
     // left-aligned under the rows above it rather than spreading to the edges.
-    // The cells divide this box exactly (see categoryChipStyles), so the grid
-    // lines up with the header's gutter instead of drifting left.
+    // The cells divide this box exactly (see useCategoryTileStyles), so the
+    // grid lines up with the header's gutter instead of drifting left.
     justifyContent: 'flex-start',
     paddingHorizontal: GUTTER,
   },
-  shimmerFill: {
-    width: '100%',
-    height: '100%',
-  },
-  shimmerLabel: {
-    marginTop: hp('0.9%'),
-    width: '64%',
-    height: hp('1.4%'),
-    borderRadius: 4,
-  },
 });
 
-export default CategoryGrid;
+export default React.memo(CategoryGrid);

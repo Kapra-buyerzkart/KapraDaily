@@ -1,15 +1,12 @@
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
-  Text,
   Image,
   ScrollView,
-  FlatList,
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
 import Animated, {
-  FadeInUp,
   interpolateColor,
   useAnimatedStyle,
   useSharedValue,
@@ -19,66 +16,80 @@ import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
-import { FONTS } from '../../../styles/typography';
 import CONFIG from '../../../globals/config';
-import TokenProductCard from '../../../components/TokenProductCard';
 import ShimmerPlaceholder from '../../../components/ShimmerPlaceholder';
 import ProductBlockShimmer from './ProductBlockShimmer';
+import ProductRail from './ProductRail';
 import SectionHeader from './SectionHeader';
-import { getStaggerDelay } from '../../../utils/staggerDelay';
-import {
-  INK,
-  ACCENT,
-  SURFACE,
-  RADIUS,
-  SPACE,
-  GUTTER,
-  HAIRLINE,
-  divider,
-} from '../homeTheme';
+import getCategoryPlaceholder from './getCategoryPlaceholder';
+import useCategoryTileStyles, {
+  TAB_WELL_IDLE,
+  TAB_WELL_ACTIVE,
+  TAB_RING_IDLE,
+  TAB_RING_ACTIVE,
+  TAB_LABEL_IDLE,
+  TAB_LABEL_ACTIVE,
+} from './useCategoryTileStyles';
+import { selectionTick } from '../../../utils/haptics';
+import { SPACE, GUTTER, MAX_FONT_SCALE, divider } from '@/styles/homeTheme';
 
-const CHIP_ICON = wp('6.4%');
+const ExploreShimmer = () => {
+  const tile = useCategoryTileStyles();
 
-const ExploreShimmer = () => (
-  <View style={styles.section}>
-    <View style={styles.shimmerHeader}>
-      <ShimmerPlaceholder style={styles.shimmerEyebrow} />
-      <ShimmerPlaceholder style={styles.shimmerTitle} />
+  return (
+    <View style={styles.section}>
+      <View style={styles.shimmerHeader}>
+        <ShimmerPlaceholder style={styles.shimmerEyebrow} />
+        <ShimmerPlaceholder style={styles.shimmerTitle} />
+      </View>
+      <View style={tile.tabRow}>
+        {[1, 2, 3, 4].map((_, i) => (
+          <View key={i} style={tile.tabItem}>
+            <ShimmerPlaceholder style={tile.shimmerTabWell} />
+            <ShimmerPlaceholder style={tile.shimmerLabel} />
+          </View>
+        ))}
+      </View>
+      <ProductBlockShimmer />
     </View>
-    <View style={styles.shimmerChipRow}>
-      {[1, 2, 3].map((_, i) => (
-        <ShimmerPlaceholder key={i} style={styles.shimmerChip} />
-      ))}
-    </View>
-    <ProductBlockShimmer />
-  </View>
-);
+  );
+};
 
-// The discovery categories used to repeat the exact tile-and-label shape of the
-// grid higher up the page, so the two sections read as the same control twice.
-// As inline pills they are unmistakably a filter for the rail beneath them, and
-// a row of them fits far more categories in the same vertical space.
-const DiscoveryChip = React.memo(function DiscoveryChip({
+// The tabs are the "Shop by category" tile, scrolled sideways: the same well,
+// the same near-full-bleed image anchored to the bottom edge, the same label
+// ramp. The previous inline pills shrank the category art to a ~24pt icon in a
+// circle, which is too small for merchandise photography to read as anything —
+// at tile scale you can actually tell the categories apart. Selection is a ring
+// plus a tinted well rather than a solid fill, so the image stays legible.
+const DiscoveryTab = React.memo(function DiscoveryTab({
   item,
   isActive,
   onPress,
 }) {
+  const tile = useCategoryTileStyles();
+  const [imageError, setImageError] = useState(false);
   const activeProgress = useSharedValue(isActive ? 1 : 0);
+
+  const label = item.catName || item.name;
 
   useEffect(() => {
     activeProgress.value = withTiming(isActive ? 1 : 0, { duration: 180 });
   }, [isActive, activeProgress]);
 
-  const containerAnimatedStyle = useAnimatedStyle(() => ({
+  useEffect(() => {
+    setImageError(false);
+  }, [item.imageUrl]);
+
+  const wellAnimatedStyle = useAnimatedStyle(() => ({
     backgroundColor: interpolateColor(
       activeProgress.value,
       [0, 1],
-      [SURFACE.base, ACCENT.primary],
+      [TAB_WELL_IDLE, TAB_WELL_ACTIVE],
     ),
     borderColor: interpolateColor(
       activeProgress.value,
       [0, 1],
-      [HAIRLINE, ACCENT.primary],
+      [TAB_RING_IDLE, TAB_RING_ACTIVE],
     ),
   }));
 
@@ -86,27 +97,45 @@ const DiscoveryChip = React.memo(function DiscoveryChip({
     color: interpolateColor(
       activeProgress.value,
       [0, 1],
-      [INK.base, INK.onDark],
+      [TAB_LABEL_IDLE, TAB_LABEL_ACTIVE],
     ),
   }));
 
+  const imageSource =
+    imageError || !item.imageUrl
+      ? getCategoryPlaceholder(label)
+      : { uri: `${CONFIG.image_base_url}${item.imageUrl}` };
+
+  const handlePress = useCallback(() => {
+    selectionTick();
+    onPress();
+  }, [onPress]);
+
   return (
-    <TouchableOpacity activeOpacity={0.85} onPress={onPress}>
-      <Animated.View style={[styles.chip, containerAnimatedStyle]}>
-        <View style={styles.chipIconWell}>
-          <Image
-            source={{ uri: `${CONFIG.image_base_url}${item.imageUrl}` }}
-            style={styles.chipIcon}
-            resizeMode="contain"
-          />
-        </View>
-        <Animated.Text
-          style={[styles.chipLabel, labelAnimatedStyle]}
-          numberOfLines={1}
-        >
-          {item.catName || item.name}
-        </Animated.Text>
+    <TouchableOpacity
+      activeOpacity={0.85}
+      onPress={handlePress}
+      style={tile.tabItem}
+      accessibilityRole="tab"
+      accessibilityState={{ selected: isActive }}
+      accessibilityLabel={label}
+    >
+      <Animated.View style={[tile.tabWell, wellAnimatedStyle]}>
+        <Image
+          source={imageSource}
+          style={tile.tabImage}
+          resizeMode="contain"
+          onError={() => setImageError(true)}
+          accessible={false}
+        />
       </Animated.View>
+      <Animated.Text
+        style={[tile.tabLabel, labelAnimatedStyle]}
+        numberOfLines={2}
+        maxFontSizeMultiplier={MAX_FONT_SCALE}
+      >
+        {label}
+      </Animated.Text>
     </TouchableOpacity>
   );
 });
@@ -122,6 +151,8 @@ const CategoryDiscoverySection = ({
   discoveryProducts,
   navigation,
 }) => {
+  const tile = useCategoryTileStyles();
+
   if (isHomeLoading && !categoryDiscovery) return <ExploreShimmer />;
   if (!shouldShow) return null;
 
@@ -154,10 +185,11 @@ const CategoryDiscoverySection = ({
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.chipRow}
+            contentContainerStyle={tile.tabRow}
+            accessibilityRole="tablist"
           >
             {discoveryCategories.map((item, index) => (
-              <DiscoveryChip
+              <DiscoveryTab
                 key={(item.catId || item.id || index).toString()}
                 item={item}
                 isActive={selectedDiscoveryCategory?.catId === item.catId}
@@ -173,29 +205,14 @@ const CategoryDiscoverySection = ({
           </View>
         ) : (
           discoveryProducts.length > 0 && (
-            <FlatList
-              horizontal
-              data={discoveryProducts}
-              keyExtractor={(item, index) =>
-                (item.productId || item.id || index).toString()
-              }
-              renderItem={({ item, index }) => (
-                <TokenProductCard
-                  item={item}
-                  entering={FadeInUp.delay(getStaggerDelay(index))}
-                  onPress={() =>
-                    navigation.navigate('ProductDetailsScreen', {
-                      productId: item.productId || item.id,
-                      product: item,
-                    })
-                  }
-                />
-              )}
-              showsHorizontalScrollIndicator={false}
+            <ProductRail
+              items={discoveryProducts}
+              navigation={navigation}
               contentContainerStyle={styles.railContent}
-              initialNumToRender={4}
-              maxToRenderPerBatch={4}
-              windowSize={5}
+              // This rail swaps its whole dataset every time a chip is tapped.
+              // Replaying the staggered entrance on each swap turns a filter
+              // into a visible reload, so the cards just cut over.
+              animateEntrance={false}
             />
           )
         )}
@@ -209,41 +226,6 @@ const styles = StyleSheet.create({
   section: {
     paddingTop: SPACE.xs,
     paddingBottom: SPACE.md,
-  },
-  chipRow: {
-    paddingHorizontal: GUTTER,
-    paddingBottom: SPACE.sm,
-    gap: wp('2.4%'),
-  },
-  chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: RADIUS.pill,
-    borderWidth: 1,
-    paddingVertical: hp('0.7%'),
-    paddingLeft: wp('1.6%'),
-    paddingRight: wp('3.6%'),
-  },
-  // A white well behind the icon so transparent category PNGs stay legible
-  // once the chip fills with orange in its active state.
-  chipIconWell: {
-    width: CHIP_ICON,
-    height: CHIP_ICON,
-    borderRadius: CHIP_ICON / 2,
-    backgroundColor: SURFACE.sunken,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: wp('2%'),
-    overflow: 'hidden',
-  },
-  chipIcon: {
-    width: '78%',
-    height: '78%',
-  },
-  chipLabel: {
-    fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('3.3%'),
-    maxWidth: wp('34%'),
   },
   railContent: {
     paddingLeft: wp('3.2%'),
@@ -270,16 +252,9 @@ const styles = StyleSheet.create({
     height: hp('2.4%'),
     borderRadius: 6,
   },
-  shimmerChipRow: {
-    flexDirection: 'row',
-    paddingHorizontal: GUTTER,
-    gap: wp('2.4%'),
-  },
-  shimmerChip: {
-    width: wp('26%'),
-    height: hp('4.4%'),
-    borderRadius: RADIUS.pill,
-  },
 });
 
-export default CategoryDiscoverySection;
+// Memoised to match its sibling sections. This was the only home section still
+// re-rendering on every HomeScreen render — including the ones driven by
+// pull-to-refresh state and by selecting a different discovery category.
+export default React.memo(CategoryDiscoverySection);

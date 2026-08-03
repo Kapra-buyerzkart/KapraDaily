@@ -89,6 +89,7 @@ const images = {
   login_landing: require('./login_landing.png'),
   no_location: require('./noimages/no_location.png'),
   claimticketBtn: require('./claimticketBtn.png'),
+  no_vocher_booking: require('./noimages/no_vocher_booking.png'),
 };
 
 export default images;

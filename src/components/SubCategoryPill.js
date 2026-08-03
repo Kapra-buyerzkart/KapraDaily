@@ -44,15 +44,27 @@ const SubCategoryPill = ({ item, isSelected, onPress }) => {
   }));
 
   const textStyle = useAnimatedStyle(() => ({
-    color: interpolateColor(progress.value, [0, 1], [TEXT_INACTIVE, TEXT_ACTIVE]),
+    color: interpolateColor(
+      progress.value,
+      [0, 1],
+      [TEXT_INACTIVE, TEXT_ACTIVE],
+    ),
   }));
 
   return (
-    <AnimatedPressable onPress={onPress} style={[styles.subCatPill, containerStyle]}>
-      <Image style={styles.subCatPillImage} source={getImageUrl(item.imageUrl)} />
+    <AnimatedPressable
+      onPress={onPress}
+      style={[styles.subCatPill, containerStyle]}
+    >
+      <Image
+        style={styles.subCatPillImage}
+        source={getImageUrl(item.imageUrl)}
+      />
       <AnimatedText
         style={[
-          isSelected ? styles.subCatPillTextActive : styles.subCatPillTextInactive,
+          isSelected
+            ? styles.subCatPillTextActive
+            : styles.subCatPillTextInactive,
           textStyle,
         ]}
       >
@@ -71,7 +83,7 @@ const styles = StyleSheet.create({
     height: 44,
     paddingHorizontal: wp('3%'),
     borderRadius: 22,
-    borderWidth: 1,
+    // borderWidth: 1,
   },
   subCatPillImage: {
     width: wp('7%'),

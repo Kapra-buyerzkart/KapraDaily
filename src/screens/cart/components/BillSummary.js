@@ -38,12 +38,12 @@ const BillSummary = ({ billCalculations }) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.titleRow}>
-        <Image source={icons.billSummary} style={styles.titleIcon} />
-        <Text style={styles.title}>Bill summary</Text>
-      </View>
-
       <View style={styles.card}>
+        <View style={styles.titleRow}>
+          <Image source={icons.billSummary} style={styles.titleIcon} />
+          <Text style={styles.title}>Bill summary</Text>
+        </View>
+
         <BillRow label="Item total" value={`₹${itemTotal.toFixed(2)}`} />
         {savings > 0 && (
           <BillRow
@@ -121,8 +121,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    paddingLeft: 16,
-    marginBottom: hp('1%'),
+    marginBottom: hp('1.5%'),
   },
   titleIcon: {
     width: wp('4.2%'),
@@ -135,6 +134,8 @@ const styles = StyleSheet.create({
     color: CART_COLORS.textPrimary,
   },
   card: {
+    borderWidth: 1,
+    borderColor: CART_COLORS.graySoftColor,
     backgroundColor: CART_COLORS.card,
     borderRadius: CART_RADIUS.card,
     padding: CART_SPACING.lg,

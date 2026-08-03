@@ -22,6 +22,15 @@ import {
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
 import { FONTS } from '../styles/typography';
+import {
+  INK,
+  ACCENT,
+  SURFACE,
+  HAIRLINE,
+  RADIUS,
+  SPACE,
+  TYPE,
+} from '@/styles/homeTheme';
 import MyOrdersProductCard from '../components/MyOrdersProductCard';
 import { getMyOrdersApi } from '../api/orderService';
 import { LoaderContext } from '../context/loaderContext';
@@ -97,13 +106,7 @@ const MyOrdersScreen = () => {
             }
           }}
         >
-          <Image
-            source={icons.backArrowNew}
-            style={{
-              resizeMode: 'contain',
-              tintColor: '#000000',
-            }}
-          />
+          <Image source={icons.backArrowNew} style={styles.backIcon} />
         </TouchableOpacity>
 
         <Text style={styles.headerText}>My Orders</Text>
@@ -112,30 +115,14 @@ const MyOrdersScreen = () => {
             source={require('../assets/images/bear2.png')}
           /> */}
       </View>
-      <View
-        style={{
-          marginTop: 15,
-          borderWidth: 1,
-          borderColor: '#00000040',
-          borderTopLeftRadius: wp('9.3%'),
-          borderTopRightRadius: wp('9.3%'),
-          paddingTop: hp('3.5%'),
-          paddingBottom: hp('2%'),
-          alignItems: 'center',
-          flex: 1,
-        }}
-      >
+      <View style={styles.listContainer}>
         <FlatList
           data={orders}
           keyExtractor={(item, index) =>
             (item.id || item.orderId || index).toString()
           }
           renderItem={(item, index) => <MyOrdersProductCard item={item} />}
-          contentContainerStyle={{
-            marginTop: hp('2%'),
-            paddingBottom: hp('7%'),
-            width: wp('100%'),
-          }}
+          contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
         />
 
@@ -160,7 +147,7 @@ export default MyOrdersScreen;
 const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: SURFACE.base,
   },
   headerContainer: {
     flexDirection: 'row',
@@ -168,14 +155,31 @@ const styles = StyleSheet.create({
     paddingLeft: wp('4.65%'),
     justifyContent: 'space-between',
     paddingTop: hp('1.5%'),
+    paddingBottom: hp('1.5%'),
     paddingRight: wp('7%'),
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: HAIRLINE,
+  },
+  backIcon: {
+    resizeMode: 'contain',
+    tintColor: INK.strong,
   },
   headerText: {
     fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('4.65%'),
-    color: '#000000',
+    color: INK.strong,
     flex: 1,
     marginLeft: wp('3%'),
+    letterSpacing: -0.3,
+  },
+  listContainer: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  listContent: {
+    paddingTop: SPACE.base,
+    paddingBottom: hp('7%'),
+    width: wp('100%'),
   },
   bearImage: {
     width: wp('21.86%'),
@@ -183,20 +187,20 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
   },
   orderNoteContainer: {
-    backgroundColor: '#FFF5F0',
-    paddingHorizontal: wp('4%'),
-    paddingVertical: hp('1%'),
-    borderRadius: wp('2%'),
-    marginTop: hp('1%'),
-    marginBottom: hp('0.5%'),
-    marginHorizontal: wp('4%'),
+    backgroundColor: SURFACE.tint,
+    paddingHorizontal: SPACE.md,
+    paddingVertical: SPACE.sm,
+    borderRadius: RADIUS.sm,
+    marginTop: SPACE.sm,
+    marginBottom: SPACE.xs,
+    marginHorizontal: wp('4.65%'),
     borderLeftWidth: 3,
-    borderLeftColor: '#F25000',
+    borderLeftColor: ACCENT.primary,
     alignSelf: 'stretch',
   },
   orderNoteText: {
+    ...TYPE.caption,
     fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('2.8%'),
-    color: '#F25000',
+    color: ACCENT.discount,
   },
 });

@@ -5,7 +5,7 @@ import {
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
 import ShimmerPlaceholder from '../../../components/ShimmerPlaceholder';
-import { SURFACE, RADIUS, SPACE, GUTTER } from '../homeTheme';
+import { SURFACE, RADIUS, SPACE, GUTTER } from '@/styles/homeTheme';
 
 // Mirrors the real rail's flat section (same inset and rhythm) so the section
 // does not visibly jump size or shape when data lands.

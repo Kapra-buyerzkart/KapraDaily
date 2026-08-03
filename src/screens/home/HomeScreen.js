@@ -1,22 +1,5 @@
-import {
-  View,
-  Image,
-  ImageBackground,
-  TouchableOpacity,
-  FlatList,
-  RefreshControl,
-} from 'react-native';
-import Animated, {
-  useSharedValue,
-  useAnimatedScrollHandler,
-  useAnimatedStyle,
-  interpolate,
-  interpolateColor,
-  Extrapolation,
-  clamp,
-  withTiming,
-  withSpring,
-} from 'react-native-reanimated';
+import { View, Image, RefreshControl } from 'react-native';
+import Animated from 'react-native-reanimated';
 import React, {
   useContext,
   useEffect,
@@ -40,11 +23,6 @@ import HomePopupModal from '../../components/HomePopupModal';
 import { openExternalUrl } from '../../utils/safeUrl';
 import { shuffle } from '../../utils/shuffle';
 import { AppContext } from '../../context/appContext';
-import useTabBarAnimation from '../../hooks/useTabBarAnimation';
-import {
-  tabBarVisibility,
-  getTabBarClearance,
-} from '../../animations/tabBarVisibility';
 
 import useResolvedAreaId from '../../queries/useResolvedAreaId';
 import useHomepageDataQuery from '../../queries/useHomepageDataQuery';
@@ -54,14 +32,21 @@ import useCategoryDiscoveryProductsQuery from '../../queries/useCategoryDiscover
 import { deriveStoreUnavailableState } from '../../queries/transformHomepageResponse';
 
 import useHomePopup from './hooks/useHomePopup';
+import useStickyTopBanner, { EMPTY_BANNERS } from './hooks/useStickyTopBanner';
+import useHomeAnimations, {
+  estimateHeaderMetrics,
+} from './hooks/useHomeAnimations';
 import HomeStatusBar from './components/HomeStatusBar';
 import StickyHeader from './components/StickyHeader';
 import PlacementBannerCarousel from './components/PlacementBannerCarousel';
 import CategoryGrid, { CategoryShimmer } from './components/CategoryGrid';
 import ProductBlock from './components/ProductBlock';
 import CategoryDiscoverySection from './components/CategoryDiscoverySection';
-import ShimmerPlaceholder from '../../components/ShimmerPlaceholder';
+import TopShowcase from './components/TopShowcase';
+import BottomShowcase from './components/BottomShowcase';
+import SeasonalBannerShimmer from './components/SeasonalBannerShimmer';
 import styles from './HomeScreen.styles';
+import { ACCENT } from '@/styles/homeTheme';
 import images from '@/assets/images';
 
 const UDENDEAL_SEAL = require('../../assets/images/udendealSeal.png');
@@ -81,221 +66,41 @@ const BLOCK2_SEE_ALL_STYLE = { alignSelf: 'center', marginTop: hp('1%') };
 const seeAllOverThree = count => count > 3;
 const seeAllAtLeastThree = count => count >= 3;
 
-const SeasonalFruitsShimmer = () => (
-  <View style={styles.fruitsContainer}>
-    <View style={styles.fruitsHeaderView}>
-      <ShimmerPlaceholder style={styles.shimmerTitle} />
-    </View>
-    <View style={styles.shimmerBannerRow}>
-      {[1, 2].map((_, i) => (
-        <ShimmerPlaceholder key={i} style={styles.shimmerBanner} />
-      ))}
-    </View>
-  </View>
-);
-
 const HomeScreen = () => {
   const { top, bottom } = useSafeAreaInsets();
   const PROFILE_AVATAR_SIZE = Math.min(wp('14%'), 56);
 
-  // ── Sticky search header animation ──────────────────────────────────────
-  const SCROLL_RANGE = 180;
-  const scrollY = useSharedValue(0);
-  const headerInfoMaxH = useSharedValue(0);
-  const searchPressScale = useSharedValue(1);
+  // Seeded with an estimate, corrected by the header's own onLayout: `height`
+  // pads the scroll content, `searchY` gives the collapse distance.
+  const [headerMetrics, setHeaderMetrics] = useState(() =>
+    estimateHeaderMetrics(top, true),
+  );
+  const handleHeaderMetrics = useCallback(patch => {
+    setHeaderMetrics(prev => {
+      const next = { ...prev, ...patch };
+      return next.height === prev.height && next.searchY === prev.searchY
+        ? prev
+        : next;
+    });
+  }, []);
 
-  const tabBarClearance = getTabBarClearance(bottom);
-  const floatingBottomOffset = hp('0.2%') + tabBarClearance;
-
-  const { onScrollWorklet } = useTabBarAnimation();
-
-  const scrollHandler = useAnimatedScrollHandler({
-    onScroll: event => {
-      const y = event.contentOffset.y;
-      scrollY.value = y;
-      onScrollWorklet(y);
-    },
-  });
-
-  const cartAnimatedStyle = useAnimatedStyle(() => {
-    const progress = clamp(tabBarVisibility.value, 0, 1);
-    return {
-      transform: [
-        {
-          translateY: interpolate(
-            progress,
-            [0, 1],
-            [tabBarClearance, 0],
-            Extrapolation.CLAMP,
-          ),
-        },
-      ],
-    };
-  });
-
-  const collapsibleHeaderStyle = useAnimatedStyle(() => {
-    if (headerInfoMaxH.value <= 0) return {};
-    return {
-      height: interpolate(
-        scrollY.value,
-        [0, SCROLL_RANGE],
-        [headerInfoMaxH.value, 0],
-        Extrapolation.CLAMP,
-      ),
-      overflow: 'hidden',
-    };
-  });
-
-  const etaAnimStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(
-      scrollY.value,
-      [0, SCROLL_RANGE * 0.65],
-      [1, 0],
-      Extrapolation.CLAMP,
-    ),
-    transform: [
-      {
-        translateY: interpolate(
-          scrollY.value,
-          [0, SCROLL_RANGE * 0.65],
-          [0, -40],
-          Extrapolation.CLAMP,
-        ),
-      },
-      {
-        scale: interpolate(
-          scrollY.value,
-          [0, SCROLL_RANGE * 0.65],
-          [1, 0.9],
-          Extrapolation.CLAMP,
-        ),
-      },
-    ],
-  }));
-
-  const coinAnimStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(
-      scrollY.value,
-      [0, SCROLL_RANGE],
-      [1, 0.8],
-      Extrapolation.CLAMP,
-    ),
-    transform: [
-      {
-        translateY: interpolate(
-          scrollY.value,
-          [0, SCROLL_RANGE],
-          [0, -20],
-          Extrapolation.CLAMP,
-        ),
-      },
-      {
-        scale: interpolate(
-          scrollY.value,
-          [0, SCROLL_RANGE],
-          [1, 0.9],
-          Extrapolation.CLAMP,
-        ),
-      },
-    ],
-  }));
-
-  const profileAnimStyle = useAnimatedStyle(() => ({
-    transform: [
-      {
-        translateY: interpolate(
-          scrollY.value,
-          [0, SCROLL_RANGE],
-          [0, -20],
-          Extrapolation.CLAMP,
-        ),
-      },
-      {
-        scale: interpolate(
-          scrollY.value,
-          [0, SCROLL_RANGE],
-          [1, 0.9],
-          Extrapolation.CLAMP,
-        ),
-      },
-    ],
-  }));
-
-  const SEARCH_MARGIN_START = hp('2%');
-  const SEARCH_MARGIN_END = hp('0.8%');
-  const SEARCH_HEIGHT_START = hp('5.4%');
-  const SEARCH_HEIGHT_END = hp('4.8%');
-  const SEARCH_RADIUS_START = wp('5.5%');
-  const SEARCH_RADIUS_END = wp('4.5%');
-
-  const searchWrapperAnimStyle = useAnimatedStyle(() => {
-    const progress = interpolate(
-      scrollY.value,
-      [0, SCROLL_RANGE],
-      [0, 1],
-      Extrapolation.CLAMP,
-    );
-    return {
-      marginTop: interpolate(
-        scrollY.value,
-        [0, SCROLL_RANGE],
-        [SEARCH_MARGIN_START, SEARCH_MARGIN_END],
-        Extrapolation.CLAMP,
-      ),
-      height: interpolate(
-        progress,
-        [0, 1],
-        [SEARCH_HEIGHT_START, SEARCH_HEIGHT_END],
-      ),
-      borderRadius: interpolate(
-        progress,
-        [0, 1],
-        [SEARCH_RADIUS_START, SEARCH_RADIUS_END],
-      ),
-      // shadowOpacity: interpolate(progress, [0, 1], [0, 0.12]),
-      // shadowRadius: interpolate(progress, [0, 1], [0, 8]),
-      // elevation: interpolate(progress, [0, 1], [0, 4]),
-      transform: [{ scale: searchPressScale.value }],
-    };
-  });
-
-  const glassOverlayAnimStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(
-      scrollY.value,
-      [0, SCROLL_RANGE],
-      [0, 1],
-      Extrapolation.CLAMP,
-    ),
-  }));
-
-  const fallbackHeaderBgStyle = useAnimatedStyle(() => ({
-    backgroundColor: interpolateColor(
-      scrollY.value,
-      [0, SCROLL_RANGE],
-      ['#F25000', '#FFFFFF'],
-    ),
-  }));
-
-  // Status-bar icon flipping lives in <HomeStatusBar/> (a leaf component) so a
-  // threshold crossing mid-scroll re-renders one StatusBar instead of this
-  // entire screen.
-  const stickyBorderAnimStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(
-      scrollY.value,
-      [60, SCROLL_RANGE],
-      [0, 1],
-      Extrapolation.CLAMP,
-    ),
-  }));
-
-  // Stable identities — both are handed to the (now memoised) StickyHeader.
-  const handleSearchPressIn = useCallback(() => {
-    searchPressScale.value = withTiming(0.98, { duration: 75 });
-  }, [searchPressScale]);
-  const handleSearchPressOut = useCallback(() => {
-    searchPressScale.value = withSpring(1, { damping: 20, stiffness: 200 });
-  }, [searchPressScale]);
-  // ────────────────────────────────────────────────────────────────────────
+  const {
+    scrollY,
+    collapseDistance,
+    scrollHandler,
+    floatingBottomOffset,
+    cartAnimatedStyle,
+    headerCollapseStyle,
+    etaAnimStyle,
+    searchWrapperAnimStyle,
+    bannerSheetStyle,
+    bannerParallaxStyle,
+    bannerScrimStyle,
+    fallbackHeaderBgStyle,
+    stickyBorderAnimStyle,
+    handleSearchPressIn,
+    handleSearchPressOut,
+  } = useHomeAnimations({ top, bottom, headerMetrics });
 
   const navigation = useNavigation();
   const [isProfileLoaded, setIsProfileLoaded] = useState(false);
@@ -390,15 +195,27 @@ const HomeScreen = () => {
   // Memoised so it is not a brand-new array each render: it is a dependency of
   // handleBannerPress, and an unstable identity there would have given that
   // callback a new identity every render anyway.
-  const categories = useMemo(() => data?.categories || [], [data]);
-  const topBanner = data?.banners?.topBanner || [];
-  const midBanner = data?.banners?.midBanner || [];
-  const bottomBanner = data?.banners?.bottomBanner || [];
-  const topSectionBanner = data?.banners?.topSectionBanner || [];
-  const topAnnouncementBanner = data?.banners?.topAnnouncementBanner || [];
-  const topSideBySide = data?.banners?.topSideBySide || [];
+  const categories = useMemo(() => data?.categories || EMPTY_BANNERS, [data]);
+  // `|| EMPTY_BANNERS`, not `|| []`: while `data` is undefined (every mount, up
+  // until the keychain read behind `areaId` resolves) a literal produced a
+  // brand-new array on every render, so React.memo on every consumer below —
+  // StickyHeader included — could never hit and they all re-rendered on each
+  // pass. The shared constant keeps those props referentially stable.
+  const topBanner = data?.banners?.topBanner || EMPTY_BANNERS;
+  const midBanner = data?.banners?.midBanner || EMPTY_BANNERS;
+  const bottomBanner = data?.banners?.bottomBanner || EMPTY_BANNERS;
+  // Held across the data gap so the header never drops to its bannerless
+  // (orange) variant and back — see useStickyTopBanner.
+  const topSectionBanner = useStickyTopBanner(
+    data?.banners?.topSectionBanner,
+    !!data,
+  );
+  const topAnnouncementBanner =
+    data?.banners?.topAnnouncementBanner || EMPTY_BANNERS;
+  const topSideBySide = data?.banners?.topSideBySide || EMPTY_BANNERS;
   const bottomShowcaseBanner = data?.banners?.bottomShowcaseBanner;
-  const bottomShowcaseProducts = data?.banners?.bottomShowcaseProducts || [];
+  const bottomShowcaseProducts =
+    data?.banners?.bottomShowcaseProducts || EMPTY_BANNERS;
   const firstProductBlock = data?.firstProductBlock;
   const secondProductBlock = data?.secondProductBlock;
   const thirdProductBlock = data?.thirdProductBlock;
@@ -461,12 +278,25 @@ const HomeScreen = () => {
     setSelectedDiscoveryCategory(category);
   }, []);
 
+  // "Explore deals" must never render with every tab idle and an empty rail, so
+  // a category is (re)selected whenever the current one is gone — first paint,
+  // after the pincode reset below, and after a refresh that returns a different
+  // category set. Keying this off `categoryDiscovery` alone missed those cases:
+  // when the reset cleared the selection without the query object changing
+  // identity, nothing re-selected and the section sat there with no open tab.
   useEffect(() => {
-    if (discoveryCategories.length > 0 && !selectedDiscoveryCategory) {
-      setSelectedDiscoveryCategory(discoveryCategories[0]);
-      setUseEmbeddedDiscoveryProducts(embeddedDiscoveryProducts.length > 0);
-    }
-  }, [categoryDiscovery]);
+    if (discoveryCategories.length === 0) return;
+    const stillListed = discoveryCategories.some(
+      c => c.catId === selectedDiscoveryCategory?.catId,
+    );
+    if (stillListed) return;
+    setSelectedDiscoveryCategory(discoveryCategories[0]);
+    setUseEmbeddedDiscoveryProducts(embeddedDiscoveryProducts.length > 0);
+  }, [
+    discoveryCategories,
+    embeddedDiscoveryProducts,
+    selectedDiscoveryCategory,
+  ]);
 
   // Passed to StickyHeader, both PlacementBannerCarousels, the bottom showcase
   // list and CategoryDiscoverySection. As a bare function it got a new identity
@@ -510,9 +340,20 @@ const HomeScreen = () => {
     message: '',
   });
 
+  const scrollContentStyle = useMemo(
+    () => [
+      styles.scrollContent,
+      {
+        paddingTop: headerMetrics.height,
+        paddingBottom: floatingBottomOffset,
+      },
+    ],
+    [headerMetrics.height, floatingBottomOffset],
+  );
+
   return (
     <View style={styles.mainContainer}>
-      <HomeStatusBar scrollY={scrollY} threshold={SCROLL_RANGE * 0.5} />
+      <HomeStatusBar scrollY={scrollY} threshold={collapseDistance * 0.6} />
       <HomePopupModal
         visible={isHomePopupVisible}
         onClose={handleClose}
@@ -521,76 +362,31 @@ const HomeScreen = () => {
       />
       <LocationModal ref={locationModalRef} />
 
-      <StickyHeader
-        top={top}
-        topSectionBanner={topSectionBanner}
-        onBannerPress={handleBannerPress}
-        glassOverlayAnimStyle={glassOverlayAnimStyle}
-        collapsibleHeaderStyle={collapsibleHeaderStyle}
-        etaAnimStyle={etaAnimStyle}
-        coinAnimStyle={coinAnimStyle}
-        profileAnimStyle={profileAnimStyle}
-        searchWrapperAnimStyle={searchWrapperAnimStyle}
-        fallbackHeaderBgStyle={fallbackHeaderBgStyle}
-        stickyBorderAnimStyle={stickyBorderAnimStyle}
-        headerInfoMaxH={headerInfoMaxH}
-        profile={profile}
-        dashboardData={dashboardData}
-        navigation={navigation}
-        isStoreUnavailable={isStoreUnavailable}
-        profileAvatarSize={PROFILE_AVATAR_SIZE}
-        onSearchPressIn={handleSearchPressIn}
-        onSearchPressOut={handleSearchPressOut}
-        onPressLocation={handleOpenLocationModal}
-      />
-
       <Animated.ScrollView
         onScroll={scrollHandler}
         scrollEventThrottle={16}
-        style={{ flex: 1 }}
-        contentContainerStyle={{
-          paddingBottom: floatingBottomOffset,
-          flexGrow: 1,
-        }}
+        style={styles.scroll}
+        contentContainerStyle={scrollContentStyle}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            // The spinner would otherwise drop in behind the header overlay.
+            progressViewOffset={headerMetrics.height}
+            // The default spinner is system grey. Tinting it is the one moment
+            // in the pull-to-refresh gesture where the brand can show up.
+            tintColor={ACCENT.primary}
+            colors={[ACCENT.primary]}
+          />
         }
       >
-        {topBanner.length > 0 && (
-          <ImageBackground
-            source={topBanner[0]?.uri}
-            style={styles.topShowcaseContainer}
-            imageStyle={{ width: '100%', height: '100%', resizeMode: 'cover' }}
-          >
-            {topAnnouncementBanner.length > 0 && (
-              <Image
-                source={topAnnouncementBanner[0].uri}
-                style={styles.topShowcaseMain}
-                resizeMode="cover"
-              />
-            )}
-
-            {topSideBySide.length > 0 && (
-              <View style={styles.topShowcaseRow}>
-                {topSideBySide.slice(0, 5).map((banner, index) => (
-                  <TouchableOpacity
-                    key={banner.bannerId || index}
-                    style={styles.topShowcaseCard}
-                    activeOpacity={0.85}
-                    onPress={() => handleBannerPress(banner)}
-                  >
-                    <Image
-                      source={banner.uri}
-                      style={styles.topShowcaseCardImage}
-                      resizeMode="contain"
-                    />
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
-          </ImageBackground>
-        )}
+        <TopShowcase
+          backgroundUri={topBanner[0]?.uri}
+          announcementUri={topAnnouncementBanner[0]?.uri}
+          sideBySide={topSideBySide}
+          onBannerPress={handleBannerPress}
+        />
 
         {!isStoreUnavailable &&
           !noLocationSelected &&
@@ -620,7 +416,7 @@ const HomeScreen = () => {
                 <PlacementBannerCarousel
                   banners={midBanner}
                   onBannerPress={handleBannerPress}
-                  style={{ height: hp('22%') }}
+                  style={styles.carouselHeight}
                   showDots={true}
                   fullWidth={true}
                   infinite
@@ -650,14 +446,14 @@ const HomeScreen = () => {
             />
 
             {isHomeLoading && fruits.length === 0 ? (
-              <SeasonalFruitsShimmer />
+              <SeasonalBannerShimmer />
             ) : (
               fruits.length > 0 && (
                 <View style={styles.carouselBleed}>
                   <PlacementBannerCarousel
                     banners={fruits}
                     onBannerPress={handleBannerPress}
-                    style={{ height: hp('22%') }}
+                    style={styles.carouselHeight}
                     showDots={false}
                     fullWidth={false}
                   />
@@ -676,40 +472,11 @@ const HomeScreen = () => {
               navigation={navigation}
             />
 
-            {bottomShowcaseBanner && bottomShowcaseProducts.length > 0 && (
-              <TouchableOpacity
-                activeOpacity={0.9}
-                onPress={() => handleBannerPress(bottomShowcaseBanner)}
-              >
-                <ImageBackground
-                  source={bottomShowcaseBanner.uri}
-                  style={styles.showcaseCard}
-                  imageStyle={styles.showcaseCardImage}
-                >
-                  <FlatList
-                    horizontal
-                    data={bottomShowcaseProducts}
-                    keyExtractor={(item, index) =>
-                      (item.bannerId || item.id || index).toString()
-                    }
-                    renderItem={({ item }) => (
-                      <TouchableOpacity
-                        onPress={() => handleBannerPress(item)}
-                        style={styles.showcaseItem}
-                      >
-                        <Image
-                          source={item.uri}
-                          style={styles.showcaseItemImage}
-                          resizeMode="contain"
-                        />
-                      </TouchableOpacity>
-                    )}
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={styles.showcaseListContent}
-                  />
-                </ImageBackground>
-              </TouchableOpacity>
-            )}
+            <BottomShowcase
+              banner={bottomShowcaseBanner}
+              products={bottomShowcaseProducts}
+              onBannerPress={handleBannerPress}
+            />
 
             <CategoryDiscoverySection
               isHomeLoading={isHomeLoading}
@@ -746,6 +513,34 @@ const HomeScreen = () => {
           </View>
         )}
       </Animated.ScrollView>
+
+      {/* `box-none`: once the header translates up, taps in the band it
+          vacated fall through to the content scrolling beneath it. */}
+      <View style={styles.headerOverlay} pointerEvents="box-none">
+        <StickyHeader
+          top={top}
+          topSectionBanner={topSectionBanner}
+          bannerPending={!data}
+          onBannerPress={handleBannerPress}
+          bannerSheetStyle={bannerSheetStyle}
+          bannerParallaxStyle={bannerParallaxStyle}
+          bannerScrimStyle={bannerScrimStyle}
+          headerCollapseStyle={headerCollapseStyle}
+          etaAnimStyle={etaAnimStyle}
+          searchWrapperAnimStyle={searchWrapperAnimStyle}
+          fallbackHeaderBgStyle={fallbackHeaderBgStyle}
+          stickyBorderAnimStyle={stickyBorderAnimStyle}
+          onHeaderMetrics={handleHeaderMetrics}
+          profile={profile}
+          dashboardData={dashboardData}
+          navigation={navigation}
+          isStoreUnavailable={isStoreUnavailable}
+          profileAvatarSize={PROFILE_AVATAR_SIZE}
+          onSearchPressIn={handleSearchPressIn}
+          onSearchPressOut={handleSearchPressOut}
+          onPressLocation={handleOpenLocationModal}
+        />
+      </View>
 
       <Animated.View
         style={[

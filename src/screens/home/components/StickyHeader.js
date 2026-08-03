@@ -3,45 +3,58 @@ import {
   View,
   Text,
   Image,
-  ImageBackground,
   TouchableOpacity,
   StyleSheet,
   Platform,
 } from 'react-native';
-import Animated from 'react-native-reanimated';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+} from 'react-native-reanimated';
+import LinearGradient from 'react-native-linear-gradient';
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
 import Entypo from 'react-native-vector-icons/Entypo';
 import Feather from 'react-native-vector-icons/Feather';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { FONTS } from '../../../styles/typography';
 import ProfileAvatarBadge from '../../../components/ProfileAvatarBadge';
 import RotatingPlaceholder from '../../../components/RotatingPlaceholder';
 import COLORS from '@/styles/colors';
+import { TYPE, MAX_FONT_SCALE } from '@/styles/homeTheme';
+import {
+  BANNER_MIN_HEIGHT,
+  BANNER_PARALLAX,
+  SEARCH_MARGIN_START,
+  SEARCH_HEIGHT,
+} from '../hooks/useHomeAnimations';
 
 const INK = '#1A1A1A';
+const SCRIM_COLORS = [
+  'rgba(8,10,16,0.46)',
+  'rgba(8,10,16,0.16)',
+  'transparent',
+];
+const SCRIM_LOCATIONS = [0, 0.55, 1];
+const BANNER_BLEED = BANNER_PARALLAX;
+const SEARCH_INSET = wp('4.7%');
 const SEARCH_EXAMPLES = ['Basmati Rice', 'Milk', 'Sunflower Oil', 'Lemons'];
-
-// The sticky header has two visual variants depending on whether a
-// `topSectionBanner` is configured: an ImageBackground-backed version with a
-// dark glass overlay that fades in on scroll, or a plain animated-background
-// fallback. Both share the same collapsible ETA/location/coins/profile row
-// and search bar — kept here as render helpers instead of duplicated JSX.
 const StickyHeader = ({
   top,
   topSectionBanner,
+  bannerPending,
   onBannerPress,
-  glassOverlayAnimStyle,
-  collapsibleHeaderStyle,
+  bannerSheetStyle,
+  bannerParallaxStyle,
+  bannerScrimStyle,
+  headerCollapseStyle,
   etaAnimStyle,
-  coinAnimStyle,
-  profileAnimStyle,
   searchWrapperAnimStyle,
   fallbackHeaderBgStyle,
   stickyBorderAnimStyle,
-  headerInfoMaxH,
+  onHeaderMetrics,
   profile,
   dashboardData,
   navigation,
@@ -51,57 +64,86 @@ const StickyHeader = ({
   onSearchPressOut,
   onPressLocation,
 }) => {
-  const onHeaderInfoLayout = e => {
-    const h = e.nativeEvent.layout.height;
-    if (headerInfoMaxH.value <= 0 && h > 0) {
-      headerInfoMaxH.value = h;
-    }
-  };
+  const onFrameLayout = React.useCallback(
+    e => onHeaderMetrics({ height: e.nativeEvent.layout.height }),
+    [onHeaderMetrics],
+  );
+  const onSearchLayout = React.useCallback(
+    e => onHeaderMetrics({ searchY: e.nativeEvent.layout.y }),
+    [onHeaderMetrics],
+  );
+
+  // Keyed off the URL string, not the object. `transformHomepageResponse`
+  // rebuilds `{ uri }` from scratch every time it runs, so each refetch (the
+  // homepage query refetches on every mount) handed <Image> a source it had to
+  // treat as new and re-request — dropping the artwork for the frames it took
+  // to come back, which is exactly when the orange hold behind it shows. Same
+  // URL now means the same object, so the image is never re-issued.
+  const bannerUrl = topSectionBanner?.[0]?.uri?.uri;
+  const bannerSource = React.useMemo(
+    () => (bannerUrl ? { uri: bannerUrl } : null),
+    [bannerUrl],
+  );
+
+  // The artwork cannot be there on the frame the header mounts, and every
+  // entry into Home is a fresh mount, so *something* is always visible first.
+  // Cutting straight to the image the instant it decodes is what makes that
+  // hand-off register as a blink. Revealing it over ~220ms instead turns the
+  // same hand-off into the banner settling in — the hold underneath is already
+  // the tone the scrim gives any artwork, so most of the fade is imperceptible.
+  //
+  // Reset on URL change, not on mount: a refetch that returns different
+  // artwork should fade the new image in rather than swap it under the user.
+  const bannerReveal = useSharedValue(0);
+  React.useEffect(() => {
+    bannerReveal.value = 0;
+  }, [bannerUrl, bannerReveal]);
+  const onBannerLoad = React.useCallback(() => {
+    bannerReveal.value = withTiming(1, { duration: 220 });
+  }, [bannerReveal]);
+  const bannerRevealStyle = useAnimatedStyle(() => ({
+    opacity: bannerReveal.value,
+  }));
+
+  const handleBannerPress = React.useCallback(
+    () => onBannerPress(topSectionBanner?.[0]),
+    [onBannerPress, topSectionBanner],
+  );
 
   const hasLocation = !!profile?.pinAddress;
 
   const renderCollapsibleInfo = () => (
-    <Animated.View style={collapsibleHeaderStyle} onLayout={onHeaderInfoLayout}>
+    <View>
       <View style={styles.headerViewOne}>
         <Animated.View style={etaAnimStyle}>
           {hasLocation ? (
             <>
-              {/* Delivery promise is the header's headline, so it reads as a
-                  labelled claim ("Delivery in / 20 mins") rather than a bare
-                  number floating above the address. */}
-              <View style={styles.etaRow}>
-                <View style={styles.etaBolt}>
-                  <MaterialIcons
-                    name="bolt"
-                    size={wp('4.4%')}
-                    color={'#F25000'}
-                  />
-                </View>
-                <View>
-                  <Text style={styles.etaLabel}>Delivery in</Text>
-                  <Text style={styles.timeText}>20 mins</Text>
-                </View>
-              </View>
+              <Text style={styles.timeText} maxFontSizeMultiplier={1.2}>
+                20 mins
+              </Text>
               <TouchableOpacity
                 hitSlop={40}
-                style={[styles.addressView, { marginTop: hp('0.5%') }]}
+                style={[styles.addressView, { marginTop: hp('0.4%') }]}
                 onPress={onPressLocation}
+                accessibilityRole="button"
+                accessibilityLabel={`Delivering to ${profile.pinAddress}. Change delivery location`}
               >
                 <Feather
                   name={'map-pin'}
-                  size={wp('3.6%')}
-                  color={'rgba(255,255,255,0.9)'}
+                  size={wp('4%')}
+                  color={'#FFFFFF'}
                   style={{ marginRight: wp('1%') }}
                 />
                 <Text
                   style={styles.addressText}
                   numberOfLines={1}
                   ellipsizeMode="tail"
+                  maxFontSizeMultiplier={MAX_FONT_SCALE}
                 >
                   {profile.pinAddress}
                 </Text>
                 <Entypo
-                  name={'chevron-down'}
+                  name={'chevron-right'}
                   size={wp('3.6%')}
                   color={'#FFFFFF'}
                 />
@@ -113,6 +155,8 @@ const StickyHeader = ({
               style={styles.selectLocationButton}
               onPress={onPressLocation}
               activeOpacity={0.85}
+              accessibilityRole="button"
+              accessibilityLabel="Select your delivery location"
             >
               <Feather
                 name={'map-pin'}
@@ -130,12 +174,20 @@ const StickyHeader = ({
             <TouchableOpacity
               onPress={() => navigation.navigate('BCoinScreen')}
               style={styles.bcoinContainer}
+              accessibilityRole="button"
+              accessibilityLabel={`${
+                dashboardData?.wallet?.bCoins || '0'
+              } UD coins. View your wallet`}
             >
               <Image
                 source={require('../../../assets/icons/udcoin.png')}
                 style={styles.bcoinIcon}
+                accessible={false}
               />
-              <Text style={styles.tokenText}>
+              <Text
+                style={styles.tokenText}
+                maxFontSizeMultiplier={MAX_FONT_SCALE}
+              >
                 {dashboardData?.wallet?.bCoins || '0'}
               </Text>
             </TouchableOpacity>
@@ -147,6 +199,8 @@ const StickyHeader = ({
                   navigation.navigate('ProfileScreen', { type: 'login' })
                 }
                 activeOpacity={0.85}
+                accessibilityRole="button"
+                accessibilityLabel="Your profile and account"
               >
                 <ProfileAvatarBadge
                   size={profileAvatarSize}
@@ -157,12 +211,13 @@ const StickyHeader = ({
           </Animated.View>
         </View>
       </View>
-    </Animated.View>
+    </View>
   );
 
   const renderSearchBar = () => (
     <Animated.View
       style={[styles.searchWrapper, searchWrapperAnimStyle]}
+      onLayout={onSearchLayout}
     >
       <TouchableOpacity
         onPress={() =>
@@ -171,12 +226,20 @@ const StickyHeader = ({
         onPressIn={onSearchPressIn}
         onPressOut={onSearchPressOut}
         style={[
-          { flex: 1, flexDirection: 'row', alignItems: 'center' },
-          isStoreUnavailable && { opacity: 0.6 },
+          styles.searchTouchable,
+          isStoreUnavailable && styles.searchDisabled,
         ]}
         activeOpacity={isStoreUnavailable ? 1 : 0.85}
+        accessibilityRole="search"
+        accessibilityLabel="Search for products"
+        accessibilityHint={
+          isStoreUnavailable
+            ? 'Unavailable while the store is closed'
+            : 'Opens product search'
+        }
+        accessibilityState={{ disabled: !!isStoreUnavailable }}
       >
-        <Feather name="search" color={INK} size={wp('5.2%')} />
+        <Feather name="search" color={'black'} size={wp('6%')} />
         <View style={styles.searchProductContainer}>
           <RotatingPlaceholder
             examples={SEARCH_EXAMPLES}
@@ -185,122 +248,182 @@ const StickyHeader = ({
             style={styles.searchProductText}
           />
         </View>
-        <View style={styles.searchDivider} />
         <Feather
           name="clipboard"
-          color={'#F25000'}
-          size={wp('4.8%')}
+          color={'black'}
+          size={wp('5%')}
           style={styles.clipboardIcon}
         />
       </TouchableOpacity>
     </Animated.View>
   );
 
-  if (topSectionBanner && topSectionBanner.length > 0) {
+  // `bannerPending` covers the cold-start case the sticky hold can't: nothing
+  // has been painted this session, so the frame is rendered banner-shaped and
+  // empty (the orange hold is what it is *for*) and the artwork mounts into it
+  // when the URL lands. Without it the first paint used the bannerless branch
+  // and then replaced the whole subtree, which both remounted the image and
+  // resized the header.
+  if (bannerSource || bannerPending) {
     return (
-      <TouchableOpacity
-        activeOpacity={0.9}
-        onPress={() => onBannerPress(topSectionBanner[0])}
-      >
-        <ImageBackground
-          source={topSectionBanner[0].uri}
-          style={{
-            width: wp('100%'),
-            paddingTop: top,
-            paddingBottom: hp('1%'),
-          }}
-          imageStyle={{ resizeMode: 'cover' }}
+      // The collapse is a translate on the outermost node: everything above the
+      // search bar is carried off the top of the screen, so nothing resizes.
+      <Animated.View style={headerCollapseStyle}>
+        <TouchableOpacity
+          activeOpacity={0.9}
+          onPress={handleBannerPress}
+          // Nothing to route to until the artwork is known.
+          disabled={!bannerSource}
+          style={styles.bannerShadow}
         >
-          <Animated.View
-            pointerEvents="none"
+          {/* Layered rather than an ImageBackground: the artwork needs to move
+              independently of the chrome for the parallax, and it has to sit
+              under a scrim that the content in turn sits on top of. */}
+          <View
             style={[
-              StyleSheet.absoluteFill,
-              { backgroundColor: '#FFFFFF' },
-              glassOverlayAnimStyle,
+              styles.bannerFrame,
+              { paddingTop: top, paddingBottom: hp('1%') },
             ]}
-          />
+            onLayout={onFrameLayout}
+          >
+            <Animated.Image
+              source={bannerSource}
+              style={[
+                styles.bannerImage,
+                bannerParallaxStyle,
+                bannerRevealStyle,
+              ]}
+              accessible={false}
+              onLoad={onBannerLoad}
+              // Android's own 300ms cross-fade is off because the reveal above
+              // replaces it: that one is uncancellable, runs on the UI thread's
+              // draw pass, and is not shared with iOS, which got a hard cut.
+              fadeDuration={0}
+            />
 
-          {renderCollapsibleInfo()}
-          {renderSearchBar()}
+            <Animated.View
+              pointerEvents="none"
+              style={[StyleSheet.absoluteFill, bannerScrimStyle]}
+            >
+              <LinearGradient
+                colors={SCRIM_COLORS}
+                locations={SCRIM_LOCATIONS}
+                style={StyleSheet.absoluteFill}
+              />
+            </Animated.View>
 
-          <Animated.View
-            pointerEvents="none"
-            style={[
-              {
-                height: 1,
-                backgroundColor: 'rgba(0,0,0,0.08)',
-                marginTop: hp('0.5%'),
-              },
-              stickyBorderAnimStyle,
-            ]}
-          />
-        </ImageBackground>
-      </TouchableOpacity>
+            <Animated.View
+              pointerEvents="none"
+              style={[
+                StyleSheet.absoluteFill,
+                styles.bannerSheet,
+                bannerSheetStyle,
+              ]}
+            />
+
+            {renderCollapsibleInfo()}
+            {renderSearchBar()}
+          </View>
+        </TouchableOpacity>
+      </Animated.View>
     );
   }
 
   return (
-    <Animated.View
-      style={[
-        { paddingTop: top, paddingBottom: hp('1%') },
-        fallbackHeaderBgStyle,
-      ]}
-    >
-      {renderCollapsibleInfo()}
-      {renderSearchBar()}
-
+    <Animated.View style={headerCollapseStyle}>
       <Animated.View
-        pointerEvents="none"
         style={[
-          {
-            height: 1,
-            backgroundColor: 'rgba(255,255,255,0.08)',
-            marginTop: hp('0.5%'),
-          },
-          stickyBorderAnimStyle,
+          { paddingTop: top, paddingBottom: hp('1%') },
+          fallbackHeaderBgStyle,
         ]}
-      />
+        onLayout={onFrameLayout}
+      >
+        {renderCollapsibleInfo()}
+        {renderSearchBar()}
+
+        <Animated.View
+          pointerEvents="none"
+          style={[styles.fallbackBorder, stickyBorderAnimStyle]}
+        />
+      </Animated.View>
     </Animated.View>
   );
 };
 
 const styles = StyleSheet.create({
+  bannerFrame: {
+    width: wp('100%'),
+    // A static floor, not an animated one — the frame keeps this box for the
+    // whole scroll.
+    minHeight: BANNER_MIN_HEIGHT,
+    // Clips the overhanging artwork — without this the bleed and the parallax
+    // scale would paint over the content below the header.
+    overflow: 'hidden',
+    // What shows for the handful of frames before the artwork paints. Every
+    // entry into Home is a fresh mount (the tab root is reset, and back exits
+    // the app), so the banner Image is a new native view each time and has to
+    // re-request its bitmap even on a warm disk cache — measured at ~5 frames
+    // / 165ms on an emulator, longer on a cold cache.
+    //
+    // This used to be brand orange, which is what read as a "blink": a
+    // saturated plate swapping to arbitrary artwork is the highest-contrast
+    // change the header can make, and it lands on every entry rather than only
+    // on a genuine first load. A deep slate is what the scrim above already
+    // turns the top of *any* artwork into, so the swap now reads as the image
+    // settling in rather than a colour change. It also keeps the white header
+    // text and icons legible while it is up, which a white hold would not.
+    backgroundColor: '#1B1F27',
+  },
+  // The banner used to end on a hard horizontal line straight into
+  // TopShowcase's own full-bleed artwork — two unrelated photographs meeting
+  // edge to edge. A soft cast separates them by reading the header as a plane
+  // above the page, which it genuinely is, rather than drawing a rule between
+  // them. Downward-only, and the one place the flat theme's "lift only what is
+  // actually above the page" clause applies on this screen.
+  //
+  // It lives on the wrapper, not on bannerFrame: `overflow: 'hidden'` there
+  // (which the parallax bleed requires) sets masksToBounds on iOS, and that
+  // clips the view's own shadow along with its children.
+  bannerShadow: {
+    shadowColor: '#0B1020',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  bannerSheet: {
+    backgroundColor: '#FFFFFF',
+  },
+  bannerImage: {
+    ...StyleSheet.absoluteFillObject,
+    // Overhang top and bottom so the parallax drift always has cover to spare.
+    top: -BANNER_BLEED,
+    bottom: -BANNER_BLEED,
+    resizeMode: 'cover',
+  },
   headerViewOne: {
     flexDirection: 'row',
-    marginHorizontal: wp('6.9%'),
+    marginLeft: wp('6.9%'),
+    marginRight: SEARCH_INSET,
     justifyContent: 'space-between',
     paddingTop: Platform.OS === 'ios' ? 0 : 5,
     alignItems: 'center',
   },
-  etaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  etaBolt: {
-    width: wp('6.6%'),
-    height: wp('6.6%'),
-    borderRadius: wp('3.3%'),
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: wp('2%'),
-  },
-  etaLabel: {
-    fontFamily: FONTS.gilroy.medium,
-    color: 'rgba(255,255,255,0.85)',
-    fontSize: wp('2.9%'),
-    letterSpacing: 0.2,
-  },
   timeText: {
+    ...TYPE.title,
     fontFamily: FONTS.gilroy.bold,
     color: '#FFFFFF',
-    fontSize: wp('5.2%'),
-    letterSpacing: -0.4,
-    marginTop: -hp('0.2%'),
   },
   addressView: {
     flexDirection: 'row',
     alignItems: 'center',
+    // Hug the content so the chevron sits right after the address instead of
+    // being pushed to the far edge of a full-width row.
+    alignSelf: 'flex-start',
+    // The row itself must be allowed to shrink, or a long address makes it
+    // overflow the header rather than truncate inside it.
+    flexShrink: 1,
+    maxWidth: '100%',
   },
   selectLocationButton: {
     flexDirection: 'row',
@@ -312,24 +435,34 @@ const styles = StyleSheet.create({
     paddingHorizontal: wp('3.5%'),
   },
   selectLocationText: {
+    ...TYPE.label,
     color: INK,
-    fontSize: wp('3.8%'),
     fontFamily: FONTS.gilroy.semiBold,
     marginRight: wp('1%'),
   },
   addressText: {
-    color: 'rgba(255,255,255,0.92)',
-    fontSize: wp('3.1%'),
+    ...TYPE.caption,
+    color: '#FFFFFF',
     fontFamily: FONTS.gilroy.medium,
-    maxWidth: wp('50%'),
+    // Gilroy's declared ascent/descent are tight, and Android sizes a Text's
+    // line box straight from those metrics — so without a generous lineHeight
+    // the taller glyphs get shaved off top and bottom. iOS is more forgiving,
+    // which is why this only showed up on Android. TYPE.caption carries a
+    // 1.33 ratio, which clears the descenders; don't tighten it here.
+    includeFontPadding: false,
+    textAlignVertical: 'center',
+    // Shrink to fit the space left by the pin and chevron rather than being
+    // capped at a fixed width — the old maxWidth truncated short addresses
+    // that had room to spare on wider screens.
+    flexShrink: 1,
   },
   bcoinContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    borderRadius: 999,
-    paddingVertical: hp('0.7%'),
-    paddingHorizontal: wp('2.8%'),
+    borderRadius: 20,
+    paddingVertical: hp('0.6%'),
+    paddingHorizontal: wp('2.5%'),
     gap: wp('1.5%'),
   },
   bcoinIcon: {
@@ -343,43 +476,65 @@ const styles = StyleSheet.create({
     gap: wp('1%'),
   },
   tokenText: {
+    ...TYPE.label,
     fontFamily: FONTS.gilroy.bold,
-    fontSize: wp('3.2%'),
     color: INK,
   },
-  // A hairline border (no shadow) is what keeps the field legible against the
-  // white collapsed header, where a borderless white pill would disappear.
+  fallbackBorder: {
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    marginTop: hp('0.5%'),
+  },
   searchWrapper: {
     backgroundColor: COLORS.white,
-    marginHorizontal: wp('4.7%'),
+    marginTop: SEARCH_MARGIN_START,
+    height: SEARCH_HEIGHT,
+    marginHorizontal: SEARCH_INSET,
     paddingHorizontal: wp('4%'),
     flexDirection: 'row',
     alignItems: 'center',
     overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(17,19,26,0.10)',
+    // Lifts the bar off whatever is behind it — the banner artwork at rest, the
+    // white header once scrolled — so it reads as a control rather than a
+    // painted rectangle. The press-scale animation in HomeScreen rides on top.
+    //
+    // Spelled out locally rather than spread from ELEVATION.sm: that token is
+    // commented out in homeTheme (the flat-page redesign), so the spread was
+    // resolving to nothing and this bar has had no shadow at all. Restoring the
+    // token would also restyle TokenProductCard's three call sites on another
+    // screen, which isn't this change's business.
+    shadowColor: '#0B1020',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  searchTouchable: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  searchDisabled: {
+    opacity: 0.6,
   },
   searchProductContainer: {
     height: hp('3.65%'),
     justifyContent: 'center',
-    marginLeft: wp('2.5%'),
+    marginLeft: wp('2%'),
     flex: 1,
     top: Platform.OS == 'ios' ? 0 : 2,
     overflow: 'hidden',
   },
   searchProductText: {
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('3.6%'),
-    color: '#6B7280',
-  },
-  searchDivider: {
-    width: 1,
-    height: hp('2.2%'),
-    backgroundColor: 'rgba(17,19,26,0.12)',
-    marginLeft: wp('2%'),
+    ...TYPE.body,
+    fontFamily: FONTS.gilroy.regular,
+    // #3A3A3A on white is 10.9:1, but the placeholder is set in Gilroy Light at
+    // small size where thin strokes read far lighter than the ratio suggests.
+    // Regular weight is what actually makes it legible outdoors.
+    color: '#3A3A3A',
   },
   clipboardIcon: {
-    marginLeft: wp('3%'),
+    marginLeft: wp('4%'),
   },
 });
 

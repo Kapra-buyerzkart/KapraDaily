@@ -309,6 +309,31 @@ export const useOrderDetails = (orderId, initialOrderData = null) => {
       rawStatus =
         latestStatus.statusKey || latestStatus.orderStatusKey || rawStatus;
     }
+    // Timeline entries carry the moment a status was reached; the header only
+    // ever holds the order date. Look backwards so a re-entered status wins.
+    const findTimelineEntry = statusKeys => {
+      const match = [...timeline].reverse().find(entry =>
+        statusKeys.includes(
+          String(entry.statusKey || entry.orderStatusKey || '')
+            .toLowerCase()
+            .replace(/[\s_-]/g, ''),
+        ),
+      );
+      if (!match) return null;
+      return {
+        date: match.statusDate || match.createdAt || match.date || null,
+        reason: match.reason || match.remarks || match.notes || null,
+      };
+    };
+
+    const cancelledEntry = findTimelineEntry(['cancelled', 'ordercancelled']);
+    const deliveredEntry = findTimelineEntry([
+      'delivered',
+      'orderdelivered',
+      'completed',
+      'ordercompleted',
+    ]);
+
     console.log(
       '📊 [ORDER STATUS DEBUG] rawStatus:',
       rawStatus,
@@ -393,6 +418,10 @@ export const useOrderDetails = (orderId, initialOrderData = null) => {
           header.bCoinAppliedValue || header.bcoinsAppliedValue || 0,
         ),
       },
+      // Null when the backend has not produced the invoice PDF yet — callers
+      // gate the "View Invoice" entry point on this being non-null.
+      invoiceFileUrl:
+        header.invoiceFileUrl || orderData?.invoiceFileUrl || null,
       invoiceUrl:
         header.invoiceFileUrl ||
         orderData?.invoiceFileUrl ||
@@ -415,6 +444,24 @@ export const useOrderDetails = (orderId, initialOrderData = null) => {
         orderData?.paymentStatus ||
         null,
       rawOrderStatus: rawStatus,
+
+      // Cancellation details. The backend spells these differently depending on
+      // whether the cancellation came from the timeline or the order header, so
+      // both shapes are collapsed here instead of in the screen.
+      cancelledAt: cancelledEntry?.date || header.cancelledAt || null,
+      formattedCancelledAt: formatFriendlyDate(
+        cancelledEntry?.date || header.cancelledAt,
+      ),
+      cancellationReason:
+        cancelledEntry?.reason ||
+        header.cancellationReason ||
+        header.cancelReason ||
+        orderData?.cancellationReason ||
+        null,
+      deliveredAt: deliveredEntry?.date || header.deliveredAt || null,
+      formattedDeliveredAt: formatFriendlyDate(
+        deliveredEntry?.date || header.deliveredAt,
+      ),
       razorpayOrderId:
         header.razorpayOrderId ||
         header.razorPayOrderId ||

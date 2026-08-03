@@ -1,60 +1,67 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, Image } from 'react-native';
 import { FadeInUp } from 'react-native-reanimated';
 import { useNavigation } from '@react-navigation/native';
 import CONFIG from '../../../globals/config';
 import getCategoryPlaceholder from './getCategoryPlaceholder';
-import categoryChipStyles from './categoryChipStyles';
+import useCategoryTileStyles from './useCategoryTileStyles';
 import AnimatedPressable from '../../../components/AnimatedPressable';
 import { getStaggerDelay } from '../../../utils/staggerDelay';
-import { categoryTint } from '../homeTheme';
+import { selectionTick } from '../../../utils/haptics';
+import { MAX_FONT_SCALE } from '@/styles/homeTheme';
 
 const CategoryItem = React.memo(({ item, index = 0 }) => {
   const navigation = useNavigation();
+  const styles = useCategoryTileStyles();
   const [imageError, setImageError] = useState(false);
 
-  // Reset the error latch when the image changes so a recycled chip does not
-  // keep showing the placeholder from a previous category.
   useEffect(() => {
     setImageError(false);
   }, [item.image, item.imageUrl]);
 
+  const label = item.catName || item.name;
+
   let imageSource;
   if (imageError || (!item.image && !item.imageUrl)) {
-    imageSource = getCategoryPlaceholder(item.catName || item.name);
+    imageSource = getCategoryPlaceholder(label);
   } else if (item.image) {
     imageSource = item.image;
   } else {
     imageSource = { uri: `${CONFIG.image_base_url}${item.imageUrl}` };
   }
 
+  const handlePress = useCallback(() => {
+    selectionTick();
+    navigation.navigate('SearchScreen', {
+      catId: item.catId || item.id,
+      catName: label,
+    });
+  }, [navigation, item.catId, item.id, label]);
+
   return (
     <AnimatedPressable
       entering={FadeInUp.delay(getStaggerDelay(index))}
-      style={categoryChipStyles.item}
-      onPress={() =>
-        navigation.navigate('SearchScreen', {
-          catId: item.catId || item.id,
-          catName: item.catName || item.name,
-        })
-      }
+      style={styles.item}
+      onPress={handlePress}
+      accessibilityRole="button"
+      accessibilityLabel={`${label} category`}
     >
-      <View
-        style={[
-          categoryChipStyles.categoryItemContainer,
-          { backgroundColor: categoryTint(index) },
-        ]}
-      >
+      <View style={styles.categoryItemContainer}>
         <Image
           source={imageSource}
-          style={categoryChipStyles.image}
+          style={styles.image}
           resizeMode="contain"
           onError={() => setImageError(true)}
+          accessible={false}
         />
       </View>
 
-      <Text style={categoryChipStyles.label} numberOfLines={2}>
-        {item.catName || item.name}
+      <Text
+        style={styles.label}
+        numberOfLines={2}
+        maxFontSizeMultiplier={MAX_FONT_SCALE}
+      >
+        {label}
       </Text>
     </AnimatedPressable>
   );

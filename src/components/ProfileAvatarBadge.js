@@ -10,7 +10,7 @@ const GOLD_DARK = '#D89B1B';
 const NEUTRAL_RING = '#E3DFD6';
 
 function createStyles({
-  size,
+  containerHeight,
   badgeSize,
   ringSize,
   ringMarginTop,
@@ -18,7 +18,15 @@ function createStyles({
   avatarSize,
 }) {
   return StyleSheet.create({
-    container: { width: size, height: size, alignItems: 'center' },
+    // The box hugs the ring horizontally — reserving the full `size` width left
+    // transparent padding on both sides, which read as the avatar being inset
+    // from the edge it was meant to sit against. Only the crown needs extra
+    // room, and only vertically.
+    container: {
+      width: ringSize,
+      height: containerHeight,
+      alignItems: 'center',
+    },
     ring: {
       width: ringSize,
       height: ringSize,
@@ -73,7 +81,8 @@ export default function ProfileAvatarBadge({
   const badgeSize = size * 0.42;
   const crownHeadroom = badgeSize * 0.62;
   const ringSize = size - crownHeadroom;
-  const ringMarginTop = isPrivileged ? crownHeadroom : crownHeadroom / 2;
+  const ringMarginTop = isPrivileged ? crownHeadroom : 0;
+  const containerHeight = ringSize + ringMarginTop;
   const ringWidth = isPrivileged ? ringSize * 0.09 : ringSize * 0.05;
   const avatarSize = ringSize - ringWidth * 2;
   const Ring = isPrivileged ? LinearGradient : View;
@@ -86,7 +95,7 @@ export default function ProfileAvatarBadge({
     : {};
 
   const styles = createStyles({
-    size,
+    containerHeight,
     badgeSize,
     ringSize,
     ringMarginTop,

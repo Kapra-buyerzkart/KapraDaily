@@ -2,11 +2,13 @@ import React, { useCallback } from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  Image,
   RefreshControl,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import images from '@/assets/images';
 import EventBookingCard from './EventBookingCard';
 import EventBookingSkeleton from './EventBookingSkeleton';
 
@@ -66,6 +68,11 @@ const EventBookingList = ({
       }
       ListEmptyComponent={
         <View style={styles.centered}>
+          <Image
+            source={images.no_vocher_booking}
+            style={styles.emptyImage}
+            resizeMode="contain"
+          />
           <Text style={styles.emptyText}>No event bookings yet</Text>
         </View>
       }
@@ -85,6 +92,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingVertical: 40,
+    gap: 16,
+  },
+  emptyImage: {
+    width: 152,
+    height: 103,
   },
   footer: {
     paddingVertical: 16,

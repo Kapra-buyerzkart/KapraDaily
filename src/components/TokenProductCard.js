@@ -1,12 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  Image,
-  Platform,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -26,17 +19,50 @@ import { useCart, useCartEntry } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import AnimatedPressable from './AnimatedPressable';
 import ShimmerPlaceholder from './ShimmerPlaceholder';
+import { impactTick, selectionTick } from '../utils/haptics';
+import {
+  INK,
+  ACCENT,
+  SURFACE,
+  RADIUS,
+  SPACE,
+  TYPE,
+  HAIRLINE,
+  MAX_FONT_SCALE,
+  hitSlopTo,
+} from '@/styles/homeTheme';
+import COLORS from '@/styles/colors';
 
 // Constants
 const DEFAULT_TOKEN_VALUE = '1';
-const COUNTER_HIT_SLOP = { top: 10, bottom: 10, left: 10, right: 10 };
-const WISHLIST_HIT_SLOP = 20;
 const NO_IMAGE_SOURCE = require('../assets/images/udenDealNotfound.png');
 const UD_TOKEN_ICON = require('../assets/icons/tokenud.png');
 
-// Styles
+// The add/counter control's drawn size. Both states share one footprint so the
+// card does not reflow the instant a product enters the cart — the single most
+// jarring moment in the old card, since the 27pt circle became a 3-part row.
+const ACTION_H = 30;
+const ACTION_W = 62;
+const ACTION_H_SMALL = 28;
+const ACTION_W_SMALL = 54;
+
+// Every interactive element is drawn at its design size and reaches the 44pt
+// minimum through hitSlop, so touch accuracy improves without the card getting
+// visually heavier.
+const ACTION_HIT_SLOP = hitSlopTo(ACTION_H);
+const COUNTER_HIT_SLOP = { top: 10, bottom: 10, left: 6, right: 6 };
+const WISHLIST_HIT_SLOP = hitSlopTo(26);
+
+// Two lines of product name are reserved whether or not the name needs them,
+// and the weight line likewise. Without both reservations the cards in a rail
+// ended at different heights and the row's baseline visibly sawtoothed.
+const NAME_LINES = 2;
+
 const styles = StyleSheet.create({
-  // Layout
+  // ── Outer geometry ────────────────────────────────────────────────────────
+  // Unchanged on purpose: six screens position this card in 2- and 3-column
+  // grids off these exact widths and margins (CategoriesScreen additionally
+  // overrides them via containerStyle). The redesign is entirely interior.
   cardContainer: {
     width: wp('35%'),
     marginVertical: hp('1%'),
@@ -46,259 +72,282 @@ const styles = StyleSheet.create({
     width: wp('29%'),
     marginHorizontal: wp('1%'),
   },
-  topCardBox: {
-    paddingVertical: hp('0.5%'),
-  },
-  topRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  topLeftRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginStart: wp('2.5%'),
-  },
-  imageContainer: {
-    marginTop: hp('0.5%'),
-    paddingHorizontal: wp('2%'),
-  },
-  imageWrapper: {
-    position: 'relative',
-    width: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
-    paddingVertical: hp('1.2%'),
-  },
-  actionOverlay: {
-    position: 'absolute',
-    right: 3,
-    bottom: 0,
-  },
-  bottomSection: {
-    padding: hp(1),
-  },
-  priceContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: hp('0.3%'),
-  },
-  offerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: hp('0.5%'),
-  },
 
-  // Cards
+  // ── Surface ───────────────────────────────────────────────────────────────
   cardSurface: {
-    backgroundColor: 'white',
-    borderRadius: 8,
+    backgroundColor: SURFACE.base,
+    borderRadius: RADIUS.md,
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: HAIRLINE,
+    padding: SPACE.sm,
+  },
+  cardSurfaceSmall: {
+    padding: SPACE.xs + 2,
+    borderRadius: RADIUS.sm,
   },
 
-  // Buttons
-  wishlistButton: {
-    padding: 4,
-    right: 4,
+  // ── Media ─────────────────────────────────────────────────────────────────
+  // The wrapper stays overflow-visible so the action control can dock across
+  // the well's lower edge; the well itself clips, so the image and the
+  // out-of-stock scrim follow the corner radius.
+  mediaWrap: {
+    width: '100%',
+    position: 'relative',
   },
-  plusIconCircle: {
-    width: wp('7%'),
-    height: wp('7%'),
-    borderRadius: 8,
-    justifyContent: 'center',
+  mediaWell: {
+    width: '100%',
+    aspectRatio: 1,
+    borderRadius: RADIUS.sm,
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#F25000',
+    justifyContent: 'center',
+    overflow: 'hidden',
   },
-  plusIconCircleThreeColumn: {
-    width: wp('7%'),
-    height: wp('7%'),
-    borderRadius: wp('2%'),
+  // Square and driven by the well rather than a fixed wp() box, so the image
+  // fills the card at every container width instead of floating small inside
+  // it. This is the change that makes the card read as merchandise.
+  productImageFill: {
+    width: '86%',
+    height: '86%',
+    resizeMode: 'contain',
   },
-  plusIconDisabled: {
-    width: wp('7%'),
-    height: wp('7%'),
-    borderRadius: wp('1.8%'),
-    backgroundColor: '#CCCCCC',
+  productImageOutOfStock: {
+    opacity: 0.45,
+  },
+  imageShimmer: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  outOfStockOverlay: {
+    ...StyleSheet.absoluteFillObject,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.66)',
   },
-  plusIconDisabledThreeColumn: {
-    width: wp('6%'),
-    height: wp('6%'),
-    borderRadius: wp('1.6%'),
+  outOfStockPill: {
+    backgroundColor: INK.base,
+    paddingHorizontal: SPACE.sm,
+    paddingVertical: 3,
+    borderRadius: RADIUS.pill,
+  },
+  outOfStockText: {
+    ...TYPE.micro,
+    color: INK.onDark,
+    fontFamily: FONTS.gilroy.bold,
+  },
+
+  discountBadge: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    backgroundColor: COLORS.success,
+    paddingHorizontal: SPACE.sm - 2,
+    paddingVertical: 2,
+    borderTopLeftRadius: RADIUS.sm,
+    borderBottomRightRadius: RADIUS.sm,
+  },
+  discountText: {
+    ...TYPE.micro,
+    fontSize: TYPE.micro.fontSize - 1,
+    color: INK.onDark,
+    fontFamily: FONTS.gilroy.bold,
+    letterSpacing: 0.2,
+  },
+
+  // ── Wishlist ──────────────────────────────────────────────────────────────
+  wishlistButton: {
+    position: 'absolute',
+    top: SPACE.xs,
+    right: SPACE.xs,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.92)',
+  },
+
+  // ── Add / quantity control ────────────────────────────────────────────────
+  actionDock: {
+    position: 'absolute',
+    right: 0,
+    bottom: -(ACTION_H / 2),
+  },
+  actionDockSmall: {
+    bottom: -(ACTION_H_SMALL / 2),
+  },
+  addButton: {
+    width: ACTION_W,
+    height: ACTION_H,
+    borderRadius: RADIUS.xs,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: SURFACE.base,
+    borderWidth: 1.2,
+    borderColor: ACCENT.primary,
+  },
+  addButtonSmall: {
+    width: ACTION_W_SMALL,
+    height: ACTION_H_SMALL,
+  },
+  addLabel: {
+    ...TYPE.label,
+    lineHeight: undefined,
+    color: ACCENT.primary,
+    fontFamily: FONTS.gilroy.bold,
+    letterSpacing: 0.4,
+  },
+  addLabelSmall: {
+    ...TYPE.caption,
+    lineHeight: undefined,
+  },
+  addDisabled: {
+    backgroundColor: SURFACE.sunken,
+    borderColor: HAIRLINE,
+  },
+  addLabelDisabled: {
+    color: INK.faint,
   },
   counterContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    height: wp('7%'),
-    borderRadius: 8,
-    backgroundColor: '#F25000',
+    width: ACTION_W,
+    height: ACTION_H,
+    borderRadius: RADIUS.xs,
+    backgroundColor: ACCENT.primary,
+  },
+  counterContainerSmall: {
+    width: ACTION_W_SMALL,
+    height: ACTION_H_SMALL,
   },
   counterBtn: {
-    width: wp('7%'),
-    height: wp('7%'),
-    borderRadius: wp('1.2%'),
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  // Images
-  imageBox: {
-    width: wp('28%'),
-    height: wp('26%'),
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  imageBoxThreeColumn: {
-    width: wp('22%'),
-    height: wp('20%'),
-  },
-  productImageFill: {
-    width: '100%',
+    width: ACTION_H,
     height: '100%',
-    resizeMode: 'contain',
-  },
-  imageShimmer: {
-    ...StyleSheet.absoluteFillObject,
-    borderRadius: 10,
-  },
-  productImageOutOfStock: {
-    opacity: 0.5,
-  },
-  outOfStockOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.6)',
-    borderRadius: 18,
+    justifyContent: 'center',
+  },
+  counterBtnSmall: {
+    width: ACTION_H_SMALL - 4,
+  },
+  counterQty: {
+    ...TYPE.label,
+    lineHeight: undefined,
+    color: INK.onDark,
+    fontFamily: FONTS.gilroy.bold,
   },
 
-  // Token
+  info: {
+    paddingTop: ACTION_H / 2 + SPACE.sm,
+  },
+  infoSmall: {
+    paddingTop: ACTION_H_SMALL / 2 + SPACE.xs,
+  },
   tokenRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: SPACE.xs,
   },
   tokenIcon: {
-    width: wp('3%'),
-    height: wp('3%'),
+    width: 12,
+    height: 12,
     resizeMode: 'contain',
   },
-  tokenIconThreeColumn: {
-    width: wp('2.6%'),
-    height: wp('2.6%'),
-  },
-
-  // Typography
   tokenText: {
-    fontSize: wp('2.2%'),
+    ...TYPE.micro,
     color: '#5E3568',
     fontFamily: FONTS.gilroy.semiBold,
-    marginLeft: wp('1%'),
+    marginLeft: SPACE.xs,
+    flexShrink: 1,
   },
-  tokenTextThreeColumn: {
-    fontSize: wp('2%'),
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: SPACE.xs,
+    gap: SPACE.xs,
   },
-  counterQty: {
-    fontSize: wp('3.5%'),
-    color: '#FFFFFF',
-    fontFamily: FONTS.gilroy.semiBold,
-    top: Platform.OS === 'ios' ? 0 : 1,
+  ratingPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: ACCENT.successSoft,
+    borderRadius: RADIUS.xs,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    gap: 2,
   },
-  counterQtyThreeColumn: {
-    fontSize: wp('3.5%'),
+  ratingText: {
+    ...TYPE.micro,
+    color: ACCENT.successText,
+    fontFamily: FONTS.gilroy.bold,
   },
-  priceText: {
-    color: '#000000',
-    fontSize: wp('3.8%'),
-    fontFamily: FONTS.gilroy.semiBold,
-  },
-  priceTextThreeColumn: {
-    fontSize: wp('2.8%'),
-  },
-  mrpLabel: {
-    fontSize: wp('3.4%'),
-    color: '#9B9B9B',
-    top: Platform.OS === 'ios' ? 0 : 1,
-    marginStart: wp('1%'),
+  deliveryText: {
+    ...TYPE.micro,
+    color: INK.muted,
     fontFamily: FONTS.gilroy.medium,
   },
-  mrpLabelThreeColumn: {
-    fontSize: wp('2.4%'),
-  },
-  mrpText: {
-    textDecorationLine: 'line-through',
-  },
-  mrpTextNoDecoration: {
-    textDecorationLine: 'none',
-  },
-  offerText: {
-    color: '#0CA201',
-    fontSize: wp('2.5%'),
-    fontFamily: FONTS.gilroy.semiBold,
-  },
-  offerTextThreeColumn: {
-    fontSize: wp('2.6%'),
-  },
-  dashedLine: {
-    flex: 1,
-    borderStyle: 'dashed',
-    borderWidth: 0.6,
-    borderColor: '#CFCFCF',
-    marginLeft: wp('2%'),
-  },
+
+  // Name leads the text column now. The old card put price first and buried
+  // the name under it, which is the wrong scan order for choosing between
+  // products — you identify the item, then price it.
   productName: {
-    fontSize: wp('3.3%'),
-    color: '#2F2F2F',
-    lineHeight: hp('2.2%'),
-    fontFamily: FONTS.gilroy.medium,
-    minHeight: hp('5%'),
+    ...TYPE.label,
+    color: INK.base,
+    fontFamily: FONTS.gilroy.semiBold,
+    minHeight: TYPE.label.lineHeight * NAME_LINES,
+    includeFontPadding: false,
   },
-  productNameThreeColumn: {
-    fontSize: wp('2.8%'),
-    minHeight: hp('3.5%'),
-    lineHeight: hp('1.8%'),
+  productNameSmall: {
+    ...TYPE.caption,
+    minHeight: TYPE.caption.lineHeight * NAME_LINES,
   },
   productWeight: {
-    fontSize: wp('2.8%'),
-    color: '#727783',
-    marginTop: hp('0.5%'),
+    ...TYPE.caption,
+    color: INK.muted,
     fontFamily: FONTS.gilroy.regular,
+    marginTop: 2,
+    // Reserved even when empty, so cards without a weight still line their
+    // price rows up with the cards beside them.
+    minHeight: TYPE.caption.lineHeight,
   },
-  productWeightThreeColumn: {
-    fontSize: wp('2.4%'),
+  productWeightSmall: {
+    ...TYPE.micro,
+    minHeight: TYPE.micro.lineHeight,
   },
-  outOfStockText: {
-    color: '#FF0000',
-    fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('2.8%'),
-    transform: [{ rotate: '-15deg' }],
-    borderWidth: 1,
-    borderColor: '#FF0000',
-    paddingHorizontal: 4,
-    paddingVertical: 2,
-    borderRadius: 4,
+
+  priceRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    marginTop: SPACE.xs + 2,
+    flexWrap: 'wrap',
   },
-  outOfStockTextThreeColumn: {
-    fontSize: wp('2.2%'),
+  priceText: {
+    ...TYPE.heading,
+    lineHeight: undefined,
+    color: INK.strong,
+    fontFamily: FONTS.gilroy.bold,
+  },
+  priceTextSmall: {
+    ...TYPE.body,
+    lineHeight: undefined,
+  },
+  mrpText: {
+    ...TYPE.caption,
+    color: INK.faint,
+    fontFamily: FONTS.gilroy.medium,
+    textDecorationLine: 'line-through',
+    marginLeft: SPACE.xs + 2,
+  },
+  mrpTextSmall: {
+    ...TYPE.micro,
   },
 });
 
-// Sub-components
+// ── Sub-components ──────────────────────────────────────────────────────────
+
 const HEART_POP_SPRING = { damping: 8, stiffness: 300, mass: 0.5 };
 
 const WishlistButton = React.memo(function WishlistButton({
   liked,
-  isThreeColumn,
+  productName,
   onPress,
 }) {
   const scale = useSharedValue(1);
@@ -322,12 +371,19 @@ const WishlistButton = React.memo(function WishlistButton({
       hitSlop={WISHLIST_HIT_SLOP}
       activeOpacity={0.8}
       onPress={onPress}
+      accessibilityRole="button"
+      accessibilityState={{ selected: liked }}
+      accessibilityLabel={
+        liked
+          ? `Remove ${productName} from wishlist`
+          : `Add ${productName} to wishlist`
+      }
     >
       <Animated.View style={heartAnimatedStyle}>
         <Ionicons
           name={liked ? 'heart' : 'heart-outline'}
-          size={isThreeColumn ? wp('4.6%') : wp('5.5%')}
-          color={liked ? '#FF0048' : '#9B9B9B'}
+          size={16}
+          color={liked ? '#FF0048' : INK.muted}
         />
       </Animated.View>
     </TouchableOpacity>
@@ -337,7 +393,6 @@ const WishlistButton = React.memo(function WishlistButton({
 const ProductImage = React.memo(function ProductImage({
   imageSource,
   isPlaceholder,
-  isThreeColumn,
   isOutOfStock,
   onError,
 }) {
@@ -370,10 +425,8 @@ const ProductImage = React.memo(function ProductImage({
     opacity: opacity.value,
   }));
 
-  const showShimmer = !isPlaceholder && !loaded;
-
   return (
-    <View style={[styles.imageBox, isThreeColumn && styles.imageBoxThreeColumn]}>
+    <>
       <Animated.Image
         source={imageSource}
         style={[
@@ -384,21 +437,24 @@ const ProductImage = React.memo(function ProductImage({
         resizeMode="contain"
         onLoad={handleLoad}
         onError={onError}
+        accessible={false}
       />
-      {showShimmer && <ShimmerPlaceholder style={styles.imageShimmer} />}
+      {!isPlaceholder && !loaded && (
+        <ShimmerPlaceholder style={styles.imageShimmer} />
+      )}
       {isOutOfStock && (
         <View style={styles.outOfStockOverlay}>
-          <Text
-            style={[
-              styles.outOfStockText,
-              isThreeColumn && styles.outOfStockTextThreeColumn,
-            ]}
-          >
-            Out of Stock
-          </Text>
+          <View style={styles.outOfStockPill}>
+            <Text
+              style={styles.outOfStockText}
+              maxFontSizeMultiplier={MAX_FONT_SCALE}
+            >
+              Out of stock
+            </Text>
+          </View>
         </View>
       )}
-    </View>
+    </>
   );
 });
 
@@ -406,36 +462,46 @@ const QuantityControl = React.memo(function QuantityControl({
   quantity,
   isOutOfStock,
   isThreeColumn,
+  productName,
   onIncrement,
   onDecrement,
   onAdd,
 }) {
   if (quantity > 0) {
     return (
-      <View style={styles.counterContainer}>
+      <View
+        style={[
+          styles.counterContainer,
+          isThreeColumn && styles.counterContainerSmall,
+        ]}
+        accessibilityLabel={`${productName}, quantity ${quantity}`}
+      >
         <AnimatedPressable
-          style={styles.counterBtn}
+          style={[styles.counterBtn, isThreeColumn && styles.counterBtnSmall]}
           hitSlop={COUNTER_HIT_SLOP}
           onPress={onDecrement}
+          accessibilityRole="button"
+          accessibilityLabel={
+            quantity === 1
+              ? `Remove ${productName} from cart`
+              : `Decrease ${productName} quantity`
+          }
         >
-          <Entypo name="minus" size={isThreeColumn ? 16 : 22} color="#FFFFFF" />
+          <Entypo name="minus" size={isThreeColumn ? 15 : 17} color="#FFFFFF" />
         </AnimatedPressable>
 
-        <Text
-          style={[
-            styles.counterQty,
-            isThreeColumn && styles.counterQtyThreeColumn,
-          ]}
-        >
+        <Text style={styles.counterQty} maxFontSizeMultiplier={MAX_FONT_SCALE}>
           {quantity}
         </Text>
 
         <AnimatedPressable
-          style={styles.counterBtn}
+          style={[styles.counterBtn, isThreeColumn && styles.counterBtnSmall]}
           hitSlop={COUNTER_HIT_SLOP}
           onPress={onIncrement}
+          accessibilityRole="button"
+          accessibilityLabel={`Increase ${productName} quantity`}
         >
-          <Entypo name="plus" size={isThreeColumn ? 16 : 22} color="#FFFFFF" />
+          <Entypo name="plus" size={isThreeColumn ? 15 : 17} color="#FFFFFF" />
         </AnimatedPressable>
       </View>
     );
@@ -445,24 +511,44 @@ const QuantityControl = React.memo(function QuantityControl({
     return (
       <View
         style={[
-          styles.plusIconDisabled,
-          isThreeColumn && styles.plusIconDisabledThreeColumn,
+          styles.addButton,
+          isThreeColumn && styles.addButtonSmall,
+          styles.addDisabled,
         ]}
+        accessibilityRole="button"
+        accessibilityState={{ disabled: true }}
+        accessibilityLabel={`${productName} is out of stock`}
       >
-        <Entypo name="plus" size={isThreeColumn ? 16 : 20} color="#FFFFFF" />
+        <Text
+          style={[
+            styles.addLabel,
+            isThreeColumn && styles.addLabelSmall,
+            styles.addLabelDisabled,
+          ]}
+          maxFontSizeMultiplier={MAX_FONT_SCALE}
+        >
+          ADD
+        </Text>
       </View>
     );
   }
 
+  // A labelled button rather than a bare "+" glyph: the old 27pt circle was
+  // both under the 44pt touch minimum and ambiguous about what it added.
   return (
     <AnimatedPressable
       onPress={onAdd}
-      style={[
-        styles.plusIconCircle,
-        isThreeColumn && styles.plusIconCircleThreeColumn,
-      ]}
+      hitSlop={ACTION_HIT_SLOP}
+      style={[styles.addButton, isThreeColumn && styles.addButtonSmall]}
+      accessibilityRole="button"
+      accessibilityLabel={`Add ${productName} to cart`}
     >
-      <Entypo name="plus" size={isThreeColumn ? 16 : 20} color="#F25000" />
+      <Text
+        style={[styles.addLabel, isThreeColumn && styles.addLabelSmall]}
+        maxFontSizeMultiplier={MAX_FONT_SCALE}
+      >
+        ADD
+      </Text>
     </AnimatedPressable>
   );
 });
@@ -472,34 +558,31 @@ const PriceSection = React.memo(function PriceSection({
   mrp,
   isThreeColumn,
 }) {
+  const hasMrp = !!mrp && mrp !== price;
+
   return (
-    <View style={styles.priceContainer}>
+    <View style={styles.priceRow}>
       <Text
-        style={[styles.priceText, isThreeColumn && styles.priceTextThreeColumn]}
+        style={[styles.priceText, isThreeColumn && styles.priceTextSmall]}
+        maxFontSizeMultiplier={MAX_FONT_SCALE}
       >
         ₹{price}
       </Text>
 
-      {mrp !== price && (
+      {hasMrp && (
         <Text
-          style={[styles.mrpLabel, isThreeColumn && styles.mrpLabelThreeColumn]}
+          style={[styles.mrpText, isThreeColumn && styles.mrpTextSmall]}
+          maxFontSizeMultiplier={MAX_FONT_SCALE}
         >
-          ₹
-          <Text
-            style={[
-              styles.mrpText,
-              mrp === price && styles.mrpTextNoDecoration,
-            ]}
-          >
-            {mrp}
-          </Text>
+          ₹{mrp}
         </Text>
       )}
     </View>
   );
 });
 
-// Component
+// ── Component ───────────────────────────────────────────────────────────────
+
 const TokenProductCard = ({
   item,
   onPress,
@@ -512,40 +595,51 @@ const TokenProductCard = ({
   containerStyle,
   entering,
 }) => {
-  // State
   const [imageError, setImageError] = useState(false);
 
   const { addToCart, updateCartItemQuantity, removeFromCart } = useCart();
   const { isInWishlist, toggleWishlist } = useWishlist();
 
   // Derived values
-  const { productId, name, mrp, price, offer, weight, token, isOutOfStock } =
-    useMemo(() => {
-      const derivedProductId = item?.productId || item?.id;
-      const derivedTokenValue =
-        item?.bTokenValue ||
-        item?.token ||
-        item?.btokens ||
-        DEFAULT_TOKEN_VALUE;
-      const discount =
-        item?.offer || item?.discountPercentage || item?.discountPercent;
+  const {
+    productId,
+    name,
+    mrp,
+    price,
+    offer,
+    weight,
+    token,
+    isOutOfStock,
+    rating,
+    deliveryEta,
+  } = useMemo(() => {
+    const derivedProductId = item?.productId || item?.id;
+    const derivedTokenValue =
+      item?.bTokenValue || item?.token || item?.btokens || DEFAULT_TOKEN_VALUE;
+    const discount =
+      item?.offer || item?.discountPercentage || item?.discountPercent;
+    const derivedRating = item?.rating ?? item?.avgRating ?? item?.ratingValue;
+    const derivedEta =
+      item?.deliveryTime ?? item?.deliveryEta ?? item?.eta ?? null;
 
-      return {
-        productId: derivedProductId,
-        name: item?.prName || item?.name || '',
-        mrp: item?.mrp || item?.unitPrice || '',
-        price: item?.price || item?.specialPrice || '',
-        offer: discount ? `${Math.round(discount)}% OFF` : '',
-        weight: item?.weight,
-        token: `${derivedTokenValue} UD ${
-          Number(derivedTokenValue) > 1 ? 'Tokens' : 'Token'
-        }`,
-        isOutOfStock:
-          item?.stockQty === 0 ||
-          item?.stockQty === '0' ||
-          item?.isAvailable === false,
-      };
-    }, [item]);
+    return {
+      productId: derivedProductId,
+      name: item?.prName || item?.name || '',
+      mrp: item?.mrp || item?.unitPrice || '',
+      price: item?.price || item?.specialPrice || '',
+      offer: discount ? `${Math.round(discount)}% OFF` : '',
+      weight: item?.weight,
+      token: `${derivedTokenValue} UD ${
+        Number(derivedTokenValue) > 1 ? 'Tokens' : 'Token'
+      }`,
+      isOutOfStock:
+        item?.stockQty === 0 ||
+        item?.stockQty === '0' ||
+        item?.isAvailable === false,
+      rating: derivedRating ? Number(derivedRating).toFixed(1) : null,
+      deliveryEta: derivedEta,
+    };
+  }, [item]);
 
   // Indexed lookup instead of an O(cartLines) scan per card. The memo above it
   // only cached the scan per render — the scan still re-ran for every card on
@@ -591,6 +685,7 @@ const TokenProductCard = ({
   const handleImageError = useCallback(() => setImageError(true), []);
 
   const handleToggleWishlist = useCallback(() => {
+    selectionTick();
     if (onToggleWishlist) {
       onToggleWishlist(item);
     } else {
@@ -599,6 +694,7 @@ const TokenProductCard = ({
   }, [onToggleWishlist, toggleWishlist, item]);
 
   const handleDecrement = useCallback(() => {
+    selectionTick();
     if (quantity === 1) {
       removeFromCart(cartItemId);
     } else {
@@ -607,10 +703,12 @@ const TokenProductCard = ({
   }, [quantity, cartItemId, removeFromCart, updateCartItemQuantity]);
 
   const handleIncrement = useCallback(() => {
+    selectionTick();
     updateCartItemQuantity(cartItemId, quantity + 1);
   }, [cartItemId, quantity, updateCartItemQuantity]);
 
   const handleAdd = useCallback(() => {
+    impactTick();
     if (onAdd) {
       onAdd(item);
     } else {
@@ -618,7 +716,73 @@ const TokenProductCard = ({
     }
   }, [onAdd, addToCart, item]);
 
-  // JSX return
+  // One spoken sentence for the whole card. Screen readers previously walked
+  // seven unlabelled leaf nodes per product with no indication of what they
+  // belonged to.
+  const cardAccessibilityLabel = useMemo(() => {
+    const parts = [name];
+    if (weight) parts.push(weight);
+    parts.push(`₹${price}`);
+    if (mrp && mrp !== price) parts.push(`MRP ₹${mrp}`);
+    if (offer) parts.push(offer);
+    if (isOutOfStock) parts.push('Out of stock');
+    return parts.filter(Boolean).join(', ');
+  }, [name, weight, price, mrp, offer, isOutOfStock]);
+
+  const showMetaRow = !!rating || !!deliveryEta;
+
+  // The card is one focusable element, and its buttons are exposed as
+  // assistive-tech *actions* on it rather than as nested focusable children.
+  // Nesting them inside an `accessible` Pressable makes them unreachable under
+  // VoiceOver on iOS, which would have left screen-reader users unable to add
+  // anything to the cart from a rail.
+  const accessibilityActions = useMemo(() => {
+    const actions = [{ name: 'activate', label: 'View product' }];
+    if (!isOutOfStock) {
+      if (quantity > 0) {
+        actions.push({ name: 'increment', label: 'Increase quantity' });
+        actions.push({ name: 'decrement', label: 'Decrease quantity' });
+      } else {
+        actions.push({ name: 'addToCart', label: 'Add to cart' });
+      }
+    }
+    if (!hideWishlist) {
+      actions.push({
+        name: 'toggleWishlist',
+        label: liked ? 'Remove from wishlist' : 'Add to wishlist',
+      });
+    }
+    return actions;
+  }, [isOutOfStock, quantity, hideWishlist, liked]);
+
+  const handleAccessibilityAction = useCallback(
+    event => {
+      switch (event.nativeEvent.actionName) {
+        case 'addToCart':
+          handleAdd();
+          break;
+        case 'increment':
+          handleIncrement();
+          break;
+        case 'decrement':
+          handleDecrement();
+          break;
+        case 'toggleWishlist':
+          handleToggleWishlist();
+          break;
+        default:
+          onPress?.();
+      }
+    },
+    [
+      handleAdd,
+      handleIncrement,
+      handleDecrement,
+      handleToggleWishlist,
+      onPress,
+    ],
+  );
+
   return (
     <AnimatedPressable
       entering={entering}
@@ -628,105 +792,122 @@ const TokenProductCard = ({
         containerStyle,
       ]}
       onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={cardAccessibilityLabel}
+      accessibilityActions={accessibilityActions}
+      onAccessibilityAction={handleAccessibilityAction}
     >
-      <View style={styles.cardSurface}>
-        <View style={styles.topCardBox}>
-          <View style={styles.topRow}>
-            <View style={styles.topLeftRow}>
-              {!hideToken && quantity === 0 ? (
-                <View style={styles.tokenRow}>
-                  <Image
-                    source={UD_TOKEN_ICON}
-                    style={[
-                      styles.tokenIcon,
-                      isThreeColumn && styles.tokenIconThreeColumn,
-                    ]}
-                  />
-                  <Text
-                    style={[
-                      styles.tokenText,
-                      isThreeColumn && styles.tokenTextThreeColumn,
-                    ]}
-                  >
-                    {token}
-                  </Text>
-                </View>
-              ) : null}
-            </View>
-
-            <View>
-              {!hideWishlist ? (
-                <WishlistButton
-                  liked={liked}
-                  isThreeColumn={isThreeColumn}
-                  onPress={handleToggleWishlist}
-                />
-              ) : null}
-            </View>
-          </View>
-        </View>
-
-        <View style={styles.imageContainer}>
-          <View style={styles.imageWrapper}>
+      <View
+        style={[styles.cardSurface, isThreeColumn && styles.cardSurfaceSmall]}
+        importantForAccessibility="no-hide-descendants"
+      >
+        <View style={styles.mediaWrap}>
+          <View style={styles.mediaWell}>
             <ProductImage
               imageSource={imageSource}
               isPlaceholder={!rawImage || imageError}
-              isThreeColumn={isThreeColumn}
               isOutOfStock={isOutOfStock}
               onError={handleImageError}
             />
 
-            <View style={styles.actionOverlay}>
-              <QuantityControl
-                quantity={quantity}
-                isOutOfStock={isOutOfStock}
-                isThreeColumn={isThreeColumn}
-                onIncrement={handleIncrement}
-                onDecrement={handleDecrement}
-                onAdd={handleAdd}
+            {!!offer && (
+              <View style={styles.discountBadge}>
+                <Text
+                  style={styles.discountText}
+                  maxFontSizeMultiplier={MAX_FONT_SCALE}
+                >
+                  {offer}
+                </Text>
+              </View>
+            )}
+
+            {!hideWishlist && (
+              <WishlistButton
+                liked={liked}
+                productName={name}
+                onPress={handleToggleWishlist}
               />
-            </View>
+            )}
           </View>
 
-          <View style={styles.bottomSection}>
-            <PriceSection
-              price={price}
-              mrp={mrp}
+          <View
+            style={[styles.actionDock, isThreeColumn && styles.actionDockSmall]}
+          >
+            <QuantityControl
+              quantity={quantity}
+              isOutOfStock={isOutOfStock}
               isThreeColumn={isThreeColumn}
+              productName={name}
+              onIncrement={handleIncrement}
+              onDecrement={handleDecrement}
+              onAdd={handleAdd}
             />
-
-            <View style={styles.offerRow}>
-              <Text
-                style={[
-                  styles.offerText,
-                  isThreeColumn && styles.offerTextThreeColumn,
-                ]}
-              >
-                {offer}
-              </Text>
-              <View style={styles.dashedLine} />
-            </View>
-
-            <Text
-              numberOfLines={2}
-              ellipsizeMode="tail"
-              style={[
-                styles.productName,
-                isThreeColumn && styles.productNameThreeColumn,
-              ]}
-            >
-              {name}
-            </Text>
-
-            <Text
-              style={[
-                styles.productWeight,
-                isThreeColumn && styles.productWeightThreeColumn,
-              ]}
-            >
-              {weight}
-            </Text>
           </View>
+        </View>
+
+        <View style={[styles.info, isThreeColumn && styles.infoSmall]}>
+          {!hideToken && quantity === 0 && (
+            <View style={styles.tokenRow}>
+              <Image source={UD_TOKEN_ICON} style={styles.tokenIcon} />
+              <Text
+                style={styles.tokenText}
+                numberOfLines={1}
+                maxFontSizeMultiplier={MAX_FONT_SCALE}
+              >
+                {token}
+              </Text>
+            </View>
+          )}
+
+          {showMetaRow && (
+            <View style={styles.metaRow}>
+              {!!rating && (
+                <View style={styles.ratingPill}>
+                  <Ionicons name="star" size={9} color={ACCENT.successText} />
+                  <Text
+                    style={styles.ratingText}
+                    maxFontSizeMultiplier={MAX_FONT_SCALE}
+                  >
+                    {rating}
+                  </Text>
+                </View>
+              )}
+              {!!deliveryEta && (
+                <Text
+                  style={styles.deliveryText}
+                  numberOfLines={1}
+                  maxFontSizeMultiplier={MAX_FONT_SCALE}
+                >
+                  {deliveryEta}
+                </Text>
+              )}
+            </View>
+          )}
+
+          <Text
+            numberOfLines={NAME_LINES}
+            ellipsizeMode="tail"
+            style={[
+              styles.productName,
+              isThreeColumn && styles.productNameSmall,
+            ]}
+            maxFontSizeMultiplier={MAX_FONT_SCALE}
+          >
+            {name}
+          </Text>
+
+          <Text
+            numberOfLines={1}
+            style={[
+              styles.productWeight,
+              isThreeColumn && styles.productWeightSmall,
+            ]}
+            maxFontSizeMultiplier={MAX_FONT_SCALE}
+          >
+            {weight}
+          </Text>
+
+          <PriceSection price={price} mrp={mrp} isThreeColumn={isThreeColumn} />
         </View>
       </View>
     </AnimatedPressable>
