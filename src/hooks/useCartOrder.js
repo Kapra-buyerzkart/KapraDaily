@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { createOrderApi, confirmCodApi } from '../api/orderService';
 import { useRazorpayPayment } from './useRazorpayPayment';
+import logger from '../utils/logger';
 
 export const useCartOrder = ({
   navigation,
@@ -96,12 +97,18 @@ export const useCartOrder = ({
       showLoader(true);
       // Perform a final summary sync before showing the confirmation modal
       // This ensures we have the absolute latest cartVersion and calculation
+      logger.debug('[PAY:cart] 0/6 pre-order summary sync payload:', {
+        deliveryType: selectedDeliveryType,
+        slotId: chosenSlot?.id,
+        pincodeAreaId: selectedAddress.pincodeAreaId,
+      });
       const summaryRes = await getCartSummary(
         selectedDeliveryType,
         chosenSlot?.id,
         null, // Force refresh version if needed
         selectedAddress.pincodeAreaId,
       );
+      logger.debug('[PAY:cart] 0/6 pre-order summary response:', summaryRes);
 
       showLoader(false);
 
@@ -211,6 +218,14 @@ export const useCartOrder = ({
     const isOnlinePayment = onlineTerms.some(term =>
       paymentMethod?.toLowerCase()?.includes(term),
     );
+    logger.debug('[PAY:cart] submitOrder start:', {
+      paymentMethod,
+      isOnlinePayment,
+      itemCount: cartItems?.length,
+      toPay: billCalculations?.toPay,
+      cartId: cartSummary?.cartId,
+      cartVersion: cartSummary?.cartVersion,
+    });
 
     try {
       showLoader(true);
@@ -227,6 +242,8 @@ export const useCartOrder = ({
           null,
           selectedAddress?.pincodeAreaId,
         );
+
+        logger.debug('[PAY:cart] cart session refresh response:', refreshRes);
 
         if (refreshRes?.success && refreshRes?.data?.cartId) {
           console.log('✅ [ORDER] Session recovered successfully');
@@ -259,7 +276,9 @@ export const useCartOrder = ({
         pincodeAreaId: selectedAddress.pincodeAreaId,
       };
 
+      logger.debug('[PAY:cart] create-order payload:', createPayload);
       const createResponse = await createOrderApi(createPayload);
+      logger.debug('[PAY:cart] create-order response:', createResponse);
       if (createResponse?.success && createResponse?.data?.orderId) {
         const orderId = createResponse.data.orderId;
         const orderNumber = createResponse.data.orderNumber || orderId;
@@ -267,7 +286,9 @@ export const useCartOrder = ({
         if (isOnlinePayment) {
           await processPayment(orderId, orderNumber);
         } else {
+          logger.debug('[PAY:cart] confirm-COD payload:', { orderId });
           const confirmResponse = await confirmCodApi(orderId);
+          logger.debug('[PAY:cart] confirm-COD response:', confirmResponse);
           if (confirmResponse?.success) {
             await finalizeOrder(createResponse.data);
           } else {
@@ -277,6 +298,7 @@ export const useCartOrder = ({
           }
         }
       } else if (createResponse?.status === 'CART_CONFLICT') {
+        logger.debug('[PAY:cart] ✖ create-order CART_CONFLICT:', createResponse);
         showLoader(false);
         setStatusType('error');
         setStatusTitle('Price/Stock Changed');
@@ -288,6 +310,11 @@ export const useCartOrder = ({
         throw new Error(createResponse?.message || 'Failed to create order');
       }
     } catch (error) {
+      logger.debug('[PAY:cart] ✖ submitOrder failed:', {
+        message: error?.message,
+        status: error?.status,
+        data: error?.data || error?.response?.data,
+      });
       showLoader(false);
       setStatusType('error');
       setStatusTitle('Error');

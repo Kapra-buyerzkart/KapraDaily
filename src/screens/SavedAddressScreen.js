@@ -1,16 +1,13 @@
 import {
   View,
   Text,
-  Image,
   TouchableOpacity,
   StyleSheet,
   FlatList,
   RefreshControl,
-  Alert,
+  Image,
 } from 'react-native';
-import React, { useState, useContext } from 'react';
-import { AppContext } from '../context/appContext';
-import StoreUnavailable from '../components/StoreUnavailable';
+import React, { useState, useCallback } from 'react';
 import LocationModal from '../components/LocationModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -20,14 +17,197 @@ import {
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { FONTS } from '../styles/typography';
 import { useAddresses } from '../hooks/useAddresses';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import AntDesign from 'react-native-vector-icons/AntDesign';
 import icons from '@/assets/icons';
 import AddressConfirmationModal from '../components/AddressConfirmationModal';
+import {
+  INK,
+  SURFACE,
+  HAIRLINE,
+  ACCENT,
+  RADIUS,
+  SPACE,
+  TYPE,
+  GUTTER,
+  MAX_FONT_SCALE,
+  hitSlopTo,
+} from '@/styles/homeTheme';
+
+const ICON = {
+  type: wp('4.4%'),
+  meta: wp('3.6%'),
+  action: wp('4.4%'),
+};
+
+// The row of edit / delete / dismiss controls that replaces the "⋮" once tapped.
+// Rendered in place of the meta cluster so the card never changes height.
+const RowActions = ({ onEdit, onDelete, onClose }) => (
+  <View style={styles.actionsRow}>
+    <TouchableOpacity
+      hitSlop={hitSlopTo(ICON.action)}
+      accessibilityRole="button"
+      accessibilityLabel="Edit address"
+      onPress={onEdit}
+      style={styles.actionButton}
+    >
+      <MaterialCommunityIcons
+        name="pencil-outline"
+        size={ICON.action}
+        color={INK.base}
+      />
+    </TouchableOpacity>
+    <View style={styles.actionSeparator} />
+    <TouchableOpacity
+      hitSlop={hitSlopTo(ICON.action)}
+      accessibilityRole="button"
+      accessibilityLabel="Delete address"
+      onPress={onDelete}
+      style={styles.actionButton}
+    >
+      <MaterialCommunityIcons
+        name="trash-can-outline"
+        size={ICON.action}
+        color={ACCENT.discount}
+      />
+    </TouchableOpacity>
+    <View style={styles.actionSeparator} />
+    <TouchableOpacity
+      hitSlop={hitSlopTo(ICON.action)}
+      accessibilityRole="button"
+      accessibilityLabel="Close actions"
+      onPress={onClose}
+      style={styles.actionButton}
+    >
+      <Ionicons name="close" size={ICON.action} color={INK.muted} />
+    </TouchableOpacity>
+  </View>
+);
+
+// Defined at module scope so React.memo actually memoises — the previous
+// in-render definition made every card remount on each parent render.
+const AddressCard = React.memo(
+  ({ item, onPress, onEdit, onMenu, onDelete, onCloseMenu }) => {
+    const isSelected = !!item.selected;
+    const isHome = String(item.type).toLowerCase() === 'home';
+
+    return (
+      <TouchableOpacity
+        activeOpacity={0.9}
+        onPress={onPress}
+        accessibilityRole="button"
+        accessibilityState={{ selected: isSelected }}
+        accessibilityLabel={`${item.type} address, ${item.address}${
+          isSelected ? ', selected. Tap to edit' : '. Tap to use this address'
+        }`}
+        style={[styles.card, isSelected && styles.cardSelected]}
+      >
+        <View style={styles.cardHeader}>
+          <View style={styles.typeCluster}>
+            <View
+              style={[styles.typeWell, isSelected && styles.typeWellActive]}
+            >
+              <Ionicons
+                name={isHome ? 'home-outline' : 'briefcase-outline'}
+                size={ICON.type}
+                color={isSelected ? ACCENT.successText : INK.base}
+              />
+            </View>
+            <Text
+              style={styles.typeText}
+              maxFontSizeMultiplier={MAX_FONT_SCALE}
+              numberOfLines={1}
+            >
+              {item.type}
+            </Text>
+          </View>
+
+          {item.threeDotsClicked ? (
+            <RowActions
+              onEdit={onEdit}
+              onDelete={onDelete}
+              onClose={onCloseMenu}
+            />
+          ) : (
+            <View style={styles.headerRight}>
+              {isSelected && (
+                <View style={styles.selectedPill}>
+                  <Ionicons
+                    name="checkmark"
+                    size={wp('3.2%')}
+                    color={ACCENT.successText}
+                  />
+                  <Text
+                    style={styles.selectedPillText}
+                    maxFontSizeMultiplier={MAX_FONT_SCALE}
+                  >
+                    Selected
+                  </Text>
+                </View>
+              )}
+              <TouchableOpacity
+                hitSlop={hitSlopTo(ICON.action)}
+                accessibilityRole="button"
+                accessibilityLabel="Address options"
+                onPress={onMenu}
+                style={styles.menuButton}
+              >
+                <Ionicons
+                  name="ellipsis-vertical"
+                  size={ICON.action}
+                  color={INK.muted}
+                />
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+
+        <View style={styles.cardDivider} />
+
+        <View style={styles.cardBody}>
+          <Text
+            style={styles.addressLine}
+            maxFontSizeMultiplier={MAX_FONT_SCALE}
+          >
+            {item.address}
+          </Text>
+
+          <View style={styles.metaRow}>
+            <View style={styles.metaCluster}>
+              <MaterialCommunityIcons
+                name="phone-outline"
+                size={ICON.meta}
+                color={INK.muted}
+              />
+              <Text
+                style={styles.metaText}
+                maxFontSizeMultiplier={MAX_FONT_SCALE}
+              >
+                {item.phone}
+              </Text>
+            </View>
+            <View style={styles.metaCluster}>
+              <MaterialCommunityIcons
+                name="map-marker-outline"
+                size={ICON.meta}
+                color={INK.muted}
+              />
+              <Text
+                style={styles.metaText}
+                maxFontSizeMultiplier={MAX_FONT_SCALE}
+              >
+                {item.pin}
+              </Text>
+            </View>
+          </View>
+        </View>
+      </TouchableOpacity>
+    );
+  },
+);
 
 const SavedAddressScreen = () => {
   const navigation = useNavigation();
-  const { isStoreUnavailable, storeUnavailableData } = useContext(AppContext);
   const [isLocationModalVisible, setIsLocationModalVisible] = useState(false);
   const {
     addresses,
@@ -48,229 +228,121 @@ const SavedAddressScreen = () => {
     }, [refreshAddresses]),
   );
 
-  const AddressCard = React.memo(
-    ({
-      item,
+  const goToEditor = useCallback(
+    address =>
+      navigation.navigate(
+        'AddLocationScreen',
+        address ? { address } : undefined,
+      ),
+    [navigation],
+  );
+
+  const renderItem = useCallback(
+    ({ item }) => (
+      <AddressCard
+        item={item}
+        onPress={() =>
+          item.selected ? goToEditor(item.raw) : onSelectAddress(item.id, false)
+        }
+        onEdit={() => goToEditor(item.raw)}
+        onMenu={() => onThreeDotsClicked(item.id)}
+        onDelete={() => onDeleteClicked(item.id)}
+        onCloseMenu={onCloseThreeDots}
+      />
+    ),
+    [
+      goToEditor,
       onSelectAddress,
       onThreeDotsClicked,
       onDeleteClicked,
-      navigation,
       onCloseThreeDots,
-    }) => {
-      const handlePress = () => {
-        if (item.selected) {
-          navigation.navigate('AddLocationScreen', { address: item.raw });
-        } else {
-          onSelectAddress(item.id, false);
-        }
-      };
-
-      return (
-        <TouchableOpacity
-          onPress={handlePress}
-          style={[
-            styles.addressContainer,
-            !item.selected && { borderColor: '#DADADA' },
-          ]}
-        >
-          <View
-            style={[
-              styles.addressContainerTopView,
-              !item.selected && { marginBottom: hp('1%') },
-            ]}
-          >
-            <View style={styles.addressContainerInnerView}>
-              <Image
-                style={[
-                  styles.homeIcon,
-                  item.type !== 'Home' && { height: wp('3%') },
-                ]}
-                source={
-                  item.type === 'Home'
-                    ? require('../assets/images/home_icon.png')
-                    : require('../assets/images/office_icon.png')
-                }
-              />
-              <Text style={styles.addressTypeText}>{item.type}</Text>
-            </View>
-
-            {item.selected ? (
-              !item.threeDotsClicked ? (
-                <View style={{ flexDirection: 'row' }}>
-                  <View style={styles.selectedView}>
-                    <Image
-                      style={styles.tickImage}
-                      source={require('../assets/images/tick.png')}
-                    />
-                    <Text style={styles.selectedText}>Selected</Text>
-                  </View>
-                  <TouchableOpacity
-                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                    onPress={() => onThreeDotsClicked(item.id)}
-                  >
-                    <Image
-                      style={styles.threeDotsIcon}
-                      source={require('../assets/images/three_dots.png')}
-                    />
-                  </TouchableOpacity>
-                </View>
-              ) : (
-                <ThreeDotsActions
-                  onEdit={() =>
-                    navigation.navigate('AddLocationScreen', {
-                      address: item.raw,
-                    })
-                  }
-                  onDelete={() => onDeleteClicked(item.id)}
-                  onCloseThreeDots={onCloseThreeDots}
-                />
-              )
-            ) : !item.threeDotsClicked ? (
-              <TouchableOpacity
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                onPress={() => onThreeDotsClicked(item.id)}
-              >
-                <Image
-                  style={styles.threeDotsIcon}
-                  source={require('../assets/images/three_dots.png')}
-                />
-              </TouchableOpacity>
-            ) : (
-              <ThreeDotsActions
-                onEdit={() =>
-                  navigation.navigate('AddLocationScreen', {
-                    address: item.raw,
-                  })
-                }
-                onDelete={() => onDeleteClicked(item.id)}
-                onCloseThreeDots={onCloseThreeDots}
-              />
-            )}
-          </View>
-
-          <View
-            style={[
-              styles.unSelectedAddressInnerContainer,
-              { marginTop: hp('0.5%') },
-            ]}
-          >
-            <Text style={[styles.addressLine, { marginHorizontal: wp('4%') }]}>
-              {item.address}
-            </Text>
-            <View style={styles.addressContainerBottomView}>
-              <View style={styles.addressBottomInnerView}>
-                <Image
-                  style={styles.phoneIcon}
-                  source={require('../assets/images/phone_icon.png')}
-                />
-                <Text style={styles.addressLine}>{item.phone}</Text>
-              </View>
-              <Text style={styles.addressLine}>PIN: {item.pin}</Text>
-            </View>
-          </View>
-        </TouchableOpacity>
-      );
-    },
+    ],
   );
 
-  const ThreeDotsActions = ({ onEdit, onDelete, onCloseThreeDots }) => (
-    <View style={styles.threeDotActionContainer}>
-      <TouchableOpacity onPress={onEdit}>
-        <MaterialCommunityIcons
-          name="pencil-outline"
-          size={wp('4.5%')}
-          color="#777777"
+  const listHeader = useCallback(
+    () => (
+      <TouchableOpacity
+        activeOpacity={0.85}
+        accessibilityRole="button"
+        accessibilityLabel="Add new location"
+        onPress={() => goToEditor()}
+        style={styles.addRow}
+      >
+        <View style={styles.addIconWell}>
+          <Ionicons name="add" size={wp('4.6%')} color={ACCENT.primary} />
+        </View>
+        <Text style={styles.addRowText} maxFontSizeMultiplier={MAX_FONT_SCALE}>
+          Add new location
+        </Text>
+        <Ionicons
+          name="chevron-forward"
+          size={wp('4%')}
+          color={ACCENT.primary}
         />
       </TouchableOpacity>
-      <TouchableOpacity
-        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        onPress={onDelete}
-      >
-        <MaterialCommunityIcons
-          name="trash-can-outline"
-          size={wp('4.5%')}
-          color="#D32F2F"
-        />
-      </TouchableOpacity>
-      <TouchableOpacity
-        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        onPress={onCloseThreeDots}
-      >
-        <AntDesign name="right" size={wp('4%')} color="#777777" />
-      </TouchableOpacity>
-    </View>
+    ),
+    [goToEditor],
+  );
+
+  const listEmpty = useCallback(
+    () =>
+      isLoading ? null : (
+        <View style={styles.emptyState}>
+          <View style={styles.emptyIconWell}>
+            <Ionicons
+              name="location-outline"
+              size={wp('8%')}
+              color={INK.muted}
+            />
+          </View>
+          <Text
+            style={styles.emptyTitle}
+            maxFontSizeMultiplier={MAX_FONT_SCALE}
+          >
+            No saved addresses
+          </Text>
+          <Text style={styles.emptyBody} maxFontSizeMultiplier={MAX_FONT_SCALE}>
+            Add a delivery location to see what we can bring to your door.
+          </Text>
+        </View>
+      ),
+    [isLoading],
   );
 
   return (
     <SafeAreaView style={styles.mainContainer}>
       <View style={styles.headerContainer}>
-        <TouchableOpacity hitSlop={40} onPress={() => navigation.goBack()}>
-          <Image
-            source={icons.backArrowNew}
-            style={{
-              resizeMode: 'contain',
-              tintColor: '#000',
-            }}
-          />
+        <TouchableOpacity
+          hitSlop={hitSlopTo(wp('6%'))}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+          onPress={() => navigation.goBack()}
+        >
+          <Image source={icons.backArrowNew} style={styles.backIcon} />
         </TouchableOpacity>
-        <Text style={styles.addressText}>Address</Text>
+        <Text style={styles.headerText} maxFontSizeMultiplier={MAX_FONT_SCALE}>
+          Address
+        </Text>
       </View>
+
       <FlatList
         data={addresses}
-        keyExtractor={item => item.id}
-        renderItem={({ item }) => (
-          <AddressCard
-            item={item}
-            onSelectAddress={onSelectAddress}
-            onThreeDotsClicked={onThreeDotsClicked}
-            onDeleteClicked={onDeleteClicked}
-            onCloseThreeDots={onCloseThreeDots}
-            navigation={navigation}
-          />
-        )}
+        keyExtractor={item => String(item.id)}
+        renderItem={renderItem}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={isLoading} onRefresh={refreshAddresses} />
+          <RefreshControl
+            refreshing={isLoading}
+            onRefresh={refreshAddresses}
+            tintColor={ACCENT.primary}
+            colors={[ACCENT.primary]}
+          />
         }
-        contentContainerStyle={{
-          paddingHorizontal: wp('4.65%'),
-          marginTop: hp('3%'),
-        }}
-        ListFooterComponent={() => (
-          <>
-            {/* <Text style={styles.addAddressText}>Add Address</Text> */}
-            {/* <TouchableOpacity style={styles.chooseLocationContainer}>
-                            <Image style={Platform.OS === 'ios' ? styles.locationIcon : [styles.locationIcon, {
-                                bottom: hp('0.25%')
-                            }]} source={require('../assets/images/location_three.png')} />
-                            <Text style={styles.locationText}>Choose current location</Text>
-                        </TouchableOpacity> */}
-          </>
-        )}
-        ListHeaderComponent={() => (
-          <TouchableOpacity
-            onPress={() => {
-              navigation.navigate('AddLocationScreen');
-            }}
-            style={styles.chooseLocationContainer}
-          >
-            <Image
-              style={
-                Platform.OS === 'ios'
-                  ? styles.locationIcon
-                  : [
-                      styles.locationIcon,
-                      {
-                        bottom: hp('0.25%'),
-                      },
-                    ]
-              }
-              source={require('../assets/images/add_icon.png')}
-            />
-            <Text style={styles.locationText}>Add new location</Text>
-          </TouchableOpacity>
-        )}
+        contentContainerStyle={styles.listContent}
+        ListHeaderComponent={listHeader}
+        ListEmptyComponent={listEmpty}
       />
+
       <LocationModal
         visible={isLocationModalVisible}
         onClose={() => setIsLocationModalVisible(false)}
@@ -291,145 +363,201 @@ export default SavedAddressScreen;
 const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: SURFACE.base,
   },
   headerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: hp('1%'),
-    marginLeft: wp('2%'),
+    paddingHorizontal: GUTTER,
+    paddingTop: hp('1.5%'),
+    paddingBottom: hp('1.5%'),
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: HAIRLINE,
   },
-  addressText: {
-    color: '#000000',
+  backIcon: {
+    resizeMode: 'contain',
+    tintColor: INK.strong,
+  },
+  headerText: {
     fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('4.65%'),
-    marginLeft: wp('2%'),
+    color: INK.strong,
+    marginLeft: wp('3%'),
+    letterSpacing: -0.3,
   },
-  addressContainer: {
-    borderColor: '#0CA201',
-    borderWidth: 1,
-    borderRadius: wp('2.3%'),
-    // paddingHorizontal: wp('4%'),
-    paddingVertical: hp('1.1%'),
-    marginBottom: hp('2.5%'),
-    minHeight: hp('16.1%'),
+  listContent: {
+    paddingHorizontal: GUTTER,
+    paddingTop: SPACE.base,
+    paddingBottom: hp('6%'),
   },
-  addressContainerTopView: {
+
+  // "Add new location" — a tinted call to action, distinct from the cards below.
+  addRow: {
     flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: SURFACE.tint,
+    borderRadius: RADIUS.md,
+    paddingHorizontal: SPACE.md,
+    paddingVertical: SPACE.md,
+    marginBottom: SPACE.base,
+  },
+  addIconWell: {
+    width: wp('8%'),
+    height: wp('8%'),
+    borderRadius: RADIUS.pill,
+    backgroundColor: ACCENT.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  addRowText: {
+    flex: 1,
+    marginLeft: SPACE.md,
+    ...TYPE.body,
+    fontFamily: FONTS.gilroy.semiBold,
+    color: ACCENT.primary,
+  },
+
+  card: {
+    borderRadius: RADIUS.lg,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(17,19,26,0.12)',
+    backgroundColor: SURFACE.base,
+    marginBottom: SPACE.md,
+    overflow: 'hidden',
+  },
+  cardSelected: {
+    borderWidth: 1.5,
+    borderColor: ACCENT.success,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: hp('1.7%'),
-    paddingHorizontal: wp('4%'),
+    paddingHorizontal: SPACE.md,
+    paddingVertical: SPACE.sm,
+    minHeight: hp('5.6%'),
   },
-  addressContainerInnerView: {
+  typeCluster: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexShrink: 1,
+    marginRight: SPACE.sm,
+  },
+  typeWell: {
+    width: wp('8%'),
+    height: wp('8%'),
+    borderRadius: RADIUS.pill,
+    backgroundColor: SURFACE.sunken,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  typeWellActive: {
+    backgroundColor: ACCENT.successSoft,
+  },
+  typeText: {
+    marginLeft: SPACE.sm,
+    ...TYPE.body,
+    fontFamily: FONTS.gilroy.semiBold,
+    color: INK.strong,
+    flexShrink: 1,
+  },
+  headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  homeIcon: {
-    width: wp('4%'),
-    height: wp('4%'),
-    // bottom: wp('0.2%')
-    resizeMode: 'contain',
-    top: Platform.OS === 'android' ? hp('-0.3%') : hp('-0.1%'),
-  },
-  addressTypeText: {
-    color: '#000000',
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('3.72%'),
-    marginLeft: wp('1%'),
-  },
-  selectedView: {
+  selectedPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#A5F99F',
-    borderRadius: wp('4.65%'),
-    padding: wp('0.5%'),
+    backgroundColor: ACCENT.successSoft,
+    borderRadius: RADIUS.pill,
+    paddingHorizontal: SPACE.sm,
+    paddingVertical: 3,
   },
-  tickImage: {
-    width: wp('3.48%'),
-    height: hp('1.28%'),
+  selectedPillText: {
+    marginLeft: 3,
+    ...TYPE.micro,
+    fontFamily: FONTS.gilroy.semiBold,
+    color: ACCENT.successText,
   },
-  selectedText: {
-    fontFamily: FONTS.gilroy.medium,
-    color: '#0CA201',
-    fontSize: wp('2.32%'),
-    marginLeft: wp('0.5%'),
+  menuButton: {
+    paddingLeft: SPACE.sm,
+    paddingVertical: SPACE.xs,
   },
-  threeDotsIcon: {
-    width: wp('0.93%'),
-    height: hp('2.14%'),
-    marginLeft: wp('4%'),
-  },
-  threeDotActionContainer: {
+
+  actionsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderColor: '#DADADA',
-    borderWidth: 1,
-    borderRadius: wp('2.32%'),
-    width: wp('22%'),
-    height: hp('3.64%'),
-    justifyContent: 'space-between',
-    paddingLeft: wp('1.5%'),
-    paddingRight: wp('1.5%'),
-    backgroundColor: '#F5F5F5',
+    backgroundColor: SURFACE.sunken,
+    borderRadius: RADIUS.pill,
+    paddingHorizontal: SPACE.xs,
   },
-  editIcon: {
-    width: wp('3.72%'),
-    height: wp('3.72%'),
-    resizeMode: 'contain',
+  actionButton: {
+    paddingHorizontal: SPACE.sm,
+    paddingVertical: SPACE.xs,
   },
-  addressContainerBottomView: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: hp('3.4%'),
-    paddingHorizontal: wp('4%'),
+  actionSeparator: {
+    width: StyleSheet.hairlineWidth,
+    alignSelf: 'stretch',
+    marginVertical: SPACE.xs,
+    backgroundColor: 'rgba(17,19,26,0.12)',
   },
-  phoneIcon: {
-    width: wp('3.25%'),
-    height: hp('1.5%'),
-    marginRight: wp('2%'),
+
+  cardDivider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: HAIRLINE,
   },
-  unSelectedAddressInnerContainer: {
-    borderTopWidth: 1,
-    borderTopColor: '#DADADA',
-    paddingTop: hp('0.6%'),
+  cardBody: {
+    paddingHorizontal: SPACE.md,
+    paddingTop: SPACE.sm,
+    paddingBottom: SPACE.md,
   },
   addressLine: {
-    color: '#3A3A3A',
+    ...TYPE.label,
     fontFamily: FONTS.gilroy.regular,
-    fontSize: wp('3.72%'),
+    color: INK.base,
   },
-  addressBottomInnerView: {
+  metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: SPACE.md,
   },
-  chooseLocationContainer: {
+  metaCluster: {
     flexDirection: 'row',
-    paddingHorizontal: wp('4%'),
-    paddingVertical: wp('2.5%'),
-    borderWidth: 1,
-    borderColor: '#DADADA',
-    borderRadius: wp('2.3%'),
     alignItems: 'center',
-    marginBottom: hp('1%'),
+    flexShrink: 1,
   },
-  locationIcon: {
-    width: wp('4.65%'),
-    height: wp('4.65%'),
-  },
-  locationText: {
-    color: '#3A3A3A',
-    fontFamily: FONTS.gilroy.regular,
-    fontSize: wp('4.1%'),
-    marginLeft: wp('3%'),
-  },
-  addAddressText: {
-    color: '#000000',
+  metaText: {
+    marginLeft: SPACE.xs,
+    ...TYPE.caption,
     fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('4.19%'),
-    alignSelf: 'center',
-    marginBottom: hp('1.2%'),
-    marginTop: hp('2%'),
+    color: INK.muted,
+  },
+
+  emptyState: {
+    alignItems: 'center',
+    paddingTop: hp('6%'),
+    paddingHorizontal: wp('8%'),
+  },
+  emptyIconWell: {
+    width: wp('16%'),
+    height: wp('16%'),
+    borderRadius: RADIUS.pill,
+    backgroundColor: SURFACE.sunken,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyTitle: {
+    marginTop: SPACE.base,
+    ...TYPE.heading,
+    fontFamily: FONTS.gilroy.semiBold,
+    color: INK.strong,
+  },
+  emptyBody: {
+    marginTop: SPACE.xs,
+    ...TYPE.label,
+    fontFamily: FONTS.gilroy.regular,
+    color: INK.muted,
+    textAlign: 'center',
   },
 });

@@ -49,7 +49,9 @@ const SuggestProductsModal = forwardRef(function SuggestProductsModal(
       handleIndicatorStyle={styles.suggestSheetHandle}
     >
       <BottomSheetView style={styles.sendContainer}>
-        <Text style={styles.sendContainerTextOne}>Didnt Find Your Product!</Text>
+        <Text style={styles.sendContainerTextOne}>
+          Didnt Find Your Product!
+        </Text>
         <Text style={styles.sendContainerTextTwo}>
           Tell us which product you want in our app
         </Text>

@@ -40,9 +40,89 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import icons from '@/assets/icons';
 import { AppContext } from '../context/appContext';
 import secureStore from '../utils/secureStore';
+import {
+  INK,
+  SURFACE,
+  HAIRLINE,
+  ACCENT,
+  RADIUS,
+  SPACE,
+  TYPE,
+  GUTTER,
+  MAX_FONT_SCALE,
+} from '@/styles/homeTheme';
 
 // Height of the map area — pin is centred on this
 const MAP_HEIGHT = hp('45%');
+// Where the form sheet starts. The re-centre button is parked just above this
+// line so it never ends up buried under the sheet.
+const SHEET_TOP = hp('30%');
+
+// Pin metrics. The pin is drawn *above* the map centre with its shadow sitting
+// on it, so the tip — not the top of the graphic — marks the coordinate that
+// gets reverse-geocoded.
+const PIN_H = wp('10%');
+const PIN_SHADOW_H = wp('1.5%');
+
+const BORDER = 'rgba(17,19,26,0.12)';
+
+const ADDRESS_TYPES = [
+  {
+    key: 'HOME',
+    label: 'Home',
+    icon: require('../assets/images/home_primary_color.png'),
+  },
+  {
+    key: 'OFFICE',
+    label: 'Office',
+    icon: require('../assets/images/office_primary_color.png'),
+  },
+  {
+    key: 'OTHER',
+    label: 'Other',
+    icon: require('../assets/images/location_five.png'),
+  },
+];
+
+// Dropdown chrome. Hoisted so DropDownPicker doesn't see a fresh component
+// type on every render of the screen.
+const DropdownArrowDown = () => (
+  <Ionicons name="chevron-down" size={wp('4%')} color={INK.muted} />
+);
+const DropdownArrowUp = () => (
+  <Ionicons name="chevron-up" size={wp('4%')} color={ACCENT.primary} />
+);
+const DropdownTick = () => (
+  <Ionicons name="checkmark" size={wp('4%')} color={ACCENT.primary} />
+);
+
+// A labelled text field. The label sits in a notch on the top border — the
+// screen's existing signature — and the whole field lifts to the accent colour
+// while focused so the active row is obvious on a long form.
+const Field = ({ label, required, wrapperStyle, inputStyle, ...inputProps }) => {
+  const [focused, setFocused] = useState(false);
+
+  return (
+    <View style={[styles.inputWrapper, wrapperStyle]}>
+      <Text
+        style={[styles.label, focused && styles.labelFocused]}
+        maxFontSizeMultiplier={MAX_FONT_SCALE}
+        numberOfLines={1}
+      >
+        {label}
+        {required ? <Text style={styles.requiredMark}> *</Text> : null}
+      </Text>
+      <TextInput
+        placeholderTextColor={INK.muted}
+        maxFontSizeMultiplier={MAX_FONT_SCALE}
+        {...inputProps}
+        style={[styles.input, focused && styles.inputFocused, inputStyle]}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+      />
+    </View>
+  );
+};
 
 const AddLocationScreen = () => {
   const navigation = useNavigation();
@@ -390,9 +470,6 @@ const AddLocationScreen = () => {
           />
 
           <View style={styles.fixedPinContainer} pointerEvents="none">
-            <View
-              style={[styles.pinShadow, isDragging && styles.pinShadowLifted]}
-            />
             <Image
               source={require('../assets/images/location_four.png')}
               style={[
@@ -400,13 +477,19 @@ const AddLocationScreen = () => {
                 isDragging && styles.fixedPinLifted,
               ]}
             />
+            <View
+              style={[styles.pinShadow, isDragging && styles.pinShadowLifted]}
+            />
           </View>
 
           <TouchableOpacity
+            activeOpacity={0.85}
+            accessibilityRole="button"
+            accessibilityLabel="Use my current location"
             style={styles.reCenterButton}
             onPress={() => getCurrentLocation(true)}
           >
-            <Ionicons name="locate" size={wp('6%')} color="#F25000" />
+            <Ionicons name="locate" size={wp('5%')} color={ACCENT.primary} />
           </TouchableOpacity>
         </View>
 
@@ -418,12 +501,21 @@ const AddLocationScreen = () => {
               onFail={error =>
                 Alert.alert('Google Places Error', String(error))
               }
-              placeholder="Search Location"
+              placeholder="Search for an area, street or landmark"
               textInputProps={{
-                placeholderTextColor: '#000000',
-                color: '#000000',
+                placeholderTextColor: INK.muted,
+                color: INK.strong,
                 returnKeyType: 'search',
+                maxFontSizeMultiplier: MAX_FONT_SCALE,
               }}
+              renderLeftButton={() => (
+                <Ionicons
+                  name="search"
+                  size={wp('4.4%')}
+                  color={INK.muted}
+                  style={styles.searchIcon}
+                />
+              )}
               fetchDetails={true}
               onPress={(data, details = null) => {
                 if (details) {
@@ -450,42 +542,65 @@ const AddLocationScreen = () => {
               styles={{
                 container: { flex: 0 },
                 textInputContainer: {
-                  backgroundColor: '#FFFFFF',
-                  borderRadius: wp('2.32%'),
-                  borderWidth: 1,
-                  borderColor: '#DADADA',
-                  height: hp('5.36%'),
-                  paddingHorizontal: wp('2%'),
+                  backgroundColor: SURFACE.base,
+                  borderRadius: RADIUS.md,
+                  borderWidth: StyleSheet.hairlineWidth,
+                  borderColor: BORDER,
+                  height: hp('5.8%'),
+                  paddingHorizontal: SPACE.md,
                   flexDirection: 'row',
                   alignItems: 'center',
+                  shadowColor: '#0B1020',
+                  shadowOffset: { width: 0, height: 6 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 16,
+                  elevation: 6,
                 },
                 textInput: {
-                  fontFamily: FONTS.gilroy.light,
-                  fontSize: wp('3.72%'),
-                  color: '#000000',
-                  height: hp('5.36%'),
+                  ...TYPE.label,
+                  fontFamily: FONTS.gilroy.regular,
+                  color: INK.strong,
+                  height: hp('5.8%'),
                   flex: 1,
+                  paddingVertical: 0,
+                  paddingHorizontal: 0,
+                  backgroundColor: 'transparent',
                 },
-                description: { color: '#000000' },
-                predefinedPlacesDescription: { color: '#000000' },
+                description: {
+                  ...TYPE.label,
+                  fontFamily: FONTS.gilroy.regular,
+                  color: INK.base,
+                },
+                predefinedPlacesDescription: { color: INK.base },
                 listView: {
-                  backgroundColor: '#FFFFFF',
-                  borderRadius: wp('2.32%'),
-                  marginTop: hp('1%'),
-                  borderWidth: 1,
-                  borderColor: '#DADADA',
-                  elevation: 5,
+                  backgroundColor: SURFACE.base,
+                  borderRadius: RADIUS.md,
+                  marginTop: SPACE.sm,
+                  borderWidth: StyleSheet.hairlineWidth,
+                  borderColor: BORDER,
+                  overflow: 'hidden',
+                  shadowColor: '#0B1020',
+                  shadowOffset: { width: 0, height: 6 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 16,
+                  elevation: 6,
                   position: 'absolute',
-                  top: hp('5.5%'),
+                  top: hp('6%'),
                   width: '100%',
                   zIndex: 100,
                 },
                 row: {
-                  padding: wp('3%'),
-                  height: hp('6%'),
+                  paddingHorizontal: SPACE.md,
+                  paddingVertical: SPACE.md,
+                  minHeight: hp('6%'),
                   flexDirection: 'row',
+                  alignItems: 'center',
+                  backgroundColor: SURFACE.base,
                 },
-                separator: { height: 1, backgroundColor: '#DADADA' },
+                separator: {
+                  height: StyleSheet.hairlineWidth,
+                  backgroundColor: HAIRLINE,
+                },
                 loader: {
                   flexDirection: 'row',
                   justifyContent: 'flex-end',
@@ -497,8 +612,13 @@ const AddLocationScreen = () => {
 
           {isGeocoding && !isInitialLoading && (
             <View style={styles.geocodingBanner}>
-              <ActivityIndicator size="small" color="#F25000" />
-              <Text style={styles.geocodingText}>Fetching address…</Text>
+              <ActivityIndicator size="small" color={ACCENT.primary} />
+              <Text
+                style={styles.geocodingText}
+                maxFontSizeMultiplier={MAX_FONT_SCALE}
+              >
+                Fetching address…
+              </Text>
             </View>
           )}
         </View>
@@ -507,238 +627,248 @@ const AddLocationScreen = () => {
           style={{ flex: 1 }}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
-          <ScrollView
-            style={styles.detailedAddressContainer}
-            contentContainerStyle={{ paddingBottom: hp('10%') }}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-          >
+          <View style={styles.sheet}>
+            {/* Pinned sheet header — stays put while the form scrolls */}
+            <View style={styles.grabHandle} />
             <View style={styles.topView}>
               <TouchableOpacity
                 style={styles.backButtonContainer}
                 onPress={() => navigation.goBack()}
+                accessibilityRole="button"
+                accessibilityLabel="Go back"
                 hitSlop={40}
               >
-                <Image
-                  source={icons.backArrowNew}
-                  style={{
-                    resizeMode: 'contain',
-                    tintColor: '#000',
-                  }}
-                />
+                <Image source={icons.backArrowNew} style={styles.backIcon} />
               </TouchableOpacity>
-              <Text style={styles.addLocationText}>
+              <Text
+                style={styles.addLocationText}
+                maxFontSizeMultiplier={MAX_FONT_SCALE}
+              >
                 {isEditMode ? 'Edit location' : 'Add location'}
               </Text>
             </View>
 
-            <View style={styles.innerView}>
-              <Image
-                style={[styles.locationIcon, { top: hp('-1%') }]}
-                source={require('../assets/images/location_four.png')}
-              />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.fetchingLocation} numberOfLines={2}>
-                  {addLine1 ||
-                    (isGeocoding || isInitialLoading
-                      ? 'Fetching Location...'
-                      : 'Address not found')}
-                </Text>
-                <Text style={styles.addressLineText}>{addLine2 || ''}</Text>
-              </View>
-            </View>
-
-            <View style={styles.delboyContainer}>
-              <Image
-                style={styles.delBoyImage}
-                source={require('../assets/images/del_boy.png')}
-              />
-              <View style={styles.detailedLocationContainer}>
-                <Text style={styles.detailedLocationText}>
-                  Detailed location for helping our
-                </Text>
-                <Text
-                  style={[
-                    styles.detailedLocationText,
-                    { fontFamily: FONTS.gilroy.semiBold },
-                  ]}
-                >
-                  delivery boy
-                </Text>
-              </View>
-            </View>
-
-            <Text style={styles.saveAsText}>Save as</Text>
-            <View style={styles.addressTypesContainer}>
-              {[
-                {
-                  key: 'HOME',
-                  label: 'Home',
-                  icon: require('../assets/images/home_primary_color.png'),
-                },
-                {
-                  key: 'OFFICE',
-                  label: 'Office',
-                  icon: require('../assets/images/office_primary_color.png'),
-                },
-                {
-                  key: 'OTHER',
-                  label: 'Other',
-                  icon: require('../assets/images/location_five.png'),
-                },
-              ].map(({ key, label, icon }) => (
-                <TouchableOpacity
-                  key={key}
-                  onPress={() => setAddressType(key)}
-                  style={[
-                    styles.addressTypeContainer,
-                    addressType === key
-                      ? { borderColor: '#F25000', backgroundColor: '#F25000' }
-                      : { borderColor: '#DADADA' },
-                  ]}
-                >
+            <ScrollView
+              style={styles.detailedAddressContainer}
+              contentContainerStyle={styles.detailedAddressContent}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+            >
+              <View style={styles.innerView}>
+                <View style={styles.locationWell}>
                   <Image
-                    style={[
-                      styles.addressTypeIcon,
-                      {
-                        tintColor: addressType === key ? '#FFFFFF' : undefined,
-                      },
-                    ]}
-                    source={icon}
+                    style={styles.locationIcon}
+                    source={require('../assets/images/location_four.png')}
                   />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text
+                    style={styles.fetchingLocation}
+                    numberOfLines={2}
+                    maxFontSizeMultiplier={MAX_FONT_SCALE}
+                  >
+                    {addLine1 ||
+                      (isGeocoding || isInitialLoading
+                        ? 'Fetching Location...'
+                        : 'Address not found')}
+                  </Text>
+                  {!!addLine2 && (
+                    <Text
+                      style={styles.addressLineText}
+                      numberOfLines={1}
+                      maxFontSizeMultiplier={MAX_FONT_SCALE}
+                    >
+                      {addLine2}
+                    </Text>
+                  )}
+                </View>
+              </View>
+
+              <View style={styles.delboyContainer}>
+                <Image
+                  style={styles.delBoyImage}
+                  source={require('../assets/images/del_boy.png')}
+                />
+                <View style={styles.detailedLocationContainer}>
+                  <Text
+                    style={styles.detailedLocationText}
+                    maxFontSizeMultiplier={MAX_FONT_SCALE}
+                  >
+                    Detailed location for helping our
+                  </Text>
                   <Text
                     style={[
-                      styles.addressTypeText,
-                      addressType === key && { color: '#FFFFFF' },
+                      styles.detailedLocationText,
+                      styles.detailedLocationEmphasis,
                     ]}
+                    maxFontSizeMultiplier={MAX_FONT_SCALE}
                   >
-                    {label}
+                    delivery boy
                   </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+                </View>
+              </View>
 
-            <View style={styles.inputWrapper}>
-              <Text style={styles.label}>
-                Full Address House / Flat / Block no
+              <Text
+                style={styles.saveAsText}
+                maxFontSizeMultiplier={MAX_FONT_SCALE}
+              >
+                Save as
               </Text>
-              <TextInput
-                style={styles.input}
+              <View style={styles.addressTypesContainer}>
+                {ADDRESS_TYPES.map(({ key, label, icon }, index) => {
+                  const active = addressType === key;
+                  const isLast = index === ADDRESS_TYPES.length - 1;
+                  return (
+                    <TouchableOpacity
+                      key={key}
+                      activeOpacity={0.85}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: active }}
+                      accessibilityLabel={`Save as ${label}`}
+                      onPress={() => setAddressType(key)}
+                      style={[
+                        styles.addressTypeContainer,
+                        isLast && { marginRight: 0 },
+                        active && styles.addressTypeContainerActive,
+                      ]}
+                    >
+                      <Image
+                        style={[
+                          styles.addressTypeIcon,
+                          active && styles.addressTypeIconActive,
+                        ]}
+                        source={icon}
+                      />
+                      <Text
+                        style={[
+                          styles.addressTypeText,
+                          active && styles.addressTypeTextActive,
+                        ]}
+                        maxFontSizeMultiplier={MAX_FONT_SCALE}
+                        numberOfLines={1}
+                      >
+                        {label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              <Field
+                label="Full Address House / Flat / Block no"
+                required
                 value={addLine1}
                 onChangeText={setAddLine1}
               />
-            </View>
 
-            <View style={styles.inputWrapper}>
-              <Text style={styles.label}>Appartment / Road / Area</Text>
-              <TextInput
-                style={styles.input}
+              <Field
+                label="Appartment / Road / Area"
                 value={addLine2}
                 onChangeText={setAddLine2}
               />
-            </View>
 
-            <View style={[styles.pincodeContainer, { zIndex: 10 }]}>
-              <View style={[styles.inputWrapper, { width: wp('42%') }]}>
-                <Text style={styles.label}>PIN Code</Text>
-                <TextInput
-                  style={styles.input}
+              <View style={[styles.pincodeContainer, { zIndex: 10 }]}>
+                <Field
+                  label="PIN Code"
+                  required
+                  wrapperStyle={styles.pincodeField}
                   value={pincode}
                   onChangeText={setPincode}
                   keyboardType="numeric"
+                  maxLength={6}
                 />
+                <View style={styles.areaField}>
+                  <DropDownPicker
+                    open={open}
+                    value={pincodeAreaId}
+                    items={items}
+                    setOpen={setOpen}
+                    setValue={setPincodeAreaId}
+                    setItems={setItems}
+                    placeholder="PIN Code Area"
+                    listMode="SCROLLVIEW"
+                    placeholderStyle={styles.dropdownPlaceholder}
+                    loading={isAreasLoading}
+                    style={styles.dropdown}
+                    textStyle={styles.dropdownText}
+                    dropDownContainerStyle={styles.dropdownContainer}
+                    listItemLabelStyle={styles.dropdownText}
+                    selectedItemLabelStyle={styles.dropdownSelectedText}
+                    ArrowDownIconComponent={DropdownArrowDown}
+                    ArrowUpIconComponent={DropdownArrowUp}
+                    TickIconComponent={DropdownTick}
+                  />
+                  {/* Rendered after the picker so the notch paints over its
+                      border on Android, where elevation beats zIndex. */}
+                  <Text
+                    style={styles.label}
+                    maxFontSizeMultiplier={MAX_FONT_SCALE}
+                    numberOfLines={1}
+                  >
+                    Area
+                    <Text style={styles.requiredMark}> *</Text>
+                  </Text>
+                </View>
               </View>
-              <View>
-                <DropDownPicker
-                  open={open}
-                  value={pincodeAreaId}
-                  items={items}
-                  setOpen={setOpen}
-                  setValue={setPincodeAreaId}
-                  setItems={setItems}
-                  placeholder="PIN Code Area"
-                  placeholderStyle={{
-                    fontFamily: FONTS.gilroy.regular,
-                    color: '#DADADA',
-                    fontSize: wp('3.4%'),
-                  }}
-                  loading={isAreasLoading}
-                  style={{
-                    borderColor: '#DADADA',
-                    height: hp('5.5%'),
-                    width: wp('42%'),
-                    minHeight: hp('4.3%'),
-                  }}
-                />
-              </View>
-            </View>
 
-            <View style={{ marginTop: hp('1.5%'), marginBottom: hp('3.5%') }}>
-              <Text
-                style={{
-                  fontFamily: FONTS.gilroy.regular,
-                  color: '#000000',
-                  fontSize: wp('3.4%'),
-                }}
-              >
-                Land mark / Delivery instruction
-              </Text>
-              <TextInput
-                placeholderTextColor="#616161"
+              <Field
+                label="Land mark / Delivery instruction"
+                wrapperStyle={styles.landmarkWrapper}
+                inputStyle={styles.landmarkInput}
                 placeholder="eg. Near Lulu Mall"
                 value={landmark}
                 onChangeText={setLandmark}
                 multiline
-                style={[
-                  styles.input,
-                  {
-                    height: hp('6.27%'),
-                    paddingHorizontal: wp('3.25%'),
-                    textAlignVertical: 'top',
-                  },
-                ]}
               />
-            </View>
 
-            <View style={styles.inputWrapper}>
-              <Text style={styles.label}>Customer name</Text>
-              <TextInput
-                style={styles.input}
+              <Field
+                label="Customer name"
+                required
                 value={custName}
                 onChangeText={setCustName}
               />
-            </View>
 
-            <View style={styles.inputWrapper}>
-              <Text style={styles.label}>Phone number</Text>
-              <TextInput
+              <Field
+                label="Phone number"
+                required
                 placeholder="Enter mobile number"
-                style={styles.input}
-                placeholderTextColor="#616161"
                 value={phone}
                 onChangeText={setPhone}
                 keyboardType="phone-pad"
                 maxLength={10}
               />
-            </View>
 
-            <LinearGradient
-              colors={['#F25000', '#FF7B3A']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.buttonGradientStyle}
-            >
-              <TouchableOpacity disabled={isLoading} onPress={handleSave}>
-                {isLoading ? (
-                  <ActivityIndicator color="#FFFFFF" />
-                ) : (
-                  <Text style={styles.buttonText}>
-                    {isEditMode ? 'UPDATE ADDRESS' : 'SAVE ADDRESS'}
-                  </Text>
-                )}
+              <TouchableOpacity
+                activeOpacity={0.9}
+                disabled={isLoading}
+                onPress={handleSave}
+                accessibilityRole="button"
+                accessibilityState={{ disabled: isLoading, busy: isLoading }}
+                accessibilityLabel={
+                  isEditMode ? 'Update address' : 'Save address'
+                }
+                style={[styles.saveButton, isLoading && styles.saveButtonBusy]}
+              >
+                <LinearGradient
+                  colors={[ACCENT.primary, '#FF7B3A']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.buttonGradientStyle}
+                >
+                  {isLoading ? (
+                    <ActivityIndicator color={INK.onDark} />
+                  ) : (
+                    <Text
+                      style={styles.buttonText}
+                      maxFontSizeMultiplier={MAX_FONT_SCALE}
+                    >
+                      {isEditMode ? 'UPDATE ADDRESS' : 'SAVE ADDRESS'}
+                    </Text>
+                  )}
+                </LinearGradient>
               </TouchableOpacity>
-            </LinearGradient>
-          </ScrollView>
+            </ScrollView>
+          </View>
         </KeyboardAvoidingView>
       </SafeAreaView>
     </>
@@ -750,6 +880,7 @@ export default AddLocationScreen;
 const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
+    backgroundColor: SURFACE.base,
   },
 
   // ── Map ──────────────────────────────────────────────────────────────────
@@ -772,14 +903,14 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     alignItems: 'center',
-    top: MAP_HEIGHT / 2,
+    top: MAP_HEIGHT / 2 - (PIN_H + PIN_SHADOW_H / 2 + 2),
     zIndex: 10,
   },
   fixedPinImage: {
     width: wp('8%'),
-    height: wp('10%'),
+    height: PIN_H,
     resizeMode: 'contain',
-    tintColor: '#F25000',
+    tintColor: ACCENT.primary,
     // No transform by default
   },
   // Lift pin up while map is panning — classic Google Maps feel
@@ -789,7 +920,7 @@ const styles = StyleSheet.create({
   // Small shadow ellipse beneath the pin on the map surface
   pinShadow: {
     width: wp('4%'),
-    height: wp('1.5%'),
+    height: PIN_SHADOW_H,
     borderRadius: wp('2%'),
     backgroundColor: 'rgba(0,0,0,0.18)',
     marginTop: 2,
@@ -802,21 +933,24 @@ const styles = StyleSheet.create({
   },
 
   // ── Re-centre button ─────────────────────────────────────────────────────
+  // Parked above SHEET_TOP so the form sheet never covers it.
   reCenterButton: {
     position: 'absolute',
-    bottom: hp('2%'),
-    right: wp('4%'),
-    backgroundColor: '#FFFFFF',
+    bottom: MAP_HEIGHT - SHEET_TOP + SPACE.md,
+    right: GUTTER,
+    backgroundColor: SURFACE.base,
     width: wp('11%'),
     height: wp('11%'),
-    borderRadius: wp('5.5%'),
+    borderRadius: RADIUS.pill,
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: BORDER,
+    shadowColor: '#0B1020',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.1,
+    shadowRadius: 16,
+    elevation: 6,
   },
 
   // ── Search layer (floats over map) ───────────────────────────────────────
@@ -825,199 +959,320 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   searchAbsoluteContainer: {
-    width: wp('90.7%'),
+    width: wp('100%') - GUTTER * 2,
     alignSelf: 'center',
-    marginTop: hp('1.5%'),
+    marginTop: SPACE.md,
     zIndex: 999,
     elevation: 10,
   },
+  searchIcon: {
+    marginRight: SPACE.sm,
+  },
   geocodingBanner: {
-    width: wp('90.7%'),
     alignSelf: 'center',
-    marginTop: hp('1%'),
-    backgroundColor: '#FFFFFF',
-    borderRadius: wp('2.32%'),
-    paddingVertical: hp('0.8%'),
-    paddingHorizontal: wp('3%'),
+    marginTop: SPACE.sm,
+    backgroundColor: SURFACE.base,
+    borderRadius: RADIUS.pill,
+    paddingVertical: SPACE.xs,
+    paddingHorizontal: SPACE.md,
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#DADADA',
-    elevation: 4,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: BORDER,
+    shadowColor: '#0B1020',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.1,
+    shadowRadius: 16,
+    elevation: 6,
   },
   geocodingText: {
-    marginLeft: wp('2%'),
-    color: '#000000',
-    fontFamily: FONTS.gilroy.regular,
-    fontSize: wp('3.2%'),
+    marginLeft: SPACE.sm,
+    ...TYPE.caption,
+    fontFamily: FONTS.gilroy.medium,
+    color: INK.base,
   },
 
   // ── Form sheet ───────────────────────────────────────────────────────────
+  sheet: {
+    flex: 1,
+    backgroundColor: SURFACE.base,
+    borderTopLeftRadius: RADIUS.xl,
+    borderTopRightRadius: RADIUS.xl,
+    marginTop: SHEET_TOP,
+    paddingTop: SPACE.sm,
+    shadowColor: '#0B1020',
+    shadowOffset: { width: 0, height: -6 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  grabHandle: {
+    width: wp('11%'),
+    height: 4,
+    borderRadius: RADIUS.pill,
+    backgroundColor: 'rgba(17,19,26,0.14)',
+    alignSelf: 'center',
+  },
   detailedAddressContainer: {
-    backgroundColor: '#FFFFFF',
     flex: 1,
-    borderTopLeftRadius: hp('4.3%'),
-    borderTopRightRadius: hp('4.3%'),
-    marginTop: hp('30%'),
-    paddingTop: hp('1%'),
-    paddingHorizontal: wp('4.65%'),
+    paddingHorizontal: GUTTER,
   },
-  upperDivider: {
-    width: wp('21.16%'),
-    height: hp('0.96%'),
-    backgroundColor: '#C9C9C9',
-    borderRadius: 20,
-    alignSelf: 'center',
-  },
-  dragInfoContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'center',
-    marginTop: hp('1.5%'),
-    backgroundColor: '#FFF0F0',
-    paddingVertical: hp('0.8%'),
-    paddingHorizontal: wp('2.5%'),
-    borderRadius: wp('2%'),
-    borderWidth: 1,
-    borderColor: '#FFD1D1',
-  },
-  dragInfoText: {
-    fontSize: wp('3.1%'),
-    color: 'red',
-    fontStyle: 'italic',
-    fontFamily: FONTS.gilroy.regular,
-    marginLeft: wp('1.5%'),
-    flex: 1,
+  detailedAddressContent: {
+    paddingBottom: hp('4%'),
   },
   topView: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: hp('2%'),
+    paddingHorizontal: GUTTER,
+    paddingTop: SPACE.md,
+    paddingBottom: SPACE.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: HAIRLINE,
   },
   backButtonContainer: {
-    padding: wp('1%'),
+    paddingRight: SPACE.xs,
+  },
+  backIcon: {
+    resizeMode: 'contain',
+    tintColor: INK.strong,
   },
   addLocationText: {
     fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('4.65%'),
-    color: '#000000',
+    color: INK.strong,
     flex: 1,
-    marginLeft: wp('4%'),
+    marginLeft: wp('3%'),
+    letterSpacing: -0.3,
   },
-  locationIcon: {
-    width: wp('5.6%'),
-    height: wp('7%'),
-  },
-  fetchingLocation: {
-    color: '#000000',
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('4.18%'),
-    marginLeft: wp('4%'),
-  },
+
+  // ── Resolved address summary ─────────────────────────────────────────────
   innerView: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: hp('2.2%'),
+    backgroundColor: SURFACE.tint,
+    borderRadius: RADIUS.md,
+    paddingHorizontal: SPACE.md,
+    paddingVertical: SPACE.md,
+    marginTop: SPACE.base,
+  },
+  locationWell: {
+    width: wp('9%'),
+    height: wp('9%'),
+    borderRadius: RADIUS.pill,
+    backgroundColor: ACCENT.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: SPACE.md,
+  },
+  locationIcon: {
+    width: wp('4%'),
+    height: wp('5%'),
+    resizeMode: 'contain',
+    tintColor: ACCENT.primary,
+  },
+  fetchingLocation: {
+    color: INK.strong,
+    fontFamily: FONTS.gilroy.semiBold,
+    ...TYPE.body,
   },
   addressLineText: {
-    color: '#616161',
-    fontSize: wp('3.6%'),
+    color: INK.muted,
+    ...TYPE.caption,
     fontFamily: FONTS.gilroy.regular,
-    marginLeft: wp('4%'),
-    marginTop: hp('1%'),
+    marginTop: 2,
   },
+
+  // ── Delivery-boy nudge ───────────────────────────────────────────────────
   delboyContainer: {
-    height: hp('6.2%'),
-    width: wp('90.7%'),
-    backgroundColor: '#FFFAF7',
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: hp('1.5%'),
+    backgroundColor: SURFACE.sunken,
+    borderRadius: RADIUS.md,
+    paddingVertical: SPACE.sm,
+    paddingHorizontal: SPACE.md,
+    marginTop: SPACE.md,
   },
   delBoyImage: {
-    width: wp('11.03%'),
-    height: hp('4.53%'),
+    width: wp('11%'),
+    height: hp('4.5%'),
     resizeMode: 'contain',
-    marginLeft: wp('6%'),
   },
   detailedLocationContainer: {
-    marginLeft: wp('3%'),
+    marginLeft: SPACE.md,
+    flex: 1,
   },
   detailedLocationText: {
     fontFamily: FONTS.gilroy.regular,
-    fontSize: wp('3.25%'),
+    ...TYPE.caption,
+    color: INK.base,
   },
+  detailedLocationEmphasis: {
+    fontFamily: FONTS.gilroy.semiBold,
+    color: INK.strong,
+  },
+
+  // ── Save-as chips ────────────────────────────────────────────────────────
   saveAsText: {
-    fontFamily: FONTS.gilroy.regular,
-    fontSize: wp('3.72%'),
-    alignSelf: 'center',
-    marginTop: hp('1%'),
+    fontFamily: FONTS.gilroy.medium,
+    ...TYPE.label,
+    color: INK.muted,
+    marginTop: SPACE.lg,
+    marginBottom: SPACE.sm,
   },
   addressTypesContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: wp('10%'),
-    marginTop: hp('1.1%'),
-    marginBottom: hp('3%'),
+    marginBottom: SPACE.xl,
   },
   addressTypeContainer: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: BORDER,
+    borderRadius: RADIUS.sm,
+    paddingHorizontal: SPACE.sm,
+    paddingVertical: SPACE.sm,
+    marginRight: SPACE.sm,
+    minHeight: hp('5%'),
+  },
+  addressTypeContainerActive: {
     borderWidth: 1,
-    borderRadius: wp('2.12%'),
-    paddingHorizontal: wp('2.8%'),
-    paddingVertical: hp('0.2%'),
+    borderColor: ACCENT.primary,
+    backgroundColor: SURFACE.tint,
   },
   addressTypeIcon: {
-    width: wp('3.95%'),
-    height: hp('3.25%'),
+    width: wp('4%'),
+    height: wp('4%'),
     resizeMode: 'contain',
+    tintColor: INK.muted,
+  },
+  addressTypeIconActive: {
+    tintColor: ACCENT.primary,
   },
   addressTypeText: {
-    fontFamily: FONTS.gilroy.regular,
-    fontSize: wp('3.72%'),
-    marginLeft: wp('1%'),
+    fontFamily: FONTS.gilroy.medium,
+    ...TYPE.label,
+    color: INK.base,
+    marginLeft: SPACE.xs,
   },
+  addressTypeTextActive: {
+    fontFamily: FONTS.gilroy.semiBold,
+    color: ACCENT.primary,
+  },
+
+  // ── Fields ───────────────────────────────────────────────────────────────
   inputWrapper: {
-    marginBottom: hp('2.5%'),
+    marginBottom: SPACE.lg,
     position: 'relative',
   },
   label: {
     position: 'absolute',
-    top: hp('-1.07%'),
-    left: wp('4%'),
-    backgroundColor: '#fff',
-    paddingHorizontal: 6,
-    fontSize: wp('3.4%'),
-    color: '#000',
+    top: -hp('0.95%'),
+    left: SPACE.md,
+    backgroundColor: SURFACE.base,
+    paddingHorizontal: SPACE.xs,
+    ...TYPE.caption,
+    color: INK.muted,
     zIndex: 1,
-    fontFamily: FONTS.gilroy.regular,
+    fontFamily: FONTS.gilroy.medium,
+  },
+  labelFocused: {
+    color: ACCENT.primary,
+  },
+  requiredMark: {
+    color: ACCENT.primary,
   },
   input: {
-    height: hp('5.5%'),
-    borderWidth: 1,
-    borderColor: '#D9D9D9',
-    borderRadius: wp('2.32%'),
-    paddingHorizontal: wp('5%'),
-    fontSize: wp('3%'),
-    color: '#000000',
+    minHeight: hp('5.8%'),
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: BORDER,
+    borderRadius: RADIUS.sm,
+    paddingHorizontal: SPACE.base,
+    paddingVertical: SPACE.sm,
+    ...TYPE.label,
+    color: INK.strong,
     fontFamily: FONTS.gilroy.regular,
   },
+  inputFocused: {
+    borderWidth: 1,
+    borderColor: ACCENT.primary,
+    backgroundColor: SURFACE.tint,
+  },
+  landmarkWrapper: {
+    marginBottom: SPACE.lg,
+  },
+  landmarkInput: {
+    minHeight: hp('8%'),
+    textAlignVertical: 'top',
+  },
+
+  // ── PIN code + area row ──────────────────────────────────────────────────
   pincodeContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: hp('1%'),
+  },
+  pincodeField: {
+    flex: 1,
+    marginRight: SPACE.md,
+  },
+  areaField: {
+    flex: 1,
+    marginBottom: SPACE.lg,
+    position: 'relative',
+  },
+  dropdown: {
+    minHeight: hp('5.8%'),
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: BORDER,
+    borderRadius: RADIUS.sm,
+    paddingHorizontal: SPACE.base,
+    backgroundColor: SURFACE.base,
+  },
+  dropdownContainer: {
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: BORDER,
+    borderRadius: RADIUS.sm,
+    backgroundColor: SURFACE.base,
+  },
+  dropdownText: {
+    ...TYPE.label,
+    fontFamily: FONTS.gilroy.regular,
+    color: INK.strong,
+  },
+  dropdownSelectedText: {
+    fontFamily: FONTS.gilroy.semiBold,
+    color: ACCENT.primary,
+  },
+  dropdownPlaceholder: {
+    ...TYPE.label,
+    fontFamily: FONTS.gilroy.regular,
+    color: INK.muted,
+  },
+
+  // ── Primary action ───────────────────────────────────────────────────────
+  saveButton: {
+    borderRadius: RADIUS.sm,
+    overflow: 'hidden',
+    marginTop: SPACE.sm,
+    marginBottom: SPACE.lg,
+    shadowColor: ACCENT.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.22,
+    shadowRadius: 14,
+    elevation: 6,
+  },
+  saveButtonBusy: {
+    opacity: 0.7,
   },
   buttonGradientStyle: {
-    height: hp('5.5%'),
-    borderRadius: wp('2.3%'),
+    height: hp('6.2%'),
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: hp('4%'),
   },
   buttonText: {
-    color: '#FFFFFF',
+    color: INK.onDark,
     fontFamily: FONTS.gilroy.bold,
-    fontSize: wp('3.72%'),
+    ...TYPE.body,
+    letterSpacing: 0.6,
   },
 });

@@ -17,7 +17,6 @@ import { useNavigation } from '@react-navigation/native';
 
 import SelectedProducts from '../../components/SelectedProducts';
 import LocationModal from '../../components/LocationModal';
-import StatusModal from '../../components/StatusModal';
 import StoreUnavailable from '../../components/StoreUnavailable';
 import HomePopupModal from '../../components/HomePopupModal';
 import { openExternalUrl } from '../../utils/safeUrl';
@@ -95,7 +94,6 @@ const HomeScreen = () => {
     searchWrapperAnimStyle,
     bannerSheetStyle,
     bannerParallaxStyle,
-    bannerScrimStyle,
     fallbackHeaderBgStyle,
     stickyBorderAnimStyle,
     handleSearchPressIn,
@@ -186,7 +184,20 @@ const HomeScreen = () => {
   // No location chosen yet — mirrors the header's "Select Location" signal
   // (StickyHeader gates on the same `profile?.pinAddress`), so header and body
   // stay in sync and clear together the moment editPincode sets an address.
-  const noLocationSelected = !profile?.pinAddress;
+  //
+  // Gated on `isProfileLoaded`, because a bare `!profile?.pinAddress` cannot
+  // tell "no location" apart from "not asked yet": `pinAddress` lives only in
+  // the persisted profile, and the reconciliation above that brings it back is
+  // an async Keychain read that has not finished on the frames right after
+  // mount. Answering there painted the whole no-location state — orange header
+  // plus the body's Select-Location panel — and withdrew it half a second
+  // later. The positive case is *not* gated: an address already on `profile`
+  // is known to be right and renders immediately.
+  const hasLocation = !!profile?.pinAddress;
+  const noLocationSelected = isProfileLoaded && !hasLocation;
+  // Neither answer is available yet. The header holds the block's footprint
+  // and the body runs its normal shimmers rather than committing either way.
+  const isLocationPending = !isProfileLoaded && !hasLocation;
 
   const popupData = data?.popup || homepageQuery.error?.popup || null;
   const { isHomePopupVisible, handleClose, handlePopupPress } =
@@ -333,13 +344,6 @@ const HomeScreen = () => {
     [],
   );
 
-  const [statusModal, setStatusModal] = useState({
-    visible: false,
-    type: 'success',
-    title: '',
-    message: '',
-  });
-
   const scrollContentStyle = useMemo(
     () => [
       styles.scrollContent,
@@ -364,7 +368,12 @@ const HomeScreen = () => {
 
       <Animated.ScrollView
         onScroll={scrollHandler}
-        scrollEventThrottle={16}
+        // 1, not 16: `scrollHandler` is a reanimated worklet, so the events
+        // never reach the JS thread and cost effectively nothing. At 16 the
+        // header collapse, banner parallax and ETA fade were only fed ~60
+        // events a second, so they updated on every other frame on a 120Hz
+        // display.
+        scrollEventThrottle={1}
         style={styles.scroll}
         contentContainerStyle={scrollContentStyle}
         showsVerticalScrollIndicator={false}
@@ -524,7 +533,6 @@ const HomeScreen = () => {
           onBannerPress={handleBannerPress}
           bannerSheetStyle={bannerSheetStyle}
           bannerParallaxStyle={bannerParallaxStyle}
-          bannerScrimStyle={bannerScrimStyle}
           headerCollapseStyle={headerCollapseStyle}
           etaAnimStyle={etaAnimStyle}
           searchWrapperAnimStyle={searchWrapperAnimStyle}
@@ -535,6 +543,7 @@ const HomeScreen = () => {
           dashboardData={dashboardData}
           navigation={navigation}
           isStoreUnavailable={isStoreUnavailable}
+          isLocationPending={isLocationPending}
           profileAvatarSize={PROFILE_AVATAR_SIZE}
           onSearchPressIn={handleSearchPressIn}
           onSearchPressOut={handleSearchPressOut}
@@ -551,14 +560,6 @@ const HomeScreen = () => {
       >
         {!isStoreUnavailable && !!data && <SelectedProducts />}
       </Animated.View>
-
-      <StatusModal
-        visible={statusModal.visible}
-        type={statusModal.type}
-        title={statusModal.title}
-        message={statusModal.message}
-        onClose={() => setStatusModal({ ...statusModal, visible: false })}
-      />
     </View>
   );
 };

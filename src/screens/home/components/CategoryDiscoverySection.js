@@ -106,10 +106,14 @@ const DiscoveryTab = React.memo(function DiscoveryTab({
       ? getCategoryPlaceholder(label)
       : { uri: `${CONFIG.image_base_url}${item.imageUrl}` };
 
+  // Takes the item and calls back with it, rather than receiving a
+  // pre-bound `() => onSelect(item)` from the map below — that closure was a
+  // new identity on every parent render, so this component's React.memo could
+  // never hit and tapping one tab re-rendered all of them.
   const handlePress = useCallback(() => {
     selectionTick();
-    onPress();
-  }, [onPress]);
+    onPress(item);
+  }, [onPress, item]);
 
   return (
     <TouchableOpacity
@@ -193,7 +197,7 @@ const CategoryDiscoverySection = ({
                 key={(item.catId || item.id || index).toString()}
                 item={item}
                 isActive={selectedDiscoveryCategory?.catId === item.catId}
-                onPress={() => onSelectCategory(item)}
+                onPress={onSelectCategory}
               />
             ))}
           </ScrollView>

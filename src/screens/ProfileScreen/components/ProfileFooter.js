@@ -1,12 +1,15 @@
-import { View, Text, Image } from 'react-native';
+import { View, Text } from 'react-native';
 import React from 'react';
 import DeviceInfo from 'react-native-device-info';
 import { styles } from '../styles';
+import { MAX_FONT_SCALE } from '@/styles/homeTheme';
 
 export default function ProfileFooter() {
   return (
     <View style={styles.footerBranding}>
-      <View style={styles.logoWrapper}></View>
+      <Text style={styles.versionText} maxFontSizeMultiplier={MAX_FONT_SCALE}>
+        {`Version ${DeviceInfo.getVersion()}`}
+      </Text>
     </View>
   );
 }

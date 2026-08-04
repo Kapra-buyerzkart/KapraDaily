@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
@@ -31,7 +37,6 @@ import {
   MAX_FONT_SCALE,
   hitSlopTo,
 } from '@/styles/homeTheme';
-import COLORS from '@/styles/colors';
 
 // Constants
 const DEFAULT_TOKEN_VALUE = '1';
@@ -139,7 +144,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 0,
     left: 0,
-    backgroundColor: COLORS.success,
+    backgroundColor: ACCENT.discount,
     paddingHorizontal: SPACE.sm - 2,
     paddingVertical: 2,
     borderTopLeftRadius: RADIUS.sm,
@@ -458,6 +463,15 @@ const ProductImage = React.memo(function ProductImage({
   );
 });
 
+// The add button is replaced by the counter the instant it is tapped, so the
+// confirmation cannot live on the button alone — it would unmount mid-frame.
+// Instead the whole dock squishes and springs back, and the counter fades up
+// under it, so the swap reads as one gesture rather than a hard cut.
+const ADD_SQUISH = { duration: 90 };
+const ADD_POP_SPRING = { damping: 9, stiffness: 420, mass: 0.6 };
+const ADD_SQUISH_SCALE = 0.88;
+const COUNTER_FADE = { duration: 160 };
+
 const QuantityControl = React.memo(function QuantityControl({
   quantity,
   isOutOfStock,
@@ -467,12 +481,48 @@ const QuantityControl = React.memo(function QuantityControl({
   onDecrement,
   onAdd,
 }) {
+  const pop = useSharedValue(1);
+  const counterIn = useSharedValue(quantity > 0 ? 1 : 0);
+  // Only the 0 → 1 transition is an *add*. A card that already had a quantity
+  // when it scrolled into view, or one being incremented, must not re-animate.
+  const wasEmpty = useRef(quantity === 0);
+
+  useEffect(() => {
+    if (quantity > 0 && wasEmpty.current) {
+      counterIn.value = 0;
+      counterIn.value = withTiming(1, COUNTER_FADE);
+    } else if (quantity === 0) {
+      counterIn.value = 0;
+    }
+    wasEmpty.current = quantity === 0;
+  }, [quantity, counterIn]);
+
+  const dockAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: pop.value }],
+  }));
+
+  // One combined transform: two animated styles on the same node would have
+  // the second `transform` overwrite the first.
+  const counterAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: counterIn.value,
+    transform: [{ scale: pop.value * (0.9 + counterIn.value * 0.1) }],
+  }));
+
+  const handleAddPress = useCallback(() => {
+    pop.value = withSequence(
+      withTiming(ADD_SQUISH_SCALE, ADD_SQUISH),
+      withSpring(1, ADD_POP_SPRING),
+    );
+    onAdd?.();
+  }, [onAdd, pop]);
+
   if (quantity > 0) {
     return (
-      <View
+      <Animated.View
         style={[
           styles.counterContainer,
           isThreeColumn && styles.counterContainerSmall,
+          counterAnimatedStyle,
         ]}
         accessibilityLabel={`${productName}, quantity ${quantity}`}
       >
@@ -503,7 +553,7 @@ const QuantityControl = React.memo(function QuantityControl({
         >
           <Entypo name="plus" size={isThreeColumn ? 15 : 17} color="#FFFFFF" />
         </AnimatedPressable>
-      </View>
+      </Animated.View>
     );
   }
 
@@ -536,20 +586,25 @@ const QuantityControl = React.memo(function QuantityControl({
   // A labelled button rather than a bare "+" glyph: the old 27pt circle was
   // both under the 44pt touch minimum and ambiguous about what it added.
   return (
-    <AnimatedPressable
-      onPress={onAdd}
-      hitSlop={ACTION_HIT_SLOP}
-      style={[styles.addButton, isThreeColumn && styles.addButtonSmall]}
-      accessibilityRole="button"
-      accessibilityLabel={`Add ${productName} to cart`}
-    >
-      <Text
-        style={[styles.addLabel, isThreeColumn && styles.addLabelSmall]}
-        maxFontSizeMultiplier={MAX_FONT_SCALE}
+    // The squish lives on a wrapper rather than on the pressable itself:
+    // AnimatedPressable already owns that node's `transform` for its press
+    // scale, and a second animated transform on it would overwrite it.
+    <Animated.View style={dockAnimatedStyle}>
+      <AnimatedPressable
+        onPress={handleAddPress}
+        hitSlop={ACTION_HIT_SLOP}
+        style={[styles.addButton, isThreeColumn && styles.addButtonSmall]}
+        accessibilityRole="button"
+        accessibilityLabel={`Add ${productName} to cart`}
       >
-        ADD
-      </Text>
-    </AnimatedPressable>
+        <Text
+          style={[styles.addLabel, isThreeColumn && styles.addLabelSmall]}
+          maxFontSizeMultiplier={MAX_FONT_SCALE}
+        >
+          ADD
+        </Text>
+      </AnimatedPressable>
+    </Animated.View>
   );
 });
 

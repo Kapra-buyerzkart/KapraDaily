@@ -12,7 +12,6 @@ import Animated, {
   useAnimatedStyle,
   withTiming,
 } from 'react-native-reanimated';
-import LinearGradient from 'react-native-linear-gradient';
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
@@ -23,7 +22,7 @@ import { FONTS } from '../../../styles/typography';
 import ProfileAvatarBadge from '../../../components/ProfileAvatarBadge';
 import RotatingPlaceholder from '../../../components/RotatingPlaceholder';
 import COLORS from '@/styles/colors';
-import { TYPE, MAX_FONT_SCALE } from '@/styles/homeTheme';
+import { TYPE, MAX_FONT_SCALE, ACCENT } from '@/styles/homeTheme';
 import {
   BANNER_MIN_HEIGHT,
   BANNER_PARALLAX,
@@ -32,15 +31,15 @@ import {
 } from '../hooks/useHomeAnimations';
 
 const INK = '#1A1A1A';
-const SCRIM_COLORS = [
-  'rgba(8,10,16,0.46)',
-  'rgba(8,10,16,0.16)',
-  'transparent',
-];
-const SCRIM_LOCATIONS = [0, 0.55, 1];
 const BANNER_BLEED = BANNER_PARALLAX;
 const SEARCH_INSET = wp('4.7%');
 const SEARCH_EXAMPLES = ['Basmati Rice', 'Milk', 'Sunflower Oil', 'Lemons'];
+
+// Banner URLs this session has already decoded at least once. Module-level for
+// the same reason `lastKnownBanner` is: it has to outlive the screen, because
+// every entry into Home is a fresh mount and the reveal below is a cold-start
+// treatment that must not run again on a bitmap the image cache already holds.
+const paintedBanners = new Set();
 const StickyHeader = ({
   top,
   topSectionBanner,
@@ -48,7 +47,6 @@ const StickyHeader = ({
   onBannerPress,
   bannerSheetStyle,
   bannerParallaxStyle,
-  bannerScrimStyle,
   headerCollapseStyle,
   etaAnimStyle,
   searchWrapperAnimStyle,
@@ -59,6 +57,7 @@ const StickyHeader = ({
   dashboardData,
   navigation,
   isStoreUnavailable,
+  isLocationPending,
   profileAvatarSize,
   onSearchPressIn,
   onSearchPressOut,
@@ -94,13 +93,30 @@ const StickyHeader = ({
   //
   // Reset on URL change, not on mount: a refetch that returns different
   // artwork should fade the new image in rather than swap it under the user.
-  const bannerReveal = useSharedValue(0);
+  //
+  // And only for artwork this session has never painted. Holding at 0 until JS
+  // hears back from `onLoad` is what was putting the orange up on *every*
+  // Android entry into Home: a remounted Fresco view re-requests its bitmap and
+  // reports back a few frames later even on a warm cache, so the hold plus the
+  // 220ms fade ran again each time. iOS returns a memory-cached image inside
+  // the first commit, which is why only its cold start ever showed this. Once
+  // the URL is in `paintedBanners` the image starts opaque and the hold behind
+  // it is never seen.
+  const seen = !!bannerUrl && paintedBanners.has(bannerUrl);
+  const bannerReveal = useSharedValue(seen ? 1 : 0);
   React.useEffect(() => {
-    bannerReveal.value = 0;
+    bannerReveal.value = bannerUrl && paintedBanners.has(bannerUrl) ? 1 : 0;
   }, [bannerUrl, bannerReveal]);
   const onBannerLoad = React.useCallback(() => {
-    bannerReveal.value = withTiming(1, { duration: 220 });
-  }, [bannerReveal]);
+    if (bannerUrl) {
+      paintedBanners.add(bannerUrl);
+    }
+    // Already opaque on a cache hit — animating from 1 to 1 is a no-op, but
+    // skip it so a re-entry never schedules a UI-thread animation at all.
+    if (bannerReveal.value !== 1) {
+      bannerReveal.value = withTiming(1, { duration: 220 });
+    }
+  }, [bannerReveal, bannerUrl]);
   const bannerRevealStyle = useAnimatedStyle(() => ({
     opacity: bannerReveal.value,
   }));
@@ -149,6 +165,31 @@ const StickyHeader = ({
                 />
               </TouchableOpacity>
             </>
+          ) : isLocationPending ? (
+            // Home has not resolved the stored address yet. Showing "Select
+            // Location" here is a claim we cannot back — for anyone who has a
+            // saved address it is wrong, and it is withdrawn a moment later.
+            // Hold the same footprint instead so the real content drops into
+            // place without the block resizing.
+            <View
+              style={styles.locationPending}
+              pointerEvents="none"
+              accessible={false}
+              importantForAccessibility="no-hide-descendants"
+            >
+              <Text style={styles.timeText} maxFontSizeMultiplier={1.2}>
+                {' '}
+              </Text>
+              <View style={[styles.addressView, { marginTop: hp('0.4%') }]}>
+                <Text
+                  style={styles.addressText}
+                  numberOfLines={1}
+                  maxFontSizeMultiplier={MAX_FONT_SCALE}
+                >
+                  {' '}
+                </Text>
+              </View>
+            </View>
           ) : (
             <TouchableOpacity
               hitSlop={20}
@@ -278,7 +319,7 @@ const StickyHeader = ({
         >
           {/* Layered rather than an ImageBackground: the artwork needs to move
               independently of the chrome for the parallax, and it has to sit
-              under a scrim that the content in turn sits on top of. */}
+              under the white sheet that the content in turn sits on top of. */}
           <View
             style={[
               styles.bannerFrame,
@@ -300,17 +341,6 @@ const StickyHeader = ({
               // draw pass, and is not shared with iOS, which got a hard cut.
               fadeDuration={0}
             />
-
-            <Animated.View
-              pointerEvents="none"
-              style={[StyleSheet.absoluteFill, bannerScrimStyle]}
-            >
-              <LinearGradient
-                colors={SCRIM_COLORS}
-                locations={SCRIM_LOCATIONS}
-                style={StyleSheet.absoluteFill}
-              />
-            </Animated.View>
 
             <Animated.View
               pointerEvents="none"
@@ -359,20 +389,17 @@ const styles = StyleSheet.create({
     // Clips the overhanging artwork — without this the bleed and the parallax
     // scale would paint over the content below the header.
     overflow: 'hidden',
-    // What shows for the handful of frames before the artwork paints. Every
+    // What shows for the handful of frames before the artwork paints, and for
+    // as long as there is no banner at all (no location selected yet). Every
     // entry into Home is a fresh mount (the tab root is reset, and back exits
     // the app), so the banner Image is a new native view each time and has to
     // re-request its bitmap even on a warm disk cache — measured at ~5 frames
     // / 165ms on an emulator, longer on a cold cache.
     //
-    // This used to be brand orange, which is what read as a "blink": a
-    // saturated plate swapping to arbitrary artwork is the highest-contrast
-    // change the header can make, and it lands on every entry rather than only
-    // on a genuine first load. A deep slate is what the scrim above already
-    // turns the top of *any* artwork into, so the swap now reads as the image
-    // settling in rather than a colour change. It also keeps the white header
+    // Brand orange, matching the bannerless header in `fallbackHeaderBgStyle`
+    // so the two states are the same surface. It also keeps the white header
     // text and icons legible while it is up, which a white hold would not.
-    backgroundColor: '#1B1F27',
+    backgroundColor: ACCENT.primary,
   },
   // The banner used to end on a hard horizontal line straight into
   // TopShowcase's own full-bleed artwork — two unrelated photographs meeting
@@ -424,6 +451,12 @@ const styles = StyleSheet.create({
     // overflow the header rather than truncate inside it.
     flexShrink: 1,
     maxWidth: '100%',
+  },
+  // Same box as the resolved ETA + address block, invisible: it is a spacer,
+  // not a skeleton — the wait is a couple of frames, so a shimmer here would
+  // itself be the flicker.
+  locationPending: {
+    opacity: 0,
   },
   selectLocationButton: {
     flexDirection: 'row',

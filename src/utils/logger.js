@@ -75,6 +75,14 @@ const redactArgs = args => {
 };
 
 const logger = {
+  // Dev-only, NOT redacted. For tracing flows where the redacted keys are the
+  // ones you need to read (payment ids, gateway order ids, signatures). Stripped
+  // to a no-op in release builds, so nothing reaches logcat / Console there.
+  debug: (...args) => {
+    if (__DEV__) {
+      console.log(...args);
+    }
+  },
   log: (...args) => {
     if (__DEV__) {
       console.log(...redactArgs(args));

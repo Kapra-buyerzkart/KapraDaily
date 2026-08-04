@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import {
   View,
   Image,
@@ -21,7 +21,13 @@ import {
 
 const DOT_ACTIVE_WIDTH = wp('2.25%');
 const DOT_INACTIVE_WIDTH = wp('1.32%');
-const PaginationDot = ({ scrollX, index, count, snap, infinite }) => {
+const PaginationDot = React.memo(function PaginationDot({
+  scrollX,
+  index,
+  count,
+  snap,
+  infinite,
+}) {
   const animatedStyle = useAnimatedStyle(() => {
     const pos = scrollX.value / snap;
     const realPos = infinite ? (((pos - 1) % count) + count) % count : pos;
@@ -42,7 +48,7 @@ const PaginationDot = ({ scrollX, index, count, snap, infinite }) => {
   });
 
   return <Animated.View style={[styles.dot, animatedStyle]} />;
-};
+});
 
 const AUTOPLAY_INTERVAL_MS = 4000;
 
@@ -63,16 +69,48 @@ const PlacementBannerCarousel = ({
 
   const isInfinite = infinite && !!banners && banners.length > 1;
 
-  const BANNER_WIDTH = fullWidth ? wp('100%') : wp('85%');
-  const BANNER_SPACING = fullWidth ? 0 : wp('4%');
-  const ITEM_MARGIN = BANNER_SPACING / 2;
-  const SNAP_INTERVAL = BANNER_WIDTH + BANNER_SPACING;
-  // Side inset so the active card sits centered with an equal peek on both sides.
-  const CONTENT_PADDING = fullWidth
-    ? 0
-    : (wp('100%') - BANNER_WIDTH) / 2 - ITEM_MARGIN;
-  // Distance from the content edge to the first item's left edge (padding + its own margin).
-  const ITEM_OFFSET = fullWidth ? 0 : CONTENT_PADDING + ITEM_MARGIN;
+  // One derivation per layout mode instead of six wp() calls and a handful of
+  // fresh style objects on every render. The styles below are handed to the
+  // FlatList and to each cell, so rebuilding them was enough on its own to
+  // re-render every banner image.
+  const geometry = useMemo(() => {
+    const bannerWidth = fullWidth ? wp('100%') : wp('85%');
+    const bannerSpacing = fullWidth ? 0 : wp('4%');
+    const itemMargin = bannerSpacing / 2;
+    // Side inset so the active card sits centered with an equal peek on both sides.
+    const contentPadding = fullWidth
+      ? 0
+      : (wp('100%') - bannerWidth) / 2 - itemMargin;
+
+    return {
+      SNAP_INTERVAL: bannerWidth + bannerSpacing,
+      // Distance from the content edge to the first item's left edge
+      // (padding + its own margin).
+      ITEM_OFFSET: fullWidth ? 0 : contentPadding + itemMargin,
+      cellStyle: [
+        !fullWidth && styles.carouselShadowWrapper,
+        {
+          width: bannerWidth,
+          marginHorizontal: itemMargin,
+          height: '100%',
+        },
+      ],
+      touchableStyle: {
+        width: '100%',
+        height: '100%',
+        borderRadius: fullWidth ? 0 : wp('4%'),
+        overflow: 'hidden',
+      },
+      listContentStyle: fullWidth
+        ? undefined
+        : { paddingHorizontal: contentPadding, paddingVertical: hp('1%') },
+      singleStyle: [
+        !fullWidth && styles.carouselShadowWrapper,
+        { width: bannerWidth, alignSelf: 'center' },
+      ],
+    };
+  }, [fullWidth]);
+  const { SNAP_INTERVAL, ITEM_OFFSET } = geometry;
 
   const scrollHandler = useAnimatedScrollHandler(event => {
     scrollX.value = event.contentOffset.x;
@@ -134,53 +172,82 @@ const PlacementBannerCarousel = ({
     return () => clearInterval(autoplayTimer);
   }, [isInfinite, isFocused, banners?.length]);
 
-  if (!banners || banners.length === 0) return null;
+  // A leading and a trailing clone, so the last banner can scroll into the
+  // first without the list visibly rewinding.
+  const extendedBanners = useMemo(() => {
+    const list = banners || [];
+    return isInfinite ? [list[list.length - 1], ...list, list[0]] : list;
+  }, [banners, isInfinite]);
 
-  const extendedBanners = isInfinite
-    ? [banners[banners.length - 1], ...banners, banners[0]]
-    : banners;
+  const getItemLayout = useCallback(
+    (_, index) => ({
+      length: SNAP_INTERVAL,
+      offset: ITEM_OFFSET + SNAP_INTERVAL * index,
+      index,
+    }),
+    [SNAP_INTERVAL, ITEM_OFFSET],
+  );
 
-  const getItemLayout = (_, index) => ({
-    length: SNAP_INTERVAL,
-    offset: ITEM_OFFSET + SNAP_INTERVAL * index,
-    index,
-  });
-
-  const onScrollBeginDrag = () => {
+  const onScrollBeginDrag = useCallback(() => {
     isDraggingRef.current = true;
-  };
+  }, []);
 
-  const onMomentumScrollEnd = e => {
-    isDraggingRef.current = false;
-    if (!isInfinite) return;
+  const onMomentumScrollEnd = useCallback(
+    e => {
+      isDraggingRef.current = false;
+      if (!isInfinite) return;
 
-    const slideIndex = Math.round(
-      e.nativeEvent.contentOffset.x / SNAP_INTERVAL,
-    );
-    currentIndexRef.current = slideIndex;
+      const slideIndex = Math.round(
+        e.nativeEvent.contentOffset.x / SNAP_INTERVAL,
+      );
+      currentIndexRef.current = slideIndex;
 
-    // Jump (without animation) from a cloned edge back to the real banner.
-    if (slideIndex === 0) {
-      currentIndexRef.current = banners.length;
-      flatListRef.current?.scrollToIndex({
-        index: banners.length,
-        animated: false,
-      });
-    } else if (slideIndex === extendedBanners.length - 1) {
-      currentIndexRef.current = 1;
-      flatListRef.current?.scrollToIndex({ index: 1, animated: false });
-    }
-  };
+      // Jump (without animation) from a cloned edge back to the real banner.
+      if (slideIndex === 0) {
+        currentIndexRef.current = banners.length;
+        flatListRef.current?.scrollToIndex({
+          index: banners.length,
+          animated: false,
+        });
+      } else if (slideIndex === extendedBanners.length - 1) {
+        currentIndexRef.current = 1;
+        flatListRef.current?.scrollToIndex({ index: 1, animated: false });
+      }
+    },
+    [isInfinite, SNAP_INTERVAL, banners, extendedBanners.length],
+  );
+
+  const keyExtractor = useCallback((_, index) => index.toString(), []);
+
+  const renderItem = useCallback(
+    ({ item }) => (
+      <View style={geometry.cellStyle}>
+        <TouchableOpacity
+          activeOpacity={0.9}
+          onPress={() => onBannerPress(item)}
+          style={geometry.touchableStyle}
+        >
+          <Image
+            source={item.uri}
+            style={styles.topHomeBannerImage}
+            resizeMode="cover"
+          />
+        </TouchableOpacity>
+      </View>
+    ),
+    [geometry, onBannerPress],
+  );
+
+  const listStyle = useMemo(
+    () => [style, !fullWidth && { overflow: 'visible' }],
+    [style, fullWidth],
+  );
+
+  if (!banners || banners.length === 0) return null;
 
   if (banners.length === 1) {
     return (
-      <View
-        style={[
-          !fullWidth && styles.carouselShadowWrapper,
-          { width: BANNER_WIDTH, alignSelf: 'center' },
-          style,
-        ]}
-      >
+      <View style={[geometry.singleStyle, style]}>
         <TouchableOpacity
           activeOpacity={0.9}
           onPress={() => onBannerPress(banners[0])}
@@ -195,7 +262,7 @@ const PlacementBannerCarousel = ({
   }
 
   return (
-    <View style={[style, !fullWidth && { overflow: 'visible' }]}>
+    <View style={listStyle}>
       <Animated.FlatList
         ref={flatListRef}
         data={extendedBanners}
@@ -210,42 +277,13 @@ const PlacementBannerCarousel = ({
         onMomentumScrollEnd={isInfinite ? onMomentumScrollEnd : undefined}
         getItemLayout={isInfinite ? getItemLayout : undefined}
         initialScrollIndex={isInfinite ? 1 : undefined}
-        scrollEventThrottle={16}
-        keyExtractor={(_, index) => index.toString()}
-        contentContainerStyle={
-          fullWidth
-            ? undefined
-            : { paddingHorizontal: CONTENT_PADDING, paddingVertical: hp('1%') }
-        }
-        renderItem={({ item }) => (
-          <View
-            style={[
-              !fullWidth && styles.carouselShadowWrapper,
-              {
-                width: BANNER_WIDTH,
-                marginHorizontal: ITEM_MARGIN,
-                height: '100%',
-              },
-            ]}
-          >
-            <TouchableOpacity
-              activeOpacity={0.9}
-              onPress={() => onBannerPress(item)}
-              style={{
-                width: '100%',
-                height: '100%',
-                borderRadius: fullWidth ? 0 : wp('4%'),
-                overflow: 'hidden',
-              }}
-            >
-              <Image
-                source={item.uri}
-                style={styles.topHomeBannerImage}
-                resizeMode="cover"
-              />
-            </TouchableOpacity>
-          </View>
-        )}
+        // 1, not 16: the handler is a UI-thread worklet, so the events are
+        // cheap, and throttling them only starved the pagination dots of
+        // frames on 120Hz displays.
+        scrollEventThrottle={1}
+        keyExtractor={keyExtractor}
+        contentContainerStyle={geometry.listContentStyle}
+        renderItem={renderItem}
       />
       {showDots && (
         <View style={styles.pagination}>
@@ -304,4 +342,9 @@ const styles = StyleSheet.create({
   },
 });
 
-export default PlacementBannerCarousel;
+// Memoised to match every other home section. This was the last one still
+// re-rendering on every HomeScreen render — pull-to-refresh, the header's
+// onLayout metrics patch, every discovery-category tap — and since its list
+// props were rebuilt inline, each of those re-rendered every banner cell and
+// re-issued its <Image> source.
+export default React.memo(PlacementBannerCarousel);

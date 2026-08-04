@@ -2,8 +2,15 @@
 import React, { useEffect } from 'react';
 import { View, Image, StyleSheet } from 'react-native';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
+import { prefetchLandingPages } from '../hooks/useLandingPages';
 
 const SplashScreen = ({ navigation }) => {
+    // Use the splash dwell time to fetch + decode the landing artwork, so
+    // AuthSuccessScreen paints its API images immediately when it mounts.
+    useEffect(() => {
+        prefetchLandingPages();
+    }, []);
+
     useEffect(() => {
         const timer = setTimeout(() => {
             navigation.replace('LocationFetching');

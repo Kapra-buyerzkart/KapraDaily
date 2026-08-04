@@ -1,9 +1,8 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
 import {
   View,
   StyleSheet,
   ScrollView,
-  Dimensions,
   TouchableOpacity,
   Image,
   ImageBackground,
@@ -15,46 +14,67 @@ import {
 } from 'react-native-responsive-screen';
 import { AppContext } from '../context/appContext';
 import ComingSoonModal from '../components/ComingSoonModal';
-import useLandingPagesQuery from '../queries/useLandingPagesQuery';
+import useLandingPages, {
+  findLandingImage,
+  prefetchLandingPageImages,
+} from '../hooks/useLandingPages';
 import { getImageUrl } from '../utils/imageUrl';
-import { useFallbackImage } from '../hooks/useFallbackImage';
 
-const { width } = Dimensions.get('window');
-
-const findImage = (images, name) => images?.find(path => path.endsWith(name));
+const CardImage = ({ source, style }) => {
+  if (!source) return <View style={style} />;
+  return (
+    <Image
+      source={source}
+      style={style}
+      resizeMode="contain"
+      fadeDuration={0}
+      progressiveRenderingEnabled
+      onError={({ nativeEvent }) =>
+        console.log(
+          '[AuthSuccess] image failed:',
+          source.uri,
+          nativeEvent?.error,
+        )
+      }
+    />
+  );
+};
 
 const AuthSuccessScreen = ({ navigation }) => {
   const { generalSettings } = useContext(AppContext);
   const [isComingSoonVisible, setIsComingSoonVisible] = useState(false);
-  const { data: landingPages } = useLandingPagesQuery();
+  const { data: landingPages } = useLandingPages();
   const landingPageImages = landingPages?.landingPageImages;
 
-  const bgImagePath = findImage(landingPageImages, 'landbg.png');
-  const kapraImagePath = findImage(landingPageImages, '20min.png');
-  const ticketsImagePath = findImage(landingPageImages, 'udentickets.png');
-  const d2cImagePath = findImage(landingPageImages, 'd2c.png');
-  const kshopeImagePath = findImage(landingPageImages, '48hrs.png');
+  // Every slot is served straight from the landingpages API — no bundled
+  // fallbacks. A slot renders empty if its file is missing on the image host.
+  const sources = useMemo(() => {
+    const toSource = name => {
+      const path = findLandingImage(landingPageImages, name);
+      return path ? getImageUrl(path) : null;
+    };
+    return {
+      bg: toSource('landbg.png'),
+      kapra: toSource('20min.png'),
+      tickets: toSource('udentickets.png'),
+      d2c: toSource(['d2cimg1.png', 'd2c.png']),
+      kshope: toSource('48hrs.png'),
+    };
+  }, [landingPageImages]);
 
-  const bg = useFallbackImage(
-    bgImagePath && getImageUrl(bgImagePath),
-    require('../assets/images/splash/backgroundbg.png'),
-  );
-  const kapra = useFallbackImage(
-    kapraImagePath && getImageUrl(kapraImagePath),
-    require('../assets/images/splash/udendeal.png'),
-  );
-  const tickets = useFallbackImage(
-    ticketsImagePath && getImageUrl(ticketsImagePath),
-    require('../assets/images/splash/Frame 1216249942 1.png'),
-  );
-  const d2c = useFallbackImage(
-    d2cImagePath && getImageUrl(d2cImagePath),
-    require('../assets/images/splash/Frame 1216249941 1.png'),
-  );
-  const kshope = useFallbackImage(
-    kshopeImagePath && getImageUrl(kshopeImagePath),
-    require('../assets/images/splash/Frame 1216249939 1.png'),
-  );
+  useEffect(() => {
+    console.log('[AuthSuccess] landing image URIs:', {
+      bg: sources.bg?.uri,
+      kapra: sources.kapra?.uri,
+      tickets: sources.tickets?.uri,
+      d2c: sources.d2c?.uri,
+      kshope: sources.kshope?.uri,
+    });
+  }, [sources]);
+
+  useEffect(() => {
+    prefetchLandingPageImages(landingPageImages);
+  }, [landingPageImages]);
 
   const handleKapra = () => {
     navigation.reset({
@@ -116,9 +136,9 @@ const AuthSuccessScreen = ({ navigation }) => {
   return (
     <View style={styles.screen}>
       <ImageBackground
-        source={bg.source}
-        onError={bg.onError}
+        source={sources.bg}
         resizeMode="cover"
+        fadeDuration={0}
         style={styles.container}
       >
         <StatusBar
@@ -143,12 +163,7 @@ const AuthSuccessScreen = ({ navigation }) => {
           <View style={styles.cardsContainer}>
             {/* 20 minss deal - Large Card (Kapra) */}
             <TouchableOpacity activeOpacity={0.9} onPress={handleKapra}>
-              <Image
-                source={kapra.source}
-                onError={kapra.onError}
-                style={styles.largeCard}
-                resizeMode="contain"
-              />
+              <CardImage source={sources.kapra} style={styles.largeCard} />
             </TouchableOpacity>
 
             {/* Uden Tickets - Large Card */}
@@ -156,32 +171,17 @@ const AuthSuccessScreen = ({ navigation }) => {
               activeOpacity={0.9}
               onPress={handleTicketCollection}
             >
-              <Image
-                source={tickets.source}
-                onError={tickets.onError}
-                style={styles.largeCard}
-                resizeMode="contain"
-              />
+              <CardImage source={sources.tickets} style={styles.largeCard} />
             </TouchableOpacity>
             {/* Small Cards Row */}
             <View style={styles.row}>
               {/* D2C */}
               <TouchableOpacity activeOpacity={0.9} onPress={handleD2c}>
-                <Image
-                  source={d2c.source}
-                  onError={d2c.onError}
-                  style={styles.smallCard}
-                  resizeMode="contain"
-                />
+                <CardImage source={sources.d2c} style={styles.smallCard} />
               </TouchableOpacity>
               {/* 48 Hrs Deal */}
               <TouchableOpacity activeOpacity={0.9} onPress={handleKshope}>
-                <Image
-                  source={kshope.source}
-                  onError={kshope.onError}
-                  style={styles.smallCard}
-                  resizeMode="contain"
-                />
+                <CardImage source={sources.kshope} style={styles.smallCard} />
               </TouchableOpacity>
             </View>
           </View>

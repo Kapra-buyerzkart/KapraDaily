@@ -39,6 +39,21 @@ const checkAuthApi = url => {
   );
 };
 
+// Endpoints that make up the payment flows (cart order + voucher purchase).
+// Traffic on these is dumped raw via `logger.debug` — dev-only — so a failed
+// payment can be traced end to end without redaction hiding the gateway ids and
+// signatures you actually need to compare against the Razorpay console.
+const PAYMENT_URL_PATTERNS = [
+  'payments/razorpay',
+  'order/create',
+  'confirmcod',
+  '/summary',
+  'vouchers/',
+];
+
+const isPaymentApi = url =>
+  !!url && PAYMENT_URL_PATTERNS.some(p => url.toLowerCase().includes(p));
+
 // axios keeps the outgoing body on `config.data` as a serialized string; parse it
 // back so it logs as an object instead of one long escaped line.
 const safeParse = value => {
@@ -52,6 +67,15 @@ const safeParse = value => {
 
 /* -------------------- ERROR HANDLER -------------------- */
 const errorHandler = error => {
+  if (isPaymentApi(error?.config?.url)) {
+    logger.debug('[PAY:http] ✖', error?.response?.status, error?.config?.url, {
+      requestBody: safeParse(error?.config?.data),
+      responseBody: error?.response?.data,
+      message: error?.message,
+      code: error?.code,
+    });
+  }
+
   logger.log(
     ' [API ERROR]:',
     error?.response?.status,
@@ -152,6 +176,13 @@ axiosInstance.interceptors.request.use(
       }
     }
 
+    if (isPaymentApi(config.url)) {
+      logger.debug('[PAY:http] →', config.method?.toUpperCase(), fullUrl, {
+        params: config.params,
+        body: safeParse(config.data),
+      });
+    }
+
     return config;
   },
   error => Promise.reject(error),
@@ -180,6 +211,15 @@ export const resetNetworkState = () => {
 /* -------------------- RESPONSE INTERCEPTOR -------------------- */
 axiosInstance.interceptors.response.use(
   response => {
+    if (isPaymentApi(response?.config?.url)) {
+      logger.debug(
+        '[PAY:http] ←',
+        response.status,
+        response?.config?.url,
+        response.data,
+      );
+    }
+
     // Check for specific database errors that imply an invalid session even if the status is 200 OK
     const data = response.data;
     if (data && data.success === false && data.message) {

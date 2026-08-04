@@ -14,7 +14,7 @@ import {
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
 import ComingSoonModal from '../components/ComingSoonModal';
-import useLandingPagesQuery from '../queries/useLandingPagesQuery';
+import useLandingPages from '../hooks/useLandingPages';
 import { getImageUrl } from '../utils/imageUrl';
 import { useFallbackImage } from '../hooks/useFallbackImage';
 
@@ -29,7 +29,7 @@ const findImage = (images, name) => images?.find(path => path.endsWith(name));
 const D2cScreen = ({ navigation }) => {
   const insets = useSafeAreaInsets();
   const [isComingSoonVisible, setIsComingSoonVisible] = useState(false);
-  const { data: landingPages } = useLandingPagesQuery();
+  const { data: landingPages } = useLandingPages();
   const d2cImages = landingPages?.d2cImages;
 
   const titleImagePath = findImage(d2cImages, 'D2C.png');

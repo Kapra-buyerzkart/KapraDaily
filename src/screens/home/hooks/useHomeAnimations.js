@@ -178,18 +178,6 @@ const useHomeAnimations = ({ top, bottom, headerMetrics }) => {
     };
   });
 
-  const bannerScrimStyle = useAnimatedStyle(() => {
-    if (collapseDistance <= 0) return { opacity: 1 };
-    return {
-      opacity: interpolate(
-        scrollY.value,
-        [0, collapseDistance * 0.7],
-        [1, 0],
-        Extrapolation.CLAMP,
-      ),
-    };
-  });
-
   const fallbackHeaderBgStyle = useAnimatedStyle(() => {
     const progress =
       collapseDistance > 0 ? clamp(scrollY.value / collapseDistance, 0, 1) : 0;
@@ -234,7 +222,6 @@ const useHomeAnimations = ({ top, bottom, headerMetrics }) => {
     searchWrapperAnimStyle,
     bannerSheetStyle,
     bannerParallaxStyle,
-    bannerScrimStyle,
     fallbackHeaderBgStyle,
     stickyBorderAnimStyle,
     handleSearchPressIn,

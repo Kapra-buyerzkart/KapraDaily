@@ -7,6 +7,9 @@ import CONFIG from '../../globals/config';
 import icons from '@/assets/icons';
 import { INK, RED } from './styles';
 
+// One optical size for every row glyph, vector or PNG, so the icon rail lines up.
+const ICON_SIZE = wp('4.6%');
+
 export const buildOffersItems = ({ onBCoin, onSmartPoint, onCoupons }) => [
   {
     key: 'UD-Wallet',
@@ -14,7 +17,7 @@ export const buildOffersItems = ({ onBCoin, onSmartPoint, onCoupons }) => [
     icon: (
       <Image
         source={icons.udcoin}
-        style={{ width: wp('4%'), height: wp('4%') }}
+        style={{ width: ICON_SIZE, height: ICON_SIZE }}
         resizeMode="contain"
       />
     ),
@@ -23,13 +26,13 @@ export const buildOffersItems = ({ onBCoin, onSmartPoint, onCoupons }) => [
   {
     key: 'smart-point',
     label: 'Smart point',
-    icon: <Ionicons name="wallet-outline" color={INK} size={wp('4%')} />,
+    icon: <Ionicons name="wallet-outline" color={INK} size={ICON_SIZE} />,
     onPress: onSmartPoint,
   },
   {
     key: 'coupon',
     label: 'Coupon',
-    icon: <Ionicons name="pricetag-outline" color={INK} size={wp('4%')} />,
+    icon: <Ionicons name="pricetag-outline" color={INK} size={ICON_SIZE} />,
     onPress: onCoupons,
   },
 ];
@@ -46,7 +49,7 @@ export const buildMyAccountItems = ({
       <MaterialCommunityIcons
         name="phone-outline"
         color={INK}
-        size={wp('4%')}
+        size={ICON_SIZE}
       />
     ),
     onPress: () =>
@@ -59,7 +62,7 @@ export const buildMyAccountItems = ({
       <MaterialCommunityIcons
         name="email-outline"
         color={INK}
-        size={wp('4%')}
+        size={ICON_SIZE}
       />
     ),
     onPress: () =>
@@ -69,7 +72,11 @@ export const buildMyAccountItems = ({
     key: 'update-password',
     label: 'Update Password',
     icon: (
-      <MaterialCommunityIcons name="lock-outline" color={INK} size={wp('4%')} />
+      <MaterialCommunityIcons
+        name="lock-outline"
+        color={INK}
+        size={ICON_SIZE}
+      />
     ),
     onPress: () => navigation.navigate('ChangePasswordScreen'),
   },
@@ -80,7 +87,7 @@ export const buildMyAccountItems = ({
       <MaterialCommunityIcons
         name="account-group-outline"
         color={INK}
-        size={wp('4%')}
+        size={ICON_SIZE}
       />
     ),
     onPress: () => navigation.navigate('MyAffilateScreen'),
@@ -88,13 +95,13 @@ export const buildMyAccountItems = ({
   {
     key: 'wishlist',
     label: 'My Wishlist',
-    icon: <Ionicons name="heart-outline" color={INK} size={wp('4%')} />,
+    icon: <Ionicons name="heart-outline" color={INK} size={ICON_SIZE} />,
     onPress: () => navigation.navigate('MainTabs', { screen: 'Wishlist' }),
   },
   {
     key: 'my-cart',
     label: 'My Cart',
-    icon: <Ionicons name="cart-outline" color={INK} size={wp('4%')} />,
+    icon: <Ionicons name="cart-outline" color={INK} size={ICON_SIZE} />,
     onPress: () => navigation.navigate('CartScreen'),
   },
   ...(Number(isTicketValidationVisible) === 1
@@ -106,7 +113,7 @@ export const buildMyAccountItems = ({
             <MaterialCommunityIcons
               name="qrcode-scan"
               color={INK}
-              size={wp('4%')}
+              size={ICON_SIZE}
             />
           ),
           onPress: () => navigation.navigate('QRScannerScreen'),
@@ -116,7 +123,7 @@ export const buildMyAccountItems = ({
   // {
   //   key: 'language',
   //   label: 'Language',
-  //   icon: <Ionicons name="language-outline" color={INK} size={wp('4%')} />,
+  //   icon: <Ionicons name="language-outline" color={INK} size={ICON_SIZE} />,
   //   onPress: onLanguage,
   // },
 ];
@@ -134,7 +141,7 @@ export const buildInformationItems = ({
       <MaterialCommunityIcons
         name="lightbulb-on-outline"
         color={INK}
-        size={wp('4%')}
+        size={ICON_SIZE}
       />
     ),
     onPress: () => suggestProductsSheetRef.current?.open(),
@@ -142,13 +149,13 @@ export const buildInformationItems = ({
   {
     key: 'customer-support',
     label: 'Customer Support',
-    icon: <Ionicons name="headset-outline" color={INK} size={wp('4%')} />,
+    icon: <Ionicons name="headset-outline" color={INK} size={ICON_SIZE} />,
     onPress: () => helpSheetRef.current?.open(),
   },
   {
     key: 'faq',
     label: 'F&Q',
-    icon: <Ionicons name="help-circle-outline" color={INK} size={wp('4%')} />,
+    icon: <Ionicons name="help-circle-outline" color={INK} size={ICON_SIZE} />,
   },
   {
     key: 'privacy-policy',
@@ -157,7 +164,7 @@ export const buildInformationItems = ({
       <MaterialCommunityIcons
         name="shield-lock-outline"
         color={INK}
-        size={wp('4%')}
+        size={ICON_SIZE}
       />
     ),
     onPress: () =>
@@ -173,7 +180,7 @@ export const buildInformationItems = ({
       <MaterialCommunityIcons
         name="file-document-outline"
         color={INK}
-        size={wp('4%')}
+        size={ICON_SIZE}
       />
     ),
     onPress: () =>
@@ -186,19 +193,23 @@ export const buildInformationItems = ({
     key: 'about-us',
     label: 'About Us',
     icon: (
-      <Ionicons name="information-circle-outline" color={INK} size={wp('4%')} />
+      <Ionicons
+        name="information-circle-outline"
+        color={INK}
+        size={ICON_SIZE}
+      />
     ),
   },
   {
     key: 'support-tickets',
     label: 'Support Tickets',
-    icon: <Ionicons name="help-circle-outline" color={INK} size={wp('4%')} />,
+    icon: <Ionicons name="help-circle-outline" color={INK} size={ICON_SIZE} />,
     onPress: () => navigation.navigate('SupportTicketsListScreen'),
   },
   {
     key: 'kpc-login',
     label: 'KPC Login',
-    icon: <Ionicons name="globe-outline" color={INK} size={wp('4%')} />,
+    icon: <Ionicons name="globe-outline" color={INK} size={ICON_SIZE} />,
     onPress: () => Linking.openURL(CONFIG.image_base_url),
   },
   {
@@ -209,7 +220,7 @@ export const buildInformationItems = ({
       <MaterialCommunityIcons
         name="account-remove-outline"
         color={RED}
-        size={wp('4%')}
+        size={ICON_SIZE}
       />
     ),
     onPress: () => setIsDeleteAccountModalVisible(true),

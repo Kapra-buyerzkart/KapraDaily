@@ -5,12 +5,10 @@ import {
   StyleSheet,
   TouchableOpacity,
   FlatList,
-  Platform,
   ScrollView,
   Animated,
   ActivityIndicator,
   Share,
-  Alert,
 } from 'react-native';
 import React, {
   useRef,
@@ -19,7 +17,10 @@ import React, {
   useContext,
   useCallback,
 } from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 import ReanimatedView, {
   useSharedValue,
   useAnimatedStyle,
@@ -36,31 +37,51 @@ import {
 import { FONTS } from '../styles/typography';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import CONFIG from '../globals/config';
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import AntDesign from 'react-native-vector-icons/AntDesign';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import Entypo from 'react-native-vector-icons/Entypo';
+import LinearGradient from 'react-native-linear-gradient';
 import TokenProductCard from '../components/TokenProductCard';
 import SelectedProducts from '../components/SelectedProducts';
 import { useWishlist } from '../context/WishlistContext';
 import { useCart } from '../context/CartContext';
 import { useProductDetails } from '../hooks/useProductDetails';
 import { getStaggerDelay } from '../utils/staggerDelay';
-import { LoaderContext } from '../context/loaderContext';
-import Entypo from 'react-native-vector-icons/Entypo';
-import Ionicons from 'react-native-vector-icons/Ionicons';
-import LinearGradient from 'react-native-linear-gradient';
+import { impactTick, selectionTick } from '../utils/haptics';
 import StoreUnavailable from '../components/StoreUnavailable';
 import LocationModal from '../components/LocationModal';
 import { AppContext } from '../context/appContext';
 import ShimmerPlaceholder from '../components/ShimmerPlaceholder';
 import AnimatedPressable from '../components/AnimatedPressable';
 import icons from '@/assets/icons';
-import COLORS from '@/styles/colors';
+import {
+  CANVAS,
+  SURFACE,
+  HAIRLINE,
+  INK,
+  ACCENT,
+  RADIUS,
+  SPACE,
+  TYPE,
+  ELEVATION,
+  GUTTER,
+  MAX_FONT_SCALE,
+  hitSlopTo,
+} from '@/styles/homeTheme';
 
 const BUMP_SPRING = { damping: 8, stiffness: 260, mass: 0.4 };
 const HEART_SPRING = { damping: 10, stiffness: 340, mass: 0.5 };
 
 const SECTION_STAGGER_MS = 90;
+
+const HERO_H = hp('50%');
+const SHEET_OVERLAP = SPACE.lg;
+
+const HEADER_BTN = 38;
+const HEADER_HIT_SLOP = hitSlopTo(HEADER_BTN);
+const STEP_HIT_SLOP = { top: 10, bottom: 6, left: 8, right: 8 };
+
+const ACTION_W = wp('32%');
+const ACTION_H = 46;
 
 const scaleFadeIn =
   (delayMs = 0) =>
@@ -88,12 +109,6 @@ const scaleFadeIn =
 const GalleryImage = ({ source, style, imageStyle }) => {
   const opacity = useSharedValue(0);
   const animatedStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
-
-  // Animate the Image directly (a Fabric host component) instead of wrapping
-  // ImageBackground with createAnimatedComponent. On the New Architecture,
-  // ImageBackground's ref resolves to the class instance — not a host view —
-  // so Reanimated can't attach the animated `opacity` prop and the screen
-  // crashes. ImageBackground had no children here, so Image is a drop-in.
   return (
     <ReanimatedView.Image
       source={source}
@@ -109,10 +124,7 @@ const PaginationDot = ({ isSelected }) => (
   <View
     style={[
       styles.paginationDot,
-      {
-        width: wp(isSelected ? '5%' : '2%'),
-        backgroundColor: isSelected ? COLORS.primary : 'rgba(255,255,255,0.55)',
-      },
+      isSelected ? styles.paginationDotActive : styles.paginationDotIdle,
     ]}
   />
 );
@@ -126,6 +138,7 @@ const ProductDetailsScreen = () => {
   const [showScrollHint, setShowScrollHint] = useState(false);
   const { isStoreUnavailable, storeUnavailableData } = useContext(AppContext);
   const [isLocationModalVisible, setIsLocationModalVisible] = useState(false);
+  const insets = useSafeAreaInsets();
 
   const navigation = useNavigation();
   const route = useRoute();
@@ -191,6 +204,7 @@ const ProductDetailsScreen = () => {
   }));
 
   const handleWishlistToggle = useCallback(() => {
+    impactTick();
     heartScale.value = withSequence(
       withTimingReanimated(1.18, { duration: 90 }),
       withSpring(1, HEART_SPRING),
@@ -209,6 +223,7 @@ const ProductDetailsScreen = () => {
 
   const toggleDetails = () => {
     const isExpanding = !showDetails;
+    selectionTick();
     Animated.timing(animation, {
       toValue: isExpanding ? 1 : 0,
       duration: 250,
@@ -228,6 +243,11 @@ const ProductDetailsScreen = () => {
     outputRange: [0, hp('40%')],
   });
 
+  const chevronRotate = animation.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '180deg'],
+  });
+
   useEffect(() => {
     if (productImage) {
       setSelectedImage(productImage);
@@ -242,16 +262,21 @@ const ProductDetailsScreen = () => {
     }
   }, [finalProductId]);
 
+  const savings =
+    Number(unitPrice) > Number(specialPrice)
+      ? Math.round(Number(unitPrice) - Number(specialPrice))
+      : 0;
+  const outOfStock = !isAvailable || stockQty === 0;
+
   if (loading && !product) {
     return (
       <SafeAreaView edges={['top']} style={styles.mainContainer}>
-        <View style={styles.loaderHeader}>
+        <View style={styles.standardHeader}>
           <TouchableOpacity
             onPress={() => navigation.goBack()}
-            style={styles.iconCircle}
+            hitSlop={HEADER_HIT_SLOP}
           >
             <Image source={icons.backArrowNew} />
-            {/* <Ionicons name="chevron-back" size={wp('6%')} color="#000" /> */}
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Product Details</Text>
         </View>
@@ -259,155 +284,70 @@ const ProductDetailsScreen = () => {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: hp('5%') }}
         >
-          <View style={styles.topSection}>
-            <View style={styles.mainImageContainer}>
-              <ShimmerPlaceholder
-                style={{
-                  width: wp('85%'),
-                  height: hp('28%'),
-                  borderRadius: 15,
-                }}
-                width={wp('85%')}
-              />
-            </View>
+          <View style={styles.heroSkeleton}>
+            <ShimmerPlaceholder
+              style={styles.heroSkeletonImage}
+              width={wp('62%')}
+            />
           </View>
 
-          <View style={styles.infoCard}>
-            <View
-              style={{
-                borderColor: '#D9D9D9',
-                borderWidth: 0.5,
-                width: wp('92%'),
-                alignSelf: 'center',
-                borderRadius: 30,
-                paddingHorizontal: 20,
-                paddingTop: 25,
-                paddingVertical: 10,
-              }}
-            >
-              <ShimmerPlaceholder
-                style={{
-                  width: wp('60%'),
-                  height: hp('3%'),
-                  borderRadius: 4,
-                  marginBottom: hp('1%'),
-                }}
-                width={wp('60%')}
-              />
-              <ShimmerPlaceholder
-                style={{
-                  width: wp('40%'),
-                  height: hp('2%'),
-                  borderRadius: 4,
-                  marginBottom: hp('2%'),
-                }}
-                width={wp('40%')}
-              />
+          <View style={styles.sheet}>
+            <ShimmerPlaceholder
+              style={[styles.skelLine, { width: wp('26%'), height: 22 }]}
+              width={wp('26%')}
+            />
+            <ShimmerPlaceholder
+              style={[
+                styles.skelLine,
+                { width: wp('72%'), height: 20, marginTop: SPACE.base },
+              ]}
+              width={wp('72%')}
+            />
+            <ShimmerPlaceholder
+              style={[styles.skelLine, { width: wp('44%'), height: 14 }]}
+              width={wp('44%')}
+            />
 
+            <View style={styles.skelPriceRow}>
               <ShimmerPlaceholder
-                style={{
-                  width: wp('30%'),
-                  height: hp('4%'),
-                  borderRadius: 8,
-                  marginTop: hp('1%'),
-                  marginBottom: hp('2%'),
-                }}
+                style={[styles.skelLine, { width: wp('30%'), height: 26 }]}
                 width={wp('30%')}
               />
-
-              <View
-                style={{
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                  alignItems: 'flex-end',
-                }}
-              >
-                <View>
-                  <ShimmerPlaceholder
-                    style={{
-                      width: wp('20%'),
-                      height: hp('2%'),
-                      borderRadius: 4,
-                      marginBottom: hp('0.5%'),
-                    }}
-                    width={wp('20%')}
-                  />
-                  <ShimmerPlaceholder
-                    style={{
-                      width: wp('35%'),
-                      height: hp('4%'),
-                      borderRadius: 4,
-                    }}
-                    width={wp('35%')}
-                  />
-                </View>
-                <ShimmerPlaceholder
-                  style={{
-                    width: wp('34%'),
-                    height: hp('5.5%'),
-                    borderRadius: hp('3%'),
-                  }}
-                  width={wp('34%')}
-                />
-              </View>
-
-              <View
-                style={{
-                  height: 1,
-                  backgroundColor: '#EEE',
-                  marginVertical: hp('2%'),
-                  width: wp('70%'),
-                  alignSelf: 'center',
-                }}
-              />
-
               <ShimmerPlaceholder
                 style={{
-                  width: wp('40%'),
-                  height: hp('2.5%'),
-                  borderRadius: 4,
-                  alignSelf: 'center',
+                  width: ACTION_W,
+                  height: ACTION_H,
+                  borderRadius: RADIUS.sm,
                 }}
-                width={wp('40%')}
+                width={ACTION_W}
               />
             </View>
-          </View>
 
-          <View style={{ marginTop: hp('4%'), paddingHorizontal: wp('8%') }}>
+            <View style={styles.rule} />
+
             <ShimmerPlaceholder
-              style={{
-                width: wp('40%'),
-                height: hp('3%'),
-                borderRadius: 4,
-                marginBottom: hp('2%'),
-              }}
+              style={[styles.skelLine, { width: wp('40%'), height: 16 }]}
               width={wp('40%')}
             />
-            <View style={{ flexDirection: 'row', gap: wp('4%') }}>
-              <ShimmerPlaceholder
-                style={{
-                  width: wp('30%'),
-                  height: hp('15%'),
-                  borderRadius: 12,
-                }}
-                width={wp('30%')}
-              />
-              <ShimmerPlaceholder
-                style={{
-                  width: wp('30%'),
-                  height: hp('15%'),
-                  borderRadius: 12,
-                }}
-                width={wp('30%')}
-              />
-              <ShimmerPlaceholder
-                style={{
-                  width: wp('30%'),
-                  height: hp('15%'),
-                  borderRadius: 12,
-                }}
-                width={wp('30%')}
-              />
+          </View>
+
+          <View style={styles.skelRailBlock}>
+            <ShimmerPlaceholder
+              style={[styles.skelLine, { width: wp('40%'), height: 20 }]}
+              width={wp('40%')}
+            />
+            <View style={styles.skelRail}>
+              {[0, 1, 2].map(i => (
+                <ShimmerPlaceholder
+                  key={i}
+                  style={{
+                    width: wp('35%'),
+                    height: hp('20%'),
+                    borderRadius: RADIUS.md,
+                  }}
+                  width={wp('35%')}
+                />
+              ))}
             </View>
           </View>
         </ScrollView>
@@ -416,31 +356,37 @@ const ProductDetailsScreen = () => {
   }
 
   const renderHeader = () => (
-    <View style={styles.floatingHeader}>
-      <View style={styles.headerLeft}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Image source={icons.backArrowNew} />
-        </TouchableOpacity>
-      </View>
+    <View style={[styles.floatingHeader, { top: insets.top + SPACE.sm }]}>
+      <TouchableOpacity
+        onPress={() => navigation.goBack()}
+        hitSlop={HEADER_HIT_SLOP}
+        style={styles.headerButton}
+        accessibilityRole="button"
+        accessibilityLabel="Go back"
+      >
+        <Image source={icons.backArrowNew} />
+      </TouchableOpacity>
+
       <View style={styles.headerRight}>
         <TouchableOpacity
-          style={styles.iconCircle}
+          style={styles.headerButton}
+          hitSlop={HEADER_HIT_SLOP}
           onPress={handleWishlistToggle}
+          accessibilityRole="button"
+          accessibilityLabel={
+            isLiked ? 'Remove from wishlist' : 'Add to wishlist'
+          }
         >
           <ReanimatedView.View style={heartAnimatedStyle}>
             <Ionicons
               name={isLiked ? 'heart' : 'heart-outline'}
-              size={wp('7%')}
-              color={COLORS.error}
-              style={{
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
+              size={20}
+              color={isLiked ? '#E1233A' : INK.base}
             />
           </ReanimatedView.View>
         </TouchableOpacity>
-        {/* <TouchableOpacity style={styles.iconCircle} onPress={handleShare}>
-                    <Ionicons name="share-social" size={wp('6%')} color="#000" />
+        {/* <TouchableOpacity style={styles.headerButton} onPress={handleShare}>
+                    <Ionicons name="share-social-outline" size={20} color={INK.base} />
                 </TouchableOpacity> */}
       </View>
     </View>
@@ -451,9 +397,11 @@ const ProductDetailsScreen = () => {
       {isStoreUnavailable ? (
         <SafeAreaView edges={['top']} style={{ flex: 1 }}>
           <View style={styles.standardHeader}>
-            <TouchableOpacity onPress={() => navigation.goBack()}>
+            <TouchableOpacity
+              onPress={() => navigation.goBack()}
+              hitSlop={HEADER_HIT_SLOP}
+            >
               <Image source={icons.backArrowNew} />
-              {/* <Ionicons name="chevron-back" size={wp('6%')} color="#000" /> */}
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Product Details</Text>
           </View>
@@ -468,17 +416,11 @@ const ProductDetailsScreen = () => {
           {renderHeader()}
           <ScrollView
             ref={mainScrollViewRef}
-            contentContainerStyle={{
-              paddingBottom: hp('15%'),
-              paddingTop: hp('5'),
-            }}
+            contentContainerStyle={{ paddingBottom: hp('15%') }}
             showsVerticalScrollIndicator={false}
             bounces={false}
           >
-            <ReanimatedView.View
-              style={styles.topSection}
-              entering={scaleFadeIn(0)}
-            >
+            <ReanimatedView.View style={styles.hero} entering={scaleFadeIn(0)}>
               <FlatList
                 data={
                   apiImages && apiImages.length > 0 ? apiImages : [productImage]
@@ -497,10 +439,10 @@ const ProductDetailsScreen = () => {
                   }
                 }}
                 renderItem={({ item }) => (
-                  <View style={styles.mainImageContainer}>
+                  <View style={styles.heroSlide}>
                     <GalleryImage
                       source={item || productImage}
-                      style={styles.imageStyle}
+                      style={styles.heroImage}
                       imageStyle={{ resizeMode: 'contain' }}
                     />
                   </View>
@@ -521,324 +463,301 @@ const ProductDetailsScreen = () => {
             </ReanimatedView.View>
 
             <ReanimatedView.View
-              style={styles.infoCard}
+              style={styles.sheet}
               entering={scaleFadeIn(SECTION_STAGGER_MS)}
             >
-              <View
-                style={{
-                  borderColor: '#D9D9D9',
-                  borderWidth: 0.5,
-                  width: wp('92%'),
-                  borderRadius: 30,
-                  paddingHorizontal: 20,
-                  paddingTop: 25,
-                  paddingVertical: 10,
-                }}
-              >
-                <View style={styles.titleRow}>
-                  <View style={{ flex: 1 }}>
-                    <View
-                      style={{
-                        flex: 1,
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        paddingBottom: hp('1%'),
-                      }}
+              <View style={styles.badgeRow}>
+                {discountPercentage > 0 && (
+                  <View style={styles.discountBadge}>
+                    <Text
+                      style={styles.discountText}
+                      maxFontSizeMultiplier={MAX_FONT_SCALE}
                     >
-                      <View>
-                        {discountPercentage > 0 && (
-                          <Text style={styles.discountText}>
-                            {Math.round(discountPercentage) ||
-                              ((unitPrice - specialPrice) / unitPrice) * 100}
-                            % OFF
-                          </Text>
-                        )}
-                      </View>
-
-                      <View style={styles.tokenBadge}>
-                        <Image
-                          style={styles.tokenIconSmall}
-                          source={require('../assets/icons/tokenud.png')}
-                        />
-                        <Text style={styles.tokenBadgeText}>
-                          {Number(bTokenValue)} UD Token
-                        </Text>
-                      </View>
-                    </View>
-                    <Text style={styles.productName}>{productName}</Text>
-                    <Text style={styles.productDescription}>
-                      {shortDescription}
+                      {Math.round(discountPercentage) ||
+                        ((unitPrice - specialPrice) / unitPrice) * 100}
+                      % OFF
                     </Text>
-                    {/* <Text style={styles.weightText}>{product?.unit || ''}</Text> */}
-                    {(!isAvailable || stockQty === 0) && (
-                      <Text style={styles.outOfStockBadge}>Out of Stock</Text>
-                    )}
                   </View>
-                </View>
+                )}
 
-                <View
-                  style={{
-                    flex: 1,
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                  }}
-                >
+                <View style={styles.tokenBadge}>
+                  <Image
+                    style={styles.tokenIconSmall}
+                    source={require('../assets/icons/tokenud.png')}
+                  />
+                  <Text
+                    style={styles.tokenBadgeText}
+                    maxFontSizeMultiplier={MAX_FONT_SCALE}
+                  >
+                    {Number(bTokenValue)} UD Token
+                  </Text>
+                </View>
+              </View>
+
+              <Text style={styles.productName} accessibilityRole="header">
+                {productName}
+              </Text>
+              {!!shortDescription && (
+                <Text style={styles.productDescription}>
+                  {shortDescription}
+                </Text>
+              )}
+              {outOfStock && (
+                <View style={styles.outOfStockPill}>
+                  <Text
+                    style={styles.outOfStockText}
+                    maxFontSizeMultiplier={MAX_FONT_SCALE}
+                  >
+                    Out of stock
+                  </Text>
+                </View>
+              )}
+
+              <View style={styles.priceBlock}>
+                <View style={styles.priceColumn}>
                   <View style={styles.priceRow}>
-                    <Text style={styles.currentPrice}>₹{specialPrice}</Text>
+                    <Text
+                      style={styles.currentPrice}
+                      maxFontSizeMultiplier={MAX_FONT_SCALE}
+                    >
+                      ₹{specialPrice}
+                    </Text>
                     {!!unitPrice &&
                       Number(unitPrice) > Number(specialPrice) && (
-                        <Text style={styles.originalPrice}>₹{unitPrice}</Text>
+                        <Text
+                          style={styles.originalPrice}
+                          maxFontSizeMultiplier={MAX_FONT_SCALE}
+                        >
+                          ₹{unitPrice}
+                        </Text>
                       )}
                   </View>
-
-                  <View style={styles.priceSection}>
-                    <View style={styles.actionContainer}>
-                      {(() => {
-                        const cartItem = cartItems.find(
-                          i =>
-                            String(i.productId || i.id) ===
-                            String(finalProductId),
-                        );
-                        const quantity = cartItem ? cartItem.quantity : 0;
-                        const cartItemId =
-                          cartItem?.cartItemId || finalProductId;
-
-                        if (quantity > 0) {
-                          return (
-                            <View style={styles.quantitySelector}>
-                              <AnimatedPressable
-                                onPress={() => {
-                                  bumpQty();
-                                  quantity === 1
-                                    ? removeFromCart(cartItemId)
-                                    : updateCartItemQuantity(
-                                        cartItemId,
-                                        quantity - 1,
-                                      );
-                                }}
-                              >
-                                <LinearGradient
-                                  colors={['#FFFFFF', '#FFD8C4']}
-                                  start={{ x: 0, y: 0 }}
-                                  end={{ x: 1, y: 1 }}
-                                  style={styles.plusIconCircle}
-                                >
-                                  <Entypo
-                                    name="minus"
-                                    size={wp('5%')}
-                                    color="#F25000"
-                                    style={styles.qtyIcon}
-                                  />
-                                </LinearGradient>
-                              </AnimatedPressable>
-                              <ReanimatedView.Text
-                                style={[styles.qtyValue, qtyAnimatedStyle]}
-                              >
-                                {quantity}
-                              </ReanimatedView.Text>
-                              <AnimatedPressable
-                                onPress={() => {
-                                  bumpQty();
-                                  updateCartItemQuantity(
-                                    cartItemId,
-                                    quantity + 1,
-                                  );
-                                }}
-                              >
-                                <LinearGradient
-                                  colors={['#FFFFFF', '#FFD8C4']}
-                                  start={{ x: 0, y: 0 }}
-                                  end={{ x: 1, y: 1 }}
-                                  style={styles.plusIconCircle}
-                                >
-                                  <Entypo
-                                    name="plus"
-                                    size={wp('5%')}
-                                    color="#F25000"
-                                    style={styles.qtyIcon}
-                                  />
-                                </LinearGradient>
-                              </AnimatedPressable>
-                            </View>
-                          );
-                        }
-
-                        if (!isAvailable || stockQty === 0) {
-                          return (
-                            <View style={styles.disabledBtn}>
-                              <Text
-                                style={[
-                                  styles.addBtnText,
-                                  { fontSize: wp('3.5%') },
-                                ]}
-                              >
-                                OUT OF STOCK
-                              </Text>
-                            </View>
-                          );
-                        }
-
-                        return (
-                          <AnimatedPressable
-                            style={styles.addBtn}
-                            onPress={() => {
-                              bumpQty();
-                              product && addToCart(product);
-                            }}
-                          >
-                            <LinearGradient
-                              colors={['#FFFFFF', '#FFD8C4']}
-                              start={{ x: 0, y: 0 }}
-                              end={{ x: 1, y: 1 }}
-                              style={[
-                                styles.plusIconCircle,
-                                { marginRight: wp('3%') },
-                              ]}
-                            >
-                              <Entypo
-                                name="plus"
-                                size={wp('5%')}
-                                color="#F25000"
-                              />
-                            </LinearGradient>
-                            <Text style={styles.addBtnText}>ADD</Text>
-                          </AnimatedPressable>
-                        );
-                      })()}
-                    </View>
-                  </View>
+                  <Text
+                    style={savings > 0 ? styles.savingsText : styles.taxNote}
+                    maxFontSizeMultiplier={MAX_FONT_SCALE}
+                  >
+                    {savings > 0
+                      ? `You save ₹${savings}`
+                      : 'Inclusive of all taxes'}
+                  </Text>
                 </View>
 
-                <LinearGradient
-                  colors={[
-                    'rgba(242, 80, 0, 0)',
-                    '#FCD3C0',
-                    'rgba(242, 80, 0, 0)',
-                  ]}
-                  start={{ x: 0, y: 0.5 }}
-                  end={{ x: 1, y: 0.5 }}
-                  style={styles.detailsDivider}
-                />
-                <View style={styles.divider} />
-                <TouchableOpacity
-                  hitSlop={30}
-                  onPress={toggleDetails}
-                  style={styles.viewProductDetailsButton}
-                >
-                  <Text style={styles.viewProductDetailsButtonText}>
-                    {showDetails ? 'View less details' : 'View product details'}
-                  </Text>
-                  <AntDesign
-                    name={showDetails ? 'up' : 'down'}
-                    size={wp('3%')}
-                    color="#f25000"
-                  />
-                </TouchableOpacity>
+                <View style={styles.actionContainer}>
+                  {(() => {
+                    const cartItem = cartItems.find(
+                      i =>
+                        String(i.productId || i.id) === String(finalProductId),
+                    );
+                    const quantity = cartItem ? cartItem.quantity : 0;
+                    const cartItemId = cartItem?.cartItemId || finalProductId;
 
-                <Animated.View
-                  style={[
-                    styles.productDetailsView,
-                    {
-                      height: heightInterpolate,
-                      overflow: 'hidden',
-                    },
-                  ]}
-                >
-                  <View style={{ flex: 1 }}>
-                    <ScrollView
-                      ref={detailsScrollViewRef}
-                      showsVerticalScrollIndicator={false}
-                      nestedScrollEnabled={true}
-                      onContentSizeChange={(w, h) => {
-                        if (h > hp('35%')) {
-                          setShowScrollHint(true);
-                        }
-                      }}
-                      onScroll={event => {
-                        const {
-                          layoutMeasurement,
-                          contentOffset,
-                          contentSize,
-                        } = event.nativeEvent;
-                        const isCloseToBottom =
-                          layoutMeasurement.height + contentOffset.y >=
-                          contentSize.height - 20;
-                        setShowScrollHint(!isCloseToBottom);
-                      }}
-                      scrollEventThrottle={16}
-                    >
-                      <Text style={styles.productDetailsText}>
-                        {productDescription?.replace(/<[^>]*>?/gm, '')}
-                      </Text>
-                      {attributes && attributes.length > 0 && (
-                        <>
-                          <Text style={styles.specsHeader}>Attributes</Text>
-                          <View style={styles.specsContainer}>
-                            {attributes.map((attr, idx) => (
-                              <View
-                                key={idx}
-                                style={[
-                                  styles.specRow,
-                                  idx % 2 !== 0 && styles.specRowAlt,
-                                ]}
-                              >
-                                <Text style={styles.specLabel}>
-                                  {attr.attrName}
-                                </Text>
-                                <Text style={styles.specValue}>
-                                  {attr.attrValue}
-                                </Text>
-                              </View>
-                            ))}
-                          </View>
-                        </>
-                      )}
-                      <View style={{ height: hp('5%') }} />
-                    </ScrollView>
+                    if (quantity > 0) {
+                      return (
+                        <View style={styles.quantitySelector}>
+                          <AnimatedPressable
+                            hitSlop={STEP_HIT_SLOP}
+                            style={styles.stepButton}
+                            accessibilityRole="button"
+                            accessibilityLabel="Decrease quantity"
+                            onPress={() => {
+                              selectionTick();
+                              bumpQty();
+                              quantity === 1
+                                ? removeFromCart(cartItemId)
+                                : updateCartItemQuantity(
+                                    cartItemId,
+                                    quantity - 1,
+                                  );
+                            }}
+                          >
+                            <Entypo name="minus" size={18} color="#FFFFFF" />
+                          </AnimatedPressable>
+                          <ReanimatedView.Text
+                            style={[styles.qtyValue, qtyAnimatedStyle]}
+                            maxFontSizeMultiplier={MAX_FONT_SCALE}
+                          >
+                            {quantity}
+                          </ReanimatedView.Text>
+                          <AnimatedPressable
+                            hitSlop={STEP_HIT_SLOP}
+                            style={styles.stepButton}
+                            accessibilityRole="button"
+                            accessibilityLabel="Increase quantity"
+                            onPress={() => {
+                              selectionTick();
+                              bumpQty();
+                              updateCartItemQuantity(cartItemId, quantity + 1);
+                            }}
+                          >
+                            <Entypo name="plus" size={18} color="#FFFFFF" />
+                          </AnimatedPressable>
+                        </View>
+                      );
+                    }
 
-                    {showScrollHint && showDetails && (
-                      <>
-                        <LinearGradient
-                          colors={[
-                            'rgba(255,255,255,0)',
-                            'rgba(255,255,255,0.8)',
-                            '#FFFFFF',
-                          ]}
-                          style={styles.fadeGradient}
-                        />
-                        <TouchableOpacity
-                          onPress={() =>
-                            detailsScrollViewRef.current?.scrollToEnd({
-                              animated: true,
-                            })
-                          }
-                          style={styles.scrollIndicator}
-                        >
-                          {/* <Text style={styles.scrollHintText}>
-                            Scroll for more
+                    if (outOfStock) {
+                      return (
+                        <View style={styles.disabledBtn}>
+                          <Text
+                            style={styles.disabledBtnText}
+                            maxFontSizeMultiplier={MAX_FONT_SCALE}
+                          >
+                            OUT OF STOCK
                           </Text>
-                          <MaterialIcons
-                            name="keyboard-arrow-down"
-                            size={wp('4%')}
-                            color="#F25000"
-                          /> */}
-                        </TouchableOpacity>
+                        </View>
+                      );
+                    }
+
+                    return (
+                      <AnimatedPressable
+                        style={styles.addBtn}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Add ${productName} to cart`}
+                        onPress={() => {
+                          impactTick();
+                          bumpQty();
+                          product && addToCart(product);
+                        }}
+                      >
+                        <Entypo
+                          name="plus"
+                          size={17}
+                          color="#FFFFFF"
+                          style={styles.addBtnIcon}
+                        />
+                        <Text
+                          style={styles.addBtnText}
+                          maxFontSizeMultiplier={MAX_FONT_SCALE}
+                        >
+                          ADD
+                        </Text>
+                      </AnimatedPressable>
+                    );
+                  })()}
+                </View>
+              </View>
+
+              <View style={styles.rule} />
+
+              <TouchableOpacity
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                onPress={toggleDetails}
+                style={styles.detailsToggle}
+                accessibilityRole="button"
+                accessibilityState={{ expanded: showDetails }}
+              >
+                <Text
+                  style={styles.detailsToggleText}
+                  maxFontSizeMultiplier={MAX_FONT_SCALE}
+                >
+                  Product details
+                </Text>
+                <Animated.View
+                  style={{ transform: [{ rotate: chevronRotate }] }}
+                >
+                  <Ionicons
+                    name="chevron-down"
+                    size={18}
+                    color={ACCENT.primary}
+                  />
+                </Animated.View>
+              </TouchableOpacity>
+
+              <Animated.View
+                style={[
+                  styles.productDetailsView,
+                  {
+                    height: heightInterpolate,
+                    overflow: 'hidden',
+                  },
+                ]}
+              >
+                <View style={{ flex: 1 }}>
+                  <ScrollView
+                    ref={detailsScrollViewRef}
+                    showsVerticalScrollIndicator={false}
+                    nestedScrollEnabled={true}
+                    onContentSizeChange={(w, h) => {
+                      if (h > hp('35%')) {
+                        setShowScrollHint(true);
+                      }
+                    }}
+                    onScroll={event => {
+                      const { layoutMeasurement, contentOffset, contentSize } =
+                        event.nativeEvent;
+                      const isCloseToBottom =
+                        layoutMeasurement.height + contentOffset.y >=
+                        contentSize.height - 20;
+                      setShowScrollHint(!isCloseToBottom);
+                    }}
+                    scrollEventThrottle={16}
+                  >
+                    <Text style={styles.productDetailsText}>
+                      {productDescription?.replace(/<[^>]*>?/gm, '')}
+                    </Text>
+                    {attributes && attributes.length > 0 && (
+                      <>
+                        <Text style={styles.specsHeader}>Highlights</Text>
+                        <View style={styles.specsContainer}>
+                          {attributes.map((attr, idx) => (
+                            <View
+                              key={idx}
+                              style={[
+                                styles.specRow,
+                                idx === attributes.length - 1 &&
+                                  styles.specRowLast,
+                              ]}
+                            >
+                              <Text style={styles.specLabel}>
+                                {attr.attrName}
+                              </Text>
+                              <Text style={styles.specValue}>
+                                {attr.attrValue}
+                              </Text>
+                            </View>
+                          ))}
+                        </View>
                       </>
                     )}
-                  </View>
-                </Animated.View>
-              </View>
+                    <View style={{ height: hp('5%') }} />
+                  </ScrollView>
+
+                  {showScrollHint && showDetails && (
+                    <>
+                      <LinearGradient
+                        colors={[
+                          'rgba(255,255,255,0)',
+                          'rgba(255,255,255,0.85)',
+                          '#FFFFFF',
+                        ]}
+                        style={styles.fadeGradient}
+                        pointerEvents="none"
+                      />
+                      <TouchableOpacity
+                        onPress={() =>
+                          detailsScrollViewRef.current?.scrollToEnd({
+                            animated: true,
+                          })
+                        }
+                        style={styles.scrollIndicator}
+                      />
+                    </>
+                  )}
+                </View>
+              </Animated.View>
             </ReanimatedView.View>
 
             <ReanimatedView.View
               style={styles.similarProductsSection}
               entering={scaleFadeIn(SECTION_STAGGER_MS * 2)}
             >
-              <Text style={styles.sectionTitle}>Similar Products</Text>
+              <Text style={styles.sectionTitle} accessibilityRole="header">
+                Similar products
+              </Text>
               {relatedLoading ? (
                 <ActivityIndicator
                   size="small"
-                  color="#F25000"
+                  color={ACCENT.primary}
                   style={{ marginVertical: hp('2%') }}
                 />
               ) : (
@@ -861,10 +780,7 @@ const ProductDetailsScreen = () => {
                     />
                   )}
                   showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={{
-                    paddingLeft: wp('7%'),
-                    paddingRight: wp('7%'),
-                  }}
+                  contentContainerStyle={styles.railContent}
                   ListEmptyComponent={
                     !relatedLoading && (
                       <View style={styles.emptyContainer}>
@@ -901,369 +817,405 @@ export default ProductDetailsScreen;
 
 const styles = StyleSheet.create({
   mainContainer: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: CANVAS,
     flex: 1,
   },
-  loaderHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: wp('5%'),
-    paddingTop: hp('2%'),
-  },
+
   standardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: wp('5%'),
-    paddingVertical: hp('1.5%'),
-    backgroundColor: '#FFF',
+    paddingHorizontal: GUTTER,
+    paddingVertical: SPACE.md,
+    backgroundColor: CANVAS,
   },
   floatingHeader: {
     position: 'absolute',
-    top: Platform.OS === 'ios' ? hp('6%') : hp('5%'),
     left: 0,
     right: 0,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: wp('5%'),
+    paddingHorizontal: GUTTER,
     zIndex: 10,
   },
-  headerLeft: {
-    flexDirection: 'row',
+  headerButton: {
+    width: HEADER_BTN,
+    height: HEADER_BTN,
+    borderRadius: HEADER_BTN / 2,
     alignItems: 'center',
-  },
-  iconCircle: {
-    width: wp('10%'),
-    height: wp('10%'),
-    borderRadius: wp('3%'),
-    backgroundColor: '#FFFFFF',
-  },
-  headerTitle: {
-    fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('4.8%'),
-    color: '#000',
-    marginHorizontal: wp('4%'),
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.94)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: HAIRLINE,
+    // ...ELEVATION.md,
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    elevation: 2,
   },
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: wp('3%'),
+    gap: SPACE.sm,
   },
-  headerGradient: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: hp('15%'),
+  headerTitle: {
+    ...TYPE.heading,
+    fontFamily: FONTS.gilroy.semiBold,
+    color: INK.strong,
+    marginHorizontal: SPACE.md,
   },
-  topSection: {
-    height: hp('38%'),
+
+  hero: {
+    height: HERO_H,
     width: '100%',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: CANVAS,
   },
-  imageBackdrop: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: '#F8F8F8',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  mainImageContainer: {
+  heroSlide: {
     width: wp('100%'),
-    height: hp('40%'),
+    height: HERO_H,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingTop: hp('5%'),
+    paddingTop: hp('4%'),
+    paddingBottom: SHEET_OVERLAP + SPACE.base,
   },
-  imageStyle: {
-    width: wp('85%'),
-    height: hp('28%'),
+  heroImage: {
+    width: wp('72%'),
+    height: '100%',
   },
   paginationContainer: {
     position: 'absolute',
-    bottom: hp('2%'),
+    bottom: SHEET_OVERLAP + SPACE.sm,
     flexDirection: 'row',
     alignSelf: 'center',
     alignItems: 'center',
   },
   paginationDot: {
-    height: wp('2%'),
-    borderRadius: wp('1%'),
-    marginHorizontal: wp('1%'),
-    backgroundColor: 'rgba(255,255,255,0.55)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.15,
-    shadowRadius: 2,
-    elevation: 2,
+    height: 5,
+    borderRadius: RADIUS.pill,
+    marginHorizontal: 3,
   },
-  infoCard: {
-    // marginTop: -hp('5%'),
-    alignSelf: 'center',
-    backgroundColor: '#FFF',
-    borderTopLeftRadius: wp('12%'),
-    borderTopRightRadius: wp('12%'),
-    paddingTop: hp('5%'),
-    paddingHorizontal: wp('8%'),
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -15 },
-    shadowOpacity: 0.08,
-    shadowRadius: 15,
-    elevation: 5,
+  paginationDotActive: {
+    width: 18,
+    backgroundColor: ACCENT.primary,
   },
-  productName: {
-    fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('4.2%'),
-    color: '#000',
-    lineHeight: hp('3%'),
+  paginationDotIdle: {
+    width: 5,
+    backgroundColor: 'rgba(17,19,26,0.18)',
   },
-  productDescription: {
-    fontFamily: FONTS.gilroy.regular,
-    fontSize: wp('3.2%'),
-    color: '#727783',
-    marginTop: hp('0.3%'),
+
+  sheet: {
+    marginTop: -SHEET_OVERLAP,
+    backgroundColor: CANVAS,
+    borderTopLeftRadius: RADIUS.xl,
+    borderTopRightRadius: RADIUS.xl,
+    paddingHorizontal: GUTTER,
+    paddingTop: SPACE.lg,
   },
-  weightText: {
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('4.4%'),
-    color: '#727783',
-    marginTop: hp('1%'),
-  },
-  tokenBadge: {
-    top: 3,
+
+  badgeRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    alignSelf: 'flex-start',
-    paddingHorizontal: wp('3%'),
-    borderLeftWidth: 1,
-    borderColor: 'black',
+    gap: SPACE.sm,
+    marginBottom: SPACE.md,
+  },
+  discountBadge: {
+    backgroundColor: ACCENT.successSoft,
+    borderRadius: RADIUS.xs,
+    paddingHorizontal: SPACE.sm,
+    paddingVertical: 4,
+  },
+  discountText: {
+    ...TYPE.micro,
+    fontFamily: FONTS.gilroy.bold,
+    color: ACCENT.successText,
+    letterSpacing: 0.3,
+  },
+  tokenBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F5EEF9',
+    borderRadius: RADIUS.xs,
+    paddingHorizontal: SPACE.sm,
+    paddingVertical: 4,
   },
   tokenIconSmall: {
-    width: wp('4%'),
-    height: wp('3%'),
+    width: 13,
+    height: 13,
     resizeMode: 'contain',
   },
   tokenBadgeText: {
-    fontFamily: FONTS.gilroy.regular,
-    fontSize: wp('3.2%'),
-    color: '#5e3568',
-    marginLeft: wp('1.5%'),
-  },
-  priceSection: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'space-between',
-    //  marginTop: hp('3%'),
-  },
-  discountText: {
+    ...TYPE.micro,
     fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('3.4%'),
-    color: '#FFF',
-    paddingHorizontal: hp('2%'),
-    borderRadius: 20,
-    paddingVertical: hp('.5%'),
-    marginRight: 16,
-    backgroundColor: '#0CA201',
+    color: '#5E3568',
+    marginLeft: SPACE.xs + 1,
+  },
+
+  productName: {
+    ...TYPE.title,
+    fontFamily: FONTS.gilroy.bold,
+    color: INK.strong,
+    letterSpacing: -0.3,
+  },
+  productDescription: {
+    ...TYPE.body,
+    fontFamily: FONTS.gilroy.regular,
+    color: INK.muted,
+    marginTop: SPACE.xs + 2,
+  },
+  outOfStockPill: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#FDECEC',
+    borderRadius: RADIUS.xs,
+    paddingHorizontal: SPACE.sm,
+    paddingVertical: 4,
+    marginTop: SPACE.sm,
+  },
+  outOfStockText: {
+    ...TYPE.micro,
+    fontFamily: FONTS.gilroy.bold,
+    color: '#B3261E',
+    letterSpacing: 0.3,
+  },
+
+  priceBlock: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: SPACE.lg,
+  },
+  priceColumn: {
+    flex: 1,
+    paddingRight: SPACE.md,
   },
   priceRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: hp('0.4%'),
+    alignItems: 'baseline',
+    flexWrap: 'wrap',
   },
   currentPrice: {
-    fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('4.8%'),
-    color: '#000',
+    ...TYPE.display,
+    lineHeight: undefined,
+    fontFamily: FONTS.gilroy.bold,
+    color: INK.strong,
+    letterSpacing: -0.4,
   },
   originalPrice: {
-    fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('4.8%'),
-    color: '#727783',
-    textDecorationLine: 'line-through',
-    marginLeft: wp('3%'),
-  },
-  unitPriceText: {
+    ...TYPE.body,
     fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('3.4%'),
-    color: '#969696',
-    marginTop: hp('0.4%'),
+    color: INK.faint,
+    textDecorationLine: 'line-through',
+    marginLeft: SPACE.sm,
+  },
+  savingsText: {
+    ...TYPE.caption,
+    fontFamily: FONTS.gilroy.semiBold,
+    color: ACCENT.savings,
+    marginTop: 3,
+  },
+  taxNote: {
+    ...TYPE.caption,
+    fontFamily: FONTS.gilroy.regular,
+    color: INK.muted,
+    marginTop: 3,
   },
   actionContainer: {
-    height: hp('6.5%'),
     justifyContent: 'center',
   },
   addBtn: {
-    backgroundColor: '#F25000',
+    backgroundColor: ACCENT.primary,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-start',
-    width: wp('34%'),
-    height: hp('5.5%'),
-    borderRadius: hp('3%'),
-    paddingLeft: wp('2%'),
-  },
-  plusIconCircle: {
-    width: wp('8.5%'),
-    height: wp('8.5%'),
-    borderRadius: wp('4.25%'),
-    alignItems: 'center',
     justifyContent: 'center',
+    width: ACTION_W,
+    height: ACTION_H,
+    borderRadius: RADIUS.sm,
   },
-  qtyIcon: {
-    // textAlign: 'center',
-    // textAlignVertical: 'center',
-    // includeFontPadding: false,
+  addBtnIcon: {
+    marginRight: SPACE.xs + 1,
   },
   addBtnText: {
-    color: '#FFF',
-
-    fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('4.8%'),
+    ...TYPE.heading,
+    lineHeight: undefined,
+    color: INK.onDark,
+    fontFamily: FONTS.gilroy.bold,
+    letterSpacing: 0.6,
   },
   disabledBtn: {
-    backgroundColor: '#CCC',
-    shadowOpacity: 0,
-    justifyContent: 'center',
+    backgroundColor: SURFACE.sunken,
+    borderWidth: 1,
+    borderColor: HAIRLINE,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    width: wp('34%'),
-    height: hp('5.5%'),
-    borderRadius: hp('3%'),
+    width: ACTION_W,
+    height: ACTION_H,
+    borderRadius: RADIUS.sm,
   },
-  outOfStockBadge: {
-    fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('3.2%'),
-    color: '#FF0000',
-    marginTop: hp('0.5%'),
+  disabledBtnText: {
+    ...TYPE.caption,
+    fontFamily: FONTS.gilroy.bold,
+    color: INK.faint,
+    letterSpacing: 0.4,
   },
   quantitySelector: {
-    backgroundColor: '#F25000',
+    backgroundColor: ACCENT.primary,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    width: wp('34%'),
-    height: hp('5.5%'),
-    borderRadius: hp('3%'),
-    paddingHorizontal: wp('2%'),
+    width: ACTION_W,
+    height: ACTION_H,
+    borderRadius: RADIUS.sm,
+    paddingHorizontal: SPACE.md,
+  },
+  stepButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   qtyValue: {
-    color: '#FFF',
-    fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('4.2%'),
+    ...TYPE.heading,
+    lineHeight: undefined,
+    color: INK.onDark,
+    fontFamily: FONTS.gilroy.bold,
   },
-  detailsDivider: {
-    width: wp('70%'),
-    height: 3,
-    alignSelf: 'center',
-    marginTop: hp('2%'),
+
+  rule: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: HAIRLINE,
+    marginTop: SPACE.lg,
   },
-  viewProductDetailsButton: {
+  detailsToggle: {
     flexDirection: 'row',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: hp('1%'),
+    paddingVertical: SPACE.base,
   },
-  viewProductDetailsButtonText: {
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('3.5%'),
-    color: '#f25000',
-    marginRight: wp('1.5%'),
-    paddingBottom: hp(0.5),
+  detailsToggleText: {
+    ...TYPE.heading,
+    fontFamily: FONTS.gilroy.semiBold,
+    color: INK.strong,
   },
   productDetailsView: {
-    marginTop: hp('0.5%'),
+    marginTop: 0,
   },
   productDetailsText: {
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('3.6%'),
-    color: '#555',
-    lineHeight: hp('3%'),
+    ...TYPE.body,
+    fontFamily: FONTS.gilroy.regular,
+    color: INK.base,
+    lineHeight: TYPE.body.lineHeight + 4,
   },
   specsHeader: {
+    ...TYPE.label,
     fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('4%'),
-    color: '#333',
-    marginTop: hp('3%'),
-    marginBottom: hp('1%'),
+    color: INK.strong,
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+    marginTop: SPACE.lg,
+    marginBottom: SPACE.sm,
   },
   specsContainer: {
-    backgroundColor: '#FAFAFA',
-    borderRadius: wp('4%'),
-    padding: wp('2%'),
-    borderWidth: 1,
-    borderColor: '#F0F0F0',
+    backgroundColor: SURFACE.sunken,
+    borderRadius: RADIUS.sm,
+    paddingHorizontal: SPACE.base,
   },
   specRow: {
     flexDirection: 'row',
-    paddingVertical: hp('1.8%'),
-    paddingHorizontal: wp('4%'),
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    alignItems: 'flex-start',
+    paddingVertical: SPACE.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: HAIRLINE,
   },
-  specRowAlt: {
-    backgroundColor: '#FFFFFF',
+  specRowLast: {
+    borderBottomWidth: 0,
   },
   specLabel: {
-    fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('3.6%'),
-    color: '#444',
-    width: wp('40%'),
+    ...TYPE.caption,
+    fontFamily: FONTS.gilroy.medium,
+    color: INK.muted,
+    width: wp('34%'),
+    paddingRight: SPACE.sm,
   },
   specValue: {
-    fontFamily: FONTS.gilroy.regular,
-    fontSize: wp('3.6%'),
-    color: '#777',
+    ...TYPE.caption,
+    fontFamily: FONTS.gilroy.semiBold,
+    color: INK.base,
     flex: 1,
-  },
-  similarProductsSection: {
-    paddingTop: hp('1%'),
-    backgroundColor: '#FFFFFF',
-  },
-  sectionTitle: {
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('4.5%'),
-    color: '#000',
-    paddingHorizontal: wp('8%'),
-    marginBottom: hp('2%'),
-  },
-  emptyContainer: {
-    padding: wp('10%'),
-    alignItems: 'center',
-  },
-  emptyText: {
-    fontFamily: FONTS.gilroy.regular,
-    fontSize: wp('3.8%'),
-    color: '#999',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  floatingCart: {
-    position: 'absolute',
-    bottom: hp('1%'),
-    left: 0,
-    right: 0,
   },
   fadeGradient: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    height: hp('10%'),
+    height: hp('8%'),
   },
   scrollIndicator: {
-    flexDirection: 'row',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: hp('5%'),
+  },
+
+  similarProductsSection: {
+    paddingTop: SPACE.lg,
+    backgroundColor: CANVAS,
+  },
+  sectionTitle: {
+    ...TYPE.title,
+    fontFamily: FONTS.gilroy.bold,
+    color: INK.strong,
+    letterSpacing: -0.3,
+    paddingHorizontal: GUTTER,
+    marginBottom: SPACE.md,
+  },
+  railContent: {
+    paddingLeft: GUTTER - wp('1%'),
+    paddingRight: GUTTER,
+  },
+  emptyContainer: {
+    paddingVertical: SPACE.xl,
+    paddingHorizontal: SPACE.base,
+    alignItems: 'center',
+  },
+  emptyText: {
+    ...TYPE.label,
+    fontFamily: FONTS.gilroy.regular,
+    color: INK.muted,
+  },
+
+  floatingCart: {
+    position: 'absolute',
+    bottom: hp('1%'),
+    left: 0,
+    right: 0,
+  },
+
+  heroSkeleton: {
+    height: HERO_H,
+    backgroundColor: CANVAS,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: hp('2%'),
   },
-  scrollHintText: {
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('3.2%'),
-    color: '#F25000',
-    marginRight: wp('1%'),
+  heroSkeletonImage: {
+    width: wp('62%'),
+    height: hp('24%'),
+    borderRadius: RADIUS.md,
+  },
+  skelLine: {
+    borderRadius: RADIUS.xs,
+    marginBottom: SPACE.sm,
+  },
+  skelPriceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: SPACE.base,
+  },
+  skelRailBlock: {
+    marginTop: SPACE.xl,
+    paddingHorizontal: GUTTER,
+  },
+  skelRail: {
+    flexDirection: 'row',
+    gap: wp('4%'),
+    marginTop: SPACE.sm,
   },
 });

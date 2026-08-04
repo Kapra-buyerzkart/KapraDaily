@@ -11,6 +11,42 @@ const DEFAULT_CONTENT_STYLE = {
   paddingRight: wp('2%'),
 };
 
+// The navigate closure lives here, bound to this cell's own item, instead of
+// being rebuilt inside the rail's renderItem. Built there it was a fresh
+// function per card per render, which meant TokenProductCard's React.memo
+// never hit inside a rail: any re-render of the rail (a refetch landing, a
+// discovery category swapping datasets) re-rendered every mounted card and
+// every product image with it.
+const RailCard = React.memo(function RailCard({
+  item,
+  index,
+  animateEntrance,
+  navigation,
+}) {
+  const handlePress = useCallback(
+    () =>
+      navigation.navigate('ProductDetailsScreen', {
+        productId: item.productId || item.id,
+        product: item,
+      }),
+    [navigation, item],
+  );
+
+  return (
+    <TokenProductCard
+      item={item}
+      // Built here rather than passed in: a FadeInUp descriptor is a new
+      // object every time it is constructed, so handing one down as a prop
+      // would have defeated this memo the same way the closure did. It is
+      // only read on mount, so recomputing it on a re-render costs nothing.
+      entering={
+        animateEntrance ? FadeInUp.delay(getStaggerDelay(index)) : undefined
+      }
+      onPress={handlePress}
+    />
+  );
+});
+
 const ProductRail = ({
   items,
   navigation,
@@ -33,17 +69,11 @@ const ProductRail = ({
 
   const renderItem = useCallback(
     ({ item, index }) => (
-      <TokenProductCard
+      <RailCard
         item={item}
-        entering={
-          animateEntrance ? FadeInUp.delay(getStaggerDelay(index)) : undefined
-        }
-        onPress={() =>
-          navigation.navigate('ProductDetailsScreen', {
-            productId: item.productId || item.id,
-            product: item,
-          })
-        }
+        index={index}
+        animateEntrance={animateEntrance}
+        navigation={navigation}
       />
     ),
     [navigation, animateEntrance],

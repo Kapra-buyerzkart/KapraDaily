@@ -23,14 +23,22 @@ export const useVoucherPayment = onBalanceChange => {
     let initiated = false;
 
     try {
+      logger.debug('[PAY:voucher] 1/5 quote payload:', {
+        voucherId,
+        quantity,
+        bCoins,
+      });
       const quoteRes = await getVoucherQuoteApi(voucherId, quantity, bCoins);
-      console.log('getVoucherQuoteApi response:', quoteRes);
+      logger.debug('[PAY:voucher] 1/5 quote response:', quoteRes);
 
-      const initiateRes = await initiateVoucherPurchaseApi({
+      const initiatePayload = {
         voucherid: voucherId,
         quantity,
         udcoinsrequested: bCoins,
-      });
+      };
+      logger.debug('[PAY:voucher] 2/5 initiate payload:', initiatePayload);
+      const initiateRes = await initiateVoucherPurchaseApi(initiatePayload);
+      logger.debug('[PAY:voucher] 2/5 initiate response:', initiateRes);
 
       if (!initiateRes?.success || !initiateRes?.data) {
         showStatus({
@@ -62,8 +70,14 @@ export const useVoucherPayment = onBalanceChange => {
           theme: { color: '#5500ffff' },
         };
 
+        logger.debug('[PAY:voucher] 3/5 razorpay checkout options:', options);
         sdkResponse = await RazorpayCheckout.open(options);
+        logger.debug('[PAY:voucher] 3/5 razorpay sdk response:', sdkResponse);
       } else {
+        logger.debug(
+          '[PAY:voucher] 3/5 fully coin-funded, skipping razorpay + verify:',
+          { purchaseId, amountPayable },
+        );
         // Fully coin-funded - backend already deducted UD Coins on
         // initiate, so there's nothing to collect or verify.
         setSuccessVisible(true);
@@ -71,10 +85,13 @@ export const useVoucherPayment = onBalanceChange => {
         return;
       }
     } catch (err) {
-      console.log(
-        '[useVoucherPayment] purchase failed:',
-        err?.response?.data || err,
-      );
+      logger.debug('[PAY:voucher] ✖ quote/initiate/sdk failed:', {
+        code: err?.code,
+        description: err?.description,
+        message: err?.message,
+        data: err?.data || err?.response?.data,
+        error: err,
+      });
       if (err?.code === 'PAYMENT_CANCELLED') {
         showStatus({
           type: 'error',
@@ -99,18 +116,27 @@ export const useVoucherPayment = onBalanceChange => {
     // verification/network issue, not a failed payment - never tell the
     // user the payment failed once we reach this point.
     try {
-      const verifyRes = await verifyVoucherPurchaseApi({
+      const verifyPayload = {
         purchaseId,
         razorpayOrderId: sdkResponse?.razorpay_order_id,
         razorpayPaymentId: sdkResponse?.razorpay_payment_id,
         razorpaySignature: sdkResponse?.razorpay_signature,
         amount: amountPayable * 100,
-      });
+      };
+      logger.debug('[PAY:voucher] 4/5 verify payload:', verifyPayload);
+      const verifyRes = await verifyVoucherPurchaseApi(verifyPayload);
+      logger.debug('[PAY:voucher] 4/5 verify response:', verifyRes);
       logger.warn('[useVoucherPayment] verify response:', verifyRes);
 
       // The purchase may already be settled by the backend (e.g. via a
       // webhook), in which case verify reports "already processed" /
       // "completed successfully" — treat that as a success.
+      logger.debug('[PAY:voucher] 5/5 verify outcome:', {
+        success: verifyRes?.success,
+        alreadyCompleted: isPaymentAlreadyCompleted(verifyRes),
+        message: verifyRes?.message,
+      });
+
       if (verifyRes?.success || isPaymentAlreadyCompleted(verifyRes)) {
         setSuccessVisible(true);
       } else {
@@ -123,6 +149,12 @@ export const useVoucherPayment = onBalanceChange => {
         });
       }
     } catch (err) {
+      logger.debug('[PAY:voucher] 4/5 verify error:', {
+        status: err?.status,
+        message: err?.message,
+        data: err?.data || err?.response?.data,
+        alreadyCompleted: isPaymentAlreadyCompleted(err),
+      });
       logger.error('[useVoucherPayment] verify error:', {
         status: err?.status,
         message: err?.message,

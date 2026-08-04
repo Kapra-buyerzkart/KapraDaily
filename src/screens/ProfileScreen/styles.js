@@ -4,268 +4,307 @@ import {
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
 import { FONTS } from '../../styles/typography';
+import {
+  CANVAS,
+  SURFACE,
+  HAIRLINE,
+  INK as HOME_INK,
+  ACCENT,
+  RADIUS,
+  SPACE,
+  TYPE,
+  GUTTER,
+  CATEGORY_WELL,
+} from '@/styles/homeTheme';
 
-export const INK = '#111111';
-export const ORANGE = '#FF6A00';
-export const RED = '#FF3B30';
-export const GRAY_50 = '#FFF';
-export const GRAY_300 = '#D8D6CE';
-export const GRAY_500 = '#9A9A92';
-export const GRAY_600 = '#707070';
-export const BG = '#ffffffff';
-export const DIVIDER = '#EFEFEF';
+// Profile is the same page as Home: one flat white sheet, sections separated by
+// whitespace and type rather than by cards and drop shadows. Everything below
+// reads off the home tokens so the two surfaces cannot drift apart again.
+
+// menuItems.js needs bare colour strings for its vector glyphs, so the two the
+// rows actually use are re-exported rather than re-declared.
+export const INK = HOME_INK.base;
+export const RED = ACCENT.discount;
+export const ORANGE = ACCENT.primary;
+export const GRAY_300 = HOME_INK.faint;
+export const BG = CANVAS;
+export const DIVIDER = HAIRLINE;
+
+// The icon rail width — dividers are inset by it so the rule starts at the
+// label, the way a list rule should, instead of cutting under the glyphs.
+const ROW_ICON = wp('8.6%');
+
+// Fixed rather than derived from the column, so the shortcut row keeps the same
+// height on every screen width instead of growing into a second hero block.
+const QUICK_ACTION_WELL = wp('13.5%');
 
 export const styles = StyleSheet.create({
-  mainConatiner: {
+  mainContainer: {
     flex: 1,
-    backgroundColor: BG,
+    backgroundColor: CANVAS,
+  },
+  scrollContent: {
+    paddingBottom: hp('12%'),
   },
 
-  headerImage: {
-    resizeMode: 'stretch',
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-  },
-  headerTopRow: {
+  // ── Header ──────────────────────────────────────────────────────────────
+  // Opaque because it is a sticky child of the ScrollView — the identity block
+  // and the sections pass underneath it.
+  topBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: hp('1.5%'),
-    paddingHorizontal: wp('5%'),
-    paddingVertical: hp('1%'),
+    paddingHorizontal: GUTTER,
+    paddingBottom: SPACE.sm,
+    backgroundColor: CANVAS,
   },
-  backButton: {
-    width: wp('9%'),
-    height: wp('9%'),
-    borderRadius: wp('4.5%'),
-    alignItems: 'center',
+  topBarBorder: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: HAIRLINE,
+  },
+  backIcon: {
+    resizeMode: 'contain',
+    tintColor: HOME_INK.strong,
+  },
+  // The slot both bar titles live in — the margin belongs here rather than on
+  // the text, so the overlaid name starts on the same left edge as "Profile".
+  topBarTitle: {
+    flex: 1,
+    marginLeft: wp('3%'),
     justifyContent: 'center',
-    backgroundColor: '',
   },
   profileHeaderText: {
-    color: INK,
-    fontFamily: FONTS.gilroy.bold,
-    fontSize: wp('5.2%'),
-    marginLeft: wp('4%'),
+    ...TYPE.heading,
+    color: HOME_INK.strong,
+    fontFamily: FONTS.gilroy.semiBold,
+    letterSpacing: -0.3,
   },
-  avatarWrapper: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    paddingBottom: hp('1.2%'),
-  },
-  avatarInner: {
-    position: 'relative',
-  },
-  avatarEditBadge: {
+  topBarName: {
     position: 'absolute',
+    left: 0,
     right: 0,
-    bottom: 10,
-    width: wp('6.5%'),
-    height: wp('6.5%'),
-    borderRadius: wp('3.25%'),
-    backgroundColor: ORANGE,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
   },
-  userInfoWrapper: {
+
+  // ── Identity ────────────────────────────────────────────────────────────
+  // Left-aligned rather than the old centred portrait block: the avatar, the
+  // name and the edit affordance all sit on the same gutter as every section
+  // below, so the page has a single left edge from top to bottom.
+  identityRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingBottom: hp('1.9%'),
-    paddingHorizontal: wp('6%'),
+    paddingHorizontal: GUTTER,
+    paddingTop: SPACE.sm,
+    paddingBottom: SPACE.base,
+  },
+  identityText: {
+    flex: 1,
+    marginLeft: SPACE.base,
+    marginRight: SPACE.sm,
   },
   userNameText: {
-    color: INK,
+    ...TYPE.title,
+    color: HOME_INK.strong,
     fontFamily: FONTS.gilroy.bold,
-    fontSize: wp('5.6%'),
-    textAlign: 'center',
+    letterSpacing: -0.3,
   },
   phoneNumberStyle: {
-    fontSize: wp('3.4%'),
+    ...TYPE.label,
+    color: HOME_INK.muted,
     fontFamily: FONTS.gilroy.medium,
-    color: 'black',
-    marginTop: hp('0.4%'),
-    textAlign: 'center',
+    marginTop: 2,
   },
+  editChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: SURFACE.tint,
+    borderRadius: RADIUS.pill,
+    paddingVertical: SPACE.sm,
+    paddingHorizontal: SPACE.md,
+  },
+  editChipText: {
+    ...TYPE.caption,
+    color: ACCENT.primary,
+    fontFamily: FONTS.gilroy.semiBold,
+    marginLeft: SPACE.xs + 1,
+  },
+
+  // ── Quick actions ───────────────────────────────────────────────────────
+  // Home's category well, but sized to the glyph rather than to the column.
+  // These are shortcuts, not merchandise: a full-width square tile gave four
+  // secondary links more of the page than the sections they lead to.
   quickActionsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: wp('2.5%'),
-    marginTop: hp('2.2%'),
-    paddingHorizontal: wp('5%'),
+    paddingHorizontal: GUTTER,
+    paddingBottom: SPACE.base,
+    gap: wp('2.4%'),
   },
-  quickActionCard: {
+  quickActionItem: {
     flex: 1,
     alignItems: 'center',
+  },
+  quickActionWell: {
+    width: QUICK_ACTION_WELL,
+    height: QUICK_ACTION_WELL,
+    borderRadius: RADIUS.md,
+    backgroundColor: CATEGORY_WELL,
+    alignItems: 'center',
     justifyContent: 'center',
-    minHeight: hp('9.5%'),
-    borderRadius: 16,
-    backgroundColor: '#FFFFFF',
-    paddingVertical: hp('1.2%'),
-    paddingHorizontal: wp('1%'),
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 2,
+    overflow: 'hidden',
+  },
+  quickActionIcon: {
+    width: QUICK_ACTION_WELL * 0.5,
+    height: QUICK_ACTION_WELL * 0.5,
+    resizeMode: 'contain',
   },
   quickActionText: {
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('2.8%'),
-    color: INK,
+    ...TYPE.micro,
+    marginTop: SPACE.xs + 2,
+    height: TYPE.micro.lineHeight * 2,
+    includeFontPadding: false,
+    textAlignVertical: 'center',
     textAlign: 'center',
-    marginTop: hp('0.7%'),
-  },
-  sectionHeader: {
+    color: HOME_INK.base,
     fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('4.2%'),
-    color: INK,
-    marginBottom: hp('1%'),
-    marginTop: hp('1.8%'),
   },
+
+  // ── List sections ───────────────────────────────────────────────────────
   sectionsContainer: {
-    paddingHorizontal: wp('5%'),
+    paddingTop: SPACE.xs,
   },
-  sectionCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: DIVIDER,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.03,
-    shadowRadius: 4,
-    // elevation: 1,
+  sectionGap: {
+    height: SPACE.base,
   },
   listItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    minHeight: hp('5.5%'),
-    paddingHorizontal: wp('4%'),
+    paddingHorizontal: GUTTER,
+    paddingVertical: SPACE.md,
+    minHeight: hp('6%'),
   },
   listItemLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
-    marginRight: wp('2%'),
+    marginRight: SPACE.sm,
   },
   listIconWrapper: {
-    width: wp('7%'),
-    height: wp('7%'),
-    backgroundColor: BG,
-    borderRadius: wp('3.5%'),
+    width: ROW_ICON,
+    height: ROW_ICON,
+    borderRadius: RADIUS.pill,
+    backgroundColor: SURFACE.sunken,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  listItemPressed: {
+    backgroundColor: SURFACE.sunken,
+  },
   listItemText: {
-    marginLeft: wp('3%'),
-    fontFamily: FONTS.gilroy.regular,
-    fontSize: wp('3.4%'),
-    color: INK,
+    ...TYPE.body,
+    marginLeft: SPACE.md,
+    fontFamily: FONTS.gilroy.medium,
+    color: HOME_INK.base,
     flexShrink: 1,
   },
   divider: {
-    height: 1,
-    backgroundColor: DIVIDER,
-    marginHorizontal: wp('4%'),
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: HAIRLINE,
+    marginLeft: GUTTER + ROW_ICON + SPACE.md,
+    marginRight: GUTTER,
   },
+
+  // ── Log out ─────────────────────────────────────────────────────────────
   logoutButton: {
-    minHeight: hp('6.5%'),
-    marginTop: hp('2.4%'),
-    marginHorizontal: wp('5%'),
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: DIVIDER,
-    backgroundColor: '#FFFFFF',
+    flexDirection: 'row',
+    minHeight: hp('6.2%'),
+    marginTop: SPACE.xl,
+    marginHorizontal: GUTTER,
+    borderRadius: RADIUS.md,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(194,65,12,0.32)',
+    backgroundColor: CANVAS,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.03,
-    shadowRadius: 4,
-    elevation: 1,
   },
   logoutButtonText: {
+    ...TYPE.body,
     fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('3.8%'),
-    color: RED,
+    color: ACCENT.discount,
+    marginLeft: SPACE.sm,
   },
+
+  // ── Suggest-a-product sheet ─────────────────────────────────────────────
   sendContainer: {
     alignItems: 'center',
-    paddingVertical: hp('2.5%'),
-    paddingHorizontal: wp('5%'),
+    paddingVertical: SPACE.lg,
+    paddingHorizontal: GUTTER,
   },
   sendContainerTextOne: {
-    fontFamily: FONTS.gilroy.regular,
-    color: INK,
-    fontSize: wp('3.72%'),
-    paddingBottom: 10,
-    lineHeight: wp('3.72%') * 1.2,
+    ...TYPE.heading,
+    fontFamily: FONTS.gilroy.bold,
+    color: HOME_INK.strong,
+    letterSpacing: -0.3,
   },
   sendContainerTextTwo: {
-    color: GRAY_600,
-    fontFamily: FONTS.gilroy.light,
-    fontSize: wp('3.25%'),
+    ...TYPE.label,
+    color: HOME_INK.muted,
+    fontFamily: FONTS.gilroy.regular,
     textAlign: 'center',
+    marginTop: SPACE.xs,
   },
   sendContainerInnerView: {
     flexDirection: 'row',
-    borderWidth: 1,
-    borderColor: GRAY_300,
-    borderRadius: 50,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(17,19,26,0.12)',
+    borderRadius: RADIUS.pill,
     alignItems: 'center',
     height: hp('6.3%'),
-    marginTop: hp('3%'),
-    paddingHorizontal: wp('2%'),
+    marginTop: SPACE.lg,
+    paddingHorizontal: SPACE.xs,
     width: '100%',
   },
   sendTextInput: {
     flex: 1,
-    fontFamily: FONTS.gilroy.light,
-    fontSize: wp('3.72%'),
-    color: INK,
-    paddingHorizontal: wp('2%'),
+    ...TYPE.body,
+    fontFamily: FONTS.gilroy.regular,
+    color: HOME_INK.base,
+    paddingHorizontal: SPACE.md,
   },
   sendButton: {
-    backgroundColor: ORANGE,
-    paddingHorizontal: wp('5%'),
-    paddingVertical: hp('0.5%'),
-    borderRadius: 40,
-    height: hp('4.3%'),
+    backgroundColor: ACCENT.primary,
+    paddingHorizontal: SPACE.lg,
+    borderRadius: RADIUS.pill,
+    height: hp('4.6%'),
     justifyContent: 'center',
     alignItems: 'center',
   },
   sendButtonText: {
-    color: '#FFFFFF',
+    ...TYPE.label,
+    color: HOME_INK.onDark,
     fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('3.5%'),
   },
   suggestSheetBackground: {
-    borderTopLeftRadius: wp('6%'),
-    borderTopRightRadius: wp('6%'),
+    borderTopLeftRadius: RADIUS.xl,
+    borderTopRightRadius: RADIUS.xl,
+    backgroundColor: SURFACE.base,
   },
   suggestSheetHandle: {
-    backgroundColor: GRAY_300,
+    backgroundColor: 'rgba(17,19,26,0.18)',
     width: wp('12%'),
   },
+
+  // ── Footer ──────────────────────────────────────────────────────────────
   footerBranding: {
     alignItems: 'center',
-    paddingVertical: hp('2%'),
-    marginBottom: hp('12%'),
-  },
-  footerLogo: {
-    width: wp('28%'),
-    height: hp('6%'),
-    resizeMode: 'contain',
-  },
-  logoWrapper: {
-    paddingHorizontal: wp('4%'),
+    paddingTop: SPACE.xl,
   },
   versionText: {
+    ...TYPE.micro,
     fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('3%'),
-    color: GRAY_500,
-    marginTop: hp('0.1%'),
+    color: HOME_INK.faint,
+    letterSpacing: 0.4,
   },
 });

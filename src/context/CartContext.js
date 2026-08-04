@@ -28,9 +28,28 @@ import {
 import { getAddressListApi, deleteAddressApi } from '../api/addressService';
 import ConfirmationModal from '../components/ConfirmationModal';
 import StatusModal from '../components/StatusModal';
+import QuantityLimitModal from '../components/QuantityLimitModal';
 import { prefetchProductImages } from '../utils/imageUrl';
 
 export const CartContext = createContext();
+
+// The backend rejects per-product purchase caps with its own wording
+// ("Maximum quantity allowed for this product is exceeded"), which the
+// stock/availability checks elsewhere in this file don't match.
+const isMaxQuantityMessage = message =>
+  /max(imum)?\s+(quantity|qty)/i.test(message || '');
+
+// Some variants of the message embed the cap ("...allowed is 5"); pull it
+// out when present so the modal can show it as a pill, and fall back to
+// just the sentence when it doesn't. Anchored on "is"/"of"/"limit" rather
+// than the first digit anywhere, so a product name like "Product 2L" in the
+// sentence can't be mistaken for the cap.
+const parseMaxQuantity = message => {
+  const match = /\b(?:is|of|limit(?:ed)?\s*(?:to)?)\s*:?\s*(\d+)/i.exec(
+    message || '',
+  );
+  return match ? Number(match[1]) : null;
+};
 
 export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
@@ -62,6 +81,10 @@ export const CartProvider = ({ children }) => {
   const [addressConfirmationData, setAddressConfirmationData] = useState(null);
   const [confirmationConfig, setConfirmationConfig] = useState(null);
   const [statusConfig, setStatusConfig] = useState(null);
+  // Per-product purchase-cap rejection surfaced by the add/update APIs.
+  // Modal rather than toast — the quantity stepper rolls back visibly, so
+  // the explanation has to be acknowledged, not glanced at.
+  const [quantityLimitConfig, setQuantityLimitConfig] = useState(null);
 
   // ─── useRef for cartVersion so every callback always reads the LATEST value ───
   const cartVersionRef = useRef(null);
@@ -787,11 +810,17 @@ export const CartProvider = ({ children }) => {
 
         if (response && response.success === false) {
           rollback();
-          const isStoreNotFound =
-            error &&
-            (String(error).toLowerCase().includes('store not found') ||
-              error?.message?.toLowerCase().includes('store not found'));
-          if (
+          const isStoreNotFound = response.message
+            ?.toLowerCase()
+            .includes('store not found');
+          if (isMaxQuantityMessage(response.message)) {
+            if (!isStoreNotFound) {
+              setQuantityLimitConfig({
+                message: response.message,
+                maxQuantity: parseMaxQuantity(response.message),
+              });
+            }
+          } else if (
             response.status === 'INSUFFICIENT_STOCK' ||
             response.message?.includes('stock')
           ) {
@@ -822,11 +851,15 @@ export const CartProvider = ({ children }) => {
           error &&
           (String(error).toLowerCase().includes('store not found') ||
             error?.message?.toLowerCase().includes('store not found'));
+        const lowerMsg = errorMsg.toLowerCase();
         const isStockError =
-          errorMsg.toLowerCase().includes('stock') ||
-          errorMsg.toLowerCase().includes('available');
-
-        if (isStockError && !isStoreNotFound) {
+          lowerMsg.includes('stock') || lowerMsg.includes('available');
+        if (isMaxQuantityMessage(errorMsg) && !isStoreNotFound) {
+          setQuantityLimitConfig({
+            message: errorMsg,
+            maxQuantity: parseMaxQuantity(errorMsg),
+          });
+        } else if (isStockError && !isStoreNotFound) {
           Toast.show('Requested qty is not available', Toast.LONG);
         } else if (errorMsg && !isStoreNotFound) {
           // Generic error only if not store not found
@@ -1018,12 +1051,20 @@ export const CartProvider = ({ children }) => {
             (String(error).toLowerCase().includes('store not found') ||
               error?.message?.toLowerCase().includes('store not found'));
 
-          if (
-            (errorMsg.toLowerCase().includes('stock') ||
-              errorMsg.toLowerCase().includes('available')) &&
-            !isStoreNotFound
-          ) {
-            Toast.show('Requested qty is not available', Toast.LONG);
+          const lowerMsg = errorMsg.toLowerCase();
+
+          if (!isStoreNotFound) {
+            if (isMaxQuantityMessage(errorMsg)) {
+              setQuantityLimitConfig({
+                message: errorMsg,
+                maxQuantity: parseMaxQuantity(errorMsg),
+              });
+            } else if (
+              lowerMsg.includes('stock') ||
+              lowerMsg.includes('available')
+            ) {
+              Toast.show('Requested qty is not available', Toast.LONG);
+            }
           }
 
           // Rollback on error (also revert addedQty — see note above)
@@ -1443,6 +1484,14 @@ export const CartProvider = ({ children }) => {
             statusConfig.onClose?.();
             setStatusConfig(null);
           }}
+        />
+      )}
+      {quantityLimitConfig && (
+        <QuantityLimitModal
+          visible={!!quantityLimitConfig}
+          message={quantityLimitConfig.message}
+          maxQuantity={quantityLimitConfig.maxQuantity}
+          onClose={() => setQuantityLimitConfig(null)}
         />
       )}
     </CartContext.Provider>
