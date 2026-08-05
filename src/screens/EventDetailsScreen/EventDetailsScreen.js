@@ -6,28 +6,30 @@ import {
   ImageBackground,
   StatusBar,
   RefreshControl,
+  Share,
   useWindowDimensions,
 } from 'react-native';
 import Toast from 'react-native-simple-toast';
 import LinearGradient from 'react-native-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
-  ZoomIn,
   useSharedValue,
   useAnimatedScrollHandler,
 } from 'react-native-reanimated';
 import styles, {
   CLAIM_GRADIENT_COLORS,
   CLAIM_GRADIENT_LOCATIONS,
+  HERO_TOP_GAP,
+  TOP_BAR_CONTENT_HEIGHT,
 } from './styles';
+import { getHeaderPaddingTop } from '@/utils/headerLayout';
 import COLORS from '@/styles/colors';
 import images from '@/assets/images';
 import icons from '@/assets/icons';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import useEventDetails from './hooks/useEventDetails';
+import EventTopBar from './components/EventTopBar';
 import EventHero from './components/EventHero';
-import ScrollHint from './components/ScrollHint';
-import ClaimBanner from './components/ClaimBanner';
 import EventSummaryCard from './components/EventSummaryCard';
 import MoreToKnow from './components/MoreToKnow';
 import ArtistList from './components/ArtistList';
@@ -62,8 +64,14 @@ const EventDetailsScreen = ({ navigation, route }) => {
   } = useEventPayment();
 
   const scrollY = useSharedValue(0);
+  const scrollProgress = useSharedValue(0);
   const scrollHandler = useAnimatedScrollHandler(e => {
     scrollY.value = e.contentOffset.y;
+    const scrollable = e.contentSize.height - e.layoutMeasurement.height;
+    scrollProgress.value =
+      scrollable > 0
+        ? Math.min(1, Math.max(0, e.contentOffset.y / scrollable))
+        : 0;
   });
 
   const scrollRef = useRef(null);
@@ -94,6 +102,26 @@ const EventDetailsScreen = ({ navigation, route }) => {
   );
 
   const handleBack = useCallback(() => navigation.goBack(), [navigation]);
+  const handleShare = useCallback(() => {
+    const eventName = details?.name || 'this event';
+    const where = [details?.venue, details?.city].filter(Boolean).join(', ');
+    const when = [details?.dateText, details?.timeText]
+      .filter(Boolean)
+      .join(' • ');
+    const message = [`Check out ${eventName} on Uden Tickets.`, when, where]
+      .filter(Boolean)
+      .join('\n');
+
+    Share.share({ message, title: eventName }).catch(err =>
+      console.error('Share Error:', err?.message),
+    );
+  }, [
+    details?.name,
+    details?.venue,
+    details?.city,
+    details?.dateText,
+    details?.timeText,
+  ]);
   const openTicketModal = useCallback(() => setTicketModalVisible(true), []);
   const closeTicketModal = useCallback(() => setTicketModalVisible(false), []);
   const handleBuyNow = useCallback(
@@ -139,6 +167,19 @@ const EventDetailsScreen = ({ navigation, route }) => {
     setTicketModalVisible(true);
   }, [dismissFailure]);
 
+  // Starts the hero below the floating top bar so the artwork reads as a card
+  // inside the page instead of bleeding under the status bar.
+  const scrollContentStyle = useMemo(
+    () => [
+      styles.scrollContent,
+      {
+        paddingTop:
+          getHeaderPaddingTop(insets) + TOP_BAR_CONTENT_HEIGHT + HERO_TOP_GAP,
+      },
+    ],
+    [insets],
+  );
+
   const claimSafeAreaStyle = useMemo(
     () => [styles.claimSafeArea, { height: insets.bottom }],
     [insets.bottom],
@@ -155,15 +196,15 @@ const EventDetailsScreen = ({ navigation, route }) => {
         translucent
         backgroundColor="transparent"
       />
-      <Image
+      {/* <Image
         source={images.bookingtabbg}
         style={styles.bgImage}
         resizeMode="cover"
-      />
+      /> */}
 
       <Animated.ScrollView
         ref={scrollRef}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={scrollContentStyle}
         showsVerticalScrollIndicator={false}
         onScroll={scrollHandler}
         scrollEventThrottle={16}
@@ -178,16 +219,10 @@ const EventDetailsScreen = ({ navigation, route }) => {
           />
         }
       >
-        <EventHero
-          key={eventId ?? 'event'}
-          event={event}
-          insets={insets}
-          onBack={handleBack}
-          scrollY={scrollY}
-        />
-        <ClaimBanner />
+        <EventHero key={eventId ?? 'event'} event={event} scrollY={scrollY} />
         <EventSummaryCard
           name={details?.name}
+          tagline={details?.tagline}
           category={details?.category}
           organizer={details?.organizer}
           minPrice={details?.minPrice}
@@ -196,7 +231,11 @@ const EventDetailsScreen = ({ navigation, route }) => {
           venue={details?.venue}
           city={details?.city}
         />
-        <MoreToKnow ageLimit={details?.ageLimit} language={details?.language} />
+        <MoreToKnow
+          ageLimit={details?.ageLimit}
+          language={details?.language}
+          onClaimPress={openTicketModal}
+        />
         <ArtistList artists={details?.artists} />
         <EventAccordions
           details={details.detailsText}
@@ -204,6 +243,15 @@ const EventDetailsScreen = ({ navigation, route }) => {
           onExpand={handleAccordionExpand}
         />
       </Animated.ScrollView>
+
+      <EventTopBar
+        insets={insets}
+        scrollY={scrollY}
+        progress={scrollProgress}
+        title={details?.name}
+        onBack={handleBack}
+        onShare={handleShare}
+      />
 
       <LinearGradient
         colors={CLAIM_GRADIENT_COLORS}

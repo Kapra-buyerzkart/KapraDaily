@@ -1,16 +1,20 @@
 import React from 'react';
 import { View, StatusBar, Image, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Shimmer from '@/components/events/Shimmer';
 import images from '@/assets/images';
-import screenStyles, { HERO_HEIGHT } from '../styles';
+import { getHeaderPaddingTop } from '@/utils/headerLayout';
+import screenStyles, { HERO_HEIGHT, HERO_CARD_OVERLAP } from '../styles';
 
 const ARTIST_KEYS = ['a', 'b', 'c', 'd'];
-const ACCORDION_KEYS = ['about', 'terms', 'faq'];
+const ACCORDION_KEYS = ['details', 'terms'];
 
-// Loading placeholder that mirrors the EventDetailsScreen layout (hero ->
-// claim banner -> summary card -> more to know -> artists -> accordions) so the
+// Loading placeholder that mirrors the EventDetailsScreen layout (top bar ->
+// hero -> summary card -> more to know -> artists -> accordions) so the
 // shimmer reads as "the content that's coming" instead of a blank spinner.
 const EventDetailsSkeleton = () => {
+  const insets = useSafeAreaInsets();
+
   return (
     <View style={screenStyles.container}>
       <StatusBar
@@ -25,36 +29,31 @@ const EventDetailsSkeleton = () => {
       />
 
       <View style={styles.content}>
+        {/* Top bar */}
+        <View
+          style={[styles.topBar, { paddingTop: getHeaderPaddingTop(insets) }]}
+        >
+          <Shimmer style={styles.topBarButton} />
+          <Shimmer style={styles.topBarLogo} />
+          <Shimmer style={styles.topBarButton} />
+        </View>
+
         {/* Hero */}
         <Shimmer style={styles.hero} />
-
-        {/* Claim banner */}
-        <Shimmer style={styles.banner} />
 
         {/* Summary card */}
         <View style={styles.card}>
           <Shimmer style={[styles.line, styles.title]} />
-          <View style={styles.row}>
-            <Shimmer style={styles.pill} />
-            <Shimmer style={[styles.line, styles.organizer]} />
-          </View>
-          <Shimmer style={[styles.line, styles.price]} />
-          {[0, 1].map(i => (
-            <View key={i} style={styles.infoRow}>
-              <Shimmer style={styles.infoIcon} />
-              <View style={styles.infoTextGroup}>
-                <Shimmer style={[styles.line, styles.infoPrimary]} />
-                <Shimmer style={[styles.line, styles.infoSecondary]} />
-              </View>
-            </View>
-          ))}
+          <Shimmer style={[styles.line, styles.tagline]} />
+          <Shimmer style={styles.pill} />
+          <Shimmer style={styles.factStrip} />
+          <Shimmer style={styles.mapStrip} />
         </View>
 
         {/* More to know */}
         <View style={styles.section}>
           <Shimmer style={[styles.line, styles.sectionTitle]} />
-          <Shimmer style={[styles.line, styles.metaRow]} />
-          <Shimmer style={[styles.line, styles.metaRow]} />
+          <Shimmer style={styles.banner} />
         </View>
 
         {/* Artists */}
@@ -83,108 +82,100 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
   },
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+  },
+  topBarButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+  },
+  topBarLogo: {
+    width: 104,
+    height: 26,
+    borderRadius: 8,
+  },
   hero: {
     width: '100%',
     height: HERO_HEIGHT,
   },
-  banner: {
-    marginHorizontal: 20,
-    marginTop: 16,
-    height: 64,
-    borderRadius: 16,
-  },
   card: {
-    marginHorizontal: 20,
-    marginTop: 18,
-    borderRadius: 18,
+    marginHorizontal: 14,
+    marginTop: -HERO_CARD_OVERLAP,
+    borderRadius: 24,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.10)',
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    padding: 18,
+    backgroundColor: 'rgba(12,6,22,0.92)',
+    padding: 16,
   },
   line: {
     borderRadius: 8,
   },
   title: {
-    height: 22,
-    width: '75%',
-    marginBottom: 14,
+    height: 26,
+    width: '80%',
+    marginBottom: 10,
+  },
+  tagline: {
+    height: 14,
+    width: '55%',
+  },
+  pill: {
+    width: 84,
+    height: 26,
+    borderRadius: 999,
+    marginTop: 12,
+  },
+  factStrip: {
+    height: 62,
+    borderRadius: 14,
+    marginTop: 14,
+  },
+  mapStrip: {
+    height: 84,
+    borderRadius: 14,
+    marginTop: 12,
+  },
+  banner: {
+    height: 66,
+    borderRadius: 16,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  pill: {
-    width: 72,
-    height: 24,
-    borderRadius: 999,
-    marginRight: 10,
-  },
-  organizer: {
-    height: 14,
-    width: 110,
-  },
-  price: {
-    height: 18,
-    width: 140,
-    marginTop: 16,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 14,
-  },
-  infoIcon: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
-    marginRight: 12,
-  },
-  infoTextGroup: {
-    flex: 1,
-  },
-  infoPrimary: {
-    height: 14,
-    width: '55%',
-    marginBottom: 6,
-  },
-  infoSecondary: {
-    height: 12,
-    width: '35%',
   },
   section: {
     paddingHorizontal: 20,
     marginTop: 24,
   },
   sectionTitle: {
-    height: 18,
+    height: 16,
     width: 130,
-    marginBottom: 16,
-  },
-  metaRow: {
-    height: 14,
-    width: '60%',
-    marginBottom: 14,
+    marginBottom: 12,
   },
   artistCard: {
-    width: 84,
+    width: 104,
     marginRight: 12,
   },
   artistImage: {
-    width: 84,
-    height: 84,
-    borderRadius: 14,
-    marginBottom: 8,
+    width: 104,
+    height: 104,
+    borderRadius: 16,
+    marginBottom: 10,
   },
   artistName: {
-    height: 12,
-    width: 64,
+    height: 14,
+    width: 80,
   },
   accordion: {
     marginHorizontal: 20,
-    marginTop: 16,
-    height: 56,
-    borderRadius: 16,
+    marginTop: 14,
+    height: 72,
+    borderRadius: 18,
   },
 });
 

@@ -29,6 +29,14 @@ const deriveDetails = event => {
 
   return {
     name: event?.eventName || event?.title || event?.name || 'Event',
+    // One-line hook shown under the title. Falls back to the organizer credit
+    // in EventSummaryCard when the API sends none.
+    tagline:
+      event?.tagLine ||
+      event?.tagline ||
+      event?.subTitle ||
+      event?.shortDescription ||
+      '',
     category: event?.categoryName || event?.category || '',
     organizer: event?.organizerName || event?.organizer || '',
     minPrice: categoryPrices.length ? Math.min(...categoryPrices) : null,

@@ -11,7 +11,30 @@ const CLAIM_BTN_PILL_TOP = 2 / 105;
 const CLAIM_BTN_PILL_BOTTOM = 54 / 105;
 const CLAIM_BTN_PILL_LEFT = 14 / 424;
 const CLAIM_BTN_PILL_RIGHT = 410 / 424;
-export const HERO_HEIGHT = 340;
+export const HERO_HEIGHT = 500;
+export const HERO_TOP_GAP = 0;
+export const TOP_BAR_CONTENT_HEIGHT = 10;
+// Scroll offsets over which the floating top bar turns from transparent
+// (over the artwork) into a solid bar carrying the event name.
+export const TOP_BAR_FADE_START = HERO_HEIGHT * 0.34;
+export const TOP_BAR_FADE_END = HERO_HEIGHT * 0.62;
+export const HERO_SCRIM_COLORS = [
+  'transparent',
+  'rgba(14,7,26,0.35)',
+  'rgba(9,4,18,0.78)',
+  'rgba(12, 2, 2, 0.96)',
+];
+export const HERO_SCRIM_LOCATIONS = [0, 0.4, 0.75, 1];
+export const HERO_TOP_SCRIM_COLORS = [
+  'rgba(12, 12, 12, 0.85)',
+  'rgba(12, 12, 12, 0.32)',
+  'transparent',
+];
+// The summary card climbs over the bottom of the hero so the artwork reads as
+// the card's backdrop rather than a separate band above it.
+export const HERO_CARD_OVERLAP = 40;
+export const ARTIST_CARD_WIDTH = 104;
+export const ARTIST_CARD_GAP = 12;
 export const CLAIM_GRADIENT_COLORS = [
   'rgba(0,0,0,0)',
   'rgba(0,0,0,0.55)',
@@ -36,11 +59,76 @@ const styles = StyleSheet.create({
     paddingBottom: 160,
   },
 
-  /* Hero */
+  topBar: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+  },
+  topBarSurface: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(9,4,18,0.94)',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(255,255,255,0.12)',
+  },
+  topBarProgressTrack: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 2,
+    overflow: 'hidden',
+  },
+  topBarProgressFill: {
+    flex: 1,
+    backgroundColor: '#8B5CF6',
+    transformOrigin: 'left',
+  },
+  topBarButton: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  topBarButtonBg: {
+    resizeMode: 'contain',
+  },
+  topBarCenter: {
+    flex: 1,
+    height: 40,
+    marginHorizontal: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  topBarLogo: {
+    width: 104,
+    height: 36,
+    resizeMode: 'contain',
+    tintColor: COLORS.white,
+  },
+  topBarTitleWrap: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  topBarTitle: {
+    color: COLORS.white,
+    fontSize: 15,
+    fontFamily: 'Gilroy-Bold',
+    textAlign: 'center',
+  },
+
   hero: {
     width: '100%',
     height: HERO_HEIGHT,
-    backgroundColor: '#111111',
+    backgroundColor: '#0B0516',
     justifyContent: 'flex-start',
     overflow: 'hidden',
   },
@@ -58,11 +146,18 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    height: '55%',
+    height: '58%',
+  },
+  heroTopScrim: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    height: '26%',
   },
   heroDots: {
     position: 'absolute',
-    bottom: 16,
+    bottom: HERO_CARD_OVERLAP + 12,
     left: 0,
     right: 0,
     flexDirection: 'row',
@@ -89,38 +184,141 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 6,
   },
-  heroTopRow: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
+
+  /* Sections */
+  section: {
+    paddingHorizontal: 20,
+    marginTop: 24,
   },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(0,0,0,0.70)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  heroTitle: {
+  sectionTitle: {
     color: COLORS.white,
-    fontSize: 22,
+    fontSize: 16,
     fontFamily: 'Gilroy-Bold',
-    marginLeft: 12,
-    textShadowColor: 'rgba(0,0,0,0.6)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 6,
+    marginBottom: 12,
   },
 
+  summaryCard: {
+    marginHorizontal: 14,
+    marginTop: -HERO_CARD_OVERLAP,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: CARD_BORDER,
+    backgroundColor: 'transparent',
+    overflow: 'hidden',
+    padding: 16,
+  },
+  summaryCardBlur: {
+    borderRadius: 24,
+  },
+  summaryCardTint: {
+    backgroundColor: 'rgba(12,6,22,0.45)',
+  },
+  summaryCardFallback: {
+    backgroundColor: 'rgba(12,6,22,0.72)',
+  },
+  eventName: {
+    color: COLORS.white,
+    fontSize: 26,
+    lineHeight: 34,
+    fontFamily: 'Gilroy-Bold',
+  },
+  eventTagline: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 13,
+    lineHeight: 18,
+    fontFamily: 'Gilroy-Medium',
+    marginTop: 6,
+  },
+  categoryPill: {
+    alignSelf: 'flex-start',
+    backgroundColor: ICON_TILE_BG,
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    marginTop: 10,
+  },
+  categoryPillText: {
+    color: COLORS.white,
+    fontSize: 12,
+    fontFamily: 'Gilroy-SemiBold',
+  },
+
+  /* Fact strip (date / venue / price) */
+  factStrip: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    marginTop: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.14)',
+    overflow: 'hidden',
+  },
+  factCell: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+  },
+  factDivider: {
+    width: 1,
+    marginVertical: 10,
+    backgroundColor: 'rgba(255,255,255,0.14)',
+  },
+  factIcon: {
+    marginRight: 7,
+  },
+  factTextGroup: {
+    flex: 1,
+  },
+  factPrimary: {
+    color: COLORS.white,
+    fontSize: 11,
+    lineHeight: 15,
+    fontFamily: 'Gilroy-SemiBold',
+  },
+  factSecondary: {
+    color: 'rgba(255,255,255,0.62)',
+    fontSize: 11,
+    lineHeight: 15,
+    fontFamily: 'Gilroy-Medium',
+  },
+  factPrice: {
+    color: '#F5C542',
+    fontSize: 12,
+    lineHeight: 16,
+    fontFamily: 'Gilroy-Bold',
+  },
+
+  /* Venue map strip */
+  mapStrip: {
+    aspectRatio: 6,
+    overflow: 'hidden',
+  },
+  mapImage: {
+    ...StyleSheet.absoluteFillObject,
+    width: undefined,
+    height: undefined,
+  },
+  mapLabel: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    maxWidth: '52%',
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: 8,
+    backgroundColor: 'rgba(110,52,192,0.85)',
+  },
+  mapLabelText: {
+    color: COLORS.white,
+    fontSize: 9,
+    lineHeight: 12,
+    fontFamily: 'Gilroy-SemiBold',
+  },
+
+  /* UD coins row */
   bannerWrap: {
-    marginHorizontal: 20,
-    marginTop: 16,
-    borderColor: '#E8E8E8',
     borderRadius: 16,
   },
   bannerCard: {
@@ -128,8 +326,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.18)',
-    paddingVertical: 12,
+    borderColor: CARD_BORDER,
+    backgroundColor: CARD_BG,
+    paddingVertical: 14,
     paddingHorizontal: 14,
     overflow: 'hidden',
   },
@@ -174,77 +373,11 @@ const styles = StyleSheet.create({
     transform: [{ rotate: '18deg' }],
   },
 
-  /* Sections */
-  section: {
-    paddingHorizontal: 20,
-    marginTop: 22,
-  },
-  sectionTitle: {
-    color: COLORS.white,
-    fontSize: 18,
-    fontFamily: 'Gilroy-Bold',
-    marginBottom: 12,
-  },
-
-  /* Summary card */
-  summaryCard: {
-    marginHorizontal: 20,
-    marginTop: 18,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: CARD_BORDER,
-    backgroundColor: CARD_BG,
-    padding: 18,
-  },
-  eventName: {
-    color: COLORS.white,
-    fontSize: 22,
-    lineHeight: 28,
-    fontFamily: 'Gilroy-Bold',
-    marginBottom: 12,
-  },
-  metaChipRow: {
+  /* More to know rows */
+  metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    flexWrap: 'wrap',
-  },
-  categoryPill: {
-    backgroundColor: ICON_TILE_BG,
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    marginRight: 10,
-  },
-  categoryPillText: {
-    color: COLORS.white,
-    fontSize: 12,
-    fontFamily: 'Gilroy-SemiBold',
-  },
-  organizerText: {
-    flexShrink: 1,
-    color: 'rgba(255,255,255,0.65)',
-    fontSize: 13,
-    fontFamily: 'Gilroy-Medium',
-  },
-  priceRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
     marginTop: 14,
-  },
-  priceLabel: {
-    color: 'rgba(255,255,255,0.65)',
-    fontSize: 13,
-    fontFamily: 'Gilroy-Medium',
-  },
-  priceValue: {
-    color: '#F5C542',
-    fontSize: 18,
-    fontFamily: 'Gilroy-Bold',
-  },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 12,
   },
   infoIconTile: {
     width: 34,
@@ -256,24 +389,6 @@ const styles = StyleSheet.create({
   infoIcon: {
     width: 34,
     height: 34,
-  },
-  infoPrimary: {
-    color: COLORS.white,
-    fontSize: 14,
-    fontFamily: 'Gilroy-SemiBold',
-  },
-  infoSecondary: {
-    color: 'rgba(255,255,255,0.65)',
-    fontSize: 13,
-    fontFamily: 'Gilroy-Medium',
-    marginTop: 2,
-  },
-
-  /* More to know rows */
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 14,
   },
   metaLabel: {
     color: 'rgba(255,255,255,0.65)',
@@ -292,27 +407,45 @@ const styles = StyleSheet.create({
     paddingRight: 12,
   },
   artistCard: {
-    width: 84,
-    marginRight: 12,
+    width: ARTIST_CARD_WIDTH,
+    marginRight: ARTIST_CARD_GAP,
     alignItems: 'flex-start',
   },
   artistImage: {
-    width: 84,
-    height: 84,
-    borderRadius: 14,
+    width: ARTIST_CARD_WIDTH,
+    height: ARTIST_CARD_WIDTH,
+    borderRadius: 16,
     backgroundColor: '#222222',
-    marginBottom: 8,
+    marginBottom: 10,
   },
   artistName: {
     color: COLORS.white,
-    fontSize: 12,
-    fontFamily: 'Gilroy-SemiBold',
+    fontSize: 14,
+    lineHeight: 18,
+    fontFamily: 'Gilroy-Bold',
   },
   artistRole: {
     color: 'rgba(255,255,255,0.55)',
-    fontSize: 11,
+    fontSize: 12,
     fontFamily: 'Gilroy-Medium',
-    marginTop: 2,
+    marginTop: 4,
+  },
+  artistProgressTrack: {
+    flexDirection: 'row',
+    alignSelf: 'center',
+    marginTop: 16,
+  },
+  artistProgressSegment: {
+    width: 28,
+    height: 3,
+    borderRadius: 2,
+    marginHorizontal: 3,
+    backgroundColor: 'rgba(255,255,255,0.16)',
+  },
+  artistProgressFill: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 2,
+    backgroundColor: '#8B5CF6',
   },
 
   accordionGroup: {
@@ -322,8 +455,8 @@ const styles = StyleSheet.create({
   /* Accordion */
   accordion: {
     marginHorizontal: 20,
-    marginTop: 16,
-    borderRadius: 16,
+    marginTop: 14,
+    borderRadius: 18,
     borderWidth: 1,
     borderColor: CARD_BORDER,
     backgroundColor: CARD_BG,
@@ -332,11 +465,22 @@ const styles = StyleSheet.create({
   accordionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 18,
-    paddingVertical: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+  },
+  accordionIconTile: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(110,52,192,0.20)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.10)',
+    marginRight: 14,
   },
   accordionTitle: {
+    flex: 1,
     color: COLORS.white,
     fontSize: 15,
     fontFamily: 'Gilroy-SemiBold',

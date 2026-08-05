@@ -77,6 +77,8 @@ const MyOrdersProductCard = props => {
     return method;
   };
 
+  console.log(isStoreUnavailable, 'isStoreUnavailable');
+
   const navigation = useNavigation();
 
   return (

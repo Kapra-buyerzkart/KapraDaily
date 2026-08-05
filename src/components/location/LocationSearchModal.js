@@ -9,7 +9,7 @@ import {
   StyleSheet,
   Platform,
 } from 'react-native';
-import { BlurView } from '@react-native-community/blur';
+import { BlurView } from '@sbaiahmed1/react-native-blur';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 import { getFontontSize } from '../../globals/GroFunctions';
 import { GOOGLE_MAPS_API_KEY } from '../../globals/secrets';

@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { View, Text, Dimensions, Platform } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import Animated, {
   FadeInDown,
   useSharedValue,
@@ -11,6 +12,7 @@ import Animated, {
   withDelay,
   Easing,
 } from 'react-native-reanimated';
+import AnimatedPressable from '@/components/AnimatedPressable';
 import icons from '@/assets/icons';
 import styles from '../styles';
 
@@ -18,7 +20,7 @@ const CARD_WIDTH = Dimensions.get('window').width - 40;
 const SHIMMER_START = -120;
 const SHIMMER_END = CARD_WIDTH + 40;
 
-const ClaimBanner = () => {
+const ClaimBanner = ({ onPress }) => {
   const flip = useSharedValue(0);
   const glow = useSharedValue(0);
   const sweep = useSharedValue(SHIMMER_START);
@@ -79,7 +81,13 @@ const ClaimBanner = () => {
       entering={FadeInDown.delay(80).duration(400)}
       style={styles.bannerWrap}
     >
-      <Animated.View style={styles.bannerCard}>
+      <AnimatedPressable
+        style={styles.bannerCard}
+        onPress={onPress}
+        disabled={!onPress}
+        accessibilityRole="button"
+        accessibilityLabel="Use your UD Coins to claim your tickets"
+      >
         {Platform.OS !== 'ios' && (
           <Animated.View
             style={[styles.bannerShimmer, shimmerStyle]}
@@ -105,10 +113,15 @@ const ClaimBanner = () => {
           />
         </View>
         <Text style={styles.bannerText}>
-          Use your <Text style={styles.bannerHighlight}>UD Coin</Text> to claim
-          your ticket
+          Use the <Text style={styles.bannerHighlight}>UD Coins</Text> to claim
+          your tickets
         </Text>
-      </Animated.View>
+        <Ionicons
+          name="chevron-forward"
+          size={18}
+          color="rgba(255,255,255,0.55)"
+        />
+      </AnimatedPressable>
     </Animated.View>
   );
 };

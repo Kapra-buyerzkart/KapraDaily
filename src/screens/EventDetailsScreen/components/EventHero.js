@@ -1,19 +1,20 @@
 import React, { useEffect, useMemo } from 'react';
 import { View, Image, ImageBackground, Dimensions } from 'react-native';
 import Animated, {
-  FadeIn,
   Extrapolation,
   interpolate,
   useAnimatedStyle,
   useSharedValue,
 } from 'react-native-reanimated';
 import Carousel from 'react-native-reanimated-carousel';
-import Ionicons from 'react-native-vector-icons/Ionicons';
 import LinearGradient from 'react-native-linear-gradient';
-import AnimatedPressable from '@/components/AnimatedPressable';
-import COLORS from '@/styles/colors';
 import { getEventGalleryImages } from '@/components/events/imageUtils';
-import styles, { HERO_HEIGHT } from '../styles';
+import styles, {
+  HERO_HEIGHT,
+  HERO_SCRIM_COLORS,
+  HERO_SCRIM_LOCATIONS,
+  HERO_TOP_SCRIM_COLORS,
+} from '../styles';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const FALLBACK_IMAGE = require('../../../assets/images/noimages/fallback.png');
@@ -25,18 +26,27 @@ const HeroImage = ({ source }) => (
     fadeDuration={0}
     style={styles.heroImageBg}
     imageStyle={styles.heroImage}
-  >
+  />
+);
+
+const HeroScrims = () => (
+  <>
     <LinearGradient
-      colors={['transparent', 'rgba(0,0,0,0.8)']}
+      colors={HERO_TOP_SCRIM_COLORS}
+      style={styles.heroTopScrim}
+      pointerEvents="none"
+    />
+    <LinearGradient
+      colors={HERO_SCRIM_COLORS}
+      locations={HERO_SCRIM_LOCATIONS}
       style={styles.heroScrim}
       pointerEvents="none"
     />
-  </ImageBackground>
+  </>
 );
 
 const HeroDot = ({ index, progress, count }) => {
   const animatedStyle = useAnimatedStyle(() => {
-    // Fractional distance from this dot to the current slide, wrapped for loop.
     const raw = Math.abs(progress.value - index);
     const distance = Math.min(raw, count - raw);
     return {
@@ -48,7 +58,7 @@ const HeroDot = ({ index, progress, count }) => {
   return <Animated.View style={[styles.heroDot, animatedStyle]} />;
 };
 
-const EventHero = ({ event, insets, onBack, scrollY }) => {
+const EventHero = ({ event, scrollY }) => {
   const gallery = useMemo(() => getEventGalleryImages(event), [event]);
   const progress = useSharedValue(0);
   const hasCarousel = gallery.length > 1;
@@ -62,6 +72,12 @@ const EventHero = ({ event, insets, onBack, scrollY }) => {
   const parallaxStyle = useAnimatedStyle(() => {
     const y = scrollY?.value ?? 0;
     return {
+      opacity: interpolate(
+        y,
+        [0, HERO_HEIGHT * 0.75],
+        [1, 0.25],
+        Extrapolation.CLAMP,
+      ),
       transform: [
         {
           translateY: interpolate(
@@ -83,10 +99,19 @@ const EventHero = ({ event, insets, onBack, scrollY }) => {
     };
   });
 
+  const dotsStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(
+      scrollY?.value ?? 0,
+      [0, HERO_HEIGHT * 0.25],
+      [1, 0],
+      Extrapolation.CLAMP,
+    ),
+  }));
+
   return (
     <View style={styles.hero}>
-      {hasCarousel ? (
-        <>
+      <Animated.View style={[styles.heroImageWrap, parallaxStyle]}>
+        {hasCarousel ? (
           <Carousel
             loop
             autoPlay
@@ -96,41 +121,32 @@ const EventHero = ({ event, insets, onBack, scrollY }) => {
             data={gallery}
             scrollAnimationDuration={600}
             onProgressChange={progress}
-            renderItem={({ item, index }) => <HeroImage key={index} source={item} />}
+            renderItem={({ item, index }) => (
+              <HeroImage key={index} source={item} />
+            )}
           />
-          <View style={styles.heroDots} pointerEvents="none">
-            {gallery.map((_, i) => (
-              <HeroDot
-                key={i}
-                index={i}
-                progress={progress}
-                count={gallery.length}
-              />
-            ))}
-          </View>
-        </>
-      ) : (
-        <Animated.View style={[styles.heroImageWrap, parallaxStyle]}>
+        ) : (
           <HeroImage source={gallery[0]} />
+        )}
+      </Animated.View>
+
+      <HeroScrims />
+
+      {hasCarousel && (
+        <Animated.View
+          style={[styles.heroDots, dotsStyle]}
+          pointerEvents="none"
+        >
+          {gallery.map((_, i) => (
+            <HeroDot
+              key={i}
+              index={i}
+              progress={progress}
+              count={gallery.length}
+            />
+          ))}
         </Animated.View>
       )}
-
-      <View
-        style={[
-          styles.heroTopRow,
-          { paddingTop: insets.top > 0 ? insets.top + 8 : 44 },
-        ]}
-      >
-        <AnimatedPressable
-          entering={FadeIn.delay(150)}
-          onPress={onBack}
-          hitSlop={16}
-          style={styles.backButton}
-        >
-          <Ionicons name="arrow-back" size={22} color={COLORS.white} />
-        </AnimatedPressable>
-        {/* <Text style={styles.heroTitle}>Events</Text> */}
-      </View>
     </View>
   );
 };

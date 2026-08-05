@@ -15,6 +15,7 @@ const EXPAND_SETTLE_MS = 340;
 
 const AccordionSection = ({
   title,
+  icon: Icon,
   children,
   defaultOpen = false,
   maxHeight,
@@ -57,6 +58,11 @@ const AccordionSection = ({
   return (
     <View ref={containerRef} collapsable={false} style={styles.accordion}>
       <AnimatedPressable style={styles.accordionHeader} onPress={toggle}>
+        {!!Icon && (
+          <View style={styles.accordionIconTile}>
+            <Icon width={22} height={22} />
+          </View>
+        )}
         <Text style={styles.accordionTitle}>{title}</Text>
         <Animated.View style={chevronStyle}>
           <Ionicons name="chevron-down" size={20} color={COLORS.white} />

@@ -2,6 +2,8 @@ import React from 'react';
 import { View } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import HtmlBody from '@/components/HtmlBody';
+import DetailsIcon from '../../../assets/icons/searchOutline.svg';
+import TermsIcon from '../../../assets/icons/documentCheckOutline.svg';
 import styles from '../styles';
 import AccordionSection from './AccordionSection';
 
@@ -12,6 +14,7 @@ const EventAccordions = ({ details, terms, onExpand }) => (
     <Animated.View entering={FadeInUp.delay(200).duration(400)}>
       <AccordionSection
         title="Details"
+        icon={DetailsIcon}
         maxHeight={details ? BODY_MAX_HEIGHT : undefined}
         onExpand={onExpand}
       >
@@ -24,7 +27,8 @@ const EventAccordions = ({ details, terms, onExpand }) => (
     </Animated.View>
     <Animated.View entering={FadeInUp.delay(240).duration(400)}>
       <AccordionSection
-        title="Terms & Conditions"
+        title="Terms and conditions"
+        icon={TermsIcon}
         maxHeight={terms ? BODY_MAX_HEIGHT : undefined}
         onExpand={onExpand}
       >

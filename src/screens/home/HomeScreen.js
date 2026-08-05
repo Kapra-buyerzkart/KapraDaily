@@ -289,12 +289,6 @@ const HomeScreen = () => {
     setSelectedDiscoveryCategory(category);
   }, []);
 
-  // "Explore deals" must never render with every tab idle and an empty rail, so
-  // a category is (re)selected whenever the current one is gone — first paint,
-  // after the pincode reset below, and after a refresh that returns a different
-  // category set. Keying this off `categoryDiscovery` alone missed those cases:
-  // when the reset cleared the selection without the query object changing
-  // identity, nothing re-selected and the section sat there with no open tab.
   useEffect(() => {
     if (discoveryCategories.length === 0) return;
     const stillListed = discoveryCategories.some(
@@ -309,9 +303,6 @@ const HomeScreen = () => {
     selectedDiscoveryCategory,
   ]);
 
-  // Passed to StickyHeader, both PlacementBannerCarousels, the bottom showcase
-  // list and CategoryDiscoverySection. As a bare function it got a new identity
-  // on every render, so none of those could ever skip re-rendering.
   const handleBannerPress = useCallback(
     banner => {
       if (!banner) return;

@@ -90,6 +90,7 @@ const images = {
   no_location: require('./noimages/no_location.png'),
   claimticketBtn: require('./claimticketBtn.png'),
   no_vocher_booking: require('./noimages/no_vocher_booking.png'),
+  maplocationnbanner: require('./maplocationnbanner.png'),
 };
 
 export default images;

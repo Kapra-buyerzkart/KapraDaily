@@ -7,7 +7,6 @@ import {
   StyleSheet,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { BlurView } from '@react-native-community/blur';
 import { FONTS } from '../styles/typography';
 import { PURPLE_BUTTON_GRADIENT } from '../styles/gradients';
 import { COLORS } from '../styles/colors';

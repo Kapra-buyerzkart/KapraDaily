@@ -1,12 +1,41 @@
 import React from 'react';
-import { View, Text, Image } from 'react-native';
-import Animated, { FadeInUp } from 'react-native-reanimated';
-import icons from '@/assets/icons';
+import { View, Text, Platform, StyleSheet } from 'react-native';
+import { BlurView } from '@sbaiahmed1/react-native-blur';
+import CalendarIcon from '../../../assets/icons/calendarOutline.svg';
+import LocationPinIcon from '../../../assets/icons/locationPinOutline.svg';
+import PriceIcon from '../../../assets/icons/mobilePaymentSuccess.svg';
 import styles from '../styles';
 import { formatPrice } from '../utils';
+import VenueMapStrip from './VenueMapStrip';
+import { hp } from '@/utils/responsive';
+
+const FACT_ICON_SIZE = 26;
+
+const FactCell = ({ Icon, primary, secondary, secondaryStyle }) => (
+  <View style={styles.factCell}>
+    <Icon
+      width={FACT_ICON_SIZE}
+      height={FACT_ICON_SIZE}
+      style={styles.factIcon}
+    />
+    <View style={styles.factTextGroup}>
+      {!!primary && (
+        <Text style={styles.factPrimary} numberOfLines={2}>
+          {primary}
+        </Text>
+      )}
+      {!!secondary && (
+        <Text style={[styles.factSecondary, secondaryStyle]} numberOfLines={2}>
+          {secondary}
+        </Text>
+      )}
+    </View>
+  </View>
+);
 
 const EventSummaryCard = ({
   name,
+  tagline,
   category,
   organizer,
   minPrice,
@@ -14,67 +43,61 @@ const EventSummaryCard = ({
   timeText,
   venue,
   city,
-}) => (
-  <Animated.View
-    entering={FadeInUp.delay(120).duration(400)}
-    style={styles.summaryCard}
-  >
-    <Text style={styles.eventName}>{name}</Text>
+}) => {
+  const price = (minPrice ?? null) !== null ? formatPrice(minPrice) : '';
+  const subtitle = tagline || (organizer ? `by ${organizer}` : '');
 
-    {(!!category || !!organizer) && (
-      <View style={styles.metaChipRow}>
-        {!!category && (
-          <View style={styles.categoryPill}>
-            <Text style={styles.categoryPillText}>{category}</Text>
-          </View>
-        )}
-        {!!organizer && (
-          <Text style={styles.organizerText} numberOfLines={1}>
-            by {organizer}
-          </Text>
-        )}
-      </View>
-    )}
+  const facts = [
+    !!dateText && (
+      <FactCell
+        key="date"
+        Icon={CalendarIcon}
+        primary={dateText}
+        secondary={timeText}
+      />
+    ),
+    (!!venue || !!city) && (
+      <FactCell
+        key="venue"
+        Icon={LocationPinIcon}
+        primary={venue}
+        secondary={city}
+      />
+    ),
+    !!price && (
+      <FactCell
+        key="price"
+        Icon={PriceIcon}
+        primary="Starts from"
+        secondary={price}
+        secondaryStyle={styles.factPrice}
+      />
+    ),
+  ].filter(Boolean);
 
-    {(minPrice ?? null) !== null && !!formatPrice(minPrice) && (
-      <View style={styles.priceRow}>
-        <Text style={styles.priceLabel}>Starts from </Text>
-        <Text style={styles.priceValue}>{formatPrice(minPrice)}</Text>
-      </View>
-    )}
-
-    {!!dateText && (
-      <View style={styles.infoRow}>
-        <View style={styles.infoIconTile}>
-          <Image
-            source={icons.calendar}
-            style={styles.infoIcon}
-            resizeMode="contain"
-          />
+  return (
+    <BlurView style={styles.summaryCard} blurAmount={20} blurType="dark">
+      <Text style={styles.eventName}>{name}</Text>
+      {!!subtitle && <Text style={styles.eventTagline}>{subtitle}</Text>}
+      {!!category && (
+        <View style={styles.categoryPill}>
+          <Text style={styles.categoryPillText}>{category}</Text>
         </View>
-        <View>
-          <Text style={styles.infoPrimary}>{dateText}</Text>
-          {!!timeText && <Text style={styles.infoSecondary}>{timeText}</Text>}
+      )}
+      {facts.length > 0 && (
+        <View style={styles.factStrip}>
+          {facts.map((fact, index) => (
+            <React.Fragment key={fact.key}>
+              {index > 0 && <View style={styles.factDivider} />}
+              {fact}
+            </React.Fragment>
+          ))}
         </View>
-      </View>
-    )}
-
-    {(!!venue || !!city) && (
-      <View style={styles.infoRow}>
-        <View style={styles.infoIconTile}>
-          <Image
-            source={icons.locationtwo}
-            style={styles.infoIcon}
-            resizeMode="contain"
-          />
-        </View>
-        <View>
-          {!!venue && <Text style={styles.infoPrimary}>{venue}</Text>}
-          {!!city && <Text style={styles.infoSecondary}>{city}</Text>}
-        </View>
-      </View>
-    )}
-  </Animated.View>
-);
+      )}
+      <View style={{ paddingTop: hp(1.5) }} />
+      <VenueMapStrip venue={venue} city={city} />
+    </BlurView>
+  );
+};
 
 export default React.memo(EventSummaryCard);

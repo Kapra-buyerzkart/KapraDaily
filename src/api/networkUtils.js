@@ -83,13 +83,17 @@ const errorHandler = error => {
     error?.message,
   );
 
-  // Dev-only body dump. `logger.log` is a no-op in production, so the response
-  // payload (which can carry PII) never reaches release logs. Status + URL alone
-  // don't say *which* field a 400 rejected — the body does.
+  // Dev-only body dump. `logger.debug` is a no-op in production, so the payload
+  // (which can carry PII) never reaches release logs. Status + URL alone don't
+  // say *which* field a 400 rejected — the body does, and it has to be
+  // unredacted: the rejected field is often one the redactor would mask.
   if (error?.response) {
-    logger.log(' [API ERROR BODY]:', {
+    logger.debug(' [API ERROR BODY]:', {
       url: error?.config?.url,
       status: error?.response?.status,
+      // GETs carry their payload in the query string, not the body — without
+      // this a 400 shows an empty requestBody and hides what was actually sent.
+      params: error?.config?.params,
       requestBody: safeParse(error?.config?.data),
       responseBody: error?.response?.data,
     });

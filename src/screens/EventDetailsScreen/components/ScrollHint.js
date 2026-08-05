@@ -31,9 +31,7 @@ const ScrollHint = ({ scrollY }) => {
     const y = scrollY?.value ?? 0;
     return {
       opacity: interpolate(y, [0, 60], [1, 0], Extrapolation.CLAMP),
-      transform: [
-        { translateY: interpolate(bounce.value, [0, 1], [0, 6]) },
-      ],
+      transform: [{ translateY: interpolate(bounce.value, [0, 1], [0, 6]) }],
     };
   });
 
