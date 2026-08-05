@@ -43,31 +43,18 @@ const DEFAULT_TOKEN_VALUE = '1';
 const NO_IMAGE_SOURCE = require('../assets/images/udenDealNotfound.png');
 const UD_TOKEN_ICON = require('../assets/icons/tokenud.png');
 
-// The add/counter control's drawn size. Both states share one footprint so the
-// card does not reflow the instant a product enters the cart — the single most
-// jarring moment in the old card, since the 27pt circle became a 3-part row.
 const ACTION_H = 30;
 const ACTION_W = 62;
 const ACTION_H_SMALL = 28;
 const ACTION_W_SMALL = 54;
 
-// Every interactive element is drawn at its design size and reaches the 44pt
-// minimum through hitSlop, so touch accuracy improves without the card getting
-// visually heavier.
 const ACTION_HIT_SLOP = hitSlopTo(ACTION_H);
 const COUNTER_HIT_SLOP = { top: 10, bottom: 10, left: 6, right: 6 };
 const WISHLIST_HIT_SLOP = hitSlopTo(26);
 
-// Two lines of product name are reserved whether or not the name needs them,
-// and the weight line likewise. Without both reservations the cards in a rail
-// ended at different heights and the row's baseline visibly sawtoothed.
 const NAME_LINES = 2;
 
 const styles = StyleSheet.create({
-  // ── Outer geometry ────────────────────────────────────────────────────────
-  // Unchanged on purpose: six screens position this card in 2- and 3-column
-  // grids off these exact widths and margins (CategoriesScreen additionally
-  // overrides them via containerStyle). The redesign is entirely interior.
   cardContainer: {
     width: wp('35%'),
     marginVertical: hp('1%'),

@@ -1,12 +1,4 @@
-import {
-  View,
-  Text,
-  Image,
-  TouchableOpacity,
-  TextInput,
-  Platform,
-  ActivityIndicator,
-} from 'react-native';
+import { View, Text, Image, Platform, ActivityIndicator } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedScrollHandler,
@@ -28,18 +20,16 @@ import secureStore from '../../utils/secureStore';
 import { getStaggerDelay } from '../../utils/staggerDelay';
 import { AppContext } from '../../context/appContext';
 import TokenProductCard from '../../components/TokenProductCard';
-import Ionicons from 'react-native-vector-icons/Ionicons';
-import Feather from 'react-native-vector-icons/Feather';
 import FilterSortModal from '../../components/FilterSortModal';
 import StoreUnavailable from '../../components/StoreUnavailable';
 import LocationModal from '../../components/LocationModal';
 import SelectedProducts from '../../components/SelectedProducts';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import useRecentSearches from './hooks/useRecentSearches';
 import RecentSearches from './components/RecentSearches';
 import SearchResultsHeader from './components/SearchResultsHeader';
+import SearchHeader from './components/SearchHeader';
 import styles from './SearchScreen.styles';
-import icons from '@/assets/icons';
+import { BORDER_FADE_RANGE } from '@/styles/motion';
 
 const SearchScreen = () => {
   const navigation = useNavigation();
@@ -107,7 +97,6 @@ const SearchScreen = () => {
     }
   }, [loading, resultCount, searchTerm, saveSearch]);
 
-  const STICKY_SHADOW_RANGE = 24;
   const scrollY = useSharedValue(0);
 
   const scrollHandler = useAnimatedScrollHandler({
@@ -116,21 +105,14 @@ const SearchScreen = () => {
     },
   });
 
-  const stickyShadowAnimStyle = useAnimatedStyle(() => {
-    const progress = interpolate(
+  const headerRuleStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(
       scrollY.value,
-      [0, STICKY_SHADOW_RANGE],
+      BORDER_FADE_RANGE,
       [0, 1],
       Extrapolation.CLAMP,
-    );
-    return {
-      shadowColor: '#000000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowRadius: 4,
-      shadowOpacity: interpolate(progress, [0, 1], [0, 0.12]),
-      elevation: interpolate(progress, [0, 1], [0, 4]),
-    };
-  });
+    ),
+  }));
 
   const renderItem = ({ item, index }) => {
     return (
@@ -153,58 +135,16 @@ const SearchScreen = () => {
 
   return (
     <SafeAreaView style={styles.mainContainer}>
-      <View style={styles.headerContainer}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-          <TouchableOpacity hitSlop={40} onPress={() => navigation.goBack()}>
-            <Image
-              source={icons.backArrowNew}
-              style={{
-                resizeMode: 'contain',
-                tintColor: 'black',
-              }}
-            />
-          </TouchableOpacity>
-          <Text style={styles.searchText}>
-            {catName ? catName : staticTitle ? staticTitle : 'Search'}
-          </Text>
-        </View>
-        <TouchableOpacity
-          onPress={() => setIsFilterSortModalVisible(true)}
-          style={styles.filterButton}
-        >
-          <Image source={icons.filter} />
-        </TouchableOpacity>
-      </View>
-      <Animated.View style={[styles.searchContainer, stickyShadowAnimStyle]}>
-        <TouchableOpacity hitSlop={12} onPress={() => submitSearch()}>
-          <Feather name="search" size={20} color="#F25000" />
-        </TouchableOpacity>
-        <TextInput
-          placeholder="What are you looking for ?"
-          placeholderTextColor={'#222222'}
-          style={styles.searchInput}
-          value={searchTerm}
-          onChangeText={setSearchTerm}
-          autoFocus={true}
-          returnKeyType="search"
-          onSubmitEditing={() => submitSearch()}
-        />
-        {searchTerm.length > 0 && (
-          <TouchableOpacity
-            onPress={() => setSearchTerm('')}
-            style={{ marginRight: wp('2%') }}
-          >
-            <Ionicons name="close-circle" size={wp('5%')} color="#CCCCCC" />
-          </TouchableOpacity>
-        )}
-        <View style={styles.divider} />
-        <Feather
-          name="clipboard"
-          color={'black'}
-          size={wp('5%')}
-          style={styles.clipboardIcon}
-        />
-      </Animated.View>
+      <SearchHeader
+        title={catName ? catName : staticTitle ? staticTitle : 'Search'}
+        searchTerm={searchTerm}
+        onChangeText={setSearchTerm}
+        onSubmit={submitSearch}
+        onClear={() => setSearchTerm('')}
+        onBack={() => navigation.goBack()}
+        onFilter={() => setIsFilterSortModalVisible(true)}
+        ruleStyle={headerRuleStyle}
+      />
 
       {isStoreUnavailable ? (
         <StoreUnavailable
@@ -262,7 +202,7 @@ const SearchScreen = () => {
                 (isSearchActive || catId || hasStaticProducts) && (
                   <View style={styles.emptyContainer}>
                     <Image
-                      source={require('../../assets/images/noimages/noproductfound.png')}
+                      source={require('../../assets/images/udendeal.png')}
                       style={styles.emptyImage}
                     />
                     <Text style={styles.noResultsText}>

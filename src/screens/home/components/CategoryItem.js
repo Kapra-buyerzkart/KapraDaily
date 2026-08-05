@@ -8,7 +8,7 @@ import useCategoryTileStyles from './useCategoryTileStyles';
 import AnimatedPressable from '../../../components/AnimatedPressable';
 import { getStaggerDelay } from '../../../utils/staggerDelay';
 import { selectionTick } from '../../../utils/haptics';
-import { MAX_FONT_SCALE } from '@/styles/homeTheme';
+import { MAX_FONT_SCALE, categoryTint } from '@/styles/homeTheme';
 
 const CategoryItem = React.memo(({ item, index = 0 }) => {
   const navigation = useNavigation();
@@ -46,7 +46,14 @@ const CategoryItem = React.memo(({ item, index = 0 }) => {
       accessibilityRole="button"
       accessibilityLabel={`${label} category`}
     >
-      <View style={styles.categoryItemContainer}>
+      {/* The well's tint is per-tile, so it stays out of the cached
+          StyleSheet (which is keyed on window width alone) and rides on top. */}
+      <View
+        style={[
+          styles.categoryItemContainer,
+          { backgroundColor: categoryTint(index) },
+        ]}
+      >
         <Image
           source={imageSource}
           style={styles.image}

@@ -11,18 +11,21 @@ import { INK, RED } from './styles';
 const ICON_SIZE = wp('4.6%');
 
 export const buildOffersItems = ({ onBCoin, onSmartPoint, onCoupons }) => [
-  {
-    key: 'UD-Wallet',
-    label: 'UD Wallet',
-    icon: (
-      <Image
-        source={icons.udcoin}
-        style={{ width: ICON_SIZE, height: ICON_SIZE }}
-        resizeMode="contain"
-      />
-    ),
-    onPress: onBCoin,
-  },
+  // {
+  //   key: 'UD-Wallet',
+  //   label: 'UD Wallet',
+  //   // `udCoinNew` rather than the older `udcoin`: same orange coin mark, but it
+  //   // ships @2x/@3x where the other is a single 20 KB raster that resamples
+  //   // soft at this size.
+  //   icon: (
+  //     <Image
+  //       source={icons.udCoinNew}
+  //       style={{ width: ICON_SIZE, height: ICON_SIZE }}
+  //       resizeMode="contain"
+  //     />
+  //   ),
+  //   onPress: onBCoin,
+  // },
   {
     key: 'smart-point',
     label: 'Smart point',

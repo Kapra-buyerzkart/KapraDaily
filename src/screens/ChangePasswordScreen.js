@@ -1,77 +1,184 @@
+import React, { useContext, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  ImageBackground,
-  Image,
   TextInput,
+  Pressable,
+  Platform,
+  StatusBar,
+  Image,
   TouchableOpacity,
-  KeyboardAvoidingView,
-  ScrollView,
-  Alert,
 } from 'react-native';
-import React, { useState, useContext } from 'react';
-import { AppContext } from '../context/appContext';
-import StoreUnavailable from '../components/StoreUnavailable';
-import LocationModal from '../components/LocationModal';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import LinearGradient from 'react-native-linear-gradient';
+import Animated, {
+  Extrapolation,
+  interpolate,
+  interpolateColor,
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
-import { FONTS } from '../styles/typography';
 import { useNavigation } from '@react-navigation/native';
-import AntDesign from 'react-native-vector-icons/AntDesign';
 import icons from '@/assets/icons';
+import { FONTS } from '../styles/typography';
 import { LoaderContext } from '../context/loaderContext';
-import { changePasswordApi } from '../api/userService';
 import StatusModal from '../components/StatusModal';
+import { changePasswordApi } from '../api/userService';
+import {
+  CANVAS,
+  SURFACE,
+  HAIRLINE,
+  INK,
+  ACCENT,
+  RADIUS,
+  SPACE,
+  TYPE,
+  GUTTER,
+  HERO_TOP,
+  HERO_GRADIENT,
+  HERO_LIFT,
+  MAX_FONT_SCALE,
+  hitSlopTo,
+} from '@/styles/homeTheme';
+import {
+  BAR_SOLID_AT,
+  BORDER_FADE_RANGE,
+  PRESS_IN,
+  PRESS_OUT,
+  entrance,
+} from '@/styles/motion';
+
+// The fourth page of the account flow, rebuilt to match Profile, Edit Profile
+// and Update Contact: same peach hero, same bar resolving from peach to white,
+// same filled-well field, same pinned brand-coloured CTA. It used to open on the
+// login screen's photographic header with the Kapra logo centred under it, which
+// made a settings change look like a re-authentication — and it carried a
+// LocationModal and a store-availability subscription it never rendered.
+//
+// The substantive change is that the page now tells you whether the password
+// you are typing will be accepted *while* you type it. The old screen took three
+// blind fields and answered "Please fill in all fields" or "New passwords do not
+// match" in a modal after the fact, and left every server rule to be discovered
+// on submit.
+
+const FOCUS_FADE = { duration: 160 };
+const METER_FADE = { duration: 220 };
+
+// What the field will actually reject, stated up front rather than after a round
+// trip. Anything the server enforces beyond this still comes back in the modal.
+const RULES = [
+  {
+    key: 'length',
+    label: 'At least 8 characters',
+    test: value => value.length >= 8,
+  },
+  {
+    key: 'letter',
+    label: 'A letter',
+    test: value => /[A-Za-z]/.test(value),
+  },
+  {
+    key: 'number',
+    label: 'A number',
+    test: value => /[0-9]/.test(value),
+  },
+];
+
+// Strength is scored more widely than the rules above — meeting the minimum is
+// the floor, not the goal, so the meter keeps moving after the checklist is
+// green and a longer or mixed password visibly earns something.
+const scorePassword = value => {
+  if (!value) return 0;
+  let score = 0;
+  if (value.length >= 8) score += 1;
+  if (value.length >= 12) score += 1;
+  if (/[A-Za-z]/.test(value) && /[0-9]/.test(value)) score += 1;
+  if (
+    /[^A-Za-z0-9]/.test(value) ||
+    (/[a-z]/.test(value) && /[A-Z]/.test(value))
+  )
+    score += 1;
+  return Math.min(score, METER_SEGMENTS);
+};
+
+const STRENGTH_COPY = ['Too short', 'Weak', 'Fair', 'Good', 'Strong'];
 
 const ChangePasswordScreen = () => {
   const navigation = useNavigation();
   const { showLoader } = useContext(LoaderContext);
-  const { isStoreUnavailable, storeUnavailableData } = useContext(AppContext);
-  const [isLocationModalVisible, setIsLocationModalVisible] = useState(false);
 
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [showOld, setShowOld] = useState(false);
-  const [showNew, setShowNew] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
 
-  // Modal state
+  // Client-side validation speaks under the field it is about. The modal is kept
+  // for what the server says, which is the only thing the user can't see for
+  // themselves — a wrong current password, chiefly.
+  const [oldError, setOldError] = useState('');
+
   const [statusModalVisible, setStatusModalVisible] = useState(false);
   const [statusType, setStatusType] = useState('success');
   const [statusTitle, setStatusTitle] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
   const [onModalClose, setOnModalClose] = useState(null);
 
-  const handleUpdate = async () => {
-    if (!oldPassword || !newPassword || !confirmPassword) {
-      setStatusType('error');
-      setStatusTitle('Error');
-      setStatusMessage('Please fill in all fields');
-      setStatusModalVisible(true);
-      return;
-    }
+  const newRef = useRef(null);
+  const confirmRef = useRef(null);
 
-    if (newPassword !== confirmPassword) {
-      setStatusType('error');
-      setStatusTitle('Error');
-      setStatusMessage('New passwords do not match');
-      setStatusModalVisible(true);
-      return;
-    }
+  const checks = useMemo(
+    () => RULES.map(rule => ({ ...rule, passed: rule.test(newPassword) })),
+    [newPassword],
+  );
+  const newValid = checks.every(check => check.passed);
+  const score = useMemo(() => scorePassword(newPassword), [newPassword]);
+
+  const confirmTouched = confirmPassword.length > 0;
+  const confirmMatches = confirmTouched && confirmPassword === newPassword;
+  const confirmError =
+    confirmTouched && !confirmMatches ? 'Passwords don’t match' : '';
+  // Worth catching here rather than at the server: submitting the password you
+  // already have is the one failure the page can be certain about.
+  const isReused = newValid && newPassword === oldPassword;
+
+  const canSubmit =
+    oldPassword.length > 0 && newValid && confirmMatches && !isReused;
+
+  const hint = !oldPassword
+    ? 'Enter your current password'
+    : !newValid
+    ? 'Choose a stronger new password'
+    : isReused
+    ? 'New password must be different'
+    : 'Re-enter the new password to confirm';
+
+  const showError = message => {
+    setStatusType('error');
+    setStatusTitle('Error');
+    setStatusMessage(message);
+    setStatusModalVisible(true);
+  };
+
+  const handleUpdate = async () => {
+    if (!canSubmit) return;
 
     try {
       showLoader(true);
-      const payload = {
+      const response = await changePasswordApi({
         oldPassword,
         newPassword,
         confirmPassword,
-      };
-      const response = await changePasswordApi(payload);
+      });
+
       if (response?.success) {
         setStatusType('success');
         setStatusTitle('Success');
@@ -79,17 +186,18 @@ const ChangePasswordScreen = () => {
         setOnModalClose(() => () => navigation.goBack());
         setStatusModalVisible(true);
       } else {
-        setStatusType('error');
-        setStatusTitle('Error');
-        setStatusMessage(response?.message || 'Failed to update password');
-        setStatusModalVisible(true);
+        const message = response?.message || 'Failed to update password';
+        // A rejected current password belongs under the field that holds it,
+        // not in a modal that has to be dismissed before it can be corrected.
+        if (/old|current|incorrect|wrong/i.test(message)) {
+          setOldError(message);
+        } else {
+          showError(message);
+        }
       }
     } catch (error) {
       console.error('Change Password Error:', error);
-      setStatusType('error');
-      setStatusTitle('Error');
-      setStatusMessage('An unexpected error occurred');
-      setStatusModalVisible(true);
+      showError('An unexpected error occurred');
     } finally {
       showLoader(false);
     }
@@ -102,119 +210,172 @@ const ChangePasswordScreen = () => {
     }
   };
 
+  // ── The sticky bar ──────────────────────────────────────────────────────
+  // Peach at rest so the status bar, the bar and the gradient below read as one
+  // surface; white once the hero is gone. `heroAnchor` is measured rather than
+  // assumed because the hero's height moves with the font scale.
+  const scrollY = useSharedValue(0);
+  const heroAnchor = useSharedValue(0);
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: event => {
+      scrollY.value = event.contentOffset.y;
+    },
+  });
+  const onHeroLayout = event => {
+    const { y, height } = event.nativeEvent.layout;
+    heroAnchor.value = y + height;
+  };
+
+  const topBarBorderStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(
+      scrollY.value,
+      BORDER_FADE_RANGE,
+      [0, 1],
+      Extrapolation.CLAMP,
+    ),
+  }));
+
+  const topBarBackgroundStyle = useAnimatedStyle(() => {
+    const anchor = heroAnchor.value;
+    if (anchor <= 0) return { backgroundColor: HERO_TOP };
+    return {
+      backgroundColor: interpolateColor(
+        scrollY.value,
+        [0, anchor * BAR_SOLID_AT],
+        [HERO_TOP, CANVAS],
+      ),
+    };
+  });
+
   return (
-    <SafeAreaView style={styles.mainContainer}>
+    <View style={styles.mainContainer}>
+      <StatusBar
+        translucent
+        backgroundColor="transparent"
+        barStyle="dark-content"
+      />
+
       <KeyboardAvoidingView
-        style={{ flex: 1 }}
+        style={styles.keyboardAvoidingView}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <ScrollView
-          contentContainerStyle={{ flexGrow: 1 }}
+        <Animated.ScrollView
+          showsVerticalScrollIndicator={false}
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          onScroll={scrollHandler}
+          scrollEventThrottle={16}
+          stickyHeaderIndices={[0]}
           keyboardShouldPersistTaps="handled"
         >
-          <ImageBackground
-            style={styles.backgroundImage}
-            source={require('../assets/images/login_background_image.jpg')}
-          >
-            <View style={styles.headerRow}>
-              <TouchableOpacity
-                hitSlop={40}
-                onPress={() => navigation.goBack()}
-              >
-                <Image
-                  source={icons.backArrowNew}
-                  style={{
-                    resizeMode: 'contain',
-                    tintColor: '#FFFFFF',
-                  }}
-                />
-              </TouchableOpacity>
-              <Text style={styles.headerTitle}>Change Password</Text>
-              <View style={{ width: wp('5%') }} />
-            </View>
-            <Image
-              style={styles.kapraLogo}
-              source={require('../assets/images/kapra_logo.png')}
-            />
-          </ImageBackground>
+          <TopBar
+            title="Change Password"
+            onBack={() => navigation.goBack()}
+            backgroundStyle={topBarBackgroundStyle}
+            borderStyle={topBarBorderStyle}
+          />
 
-          <View style={styles.formContainer}>
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Old Password</Text>
-              <View style={styles.inputWrapper}>
-                <TextInput
-                  placeholder="Enter old password"
-                  placeholderTextColor="#DADADA"
-                  style={styles.input}
-                  secureTextEntry={!showOld}
-                  value={oldPassword}
-                  onChangeText={setOldPassword}
-                />
-                <TouchableOpacity onPress={() => setShowOld(!showOld)}>
-                  <AntDesign
-                    name={showOld ? 'eye' : 'eyeo'}
-                    size={wp('5%')}
-                    color="#DADADA"
-                  />
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>New Password</Text>
-              <View style={styles.inputWrapper}>
-                <TextInput
-                  placeholder="Enter new password"
-                  placeholderTextColor="#DADADA"
-                  style={styles.input}
-                  secureTextEntry={!showNew}
-                  value={newPassword}
-                  onChangeText={setNewPassword}
-                />
-                <TouchableOpacity onPress={() => setShowNew(!showNew)}>
-                  <AntDesign
-                    name={showNew ? 'eye' : 'eyeo'}
-                    size={wp('5%')}
-                    color="#DADADA"
-                  />
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Confirm New Password</Text>
-              <View style={styles.inputWrapper}>
-                <TextInput
-                  placeholder="Confirm new password"
-                  placeholderTextColor="#DADADA"
-                  style={styles.input}
-                  secureTextEntry={!showConfirm}
-                  value={confirmPassword}
-                  onChangeText={setConfirmPassword}
-                />
-                <TouchableOpacity onPress={() => setShowConfirm(!showConfirm)}>
-                  <AntDesign
-                    name={showConfirm ? 'eye' : 'eyeo'}
-                    size={wp('5%')}
-                    color="#DADADA"
-                  />
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            <TouchableOpacity
-              onPress={handleUpdate}
-              style={styles.updateButton}
+          {/* The gradient itself never animates in — only its contents do — so
+              the sticky bar above, already painted the hero's colour, is never
+              left as a peach strip over a white page. */}
+          <LinearGradient colors={HERO_GRADIENT} style={styles.hero}>
+            <Animated.View
+              style={styles.heroInner}
+              onLayout={onHeroLayout}
+              entering={entrance(0)}
             >
-              <Text style={styles.updateButtonText}>Update Password</Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
+              <Text style={styles.heroTitle} maxFontSizeMultiplier={1.2}>
+                Set a new password
+              </Text>
+
+              <Text style={styles.heroSubtitle} maxFontSizeMultiplier={1.2}>
+                Confirm the one you use now, then choose something you haven’t
+                used elsewhere.
+              </Text>
+            </Animated.View>
+          </LinearGradient>
+
+          <Animated.View style={styles.fieldGroup} entering={entrance(1)}>
+            <PasswordField
+              label="Current Password"
+              icon="lock-outline"
+              placeholder="Enter current password"
+              value={oldPassword}
+              onChangeText={text => {
+                setOldError('');
+                setOldPassword(text);
+              }}
+              error={oldError}
+              textContentType="password"
+              autoComplete="current-password"
+              returnKeyType="next"
+              onSubmitEditing={() => newRef.current?.focus()}
+            />
+
+            <PasswordField
+              ref={newRef}
+              label="New Password"
+              icon="lock-reset"
+              placeholder="Enter new password"
+              value={newPassword}
+              onChangeText={setNewPassword}
+              error={isReused ? 'Choose a password you aren’t using now' : ''}
+              textContentType="newPassword"
+              autoComplete="new-password"
+              returnKeyType="next"
+              onSubmitEditing={() => confirmRef.current?.focus()}
+              footer={
+                <StrengthPanel
+                  visible={newPassword.length > 0}
+                  score={score}
+                  checks={checks}
+                />
+              }
+            />
+
+            <PasswordField
+              ref={confirmRef}
+              label="Confirm New Password"
+              icon="lock-check-outline"
+              placeholder="Re-enter new password"
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              error={confirmError}
+              success={confirmMatches}
+              textContentType="newPassword"
+              autoComplete="new-password"
+              returnKeyType="done"
+              onSubmitEditing={canSubmit ? handleUpdate : undefined}
+            />
+
+            {/* flex-start on the row: the icon is a Text box, so stretching it
+                over two wrapped lines centres the glyph between them. */}
+            <View style={styles.noteRow}>
+              <MaterialCommunityIcons
+                name="shield-check-outline"
+                size={wp('4%')}
+                color={INK.muted}
+                style={styles.noteIcon}
+              />
+              <Text
+                style={styles.noteText}
+                maxFontSizeMultiplier={MAX_FONT_SCALE}
+              >
+                You’ll stay signed in on this device. Use the new password the
+                next time you sign in anywhere else.
+              </Text>
+            </View>
+          </Animated.View>
+        </Animated.ScrollView>
+
+        <ActionBar
+          enabled={canSubmit}
+          label="Update Password"
+          hint={hint}
+          onPress={handleUpdate}
+        />
       </KeyboardAvoidingView>
-      <LocationModal
-        visible={isLocationModalVisible}
-        onClose={() => setIsLocationModalVisible(false)}
-      />
+
       <StatusModal
         visible={statusModalVisible}
         onClose={handleModalClose}
@@ -222,91 +383,542 @@ const ChangePasswordScreen = () => {
         title={statusTitle}
         message={statusMessage}
       />
-    </SafeAreaView>
+    </View>
+  );
+};
+
+// ── Top bar ───────────────────────────────────────────────────────────────
+// A component rather than an inline Animated.View, and not by preference: this
+// is the ScrollView's sticky child, and RN's sticky wrapper clones that child to
+// inject a style of its own. Cloned onto an Animated.View, the injected style
+// drags Reanimated's style handle through RN's own Animated pipeline, which
+// deep-freezes it in dev and makes the next updater assignment throw. A
+// component absorbs the injected prop and ignores it.
+const TopBar = ({ title, onBack, backgroundStyle, borderStyle }) => {
+  const insets = useSafeAreaInsets();
+
+  return (
+    <Animated.View
+      style={[
+        styles.topBar,
+        backgroundStyle,
+        { paddingTop: insets.top + SPACE.sm },
+      ]}
+    >
+      <TouchableOpacity
+        hitSlop={hitSlopTo(wp('6%'))}
+        onPress={onBack}
+        accessibilityRole="button"
+        accessibilityLabel="Go back"
+      >
+        <Image source={icons.backArrowNew} style={styles.backIcon} />
+      </TouchableOpacity>
+
+      <View style={styles.topBarTitle}>
+        <Text
+          style={styles.headerTitle}
+          numberOfLines={1}
+          maxFontSizeMultiplier={MAX_FONT_SCALE}
+          accessibilityRole="header"
+        >
+          {title}
+        </Text>
+      </View>
+
+      <Animated.View style={[styles.topBarBorder, borderStyle]} />
+    </Animated.View>
+  );
+};
+
+// ── Field ─────────────────────────────────────────────────────────────────
+// Edit Profile's filled well: rest, focus and error are the same three states
+// the rest of the flow uses. The reveal toggle lives inside the well rather than
+// beside it — it acts on the field, so it belongs to it.
+const PasswordField = React.forwardRef(
+  (
+    { label, icon, error, success, footer, onChangeText, value, ...props },
+    ref,
+  ) => {
+    const [focused, setFocused] = useState(false);
+    const [revealed, setRevealed] = useState(false);
+    const focus = useSharedValue(0);
+
+    const wellStyle = useAnimatedStyle(() => ({
+      backgroundColor: interpolateColor(
+        focus.value,
+        [0, 1],
+        [FIELD_REST, SURFACE.base],
+      ),
+      borderColor: interpolateColor(
+        focus.value,
+        [0, 1],
+        [FIELD_REST, ACCENT.primary],
+      ),
+    }));
+
+    const leadingColor = error
+      ? ERROR_INK
+      : success
+      ? ACCENT.success
+      : focused
+      ? ACCENT.primary
+      : INK.muted;
+
+    return (
+      <View style={styles.field}>
+        <Text style={styles.fieldLabel} maxFontSizeMultiplier={MAX_FONT_SCALE}>
+          {label}
+        </Text>
+
+        <Animated.View
+          style={[
+            styles.fieldWell,
+            wellStyle,
+            !!error && styles.fieldWellError,
+            !error && success && styles.fieldWellSuccess,
+          ]}
+        >
+          <MaterialCommunityIcons
+            name={success && !error ? 'check-circle-outline' : icon}
+            size={wp('4.6%')}
+            color={leadingColor}
+            style={styles.fieldIcon}
+          />
+
+          <TextInput
+            ref={ref}
+            style={styles.fieldInput}
+            value={value}
+            onChangeText={onChangeText}
+            placeholderTextColor={INK.faint}
+            secureTextEntry={!revealed}
+            autoCapitalize="none"
+            autoCorrect={false}
+            maxFontSizeMultiplier={MAX_FONT_SCALE}
+            onFocus={() => {
+              setFocused(true);
+              focus.value = withTiming(1, FOCUS_FADE);
+            }}
+            onBlur={() => {
+              setFocused(false);
+              focus.value = withTiming(0, FOCUS_FADE);
+            }}
+            {...props}
+          />
+
+          <TouchableOpacity
+            onPress={() => setRevealed(prev => !prev)}
+            hitSlop={hitSlopTo(wp('5%'))}
+            accessibilityRole="button"
+            accessibilityLabel={revealed ? 'Hide password' : 'Show password'}
+          >
+            <MaterialCommunityIcons
+              name={revealed ? 'eye-off-outline' : 'eye-outline'}
+              size={wp('5%')}
+              color={focused ? INK.base : INK.faint}
+            />
+          </TouchableOpacity>
+        </Animated.View>
+
+        {!!error && (
+          <View style={styles.fieldErrorRow}>
+            <MaterialCommunityIcons
+              name="alert-circle-outline"
+              size={wp('3.4%')}
+              color={ERROR_INK}
+            />
+            <Text
+              style={styles.fieldErrorText}
+              maxFontSizeMultiplier={MAX_FONT_SCALE}
+            >
+              {error}
+            </Text>
+          </View>
+        )}
+
+        {footer}
+      </View>
+    );
+  },
+);
+
+PasswordField.displayName = 'PasswordField';
+
+// ── Strength ──────────────────────────────────────────────────────────────
+// Meter and checklist are one block because they answer one question in two
+// registers: the bars say how good it is, the list says what is still missing.
+// The block holds its height once shown so the fields below it don't step down
+// the page as rules go green.
+const StrengthPanel = ({ visible, score, checks }) => {
+  if (!visible) return null;
+
+  return (
+    <View style={styles.strengthPanel}>
+      <View style={styles.meterRow}>
+        {Array.from({ length: METER_SEGMENTS }).map((_, index) => (
+          <MeterSegment key={index} filled={index < score} score={score} />
+        ))}
+        <Text
+          style={[styles.strengthLabel, { color: strengthInk(score) }]}
+          maxFontSizeMultiplier={MAX_FONT_SCALE}
+        >
+          {STRENGTH_COPY[score]}
+        </Text>
+      </View>
+
+      <View style={styles.checkList}>
+        {checks.map(check => (
+          <View key={check.key} style={styles.checkRow}>
+            <MaterialCommunityIcons
+              name={check.passed ? 'check-circle' : 'circle-small'}
+              size={wp('3.8%')}
+              color={check.passed ? ACCENT.success : INK.faint}
+            />
+            <Text
+              style={[styles.checkText, check.passed && styles.checkTextPassed]}
+              maxFontSizeMultiplier={MAX_FONT_SCALE}
+            >
+              {check.label}
+            </Text>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+};
+
+// Each bar animates its own colour, so the meter fills and warms in one
+// gesture rather than repainting as a row.
+const MeterSegment = ({ filled, score }) => {
+  const target = filled ? strengthInk(score) : METER_TRACK;
+  const style = useAnimatedStyle(() => ({
+    backgroundColor: withTiming(target, METER_FADE),
+  }));
+
+  return <Animated.View style={[styles.meterSegment, style]} />;
+};
+
+const ActionBar = ({ enabled, label, hint, onPress }) => {
+  const insets = useSafeAreaInsets();
+  const scale = useSharedValue(1);
+  const buttonStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  return (
+    <View
+      style={[
+        styles.actionBar,
+        { paddingBottom: Math.max(insets.bottom, SPACE.md) },
+      ]}
+    >
+      <Pressable
+        onPress={onPress}
+        disabled={!enabled}
+        onPressIn={() => {
+          if (enabled) scale.value = withTiming(0.98, PRESS_IN);
+        }}
+        onPressOut={() => {
+          scale.value = withSpring(1, PRESS_OUT);
+        }}
+        accessibilityRole="button"
+        accessibilityState={{ disabled: !enabled }}
+        accessibilityLabel={label}
+        accessibilityHint={enabled ? undefined : hint}
+      >
+        <Animated.View
+          style={[
+            styles.actionButton,
+            !enabled && styles.actionButtonDisabled,
+            buttonStyle,
+          ]}
+        >
+          <MaterialCommunityIcons
+            name={enabled ? 'lock-check-outline' : 'lock-outline'}
+            size={wp('4.6%')}
+            color={enabled ? INK.onDark : RESTING_INK}
+            style={styles.actionButtonIcon}
+          />
+          <Text
+            style={[
+              styles.actionButtonText,
+              !enabled && styles.actionButtonTextDisabled,
+            ]}
+            maxFontSizeMultiplier={MAX_FONT_SCALE}
+          >
+            {enabled ? label : hint}
+          </Text>
+        </Animated.View>
+      </Pressable>
+    </View>
   );
 };
 
 export default ChangePasswordScreen;
 
+// The account flow's field palette, matching Edit Profile and Update Contact: a
+// field is a filled well that turns white and takes the brand's edge when it is
+// the one being typed into.
+const FIELD_REST = '#F7F5F3';
+const FIELD_BORDER_WIDTH = 1.5;
+const ERROR_INK = ACCENT.discount;
+const ERROR_SOFT = '#FDF1EC';
+const RESTING_INK = '#9A5B38';
+
+const METER_SEGMENTS = 4;
+const METER_TRACK = 'rgba(17,19,26,0.08)';
+// Weak borrows the error ink so "this will be rejected" and "this is fragile"
+// speak with the same voice; the middle step is amber rather than a lighter
+// orange, which on a peach flow would read as the brand colour approving it.
+const strengthInk = score =>
+  score <= 1 ? ERROR_INK : score === 2 ? '#B45309' : ACCENT.success;
+
 const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: CANVAS,
   },
-  backgroundImage: {
-    height: hp('35%'),
-    alignItems: 'center',
-    paddingTop: hp('2%'),
+  keyboardAvoidingView: {
+    flex: 1,
   },
-  headerRow: {
+  // The viewport is painted the hero's colour and the sheet white on top, so an
+  // iOS rubber-band pull reveals more hero rather than a white strip.
+  scrollView: {
+    backgroundColor: HERO_TOP,
+  },
+  // flexGrow, not just a background: without it the white sheet stops at the
+  // last element and the ScrollView's own peach fills the rest of the viewport
+  // as a large empty block above the action bar.
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: SPACE.xl,
+    backgroundColor: CANVAS,
+  },
+
+  // ── Header ──────────────────────────────────────────────────────────────
+  topBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    width: '100%',
-    paddingHorizontal: wp('5%'),
-    marginBottom: hp('4%'),
+    paddingHorizontal: GUTTER,
+    paddingBottom: SPACE.sm,
+    backgroundColor: HERO_TOP,
+  },
+  topBarBorder: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: HAIRLINE,
+  },
+  backIcon: {
+    resizeMode: 'contain',
+    tintColor: INK.strong,
+  },
+  topBarTitle: {
+    flex: 1,
+    marginLeft: wp('3%'),
+    justifyContent: 'center',
   },
   headerTitle: {
+    ...TYPE.heading,
+    color: INK.strong,
     fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('5%'),
-    color: '#FFFFFF',
+    letterSpacing: -0.3,
   },
-  kapraLogo: {
-    width: wp('40%'),
-    height: hp('8%'),
-    resizeMode: 'contain',
-    marginTop: hp('2%'),
+
+  // ── Hero ────────────────────────────────────────────────────────────────
+  hero: {
+    paddingBottom: SPACE.md,
   },
-  formContainer: {
-    flex: 1,
-    paddingHorizontal: wp('6%'),
-    paddingTop: hp('4%'),
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: wp('10%'),
-    borderTopRightRadius: wp('10%'),
-    marginTop: -hp('5%'),
+  heroInner: {
+    paddingHorizontal: GUTTER,
+    paddingTop: SPACE.sm,
+    paddingBottom: SPACE.base,
   },
-  inputContainer: {
-    marginBottom: hp('2%'),
+  heroTitle: {
+    ...TYPE.title,
+    fontSize: Math.round(TYPE.title.fontSize * 1.08),
+    lineHeight: Math.round(TYPE.title.lineHeight * 1.08),
+    color: INK.strong,
+    fontFamily: FONTS.gilroy.bold,
+    letterSpacing: -0.4,
   },
-  label: {
+  heroSubtitle: {
+    ...TYPE.label,
+    color: INK.muted,
     fontFamily: FONTS.gilroy.regular,
-    fontSize: wp('3.8%'),
-    color: '#616161',
-    marginBottom: hp('0.5%'),
+    marginTop: SPACE.xs + 2,
+    maxWidth: wp('82%'),
   },
-  inputWrapper: {
+
+  // ── Fields ──────────────────────────────────────────────────────────────
+  fieldGroup: {
+    paddingHorizontal: GUTTER,
+    paddingTop: SPACE.lg,
+  },
+  field: {
+    marginBottom: SPACE.base,
+  },
+  fieldLabel: {
+    ...TYPE.micro,
+    fontFamily: FONTS.gilroy.semiBold,
+    color: INK.muted,
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+    marginBottom: SPACE.xs + 2,
+  },
+  fieldWell: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: hp('6%'),
-    borderRadius: wp('2.5%'),
-    borderWidth: 1,
-    borderColor: '#E5E5E5',
-    paddingHorizontal: wp('4%'),
-    backgroundColor: '#fff',
+    minHeight: hp('6.6%'),
+    borderRadius: RADIUS.md,
+    borderWidth: FIELD_BORDER_WIDTH,
+    paddingHorizontal: SPACE.md,
   },
-  input: {
+  fieldWellError: {
+    backgroundColor: ERROR_SOFT,
+    borderColor: ERROR_INK,
+  },
+  // Only the edge goes green. Tinting the fill as well would make a matched
+  // confirmation the loudest thing on a page whose subject is the field above
+  // it.
+  fieldWellSuccess: {
+    borderColor: ACCENT.success,
+  },
+  fieldIcon: {
+    marginRight: SPACE.md,
+  },
+  fieldInput: {
     flex: 1,
-    color: '#000',
-    fontSize: wp('4%'),
-    fontFamily: FONTS.gilroy.regular,
+    letterSpacing: 1.2,
+    bottom: Platform.OS === 'ios' ? hp(0.5) : hp(0),
+    ...TYPE.body,
+    fontFamily: FONTS.gilroy.medium,
+    color: INK.strong,
+    paddingVertical: SPACE.md,
+    paddingRight: SPACE.md,
+    includeFontPadding: false,
   },
-  updateButton: {
-    backgroundColor: '#F25000',
-    height: hp('6.5%'),
-    justifyContent: 'center',
+  fieldErrorRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: wp('2.5%'),
-    marginTop: hp('4%'),
-    shadowColor: '#F25000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 6,
+    marginTop: SPACE.xs + 2,
   },
-  updateButtonText: {
+  fieldErrorText: {
+    ...TYPE.caption,
+    fontFamily: FONTS.gilroy.medium,
+    color: ERROR_INK,
+    marginLeft: SPACE.xs + 1,
+    flexShrink: 1,
+  },
+
+  // ── Strength ────────────────────────────────────────────────────────────
+  strengthPanel: {
+    marginTop: SPACE.md,
+  },
+  meterRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACE.xs + 2,
+  },
+  meterSegment: {
+    flex: 1,
+    height: 4,
+    borderRadius: 2,
+  },
+  // Fixed width so the bars keep their length as the word under them changes
+  // from "Weak" to "Strong".
+  strengthLabel: {
+    ...TYPE.micro,
+    fontFamily: FONTS.gilroy.semiBold,
+    width: wp('17%'),
+    textAlign: 'right',
+    marginLeft: SPACE.xs,
+  },
+  checkList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: SPACE.sm,
+    gap: SPACE.md,
+  },
+  checkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  checkText: {
+    ...TYPE.caption,
+    fontFamily: FONTS.gilroy.regular,
+    color: INK.muted,
+    marginLeft: SPACE.xs,
+  },
+  checkTextPassed: {
+    fontFamily: FONTS.gilroy.semiBold,
+    color: ACCENT.successText,
+  },
+
+  // ── Note ────────────────────────────────────────────────────────────────
+  noteRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginTop: SPACE.xs,
+    padding: SPACE.md,
+    borderRadius: RADIUS.sm,
+    backgroundColor: SURFACE.sunken,
+  },
+  // Cap height sits below the line box's top; one point down puts the glyph on
+  // the first line's optical centre.
+  noteIcon: {
+    marginTop: 1,
+  },
+  noteText: {
+    ...TYPE.caption,
+    fontFamily: FONTS.gilroy.regular,
+    color: INK.muted,
+    marginLeft: SPACE.sm,
+    flex: 1,
+  },
+
+  // ── Action bar ──────────────────────────────────────────────────────────
+  actionBar: {
+    paddingHorizontal: GUTTER,
+    paddingTop: SPACE.md,
+    backgroundColor: SURFACE.base,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: HAIRLINE,
+  },
+  actionButton: {
+    flexDirection: 'row',
+    minHeight: hp('6.4%'),
+    borderRadius: RADIUS.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: ACCENT.primary,
+    ...HERO_LIFT,
+    shadowColor: ACCENT.primary,
+    shadowOpacity: 0.28,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
+  },
+  // Not ready yet, so the button keeps its shape and drops its voice rather than
+  // greying out — grey reads as broken, the brand's soft tint reads as "not
+  // yet", and the label says what is missing.
+  actionButtonDisabled: {
+    backgroundColor: ACCENT.primarySoft,
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  actionButtonText: {
+    ...TYPE.body,
     fontFamily: FONTS.gilroy.bold,
-    fontSize: wp('4.5%'),
-    color: '#FFFFFF',
+    color: INK.onDark,
+    letterSpacing: 0.2,
+  },
+  actionButtonTextDisabled: {
+    color: RESTING_INK,
+  },
+  actionButtonIcon: {
+    marginRight: SPACE.sm,
   },
 });

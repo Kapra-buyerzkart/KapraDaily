@@ -22,7 +22,16 @@ import { FONTS } from '../../../styles/typography';
 import ProfileAvatarBadge from '../../../components/ProfileAvatarBadge';
 import RotatingPlaceholder from '../../../components/RotatingPlaceholder';
 import COLORS from '@/styles/colors';
-import { TYPE, MAX_FONT_SCALE, ACCENT } from '@/styles/homeTheme';
+import {
+  TYPE,
+  MAX_FONT_SCALE,
+  ACCENT,
+  INK,
+  HAIRLINE,
+  SPACE,
+  FIELD_RULE,
+  SEARCH_FIELD,
+} from '@/styles/homeTheme';
 import {
   BANNER_MIN_HEIGHT,
   BANNER_PARALLAX,
@@ -30,7 +39,10 @@ import {
   SEARCH_HEIGHT,
 } from '../hooks/useHomeAnimations';
 
-const INK = '#1A1A1A';
+// Was a local '#1A1A1A'. The theme's INK.strong (#12131A) is the same intent a
+// shade deeper, and every other surface on this screen already reads from it —
+// the local copy was the last thing on the header defining its own ink.
+const CHIP_INK = INK.strong;
 const BANNER_BLEED = BANNER_PARALLAX;
 const SEARCH_INSET = wp('4.7%');
 const SEARCH_EXAMPLES = ['Basmati Rice', 'Milk', 'Sunflower Oil', 'Lemons'];
@@ -202,11 +214,11 @@ const StickyHeader = ({
               <Feather
                 name={'map-pin'}
                 size={wp('4.4%')}
-                color={INK}
+                color={CHIP_INK}
                 style={{ marginRight: wp('1.5%') }}
               />
               <Text style={styles.selectLocationText}>Select Location</Text>
-              <Entypo name={'chevron-down'} size={wp('4.4%')} color={INK} />
+              <Entypo name={'chevron-down'} size={wp('4.4%')} color={CHIP_INK} />
             </TouchableOpacity>
           )}
         </Animated.View>
@@ -280,7 +292,7 @@ const StickyHeader = ({
         }
         accessibilityState={{ disabled: !!isStoreUnavailable }}
       >
-        <Feather name="search" color={'black'} size={wp('6%')} />
+        <Feather name="search" color={ACCENT.primary} size={20} />
         <View style={styles.searchProductContainer}>
           <RotatingPlaceholder
             examples={SEARCH_EXAMPLES}
@@ -289,10 +301,15 @@ const StickyHeader = ({
             style={styles.searchProductText}
           />
         </View>
+        {/* The rule is what separates the field from its trailing action rather
+            than letting the two glyphs read as a pair of buttons — the same
+            detail the Search screen's field carries, and the reason the
+            clipboard no longer needs to be black to look tappable. */}
+        <View style={styles.fieldRule} />
         <Feather
           name="clipboard"
-          color={'black'}
-          size={wp('5%')}
+          color={INK.muted}
+          size={18}
           style={styles.clipboardIcon}
         />
       </TouchableOpacity>
@@ -469,7 +486,7 @@ const styles = StyleSheet.create({
   },
   selectLocationText: {
     ...TYPE.label,
-    color: INK,
+    color: CHIP_INK,
     fontFamily: FONTS.gilroy.semiBold,
     marginRight: wp('1%'),
   },
@@ -511,7 +528,7 @@ const styles = StyleSheet.create({
   tokenText: {
     ...TYPE.label,
     fontFamily: FONTS.gilroy.bold,
-    color: INK,
+    color: CHIP_INK,
   },
   fallbackBorder: {
     height: 1,
@@ -522,24 +539,32 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     marginTop: SEARCH_MARGIN_START,
     height: SEARCH_HEIGHT,
+    // Constant, and shared with the Search screen's field — see SEARCH_FIELD.
+    // It used to be animated from the collapse progress, which is why it was
+    // absent here.
+    borderRadius: SEARCH_FIELD.radius,
     marginHorizontal: SEARCH_INSET,
-    paddingHorizontal: wp('4%'),
+    paddingHorizontal: SPACE.base,
     flexDirection: 'row',
     alignItems: 'center',
     overflow: 'hidden',
-    // Lifts the bar off whatever is behind it — the banner artwork at rest, the
-    // white header once scrolled — so it reads as a control rather than a
-    // painted rectangle. The press-scale animation in HomeScreen rides on top.
+    // The shadow alone was doing two jobs and only managing one. It lifts the
+    // bar off the banner, but on light artwork — and against the white header
+    // once collapsed — the white-on-white edge dissolved and the bar lost its
+    // shape. The hairline is what actually draws the edge; the shadow is now
+    // just the lift, and shallower for it.
     //
     // Spelled out locally rather than spread from ELEVATION.sm: that token is
     // commented out in homeTheme (the flat-page redesign), so the spread was
     // resolving to nothing and this bar has had no shadow at all. Restoring the
     // token would also restyle TokenProductCard's three call sites on another
     // screen, which isn't this change's business.
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: HAIRLINE,
     shadowColor: '#0B1020',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
     elevation: 2,
   },
   searchTouchable: {
@@ -553,7 +578,7 @@ const styles = StyleSheet.create({
   searchProductContainer: {
     height: hp('3.65%'),
     justifyContent: 'center',
-    marginLeft: wp('2%'),
+    marginLeft: SPACE.md,
     flex: 1,
     top: Platform.OS == 'ios' ? 0 : 2,
     overflow: 'hidden',
@@ -566,8 +591,14 @@ const styles = StyleSheet.create({
     // Regular weight is what actually makes it legible outdoors.
     color: '#3A3A3A',
   },
+  fieldRule: {
+    width: 1,
+    height: 20,
+    backgroundColor: FIELD_RULE,
+    marginLeft: SPACE.md,
+  },
   clipboardIcon: {
-    marginLeft: wp('4%'),
+    marginLeft: SPACE.md,
   },
 });
 

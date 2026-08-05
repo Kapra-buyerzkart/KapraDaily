@@ -20,9 +20,21 @@ import { useWishlist } from '../context/WishlistContext';
 import ConfirmationModal from './ConfirmationModal';
 import AnimatedPressable from './AnimatedPressable';
 import { CART_COLORS, CART_RADIUS, CART_SPACING } from '../styles/cartTheme';
-import COLORS from '@/styles/colors';
+import {
+  INK,
+  SURFACE,
+  RADIUS,
+  SPACE,
+  TYPE,
+  HAIRLINE,
+  MAX_FONT_SCALE,
+} from '@/styles/homeTheme';
 
 const BUMP_SPRING = { damping: 8, stiffness: 260, mass: 0.4 };
+
+// Matches TokenProductCard: the art stays legible under the scrim rather than
+// being hidden, so the row still reads as the product the user added.
+const SOLD_OUT_IMAGE_OPACITY = 0.45;
 
 const CartProductCard = props => {
   const { updateCartItemQuantity, removeFromCart, updatingItems } = useCart();
@@ -79,8 +91,11 @@ const CartProductCard = props => {
     imageOpacity.value = 0;
   }, [featuredImage, imageOpacity]);
 
+  // The dim is folded into the animated opacity rather than added as a static
+  // style: an animated `opacity` always wins over a StyleSheet one, so a
+  // separate dim style would simply be overwritten by the fade-in.
   const imageAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: imageOpacity.value,
+    opacity: imageOpacity.value * (isSoldOut ? SOLD_OUT_IMAGE_OPACITY : 1),
   }));
 
   const qtyAnimatedStyle = useAnimatedStyle(() => ({
@@ -147,6 +162,21 @@ const CartProductCard = props => {
           }}
         />
 
+        {isSoldOut && (
+          <View style={styles.outOfStockOverlay}>
+            <View style={styles.outOfStockPill}>
+              <Text
+                style={styles.outOfStockText}
+                maxFontSizeMultiplier={MAX_FONT_SCALE}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+              >
+                Out of stock
+              </Text>
+            </View>
+          </View>
+        )}
+
         <AnimatedPressable
           style={styles.removeBtn}
           onPress={handleDelete}
@@ -164,13 +194,18 @@ const CartProductCard = props => {
         <View style={styles.infoRow}>
           {isSoldOut ? (
             <View style={styles.soldOutInfoColumn}>
-              <View style={styles.soldOutBadge}>
-                <Text style={styles.soldOutBadgeText}>Sold Out</Text>
-              </View>
+              <Text
+                style={[styles.productNameText, styles.productNameSoldOut]}
+                numberOfLines={2}
+                ellipsizeMode="tail"
+              >
+                {productName}
+              </Text>
               <Text
                 style={styles.removeToPlaceOrderText}
                 numberOfLines={1}
                 ellipsizeMode="tail"
+                maxFontSizeMultiplier={MAX_FONT_SCALE}
               >
                 Remove to place order
               </Text>
@@ -218,6 +253,7 @@ const CartProductCard = props => {
             <View
               style={[
                 styles.countContainer,
+                isSoldOut && styles.countContainerSoldOut,
                 isUpdating && styles.countContainerUpdating,
               ]}
             >
@@ -228,10 +264,16 @@ const CartProductCard = props => {
                 <Entypo
                   name="minus"
                   size={wp('3.6%')}
-                  color={CART_COLORS.primary}
+                  color={isSoldOut ? INK.faint : CART_COLORS.primary}
                 />
               </AnimatedPressable>
-              <Animated.Text style={[styles.countText, qtyAnimatedStyle]}>
+              <Animated.Text
+                style={[
+                  styles.countText,
+                  isSoldOut && styles.countTextSoldOut,
+                  qtyAnimatedStyle,
+                ]}
+              >
                 {quantity}
               </Animated.Text>
               <AnimatedPressable
@@ -242,7 +284,7 @@ const CartProductCard = props => {
                 <Entypo
                   name="plus"
                   size={wp('3.6%')}
-                  color={CART_COLORS.primary}
+                  color={isSoldOut ? INK.faint : CART_COLORS.primary}
                 />
               </AnimatedPressable>
             </View>
@@ -277,25 +319,11 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     marginRight: CART_SPACING.sm,
   },
-  soldOutBadge: {
-    backgroundColor: COLORS.error,
-    borderBottomRightRadius: 10,
-    borderBottomLeftRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    marginBottom: hp('0.6%'),
-  },
-  soldOutBadgeText: {
-    fontFamily: FONTS.gilroy.bold,
-    color: '#FFFFFF',
-    fontSize: wp('3%'),
-    textAlign: 'center',
-    textTransform: 'uppercase',
-  },
   removeToPlaceOrderText: {
+    ...TYPE.micro,
     fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('4%'),
-    color: CART_COLORS.textGray,
+    color: INK.muted,
+    marginTop: hp('0.4%'),
   },
   productImageView: {
     width: wp('21.4%'),
@@ -308,6 +336,31 @@ const styles = StyleSheet.create({
   },
   productImageViewSoldOut: {
     backgroundColor: CART_COLORS.background,
+  },
+  // The scrim carries the well's own radius instead of relying on
+  // `overflow: 'hidden'` — the remove button is docked outside the well's
+  // bounds and clipping the parent would swallow it.
+  outOfStockOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: CART_RADIUS.productCard,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.66)',
+  },
+  // Same pill as the token card, with tighter side padding and a width cap:
+  // the cart's image well is ~40% narrower, so the token card's SPACE.sm
+  // padding would push "Out of stock" past the scrim's edge.
+  outOfStockPill: {
+    backgroundColor: INK.base,
+    maxWidth: '94%',
+    paddingHorizontal: SPACE.xs + 2,
+    paddingVertical: 3,
+    borderRadius: RADIUS.pill,
+  },
+  outOfStockText: {
+    ...TYPE.micro,
+    color: INK.onDark,
+    fontFamily: FONTS.gilroy.bold,
   },
   productImageStyle: {
     width: '78%',
@@ -348,6 +401,11 @@ const styles = StyleSheet.create({
     fontSize: wp('3.7%'),
     color: CART_COLORS.textPrimary,
     marginRight: CART_SPACING.sm,
+  },
+  productNameSoldOut: {
+    flex: 0,
+    color: INK.muted,
+    marginRight: 0,
   },
   countColumn: {
     alignSelf: 'flex-end',
@@ -391,6 +449,12 @@ const styles = StyleSheet.create({
   countContainerUpdating: {
     opacity: 0.55,
   },
+  countContainerSoldOut: {
+    backgroundColor: SURFACE.sunken,
+    borderColor: HAIRLINE,
+    shadowOpacity: 0,
+    elevation: 0,
+  },
   stepperBtn: {
     width: wp('6.5%'),
     height: wp('6.5%'),
@@ -403,6 +467,9 @@ const styles = StyleSheet.create({
     fontSize: wp('3.4%'),
     minWidth: wp('5%'),
     textAlign: 'center',
+  },
+  countTextSoldOut: {
+    color: INK.faint,
   },
   btokenContainerSmall: {
     flexDirection: 'row',

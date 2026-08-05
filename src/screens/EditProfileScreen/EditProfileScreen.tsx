@@ -1,21 +1,46 @@
 import React from 'react';
-import {
-  Platform,
-  ScrollView,
-  TouchableOpacity,
-  Text,
-  View,
-  StatusBar,
-} from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Platform, StatusBar, TextInput, Text, View } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import LinearGradient from 'react-native-linear-gradient';
+import Animated, {
+  Extrapolation,
+  interpolate,
+  interpolateColor,
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  useSharedValue,
+} from 'react-native-reanimated';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import StatusModal from '../../components/StatusModal';
+import SectionHeader from '../home/components/SectionHeader';
 import { useEditProfileScreen } from './useEditProfileScreen';
 import { styles } from './styles';
 import EditProfileHeader from './components/EditProfileHeader';
+import EditProfileHero from './components/EditProfileHero';
 import ProfileTextField from './components/ProfileTextField';
+import DateOfBirthField from './components/DateOfBirthField';
 import GenderSelector from './components/GenderSelector';
+import SaveBar from './components/SaveBar';
+import {
+  CANVAS,
+  HERO_GRADIENT,
+  HERO_TOP,
+  INK,
+  MAX_FONT_SCALE,
+} from '@/styles/homeTheme';
+import { BAR_SOLID_AT, BORDER_FADE_RANGE, entrance } from '@/styles/motion';
 
+// Built as the page Profile pushes to rather than as a form that happens to be
+// reachable from it: the same peach hero with the same avatar at the top, the
+// same sticky bar resolving from peach to white, the same left gutter down the
+// whole page, and then a white sheet carrying two named groups of fields.
+//
+// The two groups exist because the six inputs split cleanly into what the user
+// owns and what the account owns. Putting the locked email and phone in their
+// own section with one shared note is what let them stop apologising twice in
+// their own labels — the old screen carried "(Update from Security)" inside
+// both, which is a parenthesis doing a section header's job.
 const EditProfileScreen = () => {
   const {
     navigation,
@@ -30,6 +55,7 @@ const EditProfileScreen = () => {
     email,
     phone,
     hasChanges,
+    errors,
     statusModalVisible,
     statusType,
     statusTitle,
@@ -38,71 +64,178 @@ const EditProfileScreen = () => {
     handleSave,
   } = useEditProfileScreen();
 
-  const insets = useSafeAreaInsets();
+  // The bar's animations read the scroll value on the UI thread, so scrolling
+  // this screen never re-renders it. `heroAnchor` is the offset at which the
+  // hero's bottom edge reaches the bar — measured rather than assumed, because
+  // it moves with the font scale and with whether the crown badge is drawn.
+  const scrollY = useSharedValue(0);
+  const heroAnchor = useSharedValue(0);
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: event => {
+      scrollY.value = event.contentOffset.y;
+    },
+  });
+  const onHeroMeasure = React.useCallback(
+    (bottom: number) => {
+      heroAnchor.value = bottom;
+    },
+    [heroAnchor],
+  );
+
+  // Return moves down the form rather than dismissing the keyboard — on a form
+  // this short the whole thing can be filled without reaching for a field.
+  const dobRef = React.useRef<TextInput>(null);
+  const skIdRef = React.useRef<TextInput>(null);
+
+  const topBarBorderStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(
+      scrollY.value,
+      BORDER_FADE_RANGE,
+      [0, 1],
+      Extrapolation.CLAMP,
+    ),
+  }));
+
+  // Peach at rest, white once the hero is gone, so the two never meet at a
+  // visible edge. Before measurement it stays on HERO_TOP — that is what the
+  // page looks like at rest, which is where an unmeasured screen always is.
+  const topBarBackgroundStyle = useAnimatedStyle(() => {
+    const anchor = heroAnchor.value;
+    if (anchor <= 0) return { backgroundColor: HERO_TOP };
+    return {
+      backgroundColor: interpolateColor(
+        scrollY.value,
+        [0, anchor * BAR_SOLID_AT],
+        [HERO_TOP, CANVAS],
+      ),
+    };
+  });
 
   return (
-    <View style={[styles.mainContainer]}>
-      <StatusBar barStyle={'light-content'} backgroundColor={'transparent'} />
+    <View style={styles.mainContainer}>
+      {/* The page is peach to the top edge, so the status bar's icons have to
+          be dark here. Unmounting pops the entry and Profile gets its own
+          setting back on the way out. */}
+      <StatusBar
+        translucent
+        backgroundColor="transparent"
+        barStyle="dark-content"
+      />
+
       <KeyboardAvoidingView
         style={styles.keyboardAvoidingView}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <EditProfileHeader onBack={() => navigation.goBack()} />
-
-        <ScrollView
+        <Animated.ScrollView
+          showsVerticalScrollIndicator={false}
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
+          onScroll={scrollHandler}
+          scrollEventThrottle={16}
+          stickyHeaderIndices={[0]}
           keyboardShouldPersistTaps="handled"
         >
-          <View style={styles.formContainer}>
-            <ProfileTextField
-              label="Full Name"
-              placeholder="Enter your name"
-              value={fullName}
-              onChangeText={setFullName}
+          <EditProfileHeader
+            onBack={() => navigation.goBack()}
+            backgroundStyle={topBarBackgroundStyle}
+            borderStyle={topBarBorderStyle}
+          />
+
+          {/* The gradient is never animated in — its children are. Fading the
+              whole hero would leave the sticky bar, already painted the hero's
+              colour, as a peach strip over a white page for the length of the
+              entrance. */}
+          <LinearGradient colors={HERO_GRADIENT} style={styles.hero}>
+            <EditProfileHero
+              name={fullName}
+              phone={phone}
+              onMeasure={onHeroMeasure}
+              entering={entrance(0)}
             />
+          </LinearGradient>
 
-            <ProfileTextField
-              label="Date of Birth (YYYY-MM-DD)"
-              placeholder="YYYY-MM-DD"
-              value={dob}
-              onChangeText={setDob}
-            />
+          <Animated.View entering={entrance(1)}>
+            <SectionHeader title="Personal details" />
+            <View style={styles.fieldGroup}>
+              <ProfileTextField
+                label="Full Name"
+                icon="account-outline"
+                placeholder="Enter your name"
+                value={fullName}
+                onChangeText={setFullName}
+                error={errors.fullName}
+                autoCapitalize="words"
+                returnKeyType="next"
+                onSubmitEditing={() => dobRef.current?.focus()}
+              />
 
-            <ProfileTextField
-              label="SK Id"
-              placeholder="Enter SK Id"
-              value={skId}
-              onChangeText={setSkId}
-            />
+              <DateOfBirthField
+                ref={dobRef}
+                value={dob}
+                onChange={setDob}
+                error={errors.dob}
+              />
 
-            <GenderSelector value={gender} onChange={setGender} />
+              <GenderSelector value={gender} onChange={setGender} />
 
-            <ProfileTextField
-              label="Email ID (Update from Security)"
-              value={email}
-              editable={false}
-            />
+              <ProfileTextField
+                ref={skIdRef}
+                label="SK Id"
+                icon="card-account-details-outline"
+                optional
+                placeholder="Enter SK Id"
+                value={skId}
+                onChangeText={setSkId}
+                autoCapitalize="characters"
+                returnKeyType="done"
+              />
+            </View>
+          </Animated.View>
 
-            <ProfileTextField
-              label="Phone Number (Update from Security)"
-              value={phone}
-              editable={false}
-            />
+          <Animated.View entering={entrance(2)}>
+            <SectionHeader title="Contact details" />
+            <View style={styles.fieldGroup}>
+              {/* A locked field with nothing in it still has to say what it
+                  is, or it reads as a value that failed to load. */}
+              <ProfileTextField
+                label="Email ID"
+                icon="email-outline"
+                placeholder="Not added yet"
+                value={email}
+                editable={false}
+                verified={!!email}
+              />
 
-            <TouchableOpacity
-              onPress={handleSave}
-              style={[
-                styles.saveButton,
-                !hasChanges && styles.saveButtonDisabled,
-              ]}
-              disabled={!hasChanges}
-            >
-              <Text style={styles.saveButtonText}>Save Changes</Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
+              <ProfileTextField
+                label="Phone Number"
+                icon="phone-outline"
+                placeholder="Not added yet"
+                value={phone}
+                editable={false}
+                verified={!!phone}
+              />
+            </View>
+
+            <View style={styles.noteRow}>
+              <MaterialCommunityIcons
+                name="shield-check-outline"
+                size={wp('4%')}
+                color={INK.muted}
+              />
+              <Text
+                style={styles.noteText}
+                maxFontSizeMultiplier={MAX_FONT_SCALE}
+              >
+                Your email and phone are verified. Change them from Security
+                settings so we can confirm it's you.
+              </Text>
+            </View>
+          </Animated.View>
+        </Animated.ScrollView>
+
+        <SaveBar enabled={hasChanges} onPress={handleSave} />
       </KeyboardAvoidingView>
+
       <StatusModal
         visible={statusModalVisible}
         onClose={handleModalClose}

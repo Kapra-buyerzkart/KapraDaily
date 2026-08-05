@@ -6,7 +6,22 @@ import { updateProfilePatchApi } from '../../api/userService';
 
 export type StatusType = 'success' | 'error';
 
+// Field-level problems are reported on the field itself; the modal is kept for
+// what only the server can tell us. A dialog that says "Full Name is required"
+// makes the user dismiss it before they can see which box it meant.
+export type FieldErrors = {
+  fullName?: string;
+  dob?: string;
+};
+
 const DOB_REGEX = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
+
+// The profile endpoint may hand back a birthday as a date or as a full
+// timestamp; the screen only ever deals in the date. Normalising on the way in
+// means the field, the dirty check and the validation all compare the same
+// shape — otherwise a stored `1995-04-12T00:00:00` reads as dirty on arrival
+// and then fails a save the user never made.
+const toDateOnly = (value?: string | null) => (value || '').slice(0, 10);
 
 export const useEditProfileScreen = () => {
   const navigation = useNavigation();
@@ -14,11 +29,12 @@ export const useEditProfileScreen = () => {
   const { showLoader } = useContext(LoaderContext);
 
   const [fullName, setFullName] = useState(profile?.custName || '');
-  const [dob, setDob] = useState(profile?.dob || '');
+  const [dob, setDob] = useState(toDateOnly(profile?.dob));
   const [gender, setGender] = useState(profile?.gender || '');
   const [skId, setSkId] = useState(profile?.skId || '');
 
   const [hasChanges, setHasChanges] = useState(false);
+  const [errors, setErrors] = useState<FieldErrors>({});
   const [statusModalVisible, setStatusModalVisible] = useState(false);
   const [statusType, setStatusType] = useState<StatusType>('success');
   const [statusTitle, setStatusTitle] = useState('');
@@ -26,13 +42,20 @@ export const useEditProfileScreen = () => {
 
   useEffect(() => {
     const isNameChanged = fullName.trim() !== (profile?.custName || '');
-    const isDobChanged = dob.trim() !== (profile?.dob || '');
+    const isDobChanged = dob.trim() !== toDateOnly(profile?.dob);
     const isGenderChanged = gender !== (profile?.gender || '');
     const isSkIdChanged = skId.trim() !== (profile?.skId || '');
     setHasChanges(
       isNameChanged || isDobChanged || isGenderChanged || isSkIdChanged,
     );
   }, [fullName, dob, gender, skId, profile]);
+
+  // Editing a flagged field is the user answering the complaint, so the
+  // complaint goes away then — not on the next save attempt. The guard keeps
+  // this from allocating a new object on every keystroke of a clean form.
+  useEffect(() => {
+    setErrors(prev => (prev.fullName || prev.dob ? {} : prev));
+  }, [fullName, dob]);
 
   const handleModalClose = () => {
     setStatusModalVisible(false);
@@ -51,14 +74,20 @@ export const useEditProfileScreen = () => {
   const phone = profile?.phoneNo || '';
 
   const handleSave = async () => {
+    const dobValue = dob.trim();
+    const nextErrors: FieldErrors = {};
+
     if (!fullName.trim()) {
-      showStatus('error', 'Error', 'Full Name is required');
-      return;
+      nextErrors.fullName = 'Please enter your name';
+    }
+    // The field hands up bare digits while a date is half-typed, so anything
+    // that isn't a complete, real calendar date lands here.
+    if (dobValue && !DOB_REGEX.test(dobValue)) {
+      nextErrors.dob = 'Enter a full date as DD / MM / YYYY';
     }
 
-    const dobValue = dob.trim();
-    if (dobValue && !DOB_REGEX.test(dobValue)) {
-      showStatus('error', 'Error', 'Date of Birth must be in YYYY-MM-DD format');
+    if (nextErrors.fullName || nextErrors.dob) {
+      setErrors(nextErrors);
       return;
     }
 
@@ -102,6 +131,7 @@ export const useEditProfileScreen = () => {
     email,
     phone,
     hasChanges,
+    errors,
     statusModalVisible,
     statusType,
     statusTitle,

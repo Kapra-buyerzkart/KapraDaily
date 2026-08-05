@@ -15,6 +15,23 @@ import {
 } from '@/styles/homeTheme';
 
 const ACTION_HIT_SLOP = hitSlopTo(28);
+
+/**
+ * Every prop but the text is optional — a header can be a bare title. Spelled
+ * out here rather than left to inference so the TypeScript screens that use it
+ * don't have to pass eight undefineds to satisfy a destructure.
+ *
+ * @param {object} props
+ * @param {string} [props.eyebrow]
+ * @param {string} [props.title]
+ * @param {string} [props.titleAccent]
+ * @param {string} [props.subtitle]
+ * @param {string} [props.actionLabel]
+ * @param {() => void} [props.onAction]
+ * @param {import('react-native').StyleProp<import('react-native').ViewStyle>} [props.style]
+ * @param {import('react-native').StyleProp<import('react-native').TextStyle>} [props.titleStyle]
+ * @param {boolean} [props.onDark]
+ */
 const SectionHeader = ({
   eyebrow,
   title,

@@ -1,8 +1,10 @@
 import { View, StatusBar } from 'react-native';
 import React from 'react';
+import LinearGradient from 'react-native-linear-gradient';
 import Animated, {
   Extrapolation,
   interpolate,
+  interpolateColor,
   useAnimatedScrollHandler,
   useAnimatedStyle,
   useSharedValue,
@@ -13,24 +15,30 @@ import ConfirmationModal from '../../components/ConfirmationModal';
 import StatusModal from '../../components/StatusModal';
 import HelpSupportModal from '../../components/HelpSupportModal';
 import { useProfileScreen } from './useProfileScreen';
-import { styles } from './styles';
-import { buildMyAccountItems, buildInformationItems } from './menuItems';
+import { styles, HERO_TOP, HERO_GRADIENT } from './styles';
+import {
+  buildOffersItems,
+  buildMyAccountItems,
+  buildInformationItems,
+} from './menuItems';
 import ProfileTopBar from './components/ProfileTopBar';
 import ProfileIdentity from './components/ProfileIdentity';
+import UDWalletStrip from './components/UDWalletStrip';
 import ProfileQuickActions from './components/ProfileQuickActions';
-import OffersSection from './components/OffersSection';
 import ListSection from './components/ListSection';
 import SuggestProductsModal from './components/SuggestProductsModal';
 import LogoutButton from './components/LogoutButton';
 import ProfileFooter from './components/ProfileFooter';
 import LanguageSwitcherModal from '../../components/LanguageSwitcherModal';
 import {
+  BAR_SOLID_AT,
   BORDER_FADE_RANGE,
   NAME_FADE_IN,
   NAME_TRAVEL,
   TITLE_FADE_OUT,
   entrance,
 } from './motion';
+import { CANVAS } from '@/styles/homeTheme';
 
 export default function ProfileScreen() {
   const {
@@ -56,6 +64,7 @@ export default function ProfileScreen() {
     setIsDeleteAccountModalVisible,
     isLanguageModalVisible,
     setIsLanguageModalVisible,
+    walletData,
     statusConfig,
     setStatusConfig,
     handleRequestProduct,
@@ -65,22 +74,23 @@ export default function ProfileScreen() {
     handleApplyCoupon,
   } = useProfileScreen();
 
-  // All three bar animations read the same scroll value and run on the UI
-  // thread, so scrolling this screen never re-renders it. The identity block's
-  // height is measured rather than assumed — it changes with the font scale and
-  // with whether the crown badge is drawn.
+  // Every bar animation reads the same scroll value and runs on the UI thread,
+  // so scrolling this screen never re-renders it. `swapAnchor` is the scroll
+  // offset at which the identity row's bottom edge meets the bar — measured
+  // rather than assumed, because it moves with the font scale and with whether
+  // the crown badge and the privilege chip are drawn.
   const scrollY = useSharedValue(0);
-  const identityHeight = useSharedValue(0);
+  const swapAnchor = useSharedValue(0);
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: event => {
       scrollY.value = event.contentOffset.y;
     },
   });
-  const onIdentityLayout = React.useCallback(
-    event => {
-      identityHeight.value = event.nativeEvent.layout.height;
+  const onIdentityMeasure = React.useCallback(
+    bottom => {
+      swapAnchor.value = bottom;
     },
-    [identityHeight],
+    [swapAnchor],
   );
 
   // The rule fades in over the first few points of scroll rather than snapping
@@ -95,16 +105,16 @@ export default function ProfileScreen() {
     ),
   }));
 
-  // Until the identity block has been measured the bar is just "Profile" — a
-  // zero height would otherwise make every range collapse to a single point and
-  // swap the titles on the first pixel of scroll.
+  // Until the identity row has been measured the bar is just "Profile" — a zero
+  // anchor would otherwise make every range collapse to a single point and swap
+  // the titles on the first pixel of scroll.
   const barTitleStyle = useAnimatedStyle(() => {
-    const h = identityHeight.value;
-    if (h <= 0) return { opacity: 1 };
+    const a = swapAnchor.value;
+    if (a <= 0) return { opacity: 1 };
     return {
       opacity: interpolate(
         scrollY.value,
-        TITLE_FADE_OUT.map(f => f * h),
+        TITLE_FADE_OUT.map(f => f * a),
         [1, 0],
         Extrapolation.CLAMP,
       ),
@@ -112,11 +122,11 @@ export default function ProfileScreen() {
   });
 
   const barNameStyle = useAnimatedStyle(() => {
-    const h = identityHeight.value;
-    if (h <= 0) return { opacity: 0 };
+    const a = swapAnchor.value;
+    if (a <= 0) return { opacity: 0 };
     const progress = interpolate(
       scrollY.value,
-      NAME_FADE_IN.map(f => f * h),
+      NAME_FADE_IN.map(f => f * a),
       [0, 1],
       Extrapolation.CLAMP,
     );
@@ -126,6 +136,27 @@ export default function ProfileScreen() {
     };
   });
 
+  // The bar is the hero's colour at rest and white once the hero is gone, so
+  // the two never meet at a visible edge. Before measurement it stays on
+  // HERO_TOP — that is what the page looks like at rest, which is where an
+  // unmeasured screen always is.
+  const topBarBackgroundStyle = useAnimatedStyle(() => {
+    const a = swapAnchor.value;
+    if (a <= 0) return { backgroundColor: HERO_TOP };
+    return {
+      backgroundColor: interpolateColor(
+        scrollY.value,
+        [0, a * BAR_SOLID_AT],
+        [HERO_TOP, CANVAS],
+      ),
+    };
+  });
+
+  const offersItems = buildOffersItems({
+    onBCoin: () => navigation.navigate('BCoinScreen'),
+    onSmartPoint: () => openOffersModal('Gift Cards'),
+    onCoupons: () => openOffersModal('Coupons'),
+  });
   const myAccountItems = buildMyAccountItems({
     navigation,
     onLanguage: () => setIsLanguageModalVisible(true),
@@ -151,6 +182,7 @@ export default function ProfileScreen() {
       />
       <Animated.ScrollView
         showsVerticalScrollIndicator={false}
+        style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         onScroll={scrollHandler}
         scrollEventThrottle={16}
@@ -159,20 +191,34 @@ export default function ProfileScreen() {
         <ProfileTopBar
           name={profile?.custName}
           onBack={() => navigation.goBack()}
+          backgroundStyle={topBarBackgroundStyle}
           borderStyle={topBarBorderStyle}
           titleStyle={barTitleStyle}
           nameStyle={barNameStyle}
         />
 
-        <Animated.View entering={entrance(0)} onLayout={onIdentityLayout}>
+        {/* The gradient itself is never animated in — its children are. Fading
+            the whole hero would leave the sticky bar, which is already painted
+            the hero's colour, as a peach strip over a white page for the
+            length of the entrance. */}
+        <LinearGradient colors={HERO_GRADIENT} style={styles.hero}>
           <ProfileIdentity
             profile={profile}
             onEditProfile={() => navigation.navigate('EditProfileScreen')}
             isPrivileged={profile?.isPrivileged}
+            onMeasure={onIdentityMeasure}
+            entering={entrance(0)}
           />
-        </Animated.View>
 
-        <Animated.View entering={entrance(1)}>
+          <Animated.View entering={entrance(1)}>
+            <UDWalletStrip
+              walletData={walletData}
+              onPress={() => navigation.navigate('BCoinScreen')}
+            />
+          </Animated.View>
+        </LinearGradient>
+
+        <Animated.View entering={entrance(2)}>
           <ProfileQuickActions
             onMyOrders={() => navigation.navigate('MyOrdersScreen')}
             onSavedAddress={() => navigation.navigate('SavedAddressScreen')}
@@ -183,27 +229,15 @@ export default function ProfileScreen() {
           />
         </Animated.View>
 
-        <Animated.View entering={entrance(2)} style={styles.sectionsContainer}>
-          <OffersSection
-            onBCoin={() => navigation.navigate('BCoinScreen')}
-            onSmartPoint={() => openOffersModal('Gift Cards')}
-            onCoupons={() => openOffersModal('Coupons')}
-          />
+        <Animated.View entering={entrance(3)} style={styles.sectionsContainer}>
+          <ListSection title="Offers" items={offersItems} />
           <View style={styles.sectionGap} />
-          <ListSection
-            eyebrow="Settings"
-            title="My Account"
-            items={myAccountItems}
-          />
+          <ListSection title="My Account" items={myAccountItems} />
           <View style={styles.sectionGap} />
-          <ListSection
-            eyebrow="Help"
-            title="Information"
-            items={informationItems}
-          />
+          <ListSection title="Information" items={informationItems} />
         </Animated.View>
 
-        <Animated.View entering={entrance(3)}>
+        <Animated.View entering={entrance(4)}>
           <LogoutButton onPress={() => setIsLogoutModalVisible(true)} />
           <ProfileFooter />
         </Animated.View>

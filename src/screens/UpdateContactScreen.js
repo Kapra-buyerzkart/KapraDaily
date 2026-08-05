@@ -4,56 +4,102 @@ import {
   Text,
   StyleSheet,
   TextInput,
-  TouchableOpacity,
-  ScrollView,
-  Alert,
-  KeyboardAvoidingView,
+  Pressable,
   Platform,
+  StatusBar,
   Image,
-  ImageBackground,
+  TouchableOpacity,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import LinearGradient from 'react-native-linear-gradient';
+import Animated, {
+  Extrapolation,
+  FadeIn,
+  interpolate,
+  interpolateColor,
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
-import icons from '@/assets/icons';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import icons from '@/assets/icons';
 import { FONTS } from '../styles/typography';
 import { LoaderContext } from '../context/loaderContext';
 import { AppContext } from '../context/appContext';
-import StoreUnavailable from '../components/StoreUnavailable';
-import LocationModal from '../components/LocationModal';
 import { validatePhoneNumbers } from '../utils/validation';
-
-// Placeholder for actual APIs - these should be added to userService.js securely
-// Since I don't have the final endpoints, I'll use placeholders that call updateProfilePatchApi on success
+import StatusModal from '../components/StatusModal';
 import {
   requestEmailOtpApi,
   verifyEmailOtpApi,
   requestPhoneOtpApi,
   verifyPhoneOtpApi,
 } from '../api/userService';
-import StatusModal from '../components/StatusModal';
+import {
+  CANVAS,
+  SURFACE,
+  HAIRLINE,
+  INK,
+  ACCENT,
+  RADIUS,
+  SPACE,
+  TYPE,
+  GUTTER,
+  HERO_TOP,
+  HERO_GRADIENT,
+  HERO_LIFT,
+  MAX_FONT_SCALE,
+  hitSlopTo,
+} from '@/styles/homeTheme';
+import {
+  BAR_SOLID_AT,
+  BORDER_FADE_RANGE,
+  PRESS_IN,
+  PRESS_OUT,
+  entrance,
+} from '@/styles/motion';
+
+// Rebuilt as the third page of the account flow, after Profile and Edit Profile:
+// same peach hero, same sticky bar resolving from peach to white, same gutter,
+// same filled-well field, same pinned brand-coloured CTA. It used to be the
+// login screen's photographic header and a centred logo, which made a settings
+// change look like a re-authentication.
+//
+// The two steps are one page rather than two screens. A push would put a back
+// button on the OTP step that undoes the send rather than the edit; keeping it
+// here lets "Change number" mean exactly what it says, and lets the hero carry
+// the destination the code was sent to while it is being typed.
+
+const OTP_LENGTH = 5;
+const RESEND_SECONDS = 30;
+const FOCUS_FADE = { duration: 160 };
 
 const UpdateContactScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { type } = route.params || { type: 'phone' }; // 'phone' or 'email'
+  const isPhone = type !== 'email';
   const { showLoader } = useContext(LoaderContext);
-  const { profile, loadProfile, isStoreUnavailable, storeUnavailableData } =
-    useContext(AppContext);
-  const [isLocationModalVisible, setIsLocationModalVisible] = useState(false);
+  const { profile, loadProfile } = useContext(AppContext);
 
   const [value, setValue] = useState('');
   const [originalValue, setOriginalValue] = useState('');
-  const [otp, setOtp] = useState(['', '', '', '', '']);
+  const [otp, setOtp] = useState(Array(OTP_LENGTH).fill(''));
   const [step, setStep] = useState(1); // 1: Input, 2: OTP
-  const [timer, setTimer] = useState(30);
+  const [timer, setTimer] = useState(RESEND_SECONDS);
   const [canResend, setCanResend] = useState(false);
+  // Validation speaks under the field it is about; the modal is kept for what
+  // the server says, which is the only thing the user can't see for themselves.
+  const [fieldError, setFieldError] = useState('');
+  const [otpError, setOtpError] = useState('');
 
-  // Modal state
   const [statusModalVisible, setStatusModalVisible] = useState(false);
   const [statusType, setStatusType] = useState('success');
   const [statusTitle, setStatusTitle] = useState('');
@@ -62,13 +108,19 @@ const UpdateContactScreen = () => {
 
   const otpRefs = useRef([]);
 
+  const label = isPhone ? 'Phone Number' : 'Email ID';
+
+  // Only the comparison value is taken from the profile. The field itself opens
+  // empty and the old value is stated in the hero instead — an input pre-filled
+  // with the number you came here to replace is one you have to clear before you
+  // can answer it, and it made the CTA sit disabled under a field that looked
+  // filled in.
   useEffect(() => {
     if (profile) {
-      const currentVal = type === 'phone' ? profile.phoneNo : profile.emailId;
-      setValue(currentVal || '');
+      const currentVal = isPhone ? profile.phoneNo : profile.emailId;
       setOriginalValue(currentVal || '');
     }
-  }, [profile, type]);
+  }, [profile, isPhone]);
 
   useEffect(() => {
     let interval;
@@ -76,58 +128,56 @@ const UpdateContactScreen = () => {
       interval = setInterval(() => {
         setTimer(prev => prev - 1);
       }, 1000);
-    } else if (timer === 0) {
+    } else if (step === 2 && timer === 0) {
       setCanResend(true);
     }
     return () => clearInterval(interval);
   }, [step, timer]);
 
+  const showError = message => {
+    setStatusType('error');
+    setStatusTitle('Error');
+    setStatusMessage(message);
+    setStatusModalVisible(true);
+  };
+
   const handleRequestOtp = async () => {
     if (!value.trim()) {
-      setStatusType('error');
-      setStatusTitle('Error');
-      setStatusMessage(
-        `Please enter a valid ${
-          type === 'phone' ? 'phone number' : 'email ID'
-        }`,
+      setFieldError(
+        `Please enter a valid ${isPhone ? 'phone number' : 'email ID'}`,
       );
-      setStatusModalVisible(true);
       return;
     }
 
-    if (type === 'phone' && !validatePhoneNumbers(value)) {
-      setStatusType('error');
-      setStatusTitle('Error');
-      setStatusMessage('Please enter a valid 10-digit mobile number');
-      setStatusModalVisible(true);
+    if (isPhone && !validatePhoneNumbers(value)) {
+      setFieldError('Please enter a valid 10-digit mobile number');
       return;
     }
+
+    setFieldError('');
 
     try {
       showLoader(true);
-      const payload =
-        type === 'phone' ? { newPhone: value } : { newEmail: value };
-      const response =
-        type === 'phone'
-          ? await requestPhoneOtpApi(payload)
-          : await requestEmailOtpApi(payload);
+      const payload = isPhone ? { newPhone: value } : { newEmail: value };
+      const response = isPhone
+        ? await requestPhoneOtpApi(payload)
+        : await requestEmailOtpApi(payload);
 
       if (response?.success) {
+        setOtp(Array(OTP_LENGTH).fill(''));
+        setOtpError('');
         setStep(2);
-        setTimer(30);
+        setTimer(RESEND_SECONDS);
         setCanResend(false);
+        // The step swaps in place, so the caret has to be moved deliberately —
+        // there is no navigation event to hand focus over on.
+        setTimeout(() => otpRefs.current[0]?.focus(), 350);
       } else {
-        setStatusType('error');
-        setStatusTitle('Error');
-        setStatusMessage(response?.message || 'Failed to request OTP');
-        setStatusModalVisible(true);
+        showError(response?.message || 'Failed to request OTP');
       }
     } catch (error) {
       console.error('Request OTP Error:', error);
-      setStatusType('error');
-      setStatusTitle('Error');
-      setStatusMessage('Failed to request OTP. Please try again.');
-      setStatusModalVisible(true);
+      showError('Failed to request OTP. Please try again.');
     } finally {
       showLoader(false);
     }
@@ -135,67 +185,73 @@ const UpdateContactScreen = () => {
 
   const handleVerifyOtp = async () => {
     const otpValue = otp.join('');
-    if (otpValue.length !== 5) {
-      setStatusType('error');
-      setStatusTitle('Error');
-      setStatusMessage('Please enter the 5-digit OTP');
-      setStatusModalVisible(true);
+    if (otpValue.length !== OTP_LENGTH) {
+      setOtpError(`Please enter the ${OTP_LENGTH}-digit OTP`);
       return;
     }
 
+    setOtpError('');
+
     try {
       showLoader(true);
-      const payload =
-        type === 'phone'
-          ? { newPhone: value, otp: otpValue }
-          : { newEmail: value, otp: otpValue };
+      const payload = isPhone
+        ? { newPhone: value, otp: otpValue }
+        : { newEmail: value, otp: otpValue };
 
-      const response =
-        type === 'phone'
-          ? await verifyPhoneOtpApi(payload)
-          : await verifyEmailOtpApi(payload);
+      const response = isPhone
+        ? await verifyPhoneOtpApi(payload)
+        : await verifyEmailOtpApi(payload);
 
       if (response?.success) {
         await loadProfile();
         setStatusType('success');
         setStatusTitle('Success');
-        setStatusMessage(
-          `${
-            type === 'phone' ? 'Phone Number' : 'Email ID'
-          } updated successfully`,
-        );
+        setStatusMessage(`${label} updated successfully`);
         setOnModalClose(() => () => navigation.goBack());
         setStatusModalVisible(true);
       } else {
-        setStatusType('error');
-        setStatusTitle('Error');
-        setStatusMessage(response?.message || 'Verification failed');
-        setStatusModalVisible(true);
+        setOtpError(response?.message || 'Verification failed');
       }
     } catch (error) {
       console.error('Verify OTP Error:', error);
-      setStatusType('error');
-      setStatusTitle('Error');
-      setStatusMessage('Invalid OTP or verification failed.');
-      setStatusModalVisible(true);
+      setOtpError('Invalid OTP. Please check and try again.');
     } finally {
       showLoader(false);
     }
   };
 
+  // Written to survive a paste: an autofilled code arrives in one box as five
+  // characters, and typing it a digit at a time has to land in the same state.
   const handleOtpChange = (text, index) => {
+    setOtpError('');
+    const digits = text.replace(/[^0-9]/g, '');
+
+    if (digits.length > 1) {
+      const merged = [...otp];
+      digits
+        .slice(0, OTP_LENGTH - index)
+        .split('')
+        .forEach((digit, offset) => {
+          merged[index + offset] = digit;
+        });
+      setOtp(merged);
+      const landed = Math.min(index + digits.length, OTP_LENGTH - 1);
+      otpRefs.current[landed]?.focus();
+      return;
+    }
+
     const newOtp = [...otp];
-    newOtp[index] = text;
+    newOtp[index] = digits;
     setOtp(newOtp);
 
-    if (text && index < 4) {
-      otpRefs.current[index + 1].focus();
+    if (digits && index < OTP_LENGTH - 1) {
+      otpRefs.current[index + 1]?.focus();
     }
   };
 
   const handleBackspace = (event, index) => {
     if (event.nativeEvent.key === 'Backspace' && !otp[index] && index > 0) {
-      otpRefs.current[index - 1].focus();
+      otpRefs.current[index - 1]?.focus();
     }
   };
 
@@ -206,147 +262,285 @@ const UpdateContactScreen = () => {
     }
   };
 
+  const handleChangeContact = () => {
+    setStep(1);
+    setOtp(Array(OTP_LENGTH).fill(''));
+    setOtpError('');
+  };
+
   const isDifferent = value.trim() !== originalValue.trim();
-  const isInputValid =
-    type === 'phone' ? validatePhoneNumbers(value) : value.includes('@');
+  const isInputValid = isPhone
+    ? validatePhoneNumbers(value)
+    : value.includes('@');
   const canRequestOtp = isDifferent && isInputValid;
+  const otpComplete = otp.every(digit => digit !== '');
+
+  // ── The sticky bar ──────────────────────────────────────────────────────
+  // Peach at rest so the status bar, the bar and the gradient below read as one
+  // surface; white once the hero is gone. `heroAnchor` is measured rather than
+  // assumed because the hero's height moves with the font scale.
+  const scrollY = useSharedValue(0);
+  const heroAnchor = useSharedValue(0);
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: event => {
+      scrollY.value = event.contentOffset.y;
+    },
+  });
+  const onHeroLayout = event => {
+    const { y, height } = event.nativeEvent.layout;
+    heroAnchor.value = y + height;
+  };
+
+  const topBarBorderStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(
+      scrollY.value,
+      BORDER_FADE_RANGE,
+      [0, 1],
+      Extrapolation.CLAMP,
+    ),
+  }));
+
+  const topBarBackgroundStyle = useAnimatedStyle(() => {
+    const anchor = heroAnchor.value;
+    if (anchor <= 0) return { backgroundColor: HERO_TOP };
+    return {
+      backgroundColor: interpolateColor(
+        scrollY.value,
+        [0, anchor * BAR_SOLID_AT],
+        [HERO_TOP, CANVAS],
+      ),
+    };
+  });
+
+  const primaryEnabled = step === 1 ? canRequestOtp : otpComplete;
+  const primaryLabel = step === 1 ? 'Get OTP' : 'Verify & Update';
+  const primaryHint =
+    step === 1
+      ? isDifferent
+        ? `Enter a valid ${isPhone ? 'phone number' : 'email ID'}`
+        : `Enter a new ${isPhone ? 'number' : 'email'}`
+      : `Enter all ${OTP_LENGTH} digits`;
 
   return (
-    <SafeAreaView style={styles.mainContainer}>
+    <View style={styles.mainContainer}>
+      <StatusBar
+        translucent
+        backgroundColor="transparent"
+        barStyle="dark-content"
+      />
+
       <KeyboardAvoidingView
-        style={{ flex: 1 }}
+        style={styles.keyboardAvoidingView}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <ScrollView
-          contentContainerStyle={{ flexGrow: 1 }}
+        <Animated.ScrollView
+          showsVerticalScrollIndicator={false}
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          onScroll={scrollHandler}
+          scrollEventThrottle={16}
+          stickyHeaderIndices={[0]}
           keyboardShouldPersistTaps="handled"
         >
-          <ImageBackground
-            style={styles.backgroundImage}
-            source={require('../assets/images/login_background_image.jpg')}
-          >
-            <View style={styles.headerRow}>
-              <TouchableOpacity
-                hitSlop={40}
-                onPress={() => navigation.goBack()}
-              >
-                <Image
-                  source={icons.backArrowNew}
-                  style={{
-                    resizeMode: 'contain',
-                    tintColor: '#FFFFFF',
-                  }}
+          <TopBar
+            title={`Update ${isPhone ? 'Phone' : 'Email'}`}
+            onBack={() => navigation.goBack()}
+            backgroundStyle={topBarBackgroundStyle}
+            borderStyle={topBarBorderStyle}
+          />
+
+          {/* The gradient itself never animates in — only its contents do — so
+              the sticky bar above, already painted the hero's colour, is never
+              left as a peach strip over a white page. */}
+          <LinearGradient colors={HERO_GRADIENT} style={styles.hero}>
+            <Animated.View
+              style={styles.heroInner}
+              onLayout={onHeroLayout}
+              entering={entrance(0)}
+            >
+              {/* <View style={styles.heroDisc}>
+                <MaterialCommunityIcons
+                  name={
+                    step === 1
+                      ? isPhone
+                        ? 'cellphone-cog'
+                        : 'email-edit-outline'
+                      : 'shield-key-outline'
+                  }
+                  size={wp('7.4%')}
+                  color={ACCENT.primary}
                 />
-              </TouchableOpacity>
-              <Text style={styles.headerTitle}>
-                Update {type === 'phone' ? 'Phone' : 'Email'}
+              </View> */}
+
+              <Text style={styles.heroTitle} maxFontSizeMultiplier={1.2}>
+                {step === 1
+                  ? `Change your ${isPhone ? 'number' : 'email'}`
+                  : 'Verify it’s you'}
               </Text>
-              <View style={{ width: wp('5%') }} />
-            </View>
-            <Image
-              style={styles.kapraLogo}
-              source={require('../assets/images/kapra_logo.png')}
-            />
-          </ImageBackground>
 
-          <View style={styles.formContainer}>
-            {step === 1 ? (
-              <View>
-                <View style={styles.inputContainer}>
-                  <Text style={styles.label}>
-                    New {type === 'phone' ? 'Phone Number' : 'Email ID'}
+              <Text style={styles.heroSubtitle} maxFontSizeMultiplier={1.2}>
+                {step === 1
+                  ? isPhone
+                    ? 'We’ll send a one-time code to confirm the new number is yours.'
+                    : 'We’ll send a one-time code to confirm the new address is yours.'
+                  : `We sent a ${OTP_LENGTH}-digit code to ${
+                      isPhone ? `+91 ${value}` : value
+                    }.`}
+              </Text>
+
+              {step === 1 && !!originalValue && (
+                <View style={styles.currentPill}>
+                  <MaterialCommunityIcons
+                    name="check-decagram"
+                    size={wp('3.4%')}
+                    color={ACCENT.successText}
+                  />
+                  <Text
+                    style={styles.currentPillText}
+                    numberOfLines={1}
+                    maxFontSizeMultiplier={MAX_FONT_SCALE}
+                  >
+                    Current: {isPhone ? `+91 ${originalValue}` : originalValue}
                   </Text>
-                  <View style={styles.inputWrapper}>
-                    {type === 'phone' && <Text style={styles.prefix}>+91</Text>}
-                    <TextInput
-                      placeholder={
-                        type === 'phone'
-                          ? 'Enter phone number'
-                          : 'Enter email ID'
-                      }
-                      placeholderTextColor="#DADADA"
-                      style={styles.input}
-                      value={value}
-                      onChangeText={setValue}
-                      keyboardType={
-                        type === 'phone' ? 'phone-pad' : 'email-address'
-                      }
-                      autoCapitalize="none"
-                      maxLength={type === 'phone' ? 10 : undefined}
-                    />
-                  </View>
                 </View>
+              )}
+            </Animated.View>
+          </LinearGradient>
 
-                <TouchableOpacity
-                  onPress={handleRequestOtp}
-                  style={[
-                    styles.actionButton,
-                    !canRequestOtp && styles.actionButtonDisabled,
-                  ]}
-                  disabled={!canRequestOtp}
-                >
-                  <Text style={styles.actionButtonText}>Get OTP</Text>
-                </TouchableOpacity>
+          {step === 1 ? (
+            <Animated.View key="step-input" entering={entrance(1)}>
+              <View style={styles.fieldGroup}>
+                <ContactField
+                  isPhone={isPhone}
+                  value={value}
+                  onChangeText={text => {
+                    setFieldError('');
+                    setValue(text);
+                  }}
+                  error={fieldError}
+                  onSubmitEditing={canRequestOtp ? handleRequestOtp : undefined}
+                />
+
+                <View style={styles.noteRow}>
+                  <MaterialCommunityIcons
+                    name="shield-check-outline"
+                    size={wp('4%')}
+                    color={INK.muted}
+                    style={styles.noteIcon}
+                  />
+                  <Text
+                    style={styles.noteText}
+                    maxFontSizeMultiplier={MAX_FONT_SCALE}
+                  >
+                    {isPhone
+                      ? 'Your new number becomes your login and where order updates are sent.'
+                      : 'Your new email becomes your login and where receipts are sent.'}
+                  </Text>
+                </View>
               </View>
-            ) : (
-              <View>
-                <View style={styles.inputContainer}>
-                  <Text style={styles.label}>
-                    Enter OTP sent to Phone & WhatsApp
-                  </Text>
-                  <View style={styles.otpContainer}>
-                    {otp.map((digit, index) => (
-                      <View style={styles.otpBox} key={index}>
-                        <TextInput
-                          ref={el => (otpRefs.current[index] = el)}
-                          style={styles.otpInput}
-                          keyboardType="number-pad"
-                          maxLength={1}
-                          value={digit}
-                          onChangeText={text => handleOtpChange(text, index)}
-                          onKeyPress={e => handleBackspace(e, index)}
-                        />
-                      </View>
-                    ))}
-                  </View>
+            </Animated.View>
+          ) : (
+            <Animated.View key="step-otp" entering={FadeIn.duration(220)}>
+              <View style={styles.fieldGroup}>
+                {/* Same small label as the field on the step before, for the
+                    same reason — the hero already carries the heading. */}
+                <Text
+                  style={styles.fieldLabel}
+                  maxFontSizeMultiplier={MAX_FONT_SCALE}
+                >
+                  {isPhone
+                    ? 'Code sent to your phone & WhatsApp'
+                    : 'Code sent to your inbox'}
+                </Text>
+
+                <View style={styles.otpRow}>
+                  {otp.map((digit, index) => (
+                    <OtpBox
+                      key={index}
+                      ref={el => (otpRefs.current[index] = el)}
+                      value={digit}
+                      error={!!otpError}
+                      onChangeText={text => handleOtpChange(text, index)}
+                      onKeyPress={event => handleBackspace(event, index)}
+                      accessibilityLabel={`Digit ${index + 1} of ${OTP_LENGTH}`}
+                    />
+                  ))}
                 </View>
 
+                {!!otpError && (
+                  <View style={styles.fieldErrorRow}>
+                    <MaterialCommunityIcons
+                      name="alert-circle-outline"
+                      size={wp('3.4%')}
+                      color={ERROR_INK}
+                    />
+                    <Text
+                      style={styles.fieldErrorText}
+                      maxFontSizeMultiplier={MAX_FONT_SCALE}
+                    >
+                      {otpError}
+                    </Text>
+                  </View>
+                )}
+
+                {/* The countdown holds the same row the active link will take,
+                    so nothing below it shifts when the timer runs out. */}
                 <View style={styles.resendRow}>
                   {canResend ? (
-                    <TouchableOpacity onPress={handleRequestOtp}>
-                      <Text style={styles.resendTextActive}>Resend OTP</Text>
+                    <TouchableOpacity
+                      onPress={handleRequestOtp}
+                      hitSlop={hitSlopTo(24)}
+                      accessibilityRole="button"
+                    >
+                      <Text
+                        style={styles.resendActive}
+                        maxFontSizeMultiplier={MAX_FONT_SCALE}
+                      >
+                        Resend code
+                      </Text>
                     </TouchableOpacity>
                   ) : (
-                    <Text style={styles.resendTextDisabled}>
-                      Resend OTP in {timer}s
+                    <Text
+                      style={styles.resendIdle}
+                      maxFontSizeMultiplier={MAX_FONT_SCALE}
+                    >
+                      Resend code in {timer}s
                     </Text>
                   )}
                 </View>
 
                 <TouchableOpacity
-                  onPress={handleVerifyOtp}
-                  style={styles.actionButton}
+                  onPress={handleChangeContact}
+                  style={styles.changeRow}
+                  hitSlop={hitSlopTo(24)}
+                  accessibilityRole="button"
                 >
-                  <Text style={styles.actionButtonText}>Verify & Update</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  onPress={() => setStep(1)}
-                  style={styles.changeContactLink}
-                >
-                  <Text style={styles.changeContactLinkText}>
-                    Change {type === 'phone' ? 'Phone' : 'Email'}
+                  <MaterialCommunityIcons
+                    name="pencil-outline"
+                    size={wp('3.8%')}
+                    color={ACCENT.primary}
+                  />
+                  <Text
+                    style={styles.changeText}
+                    maxFontSizeMultiplier={MAX_FONT_SCALE}
+                  >
+                    Change {isPhone ? 'number' : 'email'}
                   </Text>
                 </TouchableOpacity>
               </View>
-            )}
-          </View>
-        </ScrollView>
+            </Animated.View>
+          )}
+        </Animated.ScrollView>
+
+        <ActionBar
+          enabled={primaryEnabled}
+          label={primaryLabel}
+          hint={primaryHint}
+          icon={step === 1 ? 'message-badge-outline' : 'check-circle-outline'}
+          onPress={step === 1 ? handleRequestOtp : handleVerifyOtp}
+        />
       </KeyboardAvoidingView>
-      <LocationModal
-        visible={isLocationModalVisible}
-        onClose={() => setIsLocationModalVisible(false)}
-      />
+
       <StatusModal
         visible={statusModalVisible}
         onClose={handleModalClose}
@@ -354,148 +548,563 @@ const UpdateContactScreen = () => {
         title={statusTitle}
         message={statusMessage}
       />
-    </SafeAreaView>
+    </View>
+  );
+};
+
+// ── Top bar ───────────────────────────────────────────────────────────────
+// A component rather than an inline Animated.View, and not by preference: this
+// is the ScrollView's sticky child, and RN's sticky wrapper clones that child to
+// inject a style of its own. Cloned onto an Animated.View, the injected style
+// drags Reanimated's style handle through RN's own Animated pipeline, which
+// deep-freezes it in dev and makes the next updater assignment throw. A
+// component absorbs the injected prop and ignores it — which is the same reason
+// Edit Profile's bar is a component.
+const TopBar = ({ title, onBack, backgroundStyle, borderStyle }) => {
+  const insets = useSafeAreaInsets();
+
+  return (
+    <Animated.View
+      style={[
+        styles.topBar,
+        backgroundStyle,
+        { paddingTop: insets.top + SPACE.sm },
+      ]}
+    >
+      <TouchableOpacity
+        hitSlop={hitSlopTo(wp('6%'))}
+        onPress={onBack}
+        accessibilityRole="button"
+        accessibilityLabel="Go back"
+      >
+        <Image source={icons.backArrowNew} style={styles.backIcon} />
+      </TouchableOpacity>
+
+      <View style={styles.topBarTitle}>
+        <Text
+          style={styles.headerTitle}
+          numberOfLines={1}
+          maxFontSizeMultiplier={MAX_FONT_SCALE}
+          accessibilityRole="header"
+        >
+          {title}
+        </Text>
+      </View>
+
+      <Animated.View style={[styles.topBarBorder, borderStyle]} />
+    </Animated.View>
+  );
+};
+
+// ── Field ─────────────────────────────────────────────────────────────────
+// Edit Profile's filled well, with the country code living inside it behind a
+// hairline rule rather than floating beside the input: +91 is part of the number
+// being entered, not a second control next to it.
+const ContactField = ({ isPhone, value, onChangeText, error, ...props }) => {
+  const [focused, setFocused] = useState(false);
+  const focus = useSharedValue(0);
+
+  const wellStyle = useAnimatedStyle(() => ({
+    backgroundColor: interpolateColor(
+      focus.value,
+      [0, 1],
+      [FIELD_REST, SURFACE.base],
+    ),
+    borderColor: interpolateColor(
+      focus.value,
+      [0, 1],
+      [FIELD_REST, ACCENT.primary],
+    ),
+  }));
+
+  return (
+    <View style={styles.field}>
+      <Text style={styles.fieldLabel} maxFontSizeMultiplier={MAX_FONT_SCALE}>
+        New {isPhone ? 'Phone Number' : 'Email ID'}
+      </Text>
+
+      <Animated.View
+        style={[styles.fieldWell, wellStyle, !!error && styles.fieldWellError]}
+      >
+        {isPhone ? (
+          <View style={styles.prefixBlock}>
+            <Text
+              style={styles.prefixText}
+              maxFontSizeMultiplier={MAX_FONT_SCALE}
+            >
+              +91
+            </Text>
+            <View style={styles.prefixRule} />
+          </View>
+        ) : (
+          <MaterialCommunityIcons
+            name="email-outline"
+            size={wp('4.6%')}
+            color={error ? ERROR_INK : focused ? ACCENT.primary : INK.muted}
+            style={styles.fieldIcon}
+          />
+        )}
+
+        <TextInput
+          style={[styles.fieldInput]}
+          value={value}
+          onChangeText={onChangeText}
+          placeholder={isPhone ? '00000 00000' : 'name@example.com'}
+          placeholderTextColor={INK.faint}
+          keyboardType={isPhone ? 'phone-pad' : 'email-address'}
+          autoCapitalize="none"
+          autoCorrect={false}
+          maxLength={isPhone ? 10 : undefined}
+          returnKeyType="done"
+          maxFontSizeMultiplier={MAX_FONT_SCALE}
+          onFocus={() => {
+            setFocused(true);
+            focus.value = withTiming(1, FOCUS_FADE);
+          }}
+          onBlur={() => {
+            setFocused(false);
+            focus.value = withTiming(0, FOCUS_FADE);
+          }}
+          {...props}
+        />
+      </Animated.View>
+
+      {!!error && (
+        <View style={styles.fieldErrorRow}>
+          <MaterialCommunityIcons
+            name="alert-circle-outline"
+            size={wp('3.4%')}
+            color={ERROR_INK}
+          />
+          <Text
+            style={styles.fieldErrorText}
+            maxFontSizeMultiplier={MAX_FONT_SCALE}
+          >
+            {error}
+          </Text>
+        </View>
+      )}
+    </View>
+  );
+};
+
+// ── OTP box ───────────────────────────────────────────────────────────────
+// Same three states as the field above — rest, focus, error — so a code entry
+// reads as five small versions of the control the previous step used.
+const OtpBox = React.forwardRef(({ value, error, ...props }, ref) => {
+  const focus = useSharedValue(0);
+
+  const boxStyle = useAnimatedStyle(() => ({
+    backgroundColor: interpolateColor(
+      focus.value,
+      [0, 1],
+      [FIELD_REST, SURFACE.base],
+    ),
+    borderColor: interpolateColor(
+      focus.value,
+      [0, 1],
+      [FIELD_REST, ACCENT.primary],
+    ),
+    transform: [{ scale: 1 + focus.value * 0.04 }],
+  }));
+
+  return (
+    <Animated.View
+      style={[styles.otpBox, boxStyle, !!error && styles.otpBoxError]}
+    >
+      <TextInput
+        ref={ref}
+        style={styles.otpInput}
+        value={value}
+        keyboardType="number-pad"
+        textContentType="oneTimeCode"
+        autoComplete={Platform.OS === 'android' ? 'sms-otp' : 'one-time-code'}
+        maxLength={OTP_LENGTH}
+        selectionColor={ACCENT.primary}
+        maxFontSizeMultiplier={MAX_FONT_SCALE}
+        onFocus={() => {
+          focus.value = withTiming(1, FOCUS_FADE);
+        }}
+        onBlur={() => {
+          focus.value = withTiming(0, FOCUS_FADE);
+        }}
+        {...props}
+      />
+    </Animated.View>
+  );
+});
+
+OtpBox.displayName = 'OtpBox';
+
+const ActionBar = ({ enabled, label, hint, icon, onPress }) => {
+  const insets = useSafeAreaInsets();
+  const scale = useSharedValue(1);
+  const buttonStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  return (
+    <View
+      style={[
+        styles.actionBar,
+        { paddingBottom: Math.max(insets.bottom, SPACE.md) },
+      ]}
+    >
+      <Pressable
+        onPress={onPress}
+        disabled={!enabled}
+        onPressIn={() => {
+          if (enabled) scale.value = withTiming(0.98, PRESS_IN);
+        }}
+        onPressOut={() => {
+          scale.value = withSpring(1, PRESS_OUT);
+        }}
+        accessibilityRole="button"
+        accessibilityState={{ disabled: !enabled }}
+        accessibilityLabel={label}
+        accessibilityHint={enabled ? undefined : hint}
+      >
+        <Animated.View
+          style={[
+            styles.actionButton,
+            !enabled && styles.actionButtonDisabled,
+            buttonStyle,
+          ]}
+        >
+          <MaterialCommunityIcons
+            name={icon}
+            size={wp('4.6%')}
+            color={enabled ? INK.onDark : RESTING_INK}
+            style={styles.actionButtonIcon}
+          />
+          <Text
+            style={[
+              styles.actionButtonText,
+              !enabled && styles.actionButtonTextDisabled,
+            ]}
+            maxFontSizeMultiplier={MAX_FONT_SCALE}
+          >
+            {enabled ? label : hint}
+          </Text>
+        </Animated.View>
+      </Pressable>
+    </View>
   );
 };
 
 export default UpdateContactScreen;
 
+// The account flow's field palette, matching Edit Profile: a field is a filled
+// well that turns white and takes the brand's edge when it is the one being
+// typed into.
+const FIELD_REST = '#F7F5F3';
+const FIELD_BORDER_WIDTH = 1.5;
+const ERROR_INK = ACCENT.discount;
+const ERROR_SOFT = '#FDF1EC';
+const RESTING_INK = '#9A5B38';
+
 const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: CANVAS,
   },
-  backgroundImage: {
-    height: hp('35%'),
-    alignItems: 'center',
-    paddingTop: hp('2%'),
+  keyboardAvoidingView: {
+    flex: 1,
   },
-  headerRow: {
+  // The viewport is painted the hero's colour and the sheet white on top, so an
+  // iOS rubber-band pull reveals more hero rather than a white strip.
+  scrollView: {
+    backgroundColor: HERO_TOP,
+  },
+  // flexGrow, not just a background: this page is short, and without it the
+  // white sheet stopped at the last element and the ScrollView's own peach —
+  // there so an iOS rubber-band pull reveals more hero — filled the rest of the
+  // viewport as a large empty block above the action bar.
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: SPACE.xl,
+    backgroundColor: CANVAS,
+  },
+
+  // ── Header ──────────────────────────────────────────────────────────────
+  topBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    width: '100%',
-    paddingHorizontal: wp('5%'),
-    marginBottom: hp('4%'),
+    paddingHorizontal: GUTTER,
+    paddingBottom: SPACE.sm,
+    backgroundColor: HERO_TOP,
+  },
+  topBarBorder: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: HAIRLINE,
+  },
+  backIcon: {
+    resizeMode: 'contain',
+    tintColor: INK.strong,
+  },
+  topBarTitle: {
+    flex: 1,
+    marginLeft: wp('3%'),
+    justifyContent: 'center',
   },
   headerTitle: {
+    ...TYPE.heading,
+    color: INK.strong,
     fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('5%'),
-    color: '#FFFFFF',
+    letterSpacing: -0.3,
   },
-  kapraLogo: {
-    width: wp('40%'),
-    height: hp('8%'),
-    resizeMode: 'contain',
-    marginTop: hp('2%'),
+
+  // ── Hero ────────────────────────────────────────────────────────────────
+  hero: {
+    paddingBottom: SPACE.md,
   },
-  formContainer: {
-    flex: 1,
-    paddingHorizontal: wp('6%'),
-    paddingTop: hp('4%'),
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: wp('10%'),
-    borderTopRightRadius: wp('10%'),
-    marginTop: -hp('5%'),
+  heroInner: {
+    paddingHorizontal: GUTTER,
+    paddingTop: SPACE.sm,
+    paddingBottom: SPACE.base,
   },
-  inputContainer: {
-    marginBottom: hp('2%'),
-  },
-  label: {
-    fontFamily: FONTS.gilroy.regular,
-    fontSize: wp('3.8%'),
-    color: '#616161',
-    marginBottom: hp('0.5%'),
-  },
-  inputWrapper: {
-    flexDirection: 'row',
+  heroDisc: {
+    width: wp('14%'),
+    height: wp('14%'),
+    borderRadius: wp('7%'),
     alignItems: 'center',
-    height: hp('6%'),
-    borderRadius: wp('2.5%'),
-    borderWidth: 1,
-    borderColor: '#E5E5E5',
-    paddingHorizontal: wp('4%'),
-    backgroundColor: '#fff',
-  },
-  prefix: {
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('4%'),
-    color: '#000',
-    marginRight: wp('2%'),
-  },
-  input: {
-    flex: 1,
-    color: '#000',
-    fontSize: wp('4%'),
-    fontFamily: FONTS.gilroy.regular,
-  },
-  actionButton: {
-    backgroundColor: '#F25000',
-    height: hp('6.5%'),
     justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: wp('2.5%'),
-    marginTop: hp('4%'),
-    shadowColor: '#F25000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 6,
+    backgroundColor: SURFACE.base,
+    ...HERO_LIFT,
+    marginBottom: SPACE.md,
   },
-  actionButtonDisabled: {
-    backgroundColor: '#FFCCBC',
-    elevation: 0,
-    shadowOpacity: 0,
-  },
-  actionButtonText: {
+  heroTitle: {
+    ...TYPE.title,
+    fontSize: Math.round(TYPE.title.fontSize * 1.08),
+    lineHeight: Math.round(TYPE.title.lineHeight * 1.08),
+    color: INK.strong,
     fontFamily: FONTS.gilroy.bold,
-    fontSize: wp('4.5%'),
-    color: '#FFFFFF',
+    letterSpacing: -0.4,
   },
-  otpContainer: {
+  heroSubtitle: {
+    ...TYPE.label,
+    color: INK.muted,
+    fontFamily: FONTS.gilroy.regular,
+    marginTop: SPACE.xs + 2,
+    maxWidth: wp('82%'),
+  },
+  // The value being replaced, stated once at the top rather than pre-filled into
+  // the field — an input that opens holding the old number is an input the user
+  // has to clear before they can answer it.
+  currentPill: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: hp('1%'),
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    marginTop: SPACE.md,
+    paddingVertical: 5,
+    paddingHorizontal: SPACE.md,
+    borderRadius: RADIUS.pill,
+    backgroundColor: ACCENT.successSoft,
+  },
+  currentPillText: {
+    ...TYPE.micro,
+    fontFamily: FONTS.gilroy.semiBold,
+    color: ACCENT.successText,
+    marginLeft: SPACE.xs + 1,
+  },
+
+  // ── Field ───────────────────────────────────────────────────────────────
+  // The section header used to supply the gap under the hero; with it gone the
+  // group owns its own top space.
+  fieldGroup: {
+    paddingHorizontal: GUTTER,
+    paddingTop: SPACE.lg,
+  },
+  field: {
+    marginBottom: SPACE.base,
+  },
+  fieldLabel: {
+    ...TYPE.micro,
+    fontFamily: FONTS.gilroy.semiBold,
+    color: INK.muted,
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+    marginBottom: SPACE.xs + 2,
+  },
+  fieldWell: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    minHeight: hp('6.6%'),
+    borderRadius: RADIUS.md,
+    borderWidth: FIELD_BORDER_WIDTH,
+    paddingHorizontal: SPACE.md,
+  },
+  fieldWellError: {
+    backgroundColor: ERROR_SOFT,
+    borderColor: ERROR_INK,
+  },
+  prefixBlock: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  prefixText: {
+    ...TYPE.body,
+    fontFamily: FONTS.gilroy.semiBold,
+    color: INK.base,
+  },
+  prefixRule: {
+    width: StyleSheet.hairlineWidth,
+    height: hp('2.6%'),
+    backgroundColor: 'rgba(17,19,26,0.12)',
+    marginHorizontal: SPACE.md,
+  },
+  fieldIcon: {
+    marginRight: SPACE.md,
+  },
+  fieldInput: {
+    flex: 1,
+    letterSpacing: 1.2,
+    bottom: Platform.OS == 'ios' ? hp(0.5) : hp(0),
+    ...TYPE.body,
+    fontFamily: FONTS.gilroy.medium,
+    color: INK.strong,
+    paddingVertical: SPACE.md,
+    includeFontPadding: false,
+  },
+  // A phone number is read in groups, so the digits are given a little air.
+  fieldInputPhone: {
+    letterSpacing: 1.2,
+    bottom: Platform.OS == 'ios' ? hp(0.5) : hp(0),
+  },
+  fieldErrorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: SPACE.xs + 2,
+  },
+  fieldErrorText: {
+    ...TYPE.caption,
+    fontFamily: FONTS.gilroy.medium,
+    color: ERROR_INK,
+    marginLeft: SPACE.xs + 1,
+    flexShrink: 1,
+  },
+  // flex-start, not the default stretch: the icon is a Text box, so stretching
+  // it over two wrapped lines centred the glyph between them instead of setting
+  // it against the line it belongs to.
+  noteRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginTop: SPACE.xs,
+    padding: SPACE.md,
+    borderRadius: RADIUS.sm,
+    backgroundColor: SURFACE.sunken,
+  },
+  // Cap height sits below the line box's top; one point down puts the glyph on
+  // the first line's optical centre.
+  noteIcon: {
+    marginTop: 1,
+  },
+  noteText: {
+    ...TYPE.caption,
+    fontFamily: FONTS.gilroy.regular,
+    color: INK.muted,
+    marginLeft: SPACE.sm,
+    flex: 1,
+  },
+
+  // ── OTP ─────────────────────────────────────────────────────────────────
+  otpRow: {
+    flexDirection: 'row',
+    gap: wp('2.6%'),
   },
   otpBox: {
-    width: wp('12%'),
-    height: hp('6%'),
-    backgroundColor: '#F5F5F5',
-    borderRadius: wp('2.5%'),
-    justifyContent: 'center',
+    flex: 1,
+    height: hp('7%'),
+    borderRadius: RADIUS.md,
+    borderWidth: FIELD_BORDER_WIDTH,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E5E5E5',
+    justifyContent: 'center',
+  },
+  otpBoxError: {
+    backgroundColor: ERROR_SOFT,
+    borderColor: ERROR_INK,
   },
   otpInput: {
-    fontSize: wp('5%'),
-    fontFamily: FONTS.gilroy.bold,
-    color: '#000',
-    textAlign: 'center',
     width: '100%',
+    height: '100%',
+    textAlign: 'center',
+    ...TYPE.heading,
+    fontFamily: FONTS.gilroy.bold,
+    color: INK.strong,
+    padding: 0,
+    includeFontPadding: false,
   },
   resendRow: {
-    alignItems: 'center',
-    marginTop: hp('2%'),
+    minHeight: hp('3%'),
+    justifyContent: 'center',
+    marginTop: SPACE.base,
   },
-  resendTextActive: {
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('3.5%'),
-    color: '#F25000',
+  resendActive: {
+    ...TYPE.label,
+    fontFamily: FONTS.gilroy.semiBold,
+    color: ACCENT.primary,
   },
-  resendTextDisabled: {
+  resendIdle: {
+    ...TYPE.label,
     fontFamily: FONTS.gilroy.regular,
-    fontSize: wp('3.5%'),
-    color: '#616161',
+    color: INK.faint,
   },
-  changeContactLink: {
+  changeRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginTop: hp('3%'),
+    marginTop: SPACE.md,
   },
-  changeContactLinkText: {
-    fontFamily: FONTS.gilroy.regular,
-    fontSize: wp('3.5%'),
-    color: '#F25000',
-    textDecorationLine: 'underline',
+  changeText: {
+    ...TYPE.label,
+    fontFamily: FONTS.gilroy.semiBold,
+    color: ACCENT.primary,
+    marginLeft: SPACE.xs + 2,
+  },
+
+  // ── Action bar ──────────────────────────────────────────────────────────
+  actionBar: {
+    paddingHorizontal: GUTTER,
+    paddingTop: SPACE.md,
+    backgroundColor: SURFACE.base,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: HAIRLINE,
+  },
+  actionButton: {
+    flexDirection: 'row',
+    minHeight: hp('6.4%'),
+    borderRadius: RADIUS.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: ACCENT.primary,
+    ...HERO_LIFT,
+    shadowColor: ACCENT.primary,
+    shadowOpacity: 0.28,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
+  },
+  // Not ready yet, so the button keeps its shape and drops its voice rather than
+  // greying out — grey reads as broken, the brand's soft tint reads as "not
+  // yet", and the label says what is missing.
+  actionButtonDisabled: {
+    backgroundColor: ACCENT.primarySoft,
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  actionButtonText: {
+    ...TYPE.body,
+    fontFamily: FONTS.gilroy.bold,
+    color: INK.onDark,
+    letterSpacing: 0.2,
+  },
+  actionButtonTextDisabled: {
+    color: RESTING_INK,
+  },
+  actionButtonIcon: {
+    marginRight: SPACE.sm,
   },
 });

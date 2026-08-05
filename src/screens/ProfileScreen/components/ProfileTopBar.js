@@ -12,12 +12,18 @@ import { MAX_FONT_SCALE, SPACE, hitSlopTo } from '@/styles/homeTheme';
 // Home gives its sticky header (`stickyBorderAnimStyle`). A rule that were
 // always drawn would put a line under the name while the page is at rest.
 //
+// Its background is animated rather than fixed: at rest it is painted the
+// hero's top colour, so the status bar, the bar and the gradient below read as
+// one surface, and it resolves to white only once the hero has scrolled past.
+// A permanently white bar put a hard edge across the top of the gradient.
+//
 // The two titles are stacked rather than swapped: "Profile" is the in-flow
 // text that sizes the slot, and the name is laid over it, so neither can shift
 // the back arrow or the bar's height as they trade places.
 export default function ProfileTopBar({
   name,
   onBack,
+  backgroundStyle,
   borderStyle,
   titleStyle,
   nameStyle,
@@ -25,7 +31,13 @@ export default function ProfileTopBar({
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={[styles.topBar, { paddingTop: insets.top + SPACE.sm }]}>
+    <Animated.View
+      style={[
+        styles.topBar,
+        backgroundStyle,
+        { paddingTop: insets.top + SPACE.sm },
+      ]}
+    >
       <TouchableOpacity
         hitSlop={hitSlopTo(wp('6%'))}
         onPress={onBack}
@@ -59,6 +71,6 @@ export default function ProfileTopBar({
       </View>
 
       <Animated.View style={[styles.topBarBorder, borderStyle]} />
-    </View>
+    </Animated.View>
   );
 }

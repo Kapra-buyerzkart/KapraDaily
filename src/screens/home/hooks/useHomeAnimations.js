@@ -14,6 +14,7 @@ import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
+import { SEARCH_FIELD } from '@/styles/homeTheme';
 import useTabBarAnimation from '../../../hooks/useTabBarAnimation';
 import {
   tabBarVisibility,
@@ -35,13 +36,16 @@ import {
 // absolutely-positioned overlay with a fixed box now, and the collapse is a
 // `translateY` on the whole thing.
 
-// The search bar's resting geometry. Only the corner radius still animates, and
-// borderRadius is a paint prop, not a layout one.
+// The search bar's resting geometry. Nothing about its shape animates any more:
+// the corner used to interpolate wp('5.5%') → wp('4.5%') across the collapse,
+// which is a ~4pt wobble on a silhouette the eye is tracking as a fixed
+// landmark — too small to read as a transition, big enough to read as
+// instability. The shape is a constant from SEARCH_FIELD now (shared with the
+// Search screen's input, which is the same control), and only the press scale
+// is left on the animated style.
 const SEARCH_MARGIN_START = hp('2%');
 const SEARCH_MARGIN_END = hp('0.8%');
-const SEARCH_HEIGHT = hp('5.4%');
-const SEARCH_RADIUS_START = wp('5.5%');
-const SEARCH_RADIUS_END = wp('4.5%');
+const SEARCH_HEIGHT = SEARCH_FIELD.height;
 
 const ETA_FADE_FRACTION = 0.65;
 
@@ -136,18 +140,9 @@ const useHomeAnimations = ({ top, bottom, headerMetrics }) => {
     };
   });
 
-  const searchWrapperAnimStyle = useAnimatedStyle(() => {
-    const progress =
-      collapseDistance > 0 ? clamp(scrollY.value / collapseDistance, 0, 1) : 0;
-    return {
-      borderRadius: interpolate(
-        progress,
-        [0, 1],
-        [SEARCH_RADIUS_START, SEARCH_RADIUS_END],
-      ),
-      transform: [{ scale: searchPressScale.value }],
-    };
-  });
+  const searchWrapperAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: searchPressScale.value }],
+  }));
 
   const bannerSheetStyle = useAnimatedStyle(() => {
     if (collapseDistance <= 0) return { opacity: 0 };

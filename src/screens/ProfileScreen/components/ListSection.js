@@ -6,10 +6,10 @@ import SectionHeader from '../../home/components/SectionHeader';
 import { styles } from '../styles';
 import { INK, MAX_FONT_SCALE } from '@/styles/homeTheme';
 
-export default function ListSection({ title, eyebrow, items }) {
+export default function ListSection({ title, items }) {
   return (
     <>
-      <SectionHeader eyebrow={eyebrow} title={title} />
+      <SectionHeader title={title} />
       <View>
         {items.map((item, index) => (
           <Fragment key={item.key}>
