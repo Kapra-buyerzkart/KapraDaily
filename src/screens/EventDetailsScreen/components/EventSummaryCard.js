@@ -7,9 +7,9 @@ import PriceIcon from '../../../assets/icons/mobilePaymentSuccess.svg';
 import styles from '../styles';
 import { formatPrice } from '../utils';
 import VenueMapStrip from './VenueMapStrip';
-import { hp } from '@/utils/responsive';
+import { hp, wp } from '@/utils/responsive';
 
-const FACT_ICON_SIZE = 26;
+const FACT_ICON_SIZE = wp(10);
 
 const FactCell = ({ Icon, primary, secondary, secondaryStyle }) => (
   <View style={styles.factCell}>
