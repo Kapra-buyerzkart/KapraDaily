@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import React, { useEffect, useRef, useState } from 'react';
 import Animated, {
   Easing,
@@ -21,6 +21,7 @@ import { useNavigation } from '@react-navigation/native';
 import { FONTS } from '../styles/typography';
 import { useCart } from '../context/CartContext';
 import CONFIG from '../globals/config';
+import CachedImage from './CachedImage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { cartPillSlideIn, cartPillSlideOut } from '../animations/cartItemPop';
 
@@ -233,7 +234,7 @@ const SelectedProducts = () => {
   const renderThumbnailStack = () => (
     <View style={styles.stackContainer}>
       {previewItems.map((item, index) => (
-        <Image
+        <CachedImage
           key={item.productId || item.id || index}
           source={getImageSource(item)}
           resizeMode="cover"
@@ -356,15 +357,16 @@ const styles = StyleSheet.create({
     height: 40,
     width: 40,
     borderRadius: 10,
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
+    borderWidth: 2.5,
+    borderColor: CAPSULE_BG,
     backgroundColor: '#fff',
   },
   productImageOverlap: {
-    marginLeft: -13,
+    marginLeft: -8,
   },
   extraBadge: {
     backgroundColor: '#FFFFFF',
+    borderColor: CAPSULE_BG,
     alignItems: 'center',
     justifyContent: 'center',
   },

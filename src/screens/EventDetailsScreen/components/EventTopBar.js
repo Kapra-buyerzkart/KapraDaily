@@ -6,11 +6,16 @@ import Animated, {
   interpolate,
   useAnimatedStyle,
 } from 'react-native-reanimated';
+import { BlurView } from '@sbaiahmed1/react-native-blur';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import COLORS from '@/styles/colors';
 import icons from '@/assets/icons';
 import { getHeaderPaddingTop } from '@/utils/headerLayout';
-import styles, { TOP_BAR_FADE_END, TOP_BAR_FADE_START } from '../styles';
+import styles, {
+  GLASS_BLUR_ROUNDS,
+  TOP_BAR_FADE_END,
+  TOP_BAR_FADE_START,
+} from '../styles';
 
 const MID = (TOP_BAR_FADE_START + TOP_BAR_FADE_END) / 2;
 
@@ -68,7 +73,15 @@ const EventTopBar = ({ insets, scrollY, progress, title, onBack, onShare }) => {
       <Animated.View
         pointerEvents="none"
         style={[styles.topBarSurface, surfaceStyle]}
-      />
+      >
+        <BlurView
+          style={styles.topBarSurfaceBlur}
+          blurType="dark"
+          blurAmount={24}
+          blurRounds={GLASS_BLUR_ROUNDS}
+          overlayColor="rgba(9,4,18,0.42)"
+        />
+      </Animated.View>
 
       <AnimatedPressable
         onPress={onBack}

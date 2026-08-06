@@ -18,6 +18,7 @@ const useResolvedAreaId = (profilePincode) => {
       if (!isMounted) return;
 
       const resolvedAreaId = storedPincodeAreaId ? parseInt(storedPincodeAreaId, 10) : (profilePincode || undefined);
+      console.log('[useResolvedAreaId] stored pincodeAreaId:', storedPincodeAreaId, '| profilePincode:', profilePincode, '| resolved:', resolvedAreaId);
       setAreaId(resolvedAreaId);
 
       if (storedArea) {

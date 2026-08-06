@@ -1,5 +1,6 @@
 import React, { memo, useEffect, useState, useCallback } from 'react';
 import { View } from 'react-native';
+import { useIsFocused } from '@react-navigation/native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -32,13 +33,17 @@ const RotatingPlaceholder = ({
 }) => {
   const progress = useSharedValue(0);
   const [currentIndex, setCurrentIndex] = useState(0);
+  // The loop drives a UI-thread mapper every frame; keeping it alive on an
+  // unfocused screen steals budget from whatever is actually scrolling.
+  const isFocused = useIsFocused();
+  const paused = isPaused || !isFocused;
 
   const advanceIndex = useCallback(() => {
     setCurrentIndex(prev => (prev + 1) % examples.length);
   }, [examples.length]);
 
   useEffect(() => {
-    if (isPaused) {
+    if (paused) {
       cancelAnimation(progress);
       progress.value = withTiming(0, { duration: 150 });
       return;
@@ -52,7 +57,7 @@ const RotatingPlaceholder = ({
     );
 
     return () => cancelAnimation(progress);
-  }, [isPaused, progress]);
+  }, [paused, progress]);
 
   useAnimatedReaction(
     () => progress.value > EXIT_FRACTION,

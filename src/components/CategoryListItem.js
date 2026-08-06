@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Image, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -16,6 +16,7 @@ import {
 import { FONTS } from '../styles/typography';
 import { getImageUrl } from '../utils/imageUrl';
 import AnimatedPressable from './AnimatedPressable';
+import CachedImage from './CachedImage';
 
 const AnimatedText = Animated.createAnimatedComponent(Animated.Text);
 
@@ -86,10 +87,11 @@ const CategoryListItem = ({ item, isSelected, onPress, onLayout }) => {
         <Animated.View style={[styles.activeBg, bgStyle]} />
         <Animated.View style={[styles.indicator]} />
         <Animated.View style={[styles.iconWrap, iconStyle]}>
-          <Image
+          <CachedImage
             source={getImageUrl(item.imageUrl)}
             style={styles.image}
             resizeMode="contain"
+            accessible={false}
           />
         </Animated.View>
         <AnimatedText

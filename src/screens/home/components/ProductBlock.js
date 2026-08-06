@@ -21,10 +21,12 @@ const ProductBlock = ({
   trailingSpacer = false,
   navigation,
 }) => {
-  const handleViewAll = useCallback(
-    () => navigation.navigate('SearchScreen', { title, products: items }),
-    [navigation, title, items],
-  );
+  const handleViewAll = useCallback(() => {
+    console.log('👉 [ViewAll] title:', title);
+    console.log('👉 [ViewAll] items count:', items?.length);
+    console.log('👉 [ViewAll] items:', items);
+    navigation.navigate('SearchScreen', { title, products: items });
+  }, [navigation, title, items]);
 
   if (isLoading) return <ProductBlockShimmer />;
   if (!shouldShow) return null;

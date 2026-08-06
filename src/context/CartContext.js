@@ -33,6 +33,23 @@ import { prefetchProductImages } from '../utils/imageUrl';
 
 export const CartContext = createContext();
 
+// Narrow contexts so product cards do not re-render on every unrelated cart
+// state change (summary, addresses, modals, loading flags...). Cards subscribe
+// to the entry index only, and to a permanently stable action bag.
+const EMPTY_ENTRY_INDEX = new Map();
+export const CartEntriesContext = createContext(EMPTY_ENTRY_INDEX);
+export const CartActionsContext = createContext(null);
+
+// Rapid ADD taps are coalesced into one cart/add call carrying the tapped
+// count. Shorter than the quantity debounce: the item does not exist server
+// side yet, so we want it created promptly.
+const ADD_DEBOUNCE_MS = 350;
+const QTY_DEBOUNCE_MS = 500;
+
+const matchesIdentifier = (item, identifier) =>
+  String(item.cartItemId ?? '') === identifier ||
+  String(item.productId || item.id) === identifier;
+
 const isMaxQuantityMessage = message =>
   /max(imum)?\s+(quantity|qty)/i.test(message || '');
 
@@ -64,6 +81,16 @@ export const CartProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const [updatingItems, setUpdatingItems] = useState([]);
   const debounceTimersRef = useRef({});
+  // cartItemId -> the latest quantity a tap has asked for. Written synchronously
+  // in the action body (not inside a setState updater) so that taps landing in
+  // the same React batch still read each other's intent.
+  const pendingQtyRef = useRef({});
+  // cartItemId -> quantity to restore if a coalesced burst fails server side.
+  const rollbackQtyRef = useRef({});
+  // productId -> { qty, timer, pincode, inFlight, cancelled }. Buffers rapid ADD
+  // taps into a single cart/add request instead of N parallel ones.
+  const pendingAddRef = useRef({});
+  const flushAddRef = useRef(null);
 
   const [addresses, setAddresses] = useState([]);
   const addressesRef = useRef([]);
@@ -692,67 +719,69 @@ export const CartProvider = ({ children }) => {
     }
   }, [serviceabilityTrigger, handleStoreNotFound]);
 
-  const addToCart = useCallback(
-    async (item, pincodeAreaIdOverride = null) => {
-      const productId = item.productId || item.id;
+  // Applies a quantity delta to the local cart without touching the server.
+  // Used for the optimistic half of ADD and for rolling it back.
+  const applyLocalDelta = useCallback((productId, delta, seedItem = null) => {
+    const itemId = String(productId);
+    setCartItems(prevItems => {
+      const existingItem = prevItems.find(
+        i => String(i.productId || i.id) === itemId,
+      );
 
-      prefetchProductImages([item]);
+      if (!existingItem) {
+        if (delta <= 0 || !seedItem) return prevItems;
+        return [...prevItems, { ...seedItem, productId, quantity: delta }];
+      }
+
+      const nextQty = (existingItem.quantity || 0) + delta;
+      if (nextQty <= 0) {
+        return prevItems.filter(i => String(i.productId || i.id) !== itemId);
+      }
+      return prevItems.map(i =>
+        String(i.productId || i.id) === itemId
+          ? { ...i, quantity: nextQty, addedQty: nextQty }
+          : i,
+      );
+    });
+  }, []);
+
+  // Sends the buffered ADD taps as a single cart/add call. Any taps that land
+  // while the request is in flight are flushed as a follow-up round.
+  const flushAddToCart = useCallback(
+    async identifier => {
+      const key = String(identifier);
+      const entry = pendingAddRef.current[key];
+      if (!entry || entry.inFlight) return;
+
+      // Always hit the API with the raw id the caller handed us, not the
+      // stringified map key.
+      const productId = entry.productId ?? identifier;
+      const sentQty = entry.qty;
+      if (sentQty <= 0) {
+        delete pendingAddRef.current[key];
+        return;
+      }
+
+      entry.inFlight = true;
+      entry.timer = null;
+      const pincode = entry.pincode || profile?.pincode;
+
+      const abandon = () => {
+        delete pendingAddRef.current[key];
+      };
 
       logger.log('➕ [ADD TO CART] Adding product:', {
         productId,
-        name: item.prName || item.productName || item.name,
-        price: item.specialPrice || item.unitPrice || item.price,
+        quantity: sentQty,
       });
-
-      setCartItems(prevItems => {
-        const itemId = String(productId);
-        const existingItem = prevItems.find(i => {
-          const cartProdId = String(i.productId || i.id);
-          return cartProdId === itemId;
-        });
-
-        if (existingItem) {
-          return prevItems.map(i => {
-            const cartProdId = String(i.productId || i.id);
-            return cartProdId === itemId
-              ? { ...i, quantity: (i.quantity || 1) + 1 }
-              : i;
-          });
-        }
-        return [...prevItems, { ...item, productId, quantity: 1 }];
-      });
-
-      const rollback = () => {
-        setCartItems(prevItems => {
-          const existingItem = prevItems.find(
-            i => String(i.productId || i.id) === String(productId),
-          );
-          if (existingItem && existingItem.quantity > 1) {
-            return prevItems.map(i =>
-              String(i.productId || i.id) === String(productId)
-                ? { ...i, quantity: i.quantity - 1 }
-                : i,
-            );
-          }
-          return prevItems.filter(
-            i => String(i.productId || i.id) !== String(productId),
-          );
-        });
-      };
 
       try {
-        const response = await addToCartApi(
-          productId,
-          1,
-          pincodeAreaIdOverride || profile?.pincode,
-        );
-        logger.log(
-          '➕ [ADD TO CART] API Response:',
-          response,
-        );
+        const response = await addToCartApi(productId, sentQty, pincode);
+        logger.log('➕ [ADD TO CART] API Response:', response);
 
         if (response && response.success === false) {
-          rollback();
+          applyLocalDelta(productId, -sentQty);
+          abandon();
           const isStoreNotFound = response.message
             ?.toLowerCase()
             .includes('store not found');
@@ -782,7 +811,7 @@ export const CartProvider = ({ children }) => {
           return;
         }
 
-        await refreshCart(pincodeAreaIdOverride || profile?.pincode);
+        await refreshCart(pincode);
       } catch (error) {
         logger.error('➕ [ADD TO CART] API Error:', error);
         const errorMsg =
@@ -803,14 +832,64 @@ export const CartProvider = ({ children }) => {
           });
         } else if (isStockError && !isStoreNotFound) {
           Toast.show('Requested qty is not available', Toast.LONG);
-        } else if (errorMsg && !isStoreNotFound) {
         }
 
-        rollback();
-        await refreshCart(pincodeAreaIdOverride || profile?.pincode);
+        applyLocalDelta(productId, -sentQty);
+        abandon();
+        await refreshCart(pincode);
+        return;
+      }
+
+      // Taps that arrived mid-flight: the refresh above overwrote them with
+      // server truth, so re-apply them optimistically and send another round.
+      const current = pendingAddRef.current[key];
+      if (!current) return;
+      if (current.cancelled) {
+        abandon();
+        return;
+      }
+
+      const leftover = current.qty - sentQty;
+      if (leftover > 0) {
+        current.qty = leftover;
+        current.inFlight = false;
+        applyLocalDelta(productId, leftover);
+        current.timer = setTimeout(
+          () => flushAddRef.current?.(productId),
+          ADD_DEBOUNCE_MS,
+        );
+      } else {
+        abandon();
       }
     },
-    [refreshCart],
+    [refreshCart, applyLocalDelta],
+  );
+
+  flushAddRef.current = flushAddToCart;
+
+  const addToCart = useCallback(
+    (item, pincodeAreaIdOverride = null) => {
+      const productId = item.productId || item.id;
+      const key = String(productId);
+
+      prefetchProductImages([item]);
+      applyLocalDelta(productId, 1, item);
+
+      const existing = pendingAddRef.current[key];
+      if (existing?.timer) clearTimeout(existing.timer);
+
+      pendingAddRef.current[key] = {
+        ...existing,
+        productId,
+        qty: (existing?.qty || 0) + 1,
+        pincode: pincodeAreaIdOverride ?? existing?.pincode ?? null,
+        cancelled: false,
+        timer: existing?.inFlight
+          ? null
+          : setTimeout(() => flushAddRef.current?.(productId), ADD_DEBOUNCE_MS),
+      };
+    },
+    [applyLocalDelta],
   );
 
   const removeFromCart = useCallback(
@@ -831,6 +910,29 @@ export const CartProvider = ({ children }) => {
         logger.warn('🛒 [REMOVE] Item not found for identifier:', identifier);
         return;
       }
+
+      // Drop any in-flight intent for this line, otherwise a debounced update
+      // fires against a cart item that no longer exists.
+      for (const key of [identifierStr, String(cartItemId)]) {
+        if (debounceTimersRef.current[key]) {
+          clearTimeout(debounceTimersRef.current[key]);
+          delete debounceTimersRef.current[key];
+        }
+        delete pendingQtyRef.current[key];
+        setUpdatingItems(prev => prev.filter(id => id !== key));
+      }
+      const productKey = String(removedItem.productId || removedItem.id);
+      const pendingAdd = pendingAddRef.current[productKey];
+      if (pendingAdd) {
+        if (pendingAdd.timer) clearTimeout(pendingAdd.timer);
+        if (pendingAdd.inFlight) {
+          pendingAdd.cancelled = true;
+          pendingAdd.timer = null;
+        } else {
+          delete pendingAddRef.current[productKey];
+        }
+      }
+
       setCartItems(prevItems => {
         const newItems = prevItems.filter(item => item !== removedItem);
         if (newItems.length === 0) {
@@ -880,14 +982,25 @@ export const CartProvider = ({ children }) => {
         return removeFromCart(cartItemId);
       }
 
-      let oldQuantity = 1;
+      // First tap of a burst: remember where to roll back to if the coalesced
+      // request fails. Later taps must not overwrite it with their own
+      // optimistic value.
+      const hadPendingRequest = !!debounceTimersRef.current[cartItemIdStr];
+      if (!hadPendingRequest) {
+        const existing = cartItemsRef.current.find(item =>
+          matchesIdentifier(item, cartItemIdStr),
+        );
+        rollbackQtyRef.current[cartItemIdStr] =
+          existing?.quantity ?? existing?.addedQty ?? 1;
+      }
+      const oldQuantity = rollbackQtyRef.current[cartItemIdStr] ?? 1;
+
       setCartItems(prevItems => {
         const updated = prevItems.map(item => {
           if (
             String(item.cartItemId || item.productId || item.id) ===
             cartItemIdStr
           ) {
-            oldQuantity = item.quantity || 1;
             return { ...item, quantity, addedQty: quantity };
           }
           return item;
@@ -896,7 +1009,7 @@ export const CartProvider = ({ children }) => {
         return updated;
       });
 
-      if (debounceTimersRef.current[cartItemIdStr]) {
+      if (hadPendingRequest) {
         clearTimeout(debounceTimersRef.current[cartItemIdStr]);
       }
 
@@ -999,15 +1112,99 @@ export const CartProvider = ({ children }) => {
         } finally {
           setUpdatingItems(prev => prev.filter(id => id !== cartItemIdStr));
           delete debounceTimersRef.current[cartItemIdStr];
+          // Only release the intent if no newer tap superseded this request;
+          // otherwise that tap owns the entry and will clean it up itself.
+          if (pendingQtyRef.current[cartItemIdStr] === quantity) {
+            delete pendingQtyRef.current[cartItemIdStr];
+            delete rollbackQtyRef.current[cartItemIdStr];
+          }
         }
-      }, 500);
+      }, QTY_DEBOUNCE_MS);
     },
     [removeFromCart, refreshCart, updateCartVersion, getCartSummary],
   );
 
+  /**
+   * Relative quantity change. The arithmetic happens here against a
+   * synchronously written ref, so taps landing in the same React batch cannot
+   * read a stale rendered quantity and cancel each other out.
+   */
+  const changeCartItemQuantity = useCallback(
+    (identifier, delta, pincodeAreaIdOverride = null) => {
+      if (!delta) return undefined;
+
+      const key = String(identifier);
+      const entry = cartItemsRef.current.find(item =>
+        matchesIdentifier(item, key),
+      );
+      const productKey = String(entry?.productId || entry?.id || identifier);
+      const pendingAdd = pendingAddRef.current[productKey];
+
+      // The line item exists only optimistically so far — fold the delta into
+      // the buffered ADD rather than updating a cart item the server lacks.
+      if (pendingAdd) {
+        const nextQty = pendingAdd.qty + delta;
+        applyLocalDelta(productKey, delta);
+
+        if (pendingAdd.timer) clearTimeout(pendingAdd.timer);
+
+        if (nextQty <= 0) {
+          if (pendingAdd.inFlight) {
+            pendingAdd.qty = 0;
+            pendingAdd.cancelled = true;
+            pendingAdd.timer = null;
+          } else {
+            delete pendingAddRef.current[productKey];
+          }
+          return undefined;
+        }
+
+        pendingAdd.qty = nextQty;
+        pendingAdd.timer = pendingAdd.inFlight
+          ? null
+          : setTimeout(
+              () => flushAddRef.current?.(productKey),
+              ADD_DEBOUNCE_MS,
+            );
+        return undefined;
+      }
+
+      const base =
+        pendingQtyRef.current[key] ??
+        entry?.quantity ??
+        entry?.addedQty ??
+        0;
+      const next = Math.max(0, base + delta);
+      pendingQtyRef.current[key] = next;
+
+      return updateCartItemQuantity(identifier, next, pincodeAreaIdOverride);
+    },
+    [updateCartItemQuantity, applyLocalDelta],
+  );
+
+  // Drops every buffered tap without sending it. Used when the cart is wiped
+  // and on unmount, so no timer outlives the state it refers to.
+  const discardPendingCartWrites = useCallback(() => {
+    for (const timer of Object.values(debounceTimersRef.current)) {
+      clearTimeout(timer);
+    }
+    for (const entry of Object.values(pendingAddRef.current)) {
+      if (entry?.timer) clearTimeout(entry.timer);
+      if (entry) entry.cancelled = true;
+    }
+    debounceTimersRef.current = {};
+    pendingQtyRef.current = {};
+    rollbackQtyRef.current = {};
+    pendingAddRef.current = {};
+    setUpdatingItems([]);
+  }, []);
+
+  useEffect(() => discardPendingCartWrites, [discardPendingCartWrites]);
+
   const clearCart = useCallback(async () => {
     const previousItems = cartItems;
     try {
+      discardPendingCartWrites();
       setCartItems([]);
       setCartSummary(null);
 
@@ -1026,7 +1223,7 @@ export const CartProvider = ({ children }) => {
       setCartItems(previousItems);
       await refreshCart();
     }
-  }, [cartItems, refreshCart]);
+  }, [cartItems, refreshCart, discardPendingCartWrites]);
 
   const applyCoupon = useCallback(
     async couponCode => {
@@ -1274,6 +1471,28 @@ export const CartProvider = ({ children }) => {
     return index;
   }, [cartItems]);
 
+  // Latest-ref indirection: the underlying callbacks change identity whenever
+  // cartItems change, but the bag handed to consumers never does.
+  const latestActionsRef = useRef(null);
+  latestActionsRef.current = {
+    addToCart,
+    removeFromCart,
+    updateCartItemQuantity,
+    changeCartItemQuantity,
+  };
+  const cartActions = useMemo(
+    () => ({
+      addToCart: (...args) => latestActionsRef.current.addToCart(...args),
+      removeFromCart: (...args) =>
+        latestActionsRef.current.removeFromCart(...args),
+      updateCartItemQuantity: (...args) =>
+        latestActionsRef.current.updateCartItemQuantity(...args),
+      changeCartItemQuantity: (...args) =>
+        latestActionsRef.current.changeCartItemQuantity(...args),
+    }),
+    [],
+  );
+
   const value = useMemo(
     () => ({
       cartItems,
@@ -1286,6 +1505,7 @@ export const CartProvider = ({ children }) => {
       addToCart,
       removeFromCart,
       updateCartItemQuantity,
+      changeCartItemQuantity,
       loadCart,
       getCartSummary,
       refreshCart,
@@ -1326,6 +1546,7 @@ export const CartProvider = ({ children }) => {
       addToCart,
       removeFromCart,
       updateCartItemQuantity,
+      changeCartItemQuantity,
       loadCart,
       getCartSummary,
       refreshCart,
@@ -1358,7 +1579,11 @@ export const CartProvider = ({ children }) => {
 
   return (
     <CartContext.Provider value={value}>
-      {children}
+      <CartActionsContext.Provider value={cartActions}>
+        <CartEntriesContext.Provider value={cartEntryById}>
+          {children}
+        </CartEntriesContext.Provider>
+      </CartActionsContext.Provider>
       {confirmationConfig && (
         <ConfirmationModal
           visible={!!confirmationConfig}
@@ -1400,8 +1625,10 @@ export const useCart = () => useContext(CartContext);
 
 const EMPTY_CART_ENTRY = { quantity: 0, cartItemId: undefined };
 
+export const useCartActions = () => useContext(CartActionsContext);
+
 export const useCartEntry = itemId => {
-  const { cartEntryById } = useContext(CartContext);
+  const cartEntryById = useContext(CartEntriesContext);
   return useMemo(() => {
     const entry = cartEntryById?.get(String(itemId));
     if (!entry) return EMPTY_CART_ENTRY;

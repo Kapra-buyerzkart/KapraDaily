@@ -147,7 +147,7 @@ const ProductDetailsScreen = () => {
   const {
     addToCart,
     cartItems,
-    updateCartItemQuantity,
+    changeCartItemQuantity,
     removeFromCart,
     showStatus,
   } = useCart();
@@ -560,12 +560,7 @@ const ProductDetailsScreen = () => {
                             onPress={() => {
                               selectionTick();
                               bumpQty();
-                              quantity === 1
-                                ? removeFromCart(cartItemId)
-                                : updateCartItemQuantity(
-                                    cartItemId,
-                                    quantity - 1,
-                                  );
+                              changeCartItemQuantity(cartItemId, -1);
                             }}
                           >
                             <Entypo name="minus" size={18} color="#FFFFFF" />
@@ -584,7 +579,7 @@ const ProductDetailsScreen = () => {
                             onPress={() => {
                               selectionTick();
                               bumpQty();
-                              updateCartItemQuantity(cartItemId, quantity + 1);
+                              changeCartItemQuantity(cartItemId, 1);
                             }}
                           >
                             <Entypo name="plus" size={18} color="#FFFFFF" />

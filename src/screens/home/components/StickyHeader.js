@@ -21,6 +21,7 @@ import Feather from 'react-native-vector-icons/Feather';
 import { FONTS } from '../../../styles/typography';
 import ProfileAvatarBadge from '../../../components/ProfileAvatarBadge';
 import RotatingPlaceholder from '../../../components/RotatingPlaceholder';
+import CachedImage from '../../../components/CachedImage';
 import COLORS from '@/styles/colors';
 import {
   TYPE,
@@ -180,7 +181,11 @@ const StickyHeader = ({
                 style={{ marginRight: wp('1.5%') }}
               />
               <Text style={styles.selectLocationText}>Select Location</Text>
-              <Entypo name={'chevron-down'} size={wp('4.4%')} color={CHIP_INK} />
+              <Entypo
+                name={'chevron-down'}
+                size={wp('4.4%')}
+                color={CHIP_INK}
+              />
             </TouchableOpacity>
           )}
         </Animated.View>
@@ -292,17 +297,25 @@ const StickyHeader = ({
             ]}
             onLayout={onFrameLayout}
           >
-            <Animated.Image
-              source={bannerSource}
+            {}
+            <Animated.View
+              pointerEvents="none"
               style={[
                 styles.bannerImage,
                 bannerParallaxStyle,
                 bannerRevealStyle,
               ]}
-              accessible={false}
-              onLoad={onBannerLoad}
-              fadeDuration={0}
-            />
+            >
+              <CachedImage
+                source={bannerSource}
+                style={styles.bannerFill}
+                resizeMode="cover"
+                priority="high"
+                transitionDuration={0}
+                accessible={false}
+                onLoad={onBannerLoad}
+              />
+            </Animated.View>
 
             <Animated.View
               pointerEvents="none"
@@ -363,7 +376,9 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     top: -BANNER_BLEED,
     bottom: -BANNER_BLEED,
-    resizeMode: 'cover',
+  },
+  bannerFill: {
+    flex: 1,
   },
   headerViewOne: {
     flexDirection: 'row',

@@ -1,13 +1,10 @@
 import React from 'react';
-import {
-  View,
-  Image,
-  ImageBackground,
-  StyleSheet,
-  Platform,
-} from 'react-native';
+import { View, StyleSheet, Platform } from 'react-native';
 import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import AnimatedPressable from '../../../components/AnimatedPressable';
+import CachedImage, {
+  CachedImageBackground,
+} from '../../../components/CachedImage';
 import { RADIUS } from '@/styles/homeTheme';
 
 const SHOWCASE_ASPECT = 0.8;
@@ -40,13 +37,16 @@ const TopShowcase = ({
       : 0;
 
   return (
-    <ImageBackground
+    <CachedImageBackground
       source={backgroundUri}
       style={styles.container}
       imageStyle={styles.backgroundImage}
+      resizeMode="cover"
+      priority="high"
+      accessible={false}
     >
       {!!announcementUri && (
-        <Image
+        <CachedImage
           source={announcementUri}
           style={styles.announcement}
           resizeMode="cover"
@@ -64,7 +64,7 @@ const TopShowcase = ({
               accessibilityRole="button"
               accessibilityLabel={banner.title || `Featured offer ${index + 1}`}
             >
-              <Image
+              <CachedImage
                 source={banner.uri}
                 style={styles.cardImage}
                 resizeMode="contain"
@@ -74,7 +74,7 @@ const TopShowcase = ({
           ))}
         </View>
       )}
-    </ImageBackground>
+    </CachedImageBackground>
   );
 };
 

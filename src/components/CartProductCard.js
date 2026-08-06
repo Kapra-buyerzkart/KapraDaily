@@ -35,7 +35,7 @@ const BUMP_SPRING = { damping: 8, stiffness: 260, mass: 0.4 };
 const SOLD_OUT_IMAGE_OPACITY = 0.45;
 
 const CartProductCard = props => {
-  const { updateCartItemQuantity, removeFromCart, updatingItems } = useCart();
+  const { changeCartItemQuantity, removeFromCart, updatingItems } = useCart();
   const { isInWishlist, toggleWishlist } = useWishlist();
 
   const { item, disableManage, pincodeAreaIdOverride } = props;
@@ -105,21 +105,19 @@ const CartProductCard = props => {
 
   const handleDecrease = useCallback(() => {
     if (quantityRef.current > 1 && !isSoldOut) {
-      const next = quantityRef.current - 1;
-      quantityRef.current = next;
-      setQuantity(next);
-      updateCartItemQuantity(cartItemId, next, pincodeAreaIdOverride);
+      quantityRef.current -= 1;
+      setQuantity(quantityRef.current);
+      changeCartItemQuantity(cartItemId, -1, pincodeAreaIdOverride);
     } else {
       setIsRemovalModalVisible(true);
     }
-  }, [isSoldOut, cartItemId, pincodeAreaIdOverride, updateCartItemQuantity]);
+  }, [isSoldOut, cartItemId, pincodeAreaIdOverride, changeCartItemQuantity]);
 
   const handleIncrease = useCallback(() => {
-    const next = quantityRef.current + 1;
-    quantityRef.current = next;
-    setQuantity(next);
-    updateCartItemQuantity(cartItemId, next, pincodeAreaIdOverride);
-  }, [cartItemId, pincodeAreaIdOverride, updateCartItemQuantity]);
+    quantityRef.current += 1;
+    setQuantity(quantityRef.current);
+    changeCartItemQuantity(cartItemId, 1, pincodeAreaIdOverride);
+  }, [cartItemId, pincodeAreaIdOverride, changeCartItemQuantity]);
 
   const handleDelete = useCallback(() => {
     setIsRemovalModalVisible(true);

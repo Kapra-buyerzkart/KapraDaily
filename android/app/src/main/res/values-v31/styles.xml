@@ -5,21 +5,18 @@
          adaptive launcher icon on windowSplashScreenBackground, so without the
          attributes below the background falls back to system white and the
          bootsplash.xml layer-list is ignored. Keep this in sync with
-         res/drawable/bootsplash.xml and src/components/AppLoader.js. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
-        <item name="android:editTextBackground">@drawable/rn_edit_text_material</item>
-        <!-- Legacy fallback (ignored on 12+, kept for pre-31 devices via the
-             base values/styles.xml; harmless here). -->
+         res/drawable/bootsplash.xml and src/components/AppLoader.js.
+         Only the launch theme is overridden here - AppTheme comes from
+         values/styles.xml on every API level and carries no splash of its own,
+         so nothing branded is left behind the app once MainActivity swaps the
+         window background at first render. -->
+    <style name="BootTheme" parent="AppTheme">
+        <!-- Legacy fallback (ignored on 12+, kept so the pre-31 path and this
+             one stay identical; harmless here). -->
         <item name="android:windowBackground">@drawable/bootsplash</item>
         <!-- Branded system splash instead of the default white window. -->
         <item name="android:windowSplashScreenBackground">@color/bootsplash_background</item>
-        <!-- Reuses ic_launcher_foreground (the adaptive-icon foreground), not
-             kapra_logo directly: the SplashScreen API renders this icon
-             through the same square/circular safe-zone masking as the
-             launcher icon, and the wide wordmark bitmap gets clipped/stretched
-             without the same 14% inset ic_launcher_foreground.xml already
-             applies to keep the logo inside that safe zone. -->
-        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+               <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
     </style>
 
 </resources>

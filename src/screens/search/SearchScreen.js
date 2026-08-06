@@ -75,6 +75,29 @@ const SearchScreen = () => {
     : suggestions;
 
   useEffect(() => {
+    console.log('🔎 [SearchScreen] route.params:', route.params);
+    console.log('🔎 [SearchScreen] staticTitle:', staticTitle);
+    console.log(
+      '🔎 [SearchScreen] staticProducts count:',
+      staticProducts?.length,
+    );
+    console.log('🔎 [SearchScreen] staticProducts:', staticProducts);
+  }, [route.params, staticTitle, staticProducts]);
+
+  useEffect(() => {
+    console.log(
+      '🔎 [SearchScreen] source:',
+      isBrowsingStaticList ? 'staticProducts' : 'searchSuggestions',
+      '| isSearchActive:',
+      isSearchActive,
+      '| catId:',
+      catId,
+      '| displayed count:',
+      displayedSuggestions?.length,
+    );
+  }, [isBrowsingStaticList, isSearchActive, catId, displayedSuggestions]);
+
+  useEffect(() => {
     const fetchPincode = async () => {
       const stored = await secureStore.getItem('pincodeAreaId');
       if (stored) {

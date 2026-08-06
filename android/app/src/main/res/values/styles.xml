@@ -6,8 +6,26 @@
     <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <!-- Customize your theme here. -->
         <item name="android:editTextBackground">@drawable/rn_edit_text_material</item>
-        <!-- Branded cold-start splash instead of a black window while the JS
-             bundle loads. See res/drawable/bootsplash.xml. -->
+        <!-- Plain, unbranded window background. This drawable sits behind the
+             whole React view tree for the app's entire lifetime, so it must not
+             be the branded splash: react-native-screens leaves it exposed
+             wherever no screen is painted (cross-fade transitions, screens
+             unfreezing via freezeOnBlur, the first frame of a lazily required
+             screen), and blur views draw the decor view - window background
+             included - into every blurred frame. Using @drawable/bootsplash
+             here made the orange splash flash mid-navigation and tinted the
+             event-details glass orange. MainActivity swaps the window over to
+             this colour once React paints its first frame. -->
+        <item name="android:windowBackground">@color/window_background</item>
+    </style>
+
+    <!-- Cold-start launch theme: the branded splash covering everything from the
+         system splash dismissing to the JS bundle rendering AppLoader (same
+         orange). Applied via AndroidManifest; MainActivity replaces this window
+         background the moment React has content on screen, so it is never the
+         backdrop of a running app.
+         See res/drawable/bootsplash.xml and values-v31/styles.xml. -->
+    <style name="BootTheme" parent="AppTheme">
         <item name="android:windowBackground">@drawable/bootsplash</item>
     </style>
 

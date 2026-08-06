@@ -132,7 +132,7 @@ const EventHero = ({ event, scrollY }) => {
 
       <HeroScrims />
 
-      {hasCarousel && (
+      {/* {hasCarousel && (
         <Animated.View
           style={[styles.heroDots, dotsStyle]}
           pointerEvents="none"
@@ -146,7 +146,7 @@ const EventHero = ({ event, scrollY }) => {
             />
           ))}
         </Animated.View>
-      )}
+      )} */}
     </View>
   );
 };

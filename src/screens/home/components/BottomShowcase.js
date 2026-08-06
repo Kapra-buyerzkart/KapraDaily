@@ -1,10 +1,13 @@
 import React, { useCallback } from 'react';
-import { View, Image, ImageBackground, FlatList, StyleSheet } from 'react-native';
+import { View, FlatList, StyleSheet } from 'react-native';
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
 import AnimatedPressable from '../../../components/AnimatedPressable';
+import CachedImage, {
+  CachedImageBackground,
+} from '../../../components/CachedImage';
 import {
   RADIUS,
   SPACE,
@@ -43,7 +46,7 @@ const BottomShowcase = ({ banner, products, onBannerPress }) => {
         accessibilityRole="button"
         accessibilityLabel={item.title || 'Featured product'}
       >
-        <Image
+        <CachedImage
           source={item.uri}
           style={styles.wellImage}
           resizeMode="contain"
@@ -63,10 +66,12 @@ const BottomShowcase = ({ banner, products, onBannerPress }) => {
       accessibilityRole="button"
       accessibilityLabel={banner.title || 'Featured collection'}
     >
-      <ImageBackground
+      <CachedImageBackground
         source={banner.uri}
         style={styles.canvas}
         imageStyle={styles.canvasImage}
+        resizeMode="cover"
+        accessible={false}
       >
         <View style={styles.tray}>
           <FlatList
@@ -85,7 +90,7 @@ const BottomShowcase = ({ banner, products, onBannerPress }) => {
             windowSize={5}
           />
         </View>
-      </ImageBackground>
+      </CachedImageBackground>
     </AnimatedPressable>
   );
 };

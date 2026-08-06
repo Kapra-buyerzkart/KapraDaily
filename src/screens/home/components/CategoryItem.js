@@ -1,11 +1,12 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text, Image } from 'react-native';
+import { View, Text } from 'react-native';
 import { FadeInUp } from 'react-native-reanimated';
 import { useNavigation } from '@react-navigation/native';
 import CONFIG from '../../../globals/config';
 import getCategoryPlaceholder from './getCategoryPlaceholder';
 import useCategoryTileStyles from './useCategoryTileStyles';
 import AnimatedPressable from '../../../components/AnimatedPressable';
+import CachedImage from '../../../components/CachedImage';
 import { getStaggerDelay } from '../../../utils/staggerDelay';
 import { selectionTick } from '../../../utils/haptics';
 import { MAX_FONT_SCALE, categoryTint } from '@/styles/homeTheme';
@@ -53,7 +54,7 @@ const CategoryItem = React.memo(({ item, index = 0 }) => {
           { backgroundColor: categoryTint(index) },
         ]}
       >
-        <Image
+        <CachedImage
           source={imageSource}
           style={styles.image}
           resizeMode="contain"

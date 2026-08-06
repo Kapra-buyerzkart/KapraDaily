@@ -1,11 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
-import {
-  View,
-  Image,
-  TouchableOpacity,
-  StyleSheet,
-  AppState,
-} from 'react-native';
+import { View, TouchableOpacity, StyleSheet, AppState } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
 import Animated, {
   useAnimatedStyle,
@@ -18,6 +12,7 @@ import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
+import CachedImage from '../../../components/CachedImage';
 
 const DOT_ACTIVE_WIDTH = wp('2.25%');
 const DOT_INACTIVE_WIDTH = wp('1.32%');
@@ -203,7 +198,7 @@ const PlacementBannerCarousel = ({
           onPress={() => onBannerPress(item)}
           style={geometry.touchableStyle}
         >
-          <Image
+          <CachedImage
             source={item.uri}
             style={styles.topHomeBannerImage}
             resizeMode="cover"
@@ -231,7 +226,11 @@ const PlacementBannerCarousel = ({
             fullWidth ? styles.topHomeBannerViewFull : styles.topHomeBannerView
           }
         >
-          <Image source={banners[0].uri} style={styles.topHomeBannerImage} />
+          <CachedImage
+            source={banners[0].uri}
+            style={styles.topHomeBannerImage}
+            resizeMode="cover"
+          />
         </TouchableOpacity>
       </View>
     );

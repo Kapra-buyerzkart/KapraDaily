@@ -4,6 +4,13 @@ import secureStore from '../utils/secureStore';
 
 export const WishlistContext = createContext();
 
+// Narrow contexts for list cells: an id Set that only changes when membership
+// changes, and a permanently stable toggle. Keeps cards out of the re-render
+// path of unrelated wishlist state (loading/error).
+const EMPTY_ID_SET = new Set();
+export const WishlistIdsContext = createContext(EMPTY_ID_SET);
+export const WishlistActionsContext = createContext(null);
+
 export const WishlistProvider = ({ children }) => {
     const [wishlistItems, setWishlistItems] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -95,6 +102,18 @@ export const WishlistProvider = ({ children }) => {
         }
     }, [isInWishlist, addToWishlist, removeFromWishlist]);
 
+    const wishlistIds = useMemo(
+        () => new Set(wishlistItems.map(item => item.productId)),
+        [wishlistItems],
+    );
+
+    const latestToggleRef = useRef(toggleWishlist);
+    latestToggleRef.current = toggleWishlist;
+    const wishlistActions = useMemo(
+        () => ({ toggleWishlist: item => latestToggleRef.current(item) }),
+        [],
+    );
+
     const value = useMemo(() => ({
         wishlistItems,
         isLoading,
@@ -108,9 +127,20 @@ export const WishlistProvider = ({ children }) => {
 
     return (
         <WishlistContext.Provider value={value}>
-            {children}
+            <WishlistActionsContext.Provider value={wishlistActions}>
+                <WishlistIdsContext.Provider value={wishlistIds}>
+                    {children}
+                </WishlistIdsContext.Provider>
+            </WishlistActionsContext.Provider>
         </WishlistContext.Provider>
     );
 };
 
 export const useWishlist = () => useContext(WishlistContext);
+
+export const useWishlistActions = () => useContext(WishlistActionsContext);
+
+export const useIsWishlisted = productId => {
+    const ids = useContext(WishlistIdsContext);
+    return ids.has(productId);
+};

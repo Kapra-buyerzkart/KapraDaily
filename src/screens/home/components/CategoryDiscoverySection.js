@@ -3,7 +3,7 @@ import {
   View,
   Text,
   Image,
-  ScrollView,
+  FlatList,
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
@@ -19,6 +19,7 @@ import {
 } from 'react-native-responsive-screen';
 import CONFIG from '../../../globals/config';
 import ShimmerPlaceholder from '../../../components/ShimmerPlaceholder';
+import CachedImage from '../../../components/CachedImage';
 import ProductBlockShimmer from './ProductBlockShimmer';
 import ProductRail from './ProductRail';
 import SectionHeader from './SectionHeader';
@@ -124,7 +125,7 @@ const DiscoveryTab = React.memo(function DiscoveryTab({
       accessibilityLabel={label}
     >
       <Animated.View style={[tile.tabWell, wellAnimatedStyle]}>
-        <Image
+        <CachedImage
           source={imageSource}
           style={tile.tabImage}
           resizeMode="contain"
@@ -155,6 +156,24 @@ const CategoryDiscoverySection = ({
   navigation,
 }) => {
   const tile = useCategoryTileStyles();
+
+  const activeCatId = selectedDiscoveryCategory?.catId;
+
+  const tabKeyExtractor = useCallback(
+    (item, index) => (item.catId || item.id || index).toString(),
+    [],
+  );
+
+  const renderTab = useCallback(
+    ({ item }) => (
+      <DiscoveryTab
+        item={item}
+        isActive={activeCatId === item.catId}
+        onPress={onSelectCategory}
+      />
+    ),
+    [activeCatId, onSelectCategory],
+  );
 
   if (isHomeLoading && !categoryDiscovery) return <ExploreShimmer />;
   if (!shouldShow) return null;
@@ -187,21 +206,19 @@ const CategoryDiscoverySection = ({
         />
 
         {discoveryCategories.length > 0 && (
-          <ScrollView
+          <FlatList
             horizontal
+            data={discoveryCategories}
+            keyExtractor={tabKeyExtractor}
+            renderItem={renderTab}
+            extraData={activeCatId}
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={tile.tabRow}
+            initialNumToRender={6}
+            maxToRenderPerBatch={6}
+            windowSize={5}
             accessibilityRole="tablist"
-          >
-            {discoveryCategories.map((item, index) => (
-              <DiscoveryTab
-                key={(item.catId || item.id || index).toString()}
-                item={item}
-                isActive={selectedDiscoveryCategory?.catId === item.catId}
-                onPress={onSelectCategory}
-              />
-            ))}
-          </ScrollView>
+          />
         )}
 
         {isDiscoveryLoading ? (

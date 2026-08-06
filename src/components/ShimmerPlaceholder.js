@@ -7,18 +7,19 @@ const ShimmerPlaceholder = ({ style, duration = 1500, width = wp('100%') }) => {
     const animatedValue = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
-        const startShimmer = () => {
-            Animated.loop(
-                Animated.timing(animatedValue, {
-                    toValue: 1,
-                    duration: duration,
-                    easing: Easing.linear,
-                    useNativeDriver: true,
-                })
-            ).start();
-        };
+        const loop = Animated.loop(
+            Animated.timing(animatedValue, {
+                toValue: 1,
+                duration: duration,
+                easing: Easing.linear,
+                useNativeDriver: true,
+            })
+        );
+        loop.start();
 
-        startShimmer();
+        // Without this the loop keeps driving a detached node after unmount —
+        // costly when dozens of shimmers cycle through a list.
+        return () => loop.stop();
     }, [animatedValue, duration]);
 
     const translateX = animatedValue.interpolate({
@@ -62,4 +63,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default ShimmerPlaceholder;
+export default React.memo(ShimmerPlaceholder);

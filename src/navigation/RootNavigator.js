@@ -30,7 +30,9 @@ const RegistraionScreen = lazyScreen(() =>
 const OtpScreen = lazyScreen(() => require('../screens/OtpScreen'));
 const ChangePwdScreen = lazyScreen(() => require('../screens/ChangePwdScreen'));
 const BCoinScreen = lazyScreen(() => require('../screens/BCoinScreen'));
-const SearchScreen = lazyScreen(() => require('../screens/search/SearchScreen'));
+const SearchScreen = lazyScreen(() =>
+  require('../screens/search/SearchScreen'),
+);
 const OrderSuccessScreen = lazyScreen(() =>
   require('../screens/OrderSuccessScreen'),
 );
@@ -126,7 +128,7 @@ const SCREEN_OPTIONS = {
 const NO_GESTURE = { gestureEnabled: false };
 const BLACK_CONTENT = { contentStyle: { backgroundColor: '#000000' } };
 const BLACK_CONTENT_FADE = {
-  animation: 'fade',
+  animation: 'fade_from_bottom',
   contentStyle: { backgroundColor: '#000000' },
 };
 

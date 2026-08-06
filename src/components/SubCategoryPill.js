@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Image, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -10,6 +10,7 @@ import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import { FONTS } from '../styles/typography';
 import { getImageUrl } from '../utils/imageUrl';
 import AnimatedPressable from './AnimatedPressable';
+import CachedImage from './CachedImage';
 
 const AnimatedText = Animated.createAnimatedComponent(Animated.Text);
 
@@ -56,9 +57,10 @@ const SubCategoryPill = ({ item, isSelected, onPress }) => {
       onPress={onPress}
       style={[styles.subCatPill, containerStyle]}
     >
-      <Image
+      <CachedImage
         style={styles.subCatPillImage}
         source={getImageUrl(item.imageUrl)}
+        accessible={false}
       />
       <AnimatedText
         style={[

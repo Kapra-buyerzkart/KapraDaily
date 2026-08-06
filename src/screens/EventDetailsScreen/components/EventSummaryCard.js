@@ -4,7 +4,7 @@ import { BlurView } from '@sbaiahmed1/react-native-blur';
 import CalendarIcon from '../../../assets/icons/calendarOutline.svg';
 import LocationPinIcon from '../../../assets/icons/locationPinOutline.svg';
 import PriceIcon from '../../../assets/icons/mobilePaymentSuccess.svg';
-import styles from '../styles';
+import styles, { GLASS_BLUR_ROUNDS } from '../styles';
 import { formatPrice } from '../utils';
 import VenueMapStrip from './VenueMapStrip';
 import { hp, wp } from '@/utils/responsive';
@@ -76,7 +76,12 @@ const EventSummaryCard = ({
   ].filter(Boolean);
 
   return (
-    <BlurView style={styles.summaryCard} blurAmount={20} blurType="dark">
+    <BlurView
+      style={styles.summaryCard}
+      blurType="dark"
+      blurAmount={24}
+      blurRounds={GLASS_BLUR_ROUNDS}
+    >
       <Text style={styles.eventName}>{name}</Text>
       {!!subtitle && <Text style={styles.eventTagline}>{subtitle}</Text>}
       {!!category && (

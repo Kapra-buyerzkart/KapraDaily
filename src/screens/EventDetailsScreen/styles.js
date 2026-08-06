@@ -1,5 +1,6 @@
 import { StyleSheet } from 'react-native';
 import COLORS from '@/styles/colors';
+import { hp } from '@/utils/responsive';
 
 const CARD_BG = 'rgba(255,255,255,0.04)';
 const CARD_BORDER = 'rgba(255,255,255,0.10)';
@@ -28,7 +29,7 @@ export const HERO_TOP_SCRIM_COLORS = [
   'rgba(12, 12, 12, 0.32)',
   'transparent',
 ];
-export const HERO_CARD_OVERLAP = 40;
+export const HERO_CARD_OVERLAP = hp(20);
 export const ARTIST_CARD_WIDTH = 104;
 export const ARTIST_CARD_GAP = 12;
 export const CLAIM_GRADIENT_COLORS = [
@@ -38,6 +39,8 @@ export const CLAIM_GRADIENT_COLORS = [
   '#000000',
 ];
 export const CLAIM_GRADIENT_LOCATIONS = [0, 0.35, 0.65, 1];
+// Android redraws the blur once per pass, so keep the pass count low.
+export const GLASS_BLUR_ROUNDS = 3;
 
 const styles = StyleSheet.create({
   container: {
@@ -69,9 +72,13 @@ const styles = StyleSheet.create({
   },
   topBarSurface: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(9,4,18,0.94)',
+    backgroundColor: 'transparent',
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: 'rgba(255,255,255,0.12)',
+    overflow: 'hidden',
+  },
+  topBarSurfaceBlur: {
+    ...StyleSheet.absoluteFillObject,
   },
   topBarProgressTrack: {
     position: 'absolute',

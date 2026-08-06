@@ -81,6 +81,13 @@ const ProductListScreen = () => {
   const displayProducts =
     activeSearchText.trim().length >= MIN_SEARCH_LENGTH ? searchResults : products;
 
+  useEffect(() => {
+    console.log(
+      `[ProductListScreen] "${title}" — ${displayProducts?.length || 0} items`,
+      JSON.stringify(displayProducts, null, 2),
+    );
+  }, [title, displayProducts]);
+
   return (
     <SafeAreaView style={styles.mainContainer} edges={['top', 'left', 'right']}>
       <AnimatedHeader
