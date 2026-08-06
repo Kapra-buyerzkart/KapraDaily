@@ -45,7 +45,7 @@ const TicketSplashScreen = ({ navigation }) => {
           ]}
         />
 
-        {/* Logo */}
+        {}
         <Animated.View
           style={[
             styles.logoContainer,
@@ -61,15 +61,9 @@ const TicketSplashScreen = ({ navigation }) => {
             resizeMode="contain"
           />
         </Animated.View>
-        {/* 
-                <Animated.Text style={[styles.tagline, {
-                    opacity: taglineOpacity,
-                    transform: [{ translateY: taglineTranslateY }],
-                }]}>
-                    Movies & Entertainment
-                </Animated.Text> */}
+        {}
 
-        {/* Bottom dots animation */}
+        {}
         <View style={styles.dotsContainer}>
           {[0, 1, 2].map(i => (
             <PulsingDot key={i} delay={i * 200} />

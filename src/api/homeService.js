@@ -8,8 +8,6 @@ export const getHomepageData = async (pincodeAreaId, blocksize = 100) => {
             blocksize
         }
     };
-    // `debug` (not `log`) because `pincodeAreaId` matches the logger's `pincode`
-    // redaction pattern — it's an area id, not a user's pincode. Dev-only either way.
     logger.debug('[API REQUEST]: homepage', config.params);
     return get('homepage', config);
 };
@@ -21,7 +19,6 @@ export const getCategoryProducts = async (catId, pincodeAreaId) => {
             pincodeAreaId
         }
     };
-
 
     return get('homepage/categoryproducts', config);
 };

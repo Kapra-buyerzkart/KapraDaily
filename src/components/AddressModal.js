@@ -180,8 +180,6 @@ const AddressModal = ({
 }) => {
   const modalRef = useRef(null);
 
-  // Bridge the parent-controlled `visible` prop to CustomModal's imperative
-  // open/close API (RN core <Modal> does not render on this build).
   useEffect(() => {
     if (visible) {
       modalRef.current?.open();

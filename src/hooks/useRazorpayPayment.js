@@ -27,7 +27,6 @@ export const useRazorpayPayment = ({
       const rzpResponse = await createRazorpayOrderApi({ orderId });
       logger.debug('[PAY:cart] 1/6 create-order response:', rzpResponse);
       if (rzpResponse?.success && rzpResponse?.data) {
-        // Robust mapping: API might return keyId or razorpayKeyId
         const keyId =
           rzpResponse.data.keyId ||
           rzpResponse.data.razorpayKeyId ||
@@ -71,7 +70,6 @@ export const useRazorpayPayment = ({
 
         logger.debug('[PAY:cart] 3/6 razorpay checkout options:', options);
 
-        // Increase timeout to ensure loader modality is fully dismissed before SDK opens
         showLoader(false);
         setTimeout(async () => {
           try {
@@ -122,9 +120,6 @@ export const useRazorpayPayment = ({
               }
             };
 
-            // The payment may have been settled by the backend asynchronously
-            // (e.g. via a webhook), so verify can report "already processed" /
-            // "completed successfully" either in the response or as an error.
             const isSettled = () =>
               isPaymentAlreadyCompleted(verifyResponse) ||
               isPaymentAlreadyCompleted(verifyError);
@@ -177,7 +172,6 @@ export const useRazorpayPayment = ({
               error: sdkError,
             });
             showLoader(false);
-            // Using reset to ensure stack consistency on failure
             navigation.reset({
               index: 0,
               routes: [
@@ -197,7 +191,7 @@ export const useRazorpayPayment = ({
             });
             refreshCart();
           }
-        }, 500); // 500ms safe delay
+        }, 500);
       } else {
         throw new Error(rzpResponse?.message || 'Payment initiation failed');
       }

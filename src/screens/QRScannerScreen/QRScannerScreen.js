@@ -49,8 +49,6 @@ export default function QRScannerScreen() {
 
   const goBack = useCallback(() => navigation.goBack(), [navigation]);
 
-  // The torch can only be driven while the capture session is running, so it
-  // has to follow `isActive` rather than the toggle alone.
   const isCameraActive = isFocused && !scannedValue;
 
   const header = (

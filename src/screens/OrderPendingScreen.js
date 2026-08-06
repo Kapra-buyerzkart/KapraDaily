@@ -36,7 +36,6 @@ const OrderPendingScreen = () => {
   } = route.params || {};
 
   useEffect(() => {
-    // Prevent Android hardware back button
     const backAction = () => {
       return true;
     };
@@ -46,7 +45,6 @@ const OrderPendingScreen = () => {
       backAction,
     );
 
-    // Prevent navigation remove
     const unsubscribe = navigation.addListener('beforeRemove', e => {
       const action = e.data.action;
       if (action.type === 'RESET' || action.type === 'REPLACE') {
@@ -89,7 +87,7 @@ const OrderPendingScreen = () => {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
-          {/* Pending Icon Area */}
+          {}
           <View style={styles.pendingSection}>
             <View style={styles.iconCircle}>
               <MaterialCommunityIcons
@@ -107,7 +105,7 @@ const OrderPendingScreen = () => {
             </View>
           </View>
 
-          {/* Info Card */}
+          {}
           <View style={styles.infoCard}>
             <Text style={styles.infoTitle}>What happens next?</Text>
             <View style={styles.stepRow}>
@@ -130,13 +128,13 @@ const OrderPendingScreen = () => {
             </View>
           </View>
 
-          {/* Order Number Display */}
+          {}
           <View style={styles.orderNumberCard}>
             <Text style={styles.orderNumberLabel}>Order Number</Text>
             <Text style={styles.orderNumberText}>#{displayOrderNumber}</Text>
           </View>
 
-          {/* Buttons */}
+          {}
           <View style={styles.buttonsContainer}>
             <LinearGradient
               colors={['#F2994A', '#F2C94C']}

@@ -8,13 +8,6 @@ import {
 import { FONTS } from '../styles/typography';
 import { INK, RADIUS, SPACE, MAX_FONT_SCALE } from '../styles/homeTheme';
 
-// The three terminal-ish order states — cancelled, awaiting payment, delivered —
-// share one card so the screen reads as a system rather than three unrelated
-// treatments. Each leads with the fact, then immediately answers the only
-// question that follows it: "what happened to my money?".
-//
-// Colour is confined to the icon well, the rules and the strip title. A fully
-// saturated slab reads as an error/success toast, not as a settled order state.
 const VARIANTS = {
   cancelled: {
     accent: '#D93025',
@@ -74,7 +67,6 @@ const buildStrip = ({
     return {
       icon: 'hourglass-outline',
       title: `${money} awaiting confirmation`,
-      // Only point at the retry button when the screen is actually rendering one.
       hint: canRetryPayment
         ? 'If the amount was deducted it will reflect shortly. Otherwise retry the payment below.'
         : 'If the amount was deducted it will reflect shortly. Your order is confirmed the moment it clears.',

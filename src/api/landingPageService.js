@@ -2,12 +2,6 @@ import CONFIG from '../globals/config';
 
 const LANDING_PAGES_URL = `${CONFIG.base_url}landingpages`;
 
-/**
- * Plain fetch for the landing pages endpoint. No auth header — the endpoint is
- * public — and no interceptor layer, so what you see logged is what the server
- * actually returned.
- * @returns {Promise<Object>} the raw `{ success, data, ... }` envelope.
- */
 export const getLandingPagesApi = async () => {
   console.log('[landingPages] GET', LANDING_PAGES_URL);
 

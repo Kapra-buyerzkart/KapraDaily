@@ -61,9 +61,6 @@ const MONTHS_SHORT = [
 
 const HIT_SLOP = hitSlopTo(24);
 
-// How far the stats card rides up over the bottom of the hero artwork. The hero
-// reserves the same amount as bottom padding so the sales figure never sits
-// underneath the card.
 const CARD_OVERLAP = hp('7%');
 
 const formatDate = dateStr => {
@@ -91,14 +88,12 @@ const CoPartnerDashboardScreen = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isFilterVisible, setIsFilterVisible] = useState(false);
 
-  // States for data
   const [summary, setSummary] = useState(null);
   const [copartners, setCopartners] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [orders, setOrders] = useState([]);
   const [payouts, setPayouts] = useState([]);
 
-  // Dynamic default dates for current month
   const today = new Date();
   const defaultYear = today.getFullYear();
   const defaultMonth = String(today.getMonth() + 1).padStart(2, '0');
@@ -109,10 +104,9 @@ const CoPartnerDashboardScreen = () => {
   const [fromDate, setFromDate] = useState(defaultFromDate);
   const [toDate, setToDate] = useState(defaultToDate);
 
-  // States for custom date range picker selection
   const [tempFromDate, setTempFromDate] = useState(defaultFromDate);
   const [tempToDate, setTempToDate] = useState(defaultToDate);
-  const [selectingField, setSelectingField] = useState('from'); // 'from' or 'to'
+  const [selectingField, setSelectingField] = useState('from');
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
 
@@ -222,10 +216,6 @@ const CoPartnerDashboardScreen = () => {
     }
   };
 
-  // All fetch logic now in fetchAllData
-
-  // Six headline metrics, three to a row in the floating card. `tone` picks the
-  // icon colour: money reads green so payouts don't blend into the head counts.
   const getSummaryStats = () => {
     return [
       {
@@ -276,8 +266,6 @@ const CoPartnerDashboardScreen = () => {
     ];
   };
 
-  // Used by the loading and not-a-co-partner states, which have no hero behind
-  // them and so need dark ink on the white page.
   const renderPlainHeader = () => (
     <View style={[styles.plainHeader, { paddingTop: insets.top + SPACE.sm }]}>
       <TouchableOpacity
@@ -301,8 +289,7 @@ const CoPartnerDashboardScreen = () => {
       style={styles.hero}
       resizeMode="cover"
     >
-      {/* Darkens the brand artwork enough for white type to clear contrast at
-          every crop, and deepens toward the bottom where the card overlaps. */}
+      {}
       <LinearGradient
         colors={['rgba(26,12,4,0.45)', 'rgba(26,12,4,0.30)', 'rgba(26,12,4,0.72)']}
         locations={[0, 0.45, 1]}
@@ -385,7 +372,6 @@ const CoPartnerDashboardScreen = () => {
     </View>
   );
 
-  // Floats over the bottom of the hero: 3 x 2, ruled rather than boxed.
   const renderStatsCard = () => {
     const stats = getSummaryStats();
     return (
@@ -501,12 +487,10 @@ const CoPartnerDashboardScreen = () => {
     const firstDay = getFirstDayOfMonth(currentMonth, currentYear);
     const daysList = [];
 
-    // Add empty slots for the first week
     for (let i = 0; i < firstDay; i++) {
       daysList.push({ key: `empty-${i}`, day: null, dateStr: null });
     }
 
-    // Add days of the month
     for (let day = 1; day <= daysInMonth; day++) {
       const dateStr = `${currentYear}-${(currentMonth + 1)
         .toString()
@@ -637,7 +621,7 @@ const CoPartnerDashboardScreen = () => {
             <View style={styles.modalGrabber} />
             <Text style={styles.modalTitle}>Select Date Range</Text>
 
-            {/* Presets Row */}
+            {}
             <View style={styles.presetsRow}>
               <ScrollView
                 horizontal
@@ -671,7 +655,7 @@ const CoPartnerDashboardScreen = () => {
               </ScrollView>
             </View>
 
-            {/* Selected Range Display */}
+            {}
             <View style={styles.selectedRangeDisplay}>
               <TouchableOpacity
                 style={[
@@ -707,7 +691,7 @@ const CoPartnerDashboardScreen = () => {
               </TouchableOpacity>
             </View>
 
-            {/* Calendar Component */}
+            {}
             <View style={styles.calendarContainer}>
               <View style={styles.calendarHeader}>
                 <TouchableOpacity
@@ -735,7 +719,7 @@ const CoPartnerDashboardScreen = () => {
                 </TouchableOpacity>
               </View>
 
-              {/* Weekdays Row */}
+              {}
               <View style={styles.calendarWeekdays}>
                 {weekdays.map(day => (
                   <Text key={day} style={styles.calendarWeekdayText}>
@@ -744,7 +728,7 @@ const CoPartnerDashboardScreen = () => {
                 ))}
               </View>
 
-              {/* Days Grid */}
+              {}
               <View style={styles.calendarGrid}>
                 {daysList.map((item, index) => {
                   const dayStyle = getDayStyle(item.dateStr);
@@ -770,7 +754,7 @@ const CoPartnerDashboardScreen = () => {
               </View>
             </View>
 
-            {/* Action Buttons */}
+            {}
             <View style={styles.modalActions}>
               <TouchableOpacity
                 style={styles.modalCancelBtn}
@@ -796,9 +780,6 @@ const CoPartnerDashboardScreen = () => {
   };
 
   const renderListSection = (title, icon, items, type) => {
-    // An empty section is dropped entirely — heading included. While the fetch
-    // is still in flight the heading stays with a spinner under it, since an
-    // empty array at that point only means "not back yet", not "nothing here".
     if (items.length === 0 && !isLoading) return null;
 
     const limit = 5;
@@ -1051,7 +1032,6 @@ const styles = StyleSheet.create({
     backgroundColor: CANVAS,
   },
 
-  /* Plain header — loading / empty states only */
   plainHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1072,7 +1052,6 @@ const styles = StyleSheet.create({
     marginLeft: SPACE.sm,
   },
 
-  /* Hero — full bleed, runs under the status bar */
   hero: {
     width: '100%',
     paddingBottom: CARD_OVERLAP + SPACE.base,
@@ -1119,7 +1098,6 @@ const styles = StyleSheet.create({
     color: INK.onDark,
   },
 
-  /* Area chips — glass pills on the artwork */
   areaChipsWrap: {
     marginTop: SPACE.base,
   },
@@ -1151,7 +1129,6 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.gilroy.semiBold,
   },
 
-  /* Floating stats card */
   statsCard: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -1189,7 +1166,6 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
 
-  /* Date range */
   dateRangeBox: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1227,7 +1203,6 @@ const styles = StyleSheet.create({
     color: INK.onDark,
   },
 
-  /* List sections — flat, separated by rules rather than nested cards */
   listSection: {
     paddingHorizontal: GUTTER,
     paddingTop: SPACE.lg,
@@ -1322,7 +1297,6 @@ const styles = StyleSheet.create({
     marginTop: SPACE.md,
   },
 
-  /* Empty state */
   emptyStateContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -1355,7 +1329,6 @@ const styles = StyleSheet.create({
     color: INK.onDark,
   },
 
-  /* Filter modal */
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(11,16,32,0.55)',

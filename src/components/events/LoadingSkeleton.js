@@ -4,9 +4,6 @@ import Shimmer from './Shimmer';
 
 const PILL_WIDTHS = [72, 104, 60];
 
-// Card placeholder shaped like EventCard / PopularEventCard (image + title +
-// pill row) so the shimmer reads as "the content that's coming" instead of a
-// plain grey block while the list request is in flight.
 const CardSkeleton = () => (
   <View style={styles.card}>
     <Shimmer style={styles.image} />

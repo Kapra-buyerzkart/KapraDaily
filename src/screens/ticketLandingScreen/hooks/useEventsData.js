@@ -87,7 +87,6 @@ const mapPopularCategories = data => {
   }));
 };
 
-// Owns the Events tab's list fetching and card-press navigation.
 const useEventsData = navigation => {
   const [events, setEvents] = useState([]);
   const [eventsLoading, setEventsLoading] = useState(false);

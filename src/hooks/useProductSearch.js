@@ -22,7 +22,6 @@ const useProductSearch = (
 
   const activePincodeId = initialPincodeId || profile?.pincode;
 
-  // Extract filter values with defaults
   const sortBy = filters.sortBy || 'relevance';
   const priceMin = filters.priceMin ?? 0;
   const priceMax = filters.priceMax ?? 5000;
@@ -67,8 +66,6 @@ const useProductSearch = (
 
   const isGlobalFallback = isSearchActive && !!catId;
 
-  // True while the user has typed a searchable term but the debounce hasn't
-  // settled into a query yet — so the list can show a loader immediately.
   const isAwaitingDebounce =
     trimmedRawTerm.length >= MIN_SEARCH_LENGTH &&
     trimmedRawTerm !== effectiveTerm;
@@ -109,7 +106,7 @@ const useProductSearch = (
           ),
         );
       case 'latest':
-        return sorted; // Default order from API is usually latest
+        return sorted;
       default:
         return sorted;
     }
@@ -121,9 +118,8 @@ const useProductSearch = (
     isSearchActive,
   ]);
 
-  // Client-side price filter for general search
   const filteredSuggestions = useMemo(() => {
-    if (!isSearchActive) return sortedSuggestions; // Server handles filtering for catId
+    if (!isSearchActive) return sortedSuggestions;
     if (priceMin === 0 && priceMax >= 5000) return sortedSuggestions;
 
     return sortedSuggestions.filter(item => {

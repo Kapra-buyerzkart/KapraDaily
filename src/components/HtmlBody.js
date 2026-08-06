@@ -3,10 +3,6 @@ import { Dimensions } from 'react-native';
 import COLORS from '@/styles/colors';
 import SafeRenderHtml from '@/components/SafeRenderHtml';
 
-// Shared renderer for backend-supplied HTML (event details, terms & conditions,
-// vouchers…). Wraps the hardened SafeRenderHtml with the app's typography so the
-// same markup renders identically wherever it appears.
-
 const DEFAULT_CONTENT_WIDTH = Dimensions.get('window').width - 76;
 
 const baseStyle = {
@@ -29,9 +25,6 @@ const tagsStyles = {
 const sanitizeHtml = html =>
   typeof html === 'string'
     ? html
-        // Backend sometimes returns HTML with CSV/Excel-escaped quotes (""
-        // instead of "). Collapse them first so the tag is valid markup and the
-        // style/class stripping below actually matches.
         .replace(/""/g, '"')
         .replace(/\sstyle="[^"]*"/gi, '')
         .replace(/\sclass="[^"]*"/gi, '')

@@ -21,28 +21,6 @@ import {
   getTabBarClearance,
 } from '../../../animations/tabBarVisibility';
 
-// Every scroll-driven style on the home screen, in one place.
-//
-// These were nine `useAnimatedStyle` blocks inline in HomeScreen's body, which
-// is most of what made that file 771 lines and made the actual data flow hard
-// to find. Nothing here reads component state — they all read shared values —
-// so pulling them into a hook changes no behaviour: the animations still run on
-// the UI thread and still don't re-render the screen.
-//
-// Nothing in here writes a prop that Yoga reads. The collapse used to animate
-// `height`/`minHeight`/`marginTop`, which forced a layout pass every scroll
-// frame — and because the header was a flex sibling of the scroll view, that
-// pass re-laid-out the entire home content tree underneath it. The header is an
-// absolutely-positioned overlay with a fixed box now, and the collapse is a
-// `translateY` on the whole thing.
-
-// The search bar's resting geometry. Nothing about its shape animates any more:
-// the corner used to interpolate wp('5.5%') → wp('4.5%') across the collapse,
-// which is a ~4pt wobble on a silhouette the eye is tracking as a fixed
-// landmark — too small to read as a transition, big enough to read as
-// instability. The shape is a constant from SEARCH_FIELD now (shared with the
-// Search screen's input, which is the same control), and only the press scale
-// is left on the animated style.
 const SEARCH_MARGIN_START = hp('2%');
 const SEARCH_MARGIN_END = hp('0.8%');
 const SEARCH_HEIGHT = SEARCH_FIELD.height;
@@ -197,7 +175,6 @@ const useHomeAnimations = ({ top, bottom, headerMetrics }) => {
     };
   });
 
-  // Stable identities — both are handed to the (memoised) StickyHeader.
   const handleSearchPressIn = useCallback(() => {
     searchPressScale.value = withTiming(0.98, { duration: 75 });
   }, [searchPressScale]);

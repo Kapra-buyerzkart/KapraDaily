@@ -1,7 +1,3 @@
-// Centralized icon exports.
-// Metro resolves require() paths statically and auto-selects @2x/@3x variants,
-// so only the base filenames are referenced here.
-
 const icons = {
   objects: require('./OBJECTS.png'),
   address: require('./address.png'),

@@ -8,8 +8,6 @@ import {
   withTiming,
 } from 'react-native-reanimated';
 
-// Entrance: the ticket area rises and scales in shortly after mount, matching
-// the reveal the modal used to play when it opened.
 const useTicketEntrance = () => {
   const ticketAnim = useSharedValue(0);
 

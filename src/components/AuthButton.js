@@ -54,7 +54,6 @@ export default function AuthButton({
             height,
             borderRadius: 10,
             backgroundColor: BackgroundColor || 'transparent',
-            // shadowColor: BackgroundColor || '#000',
           },
         ]}
       >
@@ -98,9 +97,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginVertical: 5,
-    // shadowOffset: { width: 0, height: 2 },
-    // shadowOpacity: 0.3,
-    // shadowRadius: 3,
   },
   buttonText: {
     fontFamily: 'Gilroy-Bold',

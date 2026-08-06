@@ -5,9 +5,6 @@ import { getAccessToken } from './tokenService';
 import { getUserIdFromToken } from '../utils/jwt';
 import logger from '../utils/logger';
 
-// Resolves the current user's id from the stored profile or the auth token.
-// Returns null when it cannot be determined — callers must NOT fall back to a
-// hardcoded id (doing so previously caused requests to target another user's cart).
 const getUserId = async () => {
     try {
         const profileStr = await AsyncStorage.getItem('userProfile');
@@ -50,7 +47,6 @@ const getPincodeAreaId = async () => {
     return null;
 };
 
-
 export const addToCartApi = async (productId, quantity = 1, pincodeAreaIdOverride = null) => {
     const pincodeAreaId = pincodeAreaIdOverride || await getPincodeAreaId();
 
@@ -62,7 +58,6 @@ export const addToCartApi = async (productId, quantity = 1, pincodeAreaIdOverrid
 
     return post('cart/add', payload);
 };
-
 
 export const updateCartItemApi = async (cartItemId, quantity, cartVersion, productId = null, pincodeAreaIdOverride = null) => {
     const pincodeAreaId = pincodeAreaIdOverride || await getPincodeAreaId();
@@ -78,7 +73,6 @@ export const updateCartItemApi = async (cartItemId, quantity, cartVersion, produ
 
     return post(`cart/update/${cartItemId}`, payload);
 };
-
 
 export const removeFromCartApi = async (cartItemId, cartVersion, productId, pincodeAreaIdOverride = null) => {
     const pincodeAreaId = pincodeAreaIdOverride || await getPincodeAreaId();
@@ -115,7 +109,6 @@ export const getCartSummaryApi = async (deliveryMode = 'express', deliverySlotId
     return post(`cart/${idToUse}/summary`, payload);
 };
 
-
 export const clearCartApi = async (cartVersion, cartId) => {
     const payload = {
         ...(cartVersion && { ifMatchCartVersion: cartVersion })
@@ -123,7 +116,6 @@ export const clearCartApi = async (cartVersion, cartId) => {
 
     return deleteRequest('cart/clear', payload);
 };
-
 
 export const applyBCoinApi = async (bcoins, cartVersion, cartId) => {
     const userId = await getUserId();
@@ -134,7 +126,6 @@ export const applyBCoinApi = async (bcoins, cartVersion, cartId) => {
     };
     return post(`cart/${idToUse}/applybcoin`, payload);
 };
-
 
 export const removeBCoinApi = async (cartVersion, cartId) => {
     const userId = await getUserId();
@@ -174,7 +165,6 @@ export const getAvailableCouponsApi = async (pincodeAreaId) => {
     });
 };
 
-
 export const applyGiftCardApi = async (giftCode, cartVersion, pincodeAreaId, cartId) => {
     const userId = await getUserId();
     const idToUse = cartId || userId;
@@ -187,7 +177,6 @@ export const applyGiftCardApi = async (giftCode, cartVersion, pincodeAreaId, car
     logger.log('Applying gift card');
     return post(`cart/${idToUse}/applygiftcard`, payload);
 };
-
 
 export const removeGiftCardApi = async (cartVersion, cartId) => {
     const userId = await getUserId();

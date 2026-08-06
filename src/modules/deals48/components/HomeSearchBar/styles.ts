@@ -9,7 +9,7 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.white,
-    borderRadius: 24, // Pill shape match from Figma
+    borderRadius: 24,
     paddingHorizontal: 12,
     marginHorizontal: 16,
     height: 48,
@@ -23,7 +23,7 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.white,
-    borderRadius: 24, // Pill shape match from Figma
+    borderRadius: 24,
     paddingHorizontal: 12,
     height: 45,
     width: wp('70%'),
@@ -39,7 +39,7 @@ export const styles = StyleSheet.create({
   kIconText: {
     fontWeight: '800',
     fontSize: 20,
-    color: '#F25000', // Bright cyan matching Figma "K"
+    color: '#F25000',
     fontFamily: fonts.h1.fontFamily,
   },
   input: {

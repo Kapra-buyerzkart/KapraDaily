@@ -1,5 +1,3 @@
-// src/theme/colors.ts
-
 const lightColors = {
   primary: '#1A72DD',
   secondary: '#1A72DD',
@@ -18,7 +16,6 @@ const lightColors = {
   blue: '#0000ff',
   halfTransparent: 'rgba(0, 0, 0, 0.5)',
 
-  // Custom Colors
   themeWhite: '#FFFFFF',
   themeLightGray: '#DADADA',
   themeDarkGray: '#727783',
@@ -35,7 +32,7 @@ const lightColors = {
   starYellow: '#FFD700',
   darkCardBackground: '#1F1F1F',
   homeScreenBackground: '#F2FBFB',
-  wishlistbg: '#fffdfbff', //'#f5fffeff',
+  wishlistbg: '#fffdfbff',
   logoutred: '#Ff4242',
   darkFontOne: '#393939',
   black1: '#2F2F2F',
@@ -57,7 +54,6 @@ const darkColors = {
   green: '#32d296',
   blue: '#7abaff',
   halfTransparent: 'rgba(0, 0, 0, 0.5)',
-  // Custom Colors
   themeWhite: '#FFFFFF',
   themeLightGray: '#DADADA',
   themeDarkGray: '#727783',

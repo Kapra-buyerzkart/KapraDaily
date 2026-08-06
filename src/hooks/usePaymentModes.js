@@ -11,7 +11,6 @@ export const usePaymentModes = () => {
         const response = await getPaymentModesApi();
         if (response?.success && response?.data) {
           let modes = [...response.data];
-          // Ensure online exists for testing
           if (
             !modes.some(m =>
               ['online', 'razorpay', 'upi'].includes(

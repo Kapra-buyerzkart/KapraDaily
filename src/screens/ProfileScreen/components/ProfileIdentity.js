@@ -13,10 +13,6 @@ import { styles, PRIVILEGE_INK } from '../styles';
 import { ACCENT, MAX_FONT_SCALE } from '@/styles/homeTheme';
 import { PRESS_IN, PRESS_OUT } from '../motion';
 
-// `onMeasure` reports the bottom edge of the identity *row*, not of the hero.
-// The bar swaps its title the moment the real name goes behind it, so the
-// anchor has to track the name — the hero's own padding, which is there to let
-// the gradient resolve, would push that swap later than the eye expects it.
 export default function ProfileIdentity({
   profile,
   onEditProfile,
@@ -61,9 +57,7 @@ export default function ProfileIdentity({
           {profile?.phoneNo}
         </Text>
 
-        {/* The crown on the avatar says the account is privileged; this says
-            what that is. Only drawn when it applies, so an ordinary profile
-            keeps the tighter two-line block. */}
+        {}
         {!!isPrivileged && (
           <View style={styles.privilegeChip}>
             <MaterialCommunityIcons

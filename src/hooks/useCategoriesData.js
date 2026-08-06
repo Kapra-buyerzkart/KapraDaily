@@ -24,16 +24,13 @@ const useCategoriesData = (catId, debouncedSearchText, filters) => {
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [hasMoreData, setHasMoreData] = useState(true);
   const [locationInitialized, setLocationInitialized] = useState(false);
-  // Monotonic id so only the latest in-flight products request applies its
-  // result — protects against out-of-order responses when the user rapidly
-  // switches category/subcategory/search/filters.
   const requestIdRef = useRef(0);
 
   const fetchProducts = async (categoryId, page = 1) => {
     const requestId = ++requestIdRef.current;
     try {
       if (page === 1) {
-        setProductsList([]); // Clear previous products immediately to show local loader
+        setProductsList([]);
         setIsFetchingProducts(true);
         setHasMoreData(true);
       } else {
@@ -58,8 +55,6 @@ const useCategoriesData = (catId, debouncedSearchText, filters) => {
       const response = await searchProductsApi(payload);
       console.log('Products Response:', response);
 
-      // A newer request superseded this one while it was in flight — drop the
-      // stale result so it can't overwrite the current category's products.
       if (requestId !== requestIdRef.current) {
         return;
       }
@@ -70,9 +65,6 @@ const useCategoriesData = (catId, debouncedSearchText, filters) => {
         response.data &&
         response.data.items
       ) {
-        // Shuffle each page as it arrives (not the accumulated list on every
-        // render) so already-rendered items never reorder from under the
-        // user mid-scroll — only the freshly fetched page gets randomized.
         const newProducts = shuffle(response.data.items);
         if (page === 1) {
           setProductsList(newProducts);
@@ -81,7 +73,6 @@ const useCategoriesData = (catId, debouncedSearchText, filters) => {
         }
 
         setPageNumber(page);
-        // Check if we have more data based on totalCount or item length
         if (newProducts.length < PAGE_SIZE) {
           setHasMoreData(false);
         }
@@ -108,7 +99,7 @@ const useCategoriesData = (catId, debouncedSearchText, filters) => {
   const fetchCategories = async () => {
     try {
       setLoading(true);
-      const response = await getCategoriesApi(1); // Fetch root categories to find 105
+      const response = await getCategoriesApi(1);
       console.log('Categories Response:', response);
       if (
         response &&
@@ -116,10 +107,8 @@ const useCategoriesData = (catId, debouncedSearchText, filters) => {
         response.data &&
         response.data.items
       ) {
-        setStoreUnavailable(false);
         setCategoriesList(response.data.items);
 
-        // Try to find and select 105 as requested
         const targetCat = response.data.items.find(item => item.catId === 105);
         if (targetCat) {
           setSelectedId('105');
@@ -195,6 +184,9 @@ const useCategoriesData = (catId, debouncedSearchText, filters) => {
     };
 
     initializeLocationAndSettings();
+  }, [profile?.pincode]);
+
+  useEffect(() => {
     fetchCategories();
   }, []);
 
@@ -211,8 +203,6 @@ const useCategoriesData = (catId, debouncedSearchText, filters) => {
   }, [selectedId]);
 
   useEffect(() => {
-    // Wait until the stored pincode/location has been resolved so the first
-    // product fetch uses the correct pincodeAreaId instead of a null value.
     if (!locationInitialized) return;
     const catIdToFetch = selectedSubCatId || selectedId;
     if (catIdToFetch) {

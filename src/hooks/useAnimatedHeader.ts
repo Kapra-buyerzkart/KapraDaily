@@ -29,7 +29,6 @@ const useAnimatedHeader = (
   const [searchText, setSearchText] = useState('');
   const inputRef = useRef<TextInput>(null);
 
-  // Focus the input as soon as it mounts (when isSearchActive flips to true)
   useEffect(() => {
     if (!isSearchActive) return;
     const frame = requestAnimationFrame(() => {

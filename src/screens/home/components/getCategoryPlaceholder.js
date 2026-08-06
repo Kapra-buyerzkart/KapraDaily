@@ -20,7 +20,7 @@ const getCategoryPlaceholder = name => {
     return require('../../../assets/images/categories/snc.png');
   if (lowerName.includes('break') || lowerName.includes('cereal'))
     return require('../../../assets/images/categories/tcm.png');
-  return require('../../../assets/images/categories/dfn.png'); // Default fallback
+  return require('../../../assets/images/categories/dfn.png');
 };
 
 export default getCategoryPlaceholder;

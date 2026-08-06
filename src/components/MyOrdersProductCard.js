@@ -39,7 +39,6 @@ const MyOrdersProductCard = props => {
 
   const itemData = props.item.item || props.item || {};
 
-  // Standardized product list parsing
   const getProductList = () => {
     if (itemData.productImagesCsv) {
       return itemData.productImagesCsv.split(',').map(url => ({ image: url }));
@@ -53,7 +52,6 @@ const MyOrdersProductCard = props => {
 
   const { addToCart } = useCart();
 
-  // Format Date
   const formatDate = dateString => {
     if (!dateString) return '';
     try {
@@ -221,8 +219,7 @@ const MyOrdersProductCard = props => {
                 style={[
                   styles.productImage,
                   {
-                    marginLeft: index === 0 ? 0 : wp('-7%'), // overlap to left
-                    // zIndex: index + 1,                 // last image on top
+                    marginLeft: index === 0 ? 0 : wp('-7%'),
                   },
                 ]}
               />

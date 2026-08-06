@@ -13,7 +13,6 @@ export const WishlistProvider = ({ children }) => {
 
     const loadWishlist = useCallback(async (force = false) => {
         const now = Date.now();
-        // Prevent frequent fetches (e.g., within 30 seconds) unless forced
         if (!force && lastFetchedRef.current && (now - lastFetchedRef.current < 30000)) {
             return;
         }
@@ -48,7 +47,6 @@ export const WishlistProvider = ({ children }) => {
     const addToWishlist = useCallback(async (item) => {
         const productId = item.productId || item.id;
 
-        // Optimistic Update
         setWishlistItems(prevItems => {
             if (!prevItems.find(i => (i.productId || i.id) === productId)) {
                 return [...prevItems, { ...item, productId }];
@@ -60,9 +58,8 @@ export const WishlistProvider = ({ children }) => {
             await addToWishlistApi(productId);
         } catch (err) {
             console.error('Error adding to wishlist API:', err);
-            // Revert on failure
             setWishlistItems(prevItems => prevItems.filter(i => (i.productId || i.id) !== productId));
-            loadWishlist(true); // Retry fetch
+            loadWishlist(true);
         }
     }, [loadWishlist]);
 
@@ -78,11 +75,10 @@ export const WishlistProvider = ({ children }) => {
             await removeFromWishlistApi(itemId);
         } catch (err) {
             console.error('Error removing from wishlist API:', err);
-            // Revert on failure
             if (removedItem) {
                 setWishlistItems(prevItems => [...prevItems, removedItem]);
             }
-            loadWishlist(true); // Retry fetch
+            loadWishlist(true);
         }
     }, [loadWishlist]);
 

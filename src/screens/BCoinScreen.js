@@ -63,13 +63,11 @@ const BCoinScreen = () => {
   const [bCoinValueHistory, setBCoinValueHistory] = useState([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
-  // Redemption State
   const [showRedeemModal, setShowRedeemModal] = useState(false);
   const [requestedCoins, setRequestedCoins] = useState('');
   const [preferredMethod, setPreferredMethod] = useState('bank');
   const [isRedeeming, setIsRedeeming] = useState(false);
 
-  // Status Modal State
   const [statusModalVisible, setStatusModalVisible] = useState(false);
   const [statusType, setStatusType] = useState('success');
   const [statusTitle, setStatusTitle] = useState('');
@@ -135,10 +133,8 @@ const BCoinScreen = () => {
         response.data &&
         response.data.items
       ) {
-        // Determine changeType (up/down) by comparing to the previous value over time
         const items = [...response.data.items];
 
-        // Sort purely chronologically (oldest first) to compare correctly
         items.sort((a, b) => new Date(a.updatedOn) - new Date(b.updatedOn));
 
         const mappedItems = items.map((item, index) => {
@@ -155,7 +151,6 @@ const BCoinScreen = () => {
           };
         });
 
-        // Present newest first
         setBCoinValueHistory(mappedItems.reverse());
       }
     } catch (error) {
@@ -184,7 +179,6 @@ const BCoinScreen = () => {
       return;
     }
 
-    // Assuming coinsData is walletData.wallet and totalCoins is bCoins
     console.log('Available UD Coins:', walletData?.wallet?.bCoins);
     if (redeemAmount > (walletData?.wallet?.bCoins || 0)) {
       console.log('Insufficient balance validation failed');
@@ -218,7 +212,7 @@ const BCoinScreen = () => {
         if (response && response.success) {
           console.log('Redemption successful');
           setRequestedCoins('');
-          fetchWalletData(); // Refresh data
+          fetchWalletData();
 
           setStatusType('success');
           setStatusTitle('Success');
@@ -284,8 +278,6 @@ const BCoinScreen = () => {
           .toLowerCase()
       : '';
 
-  // Group history rows under an uppercase month heading (e.g. JANUARY),
-  // newest month first, matching the redesigned history section.
   const groupHistoryByMonth = items => {
     if (!items || items.length === 0) return [];
     const groups = {};
@@ -1090,7 +1082,6 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: wp('9.3%'),
     borderTopRightRadius: wp('9.3%'),
     paddingVertical: hp('3.11%'),
-    // paddingHorizontal: wp('4.65%'),
     maxHeight: hp('70%'),
   },
   modalHeaderContainer: {
@@ -1151,9 +1142,7 @@ const styles = StyleSheet.create({
   bcoinGif: {
     width: wp('47.44%'),
     height: hp('21.88%'),
-    // resizeMode: 'contain',
     alignSelf: 'center',
-    // marginTop: hp('4.1%')
     bottom: hp('1.1%'),
   },
   redeemInput: {
@@ -1197,15 +1186,12 @@ const styles = StyleSheet.create({
   historyHeaderRow: {
     flexDirection: 'column',
     alignItems: 'flex-start',
-    // marginTop: hp('2%'),
     marginBottom: hp('1%'),
   },
   historyNoteContainer: {
-    // backgroundColor: '#FFF5F0',
     paddingHorizontal: wp('3%'),
     paddingVertical: hp('0.8%'),
     borderRadius: wp('2%'),
-    // marginTop: hp('0.5%'),
     borderLeftWidth: 3,
     borderLeftColor: '#F25000',
   },

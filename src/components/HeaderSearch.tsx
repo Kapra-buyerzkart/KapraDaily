@@ -84,7 +84,6 @@ const HeaderSearch = memo(
       }
     }, [isActive, closeSearch, openSearch]);
 
-    // --- animation: title fades/scales out as search opens ---
     const titleAnimatedStyle = useAnimatedStyle(() => ({
       opacity: interpolate(progress.value, [0, 1], [1, 0], Extrapolation.CLAMP),
       transform: [
@@ -107,7 +106,6 @@ const HeaderSearch = memo(
       ],
     }));
 
-    // --- animation: input fades/scales in from the title's position ---
     const inputAnimatedStyle = useAnimatedStyle(() => ({
       opacity: interpolate(progress.value, [0, 1], [0, 1], Extrapolation.CLAMP),
       transform: [
@@ -284,8 +282,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     shadowColor: '#000',
 
-    // shadowRadius: 8,
-    // elevation: 2,
   },
   iconStack: {
     width: wp('5.5%'),

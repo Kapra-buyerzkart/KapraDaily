@@ -40,8 +40,6 @@ const RotatingPlaceholder = ({
   useEffect(() => {
     if (isPaused) {
       cancelAnimation(progress);
-      // Settle back to the fully-visible resting frame instead of freezing
-      // mid fade/slide, so pausing never looks like a glitch.
       progress.value = withTiming(0, { duration: 150 });
       return;
     }

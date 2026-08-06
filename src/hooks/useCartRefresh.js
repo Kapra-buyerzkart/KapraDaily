@@ -8,7 +8,6 @@ export const useCartRefresh = ({
 }) => {
   const [refreshing, setRefreshing] = useState(false);
 
-  // Refresh addresses and UD Coin balance whenever the screen gains focus
   useFocusEffect(
     React.useCallback(() => {
       fetchAddresses();

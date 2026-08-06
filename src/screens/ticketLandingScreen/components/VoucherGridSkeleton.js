@@ -5,8 +5,6 @@ import Shimmer from '@/components/events/Shimmer';
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = (width - 52) / 2;
 
-// Placeholder grid shown while the vouchers request is in flight, so the list
-// area fills in on the same frame as the header/tabs instead of popping in.
 const PLACEHOLDER_COUNT = 6;
 
 const SkeletonCard = () => (

@@ -44,28 +44,9 @@ export const MODAL_ANIMATION_PRESET = {
   SCALE: 'scale',
 };
 
-// Drag distance (px) / release velocity (px/s) past which a swipe is
-// treated as "let go" rather than "snap back" by the gesture-to-close handle.
 const DRAG_CLOSE_DISTANCE = 100;
 const DRAG_CLOSE_VELOCITY = 800;
 
-/**
- * CustomModal
- *
- * A from-scratch modal built only from Views, Pressable, Reanimated and a
- * Portal registry (ModalManager + ModalProvider) — no RN Modal, no
- * react-native-modal, no react-native-paper Modal.
- *
- * Control is entirely imperative: nothing about whether the modal is open
- * lives in props. A parent gets a ref and calls `.open()` / `.close()` /
- * `.toggle()`. This means re-rendering the parent screen never
- * accidentally remounts or flickers the modal, and the same component can
- * be triggered from several places without lifting state up.
- *
- * Despite being declared wherever the developer wants (e.g. inside a deeply
- * nested screen), the actual visual output is teleported to <ModalProvider />
- * mounted once at the app root, so it always paints above everything else.
- */
 const CustomModal = forwardRef((props, ref) => {
   const {
     children,
@@ -84,9 +65,6 @@ const CustomModal = forwardRef((props, ref) => {
     maxHeight,
     containerStyle,
     contentStyle,
-    // When false, children are rendered directly instead of inside the
-    // built-in ScrollView. Use for content that manages its own scrolling
-    // (nested ScrollView/FlatList) to avoid nested-scroll gesture conflicts.
     scrollable = true,
     statusBarStyle = 'light-content',
     statusBarBackgroundColor = '#000000',
@@ -96,34 +74,15 @@ const CustomModal = forwardRef((props, ref) => {
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const insets = useSafeAreaInsets();
 
-  // Stable identity for this instance inside the ModalManager portal registry.
   const id = useRef(generateModalId()).current;
 
-  // Logical open/closed state, read synchronously from imperative handlers
-  // (a React state value would be stale inside those callbacks).
   const isOpenRef = useRef(false);
-  // Whether this instance currently has a node registered in the portal.
-  // Stays true for the full duration of the close animation so the exit
-  // transition can play before the node is actually removed.
   const [isMounted, setIsMounted] = useState(false);
-  // Whether the backdrop/content should still capture touches. Flips to
-  // false the instant close() is called — separate from isMounted, which
-  // stays true until the exit animation finishes — so a modal that's
-  // mid-close never blocks taps to whatever is behind/above it. Guards
-  // against e.g. a native <Modal> (a loading spinner shown right after
-  // confirming) mounting concurrently and starving the Reanimated
-  // withTiming completion callback below, which would otherwise leave a
-  // full-screen, invisible, touch-absorbing backdrop mounted indefinitely.
   const [isInteractive, setIsInteractive] = useState(false);
-  // Guards finalizeClose against running twice (once from the animation's
-  // finished callback, once from the fallback timer below).
   const hasFinalizedRef = useRef(true);
   const closeTimeoutRef = useRef(null);
 
-  // 0 = fully closed, 1 = fully open. Drives every animated style below.
   const progress = useSharedValue(0);
-  // Extra offset (px) applied on top of `progress` while the user drags
-  // the gesture handle; reset to 0 on every fresh open.
   const dragY = useSharedValue(0);
 
   const resolvedPreset = useMemo(
@@ -134,8 +93,6 @@ const CustomModal = forwardRef((props, ref) => {
         : MODAL_ANIMATION_PRESET.SLIDE),
     [animationPreset, position],
   );
-
-  // --- Imperative open / close / toggle -------------------------------
 
   const finalizeClose = useCallback(() => {
     if (hasFinalizedRef.current) return;
@@ -163,9 +120,6 @@ const CustomModal = forwardRef((props, ref) => {
         }
       },
     );
-    // Fallback: guarantee the portal node is torn down even if the
-    // animation above never reports finished:true (e.g. interrupted by a
-    // concurrently-mounting native <Modal>).
     closeTimeoutRef.current = setTimeout(
       finalizeClose,
       animationDuration + 50,
@@ -174,15 +128,9 @@ const CustomModal = forwardRef((props, ref) => {
 
   const open = useCallback(() => {
     const performOpen = () => {
-      // Guards against double-tap / repeated open() calls re-triggering
-      // the enter animation or stacking duplicate portal entries.
       if (isOpenRef.current) return;
       isOpenRef.current = true;
       hasFinalizedRef.current = false;
-      // Cancel any fallback teardown timer left over from a close() that
-      // was interrupted by this reopen — otherwise it fires later and
-      // force-unmounts this fresh open with no animation and no user
-      // action, since finalizeClose's re-entrancy guard was just reset above.
       if (closeTimeoutRef.current) {
         clearTimeout(closeTimeoutRef.current);
         closeTimeoutRef.current = null;
@@ -196,8 +144,6 @@ const CustomModal = forwardRef((props, ref) => {
       });
     };
 
-    // When part of a queue, ModalManager decides whether this instance may
-    // open immediately or has to wait for the current holder to close.
     ModalManager.requestOpen(queue, id, performOpen);
   }, [animationDuration, dragY, id, progress, queue]);
 
@@ -215,8 +161,6 @@ const CustomModal = forwardRef((props, ref) => {
     toggle,
   ]);
 
-  // --- Android hardware back button -----------------------------------
-
   useEffect(() => {
     if (Platform.OS !== 'android') return undefined;
 
@@ -225,8 +169,6 @@ const CustomModal = forwardRef((props, ref) => {
       if (closeOnBackPress) {
         close();
       }
-      // Swallow the press either way while open, so the screen behind a
-      // visible modal never navigates away underneath it.
       return true;
     };
 
@@ -237,15 +179,9 @@ const CustomModal = forwardRef((props, ref) => {
     return () => subscription.remove();
   }, [close, closeOnBackPress]);
 
-  // --- Keyboard avoidance (Reanimated, no KeyboardAvoidingView) -------
-  // useAnimatedKeyboard tracks keyboard height on the UI thread so content
-  // shifts up smoothly with the keyboard instead of jumping when it's
-  // already fully shown/hidden.
-
   const keyboard = useAnimatedKeyboard();
   const keyboardAnimatedStyle = useAnimatedStyle(() => {
     if (position === MODAL_POSITION.TOP) {
-      // Top-anchored modals sit clear of the keyboard already.
       return { transform: [{ translateY: 0 }] };
     }
     const shiftFactor = position === MODAL_POSITION.BOTTOM ? 1 : 0.5;
@@ -253,8 +189,6 @@ const CustomModal = forwardRef((props, ref) => {
       transform: [{ translateY: -keyboard.height.value * shiftFactor }],
     };
   });
-
-  // --- Gesture-to-close (drag handle only, never the scrollable body) -
 
   const pan = useMemo(
     () =>
@@ -278,8 +212,6 @@ const CustomModal = forwardRef((props, ref) => {
         }),
     [close, dragY, gestureEnabled, position],
   );
-
-  // --- Animated styles --------------------------------------------------
 
   const backdropAnimatedStyle = useAnimatedStyle(() => ({
     opacity: interpolate(
@@ -321,8 +253,6 @@ const CustomModal = forwardRef((props, ref) => {
     return { opacity, transform };
   });
 
-  // --- Derived layout (responsive width / height / safe area / radius) -
-
   const containerPositionStyle = useMemo(() => {
     switch (position) {
       case MODAL_POSITION.TOP:
@@ -362,10 +292,6 @@ const CustomModal = forwardRef((props, ref) => {
   const resolvedMaxHeight = maxHeight ?? windowHeight * 0.85;
   const showDragHandle = gestureEnabled && position !== MODAL_POSITION.CENTER;
 
-  // --- The actual node handed to the portal ----------------------------
-  // Recreated only when something that affects what's drawn changes —
-  // never on every animation frame, since Reanimated mutates shared
-  // values on the UI thread without needing a JS re-render.
   const renderModalNode = useCallback(
     () => (
       <View
@@ -405,11 +331,7 @@ const CustomModal = forwardRef((props, ref) => {
                 contentAnimatedStyle,
               ]}
             >
-              {/* Content box. This sized layer sits above the backdrop, so it
-                already blocks taps from falling through to the backdrop's
-                close Pressable — it must be a plain View, NOT a Pressable/
-                Touchable: wrapping a ScrollView/FlatList in a touchable steals
-                the scroll gesture (no scrolling on iOS, erratic on Android). */}
+              {}
               <View
                 style={[
                   styles.contentBox,
@@ -466,9 +388,6 @@ const CustomModal = forwardRef((props, ref) => {
     ],
   );
 
-  // Presentation hints for the portal host — it can't paint behind
-  // Android's status bar from inside the absolute-fill backdrop (the OS
-  // owns that layer), so it tints the status bar itself instead.
   const statusBarMeta = useMemo(
     () => ({
       statusBarStyle,
@@ -478,16 +397,11 @@ const CustomModal = forwardRef((props, ref) => {
     [disableStatusBarTint, statusBarBackgroundColor, statusBarStyle],
   );
 
-  // Push the latest node into the portal registry while open, so any prop
-  // change (new children, resized window, etc.) is reflected immediately.
   useEffect(() => {
     if (!isMounted) return;
     ModalManager.mount(id, renderModalNode, statusBarMeta);
   }, [id, isMounted, renderModalNode, statusBarMeta]);
 
-  // Final safety net: if the owning component unmounts while a modal is
-  // still registered (e.g. the parent screen unmounts mid-animation),
-  // make sure it doesn't leak in the portal registry or block a queue.
   useEffect(
     () => () => {
       if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
@@ -498,8 +412,6 @@ const CustomModal = forwardRef((props, ref) => {
     [id, queue],
   );
 
-  // CustomModal never renders anything in its own place in the tree —
-  // its entire visual output lives in the portal (see renderModalNode).
   return null;
 });
 

@@ -78,8 +78,6 @@ export const useVoucherPayment = onBalanceChange => {
           '[PAY:voucher] 3/5 fully coin-funded, skipping razorpay + verify:',
           { purchaseId, amountPayable },
         );
-        // Fully coin-funded - backend already deducted UD Coins on
-        // initiate, so there's nothing to collect or verify.
         setSuccessVisible(true);
         onBalanceChange?.();
         return;
@@ -100,7 +98,6 @@ export const useVoucherPayment = onBalanceChange => {
             'You exited before completing the payment. Your UD Coins have not been deducted.',
         });
       } else {
-        // Never surface raw SDK/backend error text to the user.
         showStatus({
           type: 'error',
           title: 'Payment Failed',
@@ -112,9 +109,6 @@ export const useVoucherPayment = onBalanceChange => {
       return;
     }
 
-    // Payment was confirmed by Razorpay. Any failure below is a
-    // verification/network issue, not a failed payment - never tell the
-    // user the payment failed once we reach this point.
     try {
       const verifyPayload = {
         purchaseId,
@@ -128,9 +122,6 @@ export const useVoucherPayment = onBalanceChange => {
       logger.debug('[PAY:voucher] 4/5 verify response:', verifyRes);
       logger.warn('[useVoucherPayment] verify response:', verifyRes);
 
-      // The purchase may already be settled by the backend (e.g. via a
-      // webhook), in which case verify reports "already processed" /
-      // "completed successfully" — treat that as a success.
       logger.debug('[PAY:voucher] 5/5 verify outcome:', {
         success: verifyRes?.success,
         alreadyCompleted: isPaymentAlreadyCompleted(verifyRes),

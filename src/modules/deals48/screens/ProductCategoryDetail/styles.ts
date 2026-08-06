@@ -13,7 +13,7 @@ export const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         paddingHorizontal: 16,
-        paddingTop: 55, // safe area
+        paddingTop: 55,
         paddingBottom: 15,
         backgroundColor: colors.themeWhite,
         borderBottomWidth: 1,

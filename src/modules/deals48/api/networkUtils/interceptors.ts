@@ -86,7 +86,6 @@ export const setupInterceptors = (axiosInstance: AxiosInstance): void => {
           );
 
           console.log('🔄 [API] Refresh Response:', res.status, !!res.data);
-          // Check for data nesting (Data vs data) and support both camelCase and snake_case
           const data = res.data.Data || res.data.data || res.data;
           const access_token = data.access_token || data.accessToken;
           const refresh_token = data.refresh_token || data.refreshToken;

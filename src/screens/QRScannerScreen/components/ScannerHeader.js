@@ -12,8 +12,7 @@ const ScannerHeader = ({ onBack, hasTorch, torchOn, onToggleTorch }) => (
       <Image source={icons.backArrowNew} style={styles.backIcon} />
     </TouchableOpacity>
 
-    {/* No title here on purpose: the brand lockup below the header names the
-        screen, and a second line of text would compete with it. */}
+    {}
     <View style={styles.headerSpacer} />
 
     {hasTorch ? (

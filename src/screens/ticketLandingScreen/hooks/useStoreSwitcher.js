@@ -1,7 +1,5 @@
 import { useState, useCallback } from 'react';
 
-// Owns the service-switcher modal's visibility, re-applying the status bar
-// style after it closes since the switcher can change it.
 const useStoreSwitcher = applyStatusBar => {
   const [visible, setVisible] = useState(false);
 

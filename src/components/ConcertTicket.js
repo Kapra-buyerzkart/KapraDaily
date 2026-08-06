@@ -39,8 +39,6 @@ const ConcertTicket = ({
   qrValue = null,
   showScanLine = false,
   onQrPress = null,
-  // The notches are punched out of the card, so they have to be painted in the
-  // colour of whatever sits behind it.
   notchColor = COLORS.black,
   style,
 }) => {
@@ -49,9 +47,6 @@ const ConcertTicket = ({
 
   console.log(qrValue, 'qrValue=======>');
 
-  // Scanner-style sweep: a bright accent line runs top→bottom across the QR
-  // a couple of times shortly after the ticket has settled, evoking the code
-  // being read. Replays on every mount (i.e. every time the modal reopens).
   const scan = useSharedValue(0);
   useEffect(() => {
     if (!showScanLine) return;
@@ -73,9 +68,6 @@ const ConcertTicket = ({
     ],
   }));
 
-  // The exact payload this card puts on screen, logged where it is drawn rather
-  // than where it is built - the two can drift, and it is the drawn one the
-  // scanner reads back.
   useEffect(() => {
     if (qrCodeUri) {
       logger.log('[ConcertTicket] qr rendered from server image:', {
@@ -107,7 +99,7 @@ const ConcertTicket = ({
           />
         </View>
 
-        {/* Tear line between the banner and the stub */}
+        {}
         <View style={styles.perforation}>
           <View
             style={[
@@ -164,8 +156,7 @@ const ConcertTicket = ({
           <View style={styles.colDivider} />
 
           <View style={[styles.rightCol, { width: qrBoxSize }]}>
-            {/* The type block is dropped entirely when the booking has no
-                category name rather than showing a placeholder. */}
+            {}
             {!!ticketType && (
               <View style={styles.fieldBlock}>
                 <Text style={styles.label}>TICKET TYPE</Text>
@@ -219,15 +210,12 @@ const ConcertTicket = ({
 const styles = StyleSheet.create({
   wrapper: {
     width: '100%',
-    // Shadow lives on the wrapper because the card clips its own overflow.
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.35,
     shadowRadius: 24,
     elevation: 12,
   },
-  // The banner bleeds to the card edges, so the padding lives on the body and
-  // the rounded corners are clipped on the card itself.
   card: {
     backgroundColor: COLORS.white,
     borderRadius: CARD_RADIUS,
@@ -253,8 +241,6 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     ...HERO_CORNERS,
   },
-  // The poster fills the banner edge to edge so it meets the card's rounded
-  // corners; portrait art is cropped top/bottom rather than letterboxed.
   hero: {
     width: '100%',
     height: '100%',
@@ -301,8 +287,6 @@ const styles = StyleSheet.create({
     height: NOTCH,
     justifyContent: 'center',
   },
-  // Half-circles punched out of either edge; the card's overflow clip hides
-  // the outer half.
   notch: {
     position: 'absolute',
     top: 0,
@@ -337,7 +321,6 @@ const styles = StyleSheet.create({
   leftCol: {
     flex: 1,
   },
-  // Width is set inline from the QR size so the code sits flush in the column.
   rightCol: {
     alignItems: 'flex-start',
   },
@@ -389,8 +372,6 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
     letterSpacing: 0.4,
   },
-  // Pushed to the bottom of the right column so it lines up with the end of
-  // the details stack, however tall that grows.
   qrWrap: {
     position: 'relative',
     overflow: 'hidden',

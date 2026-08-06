@@ -100,10 +100,9 @@ const FilterSortModal = ({
   const [minPrice, setMinPrice] = useState(initialMin);
   const [maxPrice, setMaxPrice] = useState(initialMax);
 
-  // Slider Logic
   const sliderWidth = wp('75%');
   const minVal = 0;
-  const maxVal = 5000; // Customizable max range
+  const maxVal = 5000;
 
   const [leftPos, setLeftPos] = useState(
     new Animated.Value((initialMin / maxVal) * sliderWidth),

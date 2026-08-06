@@ -22,12 +22,6 @@ const AddressConfirmationModal = ({
 }) => {
   const modalRef = useRef(null);
 
-  // Freeze the displayed content while the exit animation plays. Callers
-  // often clear/reset these props in the same tick they trigger the close
-  // (e.g. submitOrder() nulls addressConfirmationData before the modal has
-  // finished animating out), which would otherwise flip this modal to a
-  // different conditional render (e.g. "Delivery Unavailable") for the
-  // ~300ms it's still visible and closing.
   const [display, setDisplay] = useState({
     pincode,
     areaName,
@@ -52,8 +46,6 @@ const AddressConfirmationModal = ({
     });
   }
 
-  // Bridge the parent-controlled `visible` prop to CustomModal's imperative
-  // open/close API (RN core <Modal> does not render on this build).
   useEffect(() => {
     if (visible) {
       modalRef.current?.open();

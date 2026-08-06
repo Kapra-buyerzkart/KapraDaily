@@ -16,22 +16,6 @@ import {
 
 const ACTION_HIT_SLOP = hitSlopTo(28);
 
-/**
- * Every prop but the text is optional — a header can be a bare title. Spelled
- * out here rather than left to inference so the TypeScript screens that use it
- * don't have to pass eight undefineds to satisfy a destructure.
- *
- * @param {object} props
- * @param {string} [props.eyebrow]
- * @param {string} [props.title]
- * @param {string} [props.titleAccent]
- * @param {string} [props.subtitle]
- * @param {string} [props.actionLabel]
- * @param {() => void} [props.onAction]
- * @param {import('react-native').StyleProp<import('react-native').ViewStyle>} [props.style]
- * @param {import('react-native').StyleProp<import('react-native').TextStyle>} [props.titleStyle]
- * @param {boolean} [props.onDark]
- */
 const SectionHeader = ({
   eyebrow,
   title,
@@ -137,15 +121,10 @@ const styles = StyleSheet.create({
   title: {
     ...TYPE.title,
     fontFamily: FONTS.gilroy.bold,
-    // The script accent is set larger than the title beside it, so the line box
-    // is sized for the accent rather than for Gilroy — otherwise the loops and
-    // descenders clip under the single-line clamp.
     lineHeight: Math.round(TYPE.title.fontSize * 1.5),
     color: INK.strong,
     letterSpacing: -0.3,
   },
-  // Script faces carry a much smaller x-height than Gilroy, so the accent runs
-  // a few points larger just to look the same size as the word before it.
   titleAccent: {
     fontSize: Math.round(TYPE.title.fontSize * 1.25),
     fontFamily: FONTS.script.regular,
@@ -173,8 +152,6 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.pill,
     paddingVertical: SPACE.sm,
     paddingHorizontal: SPACE.md,
-    // Aligns the CTA's text with the gutter the section's content sits on,
-    // cancelling the pill's own right padding.
     marginRight: -SPACE.md,
   },
   actionText: {

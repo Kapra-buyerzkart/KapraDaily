@@ -29,7 +29,6 @@ export const TAB_IDS = {
   TRAVEL: 'travel',
 };
 
-// Shown until the popular/categories API responds (and as a hard fallback).
 const DEFAULT_TABS = [
   {
     id: TAB_IDS.POPULAR,
@@ -57,8 +56,6 @@ const DEFAULT_TABS = [
   },
 ];
 
-// Maps a server category name onto the stable tab id the content switch
-// understands, plus a local icon fallback if the API sends no image.
 const CATEGORY_ALIASES = {
   popular: { id: TAB_IDS.POPULAR, icon: icons.lighting },
   events: { id: TAB_IDS.EVENTS, icon: icons.calendar },
@@ -133,8 +130,6 @@ const SoonBadge = React.memo(() => (
 ));
 
 const CategoryTab = React.memo(({ tab, isActive, onPress }) => {
-  // The category is flagged inactive by the API (isActive === false): it's a
-  // "coming soon" tab, so surface a badge and don't let it be selected.
   const comingSoon = tab.isActive === false;
   const activeProgress = useSharedValue(isActive ? 1 : 0);
   const scale = useSharedValue(1);
@@ -213,9 +208,6 @@ const EventCategoryTabs = ({
 }) => {
   const topInset = insets?.top ?? 0;
 
-  // Drive the bar from the popular/categories API; fall back to the static
-  // set while it loads (or if it comes back empty). Popular always leads,
-  // regardless of the order the API returns.
   const tabs = useMemo(() => {
     if (Array.isArray(categories) && categories.length > 0) {
       const mapped = categories

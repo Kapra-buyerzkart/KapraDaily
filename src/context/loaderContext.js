@@ -17,16 +17,14 @@ export const LoaderContextProvider = ({ children }) => {
             const nextCount = show ? prev + 1 : Math.max(0, prev - 1);
             console.log(`Loader count: ${prev} -> ${nextCount} (request: ${show})`);
 
-            // Safety: If count goes from 0 to 1, start a global timeout
             if (show && nextCount === 1) {
                 if (timeoutRef.current) clearTimeout(timeoutRef.current);
                 timeoutRef.current = setTimeout(() => {
                     console.warn('Loader safety timeout reached! Forcing hide.');
                     setLoadingCount(0);
-                }, 15000); // 15s absolute timeout for any operation
+                }, 15000);
             }
 
-            // If count goes to 0, clear timeout
             if (nextCount === 0 && timeoutRef.current) {
                 clearTimeout(timeoutRef.current);
                 timeoutRef.current = null;
@@ -54,7 +52,6 @@ export const LoaderContextProvider = ({ children }) => {
                             justifyContent: 'center',
                             alignItems: 'center',
                             backgroundColor: 'rgba(255,255,255,.7)',
-                            //marginBottom: windowHeight * (8 / 100),
                         }}>
                         <LottieView
                             source={require('../assets/Lottie/CartLoader1.json')}
@@ -65,9 +62,7 @@ export const LoaderContextProvider = ({ children }) => {
                             autoPlay
                             loop
                         />
-                        {/* <View style={{backgroundColor:colours.primaryWhite, borderRadius:5, padding:10, elevation:5}}>
-                <ActivityIndicator size="large" color={colours.primaryColor} />
-              </View> */}
+                        {}
                     </View>
                 </Modal>
             )}

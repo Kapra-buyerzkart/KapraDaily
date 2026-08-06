@@ -20,17 +20,6 @@ import {
   HERO_LIFT,
 } from '@/styles/homeTheme';
 
-// Profile reads off the same tokens as Home, but it is not the same page. Home
-// is a catalogue — a flat sheet is right there, because the merchandise supplies
-// all the colour. This page has no merchandise on it, so a flat white sheet had
-// nothing left to look at.
-//
-// The shape here is a warm hero carrying the identity, dissolving into a plain
-// white sheet from the shortcuts down. Exactly one block is tinted, so the top
-// of the page has a focal point and everything below it stays quiet.
-
-// menuItems.js needs bare colour strings for its vector glyphs, so the two the
-// rows actually use are re-exported rather than re-declared.
 export const INK = HOME_INK.base;
 export const RED = ACCENT.discount;
 export const ORANGE = ACCENT.primary;
@@ -38,35 +27,17 @@ export const GRAY_300 = HOME_INK.faint;
 export const BG = CANVAS;
 export const DIVIDER = HAIRLINE;
 
-// The icon rail width — dividers are inset by it so the rule starts at the
-// label, the way a list rule should, instead of cutting under the glyphs.
 const ROW_ICON = wp('8.6%');
 
-// Fixed rather than derived from the column, so the shortcut row keeps the same
-// height on every screen width instead of growing into a second hero block.
 const QUICK_ACTION_WELL = wp('13.5%');
 
-// A shade larger than the shortcut wells below it: the wallet is the only block
-// in the hero carrying a live number, so its coin outranks the four shortcuts.
 const WALLET_COIN_WELL = wp('11.5%');
 
-// The hero's wash, shared with Edit Profile and therefore defined in the theme.
-// It starts at the very top edge of the screen — the sticky bar is painted
-// HERO_TOP at rest and only turns white once you scroll, so the status bar, the
-// bar and the gradient are one continuous surface instead of a white strip
-// sitting on a peach one. The gradient resolves to the page colour at its own
-// bottom edge, so the hero melts into the white sheet rather than ending on a
-// line; nothing straddles that seam, so the gradient has to disguise it alone.
 export const HERO_TOP = THEME_HERO_TOP;
 export const HERO_GRADIENT = THEME_HERO_GRADIENT;
 
-// Privilege is already drawn on the avatar as a crown, which says *that* the
-// account is privileged but not *what* it is. The chip names it, in the badge's
-// own gold rather than in the brand orange, so it reads as status and not as
-// another tappable accent.
 const GOLD_SOFT = '#FDF3DC';
 const GOLD_INK = '#8A6410';
-// The chip's own crown glyph is a vector, so it needs the bare colour string.
 export const PRIVILEGE_INK = GOLD_INK;
 
 export const styles = StyleSheet.create({
@@ -74,9 +45,6 @@ export const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: CANVAS,
   },
-  // The viewport is painted the hero's colour and the content sheet is painted
-  // white on top of it, so an iOS rubber-band pull at the top reveals more
-  // hero rather than a white strip above it.
   scrollView: {
     backgroundColor: HERO_TOP,
   },
@@ -85,12 +53,6 @@ export const styles = StyleSheet.create({
     backgroundColor: CANVAS,
   },
 
-  // ── Header ──────────────────────────────────────────────────────────────
-  // Opaque because it is a sticky child of the ScrollView — the identity block
-  // and the sections pass underneath it.
-  // The background is animated (HERO_TOP → white) rather than fixed, so at rest
-  // the bar disappears into the hero and only becomes a bar once there is
-  // something scrolling underneath it. HERO_TOP here is the at-rest fallback.
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -110,8 +72,6 @@ export const styles = StyleSheet.create({
     resizeMode: 'contain',
     tintColor: HOME_INK.strong,
   },
-  // The slot both bar titles live in — the margin belongs here rather than on
-  // the text, so the overlaid name starts on the same left edge as "Profile".
   topBarTitle: {
     flex: 1,
     marginLeft: wp('3%'),
@@ -129,16 +89,9 @@ export const styles = StyleSheet.create({
     right: 0,
   },
 
-  // ── Identity ────────────────────────────────────────────────────────────
-  // Left-aligned rather than the old centred portrait block: the avatar, the
-  // name and the edit affordance all sit on the same gutter as every section
-  // below, so the page has a single left edge from top to bottom.
   hero: {
     paddingBottom: SPACE.sm,
   },
-  // The bottom padding is the gap up to the wallet strip, not the gap down to
-  // the white sheet — the hero closes on the strip now, so `lg` here left the
-  // identity and the balance looking like two separate blocks.
   identityRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -151,10 +104,6 @@ export const styles = StyleSheet.create({
     marginLeft: SPACE.base,
     marginRight: SPACE.sm,
   },
-  // Between `title` and `display`. The name is the one piece of type on this
-  // page that is about the person rather than about the app, so it outranks
-  // every section heading below it — but not by so much that a two-word name
-  // starts truncating against the Edit chip.
   userNameText: {
     ...TYPE.title,
     fontSize: Math.round(TYPE.title.fontSize * 1.12),
@@ -186,17 +135,12 @@ export const styles = StyleSheet.create({
     letterSpacing: 0.3,
     marginLeft: 3,
   },
-  // White on the peach hero rather than the old peach-on-white: a tinted chip
-  // on a tinted ground had almost no edge left, and this is the only control in
-  // the hero that does anything.
   editChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SURFACE.base,
     borderRadius: RADIUS.pill,
     paddingVertical: SPACE.sm,
     paddingHorizontal: SPACE.md,
-    ...HERO_LIFT,
   },
   editChipText: {
     ...TYPE.caption,
@@ -205,11 +149,6 @@ export const styles = StyleSheet.create({
     marginLeft: SPACE.xs + 1,
   },
 
-  // ── UD Wallet ───────────────────────────────────────────────────────────
-  // Sits inside the hero rather than on the white sheet below it. The balance
-  // belongs to the person, not to the menu, so it stays in the block that is
-  // about the person — and keeping it there leaves the page with exactly one
-  // tinted region, which is the whole point of the hero.
   walletStrip: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -250,6 +189,7 @@ export const styles = StyleSheet.create({
     color: HOME_INK.strong,
     fontFamily: FONTS.gilroy.bold,
     letterSpacing: -0.4,
+    fontVariant: ['tabular-nums'],
   },
   walletUnit: {
     ...TYPE.caption,
@@ -265,10 +205,6 @@ export const styles = StyleSheet.create({
     flexShrink: 1,
   },
 
-  // ── Quick actions ───────────────────────────────────────────────────────
-  // Home's category well, but sized to the glyph rather than to the column.
-  // These are shortcuts, not merchandise: a full-width square tile gave four
-  // secondary links more of the page than the sections they lead to.
   quickActionsRow: {
     flexDirection: 'row',
     paddingHorizontal: GUTTER,
@@ -306,7 +242,6 @@ export const styles = StyleSheet.create({
     fontFamily: FONTS.gilroy.semiBold,
   },
 
-  // ── List sections ───────────────────────────────────────────────────────
   sectionsContainer: {
     paddingTop: SPACE.xs,
   },
@@ -327,9 +262,6 @@ export const styles = StyleSheet.create({
     flex: 1,
     marginRight: SPACE.sm,
   },
-  // A rounded square in a warm neutral, not a grey circle. Sixteen grey pills
-  // stacked down the page read as sixteen buttons; the softer square recedes
-  // and lets the labels carry the list.
   listIconWrapper: {
     width: ROW_ICON,
     height: ROW_ICON,
@@ -355,10 +287,6 @@ export const styles = StyleSheet.create({
     marginRight: GUTTER,
   },
 
-  // ── Log out ─────────────────────────────────────────────────────────────
-  // Soft fill instead of the old red outline. An outlined button at the foot of
-  // the page reads as the page's primary action, which log out is emphatically
-  // not — the tint says "destructive" without asking to be pressed.
   logoutButton: {
     flexDirection: 'row',
     minHeight: hp('6.2%'),
@@ -376,7 +304,6 @@ export const styles = StyleSheet.create({
     marginLeft: SPACE.sm,
   },
 
-  // ── Suggest-a-product sheet ─────────────────────────────────────────────
   sendContainer: {
     alignItems: 'center',
     paddingVertical: SPACE.lg,
@@ -436,7 +363,6 @@ export const styles = StyleSheet.create({
     width: wp('12%'),
   },
 
-  // ── Footer ──────────────────────────────────────────────────────────────
   footerBranding: {
     alignItems: 'center',
     paddingTop: SPACE.xl,

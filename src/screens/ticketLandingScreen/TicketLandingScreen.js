@@ -28,7 +28,6 @@ const SCREEN_BG = require('../../assets/images/movieTicket/ticketLandingBg.png')
 const TicketLandingScreen = ({ navigation }) => {
   const insets = useSafeAreaInsets();
   const { profile, loadProfile } = useContext(AppContext);
-  // console.log(profile?.custId, 'custid');
 
   useFocusEffect(
     useCallback(() => {

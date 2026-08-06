@@ -42,14 +42,12 @@ const useHomeData = () => {
     const { showLoader } = useContext(LoaderContext);
     const { profile, loadProfileTwo, isStoreUnavailable, storeUnavailableData, setStoreUnavailable } = useContext(AppContext);
 
-    // Main homepage data fetcher, reused for initial load and pull-to-refresh
     const fetchHomepageData = useCallback(async (isRefreshing = false) => {
         let currentUnavailableData = null;
         let currentClosedData = null;
         try {
             if (isRefreshing) {
                 setRefreshing(true);
-                // Refresh Profile
                 loadProfileTwo().catch(err => console.error("Profile refresh failed:", err));
             }
 
@@ -59,7 +57,6 @@ const useHomeData = () => {
                 AsyncStorage.getItem('area')
             ]);
 
-            // Fetch general settings for store unavailable info
             try {
                 const settingsRes = await getGeneralSettingsApi();
                 if (settingsRes && settingsRes.success && settingsRes.data?.items) {
@@ -75,7 +72,7 @@ const useHomeData = () => {
 
                     currentClosedData = {
                         image: closedImageItem ? closedImageItem.stValue : null,
-                        text: "" // Will be populated from API response message
+                        text: ""
                     };
                 }
             } catch (settingsError) {
@@ -104,7 +101,6 @@ const useHomeData = () => {
             const response = await getHomepageData(areaId, 100);
             console.log('🏠 [HOME API] Raw Response Data:', response);
 
-            // Check for STORE_NOT_FOUND or STORE_CLOSED_FOR_DELIVERY
             let storeNotFound = false;
             let storeClosed = false;
             if (response?.status === 'STORE_NOT_FOUND' || response?.data?.status === 'STORE_NOT_FOUND') {
@@ -118,8 +114,6 @@ const useHomeData = () => {
                 }
             }
 
-            // 🎁 PRIORITIZE POPUP EXTRACTION: must happen regardless of store status or success flag
-            // Check all possible nesting locations based on common API patterns: data.popup, popup, details.popup
             const pObj = response?.data?.popup || response?.popup || response?.details?.popup;
             
             if (pObj && (pObj.popupImageUrl || pObj.popupImage) && Number(pObj.showPopup) === 1) {
@@ -141,7 +135,6 @@ const useHomeData = () => {
                     : currentUnavailableData;
 
                 setStoreUnavailable(true, displayData);
-                // Clear all home data when store is unavailable
                 setHomepageData(null);
                 setBanners([]);
                 setTopBanner([]);
@@ -177,7 +170,6 @@ const useHomeData = () => {
 
                         const sortByOrder = (a, b) => (a.displayOrder || a.DisplayOrder || 0) - (b.displayOrder || b.DisplayOrder || 0);
 
-                        // Extract and Map Banner Sets
                         const getBannerSet = (key) => banners.filter(b => b.placementKey === key || b.PlacementKey === key).sort(sortByOrder).map(mapBanner);
 
                         setTopBanner(getBannerSet('app_home_top_banner'));
@@ -206,7 +198,6 @@ const useHomeData = () => {
                         const showcaseProducts = banners.filter(b => b.placementKey === 'app_home_bottom_showcase_product_image' || b.PlacementKey === 'app_home_bottom_showcase_product_image').sort(sortByOrder).map(mapBanner);
                         setBottomShowcaseProducts(showcaseProducts);
 
-                        // Slider Banners (exclude specifically placed ones)
                         const specificPlacementKeys = [
                             'app_home_top_banner',
                             'app_home_top_banner_top_section',
@@ -243,9 +234,6 @@ const useHomeData = () => {
         } catch (error) {
             console.error('Error fetching homepage data:', error);
             
-            // Still try to extract popup from error data
-            // Supports both legacy axios errors and our new rich error object from networkUtils
-            // Explicitly checking data.data.popup and data.popup for the user's snippet
             const errBody = error?.data || error?.response?.data || error || error?.data?.data;
              console.error('Error fetching homepage data------->', errBody);
             
@@ -261,10 +249,8 @@ const useHomeData = () => {
                 });
             }
             
-            // Distinguish between store closed and general unavailability in catch block
             const errorMsg = typeof error === 'string' ? error : (error?.message || error?.Message || '');
             
-            // Ignore auth, network, or generic errors so we don't mistakenly show "Delivery not available"
             if (
                 errorMsg.toLowerCase().includes('session expired') || 
                 errorMsg.toLowerCase().includes('unauthorized') ||

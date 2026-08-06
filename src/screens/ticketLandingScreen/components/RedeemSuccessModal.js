@@ -75,8 +75,6 @@ const RedeemSuccessModal = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
 
-  // Plain overlay has no native surface of its own, so the hardware back
-  // button no longer gets swallowed for free the way RN's Modal did it.
   useEffect(() => {
     if (Platform.OS !== 'android' || !visible) return undefined;
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
@@ -100,10 +98,10 @@ const RedeemSuccessModal = ({
 
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
-      {/* Dark backdrop */}
+      {}
       <Animated.View style={[styles.backdrop, { opacity: opacityAnim }]} />
 
-      {/* Centered card */}
+      {}
       <View style={styles.centeredWrapper} pointerEvents="box-none">
         <Animated.View
           style={[
@@ -116,10 +114,8 @@ const RedeemSuccessModal = ({
             style={styles.card}
             resizeMode="stretch"
           >
-            {/* Purple checkmark circle */}
-            {/* <View style={styles.checkCircle}>
-              <Text style={styles.checkMark}>✓</Text>
-            </View> */}
+            {}
+            {}
 
             <Image source={icons.tickmark} style={styles.checkIcon} />
             <Text style={styles.successText}>SUCCESS</Text>
@@ -136,7 +132,7 @@ const RedeemSuccessModal = ({
                 <Text style={styles.rowLabel}>Status</Text>
                 <View style={styles.statusRow}>
                   <View style={styles.statusDot}>
-                    {/* <Image source={require('../../../assets/images/movieTicket/success.png')}/> */}
+                    {}
                     <Text style={styles.statusDotCheck}>✓</Text>
                   </View>
                   <Text style={[styles.rowValue, styles.statusValue]}>

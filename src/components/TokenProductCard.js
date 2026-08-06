@@ -38,7 +38,6 @@ import {
   hitSlopTo,
 } from '@/styles/homeTheme';
 
-// Constants
 const DEFAULT_TOKEN_VALUE = '1';
 const NO_IMAGE_SOURCE = require('../assets/images/udenDealNotfound.png');
 const UD_TOKEN_ICON = require('../assets/icons/tokenud.png');
@@ -65,7 +64,6 @@ const styles = StyleSheet.create({
     marginHorizontal: wp('1%'),
   },
 
-  // ── Surface ───────────────────────────────────────────────────────────────
   cardSurface: {
     backgroundColor: SURFACE.base,
     borderRadius: RADIUS.md,
@@ -78,10 +76,6 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.sm,
   },
 
-  // ── Media ─────────────────────────────────────────────────────────────────
-  // The wrapper stays overflow-visible so the action control can dock across
-  // the well's lower edge; the well itself clips, so the image and the
-  // out-of-stock scrim follow the corner radius.
   mediaWrap: {
     width: '100%',
     position: 'relative',
@@ -95,9 +89,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     overflow: 'hidden',
   },
-  // Square and driven by the well rather than a fixed wp() box, so the image
-  // fills the card at every container width instead of floating small inside
-  // it. This is the change that makes the card read as merchandise.
   productImageFill: {
     width: '86%',
     height: '86%',
@@ -145,7 +136,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
 
-  // ── Wishlist ──────────────────────────────────────────────────────────────
   wishlistButton: {
     position: 'absolute',
     top: SPACE.xs,
@@ -158,7 +148,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.92)',
   },
 
-  // ── Add / quantity control ────────────────────────────────────────────────
   actionDock: {
     position: 'absolute',
     right: 0,
@@ -277,9 +266,6 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.gilroy.medium,
   },
 
-  // Name leads the text column now. The old card put price first and buried
-  // the name under it, which is the wrong scan order for choosing between
-  // products — you identify the item, then price it.
   productName: {
     ...TYPE.label,
     color: INK.base,
@@ -296,8 +282,6 @@ const styles = StyleSheet.create({
     color: INK.muted,
     fontFamily: FONTS.gilroy.regular,
     marginTop: 2,
-    // Reserved even when empty, so cards without a weight still line their
-    // price rows up with the cards beside them.
     minHeight: TYPE.caption.lineHeight,
   },
   productWeightSmall: {
@@ -332,8 +316,6 @@ const styles = StyleSheet.create({
     ...TYPE.micro,
   },
 });
-
-// ── Sub-components ──────────────────────────────────────────────────────────
 
 const HEART_POP_SPRING = { damping: 8, stiffness: 300, mass: 0.5 };
 
@@ -388,16 +370,9 @@ const ProductImage = React.memo(function ProductImage({
   isOutOfStock,
   onError,
 }) {
-  // `isPlaceholder` means we're intentionally showing the "not found" art
-  // (genuine load error or a product with no image). Only real remote images
-  // get the shimmer-then-fade treatment so users never see the placeholder
-  // flash while an image is still downloading.
   const [loaded, setLoaded] = useState(false);
   const opacity = useSharedValue(isPlaceholder ? 1 : 0);
 
-  // Reset the fade/shimmer whenever the source changes — a card recycled by
-  // the FlatList for a new product, or an optimistic item swapped for server
-  // data, must shimmer again rather than flash the previous image.
   useEffect(() => {
     if (isPlaceholder) {
       setLoaded(true);
@@ -450,10 +425,6 @@ const ProductImage = React.memo(function ProductImage({
   );
 });
 
-// The add button is replaced by the counter the instant it is tapped, so the
-// confirmation cannot live on the button alone — it would unmount mid-frame.
-// Instead the whole dock squishes and springs back, and the counter fades up
-// under it, so the swap reads as one gesture rather than a hard cut.
 const ADD_SQUISH = { duration: 90 };
 const ADD_POP_SPRING = { damping: 9, stiffness: 420, mass: 0.6 };
 const ADD_SQUISH_SCALE = 0.88;
@@ -470,8 +441,6 @@ const QuantityControl = React.memo(function QuantityControl({
 }) {
   const pop = useSharedValue(1);
   const counterIn = useSharedValue(quantity > 0 ? 1 : 0);
-  // Only the 0 → 1 transition is an *add*. A card that already had a quantity
-  // when it scrolled into view, or one being incremented, must not re-animate.
   const wasEmpty = useRef(quantity === 0);
 
   useEffect(() => {
@@ -488,8 +457,6 @@ const QuantityControl = React.memo(function QuantityControl({
     transform: [{ scale: pop.value }],
   }));
 
-  // One combined transform: two animated styles on the same node would have
-  // the second `transform` overwrite the first.
   const counterAnimatedStyle = useAnimatedStyle(() => ({
     opacity: counterIn.value,
     transform: [{ scale: pop.value * (0.9 + counterIn.value * 0.1) }],
@@ -570,12 +537,7 @@ const QuantityControl = React.memo(function QuantityControl({
     );
   }
 
-  // A labelled button rather than a bare "+" glyph: the old 27pt circle was
-  // both under the 44pt touch minimum and ambiguous about what it added.
   return (
-    // The squish lives on a wrapper rather than on the pressable itself:
-    // AnimatedPressable already owns that node's `transform` for its press
-    // scale, and a second animated transform on it would overwrite it.
     <Animated.View style={dockAnimatedStyle}>
       <AnimatedPressable
         onPress={handleAddPress}
@@ -623,8 +585,6 @@ const PriceSection = React.memo(function PriceSection({
   );
 });
 
-// ── Component ───────────────────────────────────────────────────────────────
-
 const TokenProductCard = ({
   item,
   onPress,
@@ -642,7 +602,6 @@ const TokenProductCard = ({
   const { addToCart, updateCartItemQuantity, removeFromCart } = useCart();
   const { isInWishlist, toggleWishlist } = useWishlist();
 
-  // Derived values
   const {
     productId,
     name,
@@ -683,9 +642,6 @@ const TokenProductCard = ({
     };
   }, [item]);
 
-  // Indexed lookup instead of an O(cartLines) scan per card. The memo above it
-  // only cached the scan per render — the scan still re-ran for every card on
-  // every cart mutation, because `cartItems` was a new array each time.
   const { quantity, cartItemId } = useCartEntry(productId);
 
   const liked = useMemo(
@@ -701,9 +657,6 @@ const TokenProductCard = ({
     item?.img ||
     item?.imageUrl;
 
-  // Reset the error latch whenever the underlying image changes. Without this
-  // a card that is virtualized/reused by the FlatList for a new product would
-  // keep showing the "not found" placeholder from a previous (failed) image.
   useEffect(() => {
     setImageError(false);
   }, [rawImage]);
@@ -723,7 +676,6 @@ const TokenProductCard = ({
     return rawImage;
   }, [rawImage, imageError]);
 
-  // Callbacks
   const handleImageError = useCallback(() => setImageError(true), []);
 
   const handleToggleWishlist = useCallback(() => {
@@ -758,9 +710,6 @@ const TokenProductCard = ({
     }
   }, [onAdd, addToCart, item]);
 
-  // One spoken sentence for the whole card. Screen readers previously walked
-  // seven unlabelled leaf nodes per product with no indication of what they
-  // belonged to.
   const cardAccessibilityLabel = useMemo(() => {
     const parts = [name];
     if (weight) parts.push(weight);
@@ -773,11 +722,6 @@ const TokenProductCard = ({
 
   const showMetaRow = !!rating || !!deliveryEta;
 
-  // The card is one focusable element, and its buttons are exposed as
-  // assistive-tech *actions* on it rather than as nested focusable children.
-  // Nesting them inside an `accessible` Pressable makes them unreachable under
-  // VoiceOver on iOS, which would have left screen-reader users unable to add
-  // anything to the cart from a rail.
   const accessibilityActions = useMemo(() => {
     const actions = [{ name: 'activate', label: 'View product' }];
     if (!isOutOfStock) {

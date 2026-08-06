@@ -47,7 +47,6 @@ import { AppContext } from '../context/appContext';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-// General-settings flags come back as string/number "1" when enabled.
 const isSettingEnabled = value =>
   value === '1' || value === 1 || value === true;
 
@@ -138,8 +137,6 @@ const ServiceSwitcherModal = ({ visible, onClose, excludeServiceId }) => {
   const insets = useSafeAreaInsets();
   const { generalSettings } = useContext(AppContext);
 
-  // A service is "coming soon" when it opts in statically (`comingSoon`) or when
-  // its backend flag (`enabledSettingKey`, e.g. 48hrs -> `showkshope`) is off.
   const isComingSoon = useCallback(
     service =>
       Boolean(
@@ -150,8 +147,6 @@ const ServiceSwitcherModal = ({ visible, onClose, excludeServiceId }) => {
     [generalSettings],
   );
 
-  // Hide the service the user is already on (e.g. Uden Tickets on the movie
-  // ticket landing screen) so the switcher only offers other destinations.
   const services = excludeServiceId
     ? SERVICES.filter(service => service.id !== excludeServiceId)
     : SERVICES;
@@ -166,12 +161,9 @@ const ServiceSwitcherModal = ({ visible, onClose, excludeServiceId }) => {
   const pendingActionRef = useRef(null);
   const unmountTimerRef = useRef(null);
   const fallbackTimerRef = useRef(null);
-  // Read inside the [visible]-only effect below, where `modalVisible` state
-  // would be a stale closure.
   const modalVisibleRef = useRef(false);
   modalVisibleRef.current = modalVisible;
 
-  // Runs whatever was queued for "after the sheet is gone", exactly once.
   const runPendingAction = useCallback(() => {
     clearTimer(fallbackTimerRef);
     const action = pendingActionRef.current;
@@ -185,17 +177,6 @@ const ServiceSwitcherModal = ({ visible, onClose, excludeServiceId }) => {
     setModalVisible(false);
     if (!pendingActionRef.current) return;
 
-    // The queued action (navigate / deep link) must not run until the native
-    // Modal window is genuinely torn down. On iOS that moment is the Modal's
-    // `onDismiss`; anything earlier races the dismissal against the screen
-    // transition and can strand a transparent, full-screen modal window that
-    // swallows every touch — the UI still renders but nothing responds. That
-    // only bites when the Modal's host is itself a stack screen being detached
-    // (the movie ticket landing screen), which is why the home screen — whose
-    // host tab navigator outlives the navigation — never showed it.
-    //
-    // Android has no `onDismiss`, so fall back to two frames there. The timer
-    // is a safety net so the action is never stranded if `onDismiss` is missed.
     if (Platform.OS === 'ios') {
       clearTimer(fallbackTimerRef);
       fallbackTimerRef.current = setTimeout(runPendingAction, 500);
@@ -232,9 +213,6 @@ const ServiceSwitcherModal = ({ visible, onClose, excludeServiceId }) => {
       );
       backdropOpacity.value = withTiming(0, { duration: 200 });
 
-      // An interrupted animation never invokes its callback, which would leave
-      // the Modal mounted and off-screen — again a full-screen touch trap. Tear
-      // down on a timer regardless; reopening clears it in the branch above.
       clearTimer(unmountTimerRef);
       unmountTimerRef.current = setTimeout(onCloseAnimationComplete, 400);
     }
@@ -280,9 +258,6 @@ const ServiceSwitcherModal = ({ visible, onClose, excludeServiceId }) => {
 
   const handleServicePress = useCallback(
     service => {
-      // Close the sheet first: presenting Coming Soon while this Modal is still
-      // up stacks two native modals, which iOS refuses ("already presenting")
-      // and which leaves the UI wedged.
       if (isComingSoon(service)) {
         requestClose(() => setComingSoonService(service));
         return;
@@ -507,11 +482,9 @@ const styles = StyleSheet.create({
   logoImage: {
     width: wp('8%'),
     height: wp('8%'),
-    // backgroundColor: 'red',
   },
   cardTextWrap: {
     flex: 1,
-    // backgroundColor: 'red',
   },
   cardTitleRow: {
     flexDirection: 'row',

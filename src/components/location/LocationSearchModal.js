@@ -108,13 +108,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     height: windowHeight * (30 / 100),
 
-    // iOS Shadow
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.1,
     shadowRadius: 3,
 
-    // Android Shadow
     elevation: 5,
   },
   searchTextCon: {

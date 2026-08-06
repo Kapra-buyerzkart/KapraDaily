@@ -32,8 +32,6 @@ import {
 
 const BUMP_SPRING = { damping: 8, stiffness: 260, mass: 0.4 };
 
-// Matches TokenProductCard: the art stays legible under the scrim rather than
-// being hidden, so the row still reads as the product the user added.
 const SOLD_OUT_IMAGE_OPACITY = 0.45;
 
 const CartProductCard = props => {
@@ -67,10 +65,6 @@ const CartProductCard = props => {
   const [imageError, setImageError] = useState(false);
   const [quantity, setQuantity] = useState(item.addedQty || item.quantity || 1);
   const [isRemovalModalVisible, setIsRemovalModalVisible] = useState(false);
-  // Mirror of `quantity` so rapid taps read the latest value synchronously,
-  // even before React has re-rendered with the new state. Without this, two
-  // quick taps both read the same stale `quantity` closure and send the same
-  // value to the server.
   const quantityRef = useRef(quantity);
   const imageOpacity = useSharedValue(0);
   const qtyScale = useSharedValue(1);
@@ -91,9 +85,6 @@ const CartProductCard = props => {
     imageOpacity.value = 0;
   }, [featuredImage, imageOpacity]);
 
-  // The dim is folded into the animated opacity rather than added as a static
-  // style: an animated `opacity` always wins over a StyleSheet one, so a
-  // separate dim style would simply be overwritten by the fade-in.
   const imageAnimatedStyle = useAnimatedStyle(() => ({
     opacity: imageOpacity.value * (isSoldOut ? SOLD_OUT_IMAGE_OPACITY : 1),
   }));
@@ -102,7 +93,6 @@ const CartProductCard = props => {
     transform: [{ scale: qtyScale.value }],
   }));
 
-  // Get image source
   const imageSource = useMemo(() => {
     if (imageError || !featuredImage) {
       return require('../assets/images/udenDealNotfound.png');
@@ -113,8 +103,6 @@ const CartProductCard = props => {
     return { uri: `${CONFIG.image_base_url}${featuredImage}` };
   }, [featuredImage, imageError]);
 
-  // Handle quantity change. Read/advance the ref (not the `quantity` closure)
-  // so several taps fired before the next render still increment correctly.
   const handleDecrease = useCallback(() => {
     if (quantityRef.current > 1 && !isSoldOut) {
       const next = quantityRef.current - 1;
@@ -240,16 +228,10 @@ const CartProductCard = props => {
                 <Text style={styles.btokenTextSmall}>{btokens} UD Token</Text>
               </View>
             )}
-            {/* {!isSoldOut && (
-              <Text style={styles.productCount}>{quantity} pcs</Text>
-            )} */}
+            {}
           </View>
 
           {!disableManage && (
-            // Steppers stay mounted and tappable while a change syncs — we only
-            // dim them to signal "saving". Swapping them for a spinner used to
-            // lock the user out for the whole 500ms debounce + network trip and
-            // defeated the debounce's rapid-tap batching.
             <View
               style={[
                 styles.countContainer,
@@ -311,7 +293,6 @@ const styles = StyleSheet.create({
   },
   productCardViewSoldOut: {
     borderRadius: CART_RADIUS.card,
-    // backgroundColor: CART_COLORS.background,
     paddingHorizontal: CART_SPACING.sm,
   },
   soldOutInfoColumn: {
@@ -337,9 +318,6 @@ const styles = StyleSheet.create({
   productImageViewSoldOut: {
     backgroundColor: CART_COLORS.background,
   },
-  // The scrim carries the well's own radius instead of relying on
-  // `overflow: 'hidden'` — the remove button is docked outside the well's
-  // bounds and clipping the parent would swallow it.
   outOfStockOverlay: {
     ...StyleSheet.absoluteFillObject,
     borderRadius: CART_RADIUS.productCard,
@@ -347,9 +325,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.66)',
   },
-  // Same pill as the token card, with tighter side padding and a width cap:
-  // the cart's image well is ~40% narrower, so the token card's SPACE.sm
-  // padding would push "Out of stock" past the scrim's edge.
   outOfStockPill: {
     backgroundColor: INK.base,
     maxWidth: '94%',
@@ -476,7 +451,6 @@ const styles = StyleSheet.create({
     marginBottom: CART_SPACING.xl,
 
     alignItems: 'center',
-    // backgroundColor: '#F3E5F5',
     paddingHorizontal: wp('1.5%'),
     paddingVertical: hp('0.2%'),
     borderRadius: 4,

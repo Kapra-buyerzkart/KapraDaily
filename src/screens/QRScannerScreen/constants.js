@@ -32,7 +32,6 @@ export const RESULT_STYLES = {
 
 export const VALID_DISMISS_MS = 2000;
 
-// The two platforms spell the "this lens has no flash unit" error differently.
 export const TORCH_ERROR_CODES = [
   'device/flash-unavailable',
   'device/flash-not-available',

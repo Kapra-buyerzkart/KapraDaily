@@ -51,9 +51,6 @@ const ProductBlock = ({
 };
 
 const styles = StyleSheet.create({
-  // Flat: the rail is part of the page, not a card on it. Consecutive rails are
-  // told apart by the header's type hierarchy and a hairline rule, since two
-  // adjacent product rails on plain white would otherwise run together.
   surface: {
     paddingTop: SPACE.xs,
     paddingBottom: SPACE.sm,

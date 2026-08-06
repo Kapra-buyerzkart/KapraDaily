@@ -1,10 +1,3 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
-
 import { useEffect } from 'react';
 import './src/config/i18n';
 import { LogBox, StatusBar, StyleSheet, useColorScheme } from 'react-native';
@@ -41,7 +34,6 @@ function App() {
   useEffect(() => {
     LogBox.ignoreLogs(['Warning: ...']);
 
-    // OneSignal initialization via structured service
     import('./src/services/OneSignalService').then(
       ({ requestPushPermissionIfNeeded }) => {
         requestPushPermissionIfNeeded();

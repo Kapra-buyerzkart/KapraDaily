@@ -19,8 +19,6 @@ import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import { useReferralLevelMembersScreen } from './useReferralLevelMembersScreen';
 import styles from './styles';
 
-/* ----------------------------- API types ----------------------------- */
-
 export interface ReferralLevelMember {
   custId: number;
   custName: string;
@@ -31,8 +29,6 @@ export interface ReferralLevelMember {
   btEarnedForYou?: number;
   ordersThatEarnedYou?: number;
 }
-
-/* ----------------------------- helpers ----------------------------- */
 
 const formatBT = (n: number): string => {
   const rounded = Math.round(n * 100) / 100;
@@ -55,8 +51,6 @@ const extractMembers = (data: any): ReferralLevelMember[] => {
   if (Array.isArray(data.items)) return data.items;
   return [];
 };
-
-/* ----------------------------- component ----------------------------- */
 
 const ReferralLevelMembersScreen = () => {
   const insets = useSafeAreaInsets();

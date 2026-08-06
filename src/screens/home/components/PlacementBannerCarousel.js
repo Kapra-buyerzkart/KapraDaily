@@ -69,23 +69,16 @@ const PlacementBannerCarousel = ({
 
   const isInfinite = infinite && !!banners && banners.length > 1;
 
-  // One derivation per layout mode instead of six wp() calls and a handful of
-  // fresh style objects on every render. The styles below are handed to the
-  // FlatList and to each cell, so rebuilding them was enough on its own to
-  // re-render every banner image.
   const geometry = useMemo(() => {
     const bannerWidth = fullWidth ? wp('100%') : wp('85%');
     const bannerSpacing = fullWidth ? 0 : wp('4%');
     const itemMargin = bannerSpacing / 2;
-    // Side inset so the active card sits centered with an equal peek on both sides.
     const contentPadding = fullWidth
       ? 0
       : (wp('100%') - bannerWidth) / 2 - itemMargin;
 
     return {
       SNAP_INTERVAL: bannerWidth + bannerSpacing,
-      // Distance from the content edge to the first item's left edge
-      // (padding + its own margin).
       ITEM_OFFSET: fullWidth ? 0 : contentPadding + itemMargin,
       cellStyle: [
         !fullWidth && styles.carouselShadowWrapper,
@@ -116,9 +109,6 @@ const PlacementBannerCarousel = ({
     scrollX.value = event.contentOffset.x;
   });
 
-  // Track foreground/background so a tick that fires while the app is buried
-  // (its scroll animation would never run, and never report back) is skipped
-  // instead of walking the index forward blindly.
   useEffect(() => {
     const sub = AppState.addEventListener('change', nextState => {
       appStateRef.current = nextState;
@@ -126,9 +116,6 @@ const PlacementBannerCarousel = ({
     return () => sub.remove();
   }, []);
 
-  // Start on the first real banner (index 0 is the leading clone). Keyed on
-  // the banner count rather than the array identity, so a parent that rebuilds
-  // the array each render does not keep resetting the carousel.
   useEffect(() => {
     if (!isInfinite) return undefined;
 
@@ -142,14 +129,9 @@ const PlacementBannerCarousel = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isInfinite, banners?.length]);
 
-  // Autoplay only runs while this screen is focused: a blurred screen is frozen
-  // (see freezeOnBlur), so its scroll animations never complete and never fire
-  // onMomentumScrollEnd — which is what used to leave the index desynced.
   useEffect(() => {
     if (!isInfinite || !isFocused) return undefined;
 
-    // Index 0 is the leading clone, 1..banners.length are real, and
-    // banners.length + 1 is the trailing clone.
     const lastIndex = banners.length + 1;
 
     const autoplayTimer = setInterval(() => {
@@ -157,9 +139,6 @@ const PlacementBannerCarousel = ({
 
       const next = currentIndexRef.current + 1;
       if (next > lastIndex) {
-        // The wrap-around never landed (interrupted animation, or a momentum
-        // callback we never got). Recover by snapping back to the first real
-        // banner rather than scrolling past the end of the list.
         flatListRef.current?.scrollToIndex({ index: 1, animated: false });
         currentIndexRef.current = 1;
         return;
@@ -172,8 +151,6 @@ const PlacementBannerCarousel = ({
     return () => clearInterval(autoplayTimer);
   }, [isInfinite, isFocused, banners?.length]);
 
-  // A leading and a trailing clone, so the last banner can scroll into the
-  // first without the list visibly rewinding.
   const extendedBanners = useMemo(() => {
     const list = banners || [];
     return isInfinite ? [list[list.length - 1], ...list, list[0]] : list;
@@ -202,7 +179,6 @@ const PlacementBannerCarousel = ({
       );
       currentIndexRef.current = slideIndex;
 
-      // Jump (without animation) from a cloned edge back to the real banner.
       if (slideIndex === 0) {
         currentIndexRef.current = banners.length;
         flatListRef.current?.scrollToIndex({
@@ -277,9 +253,6 @@ const PlacementBannerCarousel = ({
         onMomentumScrollEnd={isInfinite ? onMomentumScrollEnd : undefined}
         getItemLayout={isInfinite ? getItemLayout : undefined}
         initialScrollIndex={isInfinite ? 1 : undefined}
-        // 1, not 16: the handler is a UI-thread worklet, so the events are
-        // cheap, and throttling them only starved the pagination dots of
-        // frames on 120Hz displays.
         scrollEventThrottle={1}
         keyExtractor={keyExtractor}
         contentContainerStyle={geometry.listContentStyle}
@@ -342,9 +315,4 @@ const styles = StyleSheet.create({
   },
 });
 
-// Memoised to match every other home section. This was the last one still
-// re-rendering on every HomeScreen render — pull-to-refresh, the header's
-// onLayout metrics patch, every discovery-category tap — and since its list
-// props were rebuilt inline, each of those re-rendered every banner cell and
-// re-issued its <Image> source.
 export default React.memo(PlacementBannerCarousel);

@@ -40,7 +40,6 @@ const languageDetector = {
     try {
       await AsyncStorage.setItem(LANGUAGE_STORAGE_KEY, language);
     } catch {
-      // best-effort persistence, next launch falls back to device locale
     }
   },
 };

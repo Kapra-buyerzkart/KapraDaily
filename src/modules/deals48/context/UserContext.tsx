@@ -1,5 +1,4 @@
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
-// import User from '../database/models/User';
 type User = any;
 
 import * as NavigationService from '../api/NavigationService';
@@ -32,7 +31,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             const response = await getProfile();
             if (response && response.success) {
                 setProfile(response.data);
-                setUser({ loggedIn: true }); // Set user as logged in
+                setUser({ loggedIn: true });
                 await setCachedProfile(response.data);
             }
         } catch (error) {
@@ -45,14 +44,12 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             try {
                 const token = await getAccessToken();
                 if (token) {
-                    // Try to load cached profile first for immediate UI
                     const cachedProfile = await getCachedProfile();
                     if (cachedProfile) {
                         const parsedProfile = JSON.parse(cachedProfile);
                         setProfile(parsedProfile);
                         setUser({ loggedIn: true });
                     }
-                    // Then refresh from server
                     await loadProfile();
                 }
             } catch (error) {
@@ -66,9 +63,6 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         try {
             await clearTokens();
             await clearCachedProfile();
-            // Deliberately not clearing pincodeAreaId: it belongs to the host
-            // app and is shared across services, so signing out of 48hrs must
-            // not wipe the user's delivery area everywhere else.
             setUser(null);
             setProfile(null);
             NavigationService.reset(NavigationService.AUTH_FALLBACK_ROUTE);

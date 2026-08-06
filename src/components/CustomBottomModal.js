@@ -17,14 +17,6 @@ import {
   widthPercentageToDP as wp,
 } from 'react-native-responsive-screen';
 
-/**
- * CustomBottomModal
- *
- * A generic, reusable bottom sheet built on @gorhom/bottom-sheet.
- * Fully imperative: visibility is never driven by parent state, only by
- * ref methods (open/close/snapTo/expand/collapse). This avoids the
- * re-render churn and flicker that comes from toggling a boolean prop.
- */
 const CustomBottomModal = forwardRef((props, ref) => {
   const {
     snapPoints,
@@ -37,19 +29,13 @@ const CustomBottomModal = forwardRef((props, ref) => {
     handleIndicatorStyle,
     keyboardBehavior = 'interactive',
     keyboardBlurBehavior = 'restore',
-    // Lifts the sheet (and dims everything except) this many px off the
-    // bottom, e.g. to float it above a sticky checkout bar that should stay
-    // visible and tappable underneath.
     bottomInset = 0,
   } = props;
 
   const sheetRef = useRef(null);
-  // Tracks whether the sheet is currently presented so the Android back
-  // button handler knows whether to intercept the press.
   const isOpenRef = useRef(false);
   const insets = useSafeAreaInsets();
 
-  // Recomputed only when the caller passes a new snapPoints array.
   const resolvedSnapPoints = useMemo(
     () => snapPoints ?? ['50%'],
     [snapPoints],
@@ -75,7 +61,6 @@ const CustomBottomModal = forwardRef((props, ref) => {
     sheetRef.current?.collapse();
   }, []);
 
-  // Expose a stable imperative API to the parent via ref.
   useImperativeHandle(
     ref,
     () => ({
@@ -88,13 +73,9 @@ const CustomBottomModal = forwardRef((props, ref) => {
     [handleOpen, handleClose, handleSnapTo, handleExpand, handleCollapse],
   );
 
-  // Fires on every sheet position change, including user-driven pan-down
-  // dismiss and backdrop press dismiss (index === -1 means fully closed).
   const handleSheetChange = useCallback(
     index => {
       isOpenRef.current = index >= 0;
-      // Let the caller react to every settle (e.g. focus an input once the
-      // sheet is fully open); still fire onClose on full dismiss.
       onChange?.(index);
       if (index === -1) {
         onClose?.();
@@ -103,9 +84,6 @@ const CustomBottomModal = forwardRef((props, ref) => {
     [onChange, onClose],
   );
 
-  // Backdrop with a fade animation; tapping it dismisses the sheet. When a
-  // bottomInset is set, stop the backdrop short of it so the content below
-  // (e.g. the sticky checkout bar) stays visible and receives touches.
   const renderBackdrop = useCallback(
     backdropProps => (
       <BottomSheetBackdrop
@@ -120,15 +98,11 @@ const CustomBottomModal = forwardRef((props, ref) => {
     [bottomInset],
   );
 
-  // Render prop wrapper so FlatList/ScrollView content passed via
-  // renderContent stays inside BottomSheetView's gesture context.
   const renderSheetContent = useCallback(
     () => renderContent?.(data),
     [renderContent, data],
   );
 
-  // Android hardware back button should close the sheet instead of
-  // navigating away, but only while the sheet is actually open.
   useEffect(() => {
     if (Platform.OS !== 'android') {
       return undefined;
@@ -147,7 +121,6 @@ const CustomBottomModal = forwardRef((props, ref) => {
       onBackPress,
     );
 
-    // Cleanup listener on unmount to avoid leaks/duplicate handlers.
     return () => subscription.remove();
   }, [handleClose]);
 
@@ -200,6 +173,4 @@ const styles = StyleSheet.create({
   },
 });
 
-// Memoized so the sheet only re-renders when its own props actually
-// change, not whenever the parent screen re-renders for unrelated reasons.
 export default React.memo(CustomBottomModal);

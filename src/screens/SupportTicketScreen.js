@@ -70,7 +70,6 @@ const SupportTicketScreen = () => {
           'Your support ticket has been created successfully. Our team will get back to you soon.',
         );
         setStatusModalVisible(true);
-        // Reset form
         setTitle('');
         setMessage('');
         setPriority('normal');
@@ -179,7 +178,6 @@ const SupportTicketScreen = () => {
                   value={orderNumber}
                   onChangeText={val => {
                     setOrderNumber(val);
-                    // If user manually types, clear internal ID so it defaults to parseInt(orderNumber)
                     setInternalOrderId(0);
                   }}
                   keyboardType={

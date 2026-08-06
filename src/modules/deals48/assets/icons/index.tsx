@@ -1,4 +1,3 @@
-// src/components/icons/CustomIcons.tsx
 import React from 'react';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -18,7 +17,6 @@ interface IconProps {
 
 const defaultSize = 24;
 
-// Icon components with default props
 const Home = ({ size = defaultSize, color = colors.primary, style }: IconProps) => (
     <Ionicons name="home-outline" size={size} color={color} style={style} />
 );
@@ -50,8 +48,6 @@ const Add = ({ size = defaultSize, color = colors.primary, style }: IconProps) =
 const Remove = ({ size = defaultSize, color = colors.primary, style }: IconProps) => (
     <Ionicons name="remove" size={size} color={color} style={style} />
 );
-
-
 
 const Menu = ({ size = defaultSize, color = colors.primary, style }: IconProps) => (
     <Ionicons name="menu" size={size} color={color} style={style} />
@@ -202,11 +198,9 @@ const TrippleRight = ({ size = defaultSize, color = colors.primary, style }: Ico
     <MaterialDesignIcons name="chevron-triple-right" size={size} color={color} style={style} />
 );
 
-
 const RightArrow = ({ size = defaultSize, color = colors.primary, style }: IconProps) => (
     <Entypo name="chevron-thin-right" size={size} color={color} style={style} />
 );
-
 
 const FilterIcon = ({ size = defaultSize, color = colors.primary, style }: IconProps) => (
     <Ionicons name="options-outline" size={size} color={color} style={style} />
@@ -240,12 +234,6 @@ const ArrowBack = ({ size = defaultSize, color = colors.primary, style }: IconPr
     <Ionicons name="arrow-back" size={size} color={color} style={style} />
 );
 
-
-
-
-
-
-// Exporting all as object for named JSX usage
 export const AppIcons = {
     Home,
     User,

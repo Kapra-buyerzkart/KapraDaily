@@ -24,8 +24,6 @@ import { COLORS } from '../styles/colors';
 import { isSafeUrl, openExternalUrl } from '../utils/safeUrl';
 import logger from '../utils/logger';
 
-// "INV/2025-26/00044039" → "INV_2025-26_00044039.pdf", falling back to the
-// file name the URL ends with.
 const buildFileName = (invoiceNumber, url) => {
   const fromNumber = (invoiceNumber || '').replace(/[^A-Za-z0-9-]+/g, '_');
   if (fromNumber) {
@@ -42,8 +40,6 @@ const InvoiceViewerScreen = () => {
   const route = useRoute();
   const { invoiceUrl, invoiceNumber, title } = route.params || {};
 
-  // The URL comes from the server, so it goes through the same scheme
-  // allow-list we use before handing anything to Linking.
   const urlIsUsable = isSafeUrl(invoiceUrl);
 
   const [loading, setLoading] = useState(true);
@@ -67,8 +63,6 @@ const InvoiceViewerScreen = () => {
 
     try {
       if (Platform.OS === 'android') {
-        // DownloadManager drops the file in the public Downloads folder and
-        // posts a notification, so no storage permission is needed.
         await ReactNativeBlobUtil.config({
           addAndroidDownloads: {
             useDownloadManager: true,
@@ -86,7 +80,6 @@ const InvoiceViewerScreen = () => {
           fileCache: true,
           path: `${ReactNativeBlobUtil.fs.dirs.DocumentDir}/${fileName}`,
         }).fetch('GET', invoiceUrl);
-        // Hands the file to the iOS share sheet, where "Save to Files" lives.
         await ReactNativeBlobUtil.ios.previewDocument(res.path());
       }
     } catch (error) {
@@ -158,9 +151,6 @@ const InvoiceViewerScreen = () => {
         ) : (
           <>
             <Pdf
-              // No `cache`: a partially-downloaded invoice would otherwise be
-              // kept and replayed on every later open. They're small enough to
-              // re-fetch each time.
               source={{ uri: invoiceUrl }}
               trustAllCerts={false}
               style={styles.pdf}

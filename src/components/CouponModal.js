@@ -29,8 +29,6 @@ const CouponModal = ({
 }) => {
   const modalRef = useRef(null);
 
-  // Bridge the parent-controlled `visible` prop to CustomModal's imperative
-  // open/close API (RN core <Modal> does not render on this build).
   useEffect(() => {
     if (visible) {
       modalRef.current?.open();
@@ -70,7 +68,7 @@ const CouponModal = ({
         </TouchableOpacity>
       </View>
 
-      {/* List */}
+      {}
       <Text style={styles.sectionTitle}>
         {isGiftCard ? 'Available Gift Cards' : 'Available Coupons'}
       </Text>

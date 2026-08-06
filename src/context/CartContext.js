@@ -33,17 +33,9 @@ import { prefetchProductImages } from '../utils/imageUrl';
 
 export const CartContext = createContext();
 
-// The backend rejects per-product purchase caps with its own wording
-// ("Maximum quantity allowed for this product is exceeded"), which the
-// stock/availability checks elsewhere in this file don't match.
 const isMaxQuantityMessage = message =>
   /max(imum)?\s+(quantity|qty)/i.test(message || '');
 
-// Some variants of the message embed the cap ("...allowed is 5"); pull it
-// out when present so the modal can show it as a pill, and fall back to
-// just the sentence when it doesn't. Anchored on "is"/"of"/"limit" rather
-// than the first digit anywhere, so a product name like "Product 2L" in the
-// sentence can't be mistaken for the cap.
 const parseMaxQuantity = message => {
   const match = /\b(?:is|of|limit(?:ed)?\s*(?:to)?)\s*:?\s*(\d+)/i.exec(
     message || '',
@@ -70,10 +62,9 @@ export const CartProvider = ({ children }) => {
   const [cartId, setCartId] = useState(null);
   const cartIdRef = useRef(null);
   const [error, setError] = useState(null);
-  const [updatingItems, setUpdatingItems] = useState([]); // [cartItemId1, cartItemId2, ...]
+  const [updatingItems, setUpdatingItems] = useState([]);
   const debounceTimersRef = useRef({});
 
-  // ─── Addresses State ───
   const [addresses, setAddresses] = useState([]);
   const addressesRef = useRef([]);
   const [isLoadingAddresses, setIsLoadingAddresses] = useState(false);
@@ -81,19 +72,14 @@ export const CartProvider = ({ children }) => {
   const [addressConfirmationData, setAddressConfirmationData] = useState(null);
   const [confirmationConfig, setConfirmationConfig] = useState(null);
   const [statusConfig, setStatusConfig] = useState(null);
-  // Per-product purchase-cap rejection surfaced by the add/update APIs.
-  // Modal rather than toast — the quantity stepper rolls back visibly, so
-  // the explanation has to be acknowledged, not glanced at.
   const [quantityLimitConfig, setQuantityLimitConfig] = useState(null);
 
-  // ─── useRef for cartVersion so every callback always reads the LATEST value ───
   const cartVersionRef = useRef(null);
-  const [cartVersion, setCartVersion] = useState(null); // kept for dependency tracking / re-renders
+  const [cartVersion, setCartVersion] = useState(null);
   const loadRequestRef = useRef(null);
   const summaryRequestRef = useRef(null);
   const failedPincodesRef = useRef(new Set());
 
-  // Helper to update version in both ref and state
   const updateCartVersion = useCallback(newVersion => {
     cartVersionRef.current = newVersion;
     setCartVersion(newVersion);
@@ -108,7 +94,6 @@ export const CartProvider = ({ children }) => {
     fetchAddresses();
   }, []);
 
-  // ─── User Switch Sync: Clear and reload cart when user identity changes ───
   useEffect(() => {
     const currentUserId = profile?.custId || profile?.id || null;
     if (
@@ -121,7 +106,6 @@ export const CartProvider = ({ children }) => {
         '->',
         currentUserId,
       );
-      // Immediately clear stale in-memory data from previous user
       setCartItems([]);
       setCartSummary(null);
       setCartId(null);
@@ -129,14 +113,12 @@ export const CartProvider = ({ children }) => {
       updateCartVersion(null);
       setAddresses([]);
       setError(null);
-      // Fetch fresh data for the new user
       loadCart();
       fetchAddresses();
     }
     lastUserIdRef.current = currentUserId;
   }, [profile?.custId, profile?.id]);
 
-  // ─── Location Sync: Refresh cart when pincode changes ───
   useEffect(() => {
     const currentPincode = profile?.pincode;
     if (currentPincode !== lastPincodeRef.current) {
@@ -165,7 +147,6 @@ export const CartProvider = ({ children }) => {
     setStatusConfig(config);
   }, []);
 
-  // ─── Addresses Logic ───
   const fetchAddresses = useCallback(async () => {
     setIsLoadingAddresses(true);
     try {
@@ -175,7 +156,6 @@ export const CartProvider = ({ children }) => {
         response,
       );
 
-      // Handle both formats: data as array or data as object with items
       const addressList = Array.isArray(response?.data)
         ? response.data
         : response?.data?.items || response?.data || [];
@@ -196,7 +176,6 @@ export const CartProvider = ({ children }) => {
               selectionFound = true;
             }
 
-            // If mapping "raw", ensure it has the ID we expect for updates
             const rawWithId = { ...addr, addressId: validId };
 
             return {
@@ -229,7 +208,6 @@ export const CartProvider = ({ children }) => {
           });
 
         if (mappedAddresses.length > 0 && !selectionFound) {
-          // Do not auto-select address if none is selected
         }
         logger.log('📍 [ADDRESS] Mapped addresses:', mappedAddresses.length);
         setAddresses(mappedAddresses);
@@ -245,8 +223,6 @@ export const CartProvider = ({ children }) => {
       setIsLoadingAddresses(false);
     }
   }, []);
-
-  // Auto-select address removed
 
   const onSelectAddress = useCallback(
     async (addressId, showConfirmationPopup = true) => {
@@ -281,8 +257,7 @@ export const CartProvider = ({ children }) => {
         return;
       }
 
-      // 1. Update the local address highlights (Pure state update)
-      setHasAlertedServiceability(false); // Reset so new address can show its own alert if bad
+      setHasAlertedServiceability(false);
       setAddresses(prev =>
         prev.map(item => ({
           ...item,
@@ -290,7 +265,6 @@ export const CartProvider = ({ children }) => {
         })),
       );
 
-      // 2. Performance side-effects (Validation or Refresh)
       if (showConfirmationPopup) {
         const pincode = selectedAddr.pin || '';
         const area =
@@ -302,7 +276,6 @@ export const CartProvider = ({ children }) => {
         setShowAddressModal(false);
 
         try {
-          // 1. First check cart/list status for the NEW pincode
           const loadRes = await loadCart(selectedAddr.pincodeAreaId);
           logger.log(
             '📍 [ADDRESS] Selection List Response:',
@@ -311,10 +284,8 @@ export const CartProvider = ({ children }) => {
 
           const isUnserviceable = loadRes?.isUnserviceable;
 
-          // Small delay to allow AddressModal to close on Native before potentially showing any UI updates
           setTimeout(() => {
             if (isUnserviceable) {
-              // Store not found is already handled by loadCart (it sets error, serviceabilityTrigger etc.)
               logger.log(
                 '📍 [ADDRESS] Store not found detected in list, skipping summary and popup.',
               );
@@ -323,13 +294,11 @@ export const CartProvider = ({ children }) => {
               setError(null);
               setServiceabilityTrigger(false);
               setHasAlertedServiceability(false);
-              // Only show confirmation if serviceable
               setAddressConfirmationData({
                 pincode,
                 areaName: area,
                 isServiceable: true,
               });
-              // Trigger summary refresh for the new address
               refreshCart(selectedAddr.pincodeAreaId);
             }
           }, 400);
@@ -346,7 +315,6 @@ export const CartProvider = ({ children }) => {
     },
     [addresses, refreshCart, loadCart],
   );
-  /* Note: getCartSummaryApi is imported at top of file */
 
   const onThreeDotsClicked = useCallback(addressId => {
     setAddresses(prev =>
@@ -356,10 +324,8 @@ export const CartProvider = ({ children }) => {
 
   const onDeleteClicked = useCallback(
     async addressId => {
-      // Close the AddressModal first if it's open to avoid modal collision on iOS
       setShowAddressModal(false);
 
-      // Slight delay to allow AddressModal to close before showing confirmation
       setTimeout(() => {
         showConfirmation({
           title: 'Delete Address',
@@ -410,8 +376,6 @@ export const CartProvider = ({ children }) => {
     );
   }, []);
 
-  // Ensure at least one address is selected removed
-
   const clearSelectedAddress = useCallback(async () => {
     try {
       await secureStore.removeItem('selectedAddressId');
@@ -421,7 +385,6 @@ export const CartProvider = ({ children }) => {
     setAddresses(prev => prev.map(item => ({ ...item, selected: false })));
   }, []);
 
-  // ─── loadCart: fetches item list and returns cartVersion (bootstrap only) ───
   const loadCart = useCallback(
     async pincodeAreaIdOverride => {
       if (loadRequestRef.current) {
@@ -437,12 +400,11 @@ export const CartProvider = ({ children }) => {
             response,
           );
           let fetchedCartVersion = null;
-          let normalizedItems = []; // Defined here for function scope
+          let normalizedItems = [];
 
           if (response && response.data) {
             if (response.data.cart && response.data.cart.cartVersion) {
               fetchedCartVersion = response.data.cart.cartVersion;
-              // Always keep the ref up-to-date so coupon/gift card apply calls have the latest version
               updateCartVersion(fetchedCartVersion);
             }
             if (response.data.cart && response.data.cart.cartId) {
@@ -453,14 +415,11 @@ export const CartProvider = ({ children }) => {
               const items = Array.isArray(response.data.items)
                 ? response.data.items
                 : [];
-              // Normalize addedQty → quantity so all components can use item.quantity
               normalizedItems = items.map(item => ({
                 ...item,
                 quantity: item.quantity || item.addedQty || 1,
               }));
               setCartItems(normalizedItems);
-              // Warm the cache so the floating cart pill thumbnails render
-              // instantly instead of downloading cold on first paint.
               prefetchProductImages(normalizedItems);
             } else {
               setCartItems([]);
@@ -480,7 +439,6 @@ export const CartProvider = ({ children }) => {
               .includes('not found');
 
           if (response && isUnserviceable) {
-            // Force the exact user-defined error message for unserviceable states
             setError(
               'Delivery not available to the selected address.Please select another address.',
             );
@@ -491,7 +449,6 @@ export const CartProvider = ({ children }) => {
           } else {
             setError(null);
             setServiceabilityTrigger(false);
-            // Clear failed pincodes on success
             failedPincodesRef.current.clear();
           }
           return {
@@ -500,7 +457,7 @@ export const CartProvider = ({ children }) => {
             isUnserviceable,
             status: response?.status,
             message: response?.message,
-            items: normalizedItems, // Return fresh items
+            items: normalizedItems,
           };
         } catch (error) {
           logger.error('🛒 [CART] Error loading cart:', error);
@@ -521,7 +478,6 @@ export const CartProvider = ({ children }) => {
     [updateCartVersion],
   );
 
-  // After this call, cartVersionRef.current is always up-to-date.
   const getCartSummary = useCallback(
     async (
       deliveryMode = 'express',
@@ -537,9 +493,7 @@ export const CartProvider = ({ children }) => {
 
       const promise = (async () => {
         try {
-          // Use override if provided (bootstrap from loadCart), otherwise use ref
           const versionToUse = cartVersionOverride || cartVersionRef.current;
-          // Use ref for cartId to stabilize callback
           const idToUse = cartIdOverride || cartIdRef.current;
           logger.log(
             '📊 [SUMMARY] Calling with version:',
@@ -601,7 +555,6 @@ export const CartProvider = ({ children }) => {
               status === 'STORE_NOT_FOUND' ||
               status === 'STORE_CLOSED_FOR_DELIVERY';
 
-            // Default to generic message unless it's a known serviceability issue
             const defaultErrorMsg =
               isKnownUnserviceableStatus || serviceabilityTrigger
                 ? 'Delivery not available to the selected address.Please select another address'
@@ -621,7 +574,6 @@ export const CartProvider = ({ children }) => {
               updateCartVersion(null);
               setCartItems([]);
               setCartSummary(null);
-              // Trigger a fresh load to recover
               setTimeout(() => loadCart(), 100);
               return {
                 success: false,
@@ -652,11 +604,9 @@ export const CartProvider = ({ children }) => {
               return { success: false, error: 'Auto-reloading...', status };
             }
 
-            // Store null summary and set the error
             setCartSummary(null);
             setError(errorMsg);
 
-            // Only trigger the hard serviceability flag if it's clearly a location issue
             const isLiteralUnserviceable =
               isKnownUnserviceableStatus ||
               String(errorMsg).toLowerCase().includes('no store') ||
@@ -692,7 +642,6 @@ export const CartProvider = ({ children }) => {
     [updateCartVersion, loadCart],
   );
 
-  // ─── refreshCart: re-fetches items and summary (Parallelized for speed) ───
   const refreshCart = useCallback(
     async pincodeAreaIdOverride => {
       const selectedAddress = addressesRef.current.find(a => a.selected);
@@ -704,10 +653,8 @@ export const CartProvider = ({ children }) => {
       logger.log('🔄 [CART] Refreshing items and summary sequentially...');
       const loadRes = await loadCart(pincodeAreaId);
 
-      // 1. Check direct response instead of stale state
       const items = loadRes?.items || [];
 
-      // 2. Determine if summary should be skipped
       const hasInvalidItems = items.some(
         item =>
           item.unavailable === 1 ||
@@ -736,7 +683,6 @@ export const CartProvider = ({ children }) => {
 
   const handleStoreNotFound = useCallback(async () => {
     if (!serviceabilityTrigger) return;
-    // The trigger informs the screen to show the AddressConfirmationModal
     logger.log('📍 [CART] Serviceability trigger activated');
   }, [serviceabilityTrigger]);
 
@@ -746,13 +692,10 @@ export const CartProvider = ({ children }) => {
     }
   }, [serviceabilityTrigger, handleStoreNotFound]);
 
-  // ─── addToCart ───
   const addToCart = useCallback(
     async (item, pincodeAreaIdOverride = null) => {
       const productId = item.productId || item.id;
 
-      // Warm the pill thumbnail immediately (usually already hot from the
-      // product card the user just tapped) so it shows without a cold fetch.
       prefetchProductImages([item]);
 
       logger.log('➕ [ADD TO CART] Adding product:', {
@@ -839,7 +782,6 @@ export const CartProvider = ({ children }) => {
           return;
         }
 
-        // Toast.show('Item added to cart', Toast.SHORT);
         await refreshCart(pincodeAreaIdOverride || profile?.pincode);
       } catch (error) {
         logger.error('➕ [ADD TO CART] API Error:', error);
@@ -862,8 +804,6 @@ export const CartProvider = ({ children }) => {
         } else if (isStockError && !isStoreNotFound) {
           Toast.show('Requested qty is not available', Toast.LONG);
         } else if (errorMsg && !isStoreNotFound) {
-          // Generic error only if not store not found
-          // Toast.show(errorMsg, Toast.SHORT);
         }
 
         rollback();
@@ -873,7 +813,6 @@ export const CartProvider = ({ children }) => {
     [refreshCart],
   );
 
-  // ─── removeFromCart ───
   const removeFromCart = useCallback(
     async (identifier, pincodeAreaIdOverride = null) => {
       let removedItem = null;
@@ -895,7 +834,6 @@ export const CartProvider = ({ children }) => {
       setCartItems(prevItems => {
         const newItems = prevItems.filter(item => item !== removedItem);
         if (newItems.length === 0) {
-          // If cart is emptied manually, also void the selected address just like in clearCart
           try {
             secureStore.removeItem('selectedAddressId');
             setAddresses(prev => prev.map(a => ({ ...a, selected: false })));
@@ -929,7 +867,6 @@ export const CartProvider = ({ children }) => {
     [cartItems, refreshCart],
   );
 
-  // ─── updateCartItemQuantity (Debounced per item) ───
   const updateCartItemQuantity = useCallback(
     async (cartItemId, quantity, pincodeAreaIdOverride = null) => {
       const cartItemIdStr = String(cartItemId);
@@ -944,7 +881,6 @@ export const CartProvider = ({ children }) => {
       }
 
       let oldQuantity = 1;
-      // 1. Optimistic UI update for quantity text
       setCartItems(prevItems => {
         const updated = prevItems.map(item => {
           if (
@@ -952,12 +888,6 @@ export const CartProvider = ({ children }) => {
             cartItemIdStr
           ) {
             oldQuantity = item.quantity || 1;
-            // Keep addedQty in sync with quantity — CartProductCard's own
-            // re-sync effect reads addedQty first, and previously relied on
-            // refreshCart's loadCart() to refresh addedQty from the server
-            // after every update. Since the success path below now skips
-            // that refetch, addedQty must be updated here too or it goes
-            // stale and the displayed quantity snaps back.
             return { ...item, quantity, addedQty: quantity };
           }
           return item;
@@ -966,7 +896,6 @@ export const CartProvider = ({ children }) => {
         return updated;
       });
 
-      // 2. Debounce the API call
       if (debounceTimersRef.current[cartItemIdStr]) {
         clearTimeout(debounceTimersRef.current[cartItemIdStr]);
       }
@@ -994,11 +923,6 @@ export const CartProvider = ({ children }) => {
             const freshVersion = response.data?.cart?.cartVersion;
 
             if (freshVersion) {
-              // Perf: the update response gave us a fresh cartVersion, so we
-              // can skip the redundant loadCart() list re-fetch — the
-              // optimistic update already reflects correct local state.
-              // Only re-sync the summary (pricing/coupon/threshold math),
-              // mirroring refreshCart's own sold-out-item guard.
               updateCartVersion(freshVersion);
 
               const selectedAddress = addressesRef.current.find(
@@ -1031,10 +955,6 @@ export const CartProvider = ({ children }) => {
                 );
               }
             } else {
-              // The update response didn't echo a fresh cartVersion, so we
-              // have no reliable ifMatchCartVersion for a summary-only call —
-              // fall back to the full refresh (loadCart always returns a
-              // fresh version) to avoid a spurious version-mismatch failure.
               await refreshCart(pincodeAreaIdOverride);
             }
           } else if (response && response.message) {
@@ -1067,7 +987,6 @@ export const CartProvider = ({ children }) => {
             }
           }
 
-          // Rollback on error (also revert addedQty — see note above)
           setCartItems(prevItems =>
             prevItems.map(item =>
               String(item.cartItemId || item.productId || item.id) ===
@@ -1081,19 +1000,17 @@ export const CartProvider = ({ children }) => {
           setUpdatingItems(prev => prev.filter(id => id !== cartItemIdStr));
           delete debounceTimersRef.current[cartItemIdStr];
         }
-      }, 500); // 500ms debounce
+      }, 500);
     },
     [removeFromCart, refreshCart, updateCartVersion, getCartSummary],
   );
 
-  // ─── clearCart ───
   const clearCart = useCallback(async () => {
     const previousItems = cartItems;
     try {
       setCartItems([]);
       setCartSummary(null);
 
-      // Also clear the persistently selected address on checkout completion
       try {
         await secureStore.removeItem('selectedAddressId');
         setAddresses(prev => prev.map(item => ({ ...item, selected: false })));
@@ -1111,7 +1028,6 @@ export const CartProvider = ({ children }) => {
     }
   }, [cartItems, refreshCart]);
 
-  // ─── applyCoupon ───
   const applyCoupon = useCallback(
     async couponCode => {
       try {
@@ -1167,7 +1083,6 @@ export const CartProvider = ({ children }) => {
     [refreshCart],
   );
 
-  // ─── removeCoupon ───
   const removeCoupon = useCallback(async () => {
     try {
       const version = cartVersionRef.current;
@@ -1184,7 +1099,6 @@ export const CartProvider = ({ children }) => {
     }
   }, [refreshCart]);
 
-  // ─── applyBCoins ───
   const applyBCoins = useCallback(
     async bcoins => {
       try {
@@ -1231,7 +1145,6 @@ export const CartProvider = ({ children }) => {
     [refreshCart],
   );
 
-  // ─── removeBCoins ───
   const removeBCoins = useCallback(async () => {
     try {
       const version = cartVersionRef.current;
@@ -1268,7 +1181,6 @@ export const CartProvider = ({ children }) => {
     }
   }, [refreshCart]);
 
-  // ─── applyGiftCard ───
   const applyGiftCard = useCallback(
     async giftCode => {
       try {
@@ -1321,7 +1233,6 @@ export const CartProvider = ({ children }) => {
     [refreshCart],
   );
 
-  // ─── removeGiftCard ───
   const removeGiftCard = useCallback(async () => {
     try {
       const version = cartVersionRef.current;
@@ -1338,7 +1249,6 @@ export const CartProvider = ({ children }) => {
     }
   }, [refreshCart]);
 
-  // ─── Derived values ───
   const cartCount = useMemo(() => {
     return cartItems.reduce((sum, item) => sum + (item.quantity || 1), 0);
   }, [cartItems]);
@@ -1351,17 +1261,6 @@ export const CartProvider = ({ children }) => {
     }, 0);
   }, [cartItems]);
 
-  // Product-id -> { quantity, cartItemId } index, built once per cart change.
-  //
-  // Every product card needs "how many of this product are in the cart", and
-  // each one used to answer that with its own `cartItems.find(...)`. That is
-  // O(cards x cartLines) work on every single cart mutation — ~800 string
-  // comparisons for a 40-card grid against a 20-line cart, repeated for each
-  // quantity tap. Indexing once turns each card's lookup into a Map hit.
-  //
-  // Keys are stringified because ids arrive as both numbers and strings
-  // depending on the endpoint, which is exactly what the old String(...)
-  // comparison in each card was normalising.
   const cartEntryById = useMemo(() => {
     const index = new Map();
     for (const item of cartItems) {
@@ -1399,7 +1298,6 @@ export const CartProvider = ({ children }) => {
       removeBCoins,
       updatingItems,
 
-      // Addresses
       addresses,
       isLoadingAddresses,
       fetchAddresses,
@@ -1500,17 +1398,8 @@ export const CartProvider = ({ children }) => {
 
 export const useCart = () => useContext(CartContext);
 
-// Stable empty entry so a card that is not in the cart gets the same object
-// identity every render, keeping downstream useMemo/useCallback deps stable.
 const EMPTY_CART_ENTRY = { quantity: 0, cartItemId: undefined };
 
-/**
- * O(1) "is this product in the cart, and how many" lookup for product cards.
- *
- * Replaces the per-card `cartItems.find(...)` scan. Returns
- * `{ quantity, cartItemId }`; `cartItemId` falls back to the product id, which
- * is what the cards already did when no cart line existed yet.
- */
 export const useCartEntry = itemId => {
   const { cartEntryById } = useContext(CartContext);
   return useMemo(() => {

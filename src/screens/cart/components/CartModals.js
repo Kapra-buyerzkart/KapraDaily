@@ -8,14 +8,12 @@ import AddressConfirmationModal from '../../../components/AddressConfirmationMod
 
 const CartModals = ({
   navigation,
-  // Status modal
   statusModalVisible,
   setStatusModalVisible,
   statusType,
   statusTitle,
   statusMessage,
   onRefresh,
-  // Address modal
   showAddressModal,
   setShowAddressModal,
   addresses,
@@ -23,13 +21,11 @@ const CartModals = ({
   onThreeDotsClicked,
   onDeleteClicked,
   onCloseThreeDots,
-  // Delivery slot modal
   showSlotModal,
   setShowSlotModal,
   setChosenSlot,
   setSelectedDeliveryType,
   pincodeAreaId,
-  // Coupon modal
   showCouponModal,
   setShowCouponModal,
   isGiftCard,
@@ -39,11 +35,9 @@ const CartModals = ({
   availableCoupons,
   availableGiftCards,
   handleCouponClick,
-  // Clear cart confirmation modal
   isClearCartModalVisible,
   setIsClearCartModalVisible,
   clearCart,
-  // Address confirmation modal
   addressConfirmationData,
   setAddressConfirmationData,
   setServiceabilityTrigger,

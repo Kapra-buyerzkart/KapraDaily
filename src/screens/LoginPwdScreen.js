@@ -54,7 +54,6 @@ const LoginPwdScreen = () => {
   const { phone } = route.params || {};
 
   const handleContinue = async () => {
-    // logger.log(phone, password);
 
     if (!password) {
       showStatus({
@@ -68,7 +67,6 @@ const LoginPwdScreen = () => {
     try {
       setLoading(true);
       const response = await loginWithPassword(phone, password);
-      // logger.log('Login Response:', response);
 
       if (response?.success && response?.data) {
         const { accessToken, refreshToken, custId } = response.data;
@@ -120,27 +118,7 @@ const LoginPwdScreen = () => {
               source={require('../assets/images/login_content.png')}
             />
           </ImageBackground>
-          {/* <View style={styles.bottomContainer}>
-                        <Text style={styles.headerText}>Login or Sign up</Text>
-                        <Text style={styles.enterNumberText}>Enter your mobile number</Text>
-
-                        <View style={styles.inputWrapper}>
-                            <Text style={styles.countryCode}>+91</Text>
-
-                            <View style={styles.divider} />
-
-                            <TextInput
-                                placeholder="9999999999"
-                                placeholderTextColor="#c1c1c1"
-                                keyboardType="number-pad"
-                                style={styles.input}
-                                onChangeText={setPhone}
-                            />
-                        </View>
-                        <TouchableOpacity onPress={handleContinue} style={styles.continueButton}>
-                            <Text style={styles.continueButtonText}>Continue</Text>
-                        </TouchableOpacity>
-                    </View> */}
+          {}
           <View style={styles.bottomContainer}>
             <Text style={styles.headerText}>Login</Text>
             <Text style={styles.enterNumberText}>Enter your password</Text>

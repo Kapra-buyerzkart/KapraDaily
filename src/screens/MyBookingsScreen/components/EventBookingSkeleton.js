@@ -8,8 +8,6 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-// Placeholder rows shown while the bookings request is in flight, so the list
-// area fills in on the same frame as the header/tabs instead of popping in.
 const PLACEHOLDER_COUNT = 5;
 
 const SkeletonRow = () => (

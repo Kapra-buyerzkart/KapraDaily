@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
   },
   gradientBorder: {
     padding: 2,
-    backgroundColor: '#F25000', // Solid orange for now, can use LinearGradient if needed
+    backgroundColor: '#F25000',
     borderRadius: wp('8%'),
   },
   innerContainer: {

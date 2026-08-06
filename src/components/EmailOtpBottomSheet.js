@@ -25,17 +25,6 @@ import { sendLoginOtpToEmail } from '../api';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-/**
- * EmailOtpBottomSheet
- *
- * Reusable, ref-controlled bottom sheet that lets the user request the
- * login OTP be delivered to their email instead of SMS. It only triggers
- * delivery — verification still happens through the existing
- * verifyLoginOtp (auth/verifyotp) flow on the parent OTP screen.
- *
- * Built on top of CustomBottomModal so it inherits the same backdrop,
- * keyboard-safe, and hardware-back-button behaviour as the rest of the app.
- */
 const EmailOtpBottomSheet = forwardRef((props, ref) => {
   const { onSuccess, onError } = props;
 
@@ -47,8 +36,6 @@ const EmailOtpBottomSheet = forwardRef((props, ref) => {
   const isValidEmail = useMemo(() => EMAIL_REGEX.test(email.trim()), [email]);
   const showError = touched && email.length > 0 && !isValidEmail;
 
-  // Wipes form state once the sheet is fully dismissed (success, cancel,
-  // backdrop tap, or swipe-down) so it always opens fresh next time.
   const resetState = useCallback(() => {
     setEmail('');
     setTouched(false);

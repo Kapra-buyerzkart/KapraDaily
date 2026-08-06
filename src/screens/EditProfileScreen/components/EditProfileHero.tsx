@@ -6,14 +6,6 @@ import ProfileAvatarBadge from '@/components/ProfileAvatarBadge';
 import { styles } from '../styles';
 import { MAX_FONT_SCALE } from '@/styles/homeTheme';
 
-// Profile's identity row, redrawn at the top of the screen it pushes to. Same
-// avatar at the same size on the same gutter, so the transition between the two
-// pages reads as the form arriving underneath a block that never moved.
-//
-// The name is the live field value rather than the saved one: an edit to the
-// Full Name field shows up here, in the place the user already reads their name
-// from, which is a better confirmation that the edit registered than any
-// message under the input could be.
 type EditProfileHeroProps = {
   name: string;
   phone?: string;

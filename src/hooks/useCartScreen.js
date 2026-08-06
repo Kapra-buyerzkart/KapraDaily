@@ -9,12 +9,10 @@ export const useCartScreen = () => {
     const navigation = useNavigation();
     const { cartItems, loadCart, cartTotal, cartCount, cartSummary, getCartSummary, refreshCart, clearCart, error: cartError } = useCart();
 
-    // ─── Composed hooks ───
     const deliveryHook = useDeliverySlot();
     const addressHook = useAddresses();
     const offersHook = useOffers(deliveryHook, addressHook);
 
-    // ─── Bill calculations ───
     const frontendBillCalculations = useMemo(() => {
         let mrpTotal = 0;
         let itemTotal = 0;
@@ -53,7 +51,6 @@ export const useCartScreen = () => {
         return frontendBillCalculations;
     }, [cartSummary, frontendBillCalculations]);
 
-    // ─── Cart initialization (loadCart → getCartSummary) ───
     const isInitialMount = useRef(true);
     const selectedAddress = useMemo(() => addressHook.addresses.find(a => a.selected), [addressHook.addresses]);
 
@@ -64,11 +61,9 @@ export const useCartScreen = () => {
             const initCart = async () => {
                 console.log('🏁 [FOCUS] Initializing Cart Screen...');
                 try {
-                    // 1. Fetch fresh addresses
                     await addressHook.refreshAddresses();
                     if (!isActive) return;
 
-                    // 2. Refresh cart (which now has a stable identity)
                     await refreshCart();
                 } catch (err) {
                     console.error('❌ [FOCUS] Error during init:', err);
@@ -87,15 +82,12 @@ export const useCartScreen = () => {
         }, [refreshCart, addressHook.refreshAddresses])
     );
 
-    // Recalculate summary when delivery type/slot OR address changes (after initial load)
     useEffect(() => {
         if (isInitialMount.current) return;
         refreshCart(selectedAddress?.pincodeAreaId);
-        // refreshCart internally calls loadCart then getCartSummary sequentially
     }, [deliveryHook.selectedDeliveryType, deliveryHook.selectedSlot, selectedAddress?.id, refreshCart]);
 
     return {
-        // Cart
         cartItems,
         cartSummary,
         billCalculations,
@@ -105,7 +97,6 @@ export const useCartScreen = () => {
         cartError,
         navigation,
 
-        // Composed hooks (spread for backward compat)
         ...offersHook,
         ...deliveryHook,
         ...addressHook,

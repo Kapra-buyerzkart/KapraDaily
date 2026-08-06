@@ -77,7 +77,6 @@ export const useOrderDetails = (orderId, initialOrderData = null) => {
       if (response && response.success && response.data) {
         setOrderData(response.data);
 
-        // Update status from response
         const responseHeader = response.data.header || {};
         const rawStatus =
           responseHeader.orderStatusKey ||
@@ -101,7 +100,7 @@ export const useOrderDetails = (orderId, initialOrderData = null) => {
         orderData?.orderId ||
         orderId;
       const payload = {
-        orderId: String(rawOrderId), // Specified as string in user request
+        orderId: String(rawOrderId),
         reason: 'Cancelled by Customer',
         requestedFromDevice: 'app',
       };
@@ -115,7 +114,7 @@ export const useOrderDetails = (orderId, initialOrderData = null) => {
         setShowCancelModal(false);
       } else {
         Toast.show(response?.message || 'Failed to cancel order', Toast.SHORT);
-        setShowCancelModal(false); // Close even on failure if it's a known error
+        setShowCancelModal(false);
       }
     } catch (error) {
       console.error('Error cancelling order:', error);
@@ -174,7 +173,7 @@ export const useOrderDetails = (orderId, initialOrderData = null) => {
       const response = await rateDeliveryAgentApi(payload);
       if (response && response.success) {
         Toast.show('Delivery agent rated successfully', Toast.SHORT);
-        await fetchOrderDetails(orderId, true); // Silent refresh
+        await fetchOrderDetails(orderId, true);
         return { success: true };
       } else {
         return (
@@ -201,7 +200,7 @@ export const useOrderDetails = (orderId, initialOrderData = null) => {
       const response = await rateOrderApi(payload);
       if (response && response.success) {
         Toast.show('Order rated successfully', Toast.SHORT);
-        await fetchOrderDetails(orderId, true); // Silent refresh
+        await fetchOrderDetails(orderId, true);
         return { success: true };
       } else {
         return (
@@ -217,7 +216,6 @@ export const useOrderDetails = (orderId, initialOrderData = null) => {
     }
   };
 
-  // Derived Data using useMemo for performance
   const derivedData = useMemo(() => {
     const header = orderData?.header || {};
     const shipping =
@@ -226,7 +224,6 @@ export const useOrderDetails = (orderId, initialOrderData = null) => {
     const payment = orderData?.payments?.[0] || orderData?.payment || {};
     const timeline = orderData?.timeline || [];
 
-    // Image merging logic: If API items don't have images, try to find them in navigation data
     const initialItems =
       initialOrderData?.items ||
       initialOrderData?.products ||
@@ -242,7 +239,6 @@ export const useOrderDetails = (orderId, initialOrderData = null) => {
       )
         return apiItem;
 
-      // Try to find a match in navigation data
       const match = initialItems.find(
         navItem =>
           String(navItem.productId || navItem.id) ===
@@ -267,7 +263,6 @@ export const useOrderDetails = (orderId, initialOrderData = null) => {
       if (!dateString) return '';
       try {
         const date = new Date(dateString);
-        // Manual formatting for better cross-platform consistency without extra libs
         const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
         const months = [
           'Jan',
@@ -293,7 +288,7 @@ export const useOrderDetails = (orderId, initialOrderData = null) => {
         const minutes = date.getMinutes().toString().padStart(2, '0');
         const ampm = hours >= 12 ? 'PM' : 'AM';
         hours = hours % 12;
-        hours = hours ? hours : 12; // the hour '0' should be '12'
+        hours = hours ? hours : 12;
 
         return `${d}, ${day} ${m} ${y}, ${hours}:${minutes} ${ampm}`;
       } catch (e) {
@@ -301,7 +296,6 @@ export const useOrderDetails = (orderId, initialOrderData = null) => {
       }
     };
 
-    // Improved status mapping using timeline if available
     let rawStatus =
       header.orderStatusKey || orderData?.orderStatus || orderStatus;
     if (timeline.length > 0) {
@@ -309,8 +303,6 @@ export const useOrderDetails = (orderId, initialOrderData = null) => {
       rawStatus =
         latestStatus.statusKey || latestStatus.orderStatusKey || rawStatus;
     }
-    // Timeline entries carry the moment a status was reached; the header only
-    // ever holds the order date. Look backwards so a re-entered status wins.
     const findTimelineEntry = statusKeys => {
       const match = [...timeline].reverse().find(entry =>
         statusKeys.includes(
@@ -398,7 +390,6 @@ export const useOrderDetails = (orderId, initialOrderData = null) => {
         header?.deliveryAgentPhone ||
         null,
 
-      // Bill Breakdown Aligned with provided JSON
       bill: {
         subTotal: Number(header.subtotal || header.subTotal || 0),
         taxTotal: Number(header.taxTotal || header.totalTax || 0),
@@ -418,8 +409,6 @@ export const useOrderDetails = (orderId, initialOrderData = null) => {
           header.bCoinAppliedValue || header.bcoinsAppliedValue || 0,
         ),
       },
-      // Null when the backend has not produced the invoice PDF yet — callers
-      // gate the "View Invoice" entry point on this being non-null.
       invoiceFileUrl:
         header.invoiceFileUrl || orderData?.invoiceFileUrl || null,
       invoiceUrl:
@@ -445,9 +434,6 @@ export const useOrderDetails = (orderId, initialOrderData = null) => {
         null,
       rawOrderStatus: rawStatus,
 
-      // Cancellation details. The backend spells these differently depending on
-      // whether the cancellation came from the timeline or the order header, so
-      // both shapes are collapsed here instead of in the screen.
       cancelledAt: cancelledEntry?.date || header.cancelledAt || null,
       formattedCancelledAt: formatFriendlyDate(
         cancelledEntry?.date || header.cancelledAt,
@@ -483,9 +469,8 @@ export const useOrderDetails = (orderId, initialOrderData = null) => {
   }, [orderData, orderStatus, orderId, initialOrderData]);
 
   return {
-    // State
     loading,
-    orderStatus, // Expose local state which is synced with derived data
+    orderStatus,
     showCancelModal,
     setShowCancelModal,
     showReturnModal,
@@ -493,10 +478,8 @@ export const useOrderDetails = (orderId, initialOrderData = null) => {
     selectedReturnItem,
     setSelectedReturnItem,
 
-    // Data
     ...derivedData,
 
-    // Actions
     handleCancelOrder,
     handleReturnItem,
     submitDeliveryAgentRating,

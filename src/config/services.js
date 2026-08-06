@@ -1,6 +1,3 @@
-// Configuration-driven service list for the Service Switcher modal.
-// Add a new service here and it renders automatically — no UI changes needed.
-
 export const SERVICE_TYPES = {
   INTERNAL: 'internal',
   EXTERNAL: 'external',
@@ -34,17 +31,12 @@ export const SERVICES = [
     id: 'partner',
     title: '48hrs Deals',
     description: 'Electronics, kitchen Appliances \n & More',
-    // Served in-process by src/modules/deals48 now, instead of deep-linking out
-    // to the standalone udmv:// app.
     type: SERVICE_TYPES.INTERNAL,
     route: 'Deals48',
     icon: 'apps-outline',
     iconColor: '#00BCD4',
     logo: require('../assets/images/modal/48hrDealIcon.png'),
     titleImage: require('../assets/images/modal/48hrImage.png'),
-    // Gated behind the `showkshope` general-settings flag. When the flag is not
-    // enabled ('1'), this service shows the Coming Soon modal instead of opening
-    // the partner app — matching the initial service picker (AuthSuccessScreen).
     enabledSettingKey: 'showkshope',
   },
   {
@@ -53,12 +45,10 @@ export const SERVICES = [
     description: 'Groceries & daily essentials',
     type: SERVICE_TYPES.INTERNAL,
     route: 'D2cScreen',
-    // params: { screen: 'HomeScreen' },
     icon: 'cart-outline',
     iconColor: '#F25000',
     logo: require('../assets/images/modal/d2cicon.png'),
     titleImage: require('../assets/images/modal/D2C.png'),
-    // badge: 'Coming Soon',
     comingSoon: false,
   },
 ];

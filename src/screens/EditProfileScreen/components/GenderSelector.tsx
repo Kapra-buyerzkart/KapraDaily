@@ -14,13 +14,6 @@ import { PRESS_IN, PRESS_OUT } from '@/styles/motion';
 
 const GENDER_OPTIONS = ['Male', 'Female', 'Other'];
 
-// Chips, in the same soft-tint-and-border treatment the fields above them use
-// when focused. The old row filled the selected option with solid orange, which
-// put a demographic field at the same volume as the Save button — and left the
-// two unselected options looking disabled rather than merely unchosen.
-//
-// Selection is marked by a tick as well as by colour, so the state survives
-// being read by someone who can't separate the tint from the neutral.
 const GenderChip = ({
   label,
   selected,

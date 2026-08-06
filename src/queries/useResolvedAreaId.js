@@ -2,9 +2,6 @@ import { useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import secureStore from '../utils/secureStore';
 
-// Resolves the pincode area id (+ stored locality/area for display) used as
-// input to the homepage query key. Returns undefined while resolving so
-// callers can gate `enabled` on it rather than fire a query with a wrong key.
 const useResolvedAreaId = (profilePincode) => {
   const [areaId, setAreaId] = useState(undefined);
   const [userLocation, setUserLocation] = useState(null);

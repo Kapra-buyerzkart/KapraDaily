@@ -11,30 +11,26 @@ import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import { styles } from '../styles';
 import icons from '@/assets/icons';
 import { INK, MAX_FONT_SCALE } from '@/styles/homeTheme';
-import { PRESS_IN, PRESS_OUT } from '../motion';
+import { useCountUp } from '@/hooks/useCountUp';
+import { BALANCE_COUNT_UP, PRESS_IN, PRESS_OUT } from '../motion';
 
-// `me/bwallet` resolves after first paint, so the strip has to be able to draw
-// itself without it. It renders a real 0.00 rather than a spinner — that is
-// what a new account's balance looks like anyway, and a placeholder that only
-// ever flashes for one frame costs more than it tells anyone.
-//
-// Same two-decimal treatment BCoinScreen uses for the same number, so the
-// balance doesn't change shape between here and the screen this leads to.
-const formatCoins = wallet => Number(wallet?.bCoins || 0).toFixed(2);
+const formatCoins = coins => Number(coins || 0).toFixed(2);
 
-// `bCoinValue` is the rupee worth of one coin. Only drawn when the API actually
-// sent a positive rate — a "₹0.00" next to a real balance reads as the coins
-// being worthless rather than as the rate being missing.
-const formatWorth = wallet => {
+const coinRate = wallet => {
   const rate = Number(wallet?.bCoinValue);
-  if (!rate || Number.isNaN(rate)) return null;
-  return `₹${(Number(wallet?.bCoins || 0) * rate).toFixed(2)}`;
+  return !rate || Number.isNaN(rate) ? null : rate;
 };
 
 export default function UDWalletStrip({ walletData, onPress }) {
   const wallet = walletData?.wallet;
-  const balance = formatCoins(wallet);
-  const worth = formatWorth(wallet);
+  const coins = Number(wallet?.bCoins || 0);
+  const rate = coinRate(wallet);
+
+  const counted = useCountUp(coins, BALANCE_COUNT_UP);
+  const balance = formatCoins(counted);
+  const worth = rate === null ? null : `₹${(counted * rate).toFixed(2)}`;
+
+  const settled = formatCoins(coins);
 
   const scale = useSharedValue(1);
   const stripStyle = useAnimatedStyle(() => ({
@@ -51,7 +47,7 @@ export default function UDWalletStrip({ walletData, onPress }) {
         scale.value = withSpring(1, PRESS_OUT);
       }}
       accessibilityRole="button"
-      accessibilityLabel={`UD Wallet, ${balance} UD Coins`}
+      accessibilityLabel={`UD Wallet, ${settled} UD Coins`}
     >
       <Animated.View style={[styles.walletStrip, stripStyle]}>
         <View style={styles.walletCoinWell}>

@@ -46,8 +46,6 @@ const AuthSuccessScreen = ({ navigation }) => {
   const { data: landingPages } = useLandingPages();
   const landingPageImages = landingPages?.landingPageImages;
 
-  // Every slot is served straight from the landingpages API — no bundled
-  // fallbacks. A slot renders empty if its file is missing on the image host.
   const sources = useMemo(() => {
     const toSource = name => {
       const path = findLandingImage(landingPageImages, name);
@@ -87,22 +85,6 @@ const AuthSuccessScreen = ({ navigation }) => {
     setIsComingSoonVisible(true);
   };
 
-  // const handleKshope = () => {
-  //     const isKshopeEnabled = generalSettings?.showkshope === '1' || generalSettings?.showkshope === 1;
-
-  //     if (isKshopeEnabled) {
-  //         const storeUrl = Platform.OS === 'ios'
-  //             ? (generalSettings?.kshope_ios_url || 'https://apps.apple.com/in/app/uden-deal/id6448085736')
-  //             : (generalSettings?.kshope_android_url || 'https://play.google.com/store/apps/details?id=com.kshope');
-
-  //         Linking.openURL(storeUrl).catch(err => {
-  //             console.error('Failed to open store URL:', err);
-  //             handleComingSoon();
-  //         });
-  //     } else {
-  //     }
-  // };
-
   const handleD2c = () => {
     navigation.navigate('D2cScreen');
   };
@@ -127,9 +109,6 @@ const AuthSuccessScreen = ({ navigation }) => {
       return;
     }
 
-    // 48hrs Deals is served in-process now (src/modules/deals48), so this no
-    // longer deep-links out to the standalone udmv:// app or falls back to its
-    // store listing. The showkshope gate above still applies.
     navigation.navigate('Deals48');
   };
 
@@ -150,7 +129,7 @@ const AuthSuccessScreen = ({ navigation }) => {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* Logo Section */}
+          {}
           <View style={styles.logoContainer}>
             <Image
               source={require('../assets/images/splash/header.png')}
@@ -159,27 +138,27 @@ const AuthSuccessScreen = ({ navigation }) => {
             />
           </View>
 
-          {/* Deal Cards Section */}
+          {}
           <View style={styles.cardsContainer}>
-            {/* 20 minss deal - Large Card (Kapra) */}
+            {}
             <TouchableOpacity activeOpacity={0.9} onPress={handleKapra}>
               <CardImage source={sources.kapra} style={styles.largeCard} />
             </TouchableOpacity>
 
-            {/* Uden Tickets - Large Card */}
+            {}
             <TouchableOpacity
               activeOpacity={0.9}
               onPress={handleTicketCollection}
             >
               <CardImage source={sources.tickets} style={styles.largeCard} />
             </TouchableOpacity>
-            {/* Small Cards Row */}
+            {}
             <View style={styles.row}>
-              {/* D2C */}
+              {}
               <TouchableOpacity activeOpacity={0.9} onPress={handleD2c}>
                 <CardImage source={sources.d2c} style={styles.smallCard} />
               </TouchableOpacity>
-              {/* 48 Hrs Deal */}
+              {}
               <TouchableOpacity activeOpacity={0.9} onPress={handleKshope}>
                 <CardImage source={sources.kshope} style={styles.smallCard} />
               </TouchableOpacity>
@@ -187,16 +166,10 @@ const AuthSuccessScreen = ({ navigation }) => {
           </View>
         </ScrollView>
 
-        {/* Bottom Section (Skyline) */}
-        {/* <View style={styles.bottomSection}>
-                  <Image
-                      source={require('../assets/images/splash/Vancouver.png')}
-                      style={styles.skylineImage}
-                      resizeMode="stretch"
-                  />
-              </View> */}
+        {}
+        {}
 
-        {/* Custom Coming Soon Popup */}
+        {}
         <ComingSoonModal
           visible={isComingSoonVisible}
           onClose={() => setIsComingSoonVisible(false)}
@@ -221,7 +194,6 @@ const styles = StyleSheet.create({
     paddingBottom: hp('8%'),
   },
   logoContainer: {
-    // marginBottom: hp('2%'),
   },
   logo: {
     width: wp('70%'),
@@ -230,23 +202,19 @@ const styles = StyleSheet.create({
   cardsContainer: {
     width: wp('90%'),
     alignItems: 'center',
-    //  marginTop: hp('2%'),
   },
   largeCard: {
     width: wp('90%'),
     height: hp('22%'),
-    //marginTop: -hp('10%'),
   },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    width: wp('90%'), // Match width of the large card
-    //  marginTop: -hp('8%'),
+    width: wp('90%'),
   },
   smallCard: {
-    width: wp('44.5%'), // Slightly larger to create a small gap in a 90% row
+    width: wp('44.5%'),
     height: hp('22%'),
-    //  backgroundColor:'red'
   },
   bottomSection: {
     position: 'absolute',

@@ -103,16 +103,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 20,
   },
-  // Fill the ticket area so the horizontal list has a definite height and a
-  // large touch target. The negative margins cancel the screen's horizontal
-  // padding so each page spans the full window width (what pagingEnabled snaps
-  // to); the padding is re-applied per page below.
   carousel: {
     flex: 1,
     marginHorizontal: -wp(5),
   },
-  // One full-width page per ticket; re-apply the content padding and center
-  // the card vertically within the page.
   page: {
     justifyContent: 'center',
     paddingHorizontal: wp(5),

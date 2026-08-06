@@ -10,8 +10,6 @@ import { getDashboardDataApi } from '../../../api/userService';
 import logger from '../../../utils/logger';
 import CONFIG from '../../../globals/config';
 
-// Owns vouchers/gift-card/bookings data fetching plus the claim and
-// voucher-detail modal flows that consume it.
 const useVoucherData = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [claimedVoucher, setClaimedVoucher] = useState(null);

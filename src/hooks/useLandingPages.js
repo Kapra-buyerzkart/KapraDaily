@@ -5,8 +5,6 @@ import { getImageUrl } from '../utils/imageUrl';
 
 const LANDING_PAGES_STALE_TIME = 6 * 60 * 60 * 1000;
 
-// Module-level cache so the splash prefetch and the screens that mount later
-// share one network call instead of each firing their own.
 let cachedData;
 let cachedAt = 0;
 let inFlight = null;
@@ -14,12 +12,6 @@ const subscribers = new Set();
 
 const isFresh = () => cachedData && Date.now() - cachedAt < LANDING_PAGES_STALE_TIME;
 
-/**
- * Fetches landing pages, de-duping concurrent callers and reusing the cached
- * payload while it is still fresh.
- * @param {boolean} force skip the freshness check and refetch.
- * @returns {Promise<Object|undefined>} the `data` object off the response.
- */
 export const fetchLandingPages = async (force = false) => {
   if (!force && isFresh()) return cachedData;
   if (inFlight) return inFlight;

@@ -14,41 +14,9 @@ const MoreToKnow = ({ ageLimit, language, onClaimPress }) => (
 
     <ClaimBanner onPress={onClaimPress} />
 
-    {/* {!!ageLimit && (
-      <View style={styles.metaRow}>
-        <View style={styles.infoIconTile}>
-          <Image
-            source={icons.people}
-            style={styles.infoIcon}
-            resizeMode="contain"
-          />
-        </View>
-        <View>
-          <Text style={styles.metaLabel}>Age limit :</Text>
-          <Text style={styles.metaValue}>
-            {typeof ageLimit === 'number' ? `${ageLimit} years` : ageLimit}
-          </Text>
-        </View>
-      </View>
-    )} */}
+    {}
 
-    {/* {!!language && (
-      <View style={styles.metaRow}>
-        <View style={styles.infoIconTile}>
-          <Image
-            source={icons.language}
-            style={styles.infoIcon}
-            resizeMode="contain"
-          />
-        </View>
-        <View>
-          <Text style={styles.metaLabel}>Language :</Text>
-          <Text style={styles.metaValue}>
-            {Array.isArray(language) ? language.join(', ') : language}
-          </Text>
-        </View>
-      </View>
-    )} */}
+    {}
   </Animated.View>
 );
 

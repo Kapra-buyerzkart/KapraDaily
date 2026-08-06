@@ -67,9 +67,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: CART_SPACING.md,
   },
   icon: {
-    // width: wp('5%'),
-    // height: wp('5%'),
-    // resizeMode: 'contain',
   },
   details: {
     flex: 1,

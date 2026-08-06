@@ -59,7 +59,6 @@ const KshopeScreen = () => {
   const userName =
     profile?.custName || profile?.name || profile?.firstName || 'Guest';
 
-  // Auto-scroll banners
   useEffect(() => {
     if (!topBanner || topBanner.length <= 1) return;
     const timer = setInterval(() => {
@@ -114,7 +113,6 @@ const KshopeScreen = () => {
     });
   };
 
-  // Prepare data
   const displayCategories = (categories || []).slice(0, 8);
   const accessorizeCategories = (categories || []).slice(0, 4);
   const topBrands = (banners || []).filter(
@@ -213,7 +211,7 @@ const KshopeScreen = () => {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      {/* HEADER */}
+      {}
       <LinearGradient
         colors={['#00BCD4', '#0097A7']}
         start={{ x: 0, y: 0 }}
@@ -244,7 +242,7 @@ const KshopeScreen = () => {
           </View>
         </View>
 
-        {/* SEARCH BAR */}
+        {}
         <TouchableOpacity
           style={styles.searchBar}
           activeOpacity={0.8}
@@ -267,7 +265,7 @@ const KshopeScreen = () => {
         }
         contentContainerStyle={{ paddingBottom: hp('12%') }}
       >
-        {/* FLASH SALE BANNER CAROUSEL */}
+        {}
         {topBanner && topBanner.length > 0 && (
           <View style={styles.bannerContainer}>
             <FlatList
@@ -296,7 +294,7 @@ const KshopeScreen = () => {
           </View>
         )}
 
-        {/* OUR CATEGORIES */}
+        {}
         {displayCategories.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>OUR CATEGORIES</Text>
@@ -311,7 +309,7 @@ const KshopeScreen = () => {
           </View>
         )}
 
-        {/* ACCESSORIZE */}
+        {}
         {accessorizeCategories.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>ACCESSORIZE</Text>
@@ -326,7 +324,7 @@ const KshopeScreen = () => {
           </View>
         )}
 
-        {/* MID BANNERS (Gents/Ladies footware style) */}
+        {}
         {midBanners.length > 0 && (
           <View style={styles.section}>
             <FlatList
@@ -342,7 +340,7 @@ const KshopeScreen = () => {
           </View>
         )}
 
-        {/* SIDE BY SIDE BANNERS (fallback if midBanners empty) */}
+        {}
         {midBanners.length === 0 &&
           topSideBySide &&
           topSideBySide.length > 0 && (
@@ -360,7 +358,7 @@ const KshopeScreen = () => {
             </View>
           )}
 
-        {/* TOP BRANDS */}
+        {}
         {topBrands.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>TOP BRANDS</Text>
@@ -375,7 +373,7 @@ const KshopeScreen = () => {
           </View>
         )}
 
-        {/* BOTTOM BANNERS */}
+        {}
         {bottomBanner && bottomBanner.length > 0 && (
           <View style={styles.section}>
             <FlatList
@@ -400,7 +398,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFFFFF',
   },
-  // Header
   header: {
     paddingHorizontal: wp('4%'),
     paddingTop: hp('1%'),
@@ -438,7 +435,6 @@ const styles = StyleSheet.create({
   headerIcon: {
     padding: wp('1%'),
   },
-  // Search
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -454,7 +450,6 @@ const styles = StyleSheet.create({
     fontSize: wp('3.5%'),
     color: '#999999',
   },
-  // Banners
   bannerContainer: {
     marginTop: hp('0.5%'),
   },
@@ -485,7 +480,6 @@ const styles = StyleSheet.create({
     width: wp('2.5%'),
     height: wp('2.5%'),
   },
-  // Sections
   section: {
     marginTop: hp('2%'),
   },
@@ -497,7 +491,6 @@ const styles = StyleSheet.create({
     marginBottom: hp('1.5%'),
     letterSpacing: 1.5,
   },
-  // Categories
   categoriesGrid: {
     paddingHorizontal: wp('4%'),
   },
@@ -529,7 +522,6 @@ const styles = StyleSheet.create({
     marginTop: hp('0.5%'),
     width: wp('18%'),
   },
-  // Accessorize
   accessorizeCard: {
     width: wp('20%'),
     alignItems: 'center',
@@ -548,7 +540,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: hp('0.5%'),
   },
-  // Mid Banners
   midBannerCard: {
     width: wp('45%'),
     height: hp('18%'),
@@ -560,7 +551,6 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  // Brands
   brandCard: {
     width: wp('20%'),
     height: wp('12%'),

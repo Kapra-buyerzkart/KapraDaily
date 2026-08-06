@@ -65,11 +65,6 @@ const selectedProducts = [
   { id: '6', image: require('../assets/images/product3.png') },
 ];
 
-// Stable, module-level component so its *type* never changes between renders.
-// Passing it as an element to ListHeaderComponent lets React reconcile it in
-// place (props update, no remount), which preserves the horizontal pill scroll
-// offset when a pill is tapped. A fresh inline function would be a new type on
-// every render and force VirtualizedList to remount it, resetting the scroll.
 const SubCategoriesHeader = React.memo(function SubCategoriesHeader({
   data,
   renderItem,
@@ -91,20 +86,15 @@ const SubCategoriesHeader = React.memo(function SubCategoriesHeader({
 });
 
 export default function () {
-  // Navigation
   const navigation = useNavigation();
 
-  // Route
   const route = useRoute();
   const { catId } = route.params || {};
 
-  // Context selectors
   const { isStoreUnavailable, storeUnavailableData } = useContext(AppContext);
 
-  // Safe area / layout
   const { bottom } = useSafeAreaInsets();
 
-  // State
   const [searchText, setSearchText] = useState('');
   const [isFilterSortModalVisible, setIsFilterSortModalVisible] =
     useState(false);
@@ -162,10 +152,6 @@ export default function () {
       const contentH = sidebarContentHeight.value;
       const scrollY = sidebarScrollY.value;
 
-      // Only auto-scroll when the tapped item isn't already fully visible.
-      // Without this, every press re-centers the item — and for items in the
-      // upper part of the list the clamped target is 0, snapping the sidebar
-      // back to the top (perceived as a "reset").
       const itemTop = layout.y;
       const itemBottom = layout.y + layout.height;
       if (itemTop >= scrollY && itemBottom <= scrollY + viewportH) {
@@ -189,7 +175,6 @@ export default function () {
     ],
   );
 
-  // Memoized values
   const tabBarClearance = getTabBarClearance(bottom);
   const floatingBottomOffset = hp('0.2%') + tabBarClearance;
 
@@ -197,7 +182,6 @@ export default function () {
     categoriesList.find(cat => cat?.catId?.toString() === selectedId)
       ?.catName || '';
 
-  // Animated styles / scroll handler
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: event => {
       onScrollWorklet(event.contentOffset.y);
@@ -220,12 +204,10 @@ export default function () {
     };
   });
 
-  // Event handlers
   const handleApplyFilters = ({ sort, min, max }) => {
     setFilters({ sortBy: sort, priceMin: min, priceMax: max });
   };
 
-  // Render helpers
   const renderItem = useCallback(
     ({ item }) => {
       const isSelected = item?.catId?.toString() === selectedId;
@@ -290,7 +272,7 @@ export default function () {
           />
         ) : (
           <>
-            {/* LEFT MENU */}
+            {}
             <View style={styles.leftMenu}>
               {loading ? (
                 <CategorySidebarShimmer />
@@ -320,7 +302,7 @@ export default function () {
               )}
             </View>
 
-            {/* RIGHT CONTENT */}
+            {}
             <View style={styles.rightContent}>
               <Animated.FlatList
                 data={productsList}
@@ -353,10 +335,6 @@ export default function () {
                 contentContainerStyle={{
                   paddingLeft: wp('1.5%'),
                   paddingRight: wp('1.5%'),
-                  // The custom AnimatedTabBar floats over the content
-                  // (position: absolute) instead of reserving its own flex
-                  // space, so this padding keeps products from rendering
-                  // underneath it.
                   paddingBottom: hp('8.5%') + tabBarClearance,
                   paddingTop: hp('0.5%'),
                 }}
@@ -447,7 +425,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.06,
     shadowRadius: 14,
-    // elevation: 3,
   },
   rightContent: {
     flex: 1,

@@ -4,11 +4,6 @@ import { AppContext } from '../context/appContext';
 import AppLoader from '../components/AppLoader';
 import lazyScreen, { lazyNamedScreen } from './lazyScreen';
 
-// AppUpdateModal is required eagerly because it renders unconditionally
-// alongside the navigator. Every screen below is deferred via `lazyScreen` so
-// its module body only runs when that route first renders — see lazyScreen.js
-// for why plain static imports (even with Metro's inlineRequires) end up
-// executing all ~50 screen modules on this navigator's first render.
 import AppUpdateModal from '../components/AppUpdateModal';
 
 const MainTabNavigator = lazyScreen(() => require('./MainTabNavigator'));
@@ -123,19 +118,9 @@ const Deals48Stack = lazyNamedScreen(
 
 const Stack = createNativeStackNavigator();
 
-// Hoisted to module scope so the navigator and its screens are not handed a
-// freshly-allocated options object on every RootNavigator render.
 const SCREEN_OPTIONS = {
   headerShown: false,
-  // Default every screen to an opaque white background so no transparent
-  // React view lets the native screen background flash through while
-  // assets load. Screens that want black override this per-screen below.
   contentStyle: { backgroundColor: '#fff' },
-  // AppContext, CartContext and WishlistContext all sit above the navigator,
-  // so any cart mutation or profile update re-rendered every screen still
-  // mounted in the stack, not just the visible one. freezeOnBlur suspends
-  // rendering for blurred screens (via react-freeze in react-native-screens);
-  // they still receive state updates and simply render them on unfreeze.
   freezeOnBlur: true,
 };
 const NO_GESTURE = { gestureEnabled: false };
@@ -159,8 +144,6 @@ export default function RootNavigator() {
   }, []);
 
   if (!profile) {
-    // Branded loader instead of null (which rendered nothing and let the black
-    // native window show through) while loadProfile() restores/fetches profile.
     return <AppLoader />;
   }
 
@@ -295,8 +278,7 @@ export default function RootNavigator() {
           component={QRScannerScreen}
           options={BLACK_CONTENT}
         />
-        {/* 48hrs Deals runs as a self-contained module with its own backend and
-            session; everything it owns lives behind this single route. */}
+        {}
         <Stack.Screen name="Deals48" component={Deals48Stack} />
       </Stack.Navigator>
 

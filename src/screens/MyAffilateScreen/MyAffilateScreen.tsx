@@ -18,8 +18,6 @@ import icons from '@/assets/icons';
 import { hp } from '@/styles/cartTheme';
 import { FONTS } from '@/styles/typography';
 
-/* ----------------------------- API types ----------------------------- */
-
 export interface ReferralLevel {
   levelNumber: number;
   memberCount: number;
@@ -42,8 +40,6 @@ export interface ReferralLevelSummary {
   summary: ReferralSummary;
 }
 
-/* ----------------------------- helpers ----------------------------- */
-
 const formatBT = (n: number): string => {
   const rounded = Math.round(n * 100) / 100;
   const [intPart, decPart] = rounded.toString().split('.');
@@ -57,8 +53,6 @@ const levelLabel = (levelNumber: number): string => {
   const ord = ORDINALS[levelNumber] ?? `${levelNumber}th`;
   return `${ord} level`;
 };
-
-/* ----------------------------- component ----------------------------- */
 
 const MyAffilateScreen = () => {
   const insets = useSafeAreaInsets();

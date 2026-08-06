@@ -49,9 +49,6 @@ const LocationModal = forwardRef(({ onClose }, ref) => {
   const [effectiveTerm, setEffectiveTerm] = useState('');
   const [areas, setAreas] = useState([]);
   const [loading, setLoading] = useState(false);
-  // The row the user just tapped, held while editPincode persists it. Gives
-  // immediate feedback (spinner on that row) during the write, which can lag
-  // on slower devices, and blocks a second tap until it settles.
   const [selectingItem, setSelectingItem] = useState(null);
 
   const trimmedRawTerm = search.trim();
@@ -130,7 +127,7 @@ const LocationModal = forwardRef(({ onClose }, ref) => {
   const renderContent = useCallback(
     () => (
       <View style={styles.container}>
-        {/* Header */}
+        {}
         <View style={styles.header}>
           <View style={styles.titleRow}>
             <Text style={styles.title}>Change Delivery Location</Text>
@@ -140,7 +137,7 @@ const LocationModal = forwardRef(({ onClose }, ref) => {
           </TouchableOpacity>
         </View>
 
-        {/* Search */}
+        {}
         <BottomSheetTextInput
           ref={inputRef}
           value={search}
@@ -169,7 +166,6 @@ const LocationModal = forwardRef(({ onClose }, ref) => {
             </Text>
           </View>
         ) : (
-          /* List */
           <BottomSheetFlatList
             data={areas.data}
             keyExtractor={(_, i) => i.toString()}
@@ -229,7 +225,6 @@ const LocationModal = forwardRef(({ onClose }, ref) => {
     }
   }, []);
 
-  // Cancel a pending focus frame if the sheet unmounts before it runs.
   useEffect(
     () => () => {
       if (focusRafRef.current != null) {

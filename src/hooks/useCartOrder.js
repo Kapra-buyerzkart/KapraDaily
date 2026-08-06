@@ -23,7 +23,6 @@ export const useCartOrder = ({
 }) => {
   const [isFinalizingOrder, setIsFinalizingOrder] = useState(false);
 
-  // Status Modal State
   const [statusModalVisible, setStatusModalVisible] = useState(false);
   const [statusType, setStatusType] = useState('success');
   const [statusTitle, setStatusTitle] = useState('');
@@ -78,11 +77,6 @@ export const useCartOrder = ({
     setStatusModalVisible,
   });
 
-  // The loader is a native <Modal>; opening the (Reanimated-based) address
-  // confirmation modal in the same tick that it dismisses races its close
-  // transition and makes the confirmation modal flash and immediately
-  // disappear. Give the native modal a moment to fully tear down first —
-  // same fix already applied to the popup in CartContext's onSelectAddress.
   const openAddressConfirmation = data => {
     setTimeout(() => setAddressConfirmationData(data), 350);
   };
@@ -95,8 +89,6 @@ export const useCartOrder = ({
 
     try {
       showLoader(true);
-      // Perform a final summary sync before showing the confirmation modal
-      // This ensures we have the absolute latest cartVersion and calculation
       logger.debug('[PAY:cart] 0/6 pre-order summary sync payload:', {
         deliveryType: selectedDeliveryType,
         slotId: chosenSlot?.id,
@@ -105,14 +97,13 @@ export const useCartOrder = ({
       const summaryRes = await getCartSummary(
         selectedDeliveryType,
         chosenSlot?.id,
-        null, // Force refresh version if needed
+        null,
         selectedAddress.pincodeAreaId,
       );
       logger.debug('[PAY:cart] 0/6 pre-order summary response:', summaryRes);
 
       showLoader(false);
 
-      // ─── Min Cart Value Validation ───
       const grandTotal = summaryRes?.data?.grandTotal || 0;
       const minVal = summaryRes?.data?.minCartValue || 0;
 
@@ -148,7 +139,6 @@ export const useCartOrder = ({
           .includes('not found');
 
       if (isUnserviceable) {
-        // Rely on the banner UI; no popup needed
         return;
       } else {
         openAddressConfirmation({
@@ -235,7 +225,6 @@ export const useCartOrder = ({
 
       if (!currentCartId) {
         console.log('🔄 [ORDER] No cartId found, attempting auto-refresh...');
-        // Attempt to get a fresh summary which might recover the session
         const refreshRes = await getCartSummary(
           selectedDeliveryType,
           chosenSlot?.id,

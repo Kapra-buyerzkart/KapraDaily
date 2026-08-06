@@ -20,13 +20,10 @@ const OrderProductCard = ({ item, orderStatus, onReturn }) => {
     item.img ||
     item?.productImg;
 
-  // Reset the error latch when the image changes so a recycled row does not
-  // keep showing the "not found" placeholder from a previous item.
   useEffect(() => {
     setImageError(false);
   }, [rawImage]);
 
-  // Helper to resolve image source
   const getImageSource = img => {
     if (!img || imageError)
       return require('../assets/images/udenDealNotfound.png');
@@ -39,7 +36,6 @@ const OrderProductCard = ({ item, orderStatus, onReturn }) => {
 
   const imageSource = getImageSource(rawImage);
 
-  // Determine Status Eligibility for Return
   const canReturn =
     orderStatus === 'delivered' &&
     item.canReturn &&
@@ -183,7 +179,6 @@ const styles = StyleSheet.create({
     paddingVertical: hp('0.1%'),
     borderRadius: 4,
     alignSelf: 'flex-end',
-    // marginTop: hp('0.8%'),
   },
   returnStatusText: {
     fontFamily: FONTS.gilroy.medium,

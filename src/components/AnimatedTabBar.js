@@ -132,11 +132,6 @@ export default function AnimatedTabBar({ state, descriptors, navigation }) {
         const focused = state.index === index;
 
         const onPress = () => {
-          // Standard React Navigation custom-tab-bar boilerplate: emit the
-          // same `tabPress` event the default tab bar would, so every
-          // `listeners.tabPress` already defined in MainTabNavigator (the
-          // Home reset-to-root, the store-unavailable Toast, the Kshope
-          // service-switcher modal) keeps firing exactly as before.
           const event = navigation.emit({
             type: 'tabPress',
             target: route.key,
@@ -163,23 +158,12 @@ export default function AnimatedTabBar({ state, descriptors, navigation }) {
 
 const styles = StyleSheet.create({
   container: {
-    // Floats over the screen content instead of sitting in normal flex flow.
-    // With a custom `tabBar`, React Navigation lays the screen content and
-    // the tab bar out as flex siblings — translating a flow sibling only
-    // moves its pixels, it still reserves its layout slot, which left a
-    // blank gap (the navigator's background showing through) when hidden.
-    // Taking it out of flow with `position: absolute` means the screen
-    // content's flex:1 box fills that space immediately, and sliding the
-    // bar down via translateY now genuinely moves it off-screen.
     position: 'absolute',
     left: 0,
     right: 0,
     bottom: 0,
     flexDirection: 'row',
     backgroundColor: '#FFFFFF',
-    // Flat: a hairline top rule instead of the wide 25%-opacity black shadow,
-    // which bled a grey haze up over the page and read as a gradient against
-    // the (now fully white) home screen.
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: 'rgba(17,19,26,0.10)',
   },

@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
     },
     popupImage: {
         width: '100%',
-        aspectRatio: 1, // Default aspect ratio, Image usually handles this if resizeMode is contain
+        aspectRatio: 1,
         borderRadius: wp('4%'),
     },
     lottieOverlay: {

@@ -14,7 +14,7 @@ const ClickForMoreButton: React.FC<ClickForMoreButtonProps> = ({ onPress, title 
     <TouchableOpacity style={styles.buttonContainer} onPress={onPress}>
       <View style={styles.contentRow}>
         <Text style={styles.buttonText}>{title}</Text>
-        {/* <Text style={styles.chevronText}>&gt;&gt;&gt;</Text> */}
+        {}
         <View style={{ flexDirection: 'row' }}>
           <View>
             <AppIcons.RightArrow size={18} color={colors.outlineTeal} />

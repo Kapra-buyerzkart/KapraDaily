@@ -13,8 +13,6 @@ import LinearGradient from 'react-native-linear-gradient';
 const AnimatedLinearGradient =
   Reanimated.createAnimatedComponent(LinearGradient);
 
-// A single skeleton block with a highlight band that sweeps across it, giving
-// the modern "shimmer" loading feel instead of a plain opacity pulse.
 const Shimmer = ({ style }) => {
   const progress = useSharedValue(0);
   const [width, setWidth] = useState(0);

@@ -43,7 +43,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
 }) => {
   const { toggleWishlist, isInWishlist } = useWishlist();
 
-  // Use values from item if provided, otherwise use individual props
   const displayTitle =
     item?.prName || item?.productName || item?.title || title || '';
   const displayPrice = item?.specialPrice || item?.price || price || 0;
@@ -87,7 +86,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
     }
   };
 
-  // Helper to render stars
   const renderStars = () => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
@@ -147,7 +145,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
           {displayTitle}
         </Text>
 
-        {/* <View style={styles.ratingContainer}>{renderStars()}</View> */}
+        {}
 
         <View style={styles.priceContainer}>
           <Text style={styles.price}>₹{displayPrice}</Text>

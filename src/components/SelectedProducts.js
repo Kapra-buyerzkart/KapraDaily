@@ -25,11 +25,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { cartPillSlideIn, cartPillSlideOut } from '../animations/cartItemPop';
 
 const ARROW_BUTTON_BG = '#F57333';
-// Brand-orange capsule so the pill stays readable over light screen backgrounds
 const CAPSULE_BG = '#F25000';
 const MAX_VISIBLE_THUMBNAILS = 3;
 
-// Compact capsule size (icon/thumbnails + badge only, no text)
 const CAPSULE_HEIGHT = 60;
 const COMPACT_WIDTH = 100;
 const STACK_COMPACT_SCALE = 0.82;
@@ -47,7 +45,7 @@ const SelectedProducts = () => {
   const maxExpandedWidth = wp('92%');
 
   const bounceScale = useSharedValue(1);
-  const widthProgress = useSharedValue(itemCount > 0 ? 1 : 0); // 0 = compact, 1 = fully expanded
+  const widthProgress = useSharedValue(itemCount > 0 ? 1 : 0);
   const textProgress = useSharedValue(itemCount > 0 ? 1 : 0);
   const arrowProgress = useSharedValue(itemCount > 0 ? 1 : 0);
   const stackPulse = useSharedValue(1);
@@ -75,7 +73,6 @@ const SelectedProducts = () => {
     );
   }
 
-  // STEP 3 + STEP 4: bounce, expand horizontally from the left, then reveal text/arrow
   function runExpandSequence() {
     phaseRef.current = 'expanding';
     bounceScale.value = withSequence(
@@ -126,8 +123,6 @@ const SelectedProducts = () => {
       } else if (currentPhase === 'compact') {
         runExpandSequence();
       }
-      // if 'expanding', let the in-flight sequence finish naturally -
-      // settleExpanded() will mark it 'expanded' once it lands.
     } else if (itemCount < prevCount && itemCount > 0) {
       countOpacity.value = withSequence(
         withTiming(0.35, { duration: 90 }),
@@ -228,9 +223,9 @@ const SelectedProducts = () => {
       return { uri: `${CONFIG.image_base_url}${item.productImage}` };
     }
     if (item.image) {
-      return item.image; // Local require() image
+      return item.image;
     }
-    return require('../assets/images/udenDealNotfound.png'); // Fallback
+    return require('../assets/images/udenDealNotfound.png');
   };
 
   const goToCart = () => navigation.navigate('CartScreen');
@@ -339,9 +334,6 @@ const styles = StyleSheet.create({
     height: CAPSULE_HEIGHT,
     borderRadius: 16,
     backgroundColor: CAPSULE_BG,
-    // Flat, to match the home screen: the solid orange already separates the
-    // capsule from the white page, and the old 25%-black/9pt shadow pooled a
-    // grey haze across the bottom of the screen.
   },
   clip: {
     flex: 1,
@@ -435,5 +427,4 @@ const styles = StyleSheet.create({
   },
 });
 
-// Wrap in React.memo to prevent unnecessary re-renders
 export default React.memo(SelectedProducts);

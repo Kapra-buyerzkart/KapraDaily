@@ -53,8 +53,6 @@ const UpcomingEventCard = ({ item, onPress, index = 0 }) => {
     item?.startDate;
   const dateParts = getDateParts(eventStart);
   const timeText = formatTime(eventStart);
-  // isActive === 0 (or false) means the event is no longer bookable. Block the
-  // press and dim the card with a "Not Available" badge so it reads as disabled.
   const unavailable = item?.isActive === 0 || item?.isActive === false;
 
   return (

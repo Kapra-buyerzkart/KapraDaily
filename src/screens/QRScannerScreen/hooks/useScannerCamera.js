@@ -10,11 +10,6 @@ import { TORCH_ERROR_CODES } from '../constants';
 const useScannerCamera = () => {
   const devices = useCameraDevices();
 
-  // `getCameraDevice` (what `useCameraDevice('back')` calls) ranks lenses by
-  // hardware level and physical-lens layout only - it never looks at the flash.
-  // On multi-lens phones that regularly lands on a back lens with no flash
-  // unit, which leaves `hasTorch` false and hides the torch button entirely.
-  // Prefer a back lens that can actually light up.
   const device = useMemo(() => {
     const best = getCameraDevice(devices, 'back');
     if (best?.hasTorch) return best;
@@ -41,8 +36,6 @@ const useScannerCamera = () => {
       error?.code,
       error?.message,
     );
-    // A torch that refuses to light is not a reason to tear the scanner down -
-    // drop the toggle back to off and let the operator keep scanning.
     if (TORCH_ERROR_CODES.includes(error?.code)) {
       setTorchOn(false);
       return;

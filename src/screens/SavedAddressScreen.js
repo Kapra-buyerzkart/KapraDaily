@@ -40,8 +40,6 @@ const ICON = {
   action: wp('4.4%'),
 };
 
-// The row of edit / delete / dismiss controls that replaces the "⋮" once tapped.
-// Rendered in place of the meta cluster so the card never changes height.
 const RowActions = ({ onEdit, onDelete, onClose }) => (
   <View style={styles.actionsRow}>
     <TouchableOpacity
@@ -84,8 +82,6 @@ const RowActions = ({ onEdit, onDelete, onClose }) => (
   </View>
 );
 
-// Defined at module scope so React.memo actually memoises — the previous
-// in-render definition made every card remount on each parent render.
 const AddressCard = React.memo(
   ({ item, onPress, onEdit, onMenu, onDelete, onCloseMenu }) => {
     const isSelected = !!item.selected;
@@ -221,7 +217,6 @@ const SavedAddressScreen = () => {
     setAddressConfirmationData,
   } = useAddresses();
 
-  // Auto-refresh address list when the screen comes into focus
   useFocusEffect(
     React.useCallback(() => {
       refreshAddresses();
@@ -347,7 +342,7 @@ const SavedAddressScreen = () => {
         visible={isLocationModalVisible}
         onClose={() => setIsLocationModalVisible(false)}
       />
-      {/* Address Confirmation Modal */}
+      {}
       <AddressConfirmationModal
         visible={!!addressConfirmationData}
         pincode={addressConfirmationData?.pincode}
@@ -391,7 +386,6 @@ const styles = StyleSheet.create({
     paddingBottom: hp('6%'),
   },
 
-  // "Add new location" — a tinted call to action, distinct from the cards below.
   addRow: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -3,10 +3,6 @@ import { Animated, BackHandler } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { TAB_IDS } from '@/components/events/EventCategoryTabs';
 
-// Owns the active-tab state and the fade/slide transition between tabs.
-// `fetchTabData(tabId)` is fired on every tab press so each tab lands with
-// fresh data without the user having to pull-to-refresh. Requests already in
-// flight for that tab are skipped so rapid tapping can't stack them up.
 const useTabNavigation = fetchTabData => {
   const [activeTab, setActiveTab] = useState(TAB_IDS.POPULAR);
   const tabAnim = useRef(new Animated.Value(1)).current;
@@ -42,9 +38,6 @@ const useTabNavigation = fetchTabData => {
     [handleTabChange],
   );
 
-  // Hardware back: when a non-Popular ("home") tab is selected, the first back
-  // press returns to the Popular tab and consumes the event. On the Popular tab
-  // it does nothing here, so the default back (leaving the screen) proceeds.
   const activeTabRef = useRef(activeTab);
   activeTabRef.current = activeTab;
   useFocusEffect(

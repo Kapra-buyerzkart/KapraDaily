@@ -86,9 +86,6 @@ const PopularTab = ({
     popularEventsLen: popularEvents?.length,
   });
 
-  // First load: the popular API drives the hero, gift cards and upcoming
-  // events, so show one cohesive full-screen shimmer until it lands instead of
-  // letting each section pop in on its own.
   if (popularEventsLoading) {
     return (
       <Animated.View style={containerStyle}>
@@ -120,41 +117,19 @@ const PopularTab = ({
         loading={bCoinsLoading}
         onPress={handleViewRewards}
       />
-      {/* 
-      <View style={styles.quickActionsRow}>
-        <QuickActionCard
-          icon={VOUCHERS_ICON}
-          title={'Get BookMyShow vouchers from\nUDEN Tickets'}
-          onPress={onGoToVouchers}
-          index={0}
-        />
-        <QuickActionCard
-          icon={SPORTS_ICON}
-          title={'Book tickets for your\nfavourite sports'}
-          onPress={onGoToSports}
-          index={1}
-        />
-      </View> */}
+      {}
 
       {!popularEventsLoading && giftCardItems.length > 0 && (
         <>
           <SectionTitle
             title="Popular Gift Cards"
-            // actionLabel="View All"
             onActionPress={onGoToVouchers}
           />
           <GiftCardRow vouchers={giftCardItems} onPress={onClaim} />
         </>
       )}
 
-      {/* {!loading && featured && (
-        <GiftCard
-          voucher={featured}
-          quote={giftQuote}
-          quoteLoading={giftQuoteLoading}
-          onPress={handleGiftPress}
-        />
-      )} */}
+      {}
 
       {loading && <LoadingSkeleton variant="card" count={3} />}
 
@@ -206,7 +181,6 @@ const PopularTab = ({
 
 const styles = StyleSheet.create({
   quickActionsRow: {
-    // flexDirection: 'row',
     gap: 6,
     paddingHorizontal: 20,
     marginTop: 20,

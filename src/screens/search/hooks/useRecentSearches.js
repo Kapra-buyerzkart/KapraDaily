@@ -5,7 +5,6 @@ const RECENT_SEARCH_KEY = 'recent_searches_list';
 const MAX_RECENT_SEARCHES = 10;
 const MIN_KEYWORD_LENGTH = 3;
 
-// Tracks the user's recent search keywords in AsyncStorage, most-recent-first.
 const useRecentSearches = () => {
   const [recentSearches, setRecentSearches] = useState([]);
 

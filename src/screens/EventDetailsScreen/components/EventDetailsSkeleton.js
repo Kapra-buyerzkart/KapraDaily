@@ -9,9 +9,6 @@ import screenStyles, { HERO_HEIGHT, HERO_CARD_OVERLAP } from '../styles';
 const ARTIST_KEYS = ['a', 'b', 'c', 'd'];
 const ACCORDION_KEYS = ['details', 'terms'];
 
-// Loading placeholder that mirrors the EventDetailsScreen layout (top bar ->
-// hero -> summary card -> more to know -> artists -> accordions) so the
-// shimmer reads as "the content that's coming" instead of a blank spinner.
 const EventDetailsSkeleton = () => {
   const insets = useSafeAreaInsets();
 
@@ -29,7 +26,7 @@ const EventDetailsSkeleton = () => {
       />
 
       <View style={styles.content}>
-        {/* Top bar */}
+        {}
         <View
           style={[styles.topBar, { paddingTop: getHeaderPaddingTop(insets) }]}
         >
@@ -38,10 +35,10 @@ const EventDetailsSkeleton = () => {
           <Shimmer style={styles.topBarButton} />
         </View>
 
-        {/* Hero */}
+        {}
         <Shimmer style={styles.hero} />
 
-        {/* Summary card */}
+        {}
         <View style={styles.card}>
           <Shimmer style={[styles.line, styles.title]} />
           <Shimmer style={[styles.line, styles.tagline]} />
@@ -50,13 +47,13 @@ const EventDetailsSkeleton = () => {
           <Shimmer style={styles.mapStrip} />
         </View>
 
-        {/* More to know */}
+        {}
         <View style={styles.section}>
           <Shimmer style={[styles.line, styles.sectionTitle]} />
           <Shimmer style={styles.banner} />
         </View>
 
-        {/* Artists */}
+        {}
         <View style={styles.section}>
           <Shimmer style={[styles.line, styles.sectionTitle]} />
           <View style={styles.row}>
@@ -69,7 +66,7 @@ const EventDetailsSkeleton = () => {
           </View>
         </View>
 
-        {/* Accordions */}
+        {}
         {ACCORDION_KEYS.map(key => (
           <Shimmer key={key} style={styles.accordion} />
         ))}

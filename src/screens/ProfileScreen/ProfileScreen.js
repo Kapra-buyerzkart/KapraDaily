@@ -74,11 +74,6 @@ export default function ProfileScreen() {
     handleApplyCoupon,
   } = useProfileScreen();
 
-  // Every bar animation reads the same scroll value and runs on the UI thread,
-  // so scrolling this screen never re-renders it. `swapAnchor` is the scroll
-  // offset at which the identity row's bottom edge meets the bar — measured
-  // rather than assumed, because it moves with the font scale and with whether
-  // the crown badge and the privilege chip are drawn.
   const scrollY = useSharedValue(0);
   const swapAnchor = useSharedValue(0);
   const scrollHandler = useAnimatedScrollHandler({
@@ -93,9 +88,6 @@ export default function ProfileScreen() {
     [swapAnchor],
   );
 
-  // The rule fades in over the first few points of scroll rather than snapping
-  // on at a threshold, so it arrives with the content instead of announcing
-  // itself.
   const topBarBorderStyle = useAnimatedStyle(() => ({
     opacity: interpolate(
       scrollY.value,
@@ -105,9 +97,6 @@ export default function ProfileScreen() {
     ),
   }));
 
-  // Until the identity row has been measured the bar is just "Profile" — a zero
-  // anchor would otherwise make every range collapse to a single point and swap
-  // the titles on the first pixel of scroll.
   const barTitleStyle = useAnimatedStyle(() => {
     const a = swapAnchor.value;
     if (a <= 0) return { opacity: 1 };
@@ -136,10 +125,6 @@ export default function ProfileScreen() {
     };
   });
 
-  // The bar is the hero's colour at rest and white once the hero is gone, so
-  // the two never meet at a visible edge. Before measurement it stays on
-  // HERO_TOP — that is what the page looks like at rest, which is where an
-  // unmeasured screen always is.
   const topBarBackgroundStyle = useAnimatedStyle(() => {
     const a = swapAnchor.value;
     if (a <= 0) return { backgroundColor: HERO_TOP };
@@ -171,10 +156,7 @@ export default function ProfileScreen() {
 
   return (
     <View style={styles.mainContainer}>
-      {/* Home leaves the bar on `light-content` while its dark banner is up,
-          and this page is now white to the top edge — without this the icons
-          arrive here invisible. Unmounting pops the entry, so Home gets its
-          own setting back on the way out. */}
+      {}
       <StatusBar
         translucent
         backgroundColor="transparent"
@@ -197,10 +179,7 @@ export default function ProfileScreen() {
           nameStyle={barNameStyle}
         />
 
-        {/* The gradient itself is never animated in — its children are. Fading
-            the whole hero would leave the sticky bar, which is already painted
-            the hero's colour, as a peach strip over a white page for the
-            length of the entrance. */}
+        {}
         <LinearGradient colors={HERO_GRADIENT} style={styles.hero}>
           <ProfileIdentity
             profile={profile}

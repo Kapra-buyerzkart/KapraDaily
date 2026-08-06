@@ -52,8 +52,6 @@ export default function WishlistScreen() {
   const [confirmationVisible, setConfirmationVisible] = useState(false);
   const [itemToRemove, setItemToRemove] = useState(null);
 
-  // Drop malformed entries and de-duplicate by product so the FlatList never
-  // renders ghost/duplicate cards while virtualizing during scroll.
   const wishlistData = useMemo(() => {
     if (!Array.isArray(wishlistItems)) {
       return [];
@@ -92,8 +90,8 @@ export default function WishlistScreen() {
 
   useFocusEffect(
     React.useCallback(() => {
-      loadWishlist(true); // Force fetch to bypass standard caching
-    }, [loadWishlist]), // Stability is now ensured by context memoization
+      loadWishlist(true);
+    }, [loadWishlist]),
   );
 
   const handleRemoveFromWishlist = (productId, productName) => {
@@ -112,11 +110,6 @@ export default function WishlistScreen() {
       ...item,
       productId: item.productId,
       prName: item.productName || item.prName || item.name,
-      // Optimistically-added items carry the product-listing image fields
-      // (featuredImage/img/imageUrl), while server wishlist items use
-      // productImage. Fall back across all of them so a freshly added card
-      // shows its real image (shimmer -> image) instead of flashing the
-      // "not found" placeholder before the server refetch lands.
       featuredImage:
         item.productImage ||
         item.featuredImage ||
@@ -232,7 +225,6 @@ export default function WishlistScreen() {
           style={[
             styles.floatingContainer,
             { bottom: hp('0.2%') + tabBarClearance },
-            // cartAnimatedStyle,
           ]}
         >
           <SelectedProducts selectedProducts={cartItems} />
@@ -284,7 +276,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#b6b6b6',
     backgroundColor: '#FFFFFF',
-    // alignItems: "center", // Removed to allow grid layout to span correctly
     borderBottomColor: '#FFFFFF',
     paddingTop: hp('1.5%'),
   },
@@ -320,14 +311,11 @@ const styles = StyleSheet.create({
   },
   footerContainer: {
     flex: 1,
-    // backgroundColor: 'red',
 
     alignItems: 'center',
     justifyContent: 'center',
   },
   footerImage: {
-    // width: wp('20%'),
-    // height: wp('20%'),
     resizeMode: 'contain',
   },
   footerText: {
@@ -336,6 +324,5 @@ const styles = StyleSheet.create({
     padding: 10,
     fontFamily: FONTS.gilroy.bold,
     textAlign: 'center',
-    //  marginTop: hp('1%'),
   },
 });

@@ -12,8 +12,6 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { colors } from '../../assets/theme/colours';
 import { searchProductsApi } from '../../api/services/productService';
 import { getCategoryProducts } from '../../api/services/homeService';
-// The loader is host-owned UI chrome, not service-specific state, so this
-// module shares it rather than standing up a second one.
 import { LoaderContext } from '../../../../context/loaderContext';
 import { getPincodeAreaId } from '../../globals/storage';
 import CONFIG from '../../globals/config';
@@ -50,7 +48,6 @@ const ProductCategoryDetail = () => {
         const pId = storedPincodeAreaId ? parseInt(storedPincodeAreaId) : null;
         setPincodeAreaId(pId);
 
-        // If we don't have products passed in, and we have a category ID, fetch them
         if ((!initialProducts || initialProducts.length === 0) && catId) {
           fetchProducts(catId, pId);
         }
@@ -121,8 +118,8 @@ const ProductCategoryDetail = () => {
           width: wp('29%'),
           marginBottom: hp('1.5%'),
           contentContainer: { padding: 6 },
-          image: { height: 80 }, // Shorter image for 3 columns
-          caption: { fontSize: 9, height: 28 }, // Slightly smaller font
+          image: { height: 80 },
+          caption: { fontSize: 9, height: 28 },
           pricePill: {
             minWidth: 45,
             height: 20,

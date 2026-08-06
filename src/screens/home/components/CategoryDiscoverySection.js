@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
+  Text,
   Image,
   ScrollView,
   TouchableOpacity,
@@ -31,7 +32,15 @@ import useCategoryTileStyles, {
   TAB_LABEL_ACTIVE,
 } from './useCategoryTileStyles';
 import { selectionTick } from '../../../utils/haptics';
-import { SPACE, GUTTER, MAX_FONT_SCALE, divider } from '@/styles/homeTheme';
+import {
+  SPACE,
+  GUTTER,
+  MAX_FONT_SCALE,
+  divider,
+  INK,
+  TYPE,
+} from '@/styles/homeTheme';
+import { FONTS } from '../../../styles/typography';
 
 const ExploreShimmer = () => {
   const tile = useCategoryTileStyles();
@@ -55,12 +64,6 @@ const ExploreShimmer = () => {
   );
 };
 
-// The tabs are the "Shop by category" tile, scrolled sideways: the same well,
-// the same near-full-bleed image anchored to the bottom edge, the same label
-// ramp. The previous inline pills shrank the category art to a ~24pt icon in a
-// circle, which is too small for merchandise photography to read as anything —
-// at tile scale you can actually tell the categories apart. Selection is a ring
-// plus a tinted well rather than a solid fill, so the image stays legible.
 const DiscoveryTab = React.memo(function DiscoveryTab({
   item,
   isActive,
@@ -106,10 +109,6 @@ const DiscoveryTab = React.memo(function DiscoveryTab({
       ? getCategoryPlaceholder(label)
       : { uri: `${CONFIG.image_base_url}${item.imageUrl}` };
 
-  // Takes the item and calls back with it, rather than receiving a
-  // pre-bound `() => onSelect(item)` from the map below — that closure was a
-  // new identity on every parent render, so this component's React.memo could
-  // never hit and tapping one tab re-rendered all of them.
   const handlePress = useCallback(() => {
     selectionTick();
     onPress(item);
@@ -172,7 +171,9 @@ const CategoryDiscoverySection = ({
           title="Explore"
           titleAccent="deals"
           subtitle={
-            activeName ? `Top picks in ${activeName}` : 'Pick a category to shop'
+            activeName
+              ? `Top picks in ${activeName}`
+              : 'Pick a category to shop'
           }
           onAction={
             selectedDiscoveryCategory
@@ -207,19 +208,28 @@ const CategoryDiscoverySection = ({
           <View style={styles.railLoading}>
             <ProductBlockShimmer />
           </View>
-        ) : (
-          discoveryProducts.length > 0 && (
-            <ProductRail
-              items={discoveryProducts}
-              navigation={navigation}
-              contentContainerStyle={styles.railContent}
-              // This rail swaps its whole dataset every time a chip is tapped.
-              // Replaying the staggered entrance on each swap turns a filter
-              // into a visible reload, so the cards just cut over.
-              animateEntrance={false}
+        ) : discoveryProducts.length > 0 ? (
+          <ProductRail
+            items={discoveryProducts}
+            navigation={navigation}
+            contentContainerStyle={styles.railContent}
+            animateEntrance={false}
+          />
+        ) : selectedDiscoveryCategory ? (
+          <View style={styles.emptyContainer}>
+            <Image
+              source={require('../../../assets/images/udenDealNotfound.png')}
+              style={styles.emptyImage}
             />
-          )
-        )}
+            <Text
+              style={styles.emptyText}
+              maxFontSizeMultiplier={MAX_FONT_SCALE}
+            >
+              Uh-oh! We couldn't find any products in this category. Check back
+              later for new additions.
+            </Text>
+          </View>
+        ) : null}
       </View>
     </>
   );
@@ -239,7 +249,25 @@ const styles = StyleSheet.create({
     minHeight: hp('28%'),
   },
 
-  // Shimmer
+  emptyContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: hp('3%'),
+    paddingHorizontal: wp('10%'),
+  },
+  emptyImage: {
+    width: wp('34%'),
+    height: wp('34%'),
+    resizeMode: 'contain',
+    marginBottom: hp('1.6%'),
+  },
+  emptyText: {
+    ...TYPE.label,
+    color: INK.muted,
+    fontFamily: FONTS.gilroy.medium,
+    textAlign: 'center',
+  },
+
   shimmerHeader: {
     paddingHorizontal: GUTTER,
     paddingTop: hp('2%'),
@@ -258,7 +286,4 @@ const styles = StyleSheet.create({
   },
 });
 
-// Memoised to match its sibling sections. This was the only home section still
-// re-rendering on every HomeScreen render — including the ones driven by
-// pull-to-refresh state and by selecting a different discovery category.
 export default React.memo(CategoryDiscoverySection);

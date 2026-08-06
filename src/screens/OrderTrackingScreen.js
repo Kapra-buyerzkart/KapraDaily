@@ -81,7 +81,6 @@ const OrderTrackingScreen = () => {
     selectedReturnItem,
     setSelectedReturnItem,
 
-    // Data
     effectiveOrderStatus,
     storeName,
     shippingAddress,
@@ -96,14 +95,12 @@ const OrderTrackingScreen = () => {
     deliveryAgentName,
     deliveryAgentPhone,
 
-    // Actions
     handleCancelOrder,
     handleReturnItem,
     refreshOrder,
     submitDeliveryAgentRating,
     submitOrderRating,
 
-    // Enhanced Data
     formattedOrderDate,
     bill,
     invoiceUrl,
@@ -124,8 +121,6 @@ const OrderTrackingScreen = () => {
     razorpayKeyId,
   } = useOrderDetails(orderId, initialOrderData);
 
-  // The header only carries `invoiceFileUrl` once the PDF has actually been
-  // generated, so it doubles as the flag for showing the View Invoice entry.
   const resolvedInvoiceUrl = React.useMemo(() => {
     if (!invoiceFileUrl) {
       return null;
@@ -162,7 +157,7 @@ const OrderTrackingScreen = () => {
         ],
       }),
     );
-    return true; // Prevent default behavior
+    return true;
   }, [navigation]);
 
   useFocusEffect(
@@ -180,7 +175,7 @@ const OrderTrackingScreen = () => {
   const [orderRating, setOrderRating] = useState(0);
   const [agentRating, setAgentRating] = useState(0);
   const [isRatingModalVisible, setIsRatingModalVisible] = useState(false);
-  const [ratingType, setRatingType] = useState('order'); // 'order' or 'agent'
+  const [ratingType, setRatingType] = useState('order');
   const [pendingRating, setPendingRating] = useState(0);
 
   useFocusEffect(
@@ -193,7 +188,6 @@ const OrderTrackingScreen = () => {
           });
         }, 500);
 
-        // Show hint text and start pulse animation
         setShowRetryHint(true);
         Animated.loop(
           Animated.sequence([
@@ -210,7 +204,6 @@ const OrderTrackingScreen = () => {
           ]),
         ).start();
 
-        // Stop pulsing after 6 seconds
         const timer = setTimeout(() => {
           retryPulseAnim.stopAnimation();
           retryPulseAnim.setValue(0);
@@ -333,7 +326,6 @@ const OrderTrackingScreen = () => {
           }),
         );
       } else {
-        // Verify API returned success: false — show pending screen
         navigation.navigate('OrderPendingScreen', {
           orderId,
           orderNumber: displayOrderId,
@@ -404,7 +396,6 @@ const OrderTrackingScreen = () => {
     }
   };
 
-  // SignalR Real-time Tracking
   useOrderTracking(
     orderId,
     statusUpdate => {
@@ -413,7 +404,6 @@ const OrderTrackingScreen = () => {
     },
     locationUpdate => {
       console.log('📍 [UI] Driver location updated:', locationUpdate);
-      // Future step: update map markers if applicable
     },
   );
 
@@ -449,19 +439,19 @@ const OrderTrackingScreen = () => {
   const getStatusColor = status => {
     switch (status) {
       case 'pending':
-        return '#F2994A'; // Orange/Yellow
+        return '#F2994A';
       case 'placed':
-        return '#F2994A'; // Orange
+        return '#F2994A';
       case 'confirmed':
-        return '#2D9CDB'; // Blue
+        return '#2D9CDB';
       case 'shipped':
-        return '#9B51E0'; // Purple
+        return '#9B51E0';
       case 'delivered':
-        return '#27AE60'; // Green
+        return '#27AE60';
       case 'cancelled':
-        return '#EB5757'; // Red
+        return '#EB5757';
       case 'returned':
-        return '#6F727A'; // Gray
+        return '#6F727A';
       default:
         return '#000000';
     }
@@ -519,9 +509,7 @@ const OrderTrackingScreen = () => {
             />
             <Text style={styles.helpText}>Help</Text>
           </TouchableOpacity>
-          {/* <TouchableOpacity onPress={() => navigation.navigate('CartScreen')}>
-                        <Image style={styles.homeIcon} source={require('../assets/images/home_two.png')} />
-                    </TouchableOpacity> */}
+          {}
         </View>
       </View>
       <ScrollView ref={scrollViewRef}>
@@ -624,8 +612,7 @@ const OrderTrackingScreen = () => {
               onHelpPress={openSupportTicket}
             />
           )}
-          {/* A cancelled order has no journey left to show, so the placed →
-              out for delivery → delivered stepper is dropped for it. */}
+          {}
           {effectiveOrderStatus !== 'cancelled' && (
             <View style={styles.statusContainer}>
               <View style={styles.statusView}>
@@ -842,7 +829,6 @@ const OrderTrackingScreen = () => {
                 <LinearGradient
                   colors={[
                     'rgba(255,255,255,0)',
-                    // 'rgba(255,255,255,0.85)',
                     '#FFFFFF',
                     '#FFFFFF',
                   ]}
@@ -899,7 +885,6 @@ const OrderTrackingScreen = () => {
                 <LinearGradient
                   colors={[
                     'rgba(255,255,255,0)',
-                    // 'rgba(255,255,255,0.85)',
                     '#FFFFFF',
                     '#FFFFFF',
                   ]}
@@ -958,7 +943,6 @@ const OrderTrackingScreen = () => {
                 <LinearGradient
                   colors={[
                     'rgba(255,255,255,0)',
-                    // 'rgba(255,255,255,0.85)',
                     '#FFFFFF',
                     '#FFFFFF',
                   ]}
@@ -1015,7 +999,6 @@ const OrderTrackingScreen = () => {
                 <LinearGradient
                   colors={[
                     'rgba(255,255,255,0)',
-                    // 'rgba(255,255,255,0.85)',
                     '#FFFFFF',
                     '#FFFFFF',
                   ]}
@@ -1279,26 +1262,8 @@ const OrderTrackingScreen = () => {
             </View>
           </View>
 
-          {/* Retry Button Area */}
-          {/* <View
-                        style={styles.retryContainerWrapper}
-                        onLayout={(event) => {
-                            const { y } = event.nativeEvent.layout;
-                            setRetryYOffset(y);
-                        }}
-                    >
-                        {canRetryPayment && !hasOnlinePaid && (
-                            <TouchableOpacity onPress={handleRetryPayment}>
-                                <LinearGradient colors={['#27AE60', '#58D68D']}
-                                    start={{ x: 0, y: 0 }}
-                                    end={{ x: 1, y: 0 }}
-                                    style={styles.cancelButtonGradient}
-                                >
-                                    <Text style={styles.cancelButtonText}>Retry Payment</Text>
-                                </LinearGradient>
-                            </TouchableOpacity>
-                        )}
-                    </View> */}
+          {}
+          {}
 
           <View style={styles.productsMainContainer}>
             <View style={styles.productsHeaderView}>
@@ -1361,7 +1326,6 @@ const OrderTrackingScreen = () => {
               style={styles.downloadBillContainer}
               onPress={async () => {
                 if (invoiceUrl) {
-                  // Use siteUrl if invoiceUrl is a relative asset path
                   const fullUrl = invoiceUrl.startsWith('http')
                     ? invoiceUrl
                     : `${CONFIG.image_base_url}${invoiceUrl}`;
@@ -1468,18 +1432,9 @@ const OrderTrackingScreen = () => {
                 setRetryYOffset(y);
               }}
             >
-              {/* {showRetryHint && (
-                                <Text style={styles.retryHintText}>👇 Tap below to retry your payment</Text>
-                            )} */}
+              {}
               <TouchableOpacity onPress={handleRetryPayment}>
-                {/* <Animated.View style={{
-                                    borderRadius: wp('2.33%'),
-                                    borderWidth: autoScrollToRetry ? 2.5 : 0,
-                                    borderColor: retryPulseAnim.interpolate({
-                                        inputRange: [0, 1],
-                                        outputRange: ['rgba(39, 174, 96, 0.3)', 'rgba(39, 174, 96, 1)']
-                                    }),
-                                }}> */}
+                {}
                 <LinearGradient
                   colors={['#27AE60', '#58D68D']}
                   start={{ x: 0, y: 0 }}
@@ -1488,7 +1443,7 @@ const OrderTrackingScreen = () => {
                 >
                   <Text style={styles.cancelButtonText}>Retry Payment</Text>
                 </LinearGradient>
-                {/* </Animated.View> */}
+                {}
               </TouchableOpacity>
             </View>
           )}
@@ -1667,10 +1622,7 @@ const styles = StyleSheet.create({
   },
   gradient: {
     width: '100%',
-    height: hp('8%'), // adjust based on UI
-    // borderTopLeftRadius: wp(10),
-    // borderTopRightRadius: wp(10),
-    // overflow: 'hidden',
+    height: hp('8%'),
     justifyContent: 'flex-end',
     alignItems: 'center',
   },
@@ -1757,7 +1709,6 @@ const styles = StyleSheet.create({
     minHeight: hp('14%'),
     justifyContent: 'center',
     marginTop: hp('1.5%'),
-    // alignItems: 'center'
   },
   addressContainer: {
     flexDirection: 'row',
@@ -1837,10 +1788,7 @@ const styles = StyleSheet.create({
   },
   productsContainerTwo: {
     width: wp('90.7%'),
-    // height: hp('29%'),
     borderRadius: wp('4.65%'),
-    // justifyContent: 'center',
-    // alignItems: 'center',
     backgroundColor: '#FFFFFF',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 0 },
@@ -1850,7 +1798,6 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     paddingHorizontal: wp('3%'),
     paddingVertical: hp('1.5%'),
-    // justifyContent: 'space-between',
     zIndex: 1,
   },
   productsMainContainer: {

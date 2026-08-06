@@ -46,8 +46,7 @@ const CategoryItem = React.memo(({ item, index = 0 }) => {
       accessibilityRole="button"
       accessibilityLabel={`${label} category`}
     >
-      {/* The well's tint is per-tile, so it stays out of the cached
-          StyleSheet (which is keyed on window width alone) and rides on top. */}
+      {}
       <View
         style={[
           styles.categoryItemContainer,

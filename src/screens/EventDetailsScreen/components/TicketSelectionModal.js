@@ -320,8 +320,6 @@ const TicketSelectionModal = ({
       lines: selectedLines,
       totalPrice,
       totalTickets,
-      // The footer promises "Using <bCoins>", so redeem the whole balance and
-      // let the backend cap it against the bill.
       udCoinsRequested: bCoins,
     };
     console.log('[TicketSelectionModal] onBuyNow payload:', payload);
@@ -410,8 +408,7 @@ const TicketSelectionModal = ({
             </View>
           </ImageBackground>
 
-          {/* Close button floats below the card, same treatment as UdenTicketModal:
-              the button scales down on press while the icon rotates inside it. */}
+          {}
           <Animated.View style={closeBtnScaleStyle}>
             <TouchableOpacity
               style={styles.closeBtn}

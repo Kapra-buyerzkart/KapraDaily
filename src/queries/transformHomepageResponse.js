@@ -30,8 +30,6 @@ const getBannerSet = (banners, key) =>
 
 const findBanner = (banners, key) => banners.find((b) => placementKeyOf(b) === key);
 
-// Popup object can appear at several nesting levels depending on whether the
-// API responded with a success body or an error body — checked in both paths.
 export const extractPopupFromResponse = (response) => {
   const pObj = response?.data?.popup || response?.popup || response?.details?.popup;
   if (pObj && (pObj.popupImageUrl || pObj.popupImage) && Number(pObj.showPopup) === 1) {
@@ -44,7 +42,6 @@ export const extractPopupFromResponse = (response) => {
   return null;
 };
 
-// Errors that should NOT be presented as "store unavailable" — auth/network noise.
 export const isIgnorableHomepageError = (error) => {
   const errorMsg = typeof error === 'string' ? error : (error?.message || error?.Message || '');
   const lower = errorMsg.toLowerCase();
@@ -60,10 +57,6 @@ export const isIgnorableHomepageError = (error) => {
 export const isClosedErrorMessage = (errorMsg) =>
   errorMsg.toLowerCase().includes('closed') || errorMsg.toLowerCase().includes('07:00');
 
-// Combines the homepage query's success-path `storeStatus` (set by
-// transformHomepageResponse) with genuine fetch errors (network/5xx, which
-// never become `storeStatus` — see transformHomepageResponse for why) into
-// one "is the store unavailable, and what should the screen show" decision.
 export const deriveStoreUnavailableState = ({ homepageData, error, generalSettings }) => {
   if (homepageData?.storeStatus === 'CLOSED') {
     return {

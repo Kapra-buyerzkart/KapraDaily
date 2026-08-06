@@ -1,9 +1,3 @@
-// Temporary stand-in for 48hrs screens that have not been ported yet.
-//
-// It exists so unported destinations resolve inside this module instead of
-// bubbling up to the host navigator, where a same-named KapraDaily screen would
-// load and query the wrong backend. Delete each registration as its slice lands;
-// delete this file when the last one is gone.
 import React from 'react';
 import { Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';

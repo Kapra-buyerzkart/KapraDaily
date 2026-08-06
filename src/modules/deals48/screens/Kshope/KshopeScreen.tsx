@@ -192,7 +192,6 @@ const KshopeScreen: React.FC = () => {
     (i: any) => i && (i.productId || i.id),
   );
 
-  // Auto-scroll banners
   useEffect(() => {
     if (!topBanner || topBanner.length <= 1) return;
     const timer = setInterval(() => {
@@ -206,7 +205,7 @@ const KshopeScreen: React.FC = () => {
   }, [topBanner]);
 
   const getImageSource = (imgPath: any) => {
-    if (!imgPath) return require('../../assets/images/logo.png'); // fallback
+    if (!imgPath) return require('../../assets/images/logo.png');
     if (typeof imgPath === 'object' && imgPath.uri) return imgPath;
     if (typeof imgPath === 'string') {
       const trimmedPath = imgPath.trim();
@@ -265,7 +264,7 @@ const KshopeScreen: React.FC = () => {
       parsedTabShowcase.items ||
       parsedTabShowcase.Items ||
       parsedTabShowcase;
-    parsedTabShowcase = unwrapBlock(parsedTabShowcase); // Unwrap again in case of double-stringified payload
+    parsedTabShowcase = unwrapBlock(parsedTabShowcase);
   }
 
   const accessorizeCategories = Array.isArray(parsedTabShowcase)
@@ -456,7 +455,7 @@ const KshopeScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      {/* HEADER */}
+      {}
       <LinearGradient
         colors={[colors.themeTeal, colors.themeDarkTeal]}
         start={{ x: 0, y: 0 }}
@@ -493,7 +492,7 @@ const KshopeScreen: React.FC = () => {
           </View>
         </View>
 
-        {/* SEARCH BAR */}
+        {}
         <View style={{ paddingHorizontal: 16, paddingBottom: hp('2.5%') }}>
           <HomeSearchBar placeholder="Search product" />
         </View>
@@ -510,7 +509,7 @@ const KshopeScreen: React.FC = () => {
         }
         contentContainerStyle={{ paddingBottom: hp('12%') }}
       >
-        {/* FLASH SALE BANNER CAROUSEL */}
+        {}
         {topBanner && topBanner.length > 0 && (
           <View style={styles.bannerContainer}>
             <FlatList
@@ -539,7 +538,7 @@ const KshopeScreen: React.FC = () => {
           </View>
         )}
 
-        {/* OUR CATEGORIES */}
+        {}
         {displayCategories.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>OUR CATEGORIES</Text>
@@ -554,7 +553,7 @@ const KshopeScreen: React.FC = () => {
           </View>
         )}
 
-        {/* ACCESSORIZE */}
+        {}
         {accessorizeCategories.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>ACCESSORIZE</Text>
@@ -566,7 +565,7 @@ const KshopeScreen: React.FC = () => {
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={{ paddingHorizontal: wp('4%') }}
             />
-            {/* Dynamic accessorize banner below the list */}
+            {}
             {(() => {
               const activeTab = accessorizeCategories.find((t: any) => {
                 const tId =
@@ -610,11 +609,7 @@ const KshopeScreen: React.FC = () => {
                           style={styles.dummyAccessorizeImage}
                           resizeMode="contain"
                         />
-                        {/* <View style={styles.bannerTextOverlay}>
-                          <Text style={styles.bannerTitleText}>
-                            {item.displayTitle || item.catName || item.name}
-                          </Text>
-                        </View> */}
+                        {}
                       </TouchableOpacity>
                     )}
                   />
@@ -624,7 +619,7 @@ const KshopeScreen: React.FC = () => {
           </View>
         )}
 
-        {/* TOP BRANDS */}
+        {}
         {topBrands && topBrands.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>TOP BRANDS</Text>
@@ -639,7 +634,7 @@ const KshopeScreen: React.FC = () => {
           </View>
         )}
 
-        {/* G-SHOCK SHOWCASE */}
+        {}
         {activeGShockItems?.length > 0 && gShockMainBanner && (
           <View style={styles.section}>
             <ImageBackground
@@ -677,12 +672,12 @@ const KshopeScreen: React.FC = () => {
           </View>
         )}
 
-        {/* BEST SELLING */}
+        {}
         {bestSelling && bestSelling.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>BEST SELLING</Text>
             <View style={styles.bestSellingCard}>
-              {/* Side peeking images */}
+              {}
               {bestSellingIndex > 0 && (
                 <Image
                   source={getImageSource(
@@ -704,7 +699,7 @@ const KshopeScreen: React.FC = () => {
                 />
               )}
 
-              {/* Main active image */}
+              {}
               <View style={styles.centerImageContainer}>
                 <Image
                   source={getImageSource(
@@ -716,7 +711,7 @@ const KshopeScreen: React.FC = () => {
                 />
               </View>
 
-              {/* Navigation Arrows */}
+              {}
               <View style={styles.arrowRow}>
                 {bestSellingIndex > 0 ? (
                   <TouchableOpacity
@@ -741,7 +736,7 @@ const KshopeScreen: React.FC = () => {
                 )}
               </View>
 
-              {/* Top Text Info */}
+              {}
               <View style={styles.bestSellingTextOverlay}>
                 <Text style={styles.bestSellingTitleText}>
                   {bestSelling[bestSellingIndex].brand ||
@@ -765,7 +760,7 @@ const KshopeScreen: React.FC = () => {
               </View>
             </View>
 
-            {/* Footer Button */}
+            {}
             <View style={{ marginTop: 16 }}>
               <ClickForMoreButton
                 onPress={() => {
@@ -780,7 +775,7 @@ const KshopeScreen: React.FC = () => {
           </View>
         )}
 
-        {/* FIRST PRODUCT BLOCK */}
+        {}
         {activeFirstProducts.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>
@@ -829,7 +824,7 @@ const KshopeScreen: React.FC = () => {
           </View>
         )}
 
-        {/* MID BANNERS */}
+        {}
         {midBanner && midBanner.length > 0 && (
           <View style={styles.section}>
             <FlatList
@@ -861,7 +856,7 @@ const KshopeScreen: React.FC = () => {
             </View>
           </View>
         )}
-        {/* GOAT DEALS */}
+        {}
         {activeGoatDeals && activeGoatDeals.length > 0 && (
           <View style={[styles.section, { paddingHorizontal: 16 }]}>
             <Text style={styles.sectionTitle}>GOAT DEALS</Text>
@@ -879,7 +874,7 @@ const KshopeScreen: React.FC = () => {
             />
           </View>
         )}
-        {/* SECOND PRODUCT BLOCK */}
+        {}
         {activeSecondProducts.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>
@@ -930,7 +925,7 @@ const KshopeScreen: React.FC = () => {
           </View>
         )}
 
-        {/* BOTTOM BANNERS */}
+        {}
         {bottomBanner && bottomBanner.length > 0 && (
           <View style={styles.section}>
             <FlatList
@@ -956,9 +951,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   header: {
-    // paddingHorizontal: wp('4%'),
     paddingTop: hp('1%'),
-    // paddingBottom: hp('2%'),
   },
   topBar: {
     flexDirection: 'row',
@@ -991,7 +984,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    // backgroundColor: 'rgba(255, 255, 255, 0.4)',
     borderRadius: 20,
     width: 101,
     height: 34,
@@ -1098,13 +1090,10 @@ const styles = StyleSheet.create({
   },
   accessorizeCard: {
     width: wp('22%'),
-    // borderRadius: wp('4%'),
-    // backgroundColor: '#F8F8F8',
 
     paddingVertical: hp('1.5%'),
     marginRight: wp('2%'),
     alignItems: 'center',
-    // marginRight: wp('1%'),
     paddingTop: hp('1%'),
     paddingBottom: hp('1.5%'),
     borderTopLeftRadius: wp('3%'),
@@ -1139,7 +1128,7 @@ const styles = StyleSheet.create({
   },
   accessorizeLabel: {
     fontSize: wp('3.2%'),
-    color: '#8A8A8A', // Grey for inactive
+    color: '#8A8A8A',
     fontFamily: Fonts.gilroyBold,
     fontWeight: '600',
     textAlign: 'center',
@@ -1149,7 +1138,6 @@ const styles = StyleSheet.create({
   dummyAccessorizeContainer: {
     paddingTop: hp('2%'),
     paddingBottom: hp('2%'),
-    // marginTop: -hp('2%'),
     zIndex: -1,
   },
   accessorizeBannerCard: {
@@ -1202,11 +1190,6 @@ const styles = StyleSheet.create({
     marginRight: wp('3%'),
     borderWidth: 1,
     borderColor: '#EEE',
-    // elevation: 2,
-    // shadowColor: '#000',
-    // shadowOffset: { width: 0, height: 1 },
-    // shadowOpacity: 0.1,
-    // shadowRadius: 2,
   },
   brandImage: {
     width: '80%',
@@ -1345,8 +1328,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 26,
     marginBottom: 10,
-    // borderWidth: 0.8,
-    // borderColor: colors.themeTeal,
     height: 140,
     overflow: 'hidden',
     elevation: 3,
@@ -1359,7 +1340,6 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     resizeMode: 'contain',
-    //borderRadius: 26,
   },
 });
 

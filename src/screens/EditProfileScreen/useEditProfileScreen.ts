@@ -6,9 +6,6 @@ import { updateProfilePatchApi } from '../../api/userService';
 
 export type StatusType = 'success' | 'error';
 
-// Field-level problems are reported on the field itself; the modal is kept for
-// what only the server can tell us. A dialog that says "Full Name is required"
-// makes the user dismiss it before they can see which box it meant.
 export type FieldErrors = {
   fullName?: string;
   dob?: string;
@@ -16,11 +13,6 @@ export type FieldErrors = {
 
 const DOB_REGEX = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
 
-// The profile endpoint may hand back a birthday as a date or as a full
-// timestamp; the screen only ever deals in the date. Normalising on the way in
-// means the field, the dirty check and the validation all compare the same
-// shape — otherwise a stored `1995-04-12T00:00:00` reads as dirty on arrival
-// and then fails a save the user never made.
 const toDateOnly = (value?: string | null) => (value || '').slice(0, 10);
 
 export const useEditProfileScreen = () => {
@@ -50,16 +42,12 @@ export const useEditProfileScreen = () => {
     );
   }, [fullName, dob, gender, skId, profile]);
 
-  // Editing a flagged field is the user answering the complaint, so the
-  // complaint goes away then — not on the next save attempt. The guard keeps
-  // this from allocating a new object on every keystroke of a clean form.
   useEffect(() => {
     setErrors(prev => (prev.fullName || prev.dob ? {} : prev));
   }, [fullName, dob]);
 
   const handleModalClose = () => {
     setStatusModalVisible(false);
-    // Removed auto-navigation back on success as per user request
   };
 
   const showStatus = (type: StatusType, title: string, message: string) => {
@@ -69,7 +57,6 @@ export const useEditProfileScreen = () => {
     setStatusModalVisible(true);
   };
 
-  // Phone and Email are handled separately via OTP flow now
   const email = profile?.emailId || '';
   const phone = profile?.phoneNo || '';
 
@@ -80,8 +67,6 @@ export const useEditProfileScreen = () => {
     if (!fullName.trim()) {
       nextErrors.fullName = 'Please enter your name';
     }
-    // The field hands up bare digits while a date is half-typed, so anything
-    // that isn't a complete, real calendar date lands here.
     if (dobValue && !DOB_REGEX.test(dobValue)) {
       nextErrors.dob = 'Enter a full date as DD / MM / YYYY';
     }
@@ -101,7 +86,7 @@ export const useEditProfileScreen = () => {
       };
       const response: any = await updateProfilePatchApi(payload);
       if (response?.success) {
-        await loadProfile(); // Refresh global profile state
+        await loadProfile();
         showStatus('success', 'Success', 'Profile updated successfully');
       } else {
         showStatus('error', 'Error', response?.message || 'Failed to update profile');

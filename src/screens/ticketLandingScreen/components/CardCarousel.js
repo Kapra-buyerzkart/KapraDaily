@@ -167,9 +167,6 @@ const CardCarousel = ({ fadeAnim, onClaim, vouchers }) => {
   const cardCount = cards.length;
   const [activeIndex, setActiveIndex] = useState(0);
 
-  // Distance from the bottom of the card stack down to the curve apex. Measured
-  // in window coordinates because the stack's screen position depends on the
-  // safe-area inset and the header/tab heights above it.
   const stackRef = useRef(null);
   const [arrowMarginTop, setArrowMarginTop] = useState(null);
   const handleStackLayout = useCallback(() => {

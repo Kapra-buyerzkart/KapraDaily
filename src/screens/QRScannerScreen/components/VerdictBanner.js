@@ -13,8 +13,7 @@ const VerdictBanner = ({
   showProgress,
 }) => (
   <View style={[styles.verdictBanner, { backgroundColor: resultStyle.color }]}>
-    {/* Rendered first so it stays behind the verdict text: the white wordmark
-        reads as a faint stamp on the solid green/red/amber band. */}
+    {}
     <View style={styles.verdictWatermarkWrap} pointerEvents="none">
       <Image source={images.kapraLogo} style={styles.verdictWatermark} />
     </View>

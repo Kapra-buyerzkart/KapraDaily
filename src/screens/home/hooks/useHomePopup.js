@@ -4,9 +4,6 @@ import { postPopupSeenApi } from '../../../api/homeService';
 import { openExternalUrl } from '../../../utils/safeUrl';
 import logger from '../../../utils/logger';
 
-// Owns the home popup's visibility/seen-tracking state machine — shows a
-// popup at most once per popupId, marks it seen on close/press, and routes
-// taps to either a product or an external/internal link.
 const useHomePopup = (popupData) => {
   const navigation = useNavigation();
   const [isHomePopupVisible, setIsHomePopupVisible] = useState(false);

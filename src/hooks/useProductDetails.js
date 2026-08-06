@@ -23,14 +23,11 @@ export const useProductDetails = (productId, initialProduct = null) => {
     useEffect(() => {
         const fetchProductData = async () => {
             if (productId) {
-                //  console.log(' nm,./,mnbvnjkml;', getPincodeAreaId());
                 try {
                     setLoading(true);
                     showLoader(true);
                     setError(null);
-                    // const pincodeAreaId = await getPincodeAreaId();
                     console.log(' nm,./,mnbvnjkml;', pincodeAreaId);
-
 
                     let currentPincodeId = pincodeAreaId || profile?.pincode;
                     if (!currentPincodeId) {
@@ -41,7 +38,6 @@ export const useProductDetails = (productId, initialProduct = null) => {
                         }
                     }
 
-                    // Fetch product details and related products in parallel
                     const [detailsResponse, relatedResponse] = await Promise.all([
                         getProductDetails(productId, currentPincodeId),
                         getRelatedProductsApi(productId, currentPincodeId)

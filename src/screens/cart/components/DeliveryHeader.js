@@ -71,7 +71,6 @@ const styles = StyleSheet.create({
   },
   etaBlock: {
     flex: 1,
-    // backgroundColor: 'red',
   },
   etaTitleRow: {
     flexDirection: 'row',

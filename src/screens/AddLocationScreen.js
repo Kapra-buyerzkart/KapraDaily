@@ -52,15 +52,9 @@ import {
   MAX_FONT_SCALE,
 } from '@/styles/homeTheme';
 
-// Height of the map area — pin is centred on this
 const MAP_HEIGHT = hp('45%');
-// Where the form sheet starts. The re-centre button is parked just above this
-// line so it never ends up buried under the sheet.
 const SHEET_TOP = hp('30%');
 
-// Pin metrics. The pin is drawn *above* the map centre with its shadow sitting
-// on it, so the tip — not the top of the graphic — marks the coordinate that
-// gets reverse-geocoded.
 const PIN_H = wp('10%');
 const PIN_SHADOW_H = wp('1.5%');
 
@@ -84,8 +78,6 @@ const ADDRESS_TYPES = [
   },
 ];
 
-// Dropdown chrome. Hoisted so DropDownPicker doesn't see a fresh component
-// type on every render of the screen.
 const DropdownArrowDown = () => (
   <Ionicons name="chevron-down" size={wp('4%')} color={INK.muted} />
 );
@@ -96,9 +88,6 @@ const DropdownTick = () => (
   <Ionicons name="checkmark" size={wp('4%')} color={ACCENT.primary} />
 );
 
-// A labelled text field. The label sits in a notch on the top border — the
-// screen's existing signature — and the whole field lifts to the accent colour
-// while focused so the active row is obvious on a long form.
 const Field = ({ label, required, wrapperStyle, inputStyle, ...inputProps }) => {
   const [focused, setFocused] = useState(false);
 
@@ -156,13 +145,11 @@ const AddLocationScreen = () => {
   const [isInitialLoading, setIsInitialLoading] = useState(!isEditMode);
   const [isAreasLoading, setIsAreasLoading] = useState(false);
   const [isGeocoding, setIsGeocoding] = useState(false);
-  // isDragging: lift the pin slightly while map is moving (nice UX touch)
   const [isDragging, setIsDragging] = useState(false);
 
   const defaultCoords = { latitude: 10.0205, longitude: 76.3052 };
   const apiKey = GOOGLE_MAPS_API_KEY;
 
-  // The map region — this is the source of truth for where the pin points
   const [region, setRegion] = useState({
     latitude: Number(editAddress?.latitude) || defaultCoords.latitude,
     longitude: Number(editAddress?.longitude) || defaultCoords.longitude,
@@ -182,7 +169,6 @@ const AddLocationScreen = () => {
       editAddress?.latitude != null &&
       editAddress?.longitude != null
     ) {
-      // Edit mode — map is already centred on the saved coords via initialRegion
       setIsInitialLoading(false);
     } else {
       handleInitialLocation();
@@ -236,7 +222,6 @@ const AddLocationScreen = () => {
         longitudeDelta: 0.005,
       };
 
-      // Move the map — the fixed pin automatically points to the new centre
       setRegion(newRegion);
       mapRef.current?.animateToRegion(newRegion, 600);
 
@@ -279,7 +264,6 @@ const AddLocationScreen = () => {
     );
   };
 
-  // Called when user STOPS panning — grab the centre coords and reverse-geocode
   const onRegionChangeComplete = newRegion => {
     setRegion(newRegion);
     setIsDragging(false);
@@ -287,7 +271,6 @@ const AddLocationScreen = () => {
   };
 
   const onRegionChange = () => {
-    // Map is actively moving — lift the pin
     setIsDragging(true);
   };
 
@@ -390,7 +373,6 @@ const AddLocationScreen = () => {
       pincode,
       pincodeAreaId,
       pincodeAreaName: items.find(i => i.value === pincodeAreaId)?.label || '',
-      // Coordinates come from the map region centre — wherever the fixed pin is pointing
       latitude: Number(region.latitude),
       longitude: Number(region.longitude),
       addressType,
@@ -410,7 +392,6 @@ const AddLocationScreen = () => {
           Toast.SHORT,
         );
 
-        // Update the app's active location to the chosen pincode area
         const selectedAreaName =
           items.find(i => i.value === pincodeAreaId)?.label || '';
         await editPincode({
@@ -418,7 +399,6 @@ const AddLocationScreen = () => {
           areaName: selectedAreaName,
         });
 
-        // Persist the selected address ID so other screens can use it
         const savedAddressId =
           response?.data?.custAddressId ||
           response?.data?.addressId ||
@@ -457,7 +437,7 @@ const AddLocationScreen = () => {
           Platform.OS === 'android' && { paddingBottom: insets.bottom },
         ]}
       >
-        {/* ── MAP (absolutely positioned behind everything) ── */}
+        {}
         <View style={styles.mapContainer}>
           <MapView
             ref={mapRef}
@@ -493,7 +473,7 @@ const AddLocationScreen = () => {
           </TouchableOpacity>
         </View>
 
-        {/* ── SEARCH BAR (floats over the map) ── */}
+        {}
         <View style={styles.searchLayer}>
           <View style={styles.searchAbsoluteContainer}>
             <GooglePlacesAutocomplete
@@ -532,7 +512,6 @@ const AddLocationScreen = () => {
                     longitudeDelta: 0.005,
                   };
 
-                  // Move the map — fixed pin stays centred, now points to new place
                   setRegion(newRegion);
                   mapRef.current?.animateToRegion(newRegion, 600);
                   reverseGeocode(lat, lng);
@@ -628,7 +607,7 @@ const AddLocationScreen = () => {
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
           <View style={styles.sheet}>
-            {/* Pinned sheet header — stays put while the form scrolls */}
+            {}
             <View style={styles.grabHandle} />
             <View style={styles.topView}>
               <TouchableOpacity
@@ -798,8 +777,7 @@ const AddLocationScreen = () => {
                     ArrowUpIconComponent={DropdownArrowUp}
                     TickIconComponent={DropdownTick}
                   />
-                  {/* Rendered after the picker so the notch paints over its
-                      border on Android, where elevation beats zIndex. */}
+                  {}
                   <Text
                     style={styles.label}
                     maxFontSizeMultiplier={MAX_FONT_SCALE}
@@ -883,7 +861,6 @@ const styles = StyleSheet.create({
     backgroundColor: SURFACE.base,
   },
 
-  // ── Map ──────────────────────────────────────────────────────────────────
   mapContainer: {
     width: wp('100%'),
     height: MAP_HEIGHT,
@@ -894,12 +871,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
-  // ── Fixed crosshair pin ──────────────────────────────────────────────────
-  // Sits at the exact centre of the map area. pointerEvents="none" so all
-  // touch events pass straight through to the MapView underneath.
   fixedPinContainer: {
     position: 'absolute',
-    // Centre horizontally
     left: 0,
     right: 0,
     alignItems: 'center',
@@ -911,13 +884,10 @@ const styles = StyleSheet.create({
     height: PIN_H,
     resizeMode: 'contain',
     tintColor: ACCENT.primary,
-    // No transform by default
   },
-  // Lift pin up while map is panning — classic Google Maps feel
   fixedPinLifted: {
     transform: [{ translateY: -6 }],
   },
-  // Small shadow ellipse beneath the pin on the map surface
   pinShadow: {
     width: wp('4%'),
     height: PIN_SHADOW_H,
@@ -932,8 +902,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.10)',
   },
 
-  // ── Re-centre button ─────────────────────────────────────────────────────
-  // Parked above SHEET_TOP so the form sheet never covers it.
   reCenterButton: {
     position: 'absolute',
     bottom: MAP_HEIGHT - SHEET_TOP + SPACE.md,
@@ -953,7 +921,6 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
 
-  // ── Search layer (floats over map) ───────────────────────────────────────
   searchLayer: {
     zIndex: 999,
     elevation: 10,
@@ -992,7 +959,6 @@ const styles = StyleSheet.create({
     color: INK.base,
   },
 
-  // ── Form sheet ───────────────────────────────────────────────────────────
   sheet: {
     flex: 1,
     backgroundColor: SURFACE.base,
@@ -1045,7 +1011,6 @@ const styles = StyleSheet.create({
     letterSpacing: -0.3,
   },
 
-  // ── Resolved address summary ─────────────────────────────────────────────
   innerView: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1082,7 +1047,6 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 
-  // ── Delivery-boy nudge ───────────────────────────────────────────────────
   delboyContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1111,7 +1075,6 @@ const styles = StyleSheet.create({
     color: INK.strong,
   },
 
-  // ── Save-as chips ────────────────────────────────────────────────────────
   saveAsText: {
     fontFamily: FONTS.gilroy.medium,
     ...TYPE.label,
@@ -1161,7 +1124,6 @@ const styles = StyleSheet.create({
     color: ACCENT.primary,
   },
 
-  // ── Fields ───────────────────────────────────────────────────────────────
   inputWrapper: {
     marginBottom: SPACE.lg,
     position: 'relative',
@@ -1207,7 +1169,6 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
   },
 
-  // ── PIN code + area row ──────────────────────────────────────────────────
   pincodeContainer: {
     flexDirection: 'row',
   },
@@ -1249,7 +1210,6 @@ const styles = StyleSheet.create({
     color: INK.muted,
   },
 
-  // ── Primary action ───────────────────────────────────────────────────────
   saveButton: {
     borderRadius: RADIUS.sm,
     overflow: 'hidden',

@@ -66,17 +66,6 @@ import {
   entrance,
 } from '@/styles/motion';
 
-// Rebuilt as the third page of the account flow, after Profile and Edit Profile:
-// same peach hero, same sticky bar resolving from peach to white, same gutter,
-// same filled-well field, same pinned brand-coloured CTA. It used to be the
-// login screen's photographic header and a centred logo, which made a settings
-// change look like a re-authentication.
-//
-// The two steps are one page rather than two screens. A push would put a back
-// button on the OTP step that undoes the send rather than the edit; keeping it
-// here lets "Change number" mean exactly what it says, and lets the hero carry
-// the destination the code was sent to while it is being typed.
-
 const OTP_LENGTH = 5;
 const RESEND_SECONDS = 30;
 const FOCUS_FADE = { duration: 160 };
@@ -84,7 +73,7 @@ const FOCUS_FADE = { duration: 160 };
 const UpdateContactScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const { type } = route.params || { type: 'phone' }; // 'phone' or 'email'
+  const { type } = route.params || { type: 'phone' };
   const isPhone = type !== 'email';
   const { showLoader } = useContext(LoaderContext);
   const { profile, loadProfile } = useContext(AppContext);
@@ -92,11 +81,9 @@ const UpdateContactScreen = () => {
   const [value, setValue] = useState('');
   const [originalValue, setOriginalValue] = useState('');
   const [otp, setOtp] = useState(Array(OTP_LENGTH).fill(''));
-  const [step, setStep] = useState(1); // 1: Input, 2: OTP
+  const [step, setStep] = useState(1);
   const [timer, setTimer] = useState(RESEND_SECONDS);
   const [canResend, setCanResend] = useState(false);
-  // Validation speaks under the field it is about; the modal is kept for what
-  // the server says, which is the only thing the user can't see for themselves.
   const [fieldError, setFieldError] = useState('');
   const [otpError, setOtpError] = useState('');
 
@@ -110,11 +97,6 @@ const UpdateContactScreen = () => {
 
   const label = isPhone ? 'Phone Number' : 'Email ID';
 
-  // Only the comparison value is taken from the profile. The field itself opens
-  // empty and the old value is stated in the hero instead — an input pre-filled
-  // with the number you came here to replace is one you have to clear before you
-  // can answer it, and it made the CTA sit disabled under a field that looked
-  // filled in.
   useEffect(() => {
     if (profile) {
       const currentVal = isPhone ? profile.phoneNo : profile.emailId;
@@ -169,8 +151,6 @@ const UpdateContactScreen = () => {
         setStep(2);
         setTimer(RESEND_SECONDS);
         setCanResend(false);
-        // The step swaps in place, so the caret has to be moved deliberately —
-        // there is no navigation event to hand focus over on.
         setTimeout(() => otpRefs.current[0]?.focus(), 350);
       } else {
         showError(response?.message || 'Failed to request OTP');
@@ -220,8 +200,6 @@ const UpdateContactScreen = () => {
     }
   };
 
-  // Written to survive a paste: an autofilled code arrives in one box as five
-  // characters, and typing it a digit at a time has to land in the same state.
   const handleOtpChange = (text, index) => {
     setOtpError('');
     const digits = text.replace(/[^0-9]/g, '');
@@ -275,10 +253,6 @@ const UpdateContactScreen = () => {
   const canRequestOtp = isDifferent && isInputValid;
   const otpComplete = otp.every(digit => digit !== '');
 
-  // ── The sticky bar ──────────────────────────────────────────────────────
-  // Peach at rest so the status bar, the bar and the gradient below read as one
-  // surface; white once the hero is gone. `heroAnchor` is measured rather than
-  // assumed because the hero's height moves with the font scale.
   const scrollY = useSharedValue(0);
   const heroAnchor = useSharedValue(0);
   const scrollHandler = useAnimatedScrollHandler({
@@ -349,28 +323,14 @@ const UpdateContactScreen = () => {
             borderStyle={topBarBorderStyle}
           />
 
-          {/* The gradient itself never animates in — only its contents do — so
-              the sticky bar above, already painted the hero's colour, is never
-              left as a peach strip over a white page. */}
+          {}
           <LinearGradient colors={HERO_GRADIENT} style={styles.hero}>
             <Animated.View
               style={styles.heroInner}
               onLayout={onHeroLayout}
               entering={entrance(0)}
             >
-              {/* <View style={styles.heroDisc}>
-                <MaterialCommunityIcons
-                  name={
-                    step === 1
-                      ? isPhone
-                        ? 'cellphone-cog'
-                        : 'email-edit-outline'
-                      : 'shield-key-outline'
-                  }
-                  size={wp('7.4%')}
-                  color={ACCENT.primary}
-                />
-              </View> */}
+              {}
 
               <Text style={styles.heroTitle} maxFontSizeMultiplier={1.2}>
                 {step === 1
@@ -442,8 +402,7 @@ const UpdateContactScreen = () => {
           ) : (
             <Animated.View key="step-otp" entering={FadeIn.duration(220)}>
               <View style={styles.fieldGroup}>
-                {/* Same small label as the field on the step before, for the
-                    same reason — the hero already carries the heading. */}
+                {}
                 <Text
                   style={styles.fieldLabel}
                   maxFontSizeMultiplier={MAX_FONT_SCALE}
@@ -483,8 +442,7 @@ const UpdateContactScreen = () => {
                   </View>
                 )}
 
-                {/* The countdown holds the same row the active link will take,
-                    so nothing below it shifts when the timer runs out. */}
+                {}
                 <View style={styles.resendRow}>
                   {canResend ? (
                     <TouchableOpacity
@@ -552,14 +510,6 @@ const UpdateContactScreen = () => {
   );
 };
 
-// ── Top bar ───────────────────────────────────────────────────────────────
-// A component rather than an inline Animated.View, and not by preference: this
-// is the ScrollView's sticky child, and RN's sticky wrapper clones that child to
-// inject a style of its own. Cloned onto an Animated.View, the injected style
-// drags Reanimated's style handle through RN's own Animated pipeline, which
-// deep-freezes it in dev and makes the next updater assignment throw. A
-// component absorbs the injected prop and ignores it — which is the same reason
-// Edit Profile's bar is a component.
 const TopBar = ({ title, onBack, backgroundStyle, borderStyle }) => {
   const insets = useSafeAreaInsets();
 
@@ -596,10 +546,6 @@ const TopBar = ({ title, onBack, backgroundStyle, borderStyle }) => {
   );
 };
 
-// ── Field ─────────────────────────────────────────────────────────────────
-// Edit Profile's filled well, with the country code living inside it behind a
-// hairline rule rather than floating beside the input: +91 is part of the number
-// being entered, not a second control next to it.
 const ContactField = ({ isPhone, value, onChangeText, error, ...props }) => {
   const [focused, setFocused] = useState(false);
   const focus = useSharedValue(0);
@@ -688,9 +634,6 @@ const ContactField = ({ isPhone, value, onChangeText, error, ...props }) => {
   );
 };
 
-// ── OTP box ───────────────────────────────────────────────────────────────
-// Same three states as the field above — rest, focus, error — so a code entry
-// reads as five small versions of the control the previous step used.
 const OtpBox = React.forwardRef(({ value, error, ...props }, ref) => {
   const focus = useSharedValue(0);
 
@@ -794,9 +737,6 @@ const ActionBar = ({ enabled, label, hint, icon, onPress }) => {
 
 export default UpdateContactScreen;
 
-// The account flow's field palette, matching Edit Profile: a field is a filled
-// well that turns white and takes the brand's edge when it is the one being
-// typed into.
 const FIELD_REST = '#F7F5F3';
 const FIELD_BORDER_WIDTH = 1.5;
 const ERROR_INK = ACCENT.discount;
@@ -811,22 +751,15 @@ const styles = StyleSheet.create({
   keyboardAvoidingView: {
     flex: 1,
   },
-  // The viewport is painted the hero's colour and the sheet white on top, so an
-  // iOS rubber-band pull reveals more hero rather than a white strip.
   scrollView: {
     backgroundColor: HERO_TOP,
   },
-  // flexGrow, not just a background: this page is short, and without it the
-  // white sheet stopped at the last element and the ScrollView's own peach —
-  // there so an iOS rubber-band pull reveals more hero — filled the rest of the
-  // viewport as a large empty block above the action bar.
   scrollContent: {
     flexGrow: 1,
     paddingBottom: SPACE.xl,
     backgroundColor: CANVAS,
   },
 
-  // ── Header ──────────────────────────────────────────────────────────────
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -858,7 +791,6 @@ const styles = StyleSheet.create({
     letterSpacing: -0.3,
   },
 
-  // ── Hero ────────────────────────────────────────────────────────────────
   hero: {
     paddingBottom: SPACE.md,
   },
@@ -892,9 +824,6 @@ const styles = StyleSheet.create({
     marginTop: SPACE.xs + 2,
     maxWidth: wp('82%'),
   },
-  // The value being replaced, stated once at the top rather than pre-filled into
-  // the field — an input that opens holding the old number is an input the user
-  // has to clear before they can answer it.
   currentPill: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -912,9 +841,6 @@ const styles = StyleSheet.create({
     marginLeft: SPACE.xs + 1,
   },
 
-  // ── Field ───────────────────────────────────────────────────────────────
-  // The section header used to supply the gap under the hero; with it gone the
-  // group owns its own top space.
   fieldGroup: {
     paddingHorizontal: GUTTER,
     paddingTop: SPACE.lg,
@@ -970,7 +896,6 @@ const styles = StyleSheet.create({
     paddingVertical: SPACE.md,
     includeFontPadding: false,
   },
-  // A phone number is read in groups, so the digits are given a little air.
   fieldInputPhone: {
     letterSpacing: 1.2,
     bottom: Platform.OS == 'ios' ? hp(0.5) : hp(0),
@@ -987,9 +912,6 @@ const styles = StyleSheet.create({
     marginLeft: SPACE.xs + 1,
     flexShrink: 1,
   },
-  // flex-start, not the default stretch: the icon is a Text box, so stretching
-  // it over two wrapped lines centred the glyph between them instead of setting
-  // it against the line it belongs to.
   noteRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -998,8 +920,6 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.sm,
     backgroundColor: SURFACE.sunken,
   },
-  // Cap height sits below the line box's top; one point down puts the glyph on
-  // the first line's optical centre.
   noteIcon: {
     marginTop: 1,
   },
@@ -1011,7 +931,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
-  // ── OTP ─────────────────────────────────────────────────────────────────
   otpRow: {
     flexDirection: 'row',
     gap: wp('2.6%'),
@@ -1065,7 +984,6 @@ const styles = StyleSheet.create({
     marginLeft: SPACE.xs + 2,
   },
 
-  // ── Action bar ──────────────────────────────────────────────────────────
   actionBar: {
     paddingHorizontal: GUTTER,
     paddingTop: SPACE.md,
@@ -1087,9 +1005,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     elevation: 4,
   },
-  // Not ready yet, so the button keeps its shape and drops its voice rather than
-  // greying out — grey reads as broken, the brand's soft tint reads as "not
-  // yet", and the label says what is missing.
   actionButtonDisabled: {
     backgroundColor: ACCENT.primarySoft,
     shadowOpacity: 0,

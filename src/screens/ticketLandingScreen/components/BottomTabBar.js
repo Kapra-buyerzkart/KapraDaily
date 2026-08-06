@@ -105,8 +105,6 @@ const styles = StyleSheet.create({
     height: ICON_SIZE,
   },
   storeImage: {
-    // width: ICON_SIZE,
-    // height: ICON_SIZE,
   },
   badge: {
     position: 'absolute',

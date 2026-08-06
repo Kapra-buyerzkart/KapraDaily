@@ -30,7 +30,6 @@ const PINCODE_AREA_MAP = {
 };
 
 const mergeCustomerIdIntoProfile = async custId => {
-  // logger.log('????????', custId)
   const storedProfile = await secureStore.getItem('profile');
   const existingProfile = storedProfile ? JSON.parse(storedProfile) : {};
 
@@ -38,8 +37,6 @@ const mergeCustomerIdIntoProfile = async custId => {
     ...existingProfile,
     custId,
   };
-
-  // logger.log('updatedProfile', updatedProfile)
 
   await secureStore.setItem('profile', JSON.stringify(updatedProfile));
 };
@@ -69,9 +66,7 @@ const RegistrationScreen = () => {
     if (value.length === 6) {
       try {
         const response = await getAreasByPincode(value);
-        // logger.log('resss', response)
 
-        // adjust based on your API response structure
         setAreas(response?.data || []);
         setSelectedArea(null);
       } catch (error) {
@@ -115,22 +110,6 @@ const RegistrationScreen = () => {
     try {
       setLoading(true);
 
-      // const response = await sendRegisterOtp(phone)
-      // logger.log('OTP response:', response)
-
-      // if (response?.success === true) {
-      //     navigation.navigate('OtpScreen', {
-      //         phone: phone,
-      //         otpType: 'register',
-      //         name: name,
-      //         email: email,
-      //         password: password,
-      //         pincodeAreaId: selectedArea.pincodeAreaId
-
-      //     })
-      // } else {
-      //     alert(response?.message || 'Failed to send OTP')
-      // }
       const payload = {
         registerToken,
         name,
@@ -141,17 +120,11 @@ const RegistrationScreen = () => {
         pincodeAreaId: selectedArea.pincodeAreaId,
       };
       const registerResponse = await registerUser(payload);
-      // logger.log('Register User Response:', registerResponse);
-      // navigation.reset({
-      //     index: 0,
-      //     routes: [{ name: 'MainTabs' }],
-      // });
       if (registerResponse?.success) {
         showStatus({
           type: 'success',
           title: 'Success',
           message: 'Registration completed successfully',
-          // onClose: () => navigation.navigate('LoginScreen')
           onClose: async () => {
             const { accessToken, refreshToken, custId } = registerResponse.data;
             await setTokens(accessToken, refreshToken);
@@ -196,11 +169,10 @@ const RegistrationScreen = () => {
 
   return (
     <SafeAreaView style={styles.mainContainer}>
-      {/* {logger.log("KKKK", phone)} */}
+      {}
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        // keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
         <ScrollView
           contentContainerStyle={{ flexGrow: 1 }}
@@ -243,7 +215,7 @@ const RegistrationScreen = () => {
               style={styles.mobilenoContainer}
             >
               <Text style={styles.mobilenoText}>+91 {phone}</Text>
-              {/* <TouchableOpacity> */}
+              {}
               <Image
                 style={[
                   styles.editIcon,
@@ -253,7 +225,7 @@ const RegistrationScreen = () => {
                 ]}
                 source={require('../assets/images/edit_icon.png')}
               />
-              {/* </TouchableOpacity> */}
+              {}
             </TouchableOpacity>
             <View style={styles.inputContainer}>
               <Text style={styles.enterNumberText}>
@@ -323,7 +295,7 @@ const RegistrationScreen = () => {
                 />
               </View>
             </View>
-            {/* {logger.log('areas', areas)} */}
+            {}
             {areas.length > 0 && (
               <View style={styles.areaCard}>
                 <Text style={styles.title}>Select your area</Text>
@@ -338,7 +310,7 @@ const RegistrationScreen = () => {
                     }}
                   >
                     <Text style={styles.areaText}>{area.areaName}</Text>
-                    {/* {logger.log('selectedArea', selectedArea)} */}
+                    {}
                     {selectedArea?.areaName !== area?.areaName ? (
                       <View style={styles.radioOuter} />
                     ) : (
@@ -485,7 +457,6 @@ const styles = StyleSheet.create({
   areaCard: {
     borderWidth: 1,
     borderColor: '#DADADA',
-    // borderRadius: 16,
     paddingVertical: hp('1.28%'),
     borderBottomLeftRadius: wp('2.33%'),
     borderBottomRightRadius: wp('2.33%'),
@@ -518,19 +489,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  // registrationContainer: {
-  //     height: hp('70%'),
-  //     paddingHorizontal: wp('5.8%'),
-  //     paddingTop: hp('3.5%'),
-  //     borderTopLeftRadius: wp('9.3%'),
-  //     borderTopRightRadius: wp('9.3%'),
-  //     backgroundColor: '#FFFFFF',
-  //     bottom: hp('4%'),
-  // },
   registrationContainer: {
     paddingHorizontal: wp('5.8%'),
     paddingTop: hp('3.5%'),
-    paddingBottom: hp('4%'), // important
+    paddingBottom: hp('4%'),
     borderTopLeftRadius: wp('9.3%'),
     borderTopRightRadius: wp('9.3%'),
     backgroundColor: '#FFFFFF',
@@ -559,7 +521,6 @@ const styles = StyleSheet.create({
   successIcon: {
     height: wp('4.65%'),
     width: wp('4.65%'),
-    // resizeMode: 'contain'
   },
   inputContainer: {
     marginTop: hp('1.5%'),

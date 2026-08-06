@@ -12,9 +12,6 @@ import CONFIG from '@/globals/config';
 import styles from '../styles';
 import { PLACEHOLDER_HERO } from '../constants';
 
-// API artists expose `artistImage` (often an absolute URL) which
-// getVoucherImageSource doesn't handle. Use it directly when absolute,
-// otherwise fall back to the shared resolver.
 const resolveArtistImage = artist => {
   const uri = artist?.artistImage;
   if (typeof uri === 'string' && uri) {
@@ -25,7 +22,6 @@ const resolveArtistImage = artist => {
   return getVoucherImageSource(artist);
 };
 
-// One segment per scrollable page, lit while that page is the one on screen.
 const ProgressSegment = ({ index, scrollX, pageWidth }) => {
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: Math.round(scrollX.value / pageWidth) === index ? 1 : 0,

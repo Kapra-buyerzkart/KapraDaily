@@ -98,98 +98,7 @@ const LoginScreen = () => {
 
   const phoneNumber = '8137956574';
 
-  // const handleContinue = async () => {
-  //     logger.log(phone);
-  //     logger.log('type', type);
-
-  //     if (phone.length !== 10) {
-  //         Alert.alert('Error', 'Please enter a valid mobile number');
-  //         return;
-  //     }
-
-  //     try {
-  //         setLoading(true);
-  //         let response
-  //         if (type === 'login') {
-  //             response = await sendLoginOtp(phone);
-  //         }
-  //         if (type === 'reset') {
-  //             response = await sendForgotPwdOtp(phone);
-  //         }
-  //         logger.log('response', response)
-  //         logger.log('OTP Response:', response);
-
-  //         if (response?.success && response?.data) {
-  //             navigation.navigate('OtpScreen', {
-  //                 phone
-  //             });
-  //         } else {
-  //             Alert.alert('Error', response?.message || 'Failed to send OTP');
-  //         }
-  //     } catch (error) {
-  //         logger.log('OTP Error:', error);
-  //         Alert.alert('Error', error?.Message || error?.message || 'Failed to send OTP');
-  //     } finally {
-  //         setLoading(false);
-  //     }
-  // };
-
-  // const handleContinueLogin = async () => {
-  //     // logger.log('Login')
-  //     // logger.log(phone);
-  //     // logger.log('type', type);
-
-  //     if (!validatePhoneNumbers(phone)) {
-  //         showStatus({
-  //             type: 'error',
-  //             title: 'Error',
-  //             message: 'Please enter a valid mobile number'
-  //         });
-  //         return;
-  //     }
-
-  //     try {
-  //         setLoading(true);
-  //         showLoader(true);
-  //         const response = await sendLoginOtp(phone);
-  //         logger.log('handleContinueLoginresponse', response)
-  //         // logger.log('OTP Response:', response);
-
-  //         if (response?.success && response?.data) {
-  //             navigation.navigate('OtpScreen', {
-  //                 phone,
-  //                 type: 'login'
-  //             });
-  //         }
-  //         else if (response?.status === 'NOT_REGISTERED') {
-  //             navigation.navigate('RegistraionScreen', {
-  //                 phone
-  //             });
-  //         }
-  //         else {
-  //             showStatus({
-  //                 type: 'error',
-  //                 title: 'Error',
-  //                 message: response?.message || 'Failed to send OTP'
-  //             });
-  //         }
-  //     } catch (error) {
-  //         logger.log('OTP Error:', error);
-  //         showStatus({
-  //             type: 'error',
-  //             title: 'Error',
-  //             message: error?.Message || error?.message || 'Failed to send OTP'
-  //         });
-  //     } finally {
-  //         setLoading(false);
-  //         showLoader(false);
-  //     }
-  // };
-
   const handleContinueLogin = async () => {
-    // logger.log('Login')
-    // logger.log(phone);
-    // logger.log('type', type);
 
     if (!validatePhoneNumbers(phone)) {
       showStatus({
@@ -203,8 +112,6 @@ const LoginScreen = () => {
     try {
       setLoading(true);
       showLoader(true);
-      // const response = await sendLoginOtp(phone);
-      // logger.log('phonephone', phone)
       const response = await checkPhone(phone);
       logger.log('handleContinueLoginresponse', response);
       logger.log('OTP Response:', response);
@@ -240,8 +147,6 @@ const LoginScreen = () => {
   };
 
   const handleContinueRest = async () => {
-    // logger.log(phone);
-    // logger.log('handleContinueResthandleContinueResttype', type);
 
     if (!validatePhoneNumbers(phone)) {
       showStatus({
@@ -262,8 +167,6 @@ const LoginScreen = () => {
       if (type === 'reset') {
         response = await sendForgotPwdOtp(phone);
       }
-      // logger.log('handleContinueRestresponse', response)
-      // logger.log('OTP Response:', response);
 
       if (response?.success && response?.data) {
         navigation.navigate('OtpScreen', {
@@ -356,32 +259,7 @@ const LoginScreen = () => {
               <Text style={styles.continueButtonText}>Continue</Text>
             </TouchableOpacity>
           </Animated.View>
-          {/* <View style={styles.bottomContainer}>
-                        <Text style={styles.headerText}>Login or Sign up</Text>
-                        <Text style={styles.enterNumberText}>Enter your password</Text>
-
-                        <View style={styles.inputContainer}>
-                            <View style={styles.inputWrapper}>
-                                <TextInput
-                                    placeholder="Enter password"
-                                    placeholderTextColor="#DADADA"
-                                    style={styles.input}
-                                    secureTextEntry={showPassword}
-                                />
-                                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                                    <Image style={styles.eyeIcon} source={require('../assets/images/eye_icon.png')} />
-                                </TouchableOpacity>
-                            </View>
-                        </View>
-
-                        <TouchableOpacity onPress={() => navigation.navigate('ChangePwdScreen')}>
-                            <Text style={styles.forgotPwdText}>Forgot password</Text>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity style={styles.continueButton}>
-                            <Text style={styles.continueButtonText}>Continue</Text>
-                        </TouchableOpacity>
-                    </View> */}
+          {}
         </ScrollView>
       </KeyboardAvoidingView>
     </View>

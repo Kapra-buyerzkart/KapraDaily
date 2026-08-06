@@ -1,7 +1,5 @@
 import { withTiming, Easing } from 'react-native-reanimated';
 
-// Used for the floating "View cart" pill (SelectedProducts) appearing when
-// the first item is added and disappearing when the cart empties.
 export function cartPillSlideIn() {
   'worklet';
   return {

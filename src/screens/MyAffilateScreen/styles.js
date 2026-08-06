@@ -11,7 +11,7 @@ const GRAY_600 = '#6B6B6B';
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FFFFFF' },
   centered: { alignItems: 'center', justifyContent: 'center' },
-  errorText: { fontSize: 13, color: GRAY_600 },
+  errorText: { fontSize: 13, fontFamily: FONTS.gilroy.regular, color: GRAY_600 },
 
   header: {
     flexDirection: 'row',
@@ -35,8 +35,13 @@ const styles = StyleSheet.create({
     backgroundColor: GRAY_50,
   },
   headerTextWrap: { flex: 1 },
-  headerTitle: { fontSize: 20, fontWeight: '700', color: INK },
-  headerSub: { fontSize: 12, color: GRAY_600, marginTop: 2 },
+  headerTitle: { fontSize: 20, fontFamily: FONTS.gilroy.bold, color: INK },
+  headerSub: {
+    fontSize: 12,
+    fontFamily: FONTS.gilroy.regular,
+    color: GRAY_600,
+    marginTop: 2,
+  },
 
   summaryStrip: {
     flexDirection: 'row',
@@ -52,8 +57,13 @@ const styles = StyleSheet.create({
     padding: 14,
   },
   sumCardAccent: { backgroundColor: ORANGE },
-  sumLabel: { fontSize: 11, color: 'rgba(255,255,255,0.7)', marginBottom: 6 },
-  sumVal: { fontSize: 18, fontWeight: '700', color: '#FFFFFF' },
+  sumLabel: {
+    fontSize: 11,
+    fontFamily: FONTS.gilroy.medium,
+    color: 'rgba(255,255,255,0.7)',
+    marginBottom: 6,
+  },
+  sumVal: { fontSize: 18, fontFamily: FONTS.gilroy.bold, color: '#FFFFFF' },
 
   listContent: { paddingHorizontal: 16, gap: 10 },
 
@@ -85,21 +95,59 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   levelBadgeFilled: { backgroundColor: ORANGE },
-  levelBadgeFilledText: { fontSize: 12, fontWeight: '700', color: '#FFFFFF' },
+  levelBadgeFilledText: {
+    fontSize: 12,
+    fontFamily: FONTS.gilroy.bold,
+    color: '#FFFFFF',
+  },
   levelBadgeEmpty: { backgroundColor: GRAY_50 },
-  levelBadgeEmptyText: { fontSize: 12, fontWeight: '700', color: GRAY_500 },
+  levelBadgeEmptyText: {
+    fontSize: 12,
+    fontFamily: FONTS.gilroy.bold,
+    color: GRAY_500,
+  },
 
   levelInfo: { flex: 1, minWidth: 0 },
-  levelName: { fontSize: 14, fontWeight: '600', color: '#FFFFFF' },
-  levelNameEmpty: { fontSize: 14, fontWeight: '600', color: GRAY_500 },
-  levelDesc: { fontSize: 12, color: 'rgba(255,255,255,0.6)', marginTop: 2 },
-  levelDescEmpty: { fontSize: 12, color: GRAY_600, marginTop: 2 },
+  levelName: {
+    fontSize: 14,
+    fontFamily: FONTS.gilroy.semiBold,
+    color: '#FFFFFF',
+  },
+  levelNameEmpty: {
+    fontSize: 14,
+    fontFamily: FONTS.gilroy.semiBold,
+    color: GRAY_500,
+  },
+  levelDesc: {
+    fontSize: 12,
+    fontFamily: FONTS.gilroy.regular,
+    color: 'rgba(255,255,255,0.6)',
+    marginTop: 2,
+  },
+  levelDescEmpty: {
+    fontSize: 12,
+    fontFamily: FONTS.gilroy.regular,
+    color: GRAY_600,
+    marginTop: 2,
+  },
 
   levelRight: { alignItems: 'flex-end' },
-  levelCount: { fontSize: 14, fontWeight: '700', color: '#FFFFFF' },
-  levelCountUnit: { color: 'rgba(255,255,255,0.6)', fontWeight: '400' },
-  levelCountEmpty: { fontSize: 13, color: GRAY_500 },
-  levelBt: { fontSize: 12, color: ORANGE, marginTop: 2, fontWeight: '600' },
+  levelCount: { fontSize: 14, fontFamily: FONTS.gilroy.bold, color: '#FFFFFF' },
+  levelCountUnit: {
+    fontFamily: FONTS.gilroy.regular,
+    color: 'rgba(255,255,255,0.6)',
+  },
+  levelCountEmpty: {
+    fontSize: 13,
+    fontFamily: FONTS.gilroy.regular,
+    color: GRAY_500,
+  },
+  levelBt: {
+    fontSize: 12,
+    fontFamily: FONTS.gilroy.semiBold,
+    color: ORANGE,
+    marginTop: 2,
+  },
 });
 
 export default styles;

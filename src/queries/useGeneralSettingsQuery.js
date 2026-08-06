@@ -17,7 +17,7 @@ const selectStoreUnavailableData = (response) => {
     },
     closed: {
       image: closedImageItem ? closedImageItem.stValue : null,
-      text: '', // populated from the homepage API response message at render time
+      text: '',
     },
   };
 };
@@ -27,7 +27,7 @@ const useGeneralSettingsQuery = () =>
     queryKey: homeKeys.generalSettings(),
     queryFn: getGeneralSettingsApi,
     select: selectStoreUnavailableData,
-    staleTime: 60 * 60 * 1000, // 1h — admin-configured copy, changes rarely
+    staleTime: 60 * 60 * 1000,
   });
 
 export default useGeneralSettingsQuery;

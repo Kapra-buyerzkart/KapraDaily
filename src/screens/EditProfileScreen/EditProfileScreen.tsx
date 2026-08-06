@@ -31,16 +31,6 @@ import {
 } from '@/styles/homeTheme';
 import { BAR_SOLID_AT, BORDER_FADE_RANGE, entrance } from '@/styles/motion';
 
-// Built as the page Profile pushes to rather than as a form that happens to be
-// reachable from it: the same peach hero with the same avatar at the top, the
-// same sticky bar resolving from peach to white, the same left gutter down the
-// whole page, and then a white sheet carrying two named groups of fields.
-//
-// The two groups exist because the six inputs split cleanly into what the user
-// owns and what the account owns. Putting the locked email and phone in their
-// own section with one shared note is what let them stop apologising twice in
-// their own labels — the old screen carried "(Update from Security)" inside
-// both, which is a parenthesis doing a section header's job.
 const EditProfileScreen = () => {
   const {
     navigation,
@@ -64,10 +54,6 @@ const EditProfileScreen = () => {
     handleSave,
   } = useEditProfileScreen();
 
-  // The bar's animations read the scroll value on the UI thread, so scrolling
-  // this screen never re-renders it. `heroAnchor` is the offset at which the
-  // hero's bottom edge reaches the bar — measured rather than assumed, because
-  // it moves with the font scale and with whether the crown badge is drawn.
   const scrollY = useSharedValue(0);
   const heroAnchor = useSharedValue(0);
   const scrollHandler = useAnimatedScrollHandler({
@@ -82,8 +68,6 @@ const EditProfileScreen = () => {
     [heroAnchor],
   );
 
-  // Return moves down the form rather than dismissing the keyboard — on a form
-  // this short the whole thing can be filled without reaching for a field.
   const dobRef = React.useRef<TextInput>(null);
   const skIdRef = React.useRef<TextInput>(null);
 
@@ -96,9 +80,6 @@ const EditProfileScreen = () => {
     ),
   }));
 
-  // Peach at rest, white once the hero is gone, so the two never meet at a
-  // visible edge. Before measurement it stays on HERO_TOP — that is what the
-  // page looks like at rest, which is where an unmeasured screen always is.
   const topBarBackgroundStyle = useAnimatedStyle(() => {
     const anchor = heroAnchor.value;
     if (anchor <= 0) return { backgroundColor: HERO_TOP };
@@ -113,9 +94,7 @@ const EditProfileScreen = () => {
 
   return (
     <View style={styles.mainContainer}>
-      {/* The page is peach to the top edge, so the status bar's icons have to
-          be dark here. Unmounting pops the entry and Profile gets its own
-          setting back on the way out. */}
+      {}
       <StatusBar
         translucent
         backgroundColor="transparent"
@@ -141,10 +120,7 @@ const EditProfileScreen = () => {
             borderStyle={topBarBorderStyle}
           />
 
-          {/* The gradient is never animated in — its children are. Fading the
-              whole hero would leave the sticky bar, already painted the hero's
-              colour, as a peach strip over a white page for the length of the
-              entrance. */}
+          {}
           <LinearGradient colors={HERO_GRADIENT} style={styles.hero}>
             <EditProfileHero
               name={fullName}
@@ -195,8 +171,7 @@ const EditProfileScreen = () => {
           <Animated.View entering={entrance(2)}>
             <SectionHeader title="Contact details" />
             <View style={styles.fieldGroup}>
-              {/* A locked field with nothing in it still has to say what it
-                  is, or it reads as a value that failed to load. */}
+              {}
               <ProfileTextField
                 label="Email ID"
                 icon="email-outline"

@@ -22,7 +22,7 @@ export const styles = StyleSheet.create({
   imageSection: {
     width: '100%',
     height: '50%',
-    backgroundColor: '#E0F2F1', // Light teal background
+    backgroundColor: '#E0F2F1',
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
@@ -63,7 +63,7 @@ export const styles = StyleSheet.create({
     fontFamily: Fonts.gilroyRegular,
     color: fontColors.titleBlack,
     marginBottom: hp('0.5%'),
-    height: hp('4%'), // Fixed height for 2 lines
+    height: hp('4%'),
   },
   ratingContainer: {
     flexDirection: 'row',

@@ -26,8 +26,6 @@ const StoreUnavailable = ({
     }
   };
 
-  // `imageSource` is a bundled require() (local asset); `image` is a remote
-  // path resolved against the CDN base url. Prefer the local source when given.
   const resolvedSource = imageSource
     ? imageSource
     : image

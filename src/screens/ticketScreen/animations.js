@@ -13,7 +13,6 @@ export const useTicketAnimations = (width, onComplete) => {
     const fadeToBlackOpacity = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
-        // Background circles animation
         const circleAnimation1 = Animated.loop(
             Animated.sequence([
                 Animated.parallel([
@@ -41,9 +40,7 @@ export const useTicketAnimations = (width, onComplete) => {
             ])
         );
 
-        // Main animation sequence
         const mainAnimation = Animated.sequence([
-            // Phase 1: Logo appears with spring
             Animated.parallel([
                 Animated.spring(logoScale, {
                     toValue: 1,
@@ -57,7 +54,6 @@ export const useTicketAnimations = (width, onComplete) => {
                     useNativeDriver: true,
                 }),
             ]),
-            // Phase 2: Tagline slides up
             Animated.delay(200),
             Animated.parallel([
                 Animated.timing(taglineOpacity, {
@@ -72,7 +68,6 @@ export const useTicketAnimations = (width, onComplete) => {
                     useNativeDriver: true,
                 }),
             ]),
-            // Phase 4: Fade to black
             Animated.timing(fadeToBlackOpacity, {
                 toValue: 1,
                 duration: 600,

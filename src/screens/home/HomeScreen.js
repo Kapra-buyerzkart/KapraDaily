@@ -50,13 +50,6 @@ import images from '@/assets/images';
 
 const UDENDEAL_SEAL = require('../../assets/images/udendealSeal.png');
 
-// Hoisted out of the render path: these are props on the (memoised)
-// ProductBlock, so rebuilding them inline meant ProductBlock's memo could
-// never hit and all three product rails re-rendered on every home render.
-// All three rails now share one content inset. They previously each declared a
-// different paddingLeft (2% / 5% / 4.6%), so the first card in each rail started
-// at a different x — the single most visible source of "unfinished" on the old
-// screen, since the rails stack directly on top of each other.
 const RAIL_CONTENT_STYLE = {
   paddingLeft: wp('3.2%'),
   paddingRight: wp('2%'),
@@ -69,8 +62,6 @@ const HomeScreen = () => {
   const { top, bottom } = useSafeAreaInsets();
   const PROFILE_AVATAR_SIZE = Math.min(wp('14%'), 56);
 
-  // Seeded with an estimate, corrected by the header's own onLayout: `height`
-  // pads the scroll content, `searchY` gives the collapse distance.
   const [headerMetrics, setHeaderMetrics] = useState(() =>
     estimateHeaderMetrics(top, true),
   );
@@ -102,24 +93,13 @@ const HomeScreen = () => {
 
   const navigation = useNavigation();
   const [isProfileLoaded, setIsProfileLoaded] = useState(false);
-  // Visibility is driven imperatively through the sheet's ref (open/close),
-  // not React state — so tapping the location doesn't re-render Home or
-  // remount the sheet, it just triggers the present animation.
   const locationModalRef = useRef(null);
   const [selectedDiscoveryCategory, setSelectedDiscoveryCategory] =
     useState(null);
   const [refreshing, setRefreshing] = useState(false);
-  const { profile, loadProfileTwo } = useContext(AppContext);
+  const { profile, loadProfileTwo, setStoreUnavailable } =
+    useContext(AppContext);
 
-  // Reconciles the locally-stored profile (guestId, pincode) on mount. This no
-  // longer raises the global blocking loader: by the time HomeScreen mounts,
-  // RootNavigator has already resolved `profile`, so the overlay was covering a
-  // screen that was ready to paint and delaying first meaningful content by the
-  // duration of two Keychain reads.
-  //
-  // The loadProfileTwo() call itself is kept: it is what mints a guestId and
-  // normalises pincodeAreaId for guest sessions, and dropping it would change
-  // who the login-redirect below fires for.
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -168,9 +148,6 @@ const HomeScreen = () => {
   }, [profile?.pincode]);
 
   const data = homepageQuery.data;
-  // Memoised: this rebuilt its result object on every render (including every
-  // scroll-driven one), so `storeUnavailableData` was a fresh reference each
-  // time and defeated memoisation in everything it was passed to.
   const { isStoreUnavailable, storeUnavailableData } = useMemo(
     () =>
       deriveStoreUnavailableState({
@@ -181,42 +158,29 @@ const HomeScreen = () => {
     [data, homepageQuery.error, generalSettingsQuery.data],
   );
 
-  // No location chosen yet — mirrors the header's "Select Location" signal
-  // (StickyHeader gates on the same `profile?.pinAddress`), so header and body
-  // stay in sync and clear together the moment editPincode sets an address.
-  //
-  // Gated on `isProfileLoaded`, because a bare `!profile?.pinAddress` cannot
-  // tell "no location" apart from "not asked yet": `pinAddress` lives only in
-  // the persisted profile, and the reconciliation above that brings it back is
-  // an async Keychain read that has not finished on the frames right after
-  // mount. Answering there painted the whole no-location state — orange header
-  // plus the body's Select-Location panel — and withdrew it half a second
-  // later. The positive case is *not* gated: an address already on `profile`
-  // is known to be right and renders immediately.
+  const isHomepageResolved = !!data || !!homepageQuery.error;
+  useEffect(() => {
+    if (!isHomepageResolved) return;
+    setStoreUnavailable(isStoreUnavailable, storeUnavailableData);
+  }, [
+    isHomepageResolved,
+    isStoreUnavailable,
+    storeUnavailableData,
+    setStoreUnavailable,
+  ]);
+
   const hasLocation = !!profile?.pinAddress;
   const noLocationSelected = isProfileLoaded && !hasLocation;
-  // Neither answer is available yet. The header holds the block's footprint
-  // and the body runs its normal shimmers rather than committing either way.
   const isLocationPending = !isProfileLoaded && !hasLocation;
 
   const popupData = data?.popup || homepageQuery.error?.popup || null;
   const { isHomePopupVisible, handleClose, handlePopupPress } =
     useHomePopup(popupData);
 
-  // Memoised so it is not a brand-new array each render: it is a dependency of
-  // handleBannerPress, and an unstable identity there would have given that
-  // callback a new identity every render anyway.
   const categories = useMemo(() => data?.categories || EMPTY_BANNERS, [data]);
-  // `|| EMPTY_BANNERS`, not `|| []`: while `data` is undefined (every mount, up
-  // until the keychain read behind `areaId` resolves) a literal produced a
-  // brand-new array on every render, so React.memo on every consumer below —
-  // StickyHeader included — could never hit and they all re-rendered on each
-  // pass. The shared constant keeps those props referentially stable.
   const topBanner = data?.banners?.topBanner || EMPTY_BANNERS;
   const midBanner = data?.banners?.midBanner || EMPTY_BANNERS;
   const bottomBanner = data?.banners?.bottomBanner || EMPTY_BANNERS;
-  // Held across the data gap so the header never drops to its bannerless
-  // (orange) variant and back — see useStickyTopBanner.
   const topSectionBanner = useStickyTopBanner(
     data?.banners?.topSectionBanner,
     !!data,
@@ -232,10 +196,6 @@ const HomeScreen = () => {
   const thirdProductBlock = data?.thirdProductBlock;
   const categoryDiscovery = data?.categoryDiscovery;
 
-  // True during pull-to-refresh, and also while the homepage query is fetching
-  // a freshly-selected area for which we have no cached data yet — so the body
-  // shows its shimmers (instead of a blank screen) right after the user picks a
-  // location, giving feedback that the new area's data is on its way.
   const isHomeLoading =
     refreshing || (!noLocationSelected && homepageQuery.isLoading);
   const fruits = bottomBanner;
@@ -359,11 +319,6 @@ const HomeScreen = () => {
 
       <Animated.ScrollView
         onScroll={scrollHandler}
-        // 1, not 16: `scrollHandler` is a reanimated worklet, so the events
-        // never reach the JS thread and cost effectively nothing. At 16 the
-        // header collapse, banner parallax and ETA fade were only fed ~60
-        // events a second, so they updated on every other frame on a 120Hz
-        // display.
         scrollEventThrottle={1}
         style={styles.scroll}
         contentContainerStyle={scrollContentStyle}
@@ -372,10 +327,7 @@ const HomeScreen = () => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            // The spinner would otherwise drop in behind the header overlay.
             progressViewOffset={headerMetrics.height}
-            // The default spinner is system grey. Tinting it is the one moment
-            // in the pull-to-refresh gesture where the brand can show up.
             tintColor={ACCENT.primary}
             colors={[ACCENT.primary]}
           />
@@ -514,8 +466,7 @@ const HomeScreen = () => {
         )}
       </Animated.ScrollView>
 
-      {/* `box-none`: once the header translates up, taps in the band it
-          vacated fall through to the content scrolling beneath it. */}
+      {}
       <View style={styles.headerOverlay} pointerEvents="box-none">
         <StickyHeader
           top={top}

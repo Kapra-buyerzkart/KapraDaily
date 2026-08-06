@@ -30,7 +30,6 @@ export const getVoucherImageSource = item => {
   for (const key of VOUCHER_IMAGE_KEYS) {
     const value = item?.[key];
     if (!value) continue;
-    // cardImage / image may already be a resolved source (require(...) or {uri}).
     if (typeof value !== 'string') return value;
     const source = toImageUri(value);
     if (source) return source;
@@ -46,7 +45,6 @@ export const getEventGalleryImages = event => {
   const sources = gallery
     .map((img, index) => ({ source: toImageUri(img?.imageUrl), img, index }))
     .filter(entry => entry.source)
-    // Keep the payload order when displayOrder ties or is missing.
     .sort(
       (a, b) =>
         (a.img?.displayOrder ?? 0) - (b.img?.displayOrder ?? 0) ||

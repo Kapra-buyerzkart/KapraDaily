@@ -34,7 +34,6 @@ function emitBadgeCount(count: number): void {
     try {
       listener(count);
     } catch {
-      // ignore listener errors
     }
   });
 }
@@ -53,7 +52,6 @@ export async function setNotificationBadgeCount(count: number): Promise<number> 
   try {
     await AsyncStorage.setItem(NOTIFICATION_BADGE_STORAGE_KEY, String(normalized));
   } catch {
-    // ignore storage write errors
   }
   emitBadgeCount(normalized);
   return normalized;
@@ -112,7 +110,6 @@ function scheduleEnsureExternalId(): void {
 
       OneSignal.login(expectedExternalId);
     } catch {
-      // ignore and retry below
     } finally {
       ensureExternalIdAttempt += 1;
       if (ensureExternalIdAttempt < 6) {
@@ -124,9 +121,6 @@ function scheduleEnsureExternalId(): void {
   }, 1500);
 }
 
-/**
- * Detailed diagnostic check for OneSignal registration status.
- */
 export async function checkOneSignalStatus(): Promise<void> {
   try {
     const hasPermission = await OneSignal.Notifications.getPermissionAsync();
@@ -177,7 +171,6 @@ export function initOneSignal(): void {
 
   OneSignal.initialize(ONE_SIGNAL_APP_ID);
 
-  // Initial diagnostic check
   setTimeout(checkOneSignalStatus, 3000);
 
   OneSignal.User.pushSubscription.addEventListener('change', (event) => {
@@ -191,11 +184,9 @@ export function initOneSignal(): void {
     const notification = event.getNotification();
     logger.log('🔔 [OneSignal] Foreground notification received:', notification?.title);
 
-    // Increment local badge count
     const incrementBy = parseBadgeCount(notification?.badgeIncrement) || 1;
     void incrementNotificationBadgeCount(incrementBy);
 
-    // This ensures the notification actually displays as a banner while the app is open
     event.getNotification().display();
   });
 

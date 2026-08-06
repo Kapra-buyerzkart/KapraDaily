@@ -18,14 +18,6 @@ import {
   STRETCH_DISTANCE,
 } from '../constants';
 
-// The banner starts as a rounded card at the top of the page and, as the user
-// scrolls, shrinks and slides up into the header until it's a circle sitting
-// next to the back button, where it stays pinned. The event name fades in
-// beside it at the same moment.
-//
-// The banner lives outside the ScrollView (absolutely positioned over it) so it
-// can survive past the top of the scroll area; the scroll content just reserves
-// BANNER_HEIGHT of padding where the banner visually sits.
 const useCollapsibleBanner = insets => {
   const headerTop = getHeaderPaddingTop(insets);
   const headerHeight = headerTop + BACK_BUTTON_SIZE + HEADER_PADDING_BOTTOM;
@@ -65,8 +57,6 @@ const useCollapsibleBanner = insets => {
     };
   });
 
-  // Title only earns its place once the banner is nearly docked, otherwise it
-  // competes with the large title still sitting in the page body.
   const headerTitleStyle = useAnimatedStyle(() => {
     const range = [COLLAPSE_DISTANCE * 0.55, COLLAPSE_DISTANCE];
     return {
@@ -84,8 +74,6 @@ const useCollapsibleBanner = insets => {
     };
   });
 
-  // Hairline under the header, so the docked row reads as a separate surface
-  // from the content sliding beneath it.
   const headerDividerStyle = useAnimatedStyle(() => ({
     opacity: interpolate(
       scrollY.value,

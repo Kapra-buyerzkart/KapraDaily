@@ -5,8 +5,6 @@ export const getEventDetailsListApi = async config => {
   return get('eventdetails/list', config);
 };
 
-//APi used in eventDetailsScreen
-
 export const getEventDetailsByIdApi = async (eventId, config) => {
   return get(`eventdetails/${eventId}`, config);
 };

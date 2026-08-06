@@ -52,12 +52,9 @@ const PaymentFailedModal = ({
         if (finished) runOnJS(setMounted)(false);
       });
     }
-    // scale/opacity are stable shared values - only re-run when visibility flips.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
 
-  // Plain overlay has no native surface of its own, so the hardware back
-  // button no longer gets swallowed for free the way RN's Modal did it.
   useEffect(() => {
     if (Platform.OS !== 'android' || !visible) return undefined;
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {

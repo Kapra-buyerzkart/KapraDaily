@@ -48,8 +48,6 @@ const MyOrdersScreen = () => {
       showLoader(true);
       const response = await getMyOrdersApi();
       logger.log('My Orders Response:', response);
-      // Assuming response structure: { success: true, data: { items: [...] } } or similar
-      // User did not provide response example for list, but usually consistent.
       if (
         response &&
         response.success &&
@@ -84,7 +82,7 @@ const MyOrdersScreen = () => {
         } else {
           navigation.navigate('HomeScreen');
         }
-        return true; // Prevent default (closing the app)
+        return true;
       };
       const subscription = BackHandler.addEventListener(
         'hardwareBackPress',
@@ -110,10 +108,7 @@ const MyOrdersScreen = () => {
         </TouchableOpacity>
 
         <Text style={styles.headerText}>My Orders</Text>
-        {/* <Image
-            style={styles.bearImage}
-            source={require('../assets/images/bear2.png')}
-          /> */}
+        {}
       </View>
       <View style={styles.listContainer}>
         <FlatList

@@ -71,14 +71,12 @@ const CheckoutScreen = () => {
   const { showLoader } = useContext(LoaderContext);
   const { profile } = useContext(AppContext);
 
-  // Modal state
   const [statusModalVisible, setStatusModalVisible] = useState(false);
   const [statusType, setStatusType] = useState('success');
   const [statusTitle, setStatusTitle] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
   const [onModalClose, setOnModalClose] = useState(null);
 
-  // Delivery & Payment selection
   const [deliveryType, setDeliveryType] = useState(
     selectedDeliveryType === 'slotted' || selectedDeliveryType === 'slot'
       ? 'slot'
@@ -90,16 +88,13 @@ const CheckoutScreen = () => {
   const [chosenSlot, setChosenSlot] = useState(null);
   const scrollViewRef = React.useRef(null);
 
-  // Get currently selected address from global context
   const currentSelectedAddress =
     addresses.find(a => a.selected) || selectedAddress;
 
-  // Unified checkout initialization and dependency refresh
   useEffect(() => {
     const currentPincodeAreaId =
       pincodeAreaId || currentSelectedAddress?.pincodeAreaId;
 
-    // Refresh summary whenever key dependencies change
     if (currentPincodeAreaId) {
       const apiDeliveryMode = deliveryType === 'slot' ? 'slotted' : 'express';
       logger.log(
@@ -112,7 +107,6 @@ const CheckoutScreen = () => {
     }
   }, [currentSelectedAddress?.id, deliveryType, selectedSlot, pincodeAreaId]);
 
-  // ─── Bill calculations (Matches useCartScreen logic) ───
   const frontendBillCalculations = React.useMemo(() => {
     let mrpTotal = 0;
     let itemTotal = 0;
@@ -141,13 +135,10 @@ const CheckoutScreen = () => {
   }, [cartItems]);
 
   const billCalculations = React.useMemo(() => {
-    // 1. Priority: Preloaded calculations passed from CartScreen (if available & valid)
     if (preloadedBillCalculations) {
       return preloadedBillCalculations;
     }
 
-    // 2. Priority: Server-side Summary
-    // If we have a preloaded summary, use that structure, otherwise context summary
     const summary = cartSummary || preloadedCartSummary;
 
     if (summary) {
@@ -165,7 +156,6 @@ const CheckoutScreen = () => {
         toPay: summary.grandTotal ?? frontendBillCalculations.toPay,
       };
     }
-    // 3. Fallback: Frontend calculations
     return frontendBillCalculations;
   }, [
     cartSummary,
@@ -174,7 +164,6 @@ const CheckoutScreen = () => {
     preloadedCartSummary,
   ]);
 
-  // Fetch payment modes once on mount
   useEffect(() => {
     const fetchPaymentModes = async () => {
       try {
@@ -187,15 +176,12 @@ const CheckoutScreen = () => {
         if (response?.success && response?.data) {
           let modes = [...response.data];
 
-          // Check if an online payment mode exists
           const hasOnline = modes.some(m =>
             ['online', 'prepaid', 'razorpay', 'upi'].includes(
               m.paymentModeName?.toLowerCase(),
             ),
           );
 
-          // FOR TESTING: If no online mode is returned by backend, inject one
-          // so the Razorpay implementation can be tested.
           if (!hasOnline) {
             logger.log(
               '💳 [CHECKOUT] Injecting Online mode for testing purposes.',
@@ -241,12 +227,10 @@ const CheckoutScreen = () => {
       showLoader(true);
 
       if (resumeOrderId) {
-        // Skip creation, go straight to payment logic
         logger.log(
           '🔄 [CHECKOUT] Resuming payment for existing order:',
           resumeOrderId,
         );
-        // When resuming, we use the provided razorpay details if available
         await handlePaymentFlow(
           resumeOrderId,
           resumeOrderId,
@@ -297,7 +281,6 @@ const CheckoutScreen = () => {
         if (isOnlinePayment) {
           await handlePaymentFlow(orderId, orderNumber);
         } else {
-          // --- COD FLOW ---
           const confirmResponse = await confirmCodApi(orderId);
           if (confirmResponse?.success) {
             await finalizeOrder(createResponse.data);
@@ -403,7 +386,7 @@ const CheckoutScreen = () => {
 
           let verifyResponse;
           let retryCount = 0;
-          const maxRetries = 2; // Initial attempt + 2 retries = 3 attempts total
+          const maxRetries = 2;
 
           const attemptVerification = async () => {
             try {
@@ -423,7 +406,6 @@ const CheckoutScreen = () => {
 
           verifyResponse = await attemptVerification();
 
-          // Retry logic if failed or pending
           while (
             (!verifyResponse?.success ||
               verifyResponse?.status === 'pending') &&
@@ -440,7 +422,6 @@ const CheckoutScreen = () => {
           if (verifyResponse?.success) {
             await finalizeOrder({ orderId, orderNumber });
           } else {
-            // Verify API returned success: false — show pending screen
             showLoader(false);
             navigation.navigate('OrderPendingScreen', {
               orderId,
@@ -487,7 +468,6 @@ const CheckoutScreen = () => {
     );
     setStatusModalVisible(true);
 
-    // Wait for 3 seconds as suggested
     setTimeout(async () => {
       try {
         const response = await getOrderDetailsApi(orderId);
@@ -528,7 +508,6 @@ const CheckoutScreen = () => {
               'We could not verify your payment. Please check your order status in the My Orders section.',
           });
 
-          // Sync cart state
           refreshCart();
         }
       } catch (err) {
@@ -546,8 +525,8 @@ const CheckoutScreen = () => {
   };
 
   const finalizeOrder = async orderData => {
-    await clearCart(); // Local clear
-    if (clearSelectedAddress) clearSelectedAddress(); // Clear selected address
+    await clearCart();
+    if (clearSelectedAddress) clearSelectedAddress();
     showLoader(false);
     navigation.navigate('OrderSuccessScreen', {
       orderId: orderData.orderId,
@@ -573,7 +552,7 @@ const CheckoutScreen = () => {
 
   return (
     <SafeAreaView style={styles.mainContainer}>
-      {/* Header */}
+      {}
       <View style={styles.headerContainer}>
         <TouchableOpacity hitSlop={40} onPress={() => navigation.goBack()}>
           <Image
@@ -592,7 +571,7 @@ const CheckoutScreen = () => {
         ref={scrollViewRef}
         contentContainerStyle={styles.scrollContent}
       >
-        {/* Delivery Address Section */}
+        {}
         <View style={styles.sectionContainer}>
           <View style={styles.sectionHeader}>
             <MaterialCommunityIcons
@@ -660,7 +639,7 @@ const CheckoutScreen = () => {
           </View>
         </View>
 
-        {/* Delivery Schedule Section */}
+        {}
         <View style={styles.sectionContainer}>
           <View style={styles.sectionHeader}>
             <MaterialCommunityIcons
@@ -671,7 +650,7 @@ const CheckoutScreen = () => {
             <Text style={styles.sectionTitle}>Delivery Schedule</Text>
           </View>
           <View style={styles.card}>
-            {/* Express Option */}
+            {}
             <TouchableOpacity
               style={styles.radioRow}
               onPress={() => setDeliveryType('express')}
@@ -701,7 +680,7 @@ const CheckoutScreen = () => {
 
             <View style={styles.radioDivider} />
 
-            {/* Slotted Option */}
+            {}
             <TouchableOpacity
               style={styles.radioRow}
               onPress={() => {
@@ -756,7 +735,7 @@ const CheckoutScreen = () => {
           </View>
         </View>
 
-        {/* Order Items Section */}
+        {}
         <View style={styles.sectionContainer}>
           <View style={styles.sectionHeader}>
             <MaterialCommunityIcons
@@ -795,7 +774,7 @@ const CheckoutScreen = () => {
           </View>
         </View>
 
-        {/* Payment Method Section */}
+        {}
         <View style={styles.sectionContainer}>
           <View style={styles.sectionHeader}>
             <MaterialCommunityIcons
@@ -862,7 +841,7 @@ const CheckoutScreen = () => {
           </View>
         </View>
 
-        {/* Bill Section */}
+        {}
         {cartError && (
           <View style={styles.errorSection}>
             <MaterialCommunityIcons
@@ -881,7 +860,7 @@ const CheckoutScreen = () => {
         )}
       </ScrollView>
 
-      {/* Bottom Bar */}
+      {}
       <View style={styles.bottomBar}>
         <TouchableOpacity
           activeOpacity={0.7}

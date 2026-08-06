@@ -7,9 +7,6 @@ import {
 import ShimmerPlaceholder from '../../../components/ShimmerPlaceholder';
 import { RADIUS, SPACE, GUTTER } from '@/styles/homeTheme';
 
-// Placeholder for the seasonal banner carousel. Mirrors that carousel's
-// geometry (same inset, same card size) so the section does not change shape
-// when the banners land.
 const SeasonalBannerShimmer = () => (
   <View style={styles.container}>
     <View style={styles.header}>

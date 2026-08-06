@@ -22,15 +22,12 @@ const deriveDetails = event => {
     ? ticketCategoriesMap[String(activeSession.sessionId)] || []
     : Object.values(ticketCategoriesMap)[0] || [];
 
-  // "Starts from" price is the cheapest ticket category on the session.
   const categoryPrices = ticketCategories
     .map(category => Number(category?.totalAmount))
     .filter(Number.isFinite);
 
   return {
     name: event?.eventName || event?.title || event?.name || 'Event',
-    // One-line hook shown under the title. Falls back to the organizer credit
-    // in EventSummaryCard when the API sends none.
     tagline:
       event?.tagLine ||
       event?.tagline ||
@@ -69,9 +66,6 @@ const deriveDetails = event => {
 
 const hasId = id => id !== null && id !== undefined;
 
-// The payload is always stored next to the id it belongs to. Anything rendered
-// from a mismatched pair would be the *previous* event's artwork and copy, so
-// the two are only ever swapped together.
 const stateForEvent = (id, seedEvent) => ({
   id,
   event: seedEvent ?? null,
@@ -113,9 +107,6 @@ export default function useEventDetails(route) {
 
     return getEventDetailsByIdApi(eventId)
       .then(res => {
-        // Another event was opened (or another refresh fired) while this call
-        // was in flight. Dropping the answer stops a slow response for the
-        // event the user already left from landing on top of the current one.
         if (requestIdRef.current !== requestId) return;
 
         const data = res?.data ?? res;

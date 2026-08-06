@@ -53,7 +53,6 @@ const AnimatedHeader = memo(
       handleClear,
     } = useAnimatedHeader(onSearchChange);
 
-    // Intercept Android hardware back to exit search before navigating
     useEffect(() => {
       if (!isSearchActive) return;
       const sub = BackHandler.addEventListener('hardwareBackPress', () => {
@@ -71,7 +70,6 @@ const AnimatedHeader = memo(
       }
     }, [isSearchActive, closeSearch, onBack]);
 
-    // Title fades up and out as search opens
     const titleAnimatedStyle = useAnimatedStyle(() => ({
       opacity: interpolate(
         progress.value,
@@ -82,7 +80,6 @@ const AnimatedHeader = memo(
       transform: [{ translateY: interpolate(progress.value, [0, 1], [0, -6]) }],
     }));
 
-    // Search input fades in and grows from slightly scaled to full
     const searchWrapperAnimatedStyle = useAnimatedStyle(() => ({
       opacity: interpolate(
         progress.value,
@@ -93,7 +90,6 @@ const AnimatedHeader = memo(
       transform: [{ scaleX: interpolate(progress.value, [0, 1], [0.88, 1]) }],
     }));
 
-    // Search icon in header fades out as search opens
     const searchIconAnimatedStyle = useAnimatedStyle(() => ({
       opacity: interpolate(
         progress.value,
@@ -105,7 +101,7 @@ const AnimatedHeader = memo(
 
     return (
       <View style={[styles.header, style]}>
-        {/* Back / exit-search button */}
+        {}
         <TouchableOpacity
           onPress={handleBack}
           style={styles.backButton}
@@ -122,9 +118,9 @@ const AnimatedHeader = memo(
           />
         </TouchableOpacity>
 
-        {/* Middle: title and search input layered via absoluteFill */}
+        {}
         <View style={styles.middle}>
-          {/* Title — always in tree, fades out when search opens */}
+          {}
           <Animated.View
             style={[
               StyleSheet.absoluteFill,
@@ -134,11 +130,11 @@ const AnimatedHeader = memo(
             pointerEvents="none"
           >
             <Text style={styles.title} numberOfLines={1}>
-              {/* {title} */}
+              {}
             </Text>
           </Animated.View>
 
-          {/* Search input — mounted while search is active (including close animation) */}
+          {}
           {isSearchActive && (
             <Animated.View
               style={[StyleSheet.absoluteFill, searchWrapperAnimatedStyle]}
@@ -153,9 +149,9 @@ const AnimatedHeader = memo(
           )}
         </View>
 
-        {/* Right-side icons */}
+        {}
         <View style={styles.rightIcons}>
-          {/* Search icon — fades out when search is active */}
+          {}
           <Animated.View
             style={searchIconAnimatedStyle}
             pointerEvents={isSearchActive ? 'none' : 'auto'}
@@ -171,7 +167,7 @@ const AnimatedHeader = memo(
             </TouchableOpacity>
           </Animated.View>
 
-          {/* Filter icon — always visible */}
+          {}
           <TouchableOpacity
             onPress={onFilterPress}
             style={styles.iconButton}

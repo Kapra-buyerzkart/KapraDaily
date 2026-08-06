@@ -10,10 +10,6 @@ import COLORS from '@/styles/colors';
 import { GIFT_CARD_BORDER_GRADIENT } from '@/styles/gradients';
 import icons from '@/assets/icons';
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
 const MONTHS = [
   'JAN',
   'FEB',
@@ -36,13 +32,7 @@ const getDateParts = value => {
   return { month: MONTHS[date.getMonth()], day: date.getDate() };
 };
 
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
-
 const EventCard = ({ item, onPress, index = 0 }) => {
-  // isActive === 0 (or false) means the event is no longer bookable. Block the
-  // press and dim the card with a "Not Available" badge so it reads as disabled.
   const unavailable = item?.isActive === 0 || item?.isActive === false;
 
   const eventStart =
@@ -65,7 +55,7 @@ const EventCard = ({ item, onPress, index = 0 }) => {
       disabled={unavailable}
       onPress={() => !unavailable && onPress?.(item)}
     >
-      {/* Gradient border */}
+      {}
       <LinearGradient
         colors={GIFT_CARD_BORDER_GRADIENT}
         start={{ x: 0, y: 0 }}
@@ -75,7 +65,7 @@ const EventCard = ({ item, onPress, index = 0 }) => {
 
       <View style={styles.inner}>
         <View style={unavailable && styles.dimmed}>
-          {/* ---- Image with scrim & floating badges ---- */}
+          {}
           <View style={styles.imageWrap}>
             <Image
               source={{ uri: CONFIG.image_base_url + item.bannerImage }}
@@ -95,7 +85,7 @@ const EventCard = ({ item, onPress, index = 0 }) => {
               </View>
             )}
 
-            {/* Category chip on image */}
+            {}
             {!!item?.categoryName && (
               <View style={styles.categoryChip}>
                 <Text style={styles.categoryText}>{item.categoryName}</Text>
@@ -103,13 +93,13 @@ const EventCard = ({ item, onPress, index = 0 }) => {
             )}
           </View>
 
-          {/* ---- Body ---- */}
+          {}
           <View style={styles.body}>
             <Text style={styles.title} numberOfLines={1}>
               {displayTitle}
             </Text>
 
-            {/* Location row */}
+            {}
             {!!location && (
               <View style={styles.locationRow}>
                 <Image source={icons.locationtwo} style={styles.locationIcon} />
@@ -119,7 +109,7 @@ const EventCard = ({ item, onPress, index = 0 }) => {
               </View>
             )}
 
-            {/* Info pills */}
+            {}
             <View style={styles.pillsRow}>
               {!!eventStart && (
                 <View style={styles.pill}>
@@ -143,7 +133,7 @@ const EventCard = ({ item, onPress, index = 0 }) => {
           </View>
         </View>
 
-        {/* Unavailable overlay */}
+        {}
         {unavailable && (
           <View style={styles.unavailableOverlay} pointerEvents="none">
             <View style={styles.unavailableBadge}>
@@ -156,19 +146,13 @@ const EventCard = ({ item, onPress, index = 0 }) => {
   );
 };
 
-// ---------------------------------------------------------------------------
-// Styles
-// ---------------------------------------------------------------------------
-
 const styles = StyleSheet.create({
-  // Outer wrapper — the gradient border bleeds through the 1.5 px margin
   card: {
     marginHorizontal: 20,
     marginTop: 16,
     borderRadius: 16,
     overflow: 'hidden',
   },
-  // Inner card sits *inside* the gradient border
   inner: {
     margin: 1.5,
     borderRadius: 14.5,
@@ -176,7 +160,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#141428',
   },
 
-  // ---- Image ----
   imageWrap: {
     position: 'relative',
   },
@@ -188,7 +171,6 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
   },
 
-  // Floating date badge — top-left
   dateBadge: {
     position: 'absolute',
     top: 12,
@@ -215,7 +197,6 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
 
-  // Category chip — top-right
   categoryChip: {
     position: 'absolute',
     top: 12,
@@ -233,7 +214,6 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
 
-  // ---- Body ----
   body: {
     padding: 14,
     gap: 10,
@@ -245,7 +225,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
 
-  // Location
   locationRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -263,7 +242,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Gilroy-Medium',
   },
 
-  // Pills
   pillsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -306,7 +284,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Gilroy-Medium',
   },
 
-  // Unavailable
   dimmed: {
     opacity: 0.45,
   },

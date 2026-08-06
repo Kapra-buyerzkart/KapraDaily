@@ -1,14 +1,3 @@
-// Centralized, redacting logger.
-//
-// Goals:
-//  - In production builds (__DEV__ === false), `log` and `info` are no-ops so we
-//    never leak data to logcat / Console / crash collectors.
-//  - `warn` and `error` are kept in production (useful for diagnostics) but every
-//    argument is deep-redacted so tokens, payment data and PII never appear.
-//
-// Usage: import logger from '../utils/logger'; logger.log('label', payload)
-// Prefer this over console.* anywhere a value could contain user/auth/payment data.
-
 const SENSITIVE_KEY_PATTERNS = [
   'token',
   'authorization',
@@ -16,7 +5,7 @@ const SENSITIVE_KEY_PATTERNS = [
   'pwd',
   'secret',
   'signature',
-  'razorpay', // razorpayPaymentId / razorpaySignature / razorpay_order_id
+  'razorpay',
   'otp',
   'phone',
   'contact',
@@ -39,8 +28,6 @@ const isSensitiveKey = key => {
   return SENSITIVE_KEY_PATTERNS.some(pattern => k.includes(pattern));
 };
 
-// Deep-clone `value` while masking any property whose key looks sensitive.
-// Guards against cycles and very deep objects.
 const redact = (value, depth = 0, seen = new WeakSet()) => {
   if (value == null || typeof value !== 'object') {
     return value;
@@ -69,15 +56,11 @@ const redactArgs = args => {
   try {
     return args.map(arg => redact(arg));
   } catch {
-    // If anything goes wrong while redacting, fail closed (don't log raw values).
     return [REDACTED];
   }
 };
 
 const logger = {
-  // Dev-only, NOT redacted. For tracing flows where the redacted keys are the
-  // ones you need to read (payment ids, gateway order ids, signatures). Stripped
-  // to a no-op in release builds, so nothing reaches logcat / Console there.
   debug: (...args) => {
     if (__DEV__) {
       console.log(...args);

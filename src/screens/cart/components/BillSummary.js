@@ -139,7 +139,6 @@ const styles = StyleSheet.create({
     backgroundColor: CART_COLORS.card,
     borderRadius: CART_RADIUS.card,
     padding: CART_SPACING.lg,
-    // ...CART_SHADOW,
   },
   row: {
     flexDirection: 'row',

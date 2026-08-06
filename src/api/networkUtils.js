@@ -14,15 +14,10 @@ let logoutHandler = () => {
 
 let isLoggingOut = false;
 
-/**
- * Registers a callback for handling 401 Unauthorized logouts from the network layer.
- * @param {Function} handler The logout function to be called on auth failure.
- */
 export const setLogoutHandler = handler => {
   logoutHandler = handler;
 };
 
-/* -------------------- HELPERS -------------------- */
 const checkAuthApi = url => {
   if (!url) return false;
   return (
@@ -39,10 +34,6 @@ const checkAuthApi = url => {
   );
 };
 
-// Endpoints that make up the payment flows (cart order + voucher purchase).
-// Traffic on these is dumped raw via `logger.debug` — dev-only — so a failed
-// payment can be traced end to end without redaction hiding the gateway ids and
-// signatures you actually need to compare against the Razorpay console.
 const PAYMENT_URL_PATTERNS = [
   'payments/razorpay',
   'order/create',
@@ -54,8 +45,6 @@ const PAYMENT_URL_PATTERNS = [
 const isPaymentApi = url =>
   !!url && PAYMENT_URL_PATTERNS.some(p => url.toLowerCase().includes(p));
 
-// axios keeps the outgoing body on `config.data` as a serialized string; parse it
-// back so it logs as an object instead of one long escaped line.
 const safeParse = value => {
   if (typeof value !== 'string') return value;
   try {
@@ -65,7 +54,6 @@ const safeParse = value => {
   }
 };
 
-/* -------------------- ERROR HANDLER -------------------- */
 const errorHandler = error => {
   if (isPaymentApi(error?.config?.url)) {
     logger.debug('[PAY:http] ✖', error?.response?.status, error?.config?.url, {
@@ -83,16 +71,10 @@ const errorHandler = error => {
     error?.message,
   );
 
-  // Dev-only body dump. `logger.debug` is a no-op in production, so the payload
-  // (which can carry PII) never reaches release logs. Status + URL alone don't
-  // say *which* field a 400 rejected — the body does, and it has to be
-  // unredacted: the rejected field is often one the redactor would mask.
   if (error?.response) {
     logger.debug(' [API ERROR BODY]:', {
       url: error?.config?.url,
       status: error?.response?.status,
-      // GETs carry their payload in the query string, not the body — without
-      // this a 400 shows an empty requestBody and hides what was actually sent.
       params: error?.config?.params,
       requestBody: safeParse(error?.config?.data),
       responseBody: error?.response?.data,
@@ -114,15 +96,12 @@ const errorHandler = error => {
     (error?.response?.data?.errors
       ? Object.values(error?.response?.data?.errors).flat().join(', ')
       : null) ||
-    // ASP.NET ProblemDetails 400s often carry only these two.
     error?.response?.data?.detail ||
     error?.response?.data?.title;
 
   const isAuthApi = checkAuthApi(error?.config?.url);
 
-  // 401 and other auth errors are handled by the response interceptor
 
-  // Handle specific database identity conflicts (FK_Carts_Customers)
   if (
     typeof message === 'string' &&
     (message.includes('FK_Carts_Customers') ||
@@ -154,7 +133,6 @@ const errorHandler = error => {
   throw genericError;
 };
 
-/* -------------------- AXIOS INSTANCE -------------------- */
 const axiosInstance = axios.create({
   baseURL: CONFIG.base_url,
   headers: {
@@ -164,7 +142,6 @@ const axiosInstance = axios.create({
   timeout: 20000,
 });
 
-/* -------------------- REQUEST INTERCEPTOR -------------------- */
 axiosInstance.interceptors.request.use(
   async config => {
     const isAuthApi = checkAuthApi(config.url);
@@ -192,7 +169,6 @@ axiosInstance.interceptors.request.use(
   error => Promise.reject(error),
 );
 
-/* -------------------- REFRESH TOKEN LOGIC -------------------- */
 let isRefreshing = false;
 let failedQueue = [];
 
@@ -201,10 +177,6 @@ const processQueue = (error, token = null) => {
   failedQueue = [];
 };
 
-/**
- * Resets the internal state of the network utility.
- * Useful during logout to clear any pending refresh attempts or queues.
- */
 export const resetNetworkState = () => {
   isRefreshing = false;
   isLoggingOut = false;
@@ -212,7 +184,6 @@ export const resetNetworkState = () => {
   logger.log(' [API]: Network state reset.');
 };
 
-/* -------------------- RESPONSE INTERCEPTOR -------------------- */
 axiosInstance.interceptors.response.use(
   response => {
     if (isPaymentApi(response?.config?.url)) {
@@ -224,7 +195,6 @@ axiosInstance.interceptors.response.use(
       );
     }
 
-    // Check for specific database errors that imply an invalid session even if the status is 200 OK
     const data = response.data;
     if (data && data.success === false && data.message) {
       const msg = String(data.message);
@@ -294,10 +264,8 @@ axiosInstance.interceptors.response.use(
           refreshToken: refreshToken,
         });
 
-        // Do NOT log the response body — it contains access/refresh tokens.
         logger.log('🔄 [API]: Refresh response received:', res.status);
 
-        // API returns { success, data: { accessToken, refreshToken } }
         const apiData = res.data?.data || res.data?.Data || res.data;
         const newAccessToken = apiData?.accessToken || apiData?.access_token;
         const newRefreshToken = apiData?.refreshToken || apiData?.refresh_token;
@@ -336,10 +304,8 @@ axiosInstance.interceptors.response.use(
   },
 );
 
-/* -------------------- API METHODS -------------------- */
 export const get = async (url, config) => {
   const res = await axiosInstance.get(url, config);
-  // logger.log('res.data', res.data)
   return res.data;
 };
 
@@ -364,7 +330,7 @@ export const patch = async (url, payload) => {
 };
 
 export const getNew = async (url, config) => {
-  return axiosInstance.get(url, config); // full response
+  return axiosInstance.get(url, config);
 };
 
 export const deleteRequest = async (url, payload) => {

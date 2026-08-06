@@ -385,9 +385,7 @@ const ProductDetailsScreen = () => {
             />
           </ReanimatedView.View>
         </TouchableOpacity>
-        {/* <TouchableOpacity style={styles.headerButton} onPress={handleShare}>
-                    <Ionicons name="share-social-outline" size={20} color={INK.base} />
-                </TouchableOpacity> */}
+        {}
       </View>
     </View>
   );
@@ -847,7 +845,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.94)',
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: HAIRLINE,
-    // ...ELEVATION.md,
     shadowOpacity: 0.06,
     shadowRadius: 10,
     elevation: 2,

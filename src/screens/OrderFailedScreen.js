@@ -37,7 +37,6 @@ const OrderFailedScreen = () => {
   } = route.params || {};
 
   useEffect(() => {
-    // Prevent Android hardware back button
     const backAction = () => {
       return true;
     };
@@ -47,7 +46,6 @@ const OrderFailedScreen = () => {
       backAction,
     );
 
-    // Prevent navigation remove
     const unsubscribe = navigation.addListener('beforeRemove', e => {
       const action = e.data.action;
       if (action.type === 'RESET' || action.type === 'REPLACE') {
@@ -63,7 +61,6 @@ const OrderFailedScreen = () => {
   }, [navigation]);
 
   const handleRetryMethod = () => {
-    // Navigate to OrderTrackingScreen where retry payment is handled directly
     navigation.dispatch(
       CommonActions.reset({
         index: 0,
@@ -111,7 +108,7 @@ const OrderFailedScreen = () => {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
-          {/* Failure Icon Area */}
+          {}
           <View style={styles.failureSection}>
             <View style={styles.iconCircle}>
               <MaterialCommunityIcons
@@ -140,7 +137,7 @@ const OrderFailedScreen = () => {
             </View>
           </View>
 
-          {/* Order Summary Card */}
+          {}
           <View style={styles.orderCard}>
             <View style={styles.orderCardHeader}>
               <MaterialCommunityIcons
@@ -194,7 +191,7 @@ const OrderFailedScreen = () => {
             </View>
           </View>
 
-          {/* Buttons */}
+          {}
           <View style={styles.buttonsContainer}>
             <LinearGradient
               colors={['#F25000', '#FF7B3A']}

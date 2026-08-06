@@ -47,9 +47,8 @@ const OrderSuccessScreen = () => {
       fetchOrderDetails();
     }
 
-    // 1. Prevent Android hardware back button
     const backAction = () => {
-      return true; // Return true to prevent default back action
+      return true;
     };
 
     const backHandler = BackHandler.addEventListener(
@@ -57,16 +56,13 @@ const OrderSuccessScreen = () => {
       backAction,
     );
 
-    // 2. Prevent navigation remove (iOS swipe, back button)
     const unsubscribe = navigation.addListener('beforeRemove', e => {
       const action = e.data.action;
 
-      // If the removal was triggered by a reset or replace action, allow it
       if (action.type === 'RESET' || action.type === 'REPLACE') {
         return;
       }
 
-      // Otherwise, prevent default behavior of leaving the screen (back button, swipe)
       e.preventDefault();
     });
 
@@ -163,7 +159,7 @@ const OrderSuccessScreen = () => {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
-          {/* Success Animation Area */}
+          {}
           <View style={styles.successSection}>
             <Image
               style={styles.successImage}
@@ -177,7 +173,7 @@ const OrderSuccessScreen = () => {
             </View>
           </View>
 
-          {/* Order Details Card */}
+          {}
           <View style={styles.orderCard}>
             <View style={styles.orderCardHeader}>
               <MaterialCommunityIcons
@@ -270,7 +266,7 @@ const OrderSuccessScreen = () => {
               </>
             ) : null}
 
-            {/* Total Amount */}
+            {}
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>Total Amount</Text>
               <Text style={styles.totalAmount}>
@@ -279,7 +275,7 @@ const OrderSuccessScreen = () => {
             </View>
           </View>
 
-          {/* Buttons */}
+          {}
           <View style={styles.buttonsContainer}>
             <TouchableOpacity
               style={styles.trackButton}
@@ -311,14 +307,7 @@ const OrderSuccessScreen = () => {
             </LinearGradient>
           </View>
 
-          {/* <TouchableOpacity
-                        style={styles.continueShoppingBtn}
-                        onPress={handleContinueShopping}
-                        activeOpacity={0.7}
-                    >
-                        <Text style={styles.continueShoppingText}>Continue Shopping</Text>
-                        <Ionicons name="arrow-forward" size={wp('4%')} color="#F25000" />
-                    </TouchableOpacity> */}
+          {}
         </ScrollView>
       </LinearGradient>
     </SafeAreaView>
@@ -334,17 +323,14 @@ const styles = StyleSheet.create({
   },
   gradientContainer: {
     flex: 1,
-    // paddingHorizontal: wp('5%'),
   },
   scrollContent: {
     paddingBottom: hp('5%'),
     paddingHorizontal: wp('5%'),
-    // backgroundColor: 'red'
   },
   successSection: {
     alignItems: 'center',
     marginTop: hp('6%'),
-    // backgroundColor: 'red'
   },
   successImage: {
     width: wp('30%'),

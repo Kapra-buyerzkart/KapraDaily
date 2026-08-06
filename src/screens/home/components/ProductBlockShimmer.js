@@ -7,8 +7,6 @@ import {
 import ShimmerPlaceholder from '../../../components/ShimmerPlaceholder';
 import { SURFACE, RADIUS, SPACE, GUTTER } from '@/styles/homeTheme';
 
-// Mirrors the real rail's flat section (same inset and rhythm) so the section
-// does not visibly jump size or shape when data lands.
 const ProductBlockShimmer = () => (
   <View style={styles.section}>
     <View style={styles.inner}>

@@ -44,10 +44,10 @@ const BillSection = ({ billCalculations }) => {
         <Text style={styles.billHeaderText}>View Your Bill</Text>
       </View>
       <View>
-        {/* Item Total */}
+        {}
         <BillRow label="Item Total" value={`₹${itemTotal.toFixed(2)}`} />
 
-        {/* Discount */}
+        {}
         {savings > 0 && (
           <BillRow
             label="Discount"
@@ -56,7 +56,7 @@ const BillSection = ({ billCalculations }) => {
           />
         )}
 
-        {/* Delivery */}
+        {}
         <BillRow
           label="Delivery Charge"
           value={
@@ -65,12 +65,10 @@ const BillSection = ({ billCalculations }) => {
           isGreen={deliveryCharge === 0}
         />
 
-        {/* Tax */}
-        {/* {totalTax > 0 && (
-                    <BillRow label="Tax" value={`₹${totalTax.toFixed(2)}`} />
-                )} */}
+        {}
+        {}
 
-        {/* Coupon */}
+        {}
         {couponDiscount > 0 && (
           <BillRow
             label="Coupon Discount"
@@ -79,7 +77,7 @@ const BillSection = ({ billCalculations }) => {
           />
         )}
 
-        {/* Gift Card */}
+        {}
         {giftCardAmount > 0 && (
           <BillRow
             label="GiftCard Applied"
@@ -88,7 +86,7 @@ const BillSection = ({ billCalculations }) => {
           />
         )}
 
-        {/* UD Coins */}
+        {}
         {bcoinsAppliedValue > 0 && (
           <BillRow
             label="Bcoins Applied"
@@ -112,7 +110,7 @@ const BillSection = ({ billCalculations }) => {
             Inclusive of GST ₹{totalTax.toFixed(2)}{' '}
           </Text>
         )}
-        {/* Savings */}
+        {}
         {totalSavings > 0 && (
           <View style={{ marginTop: hp('1%') }}>
             <Text
@@ -143,14 +141,14 @@ const styles = StyleSheet.create({
     marginBottom: hp('0.5%'),
   },
   billImageStyle: {
-    resizeMode: 'stretch', // Ensure the background stretches to fit content height
+    resizeMode: 'stretch',
   },
   billHeaderContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: hp('2%'), // More space below header
+    marginBottom: hp('2%'),
     marginTop: wp('2%'),
-    marginLeft: wp('1%'), // Slight nudge for better alignment
+    marginLeft: wp('1%'),
   },
   billIcon: {
     width: wp('5%'),

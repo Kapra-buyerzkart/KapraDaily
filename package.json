@@ -7,7 +7,6 @@
     "ios": "react-native run-ios",
     "lint": "eslint .",
     "create-screen": "node scripts/createScreen.js",
-    "cleanup": "node scripts/cleanupCode.js",
     "start": "react-native start",
     "test": "jest",
     "postinstall": "patch-package"

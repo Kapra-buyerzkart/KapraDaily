@@ -35,8 +35,6 @@ export const useEventPayment = () => {
       bookingItems.reduce((sum, item) => sum + item.quantity, 0) || 1,
     );
     let bookingId, razorpayOrderId, amount, sdkResponse;
-    // True when the backend settled the booking at initiate time (fully paid by
-    // UD Coins, or a free ticket) — Razorpay is skipped entirely in that case.
     let paymentSkipped = false;
 
     try {
@@ -72,9 +70,6 @@ export const useEventPayment = () => {
           initiateRes.data.razorpayOrderId || initiateRes.data.razorPayOrderId;
         amount = initiateRes.data.amount ?? initiateRes.data.amountPayable;
 
-        // How many coins the backend actually consumed. It may report fewer
-        // than we asked for (balance capped, or the ticket cost less), so the
-        // response wins; fall back to the request only when it stays silent.
         setCoinsUsed(
           initiateRes.data.udCoinsUsed ??
             initiateRes.data.coinsUsed ??
@@ -82,12 +77,6 @@ export const useEventPayment = () => {
             udCoinsRequested,
         );
 
-        // Zero-value booking: the ticket amount was fully covered by UD Coins,
-        // or the ticket is free. The backend has already completed the booking
-        // (`status: BOOKING_COMPLETE`), so there is nothing to charge and no
-        // Razorpay order to open — it only needs confirming below. A partial
-        // coin redemption still leaves an amount payable and keeps taking the
-        // normal Razorpay route.
         paymentSkipped =
           initiateRes.data.paymentRequired === false ||
           initiateRes.status === 'BOOKING_COMPLETE' ||
@@ -136,16 +125,6 @@ export const useEventPayment = () => {
         setFailureVisible(true);
         return { success: false, failed: true, bookingId };
       }
-      // The booking is already paid for at this point — either Razorpay
-      // collected the money, or the backend settled it at initiate time with UD
-      // Coins / a free ticket. Anything that goes wrong below is a
-      // verification/network issue (or the backend having already settled it via
-      // a webhook) — never a failed payment — so we always show the success
-      // modal, not a pending toast.
-      //
-      // `fetchQrCode` is false when the booking has not been confirmed by the
-      // backend yet — there is no issued ticket to pull a QR code for, so we
-      // show the success modal without asking for one.
       const markBookingSuccess = ({ fetchQrCode = true } = {}) => {
         setSuccessVisible(true);
 

@@ -17,7 +17,7 @@ import {
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
 import { FONTS } from '../styles/typography';
-import { resetPassword } from '../api'; // adjust path as needed
+import { resetPassword } from '../api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert } from 'react-native';
 import { getResetToken } from '../api/tokenService';
@@ -56,7 +56,6 @@ const ChangePwdScreen = () => {
 
     try {
       setLoading(true);
-      // const resetToken = await getResetToken();
       if (!resetToken) {
         showStatus({
           type: 'error',
@@ -94,11 +93,10 @@ const ChangePwdScreen = () => {
 
   return (
     <SafeAreaView style={styles.mainContainer}>
-      {/* {console.log('PHHHHH', phone)} */}
+      {}
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        // keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
         <ScrollView
           contentContainerStyle={{ flexGrow: 1 }}
@@ -117,26 +115,7 @@ const ChangePwdScreen = () => {
               source={require('../assets/images/login_content.png')}
             />
           </ImageBackground>
-          {/* <View style={styles.bottomContainer}>
-                        <Text style={styles.headerText}>Login or Sign up</Text>
-                        <Text style={styles.enterNumberText}>Enter your mobile number</Text>
-
-                        <View style={styles.inputWrapper}>
-                            <Text style={styles.countryCode}>+91</Text>
-
-                            <View style={styles.divider} />
-
-                            <TextInput
-                                placeholder="000 000 0000"
-                                placeholderTextColor="#616161"
-                                keyboardType="number-pad"
-                                style={styles.input}
-                            />
-                        </View>
-                        <TouchableOpacity style={styles.continueButton}>
-                            <Text style={styles.continueButtonText}>Continue</Text>
-                        </TouchableOpacity>
-                    </View> */}
+          {}
           <View style={styles.bottomContainer}>
             <Text style={styles.headerText}>Change Password</Text>
 

@@ -8,14 +8,9 @@ class SignalRService {
         this.callbacks = new Set();
     }
 
-    /**
-     * Initializes and starts the SignalR connection.
-     * @param {string} hubUrl Optional override for the hub URL.
-     */
     async startConnection(hubUrl) {
         if (this.connection) return;
 
-        // Automatically derive hub URL from config if not provided
         if (!hubUrl) {
             const apiBase = CONFIG.base_url || 'https://staging.kapradaily.com/api/v1/';
             const domain = apiBase.split('/api/v1/')[0];
@@ -43,7 +38,6 @@ class SignalRService {
                 .configureLogging(signalR.LogLevel.Information)
                 .build();
 
-            // Reconnection handlers
             this.connection.onreconnecting((error) => {
                 console.log('📡 [SignalR] Reconnecting...', error);
                 this.callbacks.forEach(callback => callback('reconnecting', error));
@@ -54,7 +48,6 @@ class SignalRService {
                 this.callbacks.forEach(callback => callback('reconnected', connectionId));
             });
 
-            // Listen for Order Updates
             this.connection.on('ReceiveOrderUpdate', (data) => {
                 console.log('📡 [SignalR] Order Update Received (ReceiveOrderUpdate):', data);
                 this.callbacks.forEach(callback => callback('orderUpdate', data));
@@ -71,22 +64,16 @@ class SignalRService {
             const errorMsg = String(err);
             console.error('📡 [SignalR] Connection Error:', errorMsg);
             
-            // If it's an auth error, don't spam retries
             if (errorMsg.includes('401') || errorMsg.includes('UNAUTHORIZED')) {
                 console.warn('📡 [SignalR] Authentication failed. Stopping automatic retry.');
-                this.connection = null; // Reset so it can be manually re-started on next login/tracking click
+                this.connection = null;
                 return;
             }
 
-            // Other errors get standard retry
-            setTimeout(() => this.startConnection(hubUrl), 10000); // 10s cooldown
+            setTimeout(() => this.startConnection(hubUrl), 10000);
         }
     }
 
-    /**
-     * Subscribes to a specific order for real-time updates.
-     * @param {number|string} orderId 
-     */
     async subscribeToOrder(orderId) {
         if (!this.connection || this.connection.state !== signalR.HubConnectionState.Connected) {
             console.warn('📡 [SignalR] Cannot subscribe: connection not established');
@@ -100,9 +87,6 @@ class SignalRService {
         }
     }
 
-    /**
-     * Stops the SignalR connection.
-     */
     async stopConnection() {
         if (!this.connection) return;
         try {
@@ -114,10 +98,6 @@ class SignalRService {
         }
     }
 
-    /**
-     * Registers a callback for real-time events.
-     * @param {Function} callback 
-     */
     onEvent(callback) {
         this.callbacks.add(callback);
         return () => this.callbacks.delete(callback);

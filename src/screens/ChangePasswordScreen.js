@@ -58,24 +58,9 @@ import {
   entrance,
 } from '@/styles/motion';
 
-// The fourth page of the account flow, rebuilt to match Profile, Edit Profile
-// and Update Contact: same peach hero, same bar resolving from peach to white,
-// same filled-well field, same pinned brand-coloured CTA. It used to open on the
-// login screen's photographic header with the Kapra logo centred under it, which
-// made a settings change look like a re-authentication — and it carried a
-// LocationModal and a store-availability subscription it never rendered.
-//
-// The substantive change is that the page now tells you whether the password
-// you are typing will be accepted *while* you type it. The old screen took three
-// blind fields and answered "Please fill in all fields" or "New passwords do not
-// match" in a modal after the fact, and left every server rule to be discovered
-// on submit.
-
 const FOCUS_FADE = { duration: 160 };
 const METER_FADE = { duration: 220 };
 
-// What the field will actually reject, stated up front rather than after a round
-// trip. Anything the server enforces beyond this still comes back in the modal.
 const RULES = [
   {
     key: 'length',
@@ -94,9 +79,6 @@ const RULES = [
   },
 ];
 
-// Strength is scored more widely than the rules above — meeting the minimum is
-// the floor, not the goal, so the meter keeps moving after the checklist is
-// green and a longer or mixed password visibly earns something.
 const scorePassword = value => {
   if (!value) return 0;
   let score = 0;
@@ -121,9 +103,6 @@ const ChangePasswordScreen = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  // Client-side validation speaks under the field it is about. The modal is kept
-  // for what the server says, which is the only thing the user can't see for
-  // themselves — a wrong current password, chiefly.
   const [oldError, setOldError] = useState('');
 
   const [statusModalVisible, setStatusModalVisible] = useState(false);
@@ -146,8 +125,6 @@ const ChangePasswordScreen = () => {
   const confirmMatches = confirmTouched && confirmPassword === newPassword;
   const confirmError =
     confirmTouched && !confirmMatches ? 'Passwords don’t match' : '';
-  // Worth catching here rather than at the server: submitting the password you
-  // already have is the one failure the page can be certain about.
   const isReused = newValid && newPassword === oldPassword;
 
   const canSubmit =
@@ -187,8 +164,6 @@ const ChangePasswordScreen = () => {
         setStatusModalVisible(true);
       } else {
         const message = response?.message || 'Failed to update password';
-        // A rejected current password belongs under the field that holds it,
-        // not in a modal that has to be dismissed before it can be corrected.
         if (/old|current|incorrect|wrong/i.test(message)) {
           setOldError(message);
         } else {
@@ -210,10 +185,6 @@ const ChangePasswordScreen = () => {
     }
   };
 
-  // ── The sticky bar ──────────────────────────────────────────────────────
-  // Peach at rest so the status bar, the bar and the gradient below read as one
-  // surface; white once the hero is gone. `heroAnchor` is measured rather than
-  // assumed because the hero's height moves with the font scale.
   const scrollY = useSharedValue(0);
   const heroAnchor = useSharedValue(0);
   const scrollHandler = useAnimatedScrollHandler({
@@ -275,9 +246,7 @@ const ChangePasswordScreen = () => {
             borderStyle={topBarBorderStyle}
           />
 
-          {/* The gradient itself never animates in — only its contents do — so
-              the sticky bar above, already painted the hero's colour, is never
-              left as a peach strip over a white page. */}
+          {}
           <LinearGradient colors={HERO_GRADIENT} style={styles.hero}>
             <Animated.View
               style={styles.heroInner}
@@ -348,8 +317,7 @@ const ChangePasswordScreen = () => {
               onSubmitEditing={canSubmit ? handleUpdate : undefined}
             />
 
-            {/* flex-start on the row: the icon is a Text box, so stretching it
-                over two wrapped lines centres the glyph between them. */}
+            {}
             <View style={styles.noteRow}>
               <MaterialCommunityIcons
                 name="shield-check-outline"
@@ -387,13 +355,6 @@ const ChangePasswordScreen = () => {
   );
 };
 
-// ── Top bar ───────────────────────────────────────────────────────────────
-// A component rather than an inline Animated.View, and not by preference: this
-// is the ScrollView's sticky child, and RN's sticky wrapper clones that child to
-// inject a style of its own. Cloned onto an Animated.View, the injected style
-// drags Reanimated's style handle through RN's own Animated pipeline, which
-// deep-freezes it in dev and makes the next updater assignment throw. A
-// component absorbs the injected prop and ignores it.
 const TopBar = ({ title, onBack, backgroundStyle, borderStyle }) => {
   const insets = useSafeAreaInsets();
 
@@ -430,10 +391,6 @@ const TopBar = ({ title, onBack, backgroundStyle, borderStyle }) => {
   );
 };
 
-// ── Field ─────────────────────────────────────────────────────────────────
-// Edit Profile's filled well: rest, focus and error are the same three states
-// the rest of the flow uses. The reveal toggle lives inside the well rather than
-// beside it — it acts on the field, so it belongs to it.
 const PasswordField = React.forwardRef(
   (
     { label, icon, error, success, footer, onChangeText, value, ...props },
@@ -544,11 +501,6 @@ const PasswordField = React.forwardRef(
 
 PasswordField.displayName = 'PasswordField';
 
-// ── Strength ──────────────────────────────────────────────────────────────
-// Meter and checklist are one block because they answer one question in two
-// registers: the bars say how good it is, the list says what is still missing.
-// The block holds its height once shown so the fields below it don't step down
-// the page as rules go green.
 const StrengthPanel = ({ visible, score, checks }) => {
   if (!visible) return null;
 
@@ -587,8 +539,6 @@ const StrengthPanel = ({ visible, score, checks }) => {
   );
 };
 
-// Each bar animates its own colour, so the meter fills and warms in one
-// gesture rather than repainting as a row.
 const MeterSegment = ({ filled, score }) => {
   const target = filled ? strengthInk(score) : METER_TRACK;
   const style = useAnimatedStyle(() => ({
@@ -656,9 +606,6 @@ const ActionBar = ({ enabled, label, hint, onPress }) => {
 
 export default ChangePasswordScreen;
 
-// The account flow's field palette, matching Edit Profile and Update Contact: a
-// field is a filled well that turns white and takes the brand's edge when it is
-// the one being typed into.
 const FIELD_REST = '#F7F5F3';
 const FIELD_BORDER_WIDTH = 1.5;
 const ERROR_INK = ACCENT.discount;
@@ -667,9 +614,6 @@ const RESTING_INK = '#9A5B38';
 
 const METER_SEGMENTS = 4;
 const METER_TRACK = 'rgba(17,19,26,0.08)';
-// Weak borrows the error ink so "this will be rejected" and "this is fragile"
-// speak with the same voice; the middle step is amber rather than a lighter
-// orange, which on a peach flow would read as the brand colour approving it.
 const strengthInk = score =>
   score <= 1 ? ERROR_INK : score === 2 ? '#B45309' : ACCENT.success;
 
@@ -681,21 +625,15 @@ const styles = StyleSheet.create({
   keyboardAvoidingView: {
     flex: 1,
   },
-  // The viewport is painted the hero's colour and the sheet white on top, so an
-  // iOS rubber-band pull reveals more hero rather than a white strip.
   scrollView: {
     backgroundColor: HERO_TOP,
   },
-  // flexGrow, not just a background: without it the white sheet stops at the
-  // last element and the ScrollView's own peach fills the rest of the viewport
-  // as a large empty block above the action bar.
   scrollContent: {
     flexGrow: 1,
     paddingBottom: SPACE.xl,
     backgroundColor: CANVAS,
   },
 
-  // ── Header ──────────────────────────────────────────────────────────────
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -727,7 +665,6 @@ const styles = StyleSheet.create({
     letterSpacing: -0.3,
   },
 
-  // ── Hero ────────────────────────────────────────────────────────────────
   hero: {
     paddingBottom: SPACE.md,
   },
@@ -752,7 +689,6 @@ const styles = StyleSheet.create({
     maxWidth: wp('82%'),
   },
 
-  // ── Fields ──────────────────────────────────────────────────────────────
   fieldGroup: {
     paddingHorizontal: GUTTER,
     paddingTop: SPACE.lg,
@@ -780,9 +716,6 @@ const styles = StyleSheet.create({
     backgroundColor: ERROR_SOFT,
     borderColor: ERROR_INK,
   },
-  // Only the edge goes green. Tinting the fill as well would make a matched
-  // confirmation the loudest thing on a page whose subject is the field above
-  // it.
   fieldWellSuccess: {
     borderColor: ACCENT.success,
   },
@@ -813,7 +746,6 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
 
-  // ── Strength ────────────────────────────────────────────────────────────
   strengthPanel: {
     marginTop: SPACE.md,
   },
@@ -827,8 +759,6 @@ const styles = StyleSheet.create({
     height: 4,
     borderRadius: 2,
   },
-  // Fixed width so the bars keep their length as the word under them changes
-  // from "Weak" to "Strong".
   strengthLabel: {
     ...TYPE.micro,
     fontFamily: FONTS.gilroy.semiBold,
@@ -857,7 +787,6 @@ const styles = StyleSheet.create({
     color: ACCENT.successText,
   },
 
-  // ── Note ────────────────────────────────────────────────────────────────
   noteRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -866,8 +795,6 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.sm,
     backgroundColor: SURFACE.sunken,
   },
-  // Cap height sits below the line box's top; one point down puts the glyph on
-  // the first line's optical centre.
   noteIcon: {
     marginTop: 1,
   },
@@ -879,7 +806,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
-  // ── Action bar ──────────────────────────────────────────────────────────
   actionBar: {
     paddingHorizontal: GUTTER,
     paddingTop: SPACE.md,
@@ -901,9 +827,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     elevation: 4,
   },
-  // Not ready yet, so the button keeps its shape and drops its voice rather than
-  // greying out — grey reads as broken, the brand's soft tint reads as "not
-  // yet", and the label says what is missing.
   actionButtonDisabled: {
     backgroundColor: ACCENT.primarySoft,
     shadowOpacity: 0,

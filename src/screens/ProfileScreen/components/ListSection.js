@@ -13,10 +13,7 @@ export default function ListSection({ title, items }) {
       <View>
         {items.map((item, index) => (
           <Fragment key={item.key}>
-            {/* A row is the full width of the page — scaling or fading it on
-                touch reads as the whole page flinching. It tints instead,
-                which is also the only press state that survives a slow drag
-                off the row. */}
+            {}
             <Pressable
               onPress={item.onPress}
               style={({ pressed }) => [
@@ -39,8 +36,7 @@ export default function ListSection({ title, items }) {
                   {item.label}
                 </Text>
               </View>
-              {/* The chevron is a hint, not a call to action — orange on every
-                  row made the whole list compete with itself. */}
+              {}
               <Ionicons
                 name="chevron-forward"
                 color={item.textColor || INK.faint}

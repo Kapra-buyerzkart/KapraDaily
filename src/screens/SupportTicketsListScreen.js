@@ -31,7 +31,6 @@ const SupportTicketsListScreen = () => {
       if (!isRefreshing) showLoader(true);
       const response = await getSupportTicketsApi();
       if (response && response.data) {
-        // Assuming response.data is the array of tickets
         setTickets(Array.isArray(response.data) ? response.data : []);
       } else if (response && Array.isArray(response)) {
         setTickets(response);

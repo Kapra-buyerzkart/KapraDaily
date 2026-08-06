@@ -323,14 +323,14 @@ const UdenTicketModal = ({
               style={styles.card}
               resizeMode="stretch"
             >
-              {/* Title */}
+              {}
               <Image
                 source={require('../../../assets/images/movieTicket/udentcketPurple.png')}
                 style={styles.titleImage}
                 resizeMode="contain"
               />
 
-              {/* Gift card image */}
+              {}
               <Animated.View
                 style={{
                   opacity: giftCardAnim,
@@ -359,7 +359,7 @@ const UdenTicketModal = ({
                 </ImageBackground>
               </Animated.View>
 
-              {/* Quantity selector */}
+              {}
               <View style={styles.qtyRow}>
                 <AnimatedButton
                   style={[
@@ -405,7 +405,7 @@ const UdenTicketModal = ({
                 </AnimatedButton>
               </View>
 
-              {/* UD Coin banner */}
+              {}
               <ImageBackground
                 source={require('../../../assets/icons/wrap.png')}
                 style={styles.coinBanner}
@@ -427,7 +427,7 @@ const UdenTicketModal = ({
                 <Text style={styles.coinBannerText}>to claim your ticket</Text>
               </ImageBackground>
 
-              {/* Accordion: Description & Terms */}
+              {}
               {(voucher?.shortDescription || voucher?.termsConditions) && (
                 <View style={styles.accordionContainer}>
                   {voucher?.shortDescription && (
@@ -515,11 +515,7 @@ const UdenTicketModal = ({
                     </View>
                   )}
 
-                  {/* <View style={styles.noCoinsContainer}>
-                    <Text style={styles.noCoins}>
-                      * You dont have enough coins to redeem this card
-                    </Text>
-                  </View> */}
+                  {}
                 </View>
               )}
 
@@ -619,7 +615,7 @@ const UdenTicketModal = ({
               </View>
             </ImageBackground>
 
-            {/* Close button */}
+            {}
             <AnimatedButton
               style={styles.closeBtn}
               onPress={onClose}
@@ -681,7 +677,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  // Perforated edge
   perforated: {
     flexDirection: 'row',
     width: '100%',
@@ -702,7 +697,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#1a1a2e',
   },
 
-  // White card body
   card: {
     alignSelf: 'stretch',
     borderRadius: 4,
@@ -712,7 +706,6 @@ const styles = StyleSheet.create({
     paddingBottom: hp(2.5),
   },
 
-  // Title
   titleImage: {
     width: '60%',
     height: hp(7),
@@ -720,7 +713,6 @@ const styles = StyleSheet.create({
     marginBottom: hp(1.5),
   },
 
-  // Gift card image
   giftCard: {
     width: '100%',
     height: hp(22),
@@ -739,7 +731,6 @@ const styles = StyleSheet.create({
     color: COLORS.white,
   },
 
-  // Quantity
   qtyRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -797,7 +788,6 @@ const styles = StyleSheet.create({
     paddingVertical: hp(2),
   },
 
-  // UD Coin banner
   coinBanner: {
     overflow: 'hidden',
     paddingVertical: hp(0.9),
@@ -824,10 +814,8 @@ const styles = StyleSheet.create({
     fontFamily: 'Gilroy-Bold',
   },
 
-  // Accordion
   accordionContainer: {
     marginBottom: hp(1.8),
-    // borderRadius: 8,
     overflow: 'hidden',
     borderWidth: 0.4,
     borderRadius: 15,
@@ -862,7 +850,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
 
-  // Disabled reason banner
   disabledReasonBanner: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -886,7 +873,6 @@ const styles = StyleSheet.create({
     color: '#8A5A1E',
   },
 
-  // Price row
   priceRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -921,7 +907,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: 'Gilroy-Regular',
     color: '#555555',
-    // paddingHorizontal: 5,
   },
   coinsStack: {
     width: 22,
@@ -933,7 +918,6 @@ const styles = StyleSheet.create({
     color: '#333333',
   },
 
-  // BUY NOW
   buyNowBtn: {
     backgroundColor: '#5B2BE0',
     paddingHorizontal: wp(6),
@@ -950,7 +934,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
 
-  // Close button
   closeBtn: {
     width: 52,
     height: 52,

@@ -28,11 +28,9 @@ const CartScreen = () => {
   const navigation = useNavigation();
   const { profile, loadProfile } = useContext(AppContext);
   const {
-    // Cart
     billCalculations,
     cartSummary,
 
-    // Offers
     showCouponModal,
     setShowCouponModal,
     couponCode,
@@ -47,7 +45,6 @@ const CartScreen = () => {
     handleApplyCoupon,
     handleCouponClick,
 
-    // Delivery
     selectedDeliveryType,
     setSelectedDeliveryType,
 
@@ -78,8 +75,6 @@ const CartScreen = () => {
 
   const [isClearCartModalVisible, setIsClearCartModalVisible] = useState(false);
   const [chosenSlot, setChosenSlot] = useState(null);
-  // Measured height of the sticky checkout bar so the payment sheet can float
-  // directly above it instead of covering it.
   const [checkoutBarHeight, setCheckoutBarHeight] = useState(0);
   const insets = useSafeAreaInsets();
 

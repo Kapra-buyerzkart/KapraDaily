@@ -9,13 +9,6 @@ import { getDashboardDataApi } from '../api/userService';
 import { LoaderContext } from '../context/loaderContext';
 
 const DEFAULT_OFFERS = [
-  // {
-  //     id: '1',
-  //     name: "Smart point",
-  //     content: "get flat 50%",
-  //     applyCliked: false,
-  //     image: require('../assets/images/smart_point_two.png')
-  // },
   {
     id: '2',
     name: 'Coupon',
@@ -67,24 +60,20 @@ export const useOffers = (deliveryHook, addressHook) => {
   const [appliedGiftCardCode, setAppliedGiftCardCode] = useState(null);
   const isApplyingRef = useRef(false);
 
-  // Fetch available coupons and gift cards
   const fetchRewards = useCallback(async () => {
     try {
-      // Background fetch, do not block UI with global loader
       const [couponsRes, giftCardsRes] = await Promise.all([
         getAvailableCouponsApi(),
         getAvailableGiftCardsApi(),
       ]);
 
       if (couponsRes?.data) {
-        // Extract items if nested, otherwise use data directly
         const coupons =
           couponsRes.data.items ||
           (Array.isArray(couponsRes.data) ? couponsRes.data : []);
         setAvailableCoupons(coupons);
       }
       if (giftCardsRes?.data) {
-        // Extract items if nested, otherwise use data directly
         const giftCards =
           giftCardsRes.data.items ||
           (Array.isArray(giftCardsRes.data) ? giftCardsRes.data : []);
@@ -95,12 +84,10 @@ export const useOffers = (deliveryHook, addressHook) => {
     }
   }, []);
 
-  // Fetch on mount
   useEffect(() => {
     fetchRewards();
   }, [fetchRewards]);
 
-  // Fetch wallet data and update UD Coin offer content
   useEffect(() => {
     const fetchWalletData = async () => {
       try {
@@ -128,7 +115,6 @@ export const useOffers = (deliveryHook, addressHook) => {
     fetchWalletData();
   }, []);
 
-  // Sync UD Coin applied state with cart summary
   useEffect(() => {
     if (cartSummary) {
       setOffers(prev =>
@@ -154,14 +140,13 @@ export const useOffers = (deliveryHook, addressHook) => {
       if (offerId === '2') {
         setIsGiftCard(false);
         setCouponCode('');
-        fetchRewards(); // refresh coupons before showing modal
+        fetchRewards();
         setShowCouponModal(true);
         return;
       }
 
       if (offerId === '3') {
         const bCoinOffer = offers.find(o => o.id === '3');
-        // Extract numerical value from content string (e.g., "Available UD Coin: 100.00")
         const contentValue = bCoinOffer?.content || '0';
         const availableBCoinsMatch = contentValue.match(/(\d+\.?\d*)/);
         const availableBCoins = availableBCoinsMatch
@@ -200,7 +185,7 @@ export const useOffers = (deliveryHook, addressHook) => {
       if (offerId === '4') {
         setIsGiftCard(true);
         setCouponCode('');
-        fetchRewards(); // refresh gift cards before showing modal
+        fetchRewards();
         setShowCouponModal(true);
         return;
       }

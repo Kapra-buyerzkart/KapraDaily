@@ -47,7 +47,6 @@ const SearchScreen = () => {
   const [currentPincodeId, setCurrentPincodeId] = useState(null);
   const { recentSearches, saveSearch } = useRecentSearches();
 
-  // Filter & Sort state
   const [isFilterSortModalVisible, setIsFilterSortModalVisible] =
     useState(false);
   const [filters, setFilters] = useState({
@@ -68,9 +67,6 @@ const SearchScreen = () => {
     isGlobalFallback,
   } = useProductSearch(currentPincodeId, catId, filters);
 
-  // "View All" from a home product block passes its already-fetched items
-  // directly (those blocks are curated lists with no catId to query by), so
-  // show them as-is until the user actually starts typing/searching by category.
   const hasStaticProducts =
     Array.isArray(staticProducts) && staticProducts.length > 0;
   const isBrowsingStaticList = hasStaticProducts && !catId && !isSearchActive;
@@ -90,7 +86,6 @@ const SearchScreen = () => {
     fetchPincode();
   }, [profile]);
 
-  // Save search term if results are found
   useEffect(() => {
     if (!loading && searchTerm.trim().length >= 3 && resultCount > 0) {
       saveSearch(searchTerm);

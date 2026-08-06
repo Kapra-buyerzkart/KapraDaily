@@ -16,8 +16,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
   },
-  // `elevation` is Android z-order only: the carousel cards and bottom showcase
-  // carry elevation of their own and would otherwise paint over the header.
   headerOverlay: {
     position: 'absolute',
     top: 0,
@@ -37,9 +35,6 @@ const styles = StyleSheet.create({
     height: hp('22%'),
   },
 
-  // ── Section rhythm ──────────────────────────────────────────────────────
-  // One spacer token instead of the per-section hp('4%') / hp('2%') / hp('0.5%')
-  // margins the sections each used to declare for themselves.
   sectionGapLarge: {
     height: SPACE.xl,
   },
@@ -48,7 +43,6 @@ const styles = StyleSheet.create({
     marginBottom: SPACE.xs,
   },
 
-  // Footer seal
   sealWrap: {
     alignItems: 'center',
     justifyContent: 'center',

@@ -3,10 +3,8 @@ import { colors } from './theme/colours';
 import { fonts } from './theme/typography';
 import { Fonts } from './theme/fonts';
 
-// Export a function that returns the styles
 const { width, height } = Dimensions.get('window');
 
-// Guideline sizes are based on standard design screen (e.g. iPhone X)
 const guidelineBaseWidth = 375;
 const guidelineBaseHeight = 812;
 
@@ -38,7 +36,6 @@ export const useCommonStyles = () => {
       alignItems: 'center',
       justifyContent: 'space-between',
     },
-    // Generic Text Styles
     heading1: {
       fontSize: 22,
       fontWeight: 'bold',
@@ -64,7 +61,6 @@ export const useCommonStyles = () => {
       color: colour.text,
     },
 
-    // Text Utilities
     textPrimary: { color: colour.primary },
     textWhite: { color: colour.white },
     textBold: { fontWeight: 'bold' },
@@ -102,7 +98,6 @@ export const useCommonStyles = () => {
       width: '100%',
       margin: 6,
     },
-    // Product Screen Styles
     productFloatingCartContainer: {
       position: 'absolute',
       bottom: 20,
@@ -131,31 +126,12 @@ export const useCommonStyles = () => {
       alignItems: 'center',
     },
 
-    // Order Details Screen Styles
-
-    // Transaction Success Screen Styles
     iconContainer: {
       marginBottom: 20,
       alignItems: 'center',
       justifyContent: 'center',
     },
-    // Order History Screen Styles
 
-    // Filter Button
-
-    // Filter Modal
-
-    // Radio Buttons
-
-    // Date Inputs
-
-    // Filter Action Button
-
-    // Section Headers for Daily Grouping
-
-    // Updated Transaction Cards
-
-    // Side Menu Styles
     sideMenuOverlay: {
       position: 'absolute',
       top: 0,
@@ -173,7 +149,7 @@ export const useCommonStyles = () => {
       width: '80%',
       maxWidth: 320,
       backgroundColor: colour.primary,
-      paddingTop: 50, // For status bar
+      paddingTop: 50,
       paddingBottom: 20,
       zIndex: 2001,
       shadowColor: '#000',
@@ -249,7 +225,6 @@ export const useCommonStyles = () => {
       flex: 1,
     },
 
-    // Home Screen specific styles
     headerSectionWrapper: {
       height: 480,
       width: width,
@@ -296,7 +271,6 @@ export const useCommonStyles = () => {
       paddingHorizontal: 10,
     },
     actionIcon: {
-      //marginLeft: 12,
       position: 'relative',
     },
     notificationDot: {
@@ -321,7 +295,6 @@ export const useCommonStyles = () => {
       borderRadius: 3,
       backgroundColor: colour.white,
       marginHorizontal: 3,
-      //opacity: 0.8
     },
 
     sectionContainer: {
@@ -339,8 +312,6 @@ export const useCommonStyles = () => {
       backgroundColor: colour.white,
       borderRadius: 26,
       marginBottom: 24,
-      //borderWidth: 1,
-      //borderColor: colors.outlineTeal,
       height: 140,
       overflow: 'visible',
     },
@@ -362,7 +333,6 @@ export const useCommonStyles = () => {
     goatDealImage: {
       width: 140,
       height: 140,
-      //position:'absolute',
       right: '25%',
       borderRadius: 25,
     },
@@ -397,7 +367,6 @@ export const useCommonStyles = () => {
 
     exploreItemCard: {
       width: 150,
-      //height:250,
       marginRight: 16,
       backgroundColor: colour.white,
       borderRadius: 14,
@@ -422,7 +391,6 @@ export const useCommonStyles = () => {
       alignItems: 'center',
       alignContent: 'center',
       backgroundColor: colour.white,
-      //flex: 1
     },
     discountCircleText: {
       color: colors.tealIconFont,
@@ -443,12 +411,6 @@ export const useCommonStyles = () => {
       borderRadius: 9,
       paddingHorizontal: 2,
       height: 29,
-      //width: 65,
-      //   elevation: 2,
-      //   shadowColor: colors.black,
-      //   shadowOffset: { width: 0, height: 2 },
-      //   shadowOpacity: 0.85,
-      //   shadowRadius: 2,
       alignItems: 'center',
       justifyContent: 'center',
       minWidth: 65,
@@ -547,7 +509,6 @@ export const useCommonStyles = () => {
       bottom: 0,
       borderTopRightRadius: 14,
       borderBottomRightRadius: 14,
-      //overflow: 'hidden',
     },
     brandItemCard: {
       width: (width - 32) / 3 - 6,
@@ -564,7 +525,6 @@ export const useCommonStyles = () => {
       top: 0,
       left: 0,
       right: 0,
-      //width: '100%',
       width: (width - 32) / 3 - 6,
       height: '80%',
     },
@@ -587,7 +547,6 @@ export const useCommonStyles = () => {
     },
 
     gShockSectionWrapper: {
-      //backgroundColor: colour.black,
       marginTop: 30,
       paddingBottom: 20,
     },
@@ -641,7 +600,6 @@ export const useCommonStyles = () => {
     },
 
     flashSaleContainer: {
-      //backgroundColor: '#A4E8DF',
       paddingBottom: 20,
       marginTop: 10,
     },
@@ -658,7 +616,6 @@ export const useCommonStyles = () => {
       width: width,
       height: 720,
       resizeMode: 'cover',
-      //opacity: 0.6
     },
     flashSaleItemCard: {
       alignItems: 'center',
@@ -691,19 +648,13 @@ export const useCommonStyles = () => {
       fontFamily: Fonts.bold,
     },
 
-    //Review linear radient
     reviewFilterPillActiveGradient: {
-      //paddingHorizontal: 16,
-      //paddingVertical: 8,
       borderRadius: 10,
       justifyContent: 'center',
       alignItems: 'center',
       alignContent: 'center',
-      //marginRight: 12,
-      //borderWidth: 1,
       borderColor: 'transparent',
       width: 100,
-      //flex: 1,
     },
     reviewFilterText: {
       fontFamily: Fonts.regular,
@@ -716,24 +667,7 @@ export const useCommonStyles = () => {
       fontSize: 18,
       color: colors.themeWhite,
       fontWeight: '600',
-      //marginHorizontal: 20,
     },
 
-    // Client Module Styles
-    // Shared header styles for all Client screens
-
-    // Calculator Screen Styles
-
-    // Profile Styles
-
-    // ClientList specific styles
-
-    // ClientDetails specific styles
-
-    // ClientAdd specific styles
-
-    // Common Utils
-
-    // Refactored Order History Styles
   });
 };

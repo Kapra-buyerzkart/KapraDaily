@@ -13,9 +13,6 @@ import AnimatedPressable from '@/components/AnimatedPressable';
 import icons from '../../assets/icons';
 
 const AUTOPLAY_INTERVAL_MS = 4000;
-// Each slide fills the full screen width so exactly ONE banner is visible at a
-// time — no sliver of the neighbouring slide peeking in. The rounded card sits
-// centered inside that full-width cell, keeping the card look without the peek.
 const PAGE_WIDTH = wp(100);
 const CARD_WIDTH = wp(88);
 const BANNER_HEIGHT = hp(26);

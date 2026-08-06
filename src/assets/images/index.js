@@ -1,8 +1,3 @@
-// Centralized image exports.
-// Metro resolves require() paths statically and auto-selects @2x/@3x variants,
-// so only the base filenames are referenced here.
-// SVGs are omitted (imported as components) along with nested subdirectories.
-
 const images = {
   addIcon: require('./add_icon.png'),
   assigned: require('./assigned.png'),

@@ -2,11 +2,6 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import lazyScreen from './lazyScreen';
 
-// HomeScreen is the initial route, so it is required eagerly — deferring it
-// would only move the same work a few microseconds later. Profile and MyOrders
-// are deferred until first navigation. LocationFetchingScreen, CartScreen,
-// ProductDetailsScreen and LoginScreen used to be imported here but were never
-// rendered by this navigator; their module bodies ran at startup for nothing.
 import HomeScreen from '../screens/home/HomeScreen';
 
 const ProfileScreen = lazyScreen(() =>
@@ -16,15 +11,22 @@ const MyOrdersScreen = lazyScreen(() => require('../screens/MyOrdersScreen'));
 
 const Stack = createNativeStackNavigator();
 
-// freezeOnBlur: see RootNavigator — stops blurred screens re-rendering on
-// every root-context change.
 const SCREEN_OPTIONS = { headerShown: false, freezeOnBlur: true };
+
+const PROFILE_OPTIONS = {
+  animation: 'slide_from_right',
+  animationDuration: 280,
+};
 
 export default function HomeStack() {
   return (
     <Stack.Navigator screenOptions={SCREEN_OPTIONS}>
       <Stack.Screen name="HomeScreen" component={HomeScreen} />
-      <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
+      <Stack.Screen
+        name="ProfileScreen"
+        component={ProfileScreen}
+        options={PROFILE_OPTIONS}
+      />
       <Stack.Screen name="MyOrdersScreen" component={MyOrdersScreen} />
     </Stack.Navigator>
   );

@@ -14,8 +14,6 @@ const CLAIM_BTN_PILL_RIGHT = 410 / 424;
 export const HERO_HEIGHT = 500;
 export const HERO_TOP_GAP = 0;
 export const TOP_BAR_CONTENT_HEIGHT = 10;
-// Scroll offsets over which the floating top bar turns from transparent
-// (over the artwork) into a solid bar carrying the event name.
 export const TOP_BAR_FADE_START = HERO_HEIGHT * 0.34;
 export const TOP_BAR_FADE_END = HERO_HEIGHT * 0.62;
 export const HERO_SCRIM_COLORS = [
@@ -30,8 +28,6 @@ export const HERO_TOP_SCRIM_COLORS = [
   'rgba(12, 12, 12, 0.32)',
   'transparent',
 ];
-// The summary card climbs over the bottom of the hero so the artwork reads as
-// the card's backdrop rather than a separate band above it.
 export const HERO_CARD_OVERLAP = 40;
 export const ARTIST_CARD_WIDTH = 104;
 export const ARTIST_CARD_GAP = 12;
@@ -185,7 +181,6 @@ const styles = StyleSheet.create({
     textShadowRadius: 6,
   },
 
-  /* Sections */
   section: {
     paddingHorizontal: 20,
     marginTop: 24,
@@ -243,7 +238,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Gilroy-SemiBold',
   },
 
-  /* Fact strip (date / venue / price) */
   factStrip: {
     flexDirection: 'row',
     alignItems: 'stretch',
@@ -290,7 +284,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Gilroy-Bold',
   },
 
-  /* Venue map strip */
   mapStrip: {
     aspectRatio: 6,
     overflow: 'hidden',
@@ -317,7 +310,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Gilroy-SemiBold',
   },
 
-  /* UD coins row */
   bannerWrap: {
     borderRadius: 16,
   },
@@ -373,7 +365,6 @@ const styles = StyleSheet.create({
     transform: [{ rotate: '18deg' }],
   },
 
-  /* More to know rows */
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -402,7 +393,6 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 
-  /* Artists */
   artistList: {
     paddingRight: 12,
   },
@@ -452,7 +442,6 @@ const styles = StyleSheet.create({
     marginTop: 22,
   },
 
-  /* Accordion */
   accordion: {
     marginHorizontal: 20,
     marginTop: 14,
@@ -496,12 +485,10 @@ const styles = StyleSheet.create({
     fontFamily: 'Gilroy-Medium',
   },
   divider: {
-    // height: 1,
     backgroundColor: CARD_BORDER,
     marginHorizontal: 18,
   },
 
-  /* Claim button */
   claimWrap: {
     position: 'absolute',
     bottom: -10,
@@ -524,7 +511,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  // Out of flow so the label stays centred on the pill regardless of the tick.
   claimTick: {
     position: 'absolute',
     left: 18,
@@ -536,8 +522,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Gilroy-Bold',
     letterSpacing: 0.3,
     textAlign: 'center',
-    // Android otherwise reserves extra room above/below the glyphs, which
-    // renders the label lower on the pill than it sits on iOS.
     textAlignVertical: 'center',
     includeFontPadding: false,
   },
@@ -545,7 +529,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#000000',
   },
 
-  /* Loader */
   loader: {
     flex: 1,
     alignItems: 'center',

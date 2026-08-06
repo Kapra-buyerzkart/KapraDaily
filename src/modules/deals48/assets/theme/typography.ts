@@ -1,5 +1,3 @@
-// src/theme/typography.ts
-
 import { Fonts as FontFamilies } from './fonts';
 import { colors } from './colours';
 

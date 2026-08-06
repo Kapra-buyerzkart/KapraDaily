@@ -1,5 +1,3 @@
-// src/theme/fonts.ts
-
 export const Fonts = {
     regular: 'Gilroy-Regular',
     medium: 'Gilroy-Medium',

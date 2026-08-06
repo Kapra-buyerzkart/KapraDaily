@@ -18,10 +18,6 @@ function createStyles({
   avatarSize,
 }) {
   return StyleSheet.create({
-    // The box hugs the ring horizontally — reserving the full `size` width left
-    // transparent padding on both sides, which read as the avatar being inset
-    // from the edge it was meant to sit against. Only the crown needs extra
-    // room, and only vertically.
     container: {
       width: ringSize,
       height: containerHeight,

@@ -10,37 +10,17 @@ import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import AnimatedPressable from '../../../components/AnimatedPressable';
 import { RADIUS } from '@/styles/homeTheme';
 
-// The hero block at the top of the scroll: a full-bleed background image, an
-// announcement strip laid over it, and a row of tappable cards hanging off its
-// lower edge.
-//
-// The composition is anchored to the background artwork, so the percentages
-// below are load-bearing — they describe where that image's own design elements
-// sit, not app-level rhythm. They are named rather than folded into the spacing
-// scale for exactly that reason.
-
-// The background artwork is authored at this ratio; changing it decouples the
-// overlays from the image.
 const SHOWCASE_ASPECT = 0.8;
 
 const ANNOUNCEMENT_TOP = '52.5%';
 const ANNOUNCEMENT_WIDTH = '91%';
 const ANNOUNCEMENT_ASPECT = 5;
 
-// The card row deliberately overhangs the bottom of the background so the cards
-// bridge this section and the one beneath it.
 const CARD_ROW_OVERHANG = '-7%';
-// A small platform nudge, kept from the original: the two OSes resolve the
-// percentage offsets against slightly different rounding.
 const CARD_TOP = Platform.OS === 'ios' ? '10%' : '7%';
 
-// Cards overlap very slightly so their artwork edges meet.
 const CARD_OVERLAP = Platform.OS === 'ios' ? -wp('0.5%') : -wp('1%');
 
-// Up to five cards can be configured, but the row was laid out at a fixed
-// wp('48%') each — so five cards spanned 240% of the screen and everything past
-// the second was simply off-screen. Two cards keep their original width
-// exactly; three or more share the row instead of overflowing it.
 const MAX_CARDS = 5;
 const CARD_WIDTH_PCT = 48;
 const ROW_WIDTH_PCT = 96;
@@ -124,9 +104,6 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   card: {
-    // Height follows width (the original wp('48%') × wp('52%') proportion), so
-    // a narrower card in a row of four stays the same shape as a wide one in a
-    // row of two instead of stretching.
     aspectRatio: 48 / 52,
     top: CARD_TOP,
     borderRadius: RADIUS.md,
@@ -135,8 +112,6 @@ const styles = StyleSheet.create({
   },
   cardImage: {
     width: '100%',
-    // The artwork carries its own lower whitespace; filling the card would
-    // scale it up past the frame the background image expects.
     height: '65%',
   },
 });

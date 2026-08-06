@@ -30,8 +30,6 @@ const DeliverySlotModal = ({
   const [selectedSlot, setSelectedSlot] = useState(null);
   const modalRef = useRef(null);
 
-  // Bridge the parent-controlled `visible` prop to CustomModal's imperative
-  // open/close API (RN core <Modal> does not render on this build).
   useEffect(() => {
     if (visible) {
       modalRef.current?.open();
@@ -91,7 +89,7 @@ const DeliverySlotModal = ({
       onClose={onClose}
       contentStyle={styles.modalContent}
     >
-      {/* Header */}
+      {}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <MaterialCommunityIcons
@@ -125,7 +123,7 @@ const DeliverySlotModal = ({
         </View>
       ) : (
         <View style={{ flex: 1 }}>
-          {/* Day Tabs */}
+          {}
           <View style={styles.dayTabsContainer}>
             <ScrollView
               horizontal
@@ -163,7 +161,7 @@ const DeliverySlotModal = ({
             </ScrollView>
           </View>
 
-          {/* Slots List */}
+          {}
           <ScrollView
             style={styles.slotsScrollView}
             showsVerticalScrollIndicator={false}
@@ -232,7 +230,7 @@ const DeliverySlotModal = ({
         </View>
       )}
 
-      {/* Footer */}
+      {}
       <View style={styles.footer}>
         <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
           <Text style={styles.cancelButtonText}>Cancel</Text>

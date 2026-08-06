@@ -130,7 +130,7 @@ const ReferralHistoryScreen = () => {
 
   const renderHeader = () => (
     <>
-      {/* Reward + share card */}
+      {}
       <View style={styles.rewardCard}>
         <Text style={styles.rewardLabel}>Referral reward you Earned</Text>
         <View style={styles.rewardValueRow}>

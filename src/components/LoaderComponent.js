@@ -1,4 +1,3 @@
-// components/Loader.js
 import React from 'react';
 import { View, ActivityIndicator, StyleSheet, Modal } from 'react-native';
 
@@ -19,6 +18,6 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'rgba(0,0,0,0.3)', // semi-transparent backdrop
+        backgroundColor: 'rgba(0,0,0,0.3)',
     },
 });

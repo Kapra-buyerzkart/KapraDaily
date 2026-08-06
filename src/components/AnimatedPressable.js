@@ -11,8 +11,6 @@ const PRESS_SPRING = { damping: 50, stiffness: 400, mass: 0.5 };
 
 const ReanimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-// Drop-in TouchableOpacity replacement: scales down on press instead of
-// fading opacity, so grids of cards/pills/buttons feel tactile.
 const AnimatedPressable = ({
   style,
   onPressIn,
@@ -47,10 +45,6 @@ const AnimatedPressable = ({
     />
   );
 
-  // Layout animations (entering/exiting/layout) can't live on the same
-  // component as the animated `transform` above — Reanimated warns that one
-  // may overwrite the other. When a caller passes one, wrap the pressable in
-  // an animated view and run the layout animation on that wrapper instead.
   if (entering || exiting || layout) {
     return (
       <Animated.View entering={entering} exiting={exiting} layout={layout}>

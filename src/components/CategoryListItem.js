@@ -66,7 +66,6 @@ const CategoryListItem = ({ item, isSelected, onPress, onLayout }) => {
   }));
 
   const iconStyle = useAnimatedStyle(() => ({
-    // transform: [{ scale: iconScale.value }],
   }));
 
   const textStyle = useAnimatedStyle(() => ({

@@ -22,8 +22,6 @@ export const useTicketValidation = () => {
           deviceInfo: 'app',
           remarks,
         };
-        // Full, unredacted qRCode on purpose: verifying a code means seeing the
-        // whole string. `logger.log` is stripped from release builds.
         logger.log('[useTicketValidation] validate payload:', {
           ...payload,
           qRCodeLength: String(qRCode).length,

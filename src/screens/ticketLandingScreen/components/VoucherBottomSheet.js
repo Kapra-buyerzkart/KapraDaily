@@ -328,17 +328,7 @@ const VoucherBottomSheet = ({ visible, onClose, voucher: voucherProp }) => {
           </ScrollView>
         </Animated.View>
 
-        {/* <RedeemSuccessModal
-        visible={successVisible}
-        quantity={1}
-        coinsUsed={0}
-        amountPaid={voucher?.discountTitle ?? ''}
-        onBack={() => setSuccessVisible(false)}
-        onMyVouchers={() => {
-          setSuccessVisible(false);
-          onClose();
-        }}
-      /> */}
+        {}
       </Modal>
     </>
   );

@@ -118,8 +118,6 @@ const buildViewModel = (data, passed) => {
     p.bannerImage ||
     null;
 
-  // The event carries dedicated ticket artwork; fall back to the banner chain
-  // for older events that were created before that field existed.
   const ticketImage =
     eventDetails.ticketImage || p.ticketImage || bannerImage || null;
 
@@ -194,8 +192,6 @@ const SummaryRow = ({ subtext, label, value, total, muted }) => {
   );
 };
 
-// Copy-to-clipboard control with its own micro feedback: the icon pops and
-// morphs into a green checkmark on tap, then eases back to the copy glyph.
 const CopyButton = ({ value }) => {
   const [copied, setCopied] = useState(false);
   const scale = useSharedValue(1);
@@ -336,9 +332,6 @@ const EventBookingDetailsScreen = ({ navigation, route }) => {
     vm.bookingFee != null ||
     vm.grandTotal != null;
 
-  // `docked` is the scrollable variant: its title stays hidden until the banner
-  // has collapsed into the circle beside it. The plain variant is used by the
-  // loading/error states, which have nothing to scroll.
   const renderHeader = ({ docked } = {}) => (
     <View style={[styles.header, { paddingTop: headerTop }]}>
       <AnimatedPressable
@@ -375,7 +368,6 @@ const EventBookingDetailsScreen = ({ navigation, route }) => {
     </View>
   );
 
-  // Edge case: navigated without an identifiable booking.
   if (!bookingId) {
     return (
       <View style={styles.container}>
@@ -393,7 +385,6 @@ const EventBookingDetailsScreen = ({ navigation, route }) => {
     );
   }
 
-  // Edge case: first load with nothing to show yet.
   if (isLoading && !data && !passed) {
     return (
       <View style={styles.container}>
@@ -410,7 +401,6 @@ const EventBookingDetailsScreen = ({ navigation, route }) => {
     );
   }
 
-  // Edge case: request failed and there's no fallback data to fall back on.
   if (isError && !data && !passed) {
     return (
       <View style={styles.container}>
@@ -605,7 +595,7 @@ const EventBookingDetailsScreen = ({ navigation, route }) => {
             <AccordionSection title="Payment summary">
               <View>
                 <SummaryRow label="Subtotal" value={formatPrice(vm.subTotal)} />
-                {/* <SummaryRow label="Tax" value={formatPrice(vm.tax)} /> */}
+                {}
                 <SummaryRow
                   label="
                   Convenience fee"
@@ -683,8 +673,7 @@ const EventBookingDetailsScreen = ({ navigation, route }) => {
         </Animated.View>
       </Animated.ScrollView>
 
-      {/* Sits above both the scroll view and the header so it can travel from
-          the page body into the header row without being clipped. */}
+      {}
       <Animated.View style={[styles.banner, bannerStyle]} pointerEvents="none">
         <Animated.Image
           source={ticketImage}

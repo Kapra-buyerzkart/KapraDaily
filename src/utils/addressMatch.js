@@ -7,9 +7,6 @@ export const normalizeString = str => {
     .replace(/(.)\1+/g, '$1');
 };
 
-// Loose match between a saved address label and a GPS reverse-geocoded
-// address. Falls back to Longest Common Substring to tolerate minor
-// spelling variations between what a user typed and what Google returns.
 export const isFuzzyMatch = (saved, gps) => {
   if (!saved || !gps) return false;
   const sNorm = normalizeString(saved);

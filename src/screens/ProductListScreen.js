@@ -58,7 +58,6 @@ const ProductListScreen = () => {
     { sortBy: filters.sort, priceMin: filters.min, priceMax: filters.max },
   );
 
-  // Stable callback — AnimatedHeader is memo-wrapped so this avoids re-renders
   const handleSearchChange = useCallback(
     text => {
       setActiveSearchText(text);
@@ -71,7 +70,6 @@ const ProductListScreen = () => {
     setFilters(applied);
   }, []);
 
-  // Stable callbacks — AnimatedHeader is memo-wrapped so this avoids re-renders
   const handleBack = useCallback(() => {
     navigation.goBack();
   }, [navigation]);

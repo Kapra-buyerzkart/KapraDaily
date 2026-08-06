@@ -21,7 +21,6 @@ const STATUS_COLORS = {
   failed: '#FF6B6B',
 };
 
-// Bookings the user can open a ticket/detail view for.
 const OPENABLE_STATUSES = ['confirmed', 'completed'];
 
 const getBookingImageSource = item => {

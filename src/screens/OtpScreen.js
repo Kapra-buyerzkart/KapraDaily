@@ -46,7 +46,6 @@ import images from '@/assets/images';
 const EMAIL_OTP_FALLBACK_RESEND_THRESHOLD = 1;
 
 const mergeCustomerIdIntoProfile = async custId => {
-  // logger.log('????????', custId)
   const storedProfile = await secureStore.getItem('profile');
   const existingProfile = storedProfile ? JSON.parse(storedProfile) : {};
 
@@ -54,8 +53,6 @@ const mergeCustomerIdIntoProfile = async custId => {
     ...existingProfile,
     custId,
   };
-
-  // logger.log('updatedProfile', updatedProfile)
 
   await secureStore.setItem('profile', JSON.stringify(updatedProfile));
 };
@@ -70,7 +67,7 @@ const OtpScreen = () => {
   const [otp, setOtp] = useState(['', '', '', '', '']);
   const inputRefs = Array.from({ length: 5 }, () => useRef(null));
 
-  const [timer, setTimer] = useState(30); // 1 minute
+  const [timer, setTimer] = useState(30);
   const [isResendDisabled, setIsResendDisabled] = useState(true);
   const [loading, setLoading] = useState(false);
   const [resendCount, setResendCount] = useState(0);
@@ -156,7 +153,6 @@ const OtpScreen = () => {
     };
   }, []);
 
-  // Countdown effect
   useEffect(() => {
     let interval;
     if (isResendDisabled) {
@@ -206,10 +202,8 @@ const OtpScreen = () => {
       const response = otpEmail
         ? await verifyLoginOtpEmail(otpEmail, enteredOtp)
         : await verifyLoginOtp(phone, enteredOtp);
-      // logger.log('Verify OTP Response:', response);
 
       if (response?.success && response?.data) {
-        // logger.log("mmmmmmm")
         const { accessToken, refreshToken, custId } = response.data;
         await setTokens(accessToken, refreshToken);
 
@@ -218,7 +212,6 @@ const OtpScreen = () => {
           OneSignal.login(custId.toString());
         }
 
-        // 🔥 Fetch the actual profile from backend so the home screen shows their real saved location!
         if (loadProfile) {
           await loadProfile();
         }
@@ -247,7 +240,6 @@ const OtpScreen = () => {
   };
 
   const handleContinueRegister = async () => {
-    // logger.log('enteredOtp', enteredOtp)
     const enteredOtp = otp.join('');
     if (enteredOtp.length < 5) {
       showStatus({
@@ -261,7 +253,6 @@ const OtpScreen = () => {
     try {
       setLoading(true);
       const response = await verifyRegisterOtp(phone, enteredOtp);
-      // logger.log('Verify OTP Response:', response);
 
       if (response?.success && response?.data) {
         const registerToken = response.data.registerToken;
@@ -269,46 +260,7 @@ const OtpScreen = () => {
           registerToken,
           phone,
         });
-        // logger.log('registerToken', registerToken)
-        // logger.log('name', name)
-        // logger.log('email', email)
-        // logger.log('password', password)
-        // logger.log('whatsAppNo', whatsAppNo)
-        // logger.log('referCode', referCode)
-        // logger.log('pincodeAreaId', pincodeAreaId)
-        // const registerResponse = await registerUser({ registerToken, name, email, password, whatsAppNo, referCode, pincodeAreaId, });
-        // logger.log('Register User Response:', registerResponse);
-        // navigation.reset({
-        //     index: 0,
-        //     routes: [{ name: 'MainTabs' }],
-        // });
-        // if (registerResponse?.success) {
-        //     showStatus({
-        //         type: 'success',
-        //         title: 'Success',
-        //         message: 'Registration completed successfully',
-        //         // onClose: () => navigation.navigate('LoginScreen')
-        //         onClose: async () => {
-        //             const { accessToken, refreshToken, custId } = registerResponse.data;
-        //             await setTokens(accessToken, refreshToken);
-        //             if (custId) {
-        //                 await mergeCustomerIdIntoProfile(custId);
-        //             }
 
-        //             navigation.reset({
-        //                 index: 0,
-        //                 routes: [{ name: 'MainTabs' }],
-        //             });
-        //         }
-
-        //     });
-        // } else {
-        //     showStatus({
-        //         type: 'error',
-        //         title: 'Error',
-        //         message: registerResponse?.message || 'Registration failed'
-        //     });
-        // }
       } else {
         showStatus({
           type: 'error',
@@ -342,11 +294,8 @@ const OtpScreen = () => {
     try {
       setLoading(true);
       const response = await verifyForgotPwdOtp(phone, enteredOtp);
-      // logger.log('Verify OTP Response:', response);
 
       if (response?.success && response?.data) {
-        // const { accessToken, refreshToken } = response.data;
-        // await setResetToken(response?.data?.resetToken);
 
         navigation.reset({
           index: 0,
@@ -390,7 +339,7 @@ const OtpScreen = () => {
         title: 'Success',
         message: 'OTP resent successfully',
       });
-      setOtp(['', '', '', '', '']); // clear inputs
+      setOtp(['', '', '', '', '']);
       inputRefs[0].current?.focus();
       setTimer(30);
       setIsResendDisabled(true);
@@ -407,15 +356,10 @@ const OtpScreen = () => {
     }
   };
 
-  // Opens the email OTP fallback bottom sheet. Memoized since it's passed
-  // down as an onPress handler.
   const handleOpenEmailOtpSheet = React.useCallback(() => {
     emailOtpSheetRef.current?.open();
   }, []);
 
-  // Fired by EmailOtpBottomSheet once the email OTP has actually been sent.
-  // Records the target email so handleContinueLogin verifies through
-  // verifyLoginOtpEmail (verifyotpmail) instead of the phone-based flow.
   const handleEmailOtpSuccess = email => {
     setOtpEmail(email);
     setOtp(['', '', '', '', '']);
@@ -452,13 +396,7 @@ const OtpScreen = () => {
 
       <HelpSupportModal ref={helpSheetRef} />
 
-      {/* Email OTP sending disabled for now.
-      <EmailOtpBottomSheet
-        ref={emailOtpSheetRef}
-        phone={phone}
-        onSuccess={handleEmailOtpSuccess}
-        onError={handleEmailOtpError}
-      /> */}
+      {}
       <View style={styles.imagePreloader} pointerEvents="none">
         <Image
           source={require('../assets/images/splash/backgroundbg.png')}
@@ -491,7 +429,7 @@ const OtpScreen = () => {
           resizeMode="contain"
         />
       </View>
-      {/* {logger.log('type', type)} */}
+      {}
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -598,23 +536,7 @@ const OtpScreen = () => {
               </View>
             </View>
 
-            {/* Email OTP fallback disabled for now — users only use the
-                SMS/WhatsApp OTP resend below.
-            {type === 'login' &&
-              resendCount >= EMAIL_OTP_FALLBACK_RESEND_THRESHOLD && (
-                <TouchableOpacity
-                  style={styles.emailFallbackContainer}
-                  onPress={handleOpenEmailOtpSheet}
-                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                >
-                  <Text style={styles.emailFallbackText}>
-                    Didn't receive OTP?{' '}
-                    <Text style={styles.emailFallbackLink}>
-                      Send OTP to Email
-                    </Text>
-                  </Text>
-                </TouchableOpacity>
-              )} */}
+            {}
 
             <TouchableOpacity
               style={styles.continueButton}

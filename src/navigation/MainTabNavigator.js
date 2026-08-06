@@ -15,10 +15,6 @@ import Toast from 'react-native-simple-toast';
 import ServiceSwitcherModal from '../components/ServiceSwitcherModal';
 import AnimatedTabBar from '../components/AnimatedTabBar';
 
-// HomeStack is the initial tab and is required eagerly. The other three tabs
-// are deferred: bottom-tabs already renders them lazily, but naming them
-// directly in `component={...}` still executed their modules the moment this
-// navigator first rendered.
 const CategoriesScreen = lazyScreen(() =>
   require('../screens/CategoriesScreen'),
 );
@@ -29,11 +25,6 @@ const Tab = createBottomTabNavigator();
 
 const STORE_ICON = require('../assets/icons/OBJECTS.png');
 
-// ── Hoisted tab option objects ────────────────────────────────────────────
-// These used to be rebuilt inline on every MainTabNavigator render. The
-// navigator re-renders whenever AppContext changes (isStoreUnavailable, and
-// every profile update), and a fresh `options` object invalidates React
-// Navigation's per-screen options memoisation, re-rendering the whole tab bar.
 const renderHomeIcon = ({ focused }) => (
   <Image
     source={focused ? icons.homeFilled : icons.home}
@@ -106,15 +97,11 @@ export default function MainTabNavigator() {
 
   const insets = useSafeAreaInsets();
 
-  // Depends only on the inset, so it is stable across the AppContext-driven
-  // re-renders that previously handed the navigator a brand-new object.
   const screenOptions = useMemo(
     () => ({
       tabBarShowLabel: true,
       tabBarActiveTintColor: '#000000ff',
       tabBarInactiveTintColor: null,
-      // Background tabs stay mounted, so without this each one re-rendered on
-      // every cart/profile change. See RootNavigator.
       freezeOnBlur: true,
       tabBarStyle: {
         height:
@@ -165,10 +152,6 @@ export default function MainTabNavigator() {
     <>
       <Tab.Navigator
         initialRouteName="Home"
-        // Custom tab bar swaps in the animated, scroll-aware bar below.
-        // Tab.Screen options (tabBarIcon/tabBarLabel) and listeners
-        // (tabPress) are untouched and still drive AnimatedTabBar's
-        // rendering/press behavior via `descriptors` — see AnimatedTabBar.js.
         tabBar={renderTabBar}
         screenOptions={screenOptions}
       >
@@ -186,7 +169,7 @@ export default function MainTabNavigator() {
           options={CATEGORIES_OPTIONS}
         />
 
-        {/* ---------------- WISHLIST ---------------- */}
+        {}
         <Tab.Screen
           name="Wishlist"
           component={WishlistScreen}
@@ -216,7 +199,6 @@ const styles = StyleSheet.create({
     height: hp('8%'),
     backgroundColor: '#FFFFFF',
     paddingTop: hp('0.2%'),
-    // paddingBottom: hp("1%"),
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.25,
@@ -229,7 +211,6 @@ const styles = StyleSheet.create({
     width: wp('5.12%'),
     resizeMode: 'contain',
   },
-  // Was an inline object literal on the Wishlist icon; identical values.
   wishlistIconImage: {
     height: wp('5.4%'),
     width: wp('5.4%'),

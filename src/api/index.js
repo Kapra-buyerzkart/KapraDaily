@@ -100,7 +100,6 @@ export const resendLoginOtp = async phone => {
   return post('auth/resendotp', payload);
 };
 
-// Fallback delivery channel for the login OTP.
 export const sendLoginOtpToEmail = async email => {
   const payload = {
     emailId: email,

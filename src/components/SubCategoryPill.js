@@ -83,7 +83,6 @@ const styles = StyleSheet.create({
     height: 44,
     paddingHorizontal: wp('3%'),
     borderRadius: 22,
-    // borderWidth: 1,
   },
   subCatPillImage: {
     width: wp('7%'),

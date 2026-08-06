@@ -38,8 +38,6 @@ export const useDeliverySlot = () => {
                 if (response?.success && response?.data) {
                     setDeliveryModes(response.data);
 
-                    // Map API slots to slotsByDate structure
-                    // Assuming API returns data like: [{ type: 'slotted', dates: [{ date: '...', slots: [...] }] }]
                     const slottedMode = response.data.find(m => m.type === 'slotted');
                     if (slottedMode && slottedMode.dates) {
                         const newSlots = {};
@@ -58,7 +56,6 @@ export const useDeliverySlot = () => {
 
     const datesList = useMemo(() => getNextDates(), []);
 
-    // Computed delivery mode for API calls
     const deliveryMode = selectedDeliveryType === 'slot' ? 'slotted' : 'express';
 
     const onSelectDate = (index) => {

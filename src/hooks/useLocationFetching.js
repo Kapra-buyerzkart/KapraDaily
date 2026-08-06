@@ -44,17 +44,10 @@ export const useLocationFetching = ({ navigation }) => {
 
   const userInteractedRef = useRef(false);
   const timeoutRef = useRef(null);
-  // Single-flight + mount guards. Async work here (geolocation callbacks,
-  // network promises, timers, the AppState re-fetch) can resolve AFTER the user
-  // has already left this screen. Without these guards a late resolution calls
-  // navigateAfterLocation() again and resets the stack back to AuthSuccessScreen
-  // even though the user is now on Home — the "app jumps to AuthSuccess" bug.
   const hasNavigatedRef = useRef(false);
   const isMountedRef = useRef(true);
   const pendingTimeoutsRef = useRef([]);
 
-  // setTimeout wrapper that (a) is tracked so it can be cleared on unmount and
-  // (b) no-ops its callback if the screen has already unmounted.
   const registerTimeout = (fn, delay) => {
     const id = setTimeout(() => {
       pendingTimeoutsRef.current = pendingTimeoutsRef.current.filter(
@@ -67,8 +60,6 @@ export const useLocationFetching = ({ navigation }) => {
   };
 
   const navigateAfterLocation = () => {
-    // Bail if we've already navigated away or the screen has unmounted, so a
-    // stale async callback can't pull the user back to AuthSuccessScreen.
     if (hasNavigatedRef.current || !isMountedRef.current) return;
     hasNavigatedRef.current = true;
     if (profile?.custId) {
@@ -81,8 +72,6 @@ export const useLocationFetching = ({ navigation }) => {
     }
   };
 
-  // Leave the location screen without a pincode so the app continues and the
-  // header shows "Select Location". Used when the user denies permission / GPS.
   const continueWithoutLocation = () => {
     stopAutoNavigateTimer();
     setShowConfirm(false);
@@ -93,7 +82,6 @@ export const useLocationFetching = ({ navigation }) => {
   const openLocationSettings = () => {
     if (Platform.OS !== 'android') return;
 
-    // Try all safe fallback options
     Linking.openSettings().catch(() => {});
     Linking.sendIntent('android.settings.LOCATION_SOURCE_SETTINGS').catch(
       () => {},
@@ -103,16 +91,14 @@ export const useLocationFetching = ({ navigation }) => {
 
   const startAutoNavigateTimer = () => {
     timeoutRef.current = setTimeout(() => {
-      // Navigate only if user has NOT interacted
       setLocationNotFetched(false);
       if (!userInteractedRef.current && showConfirm) {
         navigateAfterLocation();
       }
-    }, 10000); // 10 seconds
+    }, 10000);
   };
 
   const stopAutoNavigateTimer = () => {
-    // Stop the 10-sec auto navigation when the user interacts
     userInteractedRef.current = true;
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
   };
@@ -132,7 +118,6 @@ export const useLocationFetching = ({ navigation }) => {
       const geocodeResult = response.data.results[0];
       funSetAddComponent(geocodeResult);
 
-      // Find postal code checking all results (not just results[0])
       let postalCode = null;
       if (response.data.results) {
         for (const res of response.data.results) {
@@ -146,11 +131,8 @@ export const useLocationFetching = ({ navigation }) => {
         }
       }
 
-      // Await the full area-matching flow before clearing loading
       await getLocationPincodeAreas(postalCode, formattedAddress);
     } catch (error) {
-      // No hard-coded fallback: land on home with no pincode so the header
-      // shows "Select Location".
       setLocationNotFetched(true);
       navigateAfterLocation();
     }
@@ -158,7 +140,6 @@ export const useLocationFetching = ({ navigation }) => {
 
   const getLocationPincodeAreas = async (postcode, formattedAddress) => {
     try {
-      // Fetch user's saved addresses to check for a matching pincode
       let addressList = [];
       try {
         const addressRes = await getAddressListApi();
@@ -166,20 +147,16 @@ export const useLocationFetching = ({ navigation }) => {
           ? addressRes.data
           : addressRes?.data?.items || addressRes?.data || [];
       } catch (addrErr) {
-        // No saved addresses (e.g. guest user) — continue without a match
       }
 
-      // Step 1: Try matching against user's saved addresses
       if (addressList.length > 0) {
         const matchingAddress = addressList.find(addr => {
-          // 1. Match by exact pincode
           const pinMatch =
             postcode && String(addr.pincode || addr.pin) === String(postcode);
           if (pinMatch) {
             return true;
           }
 
-          // 2. Dynamic fuzzy match (non-hardcoded) using area details
           if (formattedAddress) {
             if (
               addr.areaName &&
@@ -193,7 +170,6 @@ export const useLocationFetching = ({ navigation }) => {
             ) {
               return true;
             }
-            // Fallback to match normalized sublocality in addLine2 (e.g. Thripunithura)
             const line2Norm = normalizeString(addr.addLine2);
             if (
               line2Norm.length > 3 &&
@@ -231,21 +207,16 @@ export const useLocationFetching = ({ navigation }) => {
         }
       }
 
-      // Step 2: Guard against null/empty postcode
       if (!postcode || String(postcode).trim().length === 0) {
-        // No hard-coded fallback: land on home with no pincode so the header
-        // shows "Select Location".
         setShowConfirm(false);
         setLocationNotFetched(true);
         navigateAfterLocation();
         return;
       }
 
-      // Step 3: Look up areas by postal code
       let area = await getAreasByPincode(postcode);
 
       if (area?.data?.length > 1) {
-        // Multiple stores/areas — check if user's current pincodeAreaId is among them
         if (area?.data?.find(obj => obj?.pincodeAreaId == profile?.pincode)) {
           registerTimeout(() => {
             if (!userInteractedRef.current) {
@@ -265,15 +236,11 @@ export const useLocationFetching = ({ navigation }) => {
           navigateAfterLocation();
         }, 2000);
       } else {
-        // No areas found for this pincode (user is outside delivery zone):
-        // land on home with no pincode so the header shows "Select Location".
         setShowConfirm(false);
         setLocationNotFetched(true);
         navigateAfterLocation();
       }
     } catch (error) {
-      // No hard-coded fallback: land on home with no pincode so the header
-      // shows "Select Location".
       setShowConfirm(false);
       setLocationNotFetched(true);
       navigateAfterLocation();
@@ -293,18 +260,13 @@ export const useLocationFetching = ({ navigation }) => {
     };
 
     const onFinalError = error => {
-      // No hard-coded fallback location: land on home with no pincode so the
-      // header shows "Select Location" and the user can pick manually.
       setLocationNotFetched(true);
       navigateAfterLocation();
     };
 
-    // Cached / coarse location first (WiFi/cell — very fast on cold start)
     Geolocation.getCurrentPosition(
       onSuccess,
       error => {
-        // Escalate to high accuracy, but still accept a recent fix
-        // (maximumAge: 0 forces a brand-new fix that times out indoors/cold-start)
         Geolocation.getCurrentPosition(onSuccess, onFinalError, {
           enableHighAccuracy: true,
           timeout: 20000,
@@ -314,14 +276,13 @@ export const useLocationFetching = ({ navigation }) => {
       {
         enableHighAccuracy: false,
         timeout: 5000,
-        maximumAge: 600000, // allow cached location up to 10 minutes old
+        maximumAge: 600000,
       },
     );
   };
 
   const requestLocationPermission = async () => {
     try {
-      // First ask permission
       await PermissionsAndroid.request(
         PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
         {
@@ -330,7 +291,6 @@ export const useLocationFetching = ({ navigation }) => {
         },
       );
 
-      // Now check the real final status after requesting
       const isGranted = await PermissionsAndroid.check(
         PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
       );
@@ -344,8 +304,6 @@ export const useLocationFetching = ({ navigation }) => {
           onConfirm: () => openSettings(),
           cancelText: 'Continue without location',
           onCancel: () => continueWithoutLocation(),
-          // Force a choice: back / tapping outside must not strand the user on
-          // the location-fetching GIF. Only the two buttons dismiss it.
           dismissible: false,
         });
         return;
@@ -361,8 +319,6 @@ export const useLocationFetching = ({ navigation }) => {
           onConfirm: () => openLocationSettings(),
           cancelText: 'Continue without location',
           onCancel: () => continueWithoutLocation(),
-          // Force a choice: back / tapping outside must not strand the user on
-          // the location-fetching GIF. Only the two buttons dismiss it.
           dismissible: false,
         });
         return;
@@ -421,15 +377,13 @@ export const useLocationFetching = ({ navigation }) => {
       'change',
       async nextState => {
         if (nextState === 'active') {
-          // Already navigated away (or unmounting): don't start another location
-          // flow that would reset back to AuthSuccessScreen from Home.
           if (hasNavigatedRef.current || !isMountedRef.current) return;
           const savedOverride = await AsyncStorage.getItem('manualOverride');
           const storedPincodeAreaId = await AsyncStorage.getItem(
             'pincodeAreaId',
           );
           if (savedOverride === 'true' || storedPincodeAreaId) {
-            return; // Skip auto-fetching: a location is already persisted/chosen
+            return;
           }
 
           const gpsEnabled = await DeviceInfo.isLocationEnabled();
@@ -451,12 +405,8 @@ export const useLocationFetching = ({ navigation }) => {
     return () => subscription.remove();
   }, []);
 
-  // ---- Handlers exposed to the screen ----
-
   const onSkip = () => {
     stopAutoNavigateTimer();
-    // Skip without setting a location: land on home with no pincode so
-    // the header shows "Select Location".
     setShowConfirm(false);
     setLocationNotFetched(true);
     navigateAfterLocation();
@@ -530,8 +480,6 @@ export const useLocationFetching = ({ navigation }) => {
       Alert.alert('Alert', 'Please select an area');
       return;
     }
-    // Show a loader inside the Apply button while the pincode is saved. On
-    // success we navigate away (screen unmounts); on failure we restore it.
     setApplyLoading(true);
     try {
       await editPincode(selectedLocation);

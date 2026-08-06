@@ -26,7 +26,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#000000',
   },
 
-  /* Header bar */
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -47,8 +46,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontFamily: 'Gilroy-Bold',
   },
-  // Leaves a permanent slot for the docked banner circle. The title is
-  // invisible while the banner is expanded, so the gap costs nothing there.
   headerTitleDocked: {
     paddingLeft: AVATAR_SIZE + AVATAR_GAP,
     fontSize: 18,
@@ -66,12 +63,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    // Reserves the space the (overlaid) banner occupies while expanded.
     paddingTop: BANNER_HEIGHT,
     paddingBottom: 40,
   },
 
-  /* Banner — overlaid on the scroll view so it can dock into the header */
   banner: {
     position: 'absolute',
     borderRadius: BANNER_RADIUS,
@@ -84,7 +79,6 @@ const styles = StyleSheet.create({
     height: '100%',
   },
 
-  /* Days-left pill */
   daysPill: {
     alignSelf: 'flex-start',
     marginHorizontal: 20,
@@ -100,7 +94,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Gilroy-SemiBold',
   },
 
-  /* Title block */
   titleBlock: {
     paddingHorizontal: 20,
     marginTop: 12,
@@ -118,7 +111,6 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
 
-  /* Booking number pill */
   bookingPill: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -148,7 +140,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.06)',
   },
 
-  /* Booking status chip */
   statusChip: {
     alignSelf: 'flex-start',
     marginTop: 10,
@@ -163,7 +154,6 @@ const styles = StyleSheet.create({
     textTransform: 'capitalize',
   },
 
-  /* Empty / loading / error states */
   stateWrap: {
     flex: 1,
     alignItems: 'center',
@@ -190,7 +180,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Gilroy-Bold',
   },
 
-  /* Ticket / booking-item rows */
   itemRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -246,7 +235,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Gilroy-SemiBold',
   },
 
-  /* Payment summary rows */
   summaryRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -292,7 +280,6 @@ const styles = StyleSheet.create({
     borderTopColor: 'rgba(255,255,255,0.07)',
   },
 
-  /* Details accordion rows */
   detailRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -331,13 +318,10 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: 'rgba(255,255,255,0.07)',
   },
-  // Caps the HTML details block so long copy scrolls internally instead of
-  // pushing the fixed detail rows off-screen.
   detailHtmlScroll: {
     maxHeight: 220,
   },
 
-  /* Bottom CTA */
   bottomBar: {
     position: 'absolute',
     left: 0,
@@ -349,7 +333,6 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: 'rgba(255,255,255,0.06)',
   },
-  // Placeholder CTA: dashed outline + muted fill so it reads as "not wired yet".
   viewTicketBtn: {
     flexDirection: 'row',
     alignItems: 'center',

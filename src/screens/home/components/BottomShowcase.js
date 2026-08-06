@@ -13,19 +13,6 @@ import {
   HAIRLINE,
 } from '@/styles/homeTheme';
 
-// A banner-backed rail of product tiles. Both the banner itself and each tile
-// are independently tappable — the banner and its products can point at
-// different destinations.
-//
-// The composition is a tray, not an overlay: the artwork owns the whole card,
-// and the products ride in a white tray floating over its lower edge. That tray
-// is what makes the row read as a shelf of buyable things rather than as
-// cut-outs pasted onto the banner — and it means the artwork can change without
-// the products losing their background.
-
-// Three wells and a sliver of the fourth, so the shelf is visibly scrollable
-// without a scrollbar. Stride is declared with the well because the rail snaps
-// on it.
 const WELL = wp('24%');
 const WELL_GAP = SPACE.sm;
 const WELL_STRIDE = WELL + WELL_GAP;
@@ -90,8 +77,6 @@ const BottomShowcase = ({ banner, products, onBannerPress }) => {
             getItemLayout={getItemLayout}
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.trayContent}
-            // Snap on the well stride so a flick parks a product against the
-            // tray's left edge instead of halfway between two.
             snapToInterval={WELL_STRIDE}
             snapToAlignment="start"
             decelerationRate="fast"
@@ -106,9 +91,6 @@ const BottomShowcase = ({ banner, products, onBannerPress }) => {
 };
 
 const styles = StyleSheet.create({
-  // Inset to the gutter, rounded and lifted, so it reads as artwork placed on
-  // the page rather than a panel bolted to the screen edges. The shadow lives
-  // out here because the canvas has to clip its own background image.
   card: {
     width: wp('94%'),
     height: hp('32%'),
@@ -129,13 +111,9 @@ const styles = StyleSheet.create({
     height: '100%',
     resizeMode: 'cover',
   },
-  // Very slightly translucent: enough that the artwork's colour reads through
-  // the tray and the two feel like one object, not enough to muddy the wells.
   tray: {
     margin: TRAY_INSET,
     padding: TRAY_PAD,
-    // The list is inset on the left by the padding; letting it run to the
-    // tray's right edge is what puts the fourth well half in frame.
     paddingRight: 0,
     borderRadius: RADIUS.lg,
     backgroundColor: 'rgba(255,255,255,0.94)',
@@ -147,8 +125,6 @@ const styles = StyleSheet.create({
   trayContent: {
     paddingRight: TRAY_PAD,
   },
-  // Products are cut-outs on transparent backgrounds. A tinted well gives each
-  // one an edge and a consistent footprint, however tall or wide the cut-out.
   well: {
     width: WELL,
     height: WELL,

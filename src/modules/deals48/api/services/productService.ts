@@ -23,10 +23,6 @@ export const getRelatedProductsApi = async (
   });
 };
 
-// Suggestions back the search-as-you-type field, so a failure here must never
-// surface as an error — an empty result set is the correct degraded state.
-// The upstream endpoint returns a 200 carrying status: 'SERVER_ERROR' rather
-// than a real error status, so that case is folded in alongside the throw.
 export const getProductSuggestionsApi = async (
   term: string,
   pincodeAreaId: number | null,

@@ -15,9 +15,6 @@ import QRCode from 'react-native-qrcode-svg';
 import { wp, hp } from '../../../utils/responsive';
 import COLORS from '@/styles/colors';
 
-// Full-screen enlarged QR. The offsets cancel the screen padding so the overlay
-// covers the entire screen; tapping anywhere dismisses it. Animates against the
-// shared `progress` value driven by useQrZoom.
 const QrZoomOverlay = ({ ticket, progress, onClose }) => {
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();

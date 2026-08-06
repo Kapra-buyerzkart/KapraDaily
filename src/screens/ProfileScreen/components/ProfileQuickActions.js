@@ -38,9 +38,6 @@ const ACTIONS = [
   },
 ];
 
-// Only the well scales — the label underneath stays put. Scaling the whole
-// column would drag the text off its baseline and make the row look like it
-// were breathing.
 const QuickAction = ({ icon, label, a11y, onPress }) => {
   const scale = useSharedValue(1);
   const wellStyle = useAnimatedStyle(() => ({

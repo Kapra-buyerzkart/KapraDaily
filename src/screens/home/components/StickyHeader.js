@@ -39,18 +39,11 @@ import {
   SEARCH_HEIGHT,
 } from '../hooks/useHomeAnimations';
 
-// Was a local '#1A1A1A'. The theme's INK.strong (#12131A) is the same intent a
-// shade deeper, and every other surface on this screen already reads from it —
-// the local copy was the last thing on the header defining its own ink.
 const CHIP_INK = INK.strong;
 const BANNER_BLEED = BANNER_PARALLAX;
 const SEARCH_INSET = wp('4.7%');
 const SEARCH_EXAMPLES = ['Basmati Rice', 'Milk', 'Sunflower Oil', 'Lemons'];
 
-// Banner URLs this session has already decoded at least once. Module-level for
-// the same reason `lastKnownBanner` is: it has to outlive the screen, because
-// every entry into Home is a fresh mount and the reveal below is a cold-start
-// treatment that must not run again on a bitmap the image cache already holds.
 const paintedBanners = new Set();
 const StickyHeader = ({
   top,
@@ -84,36 +77,12 @@ const StickyHeader = ({
     [onHeaderMetrics],
   );
 
-  // Keyed off the URL string, not the object. `transformHomepageResponse`
-  // rebuilds `{ uri }` from scratch every time it runs, so each refetch (the
-  // homepage query refetches on every mount) handed <Image> a source it had to
-  // treat as new and re-request — dropping the artwork for the frames it took
-  // to come back, which is exactly when the orange hold behind it shows. Same
-  // URL now means the same object, so the image is never re-issued.
   const bannerUrl = topSectionBanner?.[0]?.uri?.uri;
   const bannerSource = React.useMemo(
     () => (bannerUrl ? { uri: bannerUrl } : null),
     [bannerUrl],
   );
 
-  // The artwork cannot be there on the frame the header mounts, and every
-  // entry into Home is a fresh mount, so *something* is always visible first.
-  // Cutting straight to the image the instant it decodes is what makes that
-  // hand-off register as a blink. Revealing it over ~220ms instead turns the
-  // same hand-off into the banner settling in — the hold underneath is already
-  // the tone the scrim gives any artwork, so most of the fade is imperceptible.
-  //
-  // Reset on URL change, not on mount: a refetch that returns different
-  // artwork should fade the new image in rather than swap it under the user.
-  //
-  // And only for artwork this session has never painted. Holding at 0 until JS
-  // hears back from `onLoad` is what was putting the orange up on *every*
-  // Android entry into Home: a remounted Fresco view re-requests its bitmap and
-  // reports back a few frames later even on a warm cache, so the hold plus the
-  // 220ms fade ran again each time. iOS returns a memory-cached image inside
-  // the first commit, which is why only its cold start ever showed this. Once
-  // the URL is in `paintedBanners` the image starts opaque and the hold behind
-  // it is never seen.
   const seen = !!bannerUrl && paintedBanners.has(bannerUrl);
   const bannerReveal = useSharedValue(seen ? 1 : 0);
   React.useEffect(() => {
@@ -123,8 +92,6 @@ const StickyHeader = ({
     if (bannerUrl) {
       paintedBanners.add(bannerUrl);
     }
-    // Already opaque on a cache hit — animating from 1 to 1 is a no-op, but
-    // skip it so a re-entry never schedules a UI-thread animation at all.
     if (bannerReveal.value !== 1) {
       bannerReveal.value = withTiming(1, { duration: 220 });
     }
@@ -178,11 +145,6 @@ const StickyHeader = ({
               </TouchableOpacity>
             </>
           ) : isLocationPending ? (
-            // Home has not resolved the stored address yet. Showing "Select
-            // Location" here is a claim we cannot back — for anyone who has a
-            // saved address it is wrong, and it is withdrawn a moment later.
-            // Hold the same footprint instead so the real content drops into
-            // place without the block resizing.
             <View
               style={styles.locationPending}
               pointerEvents="none"
@@ -301,10 +263,7 @@ const StickyHeader = ({
             style={styles.searchProductText}
           />
         </View>
-        {/* The rule is what separates the field from its trailing action rather
-            than letting the two glyphs read as a pair of buttons — the same
-            detail the Search screen's field carries, and the reason the
-            clipboard no longer needs to be black to look tappable. */}
+        {}
         <View style={styles.fieldRule} />
         <Feather
           name="clipboard"
@@ -316,27 +275,16 @@ const StickyHeader = ({
     </Animated.View>
   );
 
-  // `bannerPending` covers the cold-start case the sticky hold can't: nothing
-  // has been painted this session, so the frame is rendered banner-shaped and
-  // empty (the orange hold is what it is *for*) and the artwork mounts into it
-  // when the URL lands. Without it the first paint used the bannerless branch
-  // and then replaced the whole subtree, which both remounted the image and
-  // resized the header.
   if (bannerSource || bannerPending) {
     return (
-      // The collapse is a translate on the outermost node: everything above the
-      // search bar is carried off the top of the screen, so nothing resizes.
       <Animated.View style={headerCollapseStyle}>
         <TouchableOpacity
           activeOpacity={0.9}
           onPress={handleBannerPress}
-          // Nothing to route to until the artwork is known.
           disabled={!bannerSource}
           style={styles.bannerShadow}
         >
-          {/* Layered rather than an ImageBackground: the artwork needs to move
-              independently of the chrome for the parallax, and it has to sit
-              under the white sheet that the content in turn sits on top of. */}
+          {}
           <View
             style={[
               styles.bannerFrame,
@@ -353,9 +301,6 @@ const StickyHeader = ({
               ]}
               accessible={false}
               onLoad={onBannerLoad}
-              // Android's own 300ms cross-fade is off because the reveal above
-              // replaces it: that one is uncancellable, runs on the UI thread's
-              // draw pass, and is not shared with iOS, which got a hard cut.
               fadeDuration={0}
             />
 
@@ -400,34 +345,10 @@ const StickyHeader = ({
 const styles = StyleSheet.create({
   bannerFrame: {
     width: wp('100%'),
-    // A static floor, not an animated one — the frame keeps this box for the
-    // whole scroll.
     minHeight: BANNER_MIN_HEIGHT,
-    // Clips the overhanging artwork — without this the bleed and the parallax
-    // scale would paint over the content below the header.
     overflow: 'hidden',
-    // What shows for the handful of frames before the artwork paints, and for
-    // as long as there is no banner at all (no location selected yet). Every
-    // entry into Home is a fresh mount (the tab root is reset, and back exits
-    // the app), so the banner Image is a new native view each time and has to
-    // re-request its bitmap even on a warm disk cache — measured at ~5 frames
-    // / 165ms on an emulator, longer on a cold cache.
-    //
-    // Brand orange, matching the bannerless header in `fallbackHeaderBgStyle`
-    // so the two states are the same surface. It also keeps the white header
-    // text and icons legible while it is up, which a white hold would not.
     backgroundColor: ACCENT.primary,
   },
-  // The banner used to end on a hard horizontal line straight into
-  // TopShowcase's own full-bleed artwork — two unrelated photographs meeting
-  // edge to edge. A soft cast separates them by reading the header as a plane
-  // above the page, which it genuinely is, rather than drawing a rule between
-  // them. Downward-only, and the one place the flat theme's "lift only what is
-  // actually above the page" clause applies on this screen.
-  //
-  // It lives on the wrapper, not on bannerFrame: `overflow: 'hidden'` there
-  // (which the parallax bleed requires) sets masksToBounds on iOS, and that
-  // clips the view's own shadow along with its children.
   bannerShadow: {
     shadowColor: '#0B1020',
     shadowOffset: { width: 0, height: 4 },
@@ -440,7 +361,6 @@ const styles = StyleSheet.create({
   },
   bannerImage: {
     ...StyleSheet.absoluteFillObject,
-    // Overhang top and bottom so the parallax drift always has cover to spare.
     top: -BANNER_BLEED,
     bottom: -BANNER_BLEED,
     resizeMode: 'cover',
@@ -461,17 +381,10 @@ const styles = StyleSheet.create({
   addressView: {
     flexDirection: 'row',
     alignItems: 'center',
-    // Hug the content so the chevron sits right after the address instead of
-    // being pushed to the far edge of a full-width row.
     alignSelf: 'flex-start',
-    // The row itself must be allowed to shrink, or a long address makes it
-    // overflow the header rather than truncate inside it.
     flexShrink: 1,
     maxWidth: '100%',
   },
-  // Same box as the resolved ETA + address block, invisible: it is a spacer,
-  // not a skeleton — the wait is a couple of frames, so a shimmer here would
-  // itself be the flicker.
   locationPending: {
     opacity: 0,
   },
@@ -494,16 +407,8 @@ const styles = StyleSheet.create({
     ...TYPE.caption,
     color: '#FFFFFF',
     fontFamily: FONTS.gilroy.medium,
-    // Gilroy's declared ascent/descent are tight, and Android sizes a Text's
-    // line box straight from those metrics — so without a generous lineHeight
-    // the taller glyphs get shaved off top and bottom. iOS is more forgiving,
-    // which is why this only showed up on Android. TYPE.caption carries a
-    // 1.33 ratio, which clears the descenders; don't tighten it here.
     includeFontPadding: false,
     textAlignVertical: 'center',
-    // Shrink to fit the space left by the pin and chevron rather than being
-    // capped at a fixed width — the old maxWidth truncated short addresses
-    // that had room to spare on wider screens.
     flexShrink: 1,
   },
   bcoinContainer: {
@@ -539,26 +444,12 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     marginTop: SEARCH_MARGIN_START,
     height: SEARCH_HEIGHT,
-    // Constant, and shared with the Search screen's field — see SEARCH_FIELD.
-    // It used to be animated from the collapse progress, which is why it was
-    // absent here.
     borderRadius: SEARCH_FIELD.radius,
     marginHorizontal: SEARCH_INSET,
     paddingHorizontal: SPACE.base,
     flexDirection: 'row',
     alignItems: 'center',
     overflow: 'hidden',
-    // The shadow alone was doing two jobs and only managing one. It lifts the
-    // bar off the banner, but on light artwork — and against the white header
-    // once collapsed — the white-on-white edge dissolved and the bar lost its
-    // shape. The hairline is what actually draws the edge; the shadow is now
-    // just the lift, and shallower for it.
-    //
-    // Spelled out locally rather than spread from ELEVATION.sm: that token is
-    // commented out in homeTheme (the flat-page redesign), so the spread was
-    // resolving to nothing and this bar has had no shadow at all. Restoring the
-    // token would also restyle TokenProductCard's three call sites on another
-    // screen, which isn't this change's business.
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: HAIRLINE,
     shadowColor: '#0B1020',
@@ -586,9 +477,6 @@ const styles = StyleSheet.create({
   searchProductText: {
     ...TYPE.body,
     fontFamily: FONTS.gilroy.regular,
-    // #3A3A3A on white is 10.9:1, but the placeholder is set in Gilroy Light at
-    // small size where thin strokes read far lighter than the ratio suggests.
-    // Regular weight is what actually makes it legible outdoors.
     color: '#3A3A3A',
   },
   fieldRule: {
@@ -602,9 +490,4 @@ const styles = StyleSheet.create({
   },
 });
 
-// Memoised: the header sits above the scroll view and its content only depends
-// on profile/dashboard/banner data, but it was re-rendering on every HomeScreen
-// render — including the scroll-driven ones. Its animated styles are shared
-// values, so the collapse/fade animations keep running on the UI thread
-// regardless of whether this component re-renders.
 export default React.memo(StickyHeader);

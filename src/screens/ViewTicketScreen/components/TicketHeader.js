@@ -5,8 +5,6 @@ import icons from '@/assets/icons';
 import COLORS from '@/styles/colors';
 import { COIN_BALANCE } from '../constants';
 
-// Top header (back button + branded title) plus the sub header hint and the
-// UD Coin balance chip.
 const TicketHeader = ({ onBack, coinBalance = COIN_BALANCE }) => (
   <>
     <View style={styles.header}>
@@ -29,21 +27,11 @@ const TicketHeader = ({ onBack, coinBalance = COIN_BALANCE }) => (
         resizeMode="contain"
       />
 
-      {/* Spacer keeps the title optically centered against the back button */}
+      {}
       <View style={styles.backBtn} />
     </View>
 
-    {/* <View style={styles.subHeader}>
-      <Text style={styles.hintText}>Use UD Coins to Book Your Tickets</Text>
-      <View style={styles.coinChip}>
-        <Image
-          source={icons.udcoin}
-          style={styles.coinIcon}
-          resizeMode="contain"
-        />
-        <Text style={styles.coinText}>{coinBalance}</Text>
-      </View>
-    </View> */}
+    {}
   </>
 );
 

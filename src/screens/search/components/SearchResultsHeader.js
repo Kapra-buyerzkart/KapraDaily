@@ -3,7 +3,6 @@ import { View, Text } from 'react-native';
 import { MAX_FONT_SCALE } from '@/styles/homeTheme';
 import styles from '../SearchScreen.styles';
 
-// "Results found : N" row, shown only while there's an active search term.
 const SearchResultsHeader = ({ loading, resultCount, isGlobalFallback }) => (
   <View style={styles.resultRow}>
     <Text style={styles.resultText} maxFontSizeMultiplier={MAX_FONT_SCALE}>

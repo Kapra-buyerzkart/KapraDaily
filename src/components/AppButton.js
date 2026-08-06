@@ -20,7 +20,7 @@ const AppButton = ({
   style,
   textStyle,
   loaderColor,
-  variant = 'solid', // 'solid' | 'outline'
+  variant = 'solid',
   icon,
   iconPosition = 'left',
 }) => {
@@ -30,9 +30,6 @@ const AppButton = ({
 
   const handlePress = () => {
     if (isLoading || disabled) return;
-
-    // Trigger Haptic Feedback
-    // ReactNativeHapticFeedback.trigger("impactLight", hapticOptions);
 
     if (onPress) {
       onPress();

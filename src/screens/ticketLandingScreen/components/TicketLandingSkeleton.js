@@ -5,9 +5,6 @@ import Shimmer from '@/components/events/Shimmer';
 const GIFT_CARD_COUNT = 4;
 const UPCOMING_COUNT = 3;
 
-// Full-screen placeholder for the Popular tab's initial load. Mirrors the real
-// layout (hero, rewards card, gift-card row, upcoming events) so the whole
-// content area shimmers as one instead of each section popping in separately.
 const TicketLandingSkeleton = () => (
   <View>
     <View style={styles.heroWrap}>

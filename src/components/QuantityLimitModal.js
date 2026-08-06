@@ -10,23 +10,9 @@ import CustomModal, { MODAL_POSITION } from './modal/CustomModal';
 import { CART_COLORS, CART_RADIUS } from '../styles/cartTheme';
 import { FONTS } from '../styles/typography';
 
-/**
- * QuantityLimitModal
- *
- * Shown when the backend rejects an add/update because the per-product
- * purchase cap was hit ("Maximum quantity allowed for this product is
- * exceeded"). A toast was too easy to miss here: the quantity stepper
- * visibly snaps back on rollback, so without a blocking acknowledgement the
- * user just sees the number refuse to increase with no reason given.
- *
- * `message` is the server's own copy — it names the actual limit, so it is
- * rendered verbatim rather than replaced with generic wording.
- */
 const QuantityLimitModal = ({ visible, message, maxQuantity, onClose }) => {
   const modalRef = useRef(null);
 
-  // Bridge the parent-controlled `visible` prop to CustomModal's imperative
-  // open/close API, matching StatusModal/ConfirmationModal in this codebase.
   useEffect(() => {
     if (visible) {
       modalRef.current?.open();

@@ -1,16 +1,5 @@
 #!/usr/bin/env node
 
-/**
- * Scaffolds a new screen folder under src/screens/<ScreenName>/ with:
- *   - <ScreenName>.js   (screen component)
- *   - use<ScreenName>.js (hook)
- *   - styles.js          (StyleSheet)
- *
- * Usage:
- *   node scripts/createScreen.js ScreenName
- *   npm run create-screen -- ScreenName
- */
-
 const fs = require('fs');
 const path = require('path');
 

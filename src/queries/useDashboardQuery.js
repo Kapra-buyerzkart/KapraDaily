@@ -8,7 +8,7 @@ const useDashboardQuery = (custId) =>
     queryFn: getDashboardDataApi,
     select: (response) => (response?.success ? response.data : undefined),
     enabled: !!custId,
-    staleTime: 30 * 1000, // financial data — don't let it look "fresh" for long
+    staleTime: 30 * 1000,
   });
 
 export default useDashboardQuery;

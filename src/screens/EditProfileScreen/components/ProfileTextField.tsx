@@ -30,9 +30,6 @@ export type ProfileTextFieldProps = Omit<TextInputProps, 'style'> & {
   hint?: string;
   error?: string;
   editable?: boolean;
-  // Locked fields are values the account genuinely has, changed somewhere else.
-  // They keep the resting fill, lose the border, and say so in a trailing pill —
-  // a greyed-out copy of an editable field just looks like a bug.
   verified?: boolean;
   inputStyle?: StyleProp<TextStyle>;
 };
@@ -83,8 +80,6 @@ const ProfileTextField = React.forwardRef<TextInput, ProfileTextFieldProps>(
       onBlur?.(event);
     };
 
-    // The glyph carries the same three states as the well it sits in, so the
-    // field reads as one object rather than an icon parked next to a box.
     const iconColor = error
       ? ERROR_INK
       : !editable
@@ -169,9 +164,7 @@ const ProfileTextField = React.forwardRef<TextInput, ProfileTextFieldProps>(
             ))}
         </Animated.View>
 
-        {/* An error replaces the hint rather than stacking under it — two lines
-            of helper text below one input is how a form starts to feel like a
-            document. */}
+        {}
         {error ? (
           <View style={styles.fieldErrorRow}>
             <MaterialCommunityIcons

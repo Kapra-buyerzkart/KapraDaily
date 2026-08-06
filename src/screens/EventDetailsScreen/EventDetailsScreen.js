@@ -41,8 +41,6 @@ import PaymentFailedModal from '../ticketLandingScreen/components/PaymentFailedM
 import { useEventPayment } from '../../hooks/useEventPayment';
 import prefetchMyBookings from '../../queries/prefetchMyBookings';
 
-// Breathing room kept below an expanded accordion / above the screen top when
-// scrolling it into view.
 const EXPAND_SCROLL_PADDING = 16;
 
 const EventDetailsScreen = ({ navigation, route }) => {
@@ -80,9 +78,6 @@ const EventDetailsScreen = ({ navigation, route }) => {
     claimBarHeight.current = e.nativeEvent.layout.height;
   }, []);
 
-  // When an accordion opens, nudge the page down just enough to bring the
-  // revealed body above the floating claim bar — without pushing its header off
-  // the top of the screen.
   const handleAccordionExpand = useCallback(
     ({ y, height }) => {
       const visibleBottom = windowHeight - claimBarHeight.current;
@@ -167,8 +162,6 @@ const EventDetailsScreen = ({ navigation, route }) => {
     setTicketModalVisible(true);
   }, [dismissFailure]);
 
-  // Starts the hero below the floating top bar so the artwork reads as a card
-  // inside the page instead of bleeding under the status bar.
   const scrollContentStyle = useMemo(
     () => [
       styles.scrollContent,
@@ -196,11 +189,7 @@ const EventDetailsScreen = ({ navigation, route }) => {
         translucent
         backgroundColor="transparent"
       />
-      {/* <Image
-        source={images.bookingtabbg}
-        style={styles.bgImage}
-        resizeMode="cover"
-      /> */}
+      {}
 
       <Animated.ScrollView
         ref={scrollRef}

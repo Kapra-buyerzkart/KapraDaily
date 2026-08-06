@@ -24,26 +24,20 @@ export const getProductSuggestionsApi = async (term, pincodeAreaId, limit = 8, s
             signal,
         });
 
-        // Handle case where success is false or data is missing
         if (response && response.success && Array.isArray(response.data)) {
             return response;
         }
 
-        // Handle specific server errors gracefully
         if (response && response.status === 'SERVER_ERROR') {
             console.log('Search API returned SERVER_ERROR, treating as no results.');
             return { success: true, data: [] };
         }
 
-        // If server returns error or success:false, return empty list structure to prevent UI errors
         return { success: true, data: [] };
     } catch (error) {
-        // Let react-query see cancellations as cancellations (not as a successful empty
-        // response) so an aborted request for a stale term doesn't poison its cache entry.
         if (axios.isCancel(error) || error.code === 'ERR_CANCELED') {
             throw error;
         }
-        // Silently handle error as no results found
         return { success: true, data: [] };
     }
 };

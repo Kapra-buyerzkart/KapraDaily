@@ -4,7 +4,6 @@ import { getFontontSize } from '../../globals/GroFunctions';
 export const windowWidth = Dimensions.get('window').width;
 export const windowHeight = Dimensions.get('window').height;
 
-// Styles shared by the location-fetching header actions and its modals.
 export const sharedLocationStyles = StyleSheet.create({
   iconCmnCon: {
     width: windowHeight * (5 / 100),
@@ -14,13 +13,11 @@ export const sharedLocationStyles = StyleSheet.create({
     borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
-    // iOS Shadow
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.1,
     shadowRadius: 3,
 
-    // Android Shadow
     elevation: 5,
   },
   blurStyle: {

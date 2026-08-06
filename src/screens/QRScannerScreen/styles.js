@@ -6,12 +6,8 @@ import {
 import { FONTS } from '../../styles/typography';
 import COLORS from '@/styles/colors';
 
-// The clear window the user aims the code at. Kept square so the framing hint
-// matches how QR codes are actually shaped.
 export const FRAME_SIZE = wp('68%');
 
-// Intrinsic size of kapra_logo.png. Kept as a ratio so the wordmark is only
-// ever sized by width and can never come out stretched.
 const LOGO_ASPECT = 246 / 141;
 
 export const styles = StyleSheet.create({
@@ -38,7 +34,6 @@ export const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.12)',
   },
 
-  // Scrim: four dim bands around the transparent middle window.
   overlay: {
     ...StyleSheet.absoluteFillObject,
   },
@@ -78,28 +73,24 @@ export const styles = StyleSheet.create({
     left: 0,
     borderTopWidth: wp('1%'),
     borderLeftWidth: wp('1%'),
-    // borderTopLeftRadius: wp('4%'),
   },
   cornerTopRight: {
     top: 0,
     right: 0,
     borderTopWidth: wp('1%'),
     borderRightWidth: wp('1%'),
-    // borderTopRightRadius: wp('4%'),
   },
   cornerBottomLeft: {
     bottom: 0,
     left: 0,
     borderBottomWidth: wp('1%'),
     borderLeftWidth: wp('1%'),
-    // borderBottomLeftRadius: wp('4%'),
   },
   cornerBottomRight: {
     bottom: 0,
     right: 0,
     borderBottomWidth: wp('1%'),
     borderRightWidth: wp('1%'),
-    // borderBottomRightRadius: wp('4%'),
   },
   hintText: {
     fontFamily: FONTS.gilroy.medium,
@@ -110,9 +101,6 @@ export const styles = StyleSheet.create({
     paddingHorizontal: wp('12%'),
   },
 
-  // Brand lockup. It hangs off the bottom of the top scrim so it reads as a
-  // masthead for the viewfinder instead of floating in the middle of nowhere,
-  // and it stays clear of the frame the user is aiming with.
   brandZone: {
     alignItems: 'center',
     justifyContent: 'flex-end',
@@ -126,8 +114,6 @@ export const styles = StyleSheet.create({
     aspectRatio: LOGO_ASPECT,
     resizeMode: 'contain',
   },
-  // A rule on either side of the caps label turns the wordmark and the screen
-  // name into one piece rather than two stacked labels.
   brandKickerRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -147,9 +133,6 @@ export const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.75)',
   },
 
-  // Result sheet shown once a code is decoded. The shadow lives on the wrapper
-  // because iOS drops it the moment a view clips its children, and the card
-  // itself has to clip so the banner can meet the rounded corners.
   resultWrap: {
     position: 'absolute',
     left: wp('4%'),
@@ -179,8 +162,6 @@ export const styles = StyleSheet.create({
     color: COLORS.textPrimary,
   },
 
-  // Solid band rather than a pastel wash: this is the one element that has to
-  // be readable across a queue, at arm's length, in a dark venue.
   verdictBanner: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -188,9 +169,6 @@ export const styles = StyleSheet.create({
     paddingHorizontal: wp('5%'),
     paddingVertical: hp('1.8%'),
   },
-  // The wordmark as a watermark on the accent band - the only light-surface
-  // sighting of the logo on this screen, and it works because the band behind
-  // it is solid colour. Kept faint so the verdict still leads.
   verdictWatermarkWrap: {
     ...StyleSheet.absoluteFillObject,
     alignItems: 'flex-end',
@@ -235,7 +213,6 @@ export const styles = StyleSheet.create({
   cardBody: {
     padding: wp('5%'),
   },
-  // A clean check-in gets a quiet nod; a rejection leads with its reason.
   confirmText: {
     fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3.6%'),
@@ -257,8 +234,6 @@ export const styles = StyleSheet.create({
   attendeeCol: {
     flex: 1,
   },
-  // The name is the largest thing on the card - at a gate the question is
-  // whether this ticket matches this person, not whether the code parsed.
   attendeeName: {
     fontFamily: FONTS.gilroy.bold,
     fontSize: wp('5.2%'),
@@ -340,7 +315,6 @@ export const styles = StyleSheet.create({
     color: COLORS.primary,
   },
 
-  // Permission / no-camera fallback.
   messageContainer: {
     flex: 1,
     alignItems: 'center',

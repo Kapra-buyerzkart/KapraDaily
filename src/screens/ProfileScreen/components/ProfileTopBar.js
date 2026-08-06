@@ -7,19 +7,6 @@ import icons from '@/assets/icons';
 import { styles } from '../styles';
 import { MAX_FONT_SCALE, SPACE, hitSlopTo } from '@/styles/homeTheme';
 
-// The bar is sticky, so it needs an opaque background of its own and a rule
-// that only exists once there is content underneath it — the same treatment
-// Home gives its sticky header (`stickyBorderAnimStyle`). A rule that were
-// always drawn would put a line under the name while the page is at rest.
-//
-// Its background is animated rather than fixed: at rest it is painted the
-// hero's top colour, so the status bar, the bar and the gradient below read as
-// one surface, and it resolves to white only once the hero has scrolled past.
-// A permanently white bar put a hard edge across the top of the gradient.
-//
-// The two titles are stacked rather than swapped: "Profile" is the in-flow
-// text that sizes the slot, and the name is laid over it, so neither can shift
-// the back arrow or the bar's height as they trade places.
 export default function ProfileTopBar({
   name,
   onBack,
@@ -56,9 +43,7 @@ export default function ProfileTopBar({
         >
           Profile
         </Animated.Text>
-        {/* Hidden from assistive tech: it is the same heading as the one above
-            in a different wording, and the name is already announced by the
-            identity block. */}
+        {}
         <Animated.Text
           style={[styles.profileHeaderText, styles.topBarName, nameStyle]}
           numberOfLines={1}

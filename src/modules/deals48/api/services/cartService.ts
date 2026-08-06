@@ -6,8 +6,6 @@ import {
 import { getAccessToken } from './tokenService';
 import { Buffer } from 'buffer';
 
-
-
 const getUserId = async (): Promise<number> => {
     try {
         const profileStr = await getCachedProfile();
@@ -63,7 +61,7 @@ const getPincodeAreaId = async (): Promise<number | null> => {
     } catch (error) {
         console.error('Error getting pincodeAreaId:', error);
     }
-    return 105; // Default to 105 (dummy area)
+    return 105;
 };
 
 export const addToCartApi = async (productId: string | number, quantity: number = 1, pincodeAreaIdOverride: number | null = null): Promise<any> => {
