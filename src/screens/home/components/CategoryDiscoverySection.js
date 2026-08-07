@@ -1,14 +1,14 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  Image,
-  FlatList,
-  TouchableOpacity,
-  StyleSheet,
-} from 'react-native';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import Animated, {
   interpolateColor,
+  useAnimatedScrollHandler,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -38,10 +38,17 @@ import {
   GUTTER,
   MAX_FONT_SCALE,
   divider,
+  ACCENT,
   INK,
+  RADIUS,
+  SURFACE,
   TYPE,
 } from '@/styles/homeTheme';
 import { FONTS } from '../../../styles/typography';
+
+// Half-width of the caret that points from the results panel up at the active
+// tab. The panel and the caret share a fill colour so they read as one shape.
+const CARET_HALF = 9;
 
 const ExploreShimmer = () => {
   const tile = useCategoryTileStyles();
@@ -64,6 +71,16 @@ const ExploreShimmer = () => {
     </View>
   );
 };
+
+// Card placeholders sized to the rail, shown inside the results panel while the
+// tapped category's products load.
+const RailShimmer = () => (
+  <View style={styles.railShimmerRow}>
+    {[1, 2, 3].map((_, i) => (
+      <ShimmerPlaceholder key={i} style={styles.railShimmerCard} />
+    ))}
+  </View>
+);
 
 const DiscoveryTab = React.memo(function DiscoveryTab({
   item,
@@ -156,12 +173,79 @@ const CategoryDiscoverySection = ({
   navigation,
 }) => {
   const tile = useCategoryTileStyles();
+  const { gutter, stride, tile: tileSize, width } = tile.metrics;
 
   const activeCatId = selectedDiscoveryCategory?.catId;
+  const activeName =
+    selectedDiscoveryCategory?.catName || selectedDiscoveryCategory?.name;
+
+  const tabListRef = useRef(null);
+  const scrollX = useSharedValue(0);
+  const caretX = useSharedValue(0);
+  const bodyProgress = useSharedValue(1);
+
+  const activeIndex = useMemo(
+    () => discoveryCategories.findIndex(c => c.catId === activeCatId),
+    [discoveryCategories, activeCatId],
+  );
+
+  // Caret sits under the centre of the active tab, clamped so it never rides
+  // out past the rounded corners of the panel it belongs to.
+  const caretTarget = useMemo(() => {
+    if (activeIndex < 0) return 0;
+    const centre = gutter + activeIndex * stride + tileSize / 2;
+    const min = gutter + RADIUS.lg;
+    const max = width - gutter - RADIUS.lg;
+    return Math.min(Math.max(centre, min), max) - CARET_HALF;
+  }, [activeIndex, gutter, stride, tileSize, width]);
+
+  useEffect(() => {
+    caretX.value = withTiming(caretTarget, { duration: 220 });
+  }, [caretTarget, caretX]);
+
+  // Re-play the panel's entrance once the tapped category's products are in.
+  // Skipped while loading so the panel behind the shimmer stays completely
+  // still — the shimmer cards are the only thing moving.
+  useEffect(() => {
+    if (!activeCatId || isDiscoveryLoading) return;
+    bodyProgress.value = 0;
+    bodyProgress.value = withTiming(1, { duration: 260 });
+  }, [activeCatId, isDiscoveryLoading, bodyProgress]);
+
+  // Bring a tab that was tapped near the edge into view, so the caret it is
+  // paired with stays on screen.
+  useEffect(() => {
+    if (activeIndex < 0 || discoveryCategories.length === 0) return;
+    tabListRef.current?.scrollToIndex({
+      index: activeIndex,
+      animated: true,
+      viewPosition: 0.5,
+    });
+  }, [activeIndex, discoveryCategories.length]);
+
+  const onTabScroll = useAnimatedScrollHandler(event => {
+    scrollX.value = event.contentOffset.x;
+  });
+
+  const caretStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: caretX.value - scrollX.value }],
+  }));
+
+  const bodyStyle = useAnimatedStyle(() => ({
+    opacity: bodyProgress.value,
+    transform: [{ translateY: (1 - bodyProgress.value) * 10 }],
+  }));
 
   const tabKeyExtractor = useCallback(
     (item, index) => (item.catId || item.id || index).toString(),
     [],
+  );
+
+  // Offsets include the row's leading gutter, otherwise scrollToIndex lands a
+  // gutter's width short of the tab.
+  const getTabLayout = useCallback(
+    (_, index) => ({ length: stride, offset: gutter + stride * index, index }),
+    [gutter, stride],
   );
 
   const renderTab = useCallback(
@@ -178,9 +262,6 @@ const CategoryDiscoverySection = ({
   if (isHomeLoading && !categoryDiscovery) return <ExploreShimmer />;
   if (!shouldShow) return null;
 
-  const activeName =
-    selectedDiscoveryCategory?.catName || selectedDiscoveryCategory?.name;
-
   return (
     <>
       <View style={styles.divider} />
@@ -189,29 +270,40 @@ const CategoryDiscoverySection = ({
           eyebrow="Handpicked for you"
           title="Explore"
           titleAccent="deals"
-          subtitle={
-            activeName
-              ? `Top picks in ${activeName}`
-              : 'Pick a category to shop'
-          }
+          subtitle="Tap a category to see its deals"
           onAction={
             selectedDiscoveryCategory
-              ? () =>
-                  navigation.navigate('SearchScreen', {
+              ? () => {
+                  const payload = {
                     catId: selectedDiscoveryCategory.catId,
                     catName: selectedDiscoveryCategory.catName,
-                  })
+                  };
+                  console.log('👉 [ExploreDeals ViewAll] payload:', payload);
+                  console.log(
+                    '👉 [ExploreDeals ViewAll] selectedCategory:',
+                    selectedDiscoveryCategory,
+                  );
+                  console.log(
+                    '👉 [ExploreDeals ViewAll] visible products count:',
+                    discoveryProducts?.length,
+                  );
+                  navigation.navigate('SearchScreen', payload);
+                }
               : undefined
           }
         />
 
         {discoveryCategories.length > 0 && (
-          <FlatList
+          <Animated.FlatList
+            ref={tabListRef}
             horizontal
             data={discoveryCategories}
             keyExtractor={tabKeyExtractor}
             renderItem={renderTab}
             extraData={activeCatId}
+            getItemLayout={getTabLayout}
+            onScroll={onTabScroll}
+            scrollEventThrottle={16}
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={tile.tabRow}
             initialNumToRender={6}
@@ -221,32 +313,73 @@ const CategoryDiscoverySection = ({
           />
         )}
 
-        {isDiscoveryLoading ? (
-          <View style={styles.railLoading}>
-            <ProductBlockShimmer />
+        {/* The caret belongs to the tinted panel, so it waits for it — the row
+            stays mounted meanwhile to hold its height and avoid a shift. */}
+        {!!selectedDiscoveryCategory && (
+          <View style={styles.caretRow} pointerEvents="none">
+            {!isDiscoveryLoading && (
+              <Animated.View style={[styles.caret, caretStyle]} />
+            )}
           </View>
-        ) : discoveryProducts.length > 0 ? (
-          <ProductRail
-            items={discoveryProducts}
-            navigation={navigation}
-            contentContainerStyle={styles.railContent}
-            animateEntrance={false}
-          />
-        ) : selectedDiscoveryCategory ? (
-          <View style={styles.emptyContainer}>
-            <Image
-              source={require('../../../assets/images/udenDealNotfound.png')}
-              style={styles.emptyImage}
+        )}
+
+        <Animated.View
+          style={[
+            styles.panel,
+            !!selectedDiscoveryCategory &&
+              !isDiscoveryLoading &&
+              styles.panelActive,
+            bodyStyle,
+          ]}
+        >
+          {!!activeName && !isDiscoveryLoading && (
+            <View style={styles.panelHeader}>
+              <View style={styles.panelBadge}>
+                <View style={styles.panelDot} />
+                <Text
+                  style={styles.panelBadgeText}
+                  numberOfLines={1}
+                  maxFontSizeMultiplier={MAX_FONT_SCALE}
+                >
+                  {activeName}
+                </Text>
+              </View>
+              {discoveryProducts.length > 0 && (
+                <Text
+                  style={styles.panelCount}
+                  maxFontSizeMultiplier={MAX_FONT_SCALE}
+                >
+                  {discoveryProducts.length}{' '}
+                  {discoveryProducts.length === 1 ? 'deal' : 'deals'}
+                </Text>
+              )}
+            </View>
+          )}
+
+          {isDiscoveryLoading ? (
+            <RailShimmer />
+          ) : discoveryProducts.length > 0 ? (
+            <ProductRail
+              items={discoveryProducts}
+              navigation={navigation}
+              contentContainerStyle={styles.railContent}
             />
-            <Text
-              style={styles.emptyText}
-              maxFontSizeMultiplier={MAX_FONT_SCALE}
-            >
-              Uh-oh! We couldn't find any products in this category. Check back
-              later for new additions.
-            </Text>
-          </View>
-        ) : null}
+          ) : selectedDiscoveryCategory ? (
+            <View style={styles.emptyContainer}>
+              <Image
+                source={require('../../../assets/images/udenDealNotfound.png')}
+                style={styles.emptyImage}
+              />
+              <Text
+                style={styles.emptyText}
+                maxFontSizeMultiplier={MAX_FONT_SCALE}
+              >
+                No deals in {activeName} right now. Try another category — new
+                picks land every day.
+              </Text>
+            </View>
+          ) : null}
+        </Animated.View>
       </View>
     </>
   );
@@ -259,18 +392,89 @@ const styles = StyleSheet.create({
     paddingBottom: SPACE.md,
   },
   railContent: {
-    paddingLeft: wp('3.2%'),
-    paddingRight: wp('2%'),
+    paddingLeft: SPACE.md,
+    paddingRight: SPACE.sm,
   },
-  railLoading: {
-    minHeight: hp('28%'),
+
+  caretRow: {
+    height: CARET_HALF,
+    overflow: 'hidden',
+  },
+  caret: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    width: 0,
+    height: 0,
+    backgroundColor: 'transparent',
+    borderLeftWidth: CARET_HALF,
+    borderRightWidth: CARET_HALF,
+    borderBottomWidth: CARET_HALF,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderBottomColor: SURFACE.tint,
+  },
+  panel: {
+    marginHorizontal: GUTTER,
+    borderRadius: RADIUS.lg,
+    paddingTop: SPACE.md,
+    paddingBottom: SPACE.md,
+  },
+  panelActive: {
+    backgroundColor: SURFACE.tint,
+  },
+  panelHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: SPACE.md,
+    paddingBottom: SPACE.sm,
+  },
+  panelBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexShrink: 1,
+    backgroundColor: SURFACE.base,
+    borderRadius: RADIUS.pill,
+    paddingVertical: SPACE.xs + 1,
+    paddingHorizontal: SPACE.sm + 2,
+  },
+  panelDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: ACCENT.primary,
+    marginRight: SPACE.xs + 2,
+  },
+  panelBadgeText: {
+    ...TYPE.caption,
+    flexShrink: 1,
+    color: INK.strong,
+    fontFamily: FONTS.gilroy.semiBold,
+  },
+  panelCount: {
+    ...TYPE.micro,
+    color: INK.muted,
+    fontFamily: FONTS.gilroy.medium,
+    marginLeft: SPACE.sm,
+  },
+
+  railShimmerRow: {
+    flexDirection: 'row',
+    paddingLeft: SPACE.md,
+  },
+  railShimmerCard: {
+    width: wp('35%'),
+    height: hp('22%'),
+    borderRadius: RADIUS.md,
+    marginRight: wp('3%'),
   },
 
   emptyContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: hp('3%'),
-    paddingHorizontal: wp('10%'),
+    paddingVertical: hp('2%'),
+    paddingHorizontal: SPACE.lg,
   },
   emptyImage: {
     width: wp('34%'),

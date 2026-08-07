@@ -22,6 +22,7 @@ import icons from '@/assets/icons';
 import { FONTS } from '../styles/typography';
 import { COLORS } from '../styles/colors';
 import { isSafeUrl, openExternalUrl } from '../utils/safeUrl';
+import { isInvoiceGenerated } from '../utils/invoiceUrl';
 import logger from '../utils/logger';
 
 const buildFileName = (invoiceNumber, url) => {
@@ -38,9 +39,13 @@ const buildFileName = (invoiceNumber, url) => {
 const InvoiceViewerScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const { invoiceUrl, invoiceNumber, title } = route.params || {};
+  const { invoiceUrl, invoiceNumber, title, orderId, orderNumber } =
+    route.params || {};
 
-  const urlIsUsable = isSafeUrl(invoiceUrl);
+  // The backend only serves `.../invoice/{invoiceNo}` once the invoice exists;
+  // a bare `.../invoice` means it was never generated for this order.
+  const invoiceGenerated = isInvoiceGenerated(invoiceUrl);
+  const urlIsUsable = isSafeUrl(invoiceUrl) && invoiceGenerated;
 
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(!urlIsUsable);
@@ -136,17 +141,38 @@ const InvoiceViewerScreen = () => {
       <View style={styles.pdfWrapper}>
         {failed ? (
           <View style={styles.stateContainer}>
-            <Text style={styles.errorTitle}>Unable to open invoice</Text>
-            <Text style={styles.errorText}>
-              The invoice could not be loaded. You can try opening it in your
-              browser instead.
+            <Text style={styles.errorTitle}>
+              {invoiceGenerated
+                ? 'Unable to open invoice'
+                : 'Invoice not generated'}
             </Text>
-            <TouchableOpacity
-              style={styles.browserButton}
-              onPress={() => openExternalUrl(invoiceUrl)}
-            >
-              <Text style={styles.browserButtonText}>Open in browser</Text>
-            </TouchableOpacity>
+            <Text style={styles.errorText}>
+              {invoiceGenerated
+                ? 'The invoice could not be loaded. You can try opening it in your browser instead.'
+                : "The invoice for this order hasn't been generated yet. Please contact customer support for help."}
+            </Text>
+            {invoiceGenerated ? (
+              <TouchableOpacity
+                style={styles.browserButton}
+                onPress={() => openExternalUrl(invoiceUrl)}
+              >
+                <Text style={styles.browserButtonText}>Open in browser</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={styles.browserButton}
+                onPress={() =>
+                  navigation.navigate('SupportTicketScreen', {
+                    orderId,
+                    orderNumber,
+                  })
+                }
+              >
+                <Text style={styles.browserButtonText}>
+                  Contact customer support
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
         ) : (
           <>

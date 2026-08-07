@@ -1,14 +1,27 @@
 import CONFIG from '@/globals/config';
 import { DEFAULT_TOKEN_VALUE, NO_IMAGE_SOURCE } from './constants';
 
+/** Picks the first supplied value, treating only null/undefined/'' as missing so a real 0 survives. */
+const firstPresent = (values, fallback) => {
+  const found = values.find(
+    value => value !== null && value !== undefined && value !== '',
+  );
+  return found === undefined ? fallback : found;
+};
+
+/** Amounts fall back to 0 rather than a blank, so the card never renders a bare "₹". */
+export const resolveAmount = value => firstPresent([value], 0);
+
 /**
  * Normalises the many shapes a product can arrive in (search, home rails,
  * category listings, wishlist) into the single set of fields the card renders.
  */
 export const deriveProductFields = item => {
   const derivedProductId = item?.productId || item?.id;
-  const derivedTokenValue =
-    item?.bTokenValue || item?.token || item?.btokens || DEFAULT_TOKEN_VALUE;
+  const derivedTokenValue = firstPresent(
+    [item?.bTokenValue, item?.token, item?.btokens],
+    DEFAULT_TOKEN_VALUE,
+  );
   const discount =
     item?.offer || item?.discountPercentage || item?.discountPercent;
   const derivedRating = item?.rating ?? item?.avgRating ?? item?.ratingValue;
@@ -17,8 +30,8 @@ export const deriveProductFields = item => {
   return {
     productId: derivedProductId,
     name: item?.prName || item?.name || '',
-    mrp: item?.mrp || item?.unitPrice || '',
-    price: item?.price || item?.specialPrice || '',
+    mrp: firstPresent([item?.mrp, item?.unitPrice], ''),
+    price: firstPresent([item?.price, item?.specialPrice], 0),
     offer: discount ? `${Math.round(discount)}% OFF` : '',
     weight: item?.weight,
     token: `${derivedTokenValue} UD ${
@@ -65,7 +78,7 @@ export const buildCardAccessibilityLabel = ({
 }) => {
   const parts = [name];
   if (weight) parts.push(weight);
-  parts.push(`₹${price}`);
+  parts.push(`₹${resolveAmount(price)}`);
   if (mrp && mrp !== price) parts.push(`MRP ₹${mrp}`);
   if (offer) parts.push(offer);
   if (isOutOfStock) parts.push('Out of stock');

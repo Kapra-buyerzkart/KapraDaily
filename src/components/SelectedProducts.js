@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import React, { useEffect, useRef, useState } from 'react';
 import Animated, {
   Easing,
@@ -25,14 +25,51 @@ import CachedImage from './CachedImage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { cartPillSlideIn, cartPillSlideOut } from '../animations/cartItemPop';
 
-const ARROW_BUTTON_BG = '#F57333';
 const CAPSULE_BG = '#F25000';
 const MAX_VISIBLE_THUMBNAILS = 3;
 
-const CAPSULE_HEIGHT = 60;
-const COMPACT_WIDTH = 100;
+const THUMBNAIL_SIZE = 40;
+const THUMBNAIL_RING = 2;
+const THUMBNAIL_RADIUS = 12;
+
+// Card-deck stacking: every card hides part of the one behind it, the whole
+// group is fanned around its centre and shrinks slightly towards the back.
+const CARD_OVERLAP = 22;
+const CARD_STEP = THUMBNAIL_SIZE - CARD_OVERLAP;
+const CARD_TILT = 6;
+const CARD_SCALE_STEP = 0.04;
+
+const CAPSULE_HEIGHT = 64;
+const CAPSULE_RADIUS = 18;
+
+const CAPSULE_PADDING_H = 12;
+const STACK_GAP = 18;
+const ARROW_GAP = 18;
+
 const STACK_COMPACT_SCALE = 0.82;
+
+const STACK_WIDTH = THUMBNAIL_SIZE + CARD_STEP * (MAX_VISIBLE_THUMBNAILS - 1);
+
+const COMPACT_WIDTH = Math.ceil(
+  STACK_WIDTH * STACK_COMPACT_SCALE + CAPSULE_PADDING_H * 2,
+);
+
 const BOUNCE_SPRING = { damping: 9, stiffness: 220, mass: 0.6 };
+
+const fanRotation = (index, total) =>
+  total <= 1 ? 0 : (index - (total - 1) / 2) * CARD_TILT;
+
+const cardStackStyle = (index, total) => ({
+  marginLeft: index === 0 ? 0 : -CARD_OVERLAP,
+  // Front-most card is the left-most one; keep zIndex (iOS) and elevation
+  // (Android) in sync so both platforms stack the deck the same way.
+  zIndex: total - index,
+  elevation: total - index,
+  transform: [
+    { rotate: `${fanRotation(index, total)}deg` },
+    { scale: 1 - index * CARD_SCALE_STEP },
+  ],
+});
 
 const SelectedProducts = () => {
   const navigation = useNavigation();
@@ -231,32 +268,39 @@ const SelectedProducts = () => {
 
   const goToCart = () => navigation.navigate('CartScreen');
 
-  const renderThumbnailStack = () => (
-    <View style={styles.stackContainer}>
-      {previewItems.map((item, index) => (
-        <CachedImage
-          key={item.productId || item.id || index}
-          source={getImageSource(item)}
-          resizeMode="cover"
-          style={[
-            styles.productImage,
-            index !== 0 && styles.productImageOverlap,
-          ]}
-        />
-      ))}
-      {extraCount > 0 && (
-        <View
-          style={[
-            styles.productImage,
-            styles.productImageOverlap,
-            styles.extraBadge,
-          ]}
-        >
-          <Text style={styles.extraBadgeText}>+{extraCount}</Text>
-        </View>
-      )}
-    </View>
-  );
+  const renderThumbnailStack = () => {
+    const cardCount = previewItems.length + (extraCount > 0 ? 1 : 0);
+
+    return (
+      <View style={styles.stackContainer}>
+        {previewItems.map((item, index) => (
+          <View
+            key={item.productId || item.id || index}
+            style={[styles.card, cardStackStyle(index, cardCount)]}
+          >
+            <Image
+              source={getImageSource(item)}
+              resizeMode="cover"
+              style={styles.productImage}
+            />
+          </View>
+        ))}
+        {extraCount > 0 && (
+          <View
+            style={[
+              styles.card,
+              styles.extraCard,
+              cardStackStyle(cardCount - 1, cardCount),
+              // The counter has to stay readable, so it sits on top of the deck.
+              { zIndex: cardCount + 1, elevation: cardCount + 1 },
+            ]}
+          >
+            <Text style={styles.extraBadgeText}>+{extraCount}</Text>
+          </View>
+        )}
+      </View>
+    );
+  };
 
   return (
     <Animated.View
@@ -297,7 +341,11 @@ const SelectedProducts = () => {
                 onPress={goToCart}
                 style={styles.arrowButton}
               >
-                <MaterialIcons name="chevron-right" size={26} color="#FFFFFF" />
+                <MaterialIcons
+                  name="chevron-right"
+                  size={26}
+                  color={CAPSULE_BG}
+                />
               </TouchableOpacity>
             </Animated.View>
           </View>
@@ -322,7 +370,7 @@ const SelectedProducts = () => {
           </Text>
         </View>
         <View style={styles.arrowButton}>
-          <MaterialIcons name="chevron-right" size={26} color="#FFFFFF" />
+          <MaterialIcons name="chevron-right" size={26} color={CAPSULE_BG} />
         </View>
       </View>
     </Animated.View>
@@ -333,40 +381,50 @@ const styles = StyleSheet.create({
   capsule: {
     alignSelf: 'center',
     height: CAPSULE_HEIGHT,
-    borderRadius: 16,
+    borderRadius: CAPSULE_RADIUS,
     backgroundColor: CAPSULE_BG,
+    shadowColor: '#7A2400',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.28,
+    shadowRadius: 12,
+    elevation: 8,
   },
   clip: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    borderRadius: CAPSULE_HEIGHT / 2,
+    borderRadius: CAPSULE_RADIUS,
     overflow: 'hidden',
-    paddingLeft: 6,
-    paddingRight: 6,
+    paddingLeft: CAPSULE_PADDING_H,
+    paddingRight: CAPSULE_PADDING_H,
   },
   stackSlot: {
-    marginRight: 10,
+    marginRight: STACK_GAP,
   },
   stackContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  productImage: {
-    height: 40,
-    width: 40,
-    borderRadius: 10,
-    borderWidth: 2.5,
-    borderColor: CAPSULE_BG,
-    backgroundColor: '#fff',
-  },
-  productImageOverlap: {
-    marginLeft: -8,
-  },
-  extraBadge: {
+  card: {
+    height: THUMBNAIL_SIZE,
+    width: THUMBNAIL_SIZE,
+    borderRadius: THUMBNAIL_RADIUS,
     backgroundColor: '#FFFFFF',
-    borderColor: CAPSULE_BG,
+    shadowColor: '#5A1B00',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+  productImage: {
+    height: '100%',
+    width: '100%',
+    borderRadius: THUMBNAIL_RADIUS,
+    borderWidth: THUMBNAIL_RING,
+    borderColor: '#FFFFFF',
+    backgroundColor: '#FFFFFF',
+  },
+  extraCard: {
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -388,6 +446,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 2,
     borderColor: CAPSULE_BG,
+    zIndex: MAX_VISIBLE_THUMBNAILS + 2,
+    elevation: MAX_VISIBLE_THUMBNAILS + 2,
   },
   compactBadgeText: {
     color: CAPSULE_BG,
@@ -399,33 +459,36 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   viewCartText: {
-    fontSize: 18,
+    fontSize: 17,
+    lineHeight: 21,
     color: '#FFFFFF',
     fontFamily: FONTS.gilroy.semiBold,
+    letterSpacing: 0.2,
   },
   itemsText: {
     color: '#FFFFFF',
     fontFamily: FONTS.gilroy.regular,
-    fontSize: 14,
-    opacity: 0.9,
-    marginTop: 2,
+    fontSize: 13,
+    lineHeight: 16,
+    opacity: 0.85,
+    marginTop: 3,
   },
   arrowButton: {
-    width: 42,
-    height: 42,
-    borderRadius: 10,
-    backgroundColor: ARROW_BUTTON_BG,
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: 10,
+    marginLeft: ARROW_GAP,
   },
   measureRow: {
     position: 'absolute',
     opacity: 0,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingLeft: 6,
-    paddingRight: 6,
+    paddingLeft: CAPSULE_PADDING_H,
+    paddingRight: CAPSULE_PADDING_H,
   },
 });
 

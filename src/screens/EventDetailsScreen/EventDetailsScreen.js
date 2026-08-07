@@ -208,7 +208,12 @@ const EventDetailsScreen = ({ navigation, route }) => {
           />
         }
       >
-        <EventHero key={eventId ?? 'event'} event={event} scrollY={scrollY} />
+        <EventHero
+          key={eventId ?? 'event'}
+          event={event}
+          loading={loading}
+          scrollY={scrollY}
+        />
         <EventSummaryCard
           name={details?.name}
           tagline={details?.tagline}

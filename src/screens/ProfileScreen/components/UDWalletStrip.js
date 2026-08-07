@@ -51,7 +51,7 @@ export default function UDWalletStrip({ walletData, onPress }) {
     >
       <Animated.View style={[styles.walletStrip, stripStyle]}>
         <View style={styles.walletCoinWell}>
-          <Image source={icons.udCoinNew} style={styles.walletCoin} />
+          <Image source={icons.udCoinUpdated} style={styles.walletCoin} />
         </View>
 
         <View style={styles.walletText}>

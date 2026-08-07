@@ -32,6 +32,7 @@ const ROW_ICON = wp('8.6%');
 const QUICK_ACTION_WELL = wp('13.5%');
 
 const WALLET_COIN_WELL = wp('11.5%');
+const WALLET_COIN = wp('10.2%');
 
 export const HERO_TOP = THEME_HERO_TOP;
 export const HERO_GRADIENT = THEME_HERO_GRADIENT;
@@ -167,7 +168,11 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  walletCoin: {},
+  walletCoin: {
+    width: WALLET_COIN,
+    height: WALLET_COIN,
+    resizeMode: 'contain',
+  },
   walletText: {
     flex: 1,
     marginLeft: SPACE.md,

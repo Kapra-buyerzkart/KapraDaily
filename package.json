@@ -27,6 +27,7 @@
     "@tanstack/react-query-persist-client": "^5.101.1",
     "axios": "^1.13.2",
     "i18next": "^26.3.4",
+    "ios": "^0.0.1",
     "lottie-react-native": "^7.3.5",
     "react": "19.1.1",
     "react-hook-form": "^7.81.0",

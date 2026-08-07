@@ -5,6 +5,7 @@ import AppLoader from '../components/AppLoader';
 import lazyScreen, { lazyNamedScreen } from './lazyScreen';
 
 import AppUpdateModal from '../components/AppUpdateModal';
+import { COLORS } from '../styles/colors';
 
 const MainTabNavigator = lazyScreen(() => require('./MainTabNavigator'));
 const LocationFetchingNewScreen = lazyScreen(() =>
@@ -122,14 +123,14 @@ const Stack = createNativeStackNavigator();
 
 const SCREEN_OPTIONS = {
   headerShown: false,
-  contentStyle: { backgroundColor: '#fff' },
+  contentStyle: { backgroundColor: COLORS.white },
   freezeOnBlur: true,
 };
 const NO_GESTURE = { gestureEnabled: false };
-const BLACK_CONTENT = { contentStyle: { backgroundColor: '#000000' } };
+const BLACK_CONTENT = { contentStyle: { backgroundColor: COLORS.black } };
 const BLACK_CONTENT_FADE = {
   animation: 'fade_from_bottom',
-  contentStyle: { backgroundColor: '#000000' },
+  contentStyle: { backgroundColor: COLORS.black },
 };
 
 export default function RootNavigator() {

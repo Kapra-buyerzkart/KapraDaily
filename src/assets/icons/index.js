@@ -18,6 +18,7 @@ const icons = {
   udcoin: require('./udcoin.png'),
   wrap: require('./wrap.png'),
   udCoinNew: require('./udCoinNew.png'),
+  udCoinUpdated: require('./udcoinUpdated.png'),
   saveBanner: require('./saveBanner.png'),
   home: require('./home.png'),
   homeFilled: require('./home_filled.png'),

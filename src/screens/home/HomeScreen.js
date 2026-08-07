@@ -44,6 +44,7 @@ import CategoryDiscoverySection from './components/CategoryDiscoverySection';
 import TopShowcase from './components/TopShowcase';
 import BottomShowcase from './components/BottomShowcase';
 import SeasonalBannerShimmer from './components/SeasonalBannerShimmer';
+import OrbitLoaderPreview from './components/OrbitLoaderPreview'; // TEMP
 import styles from './HomeScreen.styles';
 import { ACCENT } from '@/styles/homeTheme';
 import images from '@/assets/images';
@@ -55,6 +56,9 @@ const RAIL_CONTENT_STYLE = {
   paddingRight: wp('2%'),
 };
 const BLOCK2_SEE_ALL_STYLE = { alignSelf: 'center', marginTop: hp('1%') };
+const BLOCK1_EYEBROW = 'Fresh picks';
+const BLOCK2_EYEBROW = 'Trending now';
+const BLOCK3_EYEBROW = 'Before you go';
 const seeAllOverThree = count => count > 3;
 const seeAllAtLeastThree = count => count >= 3;
 
@@ -340,6 +344,9 @@ const HomeScreen = () => {
           onBannerPress={handleBannerPress}
         />
 
+        {/* TEMP: OrbitLoader visual test — remove with its component file */}
+        {/* <OrbitLoaderPreview /> */}
+
         {!isStoreUnavailable &&
           !noLocationSelected &&
           (isHomeLoading && categories.length === 0 ? (
@@ -376,9 +383,22 @@ const HomeScreen = () => {
               </View>
             )}
 
+            <CategoryDiscoverySection
+              isHomeLoading={isHomeLoading}
+              categoryDiscovery={categoryDiscovery}
+              shouldShow={shouldShowCategoryDiscovery}
+              discoveryCategories={discoveryCategories}
+              selectedDiscoveryCategory={selectedDiscoveryCategory}
+              onSelectCategory={handleSelectDiscoveryCategory}
+              isDiscoveryLoading={isDiscoveryLoading}
+              discoveryProducts={discoveryProducts}
+              navigation={navigation}
+            />
+
             <ProductBlock
               isLoading={isHomeLoading && firstBlockItems.length === 0}
               shouldShow={shouldShowFirstBlock}
+              eyebrow={BLOCK1_EYEBROW}
               title={firstProductBlock?.Title || firstProductBlock?.title}
               items={firstBlockItems}
               contentContainerStyle={RAIL_CONTENT_STYLE}
@@ -389,6 +409,7 @@ const HomeScreen = () => {
             <ProductBlock
               isLoading={isHomeLoading && secondBlockItems.length === 0}
               shouldShow={shouldShowSecondBlock}
+              eyebrow={BLOCK2_EYEBROW}
               title={secondProductBlock?.Title || secondProductBlock?.title}
               items={secondBlockItems}
               contentContainerStyle={RAIL_CONTENT_STYLE}
@@ -416,6 +437,7 @@ const HomeScreen = () => {
             <ProductBlock
               isLoading={isHomeLoading && thirdBlockItems.length === 0}
               shouldShow={shouldShowThirdBlock}
+              eyebrow={BLOCK3_EYEBROW}
               title={thirdProductBlock?.Title || thirdProductBlock?.title}
               items={thirdBlockItems}
               contentContainerStyle={RAIL_CONTENT_STYLE}
@@ -428,18 +450,6 @@ const HomeScreen = () => {
               banner={bottomShowcaseBanner}
               products={bottomShowcaseProducts}
               onBannerPress={handleBannerPress}
-            />
-
-            <CategoryDiscoverySection
-              isHomeLoading={isHomeLoading}
-              categoryDiscovery={categoryDiscovery}
-              shouldShow={shouldShowCategoryDiscovery}
-              discoveryCategories={discoveryCategories}
-              selectedDiscoveryCategory={selectedDiscoveryCategory}
-              onSelectCategory={handleSelectDiscoveryCategory}
-              isDiscoveryLoading={isDiscoveryLoading}
-              discoveryProducts={discoveryProducts}
-              navigation={navigation}
             />
           </>
         )}

@@ -1,9 +1,7 @@
-import React, { useCallback } from 'react';
-import { FlatList } from 'react-native';
+import React, { useCallback, useMemo } from 'react';
+import { FlatList, StyleSheet } from 'react-native';
 import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
-import { FadeInUp } from 'react-native-reanimated';
 import TokenProductCard from '../../../components/TokenProductCard';
-import { getStaggerDelay } from '../../../utils/staggerDelay';
 const CARD_STRIDE = wp('37%');
 
 const DEFAULT_CONTENT_STYLE = {
@@ -11,12 +9,7 @@ const DEFAULT_CONTENT_STYLE = {
   paddingRight: wp('2%'),
 };
 
-const RailCard = React.memo(function RailCard({
-  item,
-  index,
-  animateEntrance,
-  navigation,
-}) {
+const RailCard = React.memo(function RailCard({ item, navigation }) {
   const handlePress = useCallback(
     () =>
       navigation.navigate('ProductDetailsScreen', {
@@ -26,47 +19,36 @@ const RailCard = React.memo(function RailCard({
     [navigation, item],
   );
 
-  return (
-    <TokenProductCard
-      item={item}
-      entering={
-        animateEntrance ? FadeInUp.delay(getStaggerDelay(index)) : undefined
-      }
-      onPress={handlePress}
-    />
-  );
+  return <TokenProductCard item={item} onPress={handlePress} />;
 });
 
 const ProductRail = ({
   items,
   navigation,
   contentContainerStyle = DEFAULT_CONTENT_STYLE,
-  animateEntrance = true,
 }) => {
   const keyExtractor = useCallback(
     (item, index) => (item.productId || item.id || index).toString(),
     [],
   );
 
+  const leadingOffset = useMemo(
+    () => StyleSheet.flatten(contentContainerStyle)?.paddingLeft || 0,
+    [contentContainerStyle],
+  );
+
   const getItemLayout = useCallback(
     (_, index) => ({
       length: CARD_STRIDE,
-      offset: CARD_STRIDE * index,
+      offset: leadingOffset + CARD_STRIDE * index,
       index,
     }),
-    [],
+    [leadingOffset],
   );
 
   const renderItem = useCallback(
-    ({ item, index }) => (
-      <RailCard
-        item={item}
-        index={index}
-        animateEntrance={animateEntrance}
-        navigation={navigation}
-      />
-    ),
-    [navigation, animateEntrance],
+    ({ item }) => <RailCard item={item} navigation={navigation} />,
+    [navigation],
   );
 
   return (

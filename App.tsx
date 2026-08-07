@@ -1,7 +1,10 @@
 import { useEffect } from 'react';
 import './src/config/i18n';
-import { LogBox, StatusBar, StyleSheet, useColorScheme } from 'react-native';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { Dimensions, LogBox, StatusBar, StyleSheet } from 'react-native';
+import {
+  SafeAreaProvider,
+  initialWindowMetrics,
+} from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
@@ -19,18 +22,23 @@ import {
   persistQueryClientSubscribe,
 } from '@tanstack/react-query-persist-client';
 import { queryClient, queryPersistOptions } from './src/queryClient';
+import { COLORS } from './src/styles/colors';
+
+const window = Dimensions.get('window');
+const initialMetrics = initialWindowMetrics ?? {
+  frame: { x: 0, y: 0, width: window.width, height: window.height },
+  insets: { top: 0, left: 0, right: 0, bottom: 0 },
+};
 
 const navTheme = {
   ...DefaultTheme,
   colors: {
     ...DefaultTheme.colors,
-    background: '#000000',
+    background: COLORS.white,
   },
 };
 
 function App() {
-  const isDarkMode = useColorScheme() === 'dark';
-
   useEffect(() => {
     LogBox.ignoreLogs(['Warning: ...']);
 
@@ -56,12 +64,9 @@ function App() {
 
   return (
     <GestureHandlerRootView style={styles.container}>
-      <SafeAreaProvider>
+      <SafeAreaProvider initialMetrics={initialMetrics}>
         <KeyboardProvider>
-          <StatusBar
-            barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-            backgroundColor={isDarkMode ? '#000' : '#fff'}
-          />
+          <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
           <BottomSheetModalProvider>
             <ModalProvider>
               <QueryClientProvider client={queryClient}>

@@ -12,6 +12,7 @@ const DEFAULT_SEE_ALL_STYLE = { alignSelf: 'center' };
 const ProductBlock = ({
   isLoading,
   shouldShow,
+  eyebrow,
   title,
   titleExtraStyle,
   items,
@@ -36,6 +37,7 @@ const ProductBlock = ({
       <View style={styles.divider} />
       <View style={styles.surface}>
         <SectionHeader
+          eyebrow={eyebrow}
           title={title}
           titleStyle={titleExtraStyle}
           onAction={shouldShowSeeAll(items.length) ? handleViewAll : undefined}

@@ -141,6 +141,9 @@ const styles = StyleSheet.create({
   heroImageBg: {
     flex: 1,
   },
+  heroPlaceholder: {
+    ...StyleSheet.absoluteFillObject,
+  },
   heroImage: {
     resizeMode: 'cover',
   },

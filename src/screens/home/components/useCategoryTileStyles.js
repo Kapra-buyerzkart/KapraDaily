@@ -36,7 +36,7 @@ const buildStyles = width => {
 
   const tabImage = image - TAB_RING * 2;
 
-  return StyleSheet.create({
+  const sheet = StyleSheet.create({
     item: {
       width: cell,
       alignItems: 'center',
@@ -113,6 +113,12 @@ const buildStyles = width => {
       borderRadius: 4,
     },
   });
+
+  // Geometry the tab row is laid out with, so callers can anchor an indicator
+  // to a tab without measuring it on the fly.
+  sheet.metrics = { gutter, tile, tileGap, stride: tile + tileGap, width };
+
+  return sheet;
 };
 
 const useCategoryTileStyles = () => {

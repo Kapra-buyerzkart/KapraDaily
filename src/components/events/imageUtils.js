@@ -14,6 +14,8 @@ const EVENT_CARD_IMAGE_KEYS = [
   'imageUrl',
   'ticketImage',
   'thumbnailImage',
+  // The event list payload only carries `bannerImage`.
+  'bannerImage',
 ];
 
 const getEventCardImageUri = event => {
@@ -40,9 +42,12 @@ export const getVoucherImageSource = item => {
 export const getEventImageSource = event =>
   getEventCardImageUri(event) || PLACEHOLDER_EVENT_IMAGE;
 
+// Only the event's own gallery. It deliberately does not fall back to the card
+// image: the hero shows a placeholder until these arrive, because substituting
+// the card image means swapping it out again the moment the gallery lands.
 export const getEventGalleryImages = event => {
   const gallery = Array.isArray(event?.images) ? event.images : [];
-  const sources = gallery
+  return gallery
     .map((img, index) => ({ source: toImageUri(img?.imageUrl), img, index }))
     .filter(entry => entry.source)
     .sort(
@@ -51,11 +56,6 @@ export const getEventGalleryImages = event => {
         a.index - b.index,
     )
     .map(entry => entry.source);
-
-  if (sources.length) return sources;
-
-  const cardImage = getEventCardImageUri(event);
-  return cardImage ? [cardImage] : [];
 };
 
 export const PLACEHOLDER_VOUCHER_IMAGE = PLACEHOLDER_IMAGE;
