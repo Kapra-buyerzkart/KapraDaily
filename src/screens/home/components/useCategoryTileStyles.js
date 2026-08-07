@@ -5,9 +5,9 @@ import {
   INK,
   RADIUS,
   CATEGORY_WELL,
+  EXPLORE_PANEL,
   GUTTER_PCT,
   SPACE,
-  SURFACE,
   TYPE,
 } from '@/styles/homeTheme';
 
@@ -16,7 +16,7 @@ export const COLUMNS = 4;
 export const TAB_RING = 2;
 
 export const TAB_WELL_IDLE = CATEGORY_WELL;
-export const TAB_WELL_ACTIVE = SURFACE.tint;
+export const TAB_WELL_ACTIVE = EXPLORE_PANEL;
 export const TAB_RING_IDLE = 'rgba(242,80,0,0)';
 export const TAB_RING_ACTIVE = ACCENT.primary;
 export const TAB_LABEL_IDLE = INK.base;
@@ -27,18 +27,23 @@ const cache = new Map();
 const buildStyles = width => {
   const gutter = Math.round((width * GUTTER_PCT) / 100);
   const contentWidth = width - gutter * 2;
-  const cell = Math.floor(contentWidth / COLUMNS);
 
   const tileGap = Math.round(width * 0.024);
-  const tile = cell - tileGap;
+  const tile = Math.floor((contentWidth - tileGap * (COLUMNS - 1)) / COLUMNS);
 
   const image = Math.round(tile * 0.92);
 
   const tabImage = image - TAB_RING * 2;
 
   const sheet = StyleSheet.create({
+    grid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      paddingHorizontal: gutter,
+      columnGap: tileGap,
+    },
     item: {
-      width: cell,
+      width: tile,
       alignItems: 'center',
       marginBottom: SPACE.base,
     },

@@ -39,6 +39,7 @@ import {
   MAX_FONT_SCALE,
   divider,
   ACCENT,
+  EXPLORE_PANEL,
   INK,
   RADIUS,
   SURFACE,
@@ -189,13 +190,13 @@ const CategoryDiscoverySection = ({
     [discoveryCategories, activeCatId],
   );
 
-  // Caret sits under the centre of the active tab, clamped so it never rides
-  // out past the rounded corners of the panel it belongs to.
+  // Caret sits under the centre of the active tab. The panel it points at is
+  // full-bleed, so the caret only has to stay clear of the screen edges.
   const caretTarget = useMemo(() => {
     if (activeIndex < 0) return 0;
     const centre = gutter + activeIndex * stride + tileSize / 2;
-    const min = gutter + RADIUS.lg;
-    const max = width - gutter - RADIUS.lg;
+    const min = CARET_HALF;
+    const max = width - CARET_HALF;
     return Math.min(Math.max(centre, min), max) - CARET_HALF;
   }, [activeIndex, gutter, stride, tileSize, width]);
 
@@ -313,73 +314,72 @@ const CategoryDiscoverySection = ({
           />
         )}
 
-        {/* The caret belongs to the tinted panel, so it waits for it — the row
-            stays mounted meanwhile to hold its height and avoid a shift. */}
+        {/* The caret belongs to the tinted panel, so it lives and dies with it
+            — it slides across to the newly tapped tab rather than blinking. */}
         {!!selectedDiscoveryCategory && (
           <View style={styles.caretRow} pointerEvents="none">
-            {!isDiscoveryLoading && (
-              <Animated.View style={[styles.caret, caretStyle]} />
-            )}
+            <Animated.View style={[styles.caret, caretStyle]} />
           </View>
         )}
 
-        <Animated.View
+        {/* The tint stays put across a tab switch: only the inner block, which
+            is the part whose content actually changed, replays the entrance. */}
+        <View
           style={[
             styles.panel,
-            !!selectedDiscoveryCategory &&
-              !isDiscoveryLoading &&
-              styles.panelActive,
-            bodyStyle,
+            !!selectedDiscoveryCategory && styles.panelActive,
           ]}
         >
-          {!!activeName && !isDiscoveryLoading && (
-            <View style={styles.panelHeader}>
-              <View style={styles.panelBadge}>
-                <View style={styles.panelDot} />
+          <Animated.View style={bodyStyle}>
+            {!!activeName && !isDiscoveryLoading && (
+              <View style={styles.panelHeader}>
+                <View style={styles.panelBadge}>
+                  <View style={styles.panelDot} />
+                  <Text
+                    style={styles.panelBadgeText}
+                    numberOfLines={1}
+                    maxFontSizeMultiplier={MAX_FONT_SCALE}
+                  >
+                    {activeName}
+                  </Text>
+                </View>
+                {discoveryProducts.length > 0 && (
+                  <Text
+                    style={styles.panelCount}
+                    maxFontSizeMultiplier={MAX_FONT_SCALE}
+                  >
+                    {discoveryProducts.length}{' '}
+                    {discoveryProducts.length === 1 ? 'deal' : 'deals'}
+                  </Text>
+                )}
+              </View>
+            )}
+
+            {isDiscoveryLoading ? (
+              <RailShimmer />
+            ) : discoveryProducts.length > 0 ? (
+              <ProductRail
+                items={discoveryProducts}
+                navigation={navigation}
+                contentContainerStyle={styles.railContent}
+              />
+            ) : selectedDiscoveryCategory ? (
+              <View style={styles.emptyContainer}>
+                <Image
+                  source={require('../../../assets/images/udenDealNotfound.png')}
+                  style={styles.emptyImage}
+                />
                 <Text
-                  style={styles.panelBadgeText}
-                  numberOfLines={1}
+                  style={styles.emptyText}
                   maxFontSizeMultiplier={MAX_FONT_SCALE}
                 >
-                  {activeName}
+                  No deals in {activeName} right now. Try another category — new
+                  picks land every day.
                 </Text>
               </View>
-              {discoveryProducts.length > 0 && (
-                <Text
-                  style={styles.panelCount}
-                  maxFontSizeMultiplier={MAX_FONT_SCALE}
-                >
-                  {discoveryProducts.length}{' '}
-                  {discoveryProducts.length === 1 ? 'deal' : 'deals'}
-                </Text>
-              )}
-            </View>
-          )}
-
-          {isDiscoveryLoading ? (
-            <RailShimmer />
-          ) : discoveryProducts.length > 0 ? (
-            <ProductRail
-              items={discoveryProducts}
-              navigation={navigation}
-              contentContainerStyle={styles.railContent}
-            />
-          ) : selectedDiscoveryCategory ? (
-            <View style={styles.emptyContainer}>
-              <Image
-                source={require('../../../assets/images/udenDealNotfound.png')}
-                style={styles.emptyImage}
-              />
-              <Text
-                style={styles.emptyText}
-                maxFontSizeMultiplier={MAX_FONT_SCALE}
-              >
-                No deals in {activeName} right now. Try another category — new
-                picks land every day.
-              </Text>
-            </View>
-          ) : null}
-        </Animated.View>
+            ) : null}
+          </Animated.View>
+        </View>
       </View>
     </>
   );
@@ -392,8 +392,8 @@ const styles = StyleSheet.create({
     paddingBottom: SPACE.md,
   },
   railContent: {
-    paddingLeft: SPACE.md,
-    paddingRight: SPACE.sm,
+    paddingLeft: GUTTER,
+    paddingRight: GUTTER,
   },
 
   caretRow: {
@@ -412,22 +412,22 @@ const styles = StyleSheet.create({
     borderBottomWidth: CARET_HALF,
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
-    borderBottomColor: SURFACE.tint,
+    borderBottomColor: EXPLORE_PANEL,
   },
+  // Full-bleed: the tint runs edge to edge, so the panel takes no horizontal
+  // margin or corner radius and its contents carry the page gutter instead.
   panel: {
-    marginHorizontal: GUTTER,
-    borderRadius: RADIUS.lg,
     paddingTop: SPACE.md,
     paddingBottom: SPACE.md,
   },
   panelActive: {
-    backgroundColor: SURFACE.tint,
+    backgroundColor: EXPLORE_PANEL,
   },
   panelHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: SPACE.md,
+    paddingHorizontal: GUTTER,
     paddingBottom: SPACE.sm,
   },
   panelBadge: {
@@ -461,7 +461,7 @@ const styles = StyleSheet.create({
 
   railShimmerRow: {
     flexDirection: 'row',
-    paddingLeft: SPACE.md,
+    paddingLeft: GUTTER,
   },
   railShimmerCard: {
     width: wp('35%'),

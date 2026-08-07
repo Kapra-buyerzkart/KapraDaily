@@ -131,7 +131,7 @@ const EditProfileScreen = () => {
           </LinearGradient>
 
           <Animated.View entering={entrance(1)}>
-            <SectionHeader title="Personal details" />
+            <SectionHeader title="Personal details" variant="screen" />
             <View style={styles.fieldGroup}>
               <ProfileTextField
                 label="Full Name"
@@ -169,7 +169,7 @@ const EditProfileScreen = () => {
           </Animated.View>
 
           <Animated.View entering={entrance(2)}>
-            <SectionHeader title="Contact details" />
+            <SectionHeader title="Contact details" variant="screen" />
             <View style={styles.fieldGroup}>
               {}
               <ProfileTextField

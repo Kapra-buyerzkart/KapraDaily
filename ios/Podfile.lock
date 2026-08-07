@@ -1918,6 +1918,34 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
+  - react-native-change-icon (5.0.0):
+    - boost
+    - DoubleConversion
+    - fast_float
+    - fmt
+    - glog
+    - hermes-engine
+    - RCT-Folly
+    - RCT-Folly/Fabric
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - SocketRocket
+    - Yoga
   - react-native-geolocation (3.4.0):
     - boost
     - DoubleConversion
@@ -3361,6 +3389,7 @@ DEPENDENCIES:
   - React-Mapbuffer (from `../node_modules/react-native/ReactCommon`)
   - React-microtasksnativemodule (from `../node_modules/react-native/ReactCommon/react/nativemodule/microtasks`)
   - react-native-blob-util (from `../node_modules/react-native-blob-util`)
+  - react-native-change-icon (from `../node_modules/react-native-change-icon`)
   - "react-native-geolocation (from `../node_modules/@react-native-community/geolocation`)"
   - react-native-keyboard-controller (from `../node_modules/react-native-keyboard-controller`)
   - react-native-maps (from `../node_modules/react-native-maps`)
@@ -3520,6 +3549,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/react/nativemodule/microtasks"
   react-native-blob-util:
     :path: "../node_modules/react-native-blob-util"
+  react-native-change-icon:
+    :path: "../node_modules/react-native-change-icon"
   react-native-geolocation:
     :path: "../node_modules/@react-native-community/geolocation"
   react-native-keyboard-controller:
@@ -3685,6 +3716,7 @@ SPEC CHECKSUMS:
   React-Mapbuffer: 4c50cf6af44286015a20a5995d5321f625c93459
   React-microtasksnativemodule: a84b9331106616ab1fa36de9ae555718d4bbdcf5
   react-native-blob-util: b28c476975a9cdbf2afde81784739d791c892750
+  react-native-change-icon: 344b51b3b465b65c6209ab22176cce2865ac4aff
   react-native-geolocation: 49d39b53dfeb6c22ff1ad69e71ac9c7981affdaa
   react-native-keyboard-controller: 2ba0ae565a0c87fd840499feced67fc74048938a
   react-native-maps: 3bd3b12ba0a2849faeaff8098be43e3d91d92040

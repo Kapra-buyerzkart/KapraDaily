@@ -100,6 +100,13 @@ export const divider = {
 
 export const CATEGORY_WELL = '#F7F4F1';
 
+// The Explore panel, the caret pointing up at the active tab, and that tab's
+// well all share this fill so they read as one connected shape. It carries its
+// own token rather than SURFACE.tint because the panel is full-bleed and needs
+// more presence against the canvas than an inline chip does, and it has to stay
+// clearly apart from CATEGORY_WELL or the active tab stops looking active.
+export const EXPLORE_PANEL = '#FFF0E7';
+
 export const CATEGORY_TINTS = [
   '#FFF0E8',
   '#EAF4FF',
@@ -144,6 +151,7 @@ export default {
   GUTTER,
   divider,
   CATEGORY_WELL,
+  EXPLORE_PANEL,
   CATEGORY_TINTS,
   categoryTint,
   HERO_TOP,

@@ -23,7 +23,7 @@ export const CategoryShimmer = () => {
   return (
     <View style={styles.section}>
       <GridHeader />
-      <View style={styles.categoriesContainer}>
+      <View style={tile.grid}>
         {SHIMMER_TILES.map(i => (
           <View key={i} style={tile.item}>
             {}
@@ -38,32 +38,30 @@ export const CategoryShimmer = () => {
   );
 };
 
-const CategoryGrid = ({ categories }) => (
-  <View style={styles.section}>
-    <GridHeader />
-    <View style={styles.categoriesContainer}>
-      {categories.map((item, index) => (
-        <CategoryItem
-          key={(item.catId || item.id || index).toString()}
-          item={item}
-          index={index}
-        />
-      ))}
+const CategoryGrid = ({ categories }) => {
+  const tile = useCategoryTileStyles();
+
+  return (
+    <View style={styles.section}>
+      <GridHeader />
+      <View style={tile.grid}>
+        {categories.map((item, index) => (
+          <CategoryItem
+            key={(item.catId || item.id || index).toString()}
+            item={item}
+            index={index}
+          />
+        ))}
+      </View>
     </View>
-  </View>
-);
+  );
+};
 
 const styles = StyleSheet.create({
   section: {
     paddingBottom: SPACE.sm,
   },
   header: {
-    paddingHorizontal: GUTTER,
-  },
-  categoriesContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'flex-start',
     paddingHorizontal: GUTTER,
   },
 });
