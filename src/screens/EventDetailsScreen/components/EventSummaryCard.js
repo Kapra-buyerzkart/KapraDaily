@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Platform, StyleSheet } from 'react-native';
+import { View, Text, Platform } from 'react-native';
 import { BlurView } from '@sbaiahmed1/react-native-blur';
 import CalendarIcon from '../../../assets/icons/calendarOutline.svg';
 import LocationPinIcon from '../../../assets/icons/locationPinOutline.svg';
@@ -10,6 +10,9 @@ import VenueMapStrip from './VenueMapStrip';
 import { hp, wp } from '@/utils/responsive';
 
 const FACT_ICON_SIZE = wp(10);
+
+// Native blur crashes on low-end Android devices, so we fall back to a solid tint.
+const IS_ANDROID = Platform.OS === 'android';
 
 const FactCell = ({ Icon, primary, secondary, secondaryStyle }) => (
   <View style={styles.factCell}>
@@ -75,12 +78,15 @@ const EventSummaryCard = ({
     ),
   ].filter(Boolean);
 
+  const Surface = IS_ANDROID ? View : BlurView;
+  const surfaceProps = IS_ANDROID
+    ? {}
+    : { blurType: 'dark', blurAmount: 24, blurRounds: GLASS_BLUR_ROUNDS };
+
   return (
-    <BlurView
-      style={styles.summaryCard}
-      blurType="dark"
-      blurAmount={24}
-      blurRounds={GLASS_BLUR_ROUNDS}
+    <Surface
+      style={[styles.summaryCard, IS_ANDROID && styles.summaryCardFallback]}
+      {...surfaceProps}
     >
       <Text style={styles.eventName}>{name}</Text>
       {!!subtitle && <Text style={styles.eventTagline}>{subtitle}</Text>}
@@ -101,7 +107,7 @@ const EventSummaryCard = ({
       )}
       <View style={{ paddingTop: hp(1.5) }} />
       <VenueMapStrip venue={venue} city={city} />
-    </BlurView>
+    </Surface>
   );
 };
 

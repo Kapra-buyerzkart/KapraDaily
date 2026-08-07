@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, ImageBackground } from 'react-native';
+import { View, Text, ImageBackground, Platform } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Animated, {
   Extrapolation,
@@ -18,6 +18,9 @@ import styles, {
 } from '../styles';
 
 const MID = (TOP_BAR_FADE_START + TOP_BAR_FADE_END) / 2;
+
+// Native blur crashes on low-end Android devices, so we fall back to a solid tint.
+const IS_ANDROID = Platform.OS === 'android';
 
 const EventTopBar = ({ insets, scrollY, progress, title, onBack, onShare }) => {
   const surfaceStyle = useAnimatedStyle(() => ({
@@ -74,13 +77,17 @@ const EventTopBar = ({ insets, scrollY, progress, title, onBack, onShare }) => {
         pointerEvents="none"
         style={[styles.topBarSurface, surfaceStyle]}
       >
-        <BlurView
-          style={styles.topBarSurfaceBlur}
-          blurType="dark"
-          blurAmount={24}
-          blurRounds={GLASS_BLUR_ROUNDS}
-          overlayColor="rgba(9,4,18,0.42)"
-        />
+        {IS_ANDROID ? (
+          <View style={styles.topBarSurfaceFallback} />
+        ) : (
+          <BlurView
+            style={styles.topBarSurfaceBlur}
+            blurType="dark"
+            blurAmount={24}
+            blurRounds={GLASS_BLUR_ROUNDS}
+            overlayColor="rgba(9,4,18,0.42)"
+          />
+        )}
       </Animated.View>
 
       <AnimatedPressable

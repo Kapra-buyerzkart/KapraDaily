@@ -80,6 +80,10 @@ const styles = StyleSheet.create({
   topBarSurfaceBlur: {
     ...StyleSheet.absoluteFillObject,
   },
+  topBarSurfaceFallback: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(9,4,18,0.92)',
+  },
   topBarProgressTrack: {
     position: 'absolute',
     left: 0,
@@ -219,7 +223,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(12,6,22,0.45)',
   },
   summaryCardFallback: {
-    backgroundColor: 'rgba(12,6,22,0.72)',
+    backgroundColor: 'rgba(12,6,22,0.5)',
   },
   eventName: {
     color: COLORS.white,
