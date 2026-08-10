@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Image } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import {
   widthPercentageToDP as wp,
@@ -44,11 +44,13 @@ const OrderProductCard = ({ item, orderStatus, onReturn }) => {
 
   return (
     <View style={styles.cardContainer}>
-      <Image
-        style={styles.productImage}
-        source={imageSource}
-        onError={() => setImageError(true)}
-      />
+      <View style={styles.imageWell}>
+        <Image
+          style={styles.productImage}
+          source={imageSource}
+          onError={() => setImageError(true)}
+        />
+      </View>
       <View style={styles.detailsContainer}>
         <Text style={styles.productName} numberOfLines={2} ellipsizeMode="tail">
           {item.productName}
@@ -72,24 +74,18 @@ const OrderProductCard = ({ item, orderStatus, onReturn }) => {
           />
         )}
         {item.returnRequested && (
-          <View style={styles.statusBadge}>
-            <Text style={styles.returnStatusText}>Return Requested</Text>
-          </View>
+          <Text style={styles.returnStatusText}>Return Requested</Text>
         )}
         {item.isReturned && (
-          <View style={[styles.statusBadge, { backgroundColor: '#E8F5E9' }]}>
-            <Text style={[styles.returnStatusText, { color: '#2E7D32' }]}>
-              Returned
-            </Text>
-          </View>
+          <Text style={[styles.returnStatusText, styles.statusApproved]}>
+            Returned
+          </Text>
         )}
         {(item.returnStatusKey === 'requestrejected' ||
           item.itemStatusKey === 'requestrejected') && (
-          <View style={[styles.statusBadge, { backgroundColor: '#FFEBEE' }]}>
-            <Text style={[styles.returnStatusText, { color: '#D32F2F' }]}>
-              Return Rejected
-            </Text>
-          </View>
+          <Text style={[styles.returnStatusText, styles.statusRejected]}>
+            Return Rejected
+          </Text>
         )}
         {item.returnRefundStatus &&
           (() => {
@@ -100,22 +96,17 @@ const OrderProductCard = ({ item, orderStatus, onReturn }) => {
               status.includes('refunded');
             const isRejected =
               status.includes('rejected') || status.includes('denied');
-            const bgColor = isApproved
-              ? '#E8F5E9'
-              : isRejected
-              ? '#FFEBEE'
-              : '#E3F2FD';
-            const textColor = isApproved
-              ? '#2E7D32'
-              : isRejected
-              ? '#D32F2F'
-              : '#1E88E5';
             return (
-              <View style={[styles.statusBadge, { backgroundColor: bgColor }]}>
-                <Text style={[styles.returnStatusText, { color: textColor }]}>
-                  Refund: {item.returnRefundStatus}
-                </Text>
-              </View>
+              <Text
+                style={[
+                  styles.returnStatusText,
+                  isApproved && styles.statusApproved,
+                  isRejected && styles.statusRejected,
+                  !isApproved && !isRejected && styles.statusInfo,
+                ]}
+              >
+                Refund: {item.returnRefundStatus}
+              </Text>
             );
           })()}
       </View>
@@ -128,38 +119,43 @@ export default OrderProductCard;
 const styles = StyleSheet.create({
   cardContainer: {
     flexDirection: 'row',
-    paddingVertical: hp('1%'),
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    paddingVertical: hp('1.3%'),
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(17,19,26,0.07)',
     alignItems: 'center',
   },
+  imageWell: {
+    width: wp('15%'),
+    height: wp('15%'),
+    borderRadius: 12,
+    backgroundColor: '#F5F6F8',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   productImage: {
-    width: wp('14%'),
-    height: wp('14%'),
+    width: wp('11.5%'),
+    height: wp('11.5%'),
     resizeMode: 'contain',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#E8E8E8',
   },
   detailsContainer: {
     flex: 1,
-    marginLeft: wp('3%'),
+    marginLeft: wp('3.2%'),
   },
   productName: {
-    fontFamily: FONTS.gilroy.medium,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('3.5%'),
-    color: '#000000',
+    color: '#12131A',
   },
   quantityText: {
-    fontFamily: FONTS.gilroy.regular,
-    fontSize: wp('3.2%'),
-    color: '#777777',
+    fontFamily: FONTS.gilroy.medium,
+    fontSize: wp('3%'),
+    color: '#6B7280',
     marginTop: hp('0.3%'),
   },
   priceText: {
-    fontFamily: FONTS.gilroy.semiBold,
+    fontFamily: FONTS.gilroy.bold,
     fontSize: wp('3.8%'),
-    color: '#000000',
+    color: '#12131A',
     marginTop: hp('0.3%'),
   },
   returnButton: {
@@ -173,16 +169,20 @@ const styles = StyleSheet.create({
   returnButtonText: {
     fontSize: wp('3%'),
   },
-  statusBadge: {
-    backgroundColor: '#FFF3E0',
-    paddingHorizontal: wp('2%'),
-    paddingVertical: hp('0.1%'),
-    borderRadius: 4,
-    alignSelf: 'flex-end',
-  },
   returnStatusText: {
     fontFamily: FONTS.gilroy.medium,
     fontSize: wp('2.8%'),
     color: '#F2994A',
+    alignSelf: 'flex-end',
+    marginTop: hp('0.3%'),
+  },
+  statusApproved: {
+    color: '#2E7D32',
+  },
+  statusRejected: {
+    color: '#D32F2F',
+  },
+  statusInfo: {
+    color: '#1E88E5',
   },
 });

@@ -4,44 +4,38 @@ import {
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
 import { FONTS } from '@/styles/typography';
+import { INK, ACCENT, SURFACE, RADIUS, SPACE, TYPE } from '@/styles/homeTheme';
 import {
-  INK,
-  ACCENT,
-  SURFACE,
-  RADIUS,
-  SPACE,
-  TYPE,
-  HAIRLINE,
-} from '@/styles/homeTheme';
-import {
-  ACTION_H,
-  ACTION_W,
-  ACTION_H_SMALL,
-  ACTION_W_SMALL,
+  ADD_SIZE,
+  ADD_SIZE_SMALL,
+  DOCK_OVERHANG,
+  DOCK_OVERHANG_SMALL,
+  DOCK_WIDTH,
+  HEART_SIZE,
   NAME_LINES,
 } from './constants';
+import COLORS from '@/styles/colors';
+
+const SAVINGS_RULE = 'rgba(17,19,26,0.18)';
+const CARD_BORDER = '#E5E7EB';
+const PRICE_PILL = '#17853C';
 
 export default StyleSheet.create({
   cardContainer: {
     width: wp('35%'),
     marginVertical: hp('1%'),
     marginHorizontal: wp('1%'),
+    padding: SPACE.sm,
+    borderRadius: RADIUS.lg,
+    // borderWidth: StyleSheet.hairlineWidth,
+    borderColor: CARD_BORDER,
+    backgroundColor: SURFACE.base,
   },
   threeColumnContainer: {
     width: wp('29%'),
     marginHorizontal: wp('1%'),
-  },
-
-  cardSurface: {
-    backgroundColor: SURFACE.base,
-    borderRadius: RADIUS.md,
-    borderWidth: 1,
-    borderColor: HAIRLINE,
-    padding: SPACE.sm,
-  },
-  cardSurfaceSmall: {
     padding: SPACE.xs + 2,
-    borderRadius: RADIUS.sm,
+    borderRadius: RADIUS.md,
   },
 
   mediaWrap: {
@@ -50,13 +44,18 @@ export default StyleSheet.create({
   },
   mediaWell: {
     width: '100%',
+    borderColor: COLORS.border,
+    borderWidth: StyleSheet.hairlineWidth,
     aspectRatio: 1,
-    borderRadius: RADIUS.sm,
-    backgroundColor: '#FFFFFF',
+    borderRadius: RADIUS.md,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
   },
+  mediaWellSmall: {
+    borderRadius: RADIUS.sm,
+  },
+
   productImageFill: {
     width: '86%',
     height: '86%',
@@ -88,97 +87,74 @@ export default StyleSheet.create({
     fontFamily: FONTS.gilroy.bold,
   },
 
-  discountBadge: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    backgroundColor: ACCENT.discount,
-    paddingHorizontal: SPACE.sm - 2,
-    paddingVertical: 2,
-    borderTopLeftRadius: RADIUS.sm,
-    borderBottomRightRadius: RADIUS.sm,
-  },
-  discountText: {
-    ...TYPE.micro,
-    fontSize: TYPE.micro.fontSize - 1,
-    color: INK.onDark,
-    fontFamily: FONTS.gilroy.bold,
-    letterSpacing: 0.2,
-  },
-
   wishlistButton: {
     position: 'absolute',
-    top: SPACE.xs,
-    right: SPACE.xs,
-    width: 26,
-    height: 26,
-    borderRadius: 13,
+    top: SPACE.sm,
+    right: SPACE.sm,
+    width: HEART_SIZE,
+    height: HEART_SIZE,
+    borderRadius: HEART_SIZE / 2,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.92)',
+    backgroundColor: 'rgba(255,255,255,0.72)',
+  },
+  wishlistButtonSmall: {
+    top: SPACE.xs,
+    right: SPACE.xs,
   },
 
+  // Sits outside the well so the overhang is not clipped by its overflow, and
+  // is sized as a share of the card so the counter pill scales with the card.
   actionDock: {
     position: 'absolute',
-    right: 0,
-    bottom: -(ACTION_H / 2),
+    right: SPACE.sm,
+    bottom: -DOCK_OVERHANG,
+    width: DOCK_WIDTH,
+    alignItems: 'flex-end',
   },
   actionDockSmall: {
-    bottom: -(ACTION_H_SMALL / 2),
+    right: SPACE.xs,
+    bottom: -DOCK_OVERHANG_SMALL,
   },
+
   addButton: {
-    width: ACTION_W,
-    height: ACTION_H,
-    borderRadius: RADIUS.xs,
+    width: ADD_SIZE,
+    height: ADD_SIZE,
+    borderRadius: RADIUS.sm,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: SURFACE.base,
-    borderWidth: 1.2,
+    borderWidth: 1.6,
     borderColor: ACCENT.primary,
   },
   addButtonSmall: {
-    width: ACTION_W_SMALL,
-    height: ACTION_H_SMALL,
+    width: ADD_SIZE_SMALL,
+    height: ADD_SIZE_SMALL,
+    borderRadius: RADIUS.xs,
   },
-  addLabel: {
-    ...TYPE.label,
-    lineHeight: undefined,
-    color: ACCENT.primary,
-    fontFamily: FONTS.gilroy.bold,
-    letterSpacing: 0.4,
-  },
-  addLabelSmall: {
-    ...TYPE.caption,
-    lineHeight: undefined,
-  },
-  addDisabled: {
-    backgroundColor: SURFACE.sunken,
-    borderColor: HAIRLINE,
-  },
-  addLabelDisabled: {
-    color: INK.faint,
-  },
+
   counterContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    width: ACTION_W,
-    height: ACTION_H,
-    borderRadius: RADIUS.xs,
+    width: '100%',
+    height: ADD_SIZE,
+    borderRadius: RADIUS.sm,
     backgroundColor: ACCENT.primary,
   },
   counterContainerSmall: {
-    width: ACTION_W_SMALL,
-    height: ACTION_H_SMALL,
+    height: ADD_SIZE_SMALL,
+    borderRadius: RADIUS.xs,
   },
+  // Narrower than the pill's height so a two-digit quantity still has room.
   counterBtn: {
-    width: ACTION_H,
+    width: ADD_SIZE - 4,
     height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
   },
   counterBtnSmall: {
-    width: ACTION_H_SMALL - 4,
+    width: ADD_SIZE_SMALL - 4,
   },
   counterQty: {
     ...TYPE.label,
@@ -186,22 +162,105 @@ export default StyleSheet.create({
     color: INK.onDark,
     fontFamily: FONTS.gilroy.bold,
   },
+  counterQtySmall: {
+    ...TYPE.caption,
+    lineHeight: undefined,
+  },
 
+  // Clears the dock's overhang so the price never sits under the add button.
   info: {
-    paddingTop: ACTION_H / 2 + SPACE.sm,
+    paddingTop: DOCK_OVERHANG + SPACE.sm,
   },
   infoSmall: {
-    paddingTop: ACTION_H_SMALL / 2 + SPACE.xs,
+    paddingTop: DOCK_OVERHANG_SMALL + SPACE.sm,
   },
+
+  priceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  pricePill: {
+    backgroundColor: PRICE_PILL,
+    borderRadius: RADIUS.xxs,
+    paddingHorizontal: SPACE.sm,
+    paddingVertical: 4,
+    bottom: 2,
+    right: 1.5,
+
+    alignSelf: 'flex-start',
+  },
+  pricePillSmall: {
+    paddingHorizontal: SPACE.xs + 2,
+    paddingVertical: 3,
+  },
+  priceText: {
+    ...TYPE.label,
+    lineHeight: undefined,
+    color: INK.onDark,
+    fontFamily: FONTS.gilroy.bold,
+    includeFontPadding: false,
+  },
+  priceTextSmall: {
+    ...TYPE.caption,
+    lineHeight: undefined,
+  },
+  priceSymbol: {
+    fontSize: TYPE.micro.fontSize,
+  },
+  priceSymbolSmall: {
+    fontSize: TYPE.micro.fontSize - 1,
+  },
+  mrpText: {
+    ...TYPE.caption,
+    color: INK.faint,
+    fontFamily: FONTS.gilroy.semiBold,
+    textDecorationLine: 'line-through',
+    marginLeft: SPACE.xs + 2,
+  },
+  mrpTextSmall: {
+    ...TYPE.micro,
+  },
+
+  savingsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: SPACE.xs + 2,
+    minHeight: TYPE.micro.lineHeight,
+  },
+  savingsText: {
+    ...TYPE.micro,
+    color: ACCENT.successText,
+    fontFamily: FONTS.gilroy.bold,
+  },
+  // A dashed border only renders on both platforms when every side is set, so
+  // the rule is a 2pt dashed box clipped by a 1pt window to show just its top.
+  savingsRuleClip: {
+    flex: 1,
+    height: 1,
+    overflow: 'hidden',
+    marginLeft: SPACE.xs + 2,
+  },
+  savingsRule: {
+    height: 2,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: SAVINGS_RULE,
+  },
+
   tokenRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: SPACE.xs,
+    marginTop: SPACE.xs + 2,
+    minHeight: TYPE.micro.lineHeight,
   },
   tokenIcon: {
     width: 12,
     height: 12,
     resizeMode: 'contain',
+  },
+  tokenIconSmall: {
+    width: 10,
+    height: 10,
   },
   tokenText: {
     ...TYPE.micro,
@@ -210,10 +269,11 @@ export default StyleSheet.create({
     marginLeft: SPACE.xs,
     flexShrink: 1,
   },
+
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: SPACE.xs,
+    marginTop: SPACE.xs + 2,
     gap: SPACE.xs,
   },
   ratingPill: {
@@ -238,8 +298,9 @@ export default StyleSheet.create({
 
   productName: {
     ...TYPE.label,
-    color: INK.base,
+    color: INK.strong,
     fontFamily: FONTS.gilroy.semiBold,
+    marginTop: SPACE.xs + 2,
     minHeight: TYPE.label.lineHeight * NAME_LINES,
     includeFontPadding: false,
   },
@@ -257,32 +318,5 @@ export default StyleSheet.create({
   productWeightSmall: {
     ...TYPE.micro,
     minHeight: TYPE.micro.lineHeight,
-  },
-
-  priceRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    marginTop: SPACE.xs + 2,
-    flexWrap: 'wrap',
-  },
-  priceText: {
-    ...TYPE.heading,
-    lineHeight: undefined,
-    color: INK.strong,
-    fontFamily: FONTS.gilroy.bold,
-  },
-  priceTextSmall: {
-    ...TYPE.body,
-    lineHeight: undefined,
-  },
-  mrpText: {
-    ...TYPE.caption,
-    color: INK.faint,
-    fontFamily: FONTS.gilroy.medium,
-    textDecorationLine: 'line-through',
-    marginLeft: SPACE.xs + 2,
-  },
-  mrpTextSmall: {
-    ...TYPE.micro,
   },
 });

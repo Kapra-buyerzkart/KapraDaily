@@ -9,21 +9,36 @@ import { MAX_FONT_SCALE } from '@/styles/homeTheme';
 import CachedImage from '@/components/CachedImage';
 import ShimmerPlaceholder from '@/components/ShimmerPlaceholder';
 import styles from '../styles';
-import { IMAGE_FADE } from '../constants';
+import { IMAGE_FADE, IMAGE_LOAD_TIMEOUT } from '../constants';
+
+const sourceKeyOf = source => {
+  if (typeof source === 'string') return source;
+  if (typeof source?.uri === 'string') return source.uri;
+  return String(source ?? '');
+};
 
 const ProductImage = ({ imageSource, isPlaceholder, isOutOfStock, onError }) => {
   const [loaded, setLoaded] = useState(false);
   const opacity = useSharedValue(isPlaceholder ? 1 : 0);
+  const sourceKey = sourceKeyOf(imageSource);
 
   useEffect(() => {
     if (isPlaceholder) {
       setLoaded(true);
       opacity.value = 1;
-    } else {
-      setLoaded(false);
-      opacity.value = 0;
+      return undefined;
     }
-  }, [imageSource, isPlaceholder, opacity]);
+
+    setLoaded(false);
+    opacity.value = 0;
+
+    const timer = setTimeout(() => {
+      setLoaded(true);
+      opacity.value = withTiming(1, IMAGE_FADE);
+    }, IMAGE_LOAD_TIMEOUT);
+
+    return () => clearTimeout(timer);
+  }, [sourceKey, isPlaceholder, opacity]);
 
   const handleLoad = useCallback(() => {
     setLoaded(true);

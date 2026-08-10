@@ -4,12 +4,10 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Platform,
   Linking,
   BackHandler,
   Animated,
 } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   useNavigation,
@@ -30,7 +28,6 @@ import { FONTS } from '../styles/typography';
 import {
   INK,
   ACCENT,
-  HAIRLINE,
   RADIUS,
   SURFACE,
   MAX_FONT_SCALE,
@@ -51,7 +48,6 @@ import {
 } from '../utils/invoiceUrl';
 import RatingModal from '../components/RatingModal';
 import StatusModal from '../components/StatusModal';
-import BillSection from '../components/BillSection';
 import RazorpayCheckout from 'react-native-razorpay';
 import { verifyRazorpayPaymentApi } from '../api/paymentService';
 import Toast from 'react-native-simple-toast';
@@ -71,16 +67,16 @@ const STAR = {
   off: '#DDE1E7',
 };
 
-const WELL_TINT = {
-  brand: { bg: SURFACE.tint, fg: ACCENT.primary },
-  success: { bg: ACCENT.successSoft, fg: ACCENT.successText },
-  neutral: { bg: SURFACE.sunken, fg: INK.muted },
+const CHIP_TINT = {
+  brand: { bg: '#FFF1E9', fg: ACCENT.primary },
+  success: { bg: '#E7F7EE', fg: ACCENT.successText },
+  neutral: { bg: '#F1F2F5', fg: INK.muted },
 };
 
-const IconWell = ({ name, tone = 'brand', style }) => {
-  const { bg, fg } = WELL_TINT[tone] || WELL_TINT.brand;
+const IconChip = ({ name, tone = 'brand', style }) => {
+  const { bg, fg } = CHIP_TINT[tone] || CHIP_TINT.brand;
   return (
-    <View style={[styles.iconWell, { backgroundColor: bg }, style]}>
+    <View style={[styles.iconChip, { backgroundColor: bg }, style]}>
       <Ionicons name={name} size={ICON.md} color={fg} />
     </View>
   );
@@ -145,8 +141,20 @@ const SectionLabel = ({ children, right }) => (
   </View>
 );
 
-const DetailRow = ({ label, value, divided }) => (
-  <View style={[styles.detailRow, divided && styles.detailRowDivided]}>
+const Card = ({ children, style }) => (
+  <View style={[styles.card, style]}>{children}</View>
+);
+
+// RN only renders `borderStyle: 'dashed'` reliably when every border is set, so
+// the dashes come from an over-sized bordered box clipped down to one line.
+const DashedDivider = () => (
+  <View style={styles.dashWrap}>
+    <View style={styles.dashLine} />
+  </View>
+);
+
+const DetailRow = ({ label, value }) => (
+  <View style={styles.detailRow}>
     <Text
       style={styles.orderDetailsKeyText}
       maxFontSizeMultiplier={MAX_FONT_SCALE}
@@ -157,6 +165,20 @@ const DetailRow = ({ label, value, divided }) => (
       style={styles.orderDetailsValueText}
       numberOfLines={1}
       ellipsizeMode="tail"
+      maxFontSizeMultiplier={MAX_FONT_SCALE}
+    >
+      {value}
+    </Text>
+  </View>
+);
+
+const BillLine = ({ label, value, positive }) => (
+  <View style={styles.billLine}>
+    <Text style={styles.billLineLabel} maxFontSizeMultiplier={MAX_FONT_SCALE}>
+      {label}
+    </Text>
+    <Text
+      style={[styles.billLineValue, positive && styles.billLineValuePositive]}
       maxFontSizeMultiplier={MAX_FONT_SCALE}
     >
       {value}
@@ -584,7 +606,7 @@ const OrderTrackingScreen = () => {
   }, [isLiveOrder, stepPulse]);
 
   const renderStepRail = ({ bare = false } = {}) => (
-    <View style={[styles.railCard, bare && styles.railCardBare]}>
+    <View style={[styles.rail, bare && styles.railBare]}>
       <View style={styles.railRow}>
         {STEP_LABELS.map((label, index) => {
           const done = isStepDone(index, effectiveOrderStatus);
@@ -696,22 +718,18 @@ const OrderTrackingScreen = () => {
             </Text>
           )}
         </View>
-        <View style={styles.headerInnerView}>
-          <TouchableOpacity
-            style={styles.helpContainer}
-            onPress={openSupportTicket}
-            activeOpacity={0.7}
-            accessibilityRole="button"
-            accessibilityLabel="Get help with this order"
-          >
-            <Text
-              style={styles.helpText}
-              maxFontSizeMultiplier={MAX_FONT_SCALE}
-            >
-              Help
-            </Text>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity
+          style={styles.helpContainer}
+          onPress={openSupportTicket}
+          activeOpacity={0.7}
+          hitSlop={hitSlopTo(wp('9%'))}
+          accessibilityRole="button"
+          accessibilityLabel="Get help with this order"
+        >
+          <Text style={styles.helpText} maxFontSizeMultiplier={MAX_FONT_SCALE}>
+            Help
+          </Text>
+        </TouchableOpacity>
       </View>
 
       <ScrollView
@@ -765,13 +783,11 @@ const OrderTrackingScreen = () => {
           )}
 
           {effectiveOrderStatus !== 'cancelled' && !hero && (
-            <View style={[styles.card, styles.railOnlyCard]}>
-              {renderStepRail({ bare: true })}
-            </View>
+            <Card>{renderStepRail({ bare: true })}</Card>
           )}
 
           {effectiveOrderStatus !== 'cancelled' && !!hero && (
-            <View style={styles.heroCard}>
+            <Card>
               <View style={styles.heroTop}>
                 <View style={styles.heroCopy}>
                   <View
@@ -783,21 +799,24 @@ const OrderTrackingScreen = () => {
                     {isLiveOrder && (
                       <Animated.View
                         style={[
-                          styles.heroPillDot,
+                          styles.liveDot,
                           {
                             opacity: stepPulse.interpolate({
                               inputRange: [0, 1],
-                              outputRange: [1, 0.3],
+                              outputRange: [1, 0.25],
                             }),
                           },
                         ]}
                       />
                     )}
                     <Text
-                      style={styles.heroPillText}
+                      style={[
+                        styles.heroPillText,
+                        !isLiveOrder && styles.heroPillTextDone,
+                      ]}
                       maxFontSizeMultiplier={MAX_FONT_SCALE}
                     >
-                      {isLiveOrder ? 'Live' : 'Completed'}
+                      {isLiveOrder ? 'LIVE ORDER' : 'COMPLETED'}
                     </Text>
                   </View>
                   <Text
@@ -824,15 +843,20 @@ const OrderTrackingScreen = () => {
                     </Text>
                   )}
                 </View>
+                <IconChip
+                  name={isLiveOrder ? 'bicycle' : 'checkmark-done'}
+                  tone={isLiveOrder ? 'brand' : 'success'}
+                  style={styles.heroChip}
+                />
               </View>
               {renderStepRail()}
-            </View>
+            </Card>
           )}
         </View>
 
         <View style={styles.body}>
           {canMarkOverallReview && (
-            <View style={[styles.card, styles.ratingCard]}>
+            <Card style={styles.ratingBlock}>
               <Text
                 style={styles.ratingText}
                 maxFontSizeMultiplier={MAX_FONT_SCALE}
@@ -863,7 +887,7 @@ const OrderTrackingScreen = () => {
                   </TouchableOpacity>
                 ))}
               </View>
-            </View>
+            </Card>
           )}
 
           {!canMarkOverallReview &&
@@ -880,7 +904,7 @@ const OrderTrackingScreen = () => {
                 ? 'Not assigned'
                 : deliveryAgentName || 'Marvin Alex';
               return (
-                <View style={[styles.card, styles.agentCard]}>
+                <Card style={styles.agentRow}>
                   <View
                     style={[
                       styles.agentAvatar,
@@ -890,7 +914,7 @@ const OrderTrackingScreen = () => {
                     <Ionicons
                       name={awaitingAgent ? 'time-outline' : 'bicycle'}
                       size={ICON.lg}
-                      color={awaitingAgent ? INK.muted : ACCENT.success}
+                      color={awaitingAgent ? INK.muted : ACCENT.successText}
                     />
                   </View>
                   <View style={styles.agentCopy}>
@@ -929,11 +953,7 @@ const OrderTrackingScreen = () => {
                         }
                       }}
                     >
-                      <Ionicons
-                        name="call"
-                        size={ICON.sm}
-                        color={ACCENT.successText}
-                      />
+                      <Ionicons name="call" size={ICON.sm} color={INK.onDark} />
                       <Text
                         style={styles.callText}
                         maxFontSizeMultiplier={MAX_FONT_SCALE}
@@ -942,15 +962,15 @@ const OrderTrackingScreen = () => {
                       </Text>
                     </TouchableOpacity>
                   )}
-                </View>
+                </Card>
               );
             })()}
 
           <SectionLabel>Delivery route</SectionLabel>
-          <View style={[styles.card, styles.routeCard]}>
+          <Card>
             <View style={styles.routeRow}>
               <View style={styles.routeRail}>
-                <IconWell name="storefront-outline" tone="brand" />
+                <IconChip name="storefront" tone="brand" />
                 <View style={styles.routeConnector} />
               </View>
               <View style={styles.routeCopy}>
@@ -981,19 +1001,12 @@ const OrderTrackingScreen = () => {
                 >
                   {shippingAddress?.country || 'India'}
                 </Text>
-                {/* <Text
-                  numberOfLines={1}
-                  ellipsizeMode="tail"
-                  style={[styles.addressLineText, styles.addressPhoneText]}
-                >
-                  7000000000
-                </Text> */}
               </View>
             </View>
 
             <View style={[styles.routeRow, styles.routeRowLast]}>
               <View style={styles.routeRail}>
-                <IconWell name="home" tone="success" />
+                <IconChip name="home" tone="success" />
               </View>
               <View style={styles.routeCopy}>
                 <Text
@@ -1032,10 +1045,19 @@ const OrderTrackingScreen = () => {
                 </Text>
               </View>
             </View>
-          </View>
+          </Card>
 
           <SectionLabel>Payment method</SectionLabel>
-          <View style={[styles.card, styles.paymentCard]}>
+          <Card style={styles.paymentRow}>
+            <IconChip
+              name={
+                getPaymentLabel(paymentMethod) === 'Cash On Delivery'
+                  ? 'cash-outline'
+                  : 'card-outline'
+              }
+              tone="neutral"
+              style={styles.paymentChip}
+            />
             <View style={styles.paymentCopy}>
               <Text
                 numberOfLines={1}
@@ -1085,7 +1107,7 @@ const OrderTrackingScreen = () => {
                 </View>
               )}
             </View>
-          </View>
+          </Card>
 
           <SectionLabel
             right={
@@ -1102,7 +1124,7 @@ const OrderTrackingScreen = () => {
             Items in this order
           </SectionLabel>
 
-          <View style={[styles.card, styles.itemsCard]}>
+          <Card>
             <View style={styles.productsContainer}>
               {orderItems.map((item, index) => (
                 <OrderProductCard
@@ -1118,35 +1140,12 @@ const OrderTrackingScreen = () => {
             </View>
 
             <View style={styles.productTotalView}>
-              <View style={styles.totalCopy}>
-                <Text
-                  style={styles.totalText}
-                  maxFontSizeMultiplier={MAX_FONT_SCALE}
-                >
-                  Total
-                </Text>
-                <TouchableOpacity
-                  style={styles.viewBillContainer}
-                  activeOpacity={0.7}
-                  accessibilityRole="button"
-                  accessibilityLabel={
-                    showBillBreakdown ? 'Hide bill details' : 'View your bill'
-                  }
-                  onPress={() => setShowBillBreakdown(!showBillBreakdown)}
-                >
-                  <Text
-                    style={styles.viewBillText}
-                    maxFontSizeMultiplier={MAX_FONT_SCALE}
-                  >
-                    View Your Bill
-                  </Text>
-                  <Ionicons
-                    style={styles.viewBillIcon}
-                    name={showBillBreakdown ? 'chevron-up' : 'chevron-down'}
-                    size={ICON.xs}
-                  />
-                </TouchableOpacity>
-              </View>
+              <Text
+                style={styles.totalText}
+                maxFontSizeMultiplier={MAX_FONT_SCALE}
+              >
+                Total
+              </Text>
               <Text
                 style={styles.totalPriceText}
                 maxFontSizeMultiplier={MAX_FONT_SCALE}
@@ -1154,17 +1153,123 @@ const OrderTrackingScreen = () => {
                 ₹{grandTotal}
               </Text>
             </View>
-          </View>
 
-          {showBillBreakdown && billCalculations && (
-            <BillSection billCalculations={billCalculations} />
-          )}
+            <TouchableOpacity
+              style={styles.viewBillContainer}
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel={
+                showBillBreakdown ? 'Hide bill details' : 'View your bill'
+              }
+              onPress={() => setShowBillBreakdown(!showBillBreakdown)}
+            >
+              <Text
+                style={styles.viewBillText}
+                maxFontSizeMultiplier={MAX_FONT_SCALE}
+              >
+                {showBillBreakdown ? 'Hide bill details' : 'View your bill'}
+              </Text>
+              <Ionicons
+                style={styles.viewBillIcon}
+                name={showBillBreakdown ? 'chevron-up' : 'chevron-down'}
+                size={ICON.xs}
+              />
+            </TouchableOpacity>
+
+            {showBillBreakdown && billCalculations && (
+              <View style={styles.billBlock}>
+                <DashedDivider />
+                <BillLine
+                  label="Item total"
+                  value={`₹${billCalculations.itemTotal.toFixed(2)}`}
+                />
+                {billCalculations.savings > 0 && (
+                  <BillLine
+                    label="Discount"
+                    value={`- ₹${billCalculations.savings.toFixed(2)}`}
+                    positive
+                  />
+                )}
+                <BillLine
+                  label="Delivery charge"
+                  value={
+                    billCalculations.deliveryCharge === 0
+                      ? 'FREE'
+                      : `₹${billCalculations.deliveryCharge.toFixed(2)}`
+                  }
+                  positive={billCalculations.deliveryCharge === 0}
+                />
+                {billCalculations.couponDiscount > 0 && (
+                  <BillLine
+                    label="Coupon discount"
+                    value={`- ₹${billCalculations.couponDiscount.toFixed(2)}`}
+                    positive
+                  />
+                )}
+                {billCalculations.giftCardAmount > 0 && (
+                  <BillLine
+                    label="Gift card applied"
+                    value={`- ₹${billCalculations.giftCardAmount.toFixed(2)}`}
+                    positive
+                  />
+                )}
+                {billCalculations.bcoinsAppliedValue > 0 && (
+                  <BillLine
+                    label="Bcoins applied"
+                    value={`- ₹${billCalculations.bcoinsAppliedValue.toFixed(
+                      2,
+                    )}`}
+                    positive
+                  />
+                )}
+                <View style={styles.billTotalRow}>
+                  <Text
+                    style={styles.billTotalText}
+                    maxFontSizeMultiplier={MAX_FONT_SCALE}
+                  >
+                    To pay
+                  </Text>
+                  <Text
+                    style={styles.billTotalText}
+                    maxFontSizeMultiplier={MAX_FONT_SCALE}
+                  >
+                    ₹{billCalculations.toPay.toFixed(2)}
+                  </Text>
+                </View>
+                {billCalculations.totalTax > 0 && (
+                  <Text
+                    style={styles.billNote}
+                    maxFontSizeMultiplier={MAX_FONT_SCALE}
+                  >
+                    Inclusive of GST ₹{billCalculations.totalTax.toFixed(2)}
+                  </Text>
+                )}
+              </View>
+            )}
+
+            {billCalculations?.totalSavings > 0 && (
+              <View style={styles.savingsStrip}>
+                <Ionicons
+                  name="pricetag"
+                  size={ICON.sm}
+                  color={ACCENT.successText}
+                />
+                <Text
+                  style={styles.savingsStripText}
+                  maxFontSizeMultiplier={MAX_FONT_SCALE}
+                >
+                  You saved ₹{billCalculations.totalSavings.toFixed(2)} on this
+                  order
+                </Text>
+              </View>
+            )}
+          </Card>
 
           {(!!resolvedInvoiceUrl ||
             ['packed', 'assigned', 'dispatched', 'delivered'].includes(
               effectiveOrderStatus,
             )) && (
-            <View style={[styles.card, styles.docsCard]}>
+            <Card style={styles.docsCard}>
               {!!resolvedInvoiceUrl && (
                 <TouchableOpacity
                   style={styles.docRow}
@@ -1173,10 +1278,10 @@ const OrderTrackingScreen = () => {
                   accessibilityRole="button"
                   accessibilityLabel="View invoice"
                 >
-                  <IconWell
+                  <IconChip
                     name="receipt-outline"
                     tone="brand"
-                    style={styles.docIconWell}
+                    style={styles.docIcon}
                   />
                   <Text
                     style={styles.viewInvoiceText}
@@ -1217,10 +1322,10 @@ const OrderTrackingScreen = () => {
                     }
                   }}
                 >
-                  <IconWell
-                    name="document-text-outline"
+                  <IconChip
+                    name="download-outline"
                     tone="neutral"
-                    style={styles.docIconWell}
+                    style={styles.docIcon}
                   />
                   <Text
                     style={styles.downloadBillText}
@@ -1229,71 +1334,60 @@ const OrderTrackingScreen = () => {
                     Download the bill
                   </Text>
                   <Ionicons
-                    name="download-outline"
+                    name="chevron-forward"
                     size={ICON.md}
                     color={INK.muted}
                   />
                 </TouchableOpacity>
               )}
-            </View>
+            </Card>
           )}
 
           <SectionLabel>Order Details</SectionLabel>
-          <View style={[styles.card, styles.orderDetailsContainer]}>
+          <Card style={styles.orderDetailsCard}>
             <DetailRow label="Order ID" value={displayOrderId} />
-            <DetailRow
-              label="Payment"
-              value={getPaymentLabel(paymentMethod)}
-              divided
-            />
-            <DetailRow label="Deliver to" value={fullAddress} divided />
+            <DetailRow label="Payment" value={getPaymentLabel(paymentMethod)} />
+            <DetailRow label="Deliver to" value={fullAddress} />
             <DetailRow
               label="Order placed"
               value={formattedOrderDate || orderDate}
-              divided
             />
-          </View>
+          </Card>
 
           {canMarkDeliveryReview && (
-            <View style={[styles.card, styles.agentRatingCard]}>
-              <View style={styles.deliveryAgentInnerContainerOne}>
-                <View style={styles.deliveryAgentContainerInnerView}>
-                  <Text
-                    style={styles.deliveryAgentRatingText}
-                    maxFontSizeMultiplier={MAX_FONT_SCALE}
+            <Card style={styles.agentRatingBlock}>
+              <Text
+                style={styles.deliveryAgentRatingText}
+                maxFontSizeMultiplier={MAX_FONT_SCALE}
+              >
+                Rate our delivery boy
+              </Text>
+              <Text
+                style={styles.deliveryAgentRatingName}
+                numberOfLines={1}
+                maxFontSizeMultiplier={MAX_FONT_SCALE}
+              >
+                {deliveryAgentName || 'Marvin Alex'}
+              </Text>
+              <View style={styles.starContainerTwo}>
+                {[1, 2, 3, 4, 5].map(star => (
+                  <TouchableOpacity
+                    key={star}
+                    onPress={() => handleAgentRating(star)}
+                    activeOpacity={0.7}
+                    hitSlop={hitSlopTo(wp('5%'))}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Rate delivery agent ${star} out of 5`}
                   >
-                    Rate our delivery boy
-                  </Text>
-                  <View style={styles.starContainerTwo}>
-                    {[1, 2, 3, 4, 5].map(star => (
-                      <TouchableOpacity
-                        key={star}
-                        onPress={() => handleAgentRating(star)}
-                        activeOpacity={0.7}
-                        hitSlop={hitSlopTo(wp('5%'))}
-                        accessibilityRole="button"
-                        accessibilityLabel={`Rate delivery agent ${star} out of 5`}
-                      >
-                        <Ionicons
-                          name={star <= agentRating ? 'star' : 'star-outline'}
-                          size={ICON.lg}
-                          color={star <= agentRating ? STAR.on : STAR.off}
-                        />
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                </View>
+                    <Ionicons
+                      name={star <= agentRating ? 'star' : 'star-outline'}
+                      size={ICON.lg}
+                      color={star <= agentRating ? STAR.on : STAR.off}
+                    />
+                  </TouchableOpacity>
+                ))}
               </View>
-              <View style={styles.deliveryAgentInnerContainerTwo}>
-                <Text
-                  style={styles.deliveryAgentRatingName}
-                  numberOfLines={1}
-                  maxFontSizeMultiplier={MAX_FONT_SCALE}
-                >
-                  Delivery boy : {deliveryAgentName || 'Marvin Alex'}
-                </Text>
-              </View>
-            </View>
+            </Card>
           )}
 
           {canRetryPayment && !hasOnlinePaid && (
@@ -1313,30 +1407,21 @@ const OrderTrackingScreen = () => {
                 </Text>
               )}
               <Animated.View
-                pointerEvents="none"
-                style={[
-                  styles.retryHalo,
-                  {
-                    opacity: showRetryHint
-                      ? retryPulseAnim.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [0, 0.35],
-                        })
-                      : 0,
-                  },
-                ]}
-              />
-              <TouchableOpacity
-                activeOpacity={0.85}
-                onPress={handleRetryPayment}
-                accessibilityRole="button"
-                accessibilityLabel="Retry payment"
+                style={{
+                  opacity: showRetryHint
+                    ? retryPulseAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [1, 0.55],
+                      })
+                    : 1,
+                }}
               >
-                <LinearGradient
-                  colors={['#0E9F4F', '#3FC57A']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  onPress={handleRetryPayment}
                   style={styles.primaryButton}
+                  accessibilityRole="button"
+                  accessibilityLabel="Retry payment"
                 >
                   <Ionicons name="refresh" size={ICON.md} color={INK.onDark} />
                   <Text
@@ -1345,8 +1430,8 @@ const OrderTrackingScreen = () => {
                   >
                     Retry Payment
                   </Text>
-                </LinearGradient>
-              </TouchableOpacity>
+                </TouchableOpacity>
+              </Animated.View>
             </View>
           )}
 
@@ -1422,48 +1507,50 @@ const OrderTrackingScreen = () => {
 
 export default OrderTrackingScreen;
 
-const CARD_WIDTH = wp('91%');
-const CARD_EDGE = 'rgba(17,19,26,0.07)';
-
-const SOFT_SHADOW = Platform.select({
-  ios: {
-    shadowColor: '#0B1020',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-  },
-  android: { elevation: 2 },
-});
+const GUTTER = wp('3.6%');
+const CANVAS = '#F2F3F5';
+const RULE_COLOR = 'rgba(17,19,26,0.07)';
+const CARD_PAD_H = wp('4.2%');
+const CARD_PAD_V = hp('1.9%');
 
 const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
-    backgroundColor: SURFACE.base,
+    backgroundColor: CANVAS,
   },
 
-  iconWell: {
-    width: wp('8%'),
-    height: wp('8%'),
-    borderRadius: RADIUS.pill,
+  card: {
+    backgroundColor: SURFACE.base,
+    borderRadius: RADIUS.md,
+    paddingHorizontal: CARD_PAD_H,
+    paddingVertical: CARD_PAD_V,
+    marginHorizontal: GUTTER,
+    marginBottom: hp('1.2%'),
+  },
+
+  iconChip: {
+    width: wp('9%'),
+    height: wp('9%'),
+    borderRadius: RADIUS.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
 
   headerContainer: {
     flexDirection: 'row',
-    paddingHorizontal: wp('4.65%'),
     alignItems: 'center',
+    paddingHorizontal: wp('4.6%'),
     paddingTop: hp('1.2%'),
-    paddingBottom: hp('1.2%'),
+    paddingBottom: hp('1.4%'),
     backgroundColor: SURFACE.base,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: HAIRLINE,
+    borderBottomColor: RULE_COLOR,
   },
   backButton: {
-    width: wp('9%'),
-    height: wp('9%'),
+    width: wp('8.6%'),
+    height: wp('8.6%'),
     borderRadius: RADIUS.pill,
-    backgroundColor: SURFACE.sunken,
+    backgroundColor: '#F2F3F5',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1472,173 +1559,149 @@ const styles = StyleSheet.create({
     marginLeft: wp('3%'),
   },
   headerText: {
-    fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('4.4%'),
+    fontFamily: FONTS.gilroy.bold,
+    fontSize: wp('4.5%'),
     color: INK.strong,
-    letterSpacing: -0.3,
+    letterSpacing: -0.4,
   },
   headerSubText: {
     fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('2.8%'),
+    fontSize: wp('2.9%'),
     color: INK.muted,
     marginTop: hp('0.15%'),
   },
-  headerInnerView: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
   helpContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: SURFACE.tint,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(242,80,0,0.18)',
+    backgroundColor: '#FFF1E9',
     borderRadius: RADIUS.pill,
-    paddingHorizontal: wp('3.2%'),
-    height: hp('3.6%'),
+    paddingHorizontal: wp('3.6%'),
+    height: hp('3.7%'),
     justifyContent: 'center',
   },
   helpText: {
-    fontFamily: FONTS.gilroy.semiBold,
+    fontFamily: FONTS.gilroy.bold,
     color: ACCENT.primary,
-    fontSize: wp('2.9%'),
+    fontSize: wp('3.1%'),
     letterSpacing: 0.2,
   },
 
   scrollContent: {
-    paddingBottom: hp('3%'),
+    paddingBottom: hp('4%'),
   },
   topSection: {
-    alignItems: 'center',
-    paddingTop: hp('2%'),
+    paddingTop: hp('1.4%'),
   },
   body: {
-    alignItems: 'center',
-    paddingTop: hp('0.5%'),
-  },
-
-  card: {
-    width: CARD_WIDTH,
-    backgroundColor: SURFACE.base,
-    borderRadius: RADIUS.lg,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: CARD_EDGE,
-    ...SOFT_SHADOW,
+    paddingBottom: hp('1%'),
   },
 
   sectionLabelRow: {
-    width: CARD_WIDTH,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: hp('2.2%'),
+    paddingHorizontal: GUTTER + wp('1%'),
+    marginTop: hp('0.8%'),
     marginBottom: hp('1%'),
   },
   sectionLabelText: {
-    fontFamily: FONTS.gilroy.semiBold,
+    fontFamily: FONTS.gilroy.bold,
     color: INK.strong,
-    fontSize: wp('3.85%'),
+    fontSize: wp('3.9%'),
     letterSpacing: -0.2,
   },
   countPill: {
-    backgroundColor: SURFACE.sunken,
+    backgroundColor: '#E7E9ED',
     borderRadius: RADIUS.pill,
     paddingHorizontal: wp('2.6%'),
     paddingVertical: hp('0.35%'),
   },
   countPillText: {
     fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('2.9%'),
+    fontSize: wp('2.85%'),
     color: INK.muted,
   },
 
-  heroCard: {
-    width: CARD_WIDTH,
-    backgroundColor: SURFACE.base,
-    borderRadius: RADIUS.xl,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: CARD_EDGE,
-    paddingHorizontal: wp('4.5%'),
-    paddingTop: hp('2%'),
-    paddingBottom: hp('1.8%'),
-    ...SOFT_SHADOW,
-  },
   heroTop: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
   },
   heroCopy: {
     flex: 1,
+    marginRight: wp('3%'),
+  },
+  heroChip: {
+    width: wp('11%'),
+    height: wp('11%'),
+    borderRadius: RADIUS.md,
   },
   heroPill: {
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
-    backgroundColor: ACCENT.successSoft,
+    backgroundColor: '#E7F7EE',
     borderRadius: RADIUS.pill,
     paddingHorizontal: wp('2.4%'),
-    paddingVertical: hp('0.35%'),
-    marginBottom: hp('0.9%'),
+    paddingVertical: hp('0.4%'),
+    marginBottom: hp('1%'),
   },
   heroPillDone: {
-    backgroundColor: SURFACE.sunken,
+    backgroundColor: '#F1F2F5',
   },
-  heroPillDot: {
-    width: wp('1.6%'),
-    height: wp('1.6%'),
+  liveDot: {
+    width: wp('1.7%'),
+    height: wp('1.7%'),
     borderRadius: RADIUS.pill,
     backgroundColor: ACCENT.success,
-    marginRight: wp('1.4%'),
+    marginRight: wp('1.6%'),
   },
   heroPillText: {
-    fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('2.6%'),
+    fontFamily: FONTS.gilroy.bold,
+    fontSize: wp('2.5%'),
     color: ACCENT.successText,
-    letterSpacing: 0.2,
+    letterSpacing: 0.6,
+  },
+  heroPillTextDone: {
+    color: INK.muted,
   },
   heroTitle: {
     fontFamily: FONTS.gilroy.bold,
-    fontSize: wp('5%'),
+    fontSize: wp('5.6%'),
     color: INK.strong,
-    letterSpacing: -0.4,
+    letterSpacing: -0.5,
   },
   heroCaption: {
     fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('3.1%'),
+    fontSize: wp('3.2%'),
     color: INK.muted,
     marginTop: hp('0.4%'),
-    lineHeight: wp('4.4%'),
+    lineHeight: wp('4.5%'),
   },
   heroMeta: {
     fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('2.8%'),
+    fontSize: wp('2.85%'),
     color: INK.faint,
     marginTop: hp('0.6%'),
   },
-  railCard: {
-    marginTop: hp('1.6%'),
-    paddingTop: hp('1.6%'),
+
+  rail: {
+    marginTop: hp('2%'),
+    paddingTop: hp('1.8%'),
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: HAIRLINE,
+    borderTopColor: RULE_COLOR,
   },
-  railCardBare: {
+  railBare: {
     marginTop: 0,
     paddingTop: 0,
     borderTopWidth: 0,
-  },
-  railOnlyCard: {
-    paddingHorizontal: wp('4.5%'),
-    paddingVertical: hp('1.8%'),
   },
   railRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   railNode: {
-    width: wp('5.2%'),
-    height: wp('5.2%'),
+    width: wp('5%'),
+    height: wp('5%'),
     borderRadius: RADIUS.pill,
-    backgroundColor: SURFACE.sunken,
+    backgroundColor: '#F1F2F5',
     borderWidth: 1.5,
     borderColor: '#DDE1E7',
     alignItems: 'center',
@@ -1660,17 +1723,17 @@ const styles = StyleSheet.create({
   },
   railLine: {
     flex: 1,
-    height: 2,
-    borderRadius: 2,
-    backgroundColor: '#E4E7EC',
-    marginHorizontal: wp('1%'),
+    height: 3,
+    borderRadius: 3,
+    backgroundColor: '#E7E9ED',
+    marginHorizontal: wp('1.2%'),
   },
   railLineFilled: {
     backgroundColor: ACCENT.success,
   },
   railLabelRow: {
     flexDirection: 'row',
-    marginTop: hp('0.8%'),
+    marginTop: hp('0.9%'),
   },
   railLabel: {
     flex: 1,
@@ -1686,70 +1749,65 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   railLabelOn: {
-    fontFamily: FONTS.gilroy.semiBold,
+    fontFamily: FONTS.gilroy.bold,
     color: ACCENT.successText,
   },
 
-  ratingCard: {
-    paddingHorizontal: wp('4.5%'),
-    paddingVertical: hp('2%'),
-    marginTop: hp('1.6%'),
+  ratingBlock: {
     alignItems: 'center',
+    paddingVertical: hp('2.4%'),
   },
   ratingText: {
-    fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('3.95%'),
+    fontFamily: FONTS.gilroy.bold,
+    fontSize: wp('4.1%'),
     color: INK.strong,
   },
   ratingHint: {
     fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('2.9%'),
+    fontSize: wp('2.95%'),
     color: INK.muted,
-    marginTop: hp('0.3%'),
+    marginTop: hp('0.35%'),
   },
   starContainer: {
     flexDirection: 'row',
     width: wp('52%'),
     justifyContent: 'space-between',
-    marginTop: hp('1.4%'),
+    marginTop: hp('1.5%'),
   },
 
-  agentCard: {
+  agentRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: wp('4%'),
-    paddingVertical: hp('1.6%'),
-    marginTop: hp('1.6%'),
   },
   agentAvatar: {
     width: wp('11.5%'),
     height: wp('11.5%'),
     borderRadius: RADIUS.pill,
-    backgroundColor: ACCENT.successSoft,
+    backgroundColor: '#E7F7EE',
     alignItems: 'center',
     justifyContent: 'center',
   },
   agentAvatarIdle: {
-    backgroundColor: SURFACE.sunken,
+    backgroundColor: '#F1F2F5',
   },
   agentCopy: {
     flex: 1,
-    marginLeft: wp('3%'),
+    marginLeft: wp('3.2%'),
     marginRight: wp('2%'),
   },
   deliveryAgentNameText: {
-    fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('3.85%'),
+    fontFamily: FONTS.gilroy.bold,
+    fontSize: wp('3.9%'),
     color: INK.strong,
   },
   deliveryAgentTextTwo: {
     fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('2.8%'),
+    fontSize: wp('2.85%'),
     color: INK.muted,
     marginTop: hp('0.25%'),
   },
   agentWaitPill: {
-    backgroundColor: SURFACE.sunken,
+    backgroundColor: '#F1F2F5',
     borderRadius: RADIUS.pill,
     paddingHorizontal: wp('3%'),
     paddingVertical: hp('0.6%'),
@@ -1762,27 +1820,23 @@ const styles = StyleSheet.create({
   callContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: ACCENT.successSoft,
+    backgroundColor: ACCENT.success,
     borderRadius: RADIUS.pill,
-    paddingHorizontal: wp('3.4%'),
-    height: hp('4.4%'),
+    paddingHorizontal: wp('3.8%'),
+    height: hp('4.3%'),
   },
   callText: {
-    fontFamily: FONTS.gilroy.semiBold,
+    fontFamily: FONTS.gilroy.bold,
     fontSize: wp('3.1%'),
-    color: ACCENT.successText,
+    color: INK.onDark,
     marginLeft: wp('1.6%'),
   },
 
-  routeCard: {
-    paddingHorizontal: wp('4%'),
-    paddingVertical: hp('1.8%'),
-  },
   routeRow: {
     flexDirection: 'row',
   },
   routeRowLast: {
-    marginTop: hp('0.6%'),
+    marginTop: hp('0.4%'),
   },
   routeRail: {
     alignItems: 'center',
@@ -1793,17 +1847,17 @@ const styles = StyleSheet.create({
     width: 2,
     minHeight: hp('2%'),
     borderRadius: 2,
-    backgroundColor: '#E4E7EC',
+    backgroundColor: '#E7E9ED',
     marginVertical: hp('0.5%'),
   },
   routeCopy: {
     flex: 1,
-    marginLeft: wp('3%'),
+    marginLeft: wp('3.4%'),
     paddingBottom: hp('0.6%'),
   },
   addressHeaderText: {
-    fontSize: wp('3.2%'),
-    fontFamily: FONTS.gilroy.semiBold,
+    fontSize: wp('3.3%'),
+    fontFamily: FONTS.gilroy.bold,
     color: INK.strong,
     marginBottom: hp('0.4%'),
   },
@@ -1818,29 +1872,30 @@ const styles = StyleSheet.create({
     color: INK.base,
   },
   addressPhoneText: {
-    fontFamily: FONTS.gilroy.medium,
+    fontFamily: FONTS.gilroy.semiBold,
     color: INK.base,
     marginTop: hp('0.5%'),
   },
 
-  paymentCard: {
+  paymentRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: wp('4%'),
-    paddingVertical: hp('1.6%'),
+  },
+  paymentChip: {
+    marginRight: wp('3.2%'),
   },
   paymentCopy: {
     flex: 1,
     marginRight: wp('2%'),
   },
   paymentText: {
-    fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('3.4%'),
+    fontFamily: FONTS.gilroy.bold,
+    fontSize: wp('3.6%'),
     color: INK.strong,
   },
   paymentSubText: {
     fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('2.8%'),
+    fontSize: wp('2.85%'),
     color: INK.muted,
     marginTop: hp('0.2%'),
   },
@@ -1851,12 +1906,12 @@ const styles = StyleSheet.create({
   paymnetPrice: {
     color: INK.strong,
     fontFamily: FONTS.gilroy.bold,
-    fontSize: wp('4.4%'),
+    fontSize: wp('4.5%'),
   },
   paidBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: ACCENT.successSoft,
+    backgroundColor: '#E7F7EE',
     alignSelf: 'flex-end',
     paddingHorizontal: wp('2.2%'),
     paddingVertical: hp('0.3%'),
@@ -1870,54 +1925,117 @@ const styles = StyleSheet.create({
     marginLeft: wp('1%'),
   },
 
-  itemsCard: {
-    overflow: 'hidden',
-    paddingTop: hp('0.4%'),
-  },
   productsContainer: {
-    paddingHorizontal: wp('3.5%'),
+    marginTop: -hp('0.6%'),
   },
   productTotalView: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: SURFACE.sunken,
-    paddingVertical: hp('1.4%'),
-    paddingHorizontal: wp('4%'),
-    marginTop: hp('0.4%'),
-  },
-  totalCopy: {
-    flex: 1,
+    paddingTop: hp('1.6%'),
   },
   totalText: {
-    fontFamily: FONTS.gilroy.semiBold,
+    fontFamily: FONTS.gilroy.bold,
     fontSize: wp('4%'),
     color: INK.strong,
+  },
+  totalPriceText: {
+    fontFamily: FONTS.gilroy.bold,
+    color: INK.strong,
+    fontSize: wp('4.7%'),
   },
   viewBillContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
-    marginTop: hp('0.4%'),
+    backgroundColor: '#FFF1E9',
+    borderRadius: RADIUS.pill,
+    paddingHorizontal: wp('3.2%'),
+    paddingVertical: hp('0.6%'),
+    marginTop: hp('1.2%'),
   },
   viewBillText: {
-    fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('2.9%'),
+    fontFamily: FONTS.gilroy.bold,
+    fontSize: wp('2.95%'),
     color: ACCENT.primary,
   },
   viewBillIcon: {
     marginLeft: wp('1.5%'),
     color: ACCENT.primary,
   },
-  totalPriceText: {
+
+  billBlock: {
+    marginTop: hp('1.6%'),
+  },
+  dashWrap: {
+    height: 1,
+    overflow: 'hidden',
+    marginBottom: hp('1.4%'),
+  },
+  dashLine: {
+    height: 2,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: '#DCDEE3',
+  },
+  billLine: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: hp('0.55%'),
+  },
+  billLineLabel: {
+    fontFamily: FONTS.gilroy.regular,
+    fontSize: wp('3.2%'),
+    color: INK.muted,
+  },
+  billLineValue: {
+    fontFamily: FONTS.gilroy.semiBold,
+    fontSize: wp('3.2%'),
+    color: INK.base,
+  },
+  billLineValuePositive: {
+    color: ACCENT.successText,
+  },
+  billTotalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: hp('1%'),
+    paddingTop: hp('1.2%'),
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: RULE_COLOR,
+  },
+  billTotalText: {
     fontFamily: FONTS.gilroy.bold,
+    fontSize: wp('3.7%'),
     color: INK.strong,
-    fontSize: wp('4.65%'),
+  },
+  billNote: {
+    fontFamily: FONTS.gilroy.regular,
+    fontSize: wp('2.8%'),
+    color: INK.faint,
+    marginTop: hp('0.5%'),
+  },
+  savingsStrip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E7F7EE',
+    borderRadius: RADIUS.sm,
+    paddingHorizontal: wp('3%'),
+    paddingVertical: hp('1%'),
+    marginTop: hp('1.4%'),
+  },
+  savingsStripText: {
+    flex: 1,
+    fontFamily: FONTS.gilroy.bold,
+    fontSize: wp('3.1%'),
+    color: ACCENT.successText,
+    marginLeft: wp('2%'),
   },
 
   docsCard: {
-    marginTop: hp('1.6%'),
-    paddingHorizontal: wp('4%'),
+    paddingVertical: hp('0.4%'),
   },
   docRow: {
     flexDirection: 'row',
@@ -1926,37 +2044,32 @@ const styles = StyleSheet.create({
   },
   docRowDivided: {
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: HAIRLINE,
+    borderTopColor: RULE_COLOR,
   },
-  docIconWell: {
-    marginRight: wp('3%'),
+  docIcon: {
+    marginRight: wp('3.2%'),
   },
   viewInvoiceText: {
     flex: 1,
     fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('3.3%'),
+    fontSize: wp('3.5%'),
     color: INK.strong,
   },
   downloadBillText: {
     flex: 1,
     fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('3.3%'),
+    fontSize: wp('3.5%'),
     color: INK.strong,
   },
 
-  orderDetailsContainer: {
-    paddingHorizontal: wp('4%'),
-    paddingVertical: hp('0.4%'),
+  orderDetailsCard: {
+    paddingVertical: hp('0.6%'),
   },
   detailRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: hp('1.4%'),
-  },
-  detailRowDivided: {
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: HAIRLINE,
+    paddingVertical: hp('1.2%'),
   },
   orderDetailsKeyText: {
     fontFamily: FONTS.gilroy.medium,
@@ -1972,67 +2085,45 @@ const styles = StyleSheet.create({
     fontSize: wp('3.25%'),
   },
 
-  agentRatingCard: {
-    marginTop: hp('1.6%'),
-    overflow: 'hidden',
-  },
-  deliveryAgentInnerContainerOne: {
-    flexDirection: 'row',
+  agentRatingBlock: {
     alignItems: 'center',
-    paddingVertical: hp('2%'),
-    paddingHorizontal: wp('6%'),
-  },
-  deliveryAgentContainerInnerView: {
-    flex: 1,
-    alignItems: 'center',
+    paddingVertical: hp('2.2%'),
   },
   deliveryAgentRatingText: {
-    fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('3.72%'),
+    fontFamily: FONTS.gilroy.bold,
+    fontSize: wp('3.9%'),
     color: INK.strong,
-  },
-  starContainerTwo: {
-    flexDirection: 'row',
-    width: wp('36%'),
-    justifyContent: 'space-between',
-    marginTop: hp('1%'),
-  },
-  deliveryAgentInnerContainerTwo: {
-    backgroundColor: SURFACE.sunken,
-    paddingVertical: hp('1%'),
-    paddingHorizontal: wp('5%'),
   },
   deliveryAgentRatingName: {
     fontFamily: FONTS.gilroy.medium,
     fontSize: wp('2.9%'),
     color: INK.muted,
+    marginTop: hp('0.3%'),
+  },
+  starContainerTwo: {
+    flexDirection: 'row',
+    width: wp('40%'),
+    justifyContent: 'space-between',
+    marginTop: hp('1.3%'),
   },
 
   retryContainerWrapper: {
-    width: CARD_WIDTH,
-    marginTop: hp('2%'),
+    paddingHorizontal: GUTTER,
+    marginTop: hp('1.4%'),
   },
   retryHintText: {
-    fontFamily: FONTS.gilroy.medium,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('3.2%'),
     color: ACCENT.successText,
     textAlign: 'center',
     marginBottom: hp('1%'),
   },
-  retryHalo: {
-    position: 'absolute',
-    left: -wp('1.5%'),
-    right: -wp('1.5%'),
-    bottom: -hp('0.8%'),
-    height: hp('7.4%'),
-    borderRadius: RADIUS.lg,
-    backgroundColor: ACCENT.success,
-  },
   primaryButton: {
     flexDirection: 'row',
     width: '100%',
-    height: hp('6.2%'),
-    borderRadius: RADIUS.md,
+    height: hp('6.4%'),
+    borderRadius: RADIUS.sm,
+    backgroundColor: ACCENT.success,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -2044,20 +2135,20 @@ const styles = StyleSheet.create({
     marginLeft: wp('2%'),
   },
   cancelButton: {
-    width: CARD_WIDTH,
-    height: hp('6.2%'),
-    borderRadius: RADIUS.md,
+    height: hp('6.4%'),
+    marginHorizontal: GUTTER,
+    borderRadius: RADIUS.sm,
+    backgroundColor: SURFACE.base,
     borderWidth: 1,
-    borderColor: 'rgba(242,80,0,0.35)',
-    backgroundColor: SURFACE.tint,
+    borderColor: 'rgba(242,80,0,0.3)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: hp('2%'),
+    marginTop: hp('1.4%'),
   },
   cancelButtonText: {
     fontFamily: FONTS.gilroy.bold,
     color: ACCENT.primary,
-    fontSize: wp('3.9%'),
+    fontSize: wp('3.85%'),
     letterSpacing: 0.2,
   },
 });

@@ -45,8 +45,6 @@ const ConcertTicket = ({
   const qrSize = wp(28);
   const qrBoxSize = qrSize + QR_PADDING * 2;
 
-  console.log(qrValue, 'qrValue=======>');
-
   const scan = useSharedValue(0);
   useEffect(() => {
     if (!showScanLine) return;
@@ -443,4 +441,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ConcertTicket;
+export default React.memo(ConcertTicket);

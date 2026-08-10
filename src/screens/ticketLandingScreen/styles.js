@@ -10,6 +10,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.bg,
   },
+  backdrop: {
+    flex: 1,
+  },
   hiddenBackdrop: {
     opacity: 0,
   },

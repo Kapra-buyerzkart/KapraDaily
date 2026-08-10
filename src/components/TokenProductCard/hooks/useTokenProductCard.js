@@ -5,6 +5,8 @@ import {
   useWishlistActions,
 } from '@/context/WishlistContext';
 import { impactTick, selectionTick } from '@/utils/haptics';
+import useOpaqueImageWell from '@/hooks/useOpaqueImageWell';
+import { NO_IMAGE_SOURCE } from '../constants';
 import {
   buildAccessibilityActions,
   buildCardAccessibilityLabel,
@@ -50,6 +52,9 @@ const useTokenProductCard = ({
   );
 
   const handleImageError = useCallback(() => setImageError(true), []);
+
+  const sampledUri = imageError ? null : imageSource?.uri || null;
+  const isOpaqueImage = useOpaqueImageWell(sampledUri);
 
   const handleToggleWishlist = useCallback(() => {
     selectionTick();
@@ -133,7 +138,8 @@ const useTokenProductCard = ({
     quantity,
     liked,
     imageSource,
-    isPlaceholder: !rawImage || imageError,
+    isPlaceholder: imageSource === NO_IMAGE_SOURCE,
+    isOpaqueImage,
     handleImageError,
     handleToggleWishlist,
     handleIncrement,

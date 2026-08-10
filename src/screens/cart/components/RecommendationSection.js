@@ -26,9 +26,10 @@ const RecommendationSection = ({ productId }) => {
   );
 
   const renderItem = useCallback(
-    ({ item }) => (
+    ({ item, index }) => (
       <TokenProductCard
         item={item}
+        index={index}
         onPress={() =>
           navigation.navigate('ProductDetailsScreen', {
             productId: item.productId || item.id,

@@ -1,4 +1,4 @@
-import { useContext, useState } from 'react';
+import { useCallback, useContext, useMemo, useState } from 'react';
 import RazorpayCheckout from 'react-native-razorpay';
 import {
   createEventBookingApi,
@@ -23,7 +23,7 @@ export const useEventPayment = () => {
   const [coinsUsed, setCoinsUsed] = useState(0);
   const [ticketQuantity, setTicketQuantity] = useState(1);
 
-  const payForBooking = async ({
+  const payForBooking = useCallback(async ({
     sessionId,
     bookingItems,
     bookingPlacedFrom = 'app',
@@ -192,25 +192,38 @@ export const useEventPayment = () => {
     } finally {
       setProcessing(false);
     }
-  };
+  }, [profile?.email, profile?.phone, profile?.phoneNo]);
 
-  const resetPayment = () => {
+  const resetPayment = useCallback(() => {
     setSuccessVisible(false);
     setPaidAmount(0);
     setCoinsUsed(0);
-  };
+  }, []);
 
-  const dismissFailure = () => setFailureVisible(false);
+  const dismissFailure = useCallback(() => setFailureVisible(false), []);
 
-  return {
-    payForBooking,
-    processing,
-    successVisible,
-    failureVisible,
-    paidAmount,
-    coinsUsed,
-    ticketQuantity,
-    resetPayment,
-    dismissFailure,
-  };
+  return useMemo(
+    () => ({
+      payForBooking,
+      processing,
+      successVisible,
+      failureVisible,
+      paidAmount,
+      coinsUsed,
+      ticketQuantity,
+      resetPayment,
+      dismissFailure,
+    }),
+    [
+      payForBooking,
+      processing,
+      successVisible,
+      failureVisible,
+      paidAmount,
+      coinsUsed,
+      ticketQuantity,
+      resetPayment,
+      dismissFailure,
+    ],
+  );
 };

@@ -23,6 +23,11 @@ export const prefetchProductImages = (items, limit) => {
     });
 };
 
+const OPAQUE_FORMAT = /\.(jpe?g|bmp)(?:[?#]|$)/i;
+
+export const hasOpaqueBackground = image =>
+  typeof image === 'string' && OPAQUE_FORMAT.test(image);
+
 export const getImageUrl = imagePath => {
   if (!imagePath) return require('../assets/images/fv.png');
   if (imagePath.startsWith('http')) return { uri: imagePath };

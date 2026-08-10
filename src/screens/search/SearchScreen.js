@@ -138,6 +138,7 @@ const SearchScreen = () => {
         <TokenProductCard
           isThreeColumn={true}
           item={item}
+          index={index}
           hideWishlist={false}
           entering={FadeInUp.delay(getStaggerDelay(index))}
           onPress={() =>

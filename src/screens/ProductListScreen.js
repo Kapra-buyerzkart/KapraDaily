@@ -114,6 +114,7 @@ const ProductListScreen = () => {
               <TokenProductCard
                 isThreeColumn={true}
                 item={item}
+                index={index}
                 entering={FadeInUp.delay(getStaggerDelay(index))}
                 onPress={() =>
                   navigation.navigate('ProductDetailsScreen', {

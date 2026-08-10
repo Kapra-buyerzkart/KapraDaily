@@ -9,7 +9,8 @@ import AnimatedPressable from '../../../components/AnimatedPressable';
 import CachedImage from '../../../components/CachedImage';
 import { getStaggerDelay } from '../../../utils/staggerDelay';
 import { selectionTick } from '../../../utils/haptics';
-import { MAX_FONT_SCALE, categoryTint } from '@/styles/homeTheme';
+import { MAX_FONT_SCALE, SURFACE, categoryTint } from '@/styles/homeTheme';
+import useOpaqueImageWell from '@/hooks/useOpaqueImageWell';
 
 const CategoryItem = React.memo(({ item, index = 0 }) => {
   const navigation = useNavigation();
@@ -31,6 +32,8 @@ const CategoryItem = React.memo(({ item, index = 0 }) => {
     imageSource = { uri: `${CONFIG.image_base_url}${item.imageUrl}` };
   }
 
+  const isOpaqueImage = useOpaqueImageWell(imageSource?.uri || null);
+
   const handlePress = useCallback(() => {
     selectionTick();
     navigation.navigate('SearchScreen', {
@@ -51,7 +54,9 @@ const CategoryItem = React.memo(({ item, index = 0 }) => {
       <View
         style={[
           styles.categoryItemContainer,
-          { backgroundColor: categoryTint(index) },
+          {
+            backgroundColor: isOpaqueImage ? SURFACE.base : categoryTint(index),
+          },
         ]}
       >
         <CachedImage

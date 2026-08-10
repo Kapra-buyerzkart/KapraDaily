@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import {
   getEventDetailsListApi,
   getPopularListApi,
@@ -103,9 +103,7 @@ const useEventsData = navigation => {
     setEventsLoading(true);
     return getEventDetailsListApi()
       .then(res => {
-        console.log(res, 'eventdetails/list api response');
         const items = res?.data?.items || res?.data || [];
-        console.log('[DEBUG eventdetails/list] parsed items:', JSON.stringify(items, null, 2));
         setEvents(Array.isArray(items) ? items : []);
       })
       .catch(err => {
@@ -119,7 +117,6 @@ const useEventsData = navigation => {
     setPopularEventsLoading(true);
     return getPopularListApi()
       .then(res => {
-        console.log(res, 'popular/list api response');
         setPopularEvents(mapPopularEvents(res?.data));
         setBanners(mapBanners(res?.data));
         setPopularVouchers(mapPopularVouchers(res?.data));
@@ -139,7 +136,6 @@ const useEventsData = navigation => {
     setPopularCategoriesLoading(true);
     return getPopularCategoriesApi()
       .then(res => {
-        console.log(res, 'popular/categories api response');
         setPopularCategories(mapPopularCategories(res?.data ?? res));
       })
       .catch(err => {
@@ -165,22 +161,41 @@ const useEventsData = navigation => {
     [navigation],
   );
 
-  return {
-    events,
-    eventsLoading,
-    popularEvents,
-    popularEventsLoading,
-    banners,
-    bannersLoading: popularEventsLoading,
-    popularVouchers,
-    moreToExplore,
-    popularCategories,
-    popularCategoriesLoading,
-    fetchEventDetailsList,
-    fetchPopularEvents,
-    fetchPopularCategories,
-    handleEventPress,
-  };
+  // Memoised for the same reason as useVoucherData: a new object identity on
+  // every render invalidates the landing screen's list callbacks.
+  return useMemo(
+    () => ({
+      events,
+      eventsLoading,
+      popularEvents,
+      popularEventsLoading,
+      banners,
+      bannersLoading: popularEventsLoading,
+      popularVouchers,
+      moreToExplore,
+      popularCategories,
+      popularCategoriesLoading,
+      fetchEventDetailsList,
+      fetchPopularEvents,
+      fetchPopularCategories,
+      handleEventPress,
+    }),
+    [
+      events,
+      eventsLoading,
+      popularEvents,
+      popularEventsLoading,
+      banners,
+      popularVouchers,
+      moreToExplore,
+      popularCategories,
+      popularCategoriesLoading,
+      fetchEventDetailsList,
+      fetchPopularEvents,
+      fetchPopularCategories,
+      handleEventPress,
+    ],
+  );
 };
 
 export default useEventsData;

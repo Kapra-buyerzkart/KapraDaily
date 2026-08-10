@@ -30,6 +30,7 @@ export const ACCENT = {
 };
 
 export const RADIUS = {
+  xxs: 4,
   xs: 8,
   sm: 12,
   md: 16,
@@ -100,15 +101,10 @@ export const divider = {
 
 export const CATEGORY_WELL = '#F7F4F1';
 
-// The Explore panel, the caret pointing up at the active tab, and that tab's
-// well all share this fill so they read as one connected shape. It carries its
-// own token rather than SURFACE.tint because the panel is full-bleed and needs
-// more presence against the canvas than an inline chip does, and it has to stay
-// clearly apart from CATEGORY_WELL or the active tab stops looking active.
 export const EXPLORE_PANEL = '#FFF0E7';
+export const EXPLORE_PANEL_EDGE = 'rgba(242,80,0,0.26)';
 
 export const CATEGORY_TINTS = [
-  '#FFF0E8',
   '#EAF4FF',
   '#EAF7EE',
   '#FFF6E0',
@@ -152,6 +148,7 @@ export default {
   divider,
   CATEGORY_WELL,
   EXPLORE_PANEL,
+  EXPLORE_PANEL_EDGE,
   CATEGORY_TINTS,
   categoryTint,
   HERO_TOP,

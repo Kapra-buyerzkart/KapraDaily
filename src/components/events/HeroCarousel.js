@@ -138,6 +138,12 @@ const HeroCarousel = ({ data, onItemPress }) => {
     isDraggingRef.current = true;
   };
 
+  // A drag released without velocity never fires onMomentumScrollEnd, which
+  // would leave the flag stuck and kill autoplay for the rest of the session.
+  const onScrollEndDrag = () => {
+    isDraggingRef.current = false;
+  };
+
   const onMomentumScrollEnd = e => {
     isDraggingRef.current = false;
     if (!isInfinite) return;
@@ -171,6 +177,7 @@ const HeroCarousel = ({ data, onItemPress }) => {
         showsHorizontalScrollIndicator={false}
         onScroll={scrollHandler}
         onScrollBeginDrag={onScrollBeginDrag}
+        onScrollEndDrag={onScrollEndDrag}
         onMomentumScrollEnd={onMomentumScrollEnd}
         getItemLayout={getItemLayout}
         initialScrollIndex={1}

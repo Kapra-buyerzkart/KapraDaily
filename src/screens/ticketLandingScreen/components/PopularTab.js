@@ -79,14 +79,15 @@ const PopularTab = ({
     [],
   );
 
-  console.log('[DEBUG PopularTab]', {
-    loading,
-    vouchersLen: vouchers?.length,
-    popularEventsLoading,
-    popularEventsLen: popularEvents?.length,
-  });
+  // Only the very first load blanks the tab. A refetch (tab re-entry, pull to
+  // refresh) keeps the current content on screen instead of flashing back to
+  // the skeleton and replaying every card's entrance animation.
+  const hasPopularContent =
+    heroItems.length > 0 ||
+    giftCardItems.length > 0 ||
+    (popularEvents?.length ?? 0) > 0;
 
-  if (popularEventsLoading) {
+  if (popularEventsLoading && !hasPopularContent) {
     return (
       <Animated.View style={containerStyle}>
         <TicketLandingSkeleton />
@@ -106,7 +107,7 @@ const PopularTab = ({
 
   return (
     <Animated.View style={containerStyle}>
-      {bannersLoading ? (
+      {bannersLoading && heroItems.length === 0 ? (
         <LoadingSkeleton variant="hero" />
       ) : (
         <HeroCarousel data={heroItems} onItemPress={handleBannerPress} />
@@ -119,7 +120,7 @@ const PopularTab = ({
       />
       {}
 
-      {!popularEventsLoading && giftCardItems.length > 0 && (
+      {giftCardItems.length > 0 && (
         <>
           <SectionTitle
             title="Popular Gift Cards"
@@ -131,9 +132,11 @@ const PopularTab = ({
 
       {}
 
-      {loading && <LoadingSkeleton variant="card" count={3} />}
+      {loading && listItems.length === 0 && (
+        <LoadingSkeleton variant="card" count={3} />
+      )}
 
-      {!loading && listItems.length > 0 && (
+      {listItems.length > 0 && (
         <>
           <SectionTitle title="Featured Events" />
           {listItems.map((item, index) => (
@@ -148,7 +151,7 @@ const PopularTab = ({
       )}
 
       <SectionTitle title="Upcoming Events" />
-      {popularEventsLoading ? (
+      {popularEventsLoading && !(popularEvents?.length > 0) ? (
         <LoadingSkeleton variant="card" count={3} />
       ) : popularEvents && popularEvents.length > 0 ? (
         <FlatList

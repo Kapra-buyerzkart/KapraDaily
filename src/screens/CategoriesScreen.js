@@ -313,6 +313,7 @@ export default function () {
                   <TokenProductCard
                     isThreeColumn={false}
                     item={item}
+                    index={index}
                     entering={FadeInUp.delay(getStaggerDelay(index))}
                     containerStyle={{
                       width: wp('33%'),

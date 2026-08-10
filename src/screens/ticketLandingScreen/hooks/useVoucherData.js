@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { Image } from 'react-native';
 import {
   getVouchersApi,
@@ -136,23 +136,45 @@ const useVoucherData = () => {
     setClaimedQuoteData(null);
   }, []);
 
-  return {
-    modalVisible,
-    claimedVoucher,
-    claimedQuoteData,
-    carouselVouchers,
-    carouselLoading,
-    myVouchers,
-    myVouchersLoading,
-    bCoins,
-    bCoinsLoading,
-    giftQuote,
-    giftQuoteLoading,
-    refreshBCoins,
-    refresh,
-    handleClaim,
-    handleCloseUdenModal,
-  };
+  // Memoised: the landing screen feeds this object straight into the deps of
+  // its list callbacks, so a fresh identity every render re-renders the whole
+  // ticket list (and re-binds the hardware back handler).
+  return useMemo(
+    () => ({
+      modalVisible,
+      claimedVoucher,
+      claimedQuoteData,
+      carouselVouchers,
+      carouselLoading,
+      myVouchers,
+      myVouchersLoading,
+      bCoins,
+      bCoinsLoading,
+      giftQuote,
+      giftQuoteLoading,
+      refreshBCoins,
+      refresh,
+      handleClaim,
+      handleCloseUdenModal,
+    }),
+    [
+      modalVisible,
+      claimedVoucher,
+      claimedQuoteData,
+      carouselVouchers,
+      carouselLoading,
+      myVouchers,
+      myVouchersLoading,
+      bCoins,
+      bCoinsLoading,
+      giftQuote,
+      giftQuoteLoading,
+      refreshBCoins,
+      refresh,
+      handleClaim,
+      handleCloseUdenModal,
+    ],
+  );
 };
 
 export default useVoucherData;

@@ -49,7 +49,6 @@ const TicketLandingList = ({
 
   const keyExtractor = useCallback((item, index) => {
     if (item.type === 'event') {
-      console.log(item.event, 'item event loading here=====>');
       return `event-${item.event?.eventId ?? item.event?.id ?? index}`;
     }
     return `${item.type}-${index}`;

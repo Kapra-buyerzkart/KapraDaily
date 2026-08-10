@@ -16,7 +16,7 @@ import {
 } from '../constants';
 
 /**
- * Owns the ADD ⇄ counter swap and its shared animation values, then delegates
+ * Owns the `+` ⇄ counter swap and its shared animation values, then delegates
  * rendering to AddButton / CartCounter.
  */
 const QuantityControl = ({
@@ -72,9 +72,12 @@ const QuantityControl = ({
     );
   }
 
+  // Nothing to dock when the product cannot be bought: the well already carries
+  // the "Out of stock" pill, so a disabled button would only add noise.
+  if (isOutOfStock) return null;
+
   return (
     <AddButton
-      isOutOfStock={isOutOfStock}
       isThreeColumn={isThreeColumn}
       productName={productName}
       animatedStyle={dockAnimatedStyle}

@@ -105,7 +105,7 @@ export default function WishlistScreen() {
       setItemToRemove(null);
     }
   };
-  const renderItem = ({ item }) => {
+  const renderItem = ({ item, index }) => {
     const mappedItem = {
       ...item,
       productId: item.productId,
@@ -125,6 +125,7 @@ export default function WishlistScreen() {
     return (
       <TokenProductCard
         item={mappedItem}
+        index={index}
         isThreeColumn={true}
         hideToken={true}
         onToggleWishlist={() =>

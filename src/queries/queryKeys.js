@@ -8,6 +8,10 @@ export const dashboardKeys = {
   dashboard: (custId) => ['dashboard', custId ?? 'guest'],
 };
 
+export const buyAgainKeys = {
+  list: (custId, areaId) => ['buyAgain', custId ?? 'guest', areaId ?? 'none'],
+};
+
 export const searchKeys = {
   suggestions: (term, areaId) => ['search', 'suggestions', term, areaId ?? 'none'],
   categorySearch: (catId, areaId, sortBy, priceMin, priceMax) =>

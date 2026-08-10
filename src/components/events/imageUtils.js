@@ -14,7 +14,6 @@ const EVENT_CARD_IMAGE_KEYS = [
   'imageUrl',
   'ticketImage',
   'thumbnailImage',
-  // The event list payload only carries `bannerImage`.
   'bannerImage',
 ];
 
@@ -41,6 +40,27 @@ export const getVoucherImageSource = item => {
 
 export const getEventImageSource = event =>
   getEventCardImageUri(event) || PLACEHOLDER_EVENT_IMAGE;
+
+// The events list renders from `bannerImage`, but the same card is reused for
+// vouchers, which only carry voucher image keys. Keep `bannerImage` first so
+// event cards look exactly as before, then fall through instead of building a
+// `<base>/undefined` URL.
+const EVENT_BANNER_KEYS = [
+  'bannerImage',
+  'shortImageUrl',
+  'imageUrl',
+  'image',
+  'ticketImage',
+  'thumbnailImage',
+];
+
+export const getEventBannerSource = item => {
+  for (const key of EVENT_BANNER_KEYS) {
+    const source = toImageUri(item?.[key]);
+    if (source) return source;
+  }
+  return PLACEHOLDER_EVENT_IMAGE;
+};
 
 // Only the event's own gallery. It deliberately does not fall back to the card
 // image: the hero shows a placeholder until these arrive, because substituting

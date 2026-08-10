@@ -10,6 +10,12 @@ export const getOrderDetailsApi = async (orderId) => {
     return response;
 };
 
+// Same endpoint as getOrderDetailsApi, minus the full-body log: the buy-again
+// rail reads several orders at once and would otherwise flood the console.
+export const getOrderApi = async (orderId) => {
+    return get(`order/${orderId}`);
+};
+
 export const cancelOrderApi = async (payload) => {
     return post(`order/cancel`, payload);
 };

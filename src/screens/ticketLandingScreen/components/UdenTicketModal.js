@@ -139,10 +139,13 @@ const UdenTicketModal = ({
   useEffect(() => {
     setQuantity(1);
     setQuoteData(initialQuoteData);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [voucher?.voucherId]);
 
+  // Only adopt a real seed quote. The parent clears it to null while the claim
+  // request is in flight, and applying that null blanked the price row.
   useEffect(() => {
-    setQuoteData(initialQuoteData);
+    if (initialQuoteData) setQuoteData(initialQuoteData);
   }, [initialQuoteData]);
 
   useEffect(() => {
@@ -242,6 +245,8 @@ const UdenTicketModal = ({
     }).start();
   }, [quantity]);
 
+  // Driven by the quote itself, not by the loading flag: keying it to both made
+  // the price fade out and back in twice per refetch.
   useEffect(() => {
     priceAnim.setValue(0);
     Animated.timing(priceAnim, {
@@ -249,7 +254,7 @@ const UdenTicketModal = ({
       duration: 260,
       useNativeDriver: true,
     }).start();
-  }, [quoteData, quoteLoading]);
+  }, [quoteData, priceAnim]);
 
   useEffect(() => {
     if (visible) {
@@ -545,7 +550,7 @@ const UdenTicketModal = ({
 
               <View style={styles.priceRow}>
                 <View style={styles.priceLeft}>
-                  {quoteLoading ? (
+                  {quoteLoading && !quoteData ? (
                     <ActivityIndicator size="small" color="#5B2BE0" />
                   ) : (
                     <Animated.View
@@ -644,8 +649,10 @@ const UdenTicketModal = ({
         </View>
       </Modal>
 
+      {/* Held back until this sheet has finished dismissing: two native modals
+          transitioning at once flashes black on Android. */}
       <RedeemSuccessModal
-        visible={successVisible}
+        visible={successVisible && !modalVisible}
         quantity={quantity}
         coinsUsed={0}
         amountPaid={`₹${paidAmount}`}

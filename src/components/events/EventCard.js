@@ -2,8 +2,8 @@ import React from 'react';
 import { View, Image, Text, StyleSheet } from 'react-native';
 import { FadeInUp } from 'react-native-reanimated';
 import LinearGradient from 'react-native-linear-gradient';
-import CONFIG from '@/globals/config';
 import AnimatedPressable from '@/components/AnimatedPressable';
+import { getEventBannerSource } from './imageUtils';
 import { getStaggerDelay } from '@/utils/staggerDelay';
 import { formatDate, formatTime } from '@/screens/EventDetailsScreen/utils';
 import COLORS from '@/styles/colors';
@@ -68,7 +68,7 @@ const EventCard = ({ item, onPress, index = 0 }) => {
           {}
           <View style={styles.imageWrap}>
             <Image
-              source={{ uri: CONFIG.image_base_url + item.bannerImage }}
+              source={getEventBannerSource(item)}
               style={styles.image}
               resizeMode="cover"
             />

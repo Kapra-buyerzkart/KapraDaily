@@ -1,37 +1,33 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import {
+  View,
+  Text,
+  Image,
+  FlatList,
+  TouchableOpacity,
+  StyleSheet,
+  useWindowDimensions,
+} from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 import Animated, {
+  Easing,
+  cancelAnimation,
+  interpolate,
   interpolateColor,
-  useAnimatedScrollHandler,
   useAnimatedStyle,
   useSharedValue,
+  withRepeat,
   withTiming,
 } from 'react-native-reanimated';
+import LinearGradient from 'react-native-linear-gradient';
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
-import CONFIG from '../../../globals/config';
 import ShimmerPlaceholder from '../../../components/ShimmerPlaceholder';
-import CachedImage from '../../../components/CachedImage';
 import ProductBlockShimmer from './ProductBlockShimmer';
 import ProductRail from './ProductRail';
 import SectionHeader from './SectionHeader';
-import getCategoryPlaceholder from './getCategoryPlaceholder';
-import useCategoryTileStyles, {
-  TAB_WELL_IDLE,
-  TAB_WELL_ACTIVE,
-  TAB_RING_IDLE,
-  TAB_RING_ACTIVE,
-  TAB_LABEL_IDLE,
-  TAB_LABEL_ACTIVE,
-} from './useCategoryTileStyles';
 import { selectionTick } from '../../../utils/haptics';
 import {
   SPACE,
@@ -39,7 +35,9 @@ import {
   MAX_FONT_SCALE,
   divider,
   ACCENT,
+  CANVAS,
   EXPLORE_PANEL,
+  EXPLORE_PANEL_EDGE,
   INK,
   RADIUS,
   SURFACE,
@@ -47,34 +45,46 @@ import {
 } from '@/styles/homeTheme';
 import { FONTS } from '../../../styles/typography';
 
-// Half-width of the caret that points from the results panel up at the active
-// tab. The panel and the caret share a fill colour so they read as one shape.
-const CARET_HALF = 9;
+const RULE = 1.5;
+const TAB_H = 34;
+const TAB_PAD_H = 12;
+const TAB_RADIUS = 12;
+const SHOULDER = 8;
+const TAB_GAP = 6;
 
-const ExploreShimmer = () => {
-  const tile = useCategoryTileStyles();
+const TAB_LABEL_IDLE = INK.strong;
+const TAB_LABEL_ACTIVE = ACCENT.primary;
 
-  return (
-    <View style={styles.section}>
-      <View style={styles.shimmerHeader}>
-        <ShimmerPlaceholder style={styles.shimmerEyebrow} />
-        <ShimmerPlaceholder style={styles.shimmerTitle} />
-      </View>
-      <View style={tile.tabRow}>
-        {[1, 2, 3, 4].map((_, i) => (
-          <View key={i} style={tile.tabItem}>
-            <ShimmerPlaceholder style={tile.shimmerTabWell} />
-            <ShimmerPlaceholder style={tile.shimmerLabel} />
-          </View>
-        ))}
-      </View>
-      <ProductBlockShimmer />
+const SWEEP_MS = 1150;
+const SWEEP_WIDTH_PCT = 0.34;
+const SWEEP_COLORS = [
+  'rgba(242,80,0,0)',
+  'rgba(242,80,0,0.85)',
+  'rgba(242,80,0,0)',
+];
+const SWEEP_START = { x: 0, y: 0 };
+const SWEEP_END = { x: 1, y: 0 };
+
+const SHIMMER_TAB_WIDTHS = [wp('24%'), wp('30%'), wp('26%'), wp('34%')];
+
+const ExploreShimmer = () => (
+  <View style={styles.section}>
+    <View style={styles.shimmerHeader}>
+      <ShimmerPlaceholder style={styles.shimmerEyebrow} />
+      <ShimmerPlaceholder style={styles.shimmerTitle} />
     </View>
-  );
-};
+    <View style={styles.tabRow}>
+      {SHIMMER_TAB_WIDTHS.map((tabWidth, i) => (
+        <ShimmerPlaceholder
+          key={i}
+          style={[styles.shimmerTab, { width: tabWidth }]}
+        />
+      ))}
+    </View>
+    <ProductBlockShimmer />
+  </View>
+);
 
-// Card placeholders sized to the rail, shown inside the results panel while the
-// tapped category's products load.
 const RailShimmer = () => (
   <View style={styles.railShimmerRow}>
     {[1, 2, 3].map((_, i) => (
@@ -83,36 +93,60 @@ const RailShimmer = () => (
   </View>
 );
 
+/** SVG tab shape with smooth circular arc corners & inverted-arc shoulders. */
+const TabShapeSvg = React.memo(({ width, height }) => {
+  if (!width || !height) return null;
+
+  const sw = RULE; // stroke width
+  const r = TAB_RADIUS; // top corner radius
+  const s = SHOULDER; // shoulder (inverted arc) radius
+  const half = sw / 2;
+
+  // All corners use SVG arc (A) commands — true circular quarter-arcs.
+  // A rx,ry rotation large-arc sweep x,y
+  const d = [
+    `M 0,${height}`,
+    // left shoulder — inverted arc curving from bottom up to tab wall
+    `A ${s},${s} 0 0,0 ${s},${height - s}`,
+    // left wall straight up
+    `L ${s},${r + half}`,
+    // top-left corner — standard rounded corner
+    `A ${r},${r} 0 0,1 ${s + r},${half}`,
+    // top edge straight across
+    `L ${width - s - r},${half}`,
+    // top-right corner — standard rounded corner
+    `A ${r},${r} 0 0,1 ${width - s},${r + half}`,
+    // right wall straight down
+    `L ${width - s},${height - s}`,
+    // right shoulder — inverted arc curving from tab wall down to bottom
+    `A ${s},${s} 0 0,0 ${width},${height}`,
+  ].join(' ');
+
+  return (
+    <Svg width={width} height={height} style={StyleSheet.absoluteFill}>
+      <Path d={d} fill={CANVAS} stroke={ACCENT.primary} strokeWidth={sw} />
+    </Svg>
+  );
+});
+
 const DiscoveryTab = React.memo(function DiscoveryTab({
   item,
+  index,
   isActive,
   onPress,
+  onMeasure,
 }) {
-  const tile = useCategoryTileStyles();
-  const [imageError, setImageError] = useState(false);
   const activeProgress = useSharedValue(isActive ? 1 : 0);
+  const [tabSize, setTabSize] = React.useState({ w: 0, h: 0 });
 
   const label = item.catName || item.name;
 
   useEffect(() => {
-    activeProgress.value = withTiming(isActive ? 1 : 0, { duration: 180 });
+    activeProgress.value = withTiming(isActive ? 1 : 0, { duration: 160 });
   }, [isActive, activeProgress]);
 
-  useEffect(() => {
-    setImageError(false);
-  }, [item.imageUrl]);
-
-  const wellAnimatedStyle = useAnimatedStyle(() => ({
-    backgroundColor: interpolateColor(
-      activeProgress.value,
-      [0, 1],
-      [TAB_WELL_IDLE, TAB_WELL_ACTIVE],
-    ),
-    borderColor: interpolateColor(
-      activeProgress.value,
-      [0, 1],
-      [TAB_RING_IDLE, TAB_RING_ACTIVE],
-    ),
+  const shapeAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: activeProgress.value,
   }));
 
   const labelAnimatedStyle = useAnimatedStyle(() => ({
@@ -123,41 +157,47 @@ const DiscoveryTab = React.memo(function DiscoveryTab({
     ),
   }));
 
-  const imageSource =
-    imageError || !item.imageUrl
-      ? getCategoryPlaceholder(label)
-      : { uri: `${CONFIG.image_base_url}${item.imageUrl}` };
-
   const handlePress = useCallback(() => {
     selectionTick();
     onPress(item);
   }, [onPress, item]);
 
+  const handleLayout = useCallback(
+    event => {
+      const { x, width, height } = event.nativeEvent.layout;
+      onMeasure(index, x, width);
+      setTabSize(prev => {
+        if (prev.w > 0) return prev; // already measured, skip
+        return { w: width, h: height };
+      });
+    },
+    [index, onMeasure],
+  );
+
   return (
     <TouchableOpacity
       activeOpacity={0.85}
       onPress={handlePress}
-      style={tile.tabItem}
+      onLayout={handleLayout}
       accessibilityRole="tab"
       accessibilityState={{ selected: isActive }}
       accessibilityLabel={label}
     >
-      <Animated.View style={[tile.tabWell, wellAnimatedStyle]}>
-        <CachedImage
-          source={imageSource}
-          style={tile.tabImage}
-          resizeMode="contain"
-          onError={() => setImageError(true)}
-          accessible={false}
-        />
-      </Animated.View>
-      <Animated.Text
-        style={[tile.tabLabel, labelAnimatedStyle]}
-        numberOfLines={2}
-        maxFontSizeMultiplier={MAX_FONT_SCALE}
-      >
-        {label}
-      </Animated.Text>
+      <View style={styles.tab}>
+        <Animated.View
+          style={[styles.tabDecoration, shapeAnimatedStyle]}
+          pointerEvents="none"
+        >
+          <TabShapeSvg width={tabSize.w} height={tabSize.h} />
+        </Animated.View>
+        <Animated.Text
+          style={[styles.tabLabel, labelAnimatedStyle]}
+          numberOfLines={1}
+          maxFontSizeMultiplier={MAX_FONT_SCALE}
+        >
+          {label}
+        </Animated.Text>
+      </View>
     </TouchableOpacity>
   );
 });
@@ -173,64 +213,73 @@ const CategoryDiscoverySection = ({
   discoveryProducts,
   navigation,
 }) => {
-  const tile = useCategoryTileStyles();
-  const { gutter, stride, tile: tileSize, width } = tile.metrics;
+  const { width } = useWindowDimensions();
 
   const activeCatId = selectedDiscoveryCategory?.catId;
   const activeName =
     selectedDiscoveryCategory?.catName || selectedDiscoveryCategory?.name;
 
   const tabListRef = useRef(null);
-  const scrollX = useSharedValue(0);
-  const caretX = useSharedValue(0);
+  const tabLayouts = useRef(new Map());
   const bodyProgress = useSharedValue(1);
+  const sweepProgress = useSharedValue(0);
 
   const activeIndex = useMemo(
     () => discoveryCategories.findIndex(c => c.catId === activeCatId),
     [discoveryCategories, activeCatId],
   );
 
-  // Caret sits under the centre of the active tab. The panel it points at is
-  // full-bleed, so the caret only has to stay clear of the screen edges.
-  const caretTarget = useMemo(() => {
-    if (activeIndex < 0) return 0;
-    const centre = gutter + activeIndex * stride + tileSize / 2;
-    const min = CARET_HALF;
-    const max = width - CARET_HALF;
-    return Math.min(Math.max(centre, min), max) - CARET_HALF;
-  }, [activeIndex, gutter, stride, tileSize, width]);
+  const sweepWidth = Math.round(width * SWEEP_WIDTH_PCT);
 
   useEffect(() => {
-    caretX.value = withTiming(caretTarget, { duration: 220 });
-  }, [caretTarget, caretX]);
+    if (!isDiscoveryLoading) {
+      cancelAnimation(sweepProgress);
+      sweepProgress.value = 0;
+      return undefined;
+    }
+    sweepProgress.value = 0;
+    sweepProgress.value = withRepeat(
+      withTiming(1, { duration: SWEEP_MS, easing: Easing.inOut(Easing.quad) }),
+      -1,
+      false,
+    );
+    return () => cancelAnimation(sweepProgress);
+  }, [isDiscoveryLoading, sweepProgress]);
 
-  // Re-play the panel's entrance once the tapped category's products are in.
-  // Skipped while loading so the panel behind the shimmer stays completely
-  // still — the shimmer cards are the only thing moving.
   useEffect(() => {
     if (!activeCatId || isDiscoveryLoading) return;
     bodyProgress.value = 0;
     bodyProgress.value = withTiming(1, { duration: 260 });
   }, [activeCatId, isDiscoveryLoading, bodyProgress]);
 
-  // Bring a tab that was tapped near the edge into view, so the caret it is
-  // paired with stays on screen.
   useEffect(() => {
     if (activeIndex < 0 || discoveryCategories.length === 0) return;
-    tabListRef.current?.scrollToIndex({
-      index: activeIndex,
+    const layout = tabLayouts.current.get(activeIndex);
+    if (!layout) return;
+    const offset = layout.x + layout.width / 2 - width / 2;
+    tabListRef.current?.scrollToOffset({
+      offset: Math.max(offset, 0),
       animated: true,
-      viewPosition: 0.5,
     });
-  }, [activeIndex, discoveryCategories.length]);
+  }, [activeIndex, discoveryCategories.length, width]);
 
-  const onTabScroll = useAnimatedScrollHandler(event => {
-    scrollX.value = event.contentOffset.x;
-  });
+  const handleTabMeasure = useCallback((index, x, tabWidth) => {
+    tabLayouts.current.set(index, { x, width: tabWidth });
+  }, []);
 
-  const caretStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: caretX.value - scrollX.value }],
+  const sweepStyle = useAnimatedStyle(() => ({
+    transform: [
+      {
+        translateX: interpolate(
+          sweepProgress.value,
+          [0, 1],
+          [-sweepWidth, width],
+        ),
+      },
+    ],
   }));
+
+  const sweepSizeStyle = useMemo(() => ({ width: sweepWidth }), [sweepWidth]);
 
   const bodyStyle = useAnimatedStyle(() => ({
     opacity: bodyProgress.value,
@@ -242,22 +291,17 @@ const CategoryDiscoverySection = ({
     [],
   );
 
-  // Offsets include the row's leading gutter, otherwise scrollToIndex lands a
-  // gutter's width short of the tab.
-  const getTabLayout = useCallback(
-    (_, index) => ({ length: stride, offset: gutter + stride * index, index }),
-    [gutter, stride],
-  );
-
   const renderTab = useCallback(
-    ({ item }) => (
+    ({ item, index }) => (
       <DiscoveryTab
         item={item}
+        index={index}
         isActive={activeCatId === item.catId}
         onPress={onSelectCategory}
+        onMeasure={handleTabMeasure}
       />
     ),
-    [activeCatId, onSelectCategory],
+    [activeCatId, onSelectCategory, handleTabMeasure],
   );
 
   if (isHomeLoading && !categoryDiscovery) return <ExploreShimmer />;
@@ -295,35 +339,38 @@ const CategoryDiscoverySection = ({
         />
 
         {discoveryCategories.length > 0 && (
-          <Animated.FlatList
-            ref={tabListRef}
-            horizontal
-            data={discoveryCategories}
-            keyExtractor={tabKeyExtractor}
-            renderItem={renderTab}
-            extraData={activeCatId}
-            getItemLayout={getTabLayout}
-            onScroll={onTabScroll}
-            scrollEventThrottle={16}
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={tile.tabRow}
-            initialNumToRender={6}
-            maxToRenderPerBatch={6}
-            windowSize={5}
-            accessibilityRole="tablist"
-          />
-        )}
-
-        {/* The caret belongs to the tinted panel, so it lives and dies with it
-            — it slides across to the newly tapped tab rather than blinking. */}
-        {!!selectedDiscoveryCategory && (
-          <View style={styles.caretRow} pointerEvents="none">
-            <Animated.View style={[styles.caret, caretStyle]} />
+          <View style={styles.tabBar}>
+            <View style={styles.tabRule} pointerEvents="none" />
+            {isDiscoveryLoading && (
+              <Animated.View
+                style={[styles.sweep, sweepSizeStyle, sweepStyle]}
+                pointerEvents="none"
+              >
+                <LinearGradient
+                  colors={SWEEP_COLORS}
+                  start={SWEEP_START}
+                  end={SWEEP_END}
+                  style={styles.sweepFill}
+                />
+              </Animated.View>
+            )}
+            <FlatList
+              ref={tabListRef}
+              horizontal
+              data={discoveryCategories}
+              keyExtractor={tabKeyExtractor}
+              renderItem={renderTab}
+              extraData={activeCatId}
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.tabRow}
+              initialNumToRender={8}
+              maxToRenderPerBatch={8}
+              windowSize={5}
+              accessibilityRole="tablist"
+            />
           </View>
         )}
 
-        {/* The tint stays put across a tab switch: only the inner block, which
-            is the part whose content actually changed, replays the entrance. */}
         <View
           style={[
             styles.panel,
@@ -331,7 +378,7 @@ const CategoryDiscoverySection = ({
           ]}
         >
           <Animated.View style={bodyStyle}>
-            {!!activeName && !isDiscoveryLoading && (
+            {!!activeName && (
               <View style={styles.panelHeader}>
                 <View style={styles.panelBadge}>
                   <View style={styles.panelDot} />
@@ -343,14 +390,23 @@ const CategoryDiscoverySection = ({
                     {activeName}
                   </Text>
                 </View>
-                {discoveryProducts.length > 0 && (
+                {isDiscoveryLoading ? (
                   <Text
                     style={styles.panelCount}
                     maxFontSizeMultiplier={MAX_FONT_SCALE}
                   >
-                    {discoveryProducts.length}{' '}
-                    {discoveryProducts.length === 1 ? 'deal' : 'deals'}
+                    Finding deals…
                   </Text>
+                ) : (
+                  discoveryProducts.length > 0 && (
+                    <Text
+                      style={styles.panelCount}
+                      maxFontSizeMultiplier={MAX_FONT_SCALE}
+                    >
+                      {discoveryProducts.length}{' '}
+                      {discoveryProducts.length === 1 ? 'deal' : 'deals'}
+                    </Text>
+                  )
                 )}
               </View>
             )}
@@ -396,32 +452,53 @@ const styles = StyleSheet.create({
     paddingRight: GUTTER,
   },
 
-  caretRow: {
-    height: CARET_HALF,
-    overflow: 'hidden',
+  tabBar: {
+    justifyContent: 'flex-end',
   },
-  caret: {
+  tabRow: {
+    paddingHorizontal: GUTTER,
+    alignItems: 'flex-end',
+    gap: TAB_GAP,
+  },
+  tabRule: {
     position: 'absolute',
-    bottom: 0,
     left: 0,
-    width: 0,
-    height: 0,
-    backgroundColor: 'transparent',
-    borderLeftWidth: CARET_HALF,
-    borderRightWidth: CARET_HALF,
-    borderBottomWidth: CARET_HALF,
-    borderLeftColor: 'transparent',
-    borderRightColor: 'transparent',
-    borderBottomColor: EXPLORE_PANEL,
+    right: 0,
+    bottom: 0,
+    height: RULE,
+    backgroundColor: ACCENT.primary,
   },
-  // Full-bleed: the tint runs edge to edge, so the panel takes no horizontal
-  // margin or corner radius and its contents carry the page gutter instead.
+  tab: {
+    height: TAB_H,
+    paddingHorizontal: TAB_PAD_H + SHOULDER,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tabDecoration: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  tabLabel: {
+    ...TYPE.caption,
+    includeFontPadding: false,
+    fontFamily: FONTS.gilroy.semiBold,
+  },
+  sweep: {
+    position: 'absolute',
+    left: 0,
+    bottom: 0,
+    height: RULE,
+  },
+  sweepFill: {
+    flex: 1,
+  },
   panel: {
     paddingTop: SPACE.md,
     paddingBottom: SPACE.md,
   },
   panelActive: {
-    backgroundColor: EXPLORE_PANEL,
+    // backgroundColor: EXPLORE_PANEL,
+    borderBottomWidth: RULE,
+    borderBottomColor: EXPLORE_PANEL_EDGE,
   },
   panelHeader: {
     flexDirection: 'row',
@@ -504,6 +581,11 @@ const styles = StyleSheet.create({
     width: wp('24%'),
     height: hp('2.4%'),
     borderRadius: 6,
+  },
+  shimmerTab: {
+    height: TAB_H,
+    borderTopLeftRadius: TAB_RADIUS,
+    borderTopRightRadius: TAB_RADIUS,
   },
 });
 

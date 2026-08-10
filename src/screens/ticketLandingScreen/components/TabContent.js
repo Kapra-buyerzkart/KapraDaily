@@ -13,6 +13,7 @@ const TabContent = ({
   vouchers,
   loading,
   bCoins,
+  bCoinsLoading,
   giftQuote,
   giftQuoteLoading,
   onClaim,
@@ -25,13 +26,8 @@ const TabContent = ({
   popularVouchers,
   moreToExplore,
   onEventPress,
+  arcApexY,
 }) => {
-  console.log(
-    '[DEBUG TabContent] activeTab=',
-    activeTab,
-    'POPULAR=',
-    TAB_IDS.POPULAR,
-  );
   switch (activeTab) {
     case TAB_IDS.POPULAR:
       return (
@@ -41,6 +37,7 @@ const TabContent = ({
           vouchers={vouchers}
           loading={loading}
           bCoins={bCoins}
+          bCoinsLoading={bCoinsLoading}
           giftQuote={giftQuote}
           giftQuoteLoading={giftQuoteLoading}
           onClaim={onClaim}
@@ -61,6 +58,7 @@ const TabContent = ({
           fadeAnim={fadeAnim}
           vouchers={vouchers}
           onClaim={onClaim}
+          arcApexY={arcApexY}
         />
       );
     case TAB_IDS.SPORTS:

@@ -12,6 +12,42 @@ const firstPresent = (values, fallback) => {
 /** Amounts fall back to 0 rather than a blank, so the card never renders a bare "₹". */
 export const resolveAmount = value => firstPresent([value], 0);
 
+/** Drops the decimals when there are none to show, so ₹59.00 renders as ₹59. */
+export const formatAmount = value => {
+  const amount = Number(value);
+  if (!Number.isFinite(amount)) return '';
+  const rounded = Math.round(amount * 100) / 100;
+  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(2);
+};
+
+/**
+ * Rupees off, not percent: the card leads with the absolute saving.
+ * A missing or lower MRP means there is nothing to claim, so it resolves to 0
+ * and the caller falls back to the percentage the API sent, if any.
+ */
+export const resolveSavings = (mrp, price) => {
+  const mrpValue = Number(mrp);
+  const priceValue = Number(price);
+  if (!Number.isFinite(mrpValue) || !Number.isFinite(priceValue)) return 0;
+
+  const saving = Math.round((mrpValue - priceValue) * 100) / 100;
+  return saving > 0 ? saving : 0;
+};
+
+/**
+ * Which tint the image well gets. Callers inside a list pass their row index so
+ * the palette cycles down the grid; everyone else falls back to a hash of the
+ * product id, which still varies the wells without threading an index through.
+ */
+export const resolveTintIndex = (index, productId) => {
+  if (Number.isFinite(index)) return index;
+
+  const key = String(productId ?? '');
+  let sum = 0;
+  for (let i = 0; i < key.length; i += 1) sum += key.charCodeAt(i);
+  return sum;
+};
+
 /**
  * Normalises the many shapes a product can arrive in (search, home rails,
  * category listings, wishlist) into the single set of fields the card renders.
@@ -25,7 +61,8 @@ export const deriveProductFields = item => {
   const discount =
     item?.offer || item?.discountPercentage || item?.discountPercent;
   const derivedRating = item?.rating ?? item?.avgRating ?? item?.ratingValue;
-  const derivedEta = item?.deliveryTime ?? item?.deliveryEta ?? item?.eta ?? null;
+  const derivedEta =
+    item?.deliveryTime ?? item?.deliveryEta ?? item?.eta ?? null;
 
   return {
     productId: derivedProductId,
@@ -59,13 +96,19 @@ export const resolveImageSource = (rawImage, hasError) => {
   }
 
   if (typeof rawImage === 'string') {
-    const uri = rawImage.startsWith('http')
-      ? rawImage
-      : `${CONFIG.image_base_url}${rawImage}`;
+    const path = rawImage.split(',')[0].trim();
+    if (!path) return NO_IMAGE_SOURCE;
+
+    const uri = path.startsWith('http')
+      ? path
+      : `${CONFIG.image_base_url}${path}`;
     return { uri };
   }
 
-  return rawImage;
+  if (typeof rawImage === 'number') return rawImage;
+  if (typeof rawImage?.uri === 'string' && rawImage.uri) return rawImage;
+
+  return NO_IMAGE_SOURCE;
 };
 
 export const buildCardAccessibilityLabel = ({

@@ -1,11 +1,17 @@
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   View,
   Image,
   Text,
   Animated,
   TouchableOpacity,
-  Platform,
   Dimensions,
   StyleSheet,
   Vibration,
@@ -25,6 +31,7 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { hp } from '../../../utils/responsive';
 import { getVoucherImageSource } from '@/components/events/imageUtils';
 import images from '@/assets/images';
+import { getArcApexOffset } from '../backdropArc';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -35,11 +42,17 @@ const STACK_Y_STEP = 16;
 const CARD_WIDTH = SCREEN_WIDTH * 0.72;
 const CARD_HEIGHT = CARD_WIDTH * 0.62;
 
-const CURVE_APEX_RATIO = 610 / 932;
 const ARROW_PILL_HEIGHT = 48;
+const ARROW_BUTTON_SIZE = 44;
 const ARROW_MIN_GAP = 16;
+const UNMEASURED_ARROW_GAP = hp(11);
 const CLAIM_GAP = 28;
-const ARROW_PILL_OVERLAP = hp((60 / 932) * 100);
+
+// Used for the single frame before the backdrop has been measured; the same
+// cover maths as the real thing, just against the window instead of the
+// measured box.
+const FALLBACK_ARC_APEX_Y =
+  getArcApexOffset(SCREEN_WIDTH, SCREEN_HEIGHT) ?? hp(65);
 
 const StackCard = React.memo(({ item, stackIndex, dragX, dragY, isTop }) => {
   const imageSource = getVoucherImageSource(item);
@@ -161,21 +174,37 @@ const ArrowButton = React.memo(({ iconName, onPress }) => {
   );
 });
 
-const CardCarousel = ({ fadeAnim, onClaim, vouchers }) => {
+const CardCarousel = ({ fadeAnim, onClaim, vouchers, arcApexY }) => {
   const cards = useMemo(() => vouchers ?? [], [vouchers]);
 
   const cardCount = cards.length;
   const [activeIndex, setActiveIndex] = useState(0);
 
+  // The pill straddles the apex of the backdrop's curve. `arcApexY` is that
+  // apex in window coordinates, so measuring the stack the same way keeps both
+  // sides of the subtraction in one coordinate space (which also cancels out
+  // any list scroll offset) instead of mixing layout with screen dimensions.
   const stackRef = useRef(null);
   const [arrowMarginTop, setArrowMarginTop] = useState(null);
-  const handleStackLayout = useCallback(() => {
+  const alignArrowsToArc = useCallback(() => {
     stackRef.current?.measureInWindow((x, y, width, height) => {
-      if (!height) return;
-      const pillTop = SCREEN_HEIGHT * CURVE_APEX_RATIO - ARROW_PILL_HEIGHT / 2;
+      if (!height) {
+        // Nothing to align against: fall back rather than leave the arrows and
+        // the claim button hidden.
+        setArrowMarginTop(gap => gap ?? UNMEASURED_ARROW_GAP);
+        return;
+      }
+      const pillTop = (arcApexY ?? FALLBACK_ARC_APEX_Y) - ARROW_PILL_HEIGHT / 2;
       setArrowMarginTop(Math.max(ARROW_MIN_GAP, pillTop - (y + height)));
     });
-  }, []);
+  }, [arcApexY]);
+
+  // The backdrop is measured on its own layout pass, so the apex usually lands
+  // after the stack has already reported in: realign whenever it changes.
+  useEffect(() => {
+    if (arcApexY == null) return;
+    alignArrowsToArc();
+  }, [arcApexY, alignArrowsToArc]);
 
   const dragX = useSharedValue(0);
   const dragY = useSharedValue(0);
@@ -186,11 +215,39 @@ const CardCarousel = ({ fadeAnim, onClaim, vouchers }) => {
     Vibration.vibrate(10);
   }, []);
 
+  // The drag values are reset after the new card has been committed (see the
+  // layout effect below). Resetting them here recentred the card on the UI
+  // thread a frame before React swapped its contents, so the card that had just
+  // been flung away flashed back into place still showing the old voucher.
+  const transitionRef = useRef(null);
+
   const advance = useCallback(() => {
-    setActiveIndex(i => (cardCount ? (i + 1) % cardCount : 0));
+    // A lone card has nothing to swap to, so the index never changes and the
+    // layout effect below would never fire: recentre it here instead.
+    if (cardCount < 2) {
+      dragX.value = 0;
+      dragY.value = 0;
+      return;
+    }
+    transitionRef.current = 'next';
+    setActiveIndex(i => (i + 1) % cardCount);
+  }, [cardCount, dragX, dragY]);
+
+  useLayoutEffect(() => {
+    const transition = transitionRef.current;
+    if (!transition) return;
+    transitionRef.current = null;
+
+    if (transition === 'prev') {
+      dragX.value = -SCREEN_WIDTH;
+      dragY.value = 0;
+      dragX.value = withSpring(0, { damping: 16, stiffness: 160 });
+      return;
+    }
+
     dragX.value = 0;
     dragY.value = 0;
-  }, [cardCount, dragX, dragY]);
+  }, [activeIndex, dragX, dragY]);
 
   const handleNext = useCallback(() => {
     if (cardCount < 2) return;
@@ -206,11 +263,9 @@ const CardCarousel = ({ fadeAnim, onClaim, vouchers }) => {
 
   const handlePrev = useCallback(() => {
     if (cardCount < 2) return;
+    transitionRef.current = 'prev';
     setActiveIndex(i => (i - 1 + cardCount) % cardCount);
-    dragX.value = -SCREEN_WIDTH;
-    dragY.value = 0;
-    dragX.value = withSpring(0, { damping: 16, stiffness: 160 });
-  }, [cardCount, dragX, dragY]);
+  }, [cardCount]);
 
   const panGesture = useMemo(
     () =>
@@ -299,44 +354,46 @@ const CardCarousel = ({ fadeAnim, onClaim, vouchers }) => {
       <View style={styles.carouselWrapper}>
         <View
           ref={stackRef}
-          onLayout={handleStackLayout}
+          onLayout={alignArrowsToArc}
+          collapsable={false}
           style={styles.stackContainer}
         >
           {stackSlots}
         </View>
       </View>
 
-      <View
-        style={[
-          styles.arrowContainer,
-          {
-            marginTop:
-              arrowMarginTop ?? (Platform.OS === 'ios' ? hp(11) : hp(10)),
-          },
-        ]}
-      >
-        <View style={styles.arrowPill}>
-          <ArrowButton iconName="keyboard-arrow-left" onPress={handlePrev} />
-          <View style={styles.arrowDivider} />
-          <ArrowButton iconName="keyboard-arrow-right" onPress={handleNext} />
-        </View>
-      </View>
-
-      <View style={styles.claimWrapper}>
-        <TouchableOpacity
-          activeOpacity={0.8}
-          onPressIn={handleClaimPressIn}
-          onPressOut={handleClaimPressOut}
-          onPress={() => onClaim(cards[activeIndex])}
+      {/* Kept hidden until the arc has been measured so the arrows and the
+          claim button below them never flash at an unaligned position. */}
+      <View style={arrowMarginTop == null && styles.hiddenUntilAligned}>
+        <View
+          style={[
+            styles.arrowContainer,
+            { marginTop: arrowMarginTop ?? ARROW_MIN_GAP },
+          ]}
         >
-          <Reanimated.View style={claimButtonStyle}>
-            <Image
-              source={images.claimbutton}
-              style={styles.claimButton}
-              resizeMode="contain"
-            />
-          </Reanimated.View>
-        </TouchableOpacity>
+          <View style={styles.arrowPill}>
+            <ArrowButton iconName="keyboard-arrow-left" onPress={handlePrev} />
+            <View style={styles.arrowDivider} />
+            <ArrowButton iconName="keyboard-arrow-right" onPress={handleNext} />
+          </View>
+        </View>
+
+        <View style={styles.claimWrapper}>
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPressIn={handleClaimPressIn}
+            onPressOut={handleClaimPressOut}
+            onPress={() => onClaim(cards[activeIndex])}
+          >
+            <Reanimated.View style={claimButtonStyle}>
+              <Image
+                source={images.claimbutton}
+                style={styles.claimButton}
+                resizeMode="contain"
+              />
+            </Reanimated.View>
+          </TouchableOpacity>
+        </View>
       </View>
     </Animated.View>
   );
@@ -398,19 +455,28 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: 'Gilroy-Bold',
   },
+  hiddenUntilAligned: {
+    opacity: 0,
+  },
   arrowContainer: {
     alignItems: 'center',
   },
+  // Height is pinned rather than derived from the icon glyphs: the vector icon
+  // font reports different line heights on iOS and Android, which would make
+  // the pill straddle the arc by a different amount on each platform.
   arrowPill: {
     flexDirection: 'row',
     alignItems: 'center',
+    height: ARROW_PILL_HEIGHT,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    borderRadius: 30,
+    borderRadius: ARROW_PILL_HEIGHT / 2,
     paddingHorizontal: 6,
-    top: -ARROW_PILL_OVERLAP,
   },
   arrowButton: {
-    padding: 10,
+    width: ARROW_BUTTON_SIZE,
+    height: ARROW_BUTTON_SIZE,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   arrowDivider: {
     width: 1,

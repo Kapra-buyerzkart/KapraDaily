@@ -11,6 +11,7 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
+  runOnJS,
 } from 'react-native-reanimated';
 import {
   widthPercentageToDP as wp,
@@ -22,6 +23,8 @@ import { FONTS } from '../../../styles/typography';
 import ProfileAvatarBadge from '../../../components/ProfileAvatarBadge';
 import RotatingPlaceholder from '../../../components/RotatingPlaceholder';
 import CachedImage from '../../../components/CachedImage';
+import HeaderSkeleton from './HeaderSkeleton';
+import { resolveHeaderPhase, HEADER_PHASE } from './headerPhase';
 import COLORS from '@/styles/colors';
 import {
   TYPE,
@@ -86,20 +89,33 @@ const StickyHeader = ({
 
   const seen = !!bannerUrl && paintedBanners.has(bannerUrl);
   const bannerReveal = useSharedValue(seen ? 1 : 0);
+  const [bannerPainted, setBannerPainted] = React.useState(seen);
   React.useEffect(() => {
-    bannerReveal.value = bannerUrl && paintedBanners.has(bannerUrl) ? 1 : 0;
+    const alreadyPainted = !!bannerUrl && paintedBanners.has(bannerUrl);
+    bannerReveal.value = alreadyPainted ? 1 : 0;
+    setBannerPainted(alreadyPainted);
   }, [bannerUrl, bannerReveal]);
   const onBannerLoad = React.useCallback(() => {
     if (bannerUrl) {
       paintedBanners.add(bannerUrl);
     }
     if (bannerReveal.value !== 1) {
-      bannerReveal.value = withTiming(1, { duration: 220 });
+      bannerReveal.value = withTiming(1, { duration: 220 }, finished => {
+        if (finished) runOnJS(setBannerPainted)(true);
+      });
+      return;
     }
+    setBannerPainted(true);
   }, [bannerReveal, bannerUrl]);
   const bannerRevealStyle = useAnimatedStyle(() => ({
     opacity: bannerReveal.value,
   }));
+  const skeletonStyle = useAnimatedStyle(() => ({
+    opacity: 1 - bannerReveal.value,
+  }));
+
+  const phase = resolveHeaderPhase({ bannerUrl, bannerPending, bannerPainted });
+  const showSkeleton = phase === HEADER_PHASE.shimmer;
 
   const handleBannerPress = React.useCallback(
     () => onBannerPress(topSectionBanner?.[0]),
@@ -280,7 +296,7 @@ const StickyHeader = ({
     </Animated.View>
   );
 
-  if (bannerSource || bannerPending) {
+  if (phase !== HEADER_PHASE.plain) {
     return (
       <Animated.View style={headerCollapseStyle}>
         <TouchableOpacity
@@ -328,6 +344,15 @@ const StickyHeader = ({
 
             {renderCollapsibleInfo()}
             {renderSearchBar()}
+
+            {showSkeleton && (
+              <Animated.View
+                style={[StyleSheet.absoluteFill, skeletonStyle]}
+                pointerEvents="auto"
+              >
+                <HeaderSkeleton top={top} />
+              </Animated.View>
+            )}
           </View>
         </TouchableOpacity>
       </Animated.View>

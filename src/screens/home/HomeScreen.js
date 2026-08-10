@@ -27,6 +27,7 @@ import useResolvedAreaId from '../../queries/useResolvedAreaId';
 import useHomepageDataQuery from '../../queries/useHomepageDataQuery';
 import useGeneralSettingsQuery from '../../queries/useGeneralSettingsQuery';
 import useDashboardQuery from '../../queries/useDashboardQuery';
+import useBuyAgainQuery from '../../queries/useBuyAgainQuery';
 import useCategoryDiscoveryProductsQuery from '../../queries/useCategoryDiscoveryProductsQuery';
 import { deriveStoreUnavailableState } from '../../queries/transformHomepageResponse';
 
@@ -41,6 +42,7 @@ import PlacementBannerCarousel from './components/PlacementBannerCarousel';
 import CategoryGrid, { CategoryShimmer } from './components/CategoryGrid';
 import ProductBlock from './components/ProductBlock';
 import CategoryDiscoverySection from './components/CategoryDiscoverySection';
+import BuyAgainSection from './components/buyAgain/BuyAgainSection';
 import TopShowcase from './components/TopShowcase';
 import BottomShowcase from './components/BottomShowcase';
 import SeasonalBannerShimmer from './components/SeasonalBannerShimmer';
@@ -134,16 +136,6 @@ const HomeScreen = () => {
   const dashboardQuery = useDashboardQuery(profile?.custId);
   const dashboardData = dashboardQuery.data;
 
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    try {
-      await Promise.all([dashboardQuery.refetch(), homepageQuery.refetch()]);
-    } catch (error) {
-      console.error('Refresh error:', error);
-    } finally {
-      setRefreshing(false);
-    }
-  }, [dashboardQuery.refetch, homepageQuery.refetch]);
   useEffect(() => {
     if (profile?.pincode) {
       setSelectedDiscoveryCategory(null);
@@ -161,6 +153,29 @@ const HomeScreen = () => {
       }),
     [data, homepageQuery.error, generalSettingsQuery.data],
   );
+
+  // Assembled from order history, so it only runs once the store is actually
+  // serving this area — a closed store has nothing to re-buy from.
+  const buyAgainQuery = useBuyAgainQuery(
+    profile?.custId,
+    areaId,
+    !isStoreUnavailable,
+  );
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([
+        dashboardQuery.refetch(),
+        homepageQuery.refetch(),
+        buyAgainQuery.refetch(),
+      ]);
+    } catch (error) {
+      console.error('Refresh error:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [dashboardQuery.refetch, homepageQuery.refetch, buyAgainQuery.refetch]);
 
   const isHomepageResolved = !!data || !!homepageQuery.error;
   useEffect(() => {
@@ -202,6 +217,8 @@ const HomeScreen = () => {
 
   const isHomeLoading =
     refreshing || (!noLocationSelected && homepageQuery.isLoading);
+  const isHeaderDataPending =
+    !data && !noLocationSelected && !homepageQuery.error;
   const fruits = bottomBanner;
 
   const firstBlockItems = useMemo(
@@ -337,12 +354,14 @@ const HomeScreen = () => {
           />
         }
       >
-        <TopShowcase
-          backgroundUri={topBanner[0]?.uri}
-          announcementUri={topAnnouncementBanner[0]?.uri}
-          sideBySide={topSideBySide}
-          onBannerPress={handleBannerPress}
-        />
+        {!isStoreUnavailable && !noLocationSelected && (
+          <TopShowcase
+            backgroundUri={topBanner[0]?.uri}
+            announcementUri={topAnnouncementBanner[0]?.uri}
+            sideBySide={topSideBySide}
+            onBannerPress={handleBannerPress}
+          />
+        )}
 
         {/* TEMP: OrbitLoader visual test — remove with its component file */}
         {/* <OrbitLoaderPreview /> */}
@@ -382,6 +401,11 @@ const HomeScreen = () => {
                 />
               </View>
             )}
+
+            <BuyAgainSection
+              products={buyAgainQuery.data}
+              navigation={navigation}
+            />
 
             <CategoryDiscoverySection
               isHomeLoading={isHomeLoading}
@@ -481,7 +505,7 @@ const HomeScreen = () => {
         <StickyHeader
           top={top}
           topSectionBanner={topSectionBanner}
-          bannerPending={!data}
+          bannerPending={isHeaderDataPending}
           onBannerPress={handleBannerPress}
           bannerSheetStyle={bannerSheetStyle}
           bannerParallaxStyle={bannerParallaxStyle}

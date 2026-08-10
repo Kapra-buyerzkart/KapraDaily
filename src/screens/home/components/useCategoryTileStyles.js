@@ -1,26 +1,15 @@
 import { StyleSheet, useWindowDimensions } from 'react-native';
 import { FONTS } from '../../../styles/typography';
 import {
-  ACCENT,
   INK,
   RADIUS,
   CATEGORY_WELL,
-  EXPLORE_PANEL,
   GUTTER_PCT,
   SPACE,
   TYPE,
 } from '@/styles/homeTheme';
 
 export const COLUMNS = 4;
-
-export const TAB_RING = 2;
-
-export const TAB_WELL_IDLE = CATEGORY_WELL;
-export const TAB_WELL_ACTIVE = EXPLORE_PANEL;
-export const TAB_RING_IDLE = 'rgba(242,80,0,0)';
-export const TAB_RING_ACTIVE = ACCENT.primary;
-export const TAB_LABEL_IDLE = INK.base;
-export const TAB_LABEL_ACTIVE = ACCENT.primary;
 
 const cache = new Map();
 
@@ -32,8 +21,6 @@ const buildStyles = width => {
   const tile = Math.floor((contentWidth - tileGap * (COLUMNS - 1)) / COLUMNS);
 
   const image = Math.round(tile * 0.92);
-
-  const tabImage = image - TAB_RING * 2;
 
   const sheet = StyleSheet.create({
     grid: {
@@ -70,57 +57,12 @@ const buildStyles = width => {
       color: INK.base,
       fontFamily: FONTS.gilroy.semiBold,
     },
-    tabRow: {
-      flexDirection: 'row',
-      paddingHorizontal: gutter,
-      paddingBottom: SPACE.md,
-      gap: tileGap,
-    },
-    tabItem: {
-      width: tile,
-      alignItems: 'center',
-    },
-    tabWell: {
-      width: tile,
-      height: tile,
-      borderRadius: RADIUS.lg,
-      alignItems: 'center',
-      justifyContent: 'flex-end',
-      borderWidth: TAB_RING,
-      overflow: 'hidden',
-    },
-    tabImage: {
-      width: tabImage,
-      height: tabImage,
-    },
-    tabLabel: {
-      ...TYPE.micro,
-      marginTop: SPACE.sm,
-      height: TYPE.micro.lineHeight * 2,
-      includeFontPadding: false,
-      textAlignVertical: 'center',
-      textAlign: 'center',
-      fontFamily: FONTS.gilroy.semiBold,
-    },
     shimmerFill: {
       width: '100%',
       height: '100%',
     },
-    shimmerTabWell: {
-      width: tile,
-      height: tile,
-      borderRadius: RADIUS.lg,
-    },
-    shimmerLabel: {
-      marginTop: SPACE.sm,
-      width: '64%',
-      height: TYPE.micro.lineHeight,
-      borderRadius: 4,
-    },
   });
 
-  // Geometry the tab row is laid out with, so callers can anchor an indicator
-  // to a tab without measuring it on the fly.
   sheet.metrics = { gutter, tile, tileGap, stride: tile + tileGap, width };
 
   return sheet;

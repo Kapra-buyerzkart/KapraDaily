@@ -9,6 +9,26 @@ import {
 import Animated from 'react-native-reanimated';
 import ConcertTicket from '../../../components/ConcertTicket';
 import { wp, hp } from '../../../utils/responsive';
+
+// Memoised page: without it every swipe re-renders all tickets, which rebuilds
+// each QR (an SVG) from scratch.
+const TicketPage = React.memo(({ ticket, index, width, active, onQrPress }) => {
+  const handleQrPress = useCallback(
+    () => onQrPress(index),
+    [onQrPress, index],
+  );
+
+  return (
+    <View style={[styles.page, { width }]}>
+      <ConcertTicket
+        {...ticket}
+        showScanLine={active}
+        onQrPress={handleQrPress}
+      />
+    </View>
+  );
+});
+
 const TicketCarousel = ({ tickets, entranceStyle, onQrPress }) => {
   const { width } = useWindowDimensions();
   const [activeIndex, setActiveIndex] = useState(0);
@@ -24,13 +44,13 @@ const TicketCarousel = ({ tickets, entranceStyle, onQrPress }) => {
 
   const renderItem = useCallback(
     ({ item, index }) => (
-      <View style={[styles.page, { width }]}>
-        <ConcertTicket
-          {...item}
-          showScanLine={index === activeIndex}
-          onQrPress={() => onQrPress(index)}
-        />
-      </View>
+      <TicketPage
+        ticket={item}
+        index={index}
+        width={width}
+        active={index === activeIndex}
+        onQrPress={onQrPress}
+      />
     ),
     [width, activeIndex, onQrPress],
   );

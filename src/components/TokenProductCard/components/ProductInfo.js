@@ -6,12 +6,16 @@ import PriceSection from './PriceSection';
 import styles from '../styles';
 import { NAME_LINES, UD_TOKEN_ICON } from '../constants';
 
-/** Everything below the media well: token strip, rating/ETA, name, weight, price. */
+/**
+ * Everything below the media well: price and saving lead, then the UD token the
+ * order earns, any rating/ETA the API sent, and finally the name and weight.
+ */
 const ProductInfo = ({
   name,
   weight,
   price,
   mrp,
+  offer,
   token,
   rating,
   deliveryEta,
@@ -21,10 +25,23 @@ const ProductInfo = ({
   const showMetaRow = !!rating || !!deliveryEta;
 
   return (
-    <View style={[styles.info, isThreeColumn && styles.infoSmall]}>
+    <View
+      style={[styles.info, isThreeColumn && styles.infoSmall]}
+      importantForAccessibility="no-hide-descendants"
+    >
+      <PriceSection
+        price={price}
+        mrp={mrp}
+        offer={offer}
+        isThreeColumn={isThreeColumn}
+      />
+
       {showToken && (
         <View style={styles.tokenRow}>
-          <Image source={UD_TOKEN_ICON} style={styles.tokenIcon} />
+          <Image
+            source={UD_TOKEN_ICON}
+            style={[styles.tokenIcon, isThreeColumn && styles.tokenIconSmall]}
+          />
           <Text
             style={styles.tokenText}
             numberOfLines={1}
@@ -77,10 +94,8 @@ const ProductInfo = ({
         ]}
         maxFontSizeMultiplier={MAX_FONT_SCALE}
       >
-        {weight}
+        {weight || ''}
       </Text>
-
-      <PriceSection price={price} mrp={mrp} isThreeColumn={isThreeColumn} />
     </View>
   );
 };

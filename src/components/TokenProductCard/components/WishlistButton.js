@@ -7,11 +7,13 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { INK } from '@/styles/homeTheme';
+import { ACCENT } from '@/styles/homeTheme';
 import styles from '../styles';
 import { HEART_POP_SPRING, WISHLIST_HIT_SLOP } from '../constants';
 
-const WishlistButton = ({ liked, productName, onPress }) => {
+const LIKED_COLOUR = '#FF0048';
+
+const WishlistButton = ({ liked, isThreeColumn, productName, onPress }) => {
   const scale = useSharedValue(1);
 
   useEffect(() => {
@@ -29,7 +31,10 @@ const WishlistButton = ({ liked, productName, onPress }) => {
 
   return (
     <TouchableOpacity
-      style={styles.wishlistButton}
+      style={[
+        styles.wishlistButton,
+        isThreeColumn && styles.wishlistButtonSmall,
+      ]}
       hitSlop={WISHLIST_HIT_SLOP}
       activeOpacity={0.8}
       onPress={onPress}
@@ -45,7 +50,7 @@ const WishlistButton = ({ liked, productName, onPress }) => {
         <Ionicons
           name={liked ? 'heart' : 'heart-outline'}
           size={16}
-          color={liked ? '#FF0048' : INK.muted}
+          color={liked ? LIKED_COLOUR : ACCENT.primary}
         />
       </Animated.View>
     </TouchableOpacity>

@@ -9,7 +9,7 @@ const DEFAULT_CONTENT_STYLE = {
   paddingRight: wp('2%'),
 };
 
-const RailCard = React.memo(function RailCard({ item, navigation }) {
+const RailCard = React.memo(function RailCard({ item, index, navigation }) {
   const handlePress = useCallback(
     () =>
       navigation.navigate('ProductDetailsScreen', {
@@ -19,7 +19,7 @@ const RailCard = React.memo(function RailCard({ item, navigation }) {
     [navigation, item],
   );
 
-  return <TokenProductCard item={item} onPress={handlePress} />;
+  return <TokenProductCard item={item} index={index} onPress={handlePress} />;
 });
 
 const ProductRail = ({
@@ -47,7 +47,9 @@ const ProductRail = ({
   );
 
   const renderItem = useCallback(
-    ({ item }) => <RailCard item={item} navigation={navigation} />,
+    ({ item, index }) => (
+      <RailCard item={item} index={index} navigation={navigation} />
+    ),
     [navigation],
   );
 

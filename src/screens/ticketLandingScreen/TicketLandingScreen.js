@@ -1,4 +1,10 @@
-import React, { useMemo, useState, useCallback, useContext } from 'react';
+import React, {
+  useMemo,
+  useState,
+  useCallback,
+  useContext,
+  useRef,
+} from 'react';
 import { ImageBackground, StatusBar, View } from 'react-native';
 import {
   useSharedValue,
@@ -22,8 +28,7 @@ import useStatusBarFocus from './hooks/useStatusBarFocus';
 import useHeroFade from './hooks/useHeroFade';
 import useStoreSwitcher from './hooks/useStoreSwitcher';
 import prefetchMyBookings from '../../queries/prefetchMyBookings';
-
-const SCREEN_BG = require('../../assets/images/movieTicket/ticketLandingBg.png');
+import { BACKDROP_SOURCE, getArcApexOffset } from './backdropArc';
 
 const TicketLandingScreen = ({ navigation }) => {
   const insets = useSafeAreaInsets();
@@ -42,24 +47,42 @@ const TicketLandingScreen = ({ navigation }) => {
   const voucherData = useVoucherData();
   const eventsData = useEventsData(navigation);
 
+  const {
+    refresh: refreshVouchers,
+    handleClaim,
+    refreshBCoins,
+    handleCloseUdenModal,
+  } = voucherData;
+  const {
+    fetchPopularEvents,
+    fetchPopularCategories,
+    fetchEventDetailsList,
+    handleEventPress,
+  } = eventsData;
+
   const fetchTabData = useCallback(
     tabId => {
       switch (tabId) {
         case TAB_IDS.POPULAR:
           return Promise.all([
-            eventsData.fetchPopularEvents(),
-            eventsData.fetchPopularCategories(),
-            voucherData.refresh(),
+            fetchPopularEvents(),
+            fetchPopularCategories(),
+            refreshVouchers(),
           ]);
         case TAB_IDS.EVENTS:
-          return eventsData.fetchEventDetailsList();
+          return fetchEventDetailsList();
         case TAB_IDS.VOUCHERS:
-          return voucherData.refresh();
+          return refreshVouchers();
         default:
           return Promise.resolve();
       }
     },
-    [eventsData, voucherData],
+    [
+      fetchPopularEvents,
+      fetchPopularCategories,
+      fetchEventDetailsList,
+      refreshVouchers,
+    ],
   );
 
   const tabNav = useTabNavigation(fetchTabData);
@@ -73,16 +96,17 @@ const TicketLandingScreen = ({ navigation }) => {
   });
 
   const [refreshing, setRefreshing] = useState(false);
+  const activeTab = tabNav.activeTab;
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
       const tasks = [
-        voucherData.refresh(),
-        eventsData.fetchPopularEvents(),
-        eventsData.fetchPopularCategories(),
+        refreshVouchers(),
+        fetchPopularEvents(),
+        fetchPopularCategories(),
       ];
-      if (tabNav.activeTab === TAB_IDS.EVENTS) {
-        tasks.push(eventsData.fetchEventDetailsList());
+      if (activeTab === TAB_IDS.EVENTS) {
+        tasks.push(fetchEventDetailsList());
       }
       await Promise.all(tasks);
     } catch (error) {
@@ -90,7 +114,18 @@ const TicketLandingScreen = ({ navigation }) => {
     } finally {
       setRefreshing(false);
     }
-  }, [voucherData, eventsData, tabNav.activeTab]);
+  }, [
+    refreshVouchers,
+    fetchPopularEvents,
+    fetchPopularCategories,
+    fetchEventDetailsList,
+    activeTab,
+  ]);
+
+  const handleMyBookingsPress = useCallback(() => {
+    prefetchMyBookings();
+    navigation.navigate('MyBookingsScreen');
+  }, [navigation]);
 
   const gradientStyle = useMemo(
     () => [styles.statusBarGradient, { height: insets.top + 24 }],
@@ -98,10 +133,23 @@ const TicketLandingScreen = ({ navigation }) => {
   );
 
   const backdropImageStyle = useMemo(
-    () =>
-      tabNav.activeTab === TAB_IDS.VOUCHERS ? undefined : styles.hiddenBackdrop,
-    [tabNav.activeTab],
+    () => (activeTab === TAB_IDS.VOUCHERS ? undefined : styles.hiddenBackdrop),
+    [activeTab],
   );
+
+  // Window coordinate of the backdrop curve's apex, measured from the box the
+  // image is actually painted into so it survives every screen size, notch and
+  // the different things `window` means on iOS vs Android. The carousel arrows
+  // are pinned to it. Re-runs on rotation and on any backdrop resize.
+  const backdropRef = useRef(null);
+  const [arcApexY, setArcApexY] = useState(null);
+  const handleBackdropLayout = useCallback(() => {
+    backdropRef.current?.measureInWindow((x, y, width, height) => {
+      const apexOffset = getArcApexOffset(width, height);
+      if (apexOffset == null) return;
+      setArcApexY(y + apexOffset);
+    });
+  }, []);
 
   const tabContentProps = useMemo(
     () => ({
@@ -113,7 +161,7 @@ const TicketLandingScreen = ({ navigation }) => {
       bCoinsLoading: voucherData.bCoinsLoading,
       giftQuote: voucherData.giftQuote,
       giftQuoteLoading: voucherData.giftQuoteLoading,
-      onClaim: voucherData.handleClaim,
+      onClaim: handleClaim,
       onGoToVouchers: tabNav.handleGoToVouchers,
       onGoToSports: tabNav.handleGoToSports,
       popularEvents: eventsData.popularEvents,
@@ -124,12 +172,21 @@ const TicketLandingScreen = ({ navigation }) => {
       moreToExplore: eventsData.moreToExplore,
       popularCategories: eventsData.popularCategories,
       popularCategoriesLoading: eventsData.popularCategoriesLoading,
-      onEventPress: eventsData.handleEventPress,
+      onEventPress: handleEventPress,
+      arcApexY,
     }),
+    // Field-level deps: claiming a voucher (which flips modal state on
+    // voucherData) must not rebuild the whole tab content.
     [
       fadeAnim,
       navigation,
-      voucherData,
+      voucherData.carouselVouchers,
+      voucherData.carouselLoading,
+      voucherData.bCoins,
+      voucherData.bCoinsLoading,
+      voucherData.giftQuote,
+      voucherData.giftQuoteLoading,
+      handleClaim,
       tabNav.handleGoToVouchers,
       tabNav.handleGoToSports,
       eventsData.popularEvents,
@@ -140,7 +197,8 @@ const TicketLandingScreen = ({ navigation }) => {
       eventsData.moreToExplore,
       eventsData.popularCategories,
       eventsData.popularCategoriesLoading,
-      eventsData.handleEventPress,
+      handleEventPress,
+      arcApexY,
     ],
   );
 
@@ -148,30 +206,37 @@ const TicketLandingScreen = ({ navigation }) => {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" translucent backgroundColor="black" />
 
-      <ImageBackground
-        source={SCREEN_BG}
+      <View
+        ref={backdropRef}
+        onLayout={handleBackdropLayout}
+        collapsable={false}
         style={styles.contentBg}
-        imageStyle={backdropImageStyle}
-        resizeMode="cover"
       >
-        <TicketLandingList
-          navigation={navigation}
-          insets={insets}
-          profile={profile}
-          activeTab={tabNav.activeTab}
-          handleTabChange={tabNav.handleTabChange}
-          popularCategories={eventsData.popularCategories}
-          scrollY={scrollY}
-          scrollHandler={scrollHandler}
-          tabContentStyle={tabNav.tabContentStyle}
-          events={eventsData.events}
-          eventsLoading={eventsData.eventsLoading}
-          handleEventPress={eventsData.handleEventPress}
-          tabContentProps={tabContentProps}
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-        />
-      </ImageBackground>
+        <ImageBackground
+          source={BACKDROP_SOURCE}
+          style={styles.backdrop}
+          imageStyle={backdropImageStyle}
+          resizeMode="cover"
+        >
+          <TicketLandingList
+            navigation={navigation}
+            insets={insets}
+            profile={profile}
+            activeTab={activeTab}
+            handleTabChange={tabNav.handleTabChange}
+            popularCategories={eventsData.popularCategories}
+            scrollY={scrollY}
+            scrollHandler={scrollHandler}
+            tabContentStyle={tabNav.tabContentStyle}
+            events={eventsData.events}
+            eventsLoading={eventsData.eventsLoading}
+            handleEventPress={handleEventPress}
+            tabContentProps={tabContentProps}
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+          />
+        </ImageBackground>
+      </View>
 
       <LinearGradient
         colors={['rgba(0,0,0,0.55)', 'rgba(0,0,0,0)']}
@@ -186,16 +251,13 @@ const TicketLandingScreen = ({ navigation }) => {
         voucher={voucherData.claimedVoucher}
         bCoins={voucherData.bCoins}
         initialQuoteData={voucherData.claimedQuoteData}
-        onPurchaseSettled={voucherData.refreshBCoins}
-        onClose={voucherData.handleCloseUdenModal}
+        onPurchaseSettled={refreshBCoins}
+        onClose={handleCloseUdenModal}
       />
       <BottomTabBar
         bookingsCount={voucherData.myVouchers.length}
         onHomePress={tabNav.handleGoHome}
-        onMyBookingsPress={() => {
-          prefetchMyBookings();
-          navigation.navigate('MyBookingsScreen');
-        }}
+        onMyBookingsPress={handleMyBookingsPress}
         onStorePress={storeSwitcher.open}
       />
 

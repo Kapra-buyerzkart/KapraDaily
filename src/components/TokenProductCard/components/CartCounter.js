@@ -2,14 +2,14 @@ import React from 'react';
 import { Text } from 'react-native';
 import Animated from 'react-native-reanimated';
 import Entypo from 'react-native-vector-icons/Entypo';
-import { MAX_FONT_SCALE } from '@/styles/homeTheme';
+import { INK, MAX_FONT_SCALE } from '@/styles/homeTheme';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import styles from '../styles';
 import { COUNTER_HIT_SLOP } from '../constants';
 
 /**
  * The `− qty +` pill shown once the product is in the cart.
- * `animatedStyle` is owned by QuantityControl so the ADD → counter swap
+ * `animatedStyle` is owned by QuantityControl so the `+` → counter swap
  * keeps a single continuous pop animation.
  */
 const CartCounter = ({
@@ -42,10 +42,13 @@ const CartCounter = ({
             : `Decrease ${productName} quantity`
         }
       >
-        <Entypo name="minus" size={iconSize} color="#FFFFFF" />
+        <Entypo name="minus" size={iconSize} color={INK.onDark} />
       </AnimatedPressable>
 
-      <Text style={styles.counterQty} maxFontSizeMultiplier={MAX_FONT_SCALE}>
+      <Text
+        style={[styles.counterQty, isThreeColumn && styles.counterQtySmall]}
+        maxFontSizeMultiplier={MAX_FONT_SCALE}
+      >
         {quantity}
       </Text>
 
@@ -56,7 +59,7 @@ const CartCounter = ({
         accessibilityRole="button"
         accessibilityLabel={`Increase ${productName} quantity`}
       >
-        <Entypo name="plus" size={iconSize} color="#FFFFFF" />
+        <Entypo name="plus" size={iconSize} color={INK.onDark} />
       </AnimatedPressable>
     </Animated.View>
   );

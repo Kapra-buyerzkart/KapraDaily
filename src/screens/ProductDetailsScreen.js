@@ -41,6 +41,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import Entypo from 'react-native-vector-icons/Entypo';
 import LinearGradient from 'react-native-linear-gradient';
 import TokenProductCard from '../components/TokenProductCard';
+import { formatAmount } from '../components/TokenProductCard/utils';
 import SelectedProducts from '../components/SelectedProducts';
 import { useWishlist } from '../context/WishlistContext';
 import { useCart } from '../context/CartContext';
@@ -67,6 +68,9 @@ import {
   MAX_FONT_SCALE,
   hitSlopTo,
 } from '@/styles/homeTheme';
+
+const PRICE_PILL = '#17853C';
+const SAVINGS_RULE = 'rgba(17,19,26,0.18)';
 
 const BUMP_SPRING = { damping: 8, stiffness: 260, mass: 0.4 };
 const HEART_SPRING = { damping: 10, stiffness: 340, mass: 0.5 };
@@ -514,30 +518,42 @@ const ProductDetailsScreen = () => {
               <View style={styles.priceBlock}>
                 <View style={styles.priceColumn}>
                   <View style={styles.priceRow}>
-                    <Text
-                      style={styles.currentPrice}
-                      maxFontSizeMultiplier={MAX_FONT_SCALE}
-                    >
-                      ₹{specialPrice}
-                    </Text>
+                    <View style={styles.pricePillShadow}>
+                      <View style={styles.pricePill}>
+                        <Text
+                          style={styles.currentPrice}
+                          maxFontSizeMultiplier={MAX_FONT_SCALE}
+                        >
+                          <Text style={styles.priceSymbol}>₹</Text>
+                          {formatAmount(specialPrice) || specialPrice}
+                        </Text>
+                      </View>
+                    </View>
+
                     {!!unitPrice &&
                       Number(unitPrice) > Number(specialPrice) && (
                         <Text
                           style={styles.originalPrice}
                           maxFontSizeMultiplier={MAX_FONT_SCALE}
                         >
-                          ₹{unitPrice}
+                          ₹{formatAmount(unitPrice) || unitPrice}
                         </Text>
                       )}
                   </View>
-                  <Text
-                    style={savings > 0 ? styles.savingsText : styles.taxNote}
-                    maxFontSizeMultiplier={MAX_FONT_SCALE}
-                  >
-                    {savings > 0
-                      ? `You save ₹${savings}`
-                      : 'Inclusive of all taxes'}
-                  </Text>
+
+                  <View style={styles.savingsRow}>
+                    <Text
+                      style={savings > 0 ? styles.savingsText : styles.taxNote}
+                      maxFontSizeMultiplier={MAX_FONT_SCALE}
+                    >
+                      {savings > 0
+                        ? `₹${formatAmount(savings)} OFF`
+                        : 'Inclusive of all taxes'}
+                    </Text>
+                    <View style={styles.savingsRuleClip}>
+                      <View style={styles.savingsRule} />
+                    </View>
+                  </View>
                 </View>
 
                 <View style={styles.actionContainer}>
@@ -763,6 +779,7 @@ const ProductDetailsScreen = () => {
                   renderItem={({ item, index }) => (
                     <TokenProductCard
                       item={item}
+                      index={index}
                       entering={FadeInUp.delay(getStaggerDelay(index))}
                       onPress={() =>
                         navigation.push('ProductDetailsScreen', {
@@ -980,34 +997,68 @@ const styles = StyleSheet.create({
   },
   priceRow: {
     flexDirection: 'row',
-    alignItems: 'baseline',
+    alignItems: 'center',
     flexWrap: 'wrap',
   },
+  pricePillShadow: {
+    backgroundColor: 'black',
+    borderRadius: RADIUS.xs,
+    alignSelf: 'flex-start',
+  },
+  pricePill: {
+    backgroundColor: PRICE_PILL,
+    borderRadius: RADIUS.xs,
+    paddingHorizontal: SPACE.sm + 2,
+    paddingVertical: 6,
+    bottom: 2.5,
+    right: 2,
+    alignSelf: 'flex-start',
+  },
   currentPrice: {
-    ...TYPE.display,
+    ...TYPE.title,
     lineHeight: undefined,
     fontFamily: FONTS.gilroy.bold,
-    color: INK.strong,
-    letterSpacing: -0.4,
+    color: INK.onDark,
+    letterSpacing: -0.2,
+    includeFontPadding: false,
+  },
+  priceSymbol: {
+    fontSize: TYPE.caption.fontSize,
   },
   originalPrice: {
     ...TYPE.body,
-    fontFamily: FONTS.gilroy.medium,
+    fontFamily: FONTS.gilroy.semiBold,
     color: INK.faint,
     textDecorationLine: 'line-through',
     marginLeft: SPACE.sm,
   },
+  savingsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: SPACE.xs + 2,
+    minHeight: TYPE.caption.lineHeight,
+  },
   savingsText: {
     ...TYPE.caption,
-    fontFamily: FONTS.gilroy.semiBold,
-    color: ACCENT.savings,
-    marginTop: 3,
+    fontFamily: FONTS.gilroy.bold,
+    color: ACCENT.successText,
+  },
+  savingsRuleClip: {
+    flex: 1,
+    height: 1,
+    overflow: 'hidden',
+    marginLeft: SPACE.xs + 2,
+  },
+  savingsRule: {
+    height: 2,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: SAVINGS_RULE,
   },
   taxNote: {
     ...TYPE.caption,
     fontFamily: FONTS.gilroy.regular,
     color: INK.muted,
-    marginTop: 3,
   },
   actionContainer: {
     justifyContent: 'center',

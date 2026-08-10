@@ -1,13 +1,15 @@
-import React from 'react';
-import { View } from 'react-native';
+import React, { useMemo } from 'react';
 import AnimatedPressable from '@/components/AnimatedPressable';
+import { SURFACE, categoryTint } from '@/styles/homeTheme';
 import ProductInfo from './components/ProductInfo';
 import ProductMedia from './components/ProductMedia';
 import useTokenProductCard from './hooks/useTokenProductCard';
+import { resolveTintIndex } from './utils';
 import styles from './styles';
 
 const TokenProductCard = ({
   item,
+  index,
   onPress,
   onAdd,
   onToggleWishlist,
@@ -24,6 +26,7 @@ const TokenProductCard = ({
     liked,
     imageSource,
     isPlaceholder,
+    isOpaqueImage,
     handleImageError,
     handleToggleWishlist,
     handleIncrement,
@@ -42,6 +45,7 @@ const TokenProductCard = ({
   });
 
   const {
+    productId,
     name,
     mrp,
     price,
@@ -52,6 +56,14 @@ const TokenProductCard = ({
     rating,
     deliveryEta,
   } = product;
+
+  const tint = useMemo(
+    () =>
+      isOpaqueImage
+        ? SURFACE.base
+        : categoryTint(resolveTintIndex(index, productId)),
+    [isOpaqueImage, index, productId],
+  );
 
   return (
     <AnimatedPressable
@@ -67,39 +79,35 @@ const TokenProductCard = ({
       accessibilityActions={accessibilityActions}
       onAccessibilityAction={handleAccessibilityAction}
     >
-      <View
-        style={[styles.cardSurface, isThreeColumn && styles.cardSurfaceSmall]}
-        importantForAccessibility="no-hide-descendants"
-      >
-        <ProductMedia
-          imageSource={imageSource}
-          isPlaceholder={isPlaceholder}
-          isOutOfStock={isOutOfStock}
-          onImageError={handleImageError}
-          offer={offer}
-          name={name}
-          liked={liked}
-          hideWishlist={hideWishlist}
-          onToggleWishlist={handleToggleWishlist}
-          quantity={quantity}
-          isThreeColumn={isThreeColumn}
-          onIncrement={handleIncrement}
-          onDecrement={handleDecrement}
-          onAdd={handleAdd}
-        />
+      <ProductMedia
+        imageSource={imageSource}
+        isPlaceholder={isPlaceholder}
+        isOutOfStock={isOutOfStock}
+        onImageError={handleImageError}
+        tint={tint}
+        name={name}
+        liked={liked}
+        hideWishlist={hideWishlist}
+        onToggleWishlist={handleToggleWishlist}
+        quantity={quantity}
+        isThreeColumn={isThreeColumn}
+        onIncrement={handleIncrement}
+        onDecrement={handleDecrement}
+        onAdd={handleAdd}
+      />
 
-        <ProductInfo
-          name={name}
-          weight={weight}
-          price={price}
-          mrp={mrp}
-          token={token}
-          rating={rating}
-          deliveryEta={deliveryEta}
-          showToken={!hideToken && quantity === 0}
-          isThreeColumn={isThreeColumn}
-        />
-      </View>
+      <ProductInfo
+        name={name}
+        weight={weight}
+        price={price}
+        mrp={mrp}
+        offer={offer}
+        token={token}
+        rating={rating}
+        deliveryEta={deliveryEta}
+        showToken={!hideToken}
+        isThreeColumn={isThreeColumn}
+      />
     </AnimatedPressable>
   );
 };

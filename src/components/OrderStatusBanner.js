@@ -6,13 +6,12 @@ import {
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
 import { FONTS } from '../styles/typography';
-import { INK, RADIUS, SPACE, MAX_FONT_SCALE } from '../styles/homeTheme';
+import { INK, RADIUS, MAX_FONT_SCALE } from '../styles/homeTheme';
 
 const VARIANTS = {
   cancelled: {
     accent: '#D93025',
     tint: '#FEF3F2',
-    edge: 'rgba(217,48,37,0.14)',
     icon: 'close',
     title: 'Order cancelled',
     helpLabel: 'Something wrong? Get help',
@@ -20,7 +19,6 @@ const VARIANTS = {
   pending: {
     accent: '#B45309',
     tint: '#FFF8EB',
-    edge: 'rgba(180,83,9,0.14)',
     icon: 'time-outline',
     title: 'Payment pending',
     helpLabel: 'Payment issue? Get help',
@@ -28,14 +26,13 @@ const VARIANTS = {
   delivered: {
     accent: '#0B7A3D',
     tint: '#E7F7EE',
-    edge: 'rgba(11,122,61,0.14)',
     icon: 'checkmark',
     title: 'Order delivered',
     helpLabel: 'Issue with this order? Get help',
   },
 };
 
-const STRIP_NEUTRAL = '#F0F1F4';
+const STRIP_NEUTRAL = '#F1F2F5';
 
 const buildStrip = ({
   variant,
@@ -106,15 +103,10 @@ const OrderStatusBanner = ({
   });
 
   return (
-    <View
-      style={[
-        styles.card,
-        { backgroundColor: theme.tint, borderColor: theme.edge },
-      ]}
-    >
+    <View style={[styles.card, { backgroundColor: theme.tint }]}>
       <View style={styles.headRow}>
-        <View style={[styles.iconWell, { borderColor: theme.edge }]}>
-          <Ionicons name={theme.icon} size={wp('4.6%')} color={theme.accent} />
+        <View style={styles.iconWell}>
+          <Ionicons name={theme.icon} size={wp('5.2%')} color={theme.accent} />
         </View>
         <View style={styles.headText}>
           <Text style={styles.title} maxFontSizeMultiplier={MAX_FONT_SCALE}>
@@ -132,7 +124,7 @@ const OrderStatusBanner = ({
       </View>
 
       {!!reason && (
-        <View style={[styles.reasonRow, { borderTopColor: theme.edge }]}>
+        <View style={styles.reasonRow}>
           <Text
             style={styles.reasonLabel}
             maxFontSizeMultiplier={MAX_FONT_SCALE}
@@ -158,7 +150,7 @@ const OrderStatusBanner = ({
         >
           <Ionicons
             name={strip.icon}
-            size={wp('3.8%')}
+            size={wp('4%')}
             color={strip.positive ? theme.accent : INK.muted}
           />
         </View>
@@ -185,7 +177,7 @@ const OrderStatusBanner = ({
 
       {!!onHelpPress && (
         <TouchableOpacity
-          style={[styles.helpRow, { borderTopColor: theme.edge }]}
+          style={styles.helpRow}
           onPress={onHelpPress}
           activeOpacity={0.7}
           accessibilityRole="button"
@@ -210,35 +202,33 @@ const OrderStatusBanner = ({
 
 const styles = StyleSheet.create({
   card: {
-    width: wp('90.7%'),
     borderRadius: RADIUS.md,
-    borderWidth: StyleSheet.hairlineWidth,
-    paddingHorizontal: wp('4%'),
-    paddingVertical: hp('1.8%'),
-    marginBottom: hp('1.5%'),
+    marginHorizontal: wp('3.6%'),
+    paddingHorizontal: wp('4.2%'),
+    paddingVertical: hp('1.9%'),
+    marginBottom: hp('1.2%'),
   },
   headRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   iconWell: {
-    width: wp('9%'),
-    height: wp('9%'),
-    borderRadius: wp('4.5%'),
+    width: wp('10%'),
+    height: wp('10%'),
+    borderRadius: RADIUS.pill,
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: StyleSheet.hairlineWidth,
   },
   headText: {
     flex: 1,
     marginLeft: wp('3%'),
   },
   title: {
-    fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('4.1%'),
+    fontFamily: FONTS.gilroy.bold,
+    fontSize: wp('4.6%'),
     color: INK.strong,
-    letterSpacing: -0.2,
+    letterSpacing: -0.4,
   },
   subtitle: {
     fontFamily: FONTS.gilroy.medium,
@@ -249,19 +239,17 @@ const styles = StyleSheet.create({
   reasonRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    marginTop: hp('1.4%'),
-    paddingTop: hp('1.4%'),
-    borderTopWidth: StyleSheet.hairlineWidth,
+    marginTop: hp('1.6%'),
   },
   reasonLabel: {
-    fontFamily: FONTS.gilroy.medium,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3.1%'),
     color: INK.muted,
     marginRight: wp('3%'),
   },
   reasonValue: {
     flex: 1,
-    fontFamily: FONTS.gilroy.semiBold,
+    fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3.1%'),
     color: INK.base,
     textAlign: 'right',
@@ -271,13 +259,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
     borderRadius: RADIUS.sm,
-    padding: SPACE.md,
-    marginTop: hp('1.4%'),
+    padding: wp('3%'),
+    marginTop: hp('1.5%'),
   },
   stripIcon: {
-    width: wp('7.4%'),
-    height: wp('7.4%'),
-    borderRadius: wp('3.7%'),
+    width: wp('7.6%'),
+    height: wp('7.6%'),
+    borderRadius: RADIUS.xs,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -286,26 +274,24 @@ const styles = StyleSheet.create({
     marginLeft: wp('2.8%'),
   },
   stripTitle: {
-    fontFamily: FONTS.gilroy.semiBold,
+    fontFamily: FONTS.gilroy.bold,
     fontSize: wp('3.4%'),
   },
   stripHint: {
-    fontFamily: FONTS.gilroy.medium,
+    fontFamily: FONTS.gilroy.regular,
     fontSize: wp('2.9%'),
     color: INK.muted,
-    marginTop: hp('0.2%'),
+    marginTop: hp('0.3%'),
     lineHeight: wp('4.1%'),
   },
   helpRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: hp('1.2%'),
-    paddingTop: hp('1.2%'),
-    borderTopWidth: StyleSheet.hairlineWidth,
+    marginTop: hp('1.4%'),
   },
   helpText: {
-    fontFamily: FONTS.gilroy.semiBold,
+    fontFamily: FONTS.gilroy.bold,
     fontSize: wp('3.2%'),
     marginRight: wp('1%'),
   },
