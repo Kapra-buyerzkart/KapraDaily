@@ -321,7 +321,7 @@ const ChangePasswordScreen = () => {
             <View style={styles.noteRow}>
               <MaterialCommunityIcons
                 name="shield-check-outline"
-                size={wp('4%')}
+                size={wp('3.6%')}
                 color={INK.muted}
                 style={styles.noteIcon}
               />
@@ -437,7 +437,7 @@ const PasswordField = React.forwardRef(
         >
           <MaterialCommunityIcons
             name={success && !error ? 'check-circle-outline' : icon}
-            size={wp('4.6%')}
+            size={wp('4.2%')}
             color={leadingColor}
             style={styles.fieldIcon}
           />
@@ -471,7 +471,7 @@ const PasswordField = React.forwardRef(
           >
             <MaterialCommunityIcons
               name={revealed ? 'eye-off-outline' : 'eye-outline'}
-              size={wp('5%')}
+              size={wp('4.4%')}
               color={focused ? INK.base : INK.faint}
             />
           </TouchableOpacity>
@@ -523,7 +523,7 @@ const StrengthPanel = ({ visible, score, checks }) => {
           <View key={check.key} style={styles.checkRow}>
             <MaterialCommunityIcons
               name={check.passed ? 'check-circle' : 'circle-small'}
-              size={wp('3.8%')}
+              size={wp('3.4%')}
               color={check.passed ? ACCENT.success : INK.faint}
             />
             <Text
@@ -585,7 +585,7 @@ const ActionBar = ({ enabled, label, hint, onPress }) => {
         >
           <MaterialCommunityIcons
             name={enabled ? 'lock-check-outline' : 'lock-outline'}
-            size={wp('4.6%')}
+            size={wp('4.2%')}
             color={enabled ? INK.onDark : RESTING_INK}
             style={styles.actionButtonIcon}
           />
@@ -630,7 +630,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingBottom: SPACE.xl,
+    paddingBottom: SPACE.base,
     backgroundColor: CANVAS,
   },
 
@@ -638,7 +638,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: GUTTER,
-    paddingBottom: SPACE.sm,
+    paddingBottom: SPACE.xs + 2,
     backgroundColor: HERO_TOP,
   },
   topBarBorder: {
@@ -666,51 +666,49 @@ const styles = StyleSheet.create({
   },
 
   hero: {
-    paddingBottom: SPACE.md,
+    paddingBottom: SPACE.sm,
   },
   heroInner: {
     paddingHorizontal: GUTTER,
-    paddingTop: SPACE.sm,
-    paddingBottom: SPACE.base,
+    paddingTop: SPACE.xs,
+    paddingBottom: SPACE.md,
   },
   heroTitle: {
     ...TYPE.title,
-    fontSize: Math.round(TYPE.title.fontSize * 1.08),
-    lineHeight: Math.round(TYPE.title.lineHeight * 1.08),
     color: INK.strong,
     fontFamily: FONTS.gilroy.bold,
-    letterSpacing: -0.4,
+    letterSpacing: -0.3,
   },
   heroSubtitle: {
-    ...TYPE.label,
+    ...TYPE.caption,
     color: INK.muted,
     fontFamily: FONTS.gilroy.regular,
-    marginTop: SPACE.xs + 2,
+    marginTop: SPACE.xs,
     maxWidth: wp('82%'),
   },
 
   fieldGroup: {
     paddingHorizontal: GUTTER,
-    paddingTop: SPACE.lg,
+    paddingTop: SPACE.base,
   },
   field: {
-    marginBottom: SPACE.base,
+    marginBottom: SPACE.md,
   },
   fieldLabel: {
     ...TYPE.micro,
     fontFamily: FONTS.gilroy.semiBold,
     color: INK.muted,
-    letterSpacing: 0.6,
+    letterSpacing: 0.8,
     textTransform: 'uppercase',
-    marginBottom: SPACE.xs + 2,
+    marginBottom: SPACE.xs,
   },
   fieldWell: {
     flexDirection: 'row',
     alignItems: 'center',
-    minHeight: hp('6.6%'),
-    borderRadius: RADIUS.md,
+    minHeight: hp('5.8%'),
+    borderRadius: RADIUS.sm,
     borderWidth: FIELD_BORDER_WIDTH,
-    paddingHorizontal: SPACE.md,
+    paddingHorizontal: SPACE.sm + 2,
   },
   fieldWellError: {
     backgroundColor: ERROR_SOFT,
@@ -720,7 +718,7 @@ const styles = StyleSheet.create({
     borderColor: ACCENT.success,
   },
   fieldIcon: {
-    marginRight: SPACE.md,
+    marginRight: SPACE.sm + 2,
   },
   fieldInput: {
     flex: 1,
@@ -729,8 +727,8 @@ const styles = StyleSheet.create({
     ...TYPE.body,
     fontFamily: FONTS.gilroy.medium,
     color: INK.strong,
-    paddingVertical: SPACE.md,
-    paddingRight: SPACE.md,
+    paddingVertical: SPACE.sm,
+    paddingRight: SPACE.sm + 2,
     includeFontPadding: false,
   },
   fieldErrorRow: {
@@ -747,7 +745,7 @@ const styles = StyleSheet.create({
   },
 
   strengthPanel: {
-    marginTop: SPACE.md,
+    marginTop: SPACE.sm,
   },
   meterRow: {
     flexDirection: 'row',
@@ -756,7 +754,7 @@ const styles = StyleSheet.create({
   },
   meterSegment: {
     flex: 1,
-    height: 4,
+    height: 3,
     borderRadius: 2,
   },
   strengthLabel: {
@@ -769,18 +767,18 @@ const styles = StyleSheet.create({
   checkList: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginTop: SPACE.sm,
-    gap: SPACE.md,
+    marginTop: SPACE.xs + 2,
+    gap: SPACE.sm + 2,
   },
   checkRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   checkText: {
-    ...TYPE.caption,
+    ...TYPE.micro,
     fontFamily: FONTS.gilroy.regular,
     color: INK.muted,
-    marginLeft: SPACE.xs,
+    marginLeft: SPACE.xs - 1,
   },
   checkTextPassed: {
     fontFamily: FONTS.gilroy.semiBold,
@@ -791,32 +789,33 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     marginTop: SPACE.xs,
-    padding: SPACE.md,
-    borderRadius: RADIUS.sm,
+    padding: SPACE.sm + 2,
+    borderRadius: RADIUS.xs,
     backgroundColor: SURFACE.sunken,
   },
   noteIcon: {
     marginTop: 1,
   },
   noteText: {
-    ...TYPE.caption,
+    ...TYPE.micro,
+    lineHeight: TYPE.caption.lineHeight,
     fontFamily: FONTS.gilroy.regular,
     color: INK.muted,
-    marginLeft: SPACE.sm,
+    marginLeft: SPACE.xs + 2,
     flex: 1,
   },
 
   actionBar: {
     paddingHorizontal: GUTTER,
-    paddingTop: SPACE.md,
+    paddingTop: SPACE.sm + 2,
     backgroundColor: SURFACE.base,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: HAIRLINE,
   },
   actionButton: {
     flexDirection: 'row',
-    minHeight: hp('6.4%'),
-    borderRadius: RADIUS.md,
+    minHeight: hp('5.8%'),
+    borderRadius: RADIUS.sm,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: ACCENT.primary,
@@ -833,7 +832,7 @@ const styles = StyleSheet.create({
     elevation: 0,
   },
   actionButtonText: {
-    ...TYPE.body,
+    ...TYPE.label,
     fontFamily: FONTS.gilroy.bold,
     color: INK.onDark,
     letterSpacing: 0.2,
@@ -842,6 +841,6 @@ const styles = StyleSheet.create({
     color: RESTING_INK,
   },
   actionButtonIcon: {
-    marginRight: SPACE.sm,
+    marginRight: SPACE.xs + 2,
   },
 });

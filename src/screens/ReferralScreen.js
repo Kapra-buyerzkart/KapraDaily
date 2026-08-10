@@ -60,10 +60,7 @@ const ReferralScreen = () => {
             onPress={() => navigation.goBack()}
             style={styles.backButton}
           >
-            <Image
-              source={icons.backArrowNew}
-              style={styles.backIcon}
-            />
+            <Image source={icons.backArrowNew} style={styles.backIcon} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Refer and Earn</Text>
           <View style={styles.coinBadge}>

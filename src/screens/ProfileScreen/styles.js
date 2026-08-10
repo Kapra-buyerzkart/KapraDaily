@@ -27,12 +27,16 @@ export const GRAY_300 = HOME_INK.faint;
 export const BG = CANVAS;
 export const DIVIDER = HAIRLINE;
 
-const ROW_ICON = wp('8.6%');
+const ROW_ICON = wp('7.4%');
+const ROW_GAP = SPACE.md - 2;
 
-const QUICK_ACTION_WELL = wp('13.5%');
+const QUICK_ACTION_WELL = wp('12.2%');
 
-const WALLET_COIN_WELL = wp('11.5%');
-const WALLET_COIN = wp('10.2%');
+const WALLET_COIN_WELL = wp('9.6%');
+const WALLET_COIN = wp('8.6%');
+
+const CARD_PAD = SPACE.md;
+const CARD_EDGE = 'rgba(17,19,26,0.07)';
 
 export const HERO_TOP = THEME_HERO_TOP;
 export const HERO_GRADIENT = THEME_HERO_GRADIENT;
@@ -50,7 +54,7 @@ export const styles = StyleSheet.create({
     backgroundColor: HERO_TOP,
   },
   scrollContent: {
-    paddingBottom: hp('12%'),
+    paddingBottom: hp('7%'),
     backgroundColor: CANVAS,
   },
 
@@ -58,7 +62,7 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: GUTTER,
-    paddingBottom: SPACE.sm,
+    paddingBottom: SPACE.xs + 2,
     backgroundColor: HERO_TOP,
   },
   topBarBorder: {
@@ -91,41 +95,39 @@ export const styles = StyleSheet.create({
   },
 
   hero: {
-    paddingBottom: SPACE.sm,
+    paddingBottom: SPACE.xs,
   },
   identityRow: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: GUTTER,
-    paddingTop: SPACE.sm,
-    paddingBottom: SPACE.base,
+    paddingTop: SPACE.xs,
+    paddingBottom: SPACE.md,
   },
   identityText: {
     flex: 1,
-    marginLeft: SPACE.base,
-    marginRight: SPACE.sm,
+    marginLeft: SPACE.md,
+    marginRight: SPACE.xs,
   },
   userNameText: {
-    ...TYPE.title,
-    fontSize: Math.round(TYPE.title.fontSize * 1.12),
-    lineHeight: Math.round(TYPE.title.lineHeight * 1.12),
+    ...TYPE.heading,
     color: HOME_INK.strong,
     fontFamily: FONTS.gilroy.bold,
-    letterSpacing: -0.4,
+    letterSpacing: -0.3,
   },
   phoneNumberStyle: {
-    ...TYPE.label,
+    ...TYPE.caption,
     color: HOME_INK.muted,
     fontFamily: FONTS.gilroy.medium,
-    marginTop: 2,
+    marginTop: 1,
   },
   privilegeChip: {
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
-    marginTop: SPACE.xs + 2,
-    paddingVertical: 3,
-    paddingHorizontal: SPACE.sm,
+    marginTop: SPACE.xs,
+    paddingVertical: 2,
+    paddingHorizontal: SPACE.sm - 1,
     borderRadius: RADIUS.pill,
     backgroundColor: GOLD_SOFT,
   },
@@ -140,24 +142,25 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: RADIUS.pill,
-    paddingVertical: SPACE.sm,
-    paddingHorizontal: SPACE.md,
+    paddingVertical: SPACE.xs + 1,
+    paddingHorizontal: SPACE.sm + 2,
+    backgroundColor: ACCENT.primarySoft,
   },
   editChipText: {
-    ...TYPE.caption,
+    ...TYPE.micro,
     color: ACCENT.primary,
     fontFamily: FONTS.gilroy.semiBold,
-    marginLeft: SPACE.xs + 1,
+    marginLeft: SPACE.xs - 1,
   },
 
   walletStrip: {
     flexDirection: 'row',
     alignItems: 'center',
     marginHorizontal: GUTTER,
-    marginBottom: SPACE.sm,
-    paddingVertical: SPACE.md,
-    paddingHorizontal: SPACE.md,
-    borderRadius: RADIUS.md,
+    marginBottom: SPACE.xs,
+    paddingVertical: SPACE.sm + 2,
+    paddingHorizontal: SPACE.md - 2,
+    borderRadius: RADIUS.sm,
     backgroundColor: SURFACE.base,
     ...HERO_LIFT,
   },
@@ -175,8 +178,8 @@ export const styles = StyleSheet.create({
   },
   walletText: {
     flex: 1,
-    marginLeft: SPACE.md,
-    marginRight: SPACE.sm,
+    marginLeft: SPACE.sm + 2,
+    marginRight: SPACE.xs,
   },
   walletLabel: {
     ...TYPE.micro,
@@ -190,20 +193,20 @@ export const styles = StyleSheet.create({
     marginTop: 1,
   },
   walletBalance: {
-    ...TYPE.title,
+    ...TYPE.heading,
     color: HOME_INK.strong,
     fontFamily: FONTS.gilroy.bold,
     letterSpacing: -0.4,
     fontVariant: ['tabular-nums'],
   },
   walletUnit: {
-    ...TYPE.caption,
+    ...TYPE.micro,
     color: HOME_INK.muted,
     fontFamily: FONTS.gilroy.medium,
-    marginLeft: SPACE.xs + 2,
+    marginLeft: SPACE.xs,
   },
   walletWorth: {
-    ...TYPE.caption,
+    ...TYPE.micro,
     color: HOME_INK.faint,
     fontFamily: FONTS.gilroy.medium,
     marginLeft: SPACE.xs,
@@ -213,8 +216,9 @@ export const styles = StyleSheet.create({
   quickActionsRow: {
     flexDirection: 'row',
     paddingHorizontal: GUTTER,
-    paddingBottom: SPACE.base,
-    gap: wp('2.4%'),
+    paddingTop: SPACE.xs,
+    paddingBottom: SPACE.sm,
+    gap: wp('2%'),
   },
   quickActionItem: {
     flex: 1,
@@ -223,7 +227,7 @@ export const styles = StyleSheet.create({
   quickActionWell: {
     width: QUICK_ACTION_WELL,
     height: QUICK_ACTION_WELL,
-    borderRadius: RADIUS.md,
+    borderRadius: RADIUS.sm,
     backgroundColor: CATEGORY_WELL,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: 'rgba(17,19,26,0.04)',
@@ -232,13 +236,13 @@ export const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   quickActionIcon: {
-    width: QUICK_ACTION_WELL * 0.5,
-    height: QUICK_ACTION_WELL * 0.5,
+    width: QUICK_ACTION_WELL * 0.52,
+    height: QUICK_ACTION_WELL * 0.52,
     resizeMode: 'contain',
   },
   quickActionText: {
     ...TYPE.micro,
-    marginTop: SPACE.xs + 2,
+    marginTop: SPACE.xs + 1,
     height: TYPE.micro.lineHeight * 2,
     includeFontPadding: false,
     textAlignVertical: 'center',
@@ -251,15 +255,35 @@ export const styles = StyleSheet.create({
     paddingTop: SPACE.xs,
   },
   sectionGap: {
-    height: SPACE.base,
+    height: SPACE.md,
+  },
+  sectionHeader: {
+    paddingTop: 0,
+    paddingBottom: SPACE.xs + 2,
+  },
+  sectionTitle: {
+    ...TYPE.micro,
+    lineHeight: TYPE.micro.lineHeight,
+    fontFamily: FONTS.gilroy.semiBold,
+    color: HOME_INK.muted,
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+  },
+  sectionCard: {
+    marginHorizontal: GUTTER,
+    borderRadius: RADIUS.sm,
+    backgroundColor: SURFACE.base,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: CARD_EDGE,
+    overflow: 'hidden',
   },
   listItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: GUTTER,
-    paddingVertical: SPACE.md,
-    minHeight: hp('6%'),
+    paddingHorizontal: CARD_PAD,
+    paddingVertical: SPACE.sm,
+    minHeight: hp('5.2%'),
   },
   listItemLeft: {
     flexDirection: 'row',
@@ -270,7 +294,7 @@ export const styles = StyleSheet.create({
   listIconWrapper: {
     width: ROW_ICON,
     height: ROW_ICON,
-    borderRadius: RADIUS.sm,
+    borderRadius: RADIUS.xs,
     backgroundColor: '#F7F5F3',
     justifyContent: 'center',
     alignItems: 'center',
@@ -279,8 +303,8 @@ export const styles = StyleSheet.create({
     backgroundColor: SURFACE.sunken,
   },
   listItemText: {
-    ...TYPE.body,
-    marginLeft: SPACE.md,
+    ...TYPE.label,
+    marginLeft: ROW_GAP,
     fontFamily: FONTS.gilroy.medium,
     color: HOME_INK.base,
     flexShrink: 1,
@@ -288,25 +312,24 @@ export const styles = StyleSheet.create({
   divider: {
     height: StyleSheet.hairlineWidth,
     backgroundColor: HAIRLINE,
-    marginLeft: GUTTER + ROW_ICON + SPACE.md,
-    marginRight: GUTTER,
+    marginLeft: CARD_PAD + ROW_ICON + ROW_GAP,
   },
 
   logoutButton: {
     flexDirection: 'row',
-    minHeight: hp('6.2%'),
-    marginTop: SPACE.xl,
+    minHeight: hp('5.4%'),
+    marginTop: SPACE.base,
     marginHorizontal: GUTTER,
-    borderRadius: RADIUS.md,
+    borderRadius: RADIUS.sm,
     backgroundColor: '#FDF1EC',
     alignItems: 'center',
     justifyContent: 'center',
   },
   logoutButtonText: {
-    ...TYPE.body,
+    ...TYPE.label,
     fontFamily: FONTS.gilroy.semiBold,
     color: ACCENT.discount,
-    marginLeft: SPACE.sm,
+    marginLeft: SPACE.xs + 2,
   },
 
   sendContainer: {
@@ -370,7 +393,7 @@ export const styles = StyleSheet.create({
 
   footerBranding: {
     alignItems: 'center',
-    paddingTop: SPACE.xl,
+    paddingTop: SPACE.base,
   },
   versionText: {
     ...TYPE.micro,

@@ -16,7 +16,7 @@ export default function LogoutButton({ onPress }) {
     >
       <Ionicons
         name="log-out-outline"
-        size={wp('4.6%')}
+        size={wp('4.2%')}
         color={ACCENT.discount}
       />
       <Text

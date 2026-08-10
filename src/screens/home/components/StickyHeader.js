@@ -275,7 +275,7 @@ const StickyHeader = ({
         }
         accessibilityState={{ disabled: !!isStoreUnavailable }}
       >
-        <Feather name="search" color={ACCENT.primary} size={20} />
+        <Feather name="search" color={INK.primary} size={20} />
         <View style={styles.searchProductContainer}>
           <RotatingPlaceholder
             examples={SEARCH_EXAMPLES}

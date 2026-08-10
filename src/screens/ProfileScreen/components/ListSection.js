@@ -9,8 +9,12 @@ import { INK, MAX_FONT_SCALE } from '@/styles/homeTheme';
 export default function ListSection({ title, items }) {
   return (
     <>
-      <SectionHeader title={title} />
-      <View>
+      <SectionHeader
+        title={title}
+        style={styles.sectionHeader}
+        titleStyle={styles.sectionTitle}
+      />
+      <View style={styles.sectionCard}>
         {items.map((item, index) => (
           <Fragment key={item.key}>
             {}
@@ -40,7 +44,7 @@ export default function ListSection({ title, items }) {
               <Ionicons
                 name="chevron-forward"
                 color={item.textColor || INK.faint}
-                size={wp('3.8%')}
+                size={wp('3.4%')}
               />
             </Pressable>
             {index < items.length - 1 && !item.hideDividerAfter && (

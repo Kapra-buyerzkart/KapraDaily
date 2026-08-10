@@ -352,7 +352,7 @@ const UpdateContactScreen = () => {
                 <View style={styles.currentPill}>
                   <MaterialCommunityIcons
                     name="check-decagram"
-                    size={wp('3.4%')}
+                    size={wp('3.2%')}
                     color={ACCENT.successText}
                   />
                   <Text
@@ -384,7 +384,7 @@ const UpdateContactScreen = () => {
                 <View style={styles.noteRow}>
                   <MaterialCommunityIcons
                     name="shield-check-outline"
-                    size={wp('4%')}
+                    size={wp('3.6%')}
                     color={INK.muted}
                     style={styles.noteIcon}
                   />
@@ -475,7 +475,7 @@ const UpdateContactScreen = () => {
                 >
                   <MaterialCommunityIcons
                     name="pencil-outline"
-                    size={wp('3.8%')}
+                    size={wp('3.4%')}
                     color={ACCENT.primary}
                   />
                   <Text
@@ -585,7 +585,7 @@ const ContactField = ({ isPhone, value, onChangeText, error, ...props }) => {
         ) : (
           <MaterialCommunityIcons
             name="email-outline"
-            size={wp('4.6%')}
+            size={wp('4.2%')}
             color={error ? ERROR_INK : focused ? ACCENT.primary : INK.muted}
             style={styles.fieldIcon}
           />
@@ -716,7 +716,7 @@ const ActionBar = ({ enabled, label, hint, icon, onPress }) => {
         >
           <MaterialCommunityIcons
             name={icon}
-            size={wp('4.6%')}
+            size={wp('4.2%')}
             color={enabled ? INK.onDark : RESTING_INK}
             style={styles.actionButtonIcon}
           />
@@ -756,7 +756,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingBottom: SPACE.xl,
+    paddingBottom: SPACE.base,
     backgroundColor: CANVAS,
   },
 
@@ -764,7 +764,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: GUTTER,
-    paddingBottom: SPACE.sm,
+    paddingBottom: SPACE.xs + 2,
     backgroundColor: HERO_TOP,
   },
   topBarBorder: {
@@ -792,12 +792,12 @@ const styles = StyleSheet.create({
   },
 
   hero: {
-    paddingBottom: SPACE.md,
+    paddingBottom: SPACE.sm,
   },
   heroInner: {
     paddingHorizontal: GUTTER,
-    paddingTop: SPACE.sm,
-    paddingBottom: SPACE.base,
+    paddingTop: SPACE.xs,
+    paddingBottom: SPACE.md,
   },
   heroDisc: {
     width: wp('14%'),
@@ -811,26 +811,24 @@ const styles = StyleSheet.create({
   },
   heroTitle: {
     ...TYPE.title,
-    fontSize: Math.round(TYPE.title.fontSize * 1.08),
-    lineHeight: Math.round(TYPE.title.lineHeight * 1.08),
     color: INK.strong,
     fontFamily: FONTS.gilroy.bold,
-    letterSpacing: -0.4,
+    letterSpacing: -0.3,
   },
   heroSubtitle: {
-    ...TYPE.label,
+    ...TYPE.caption,
     color: INK.muted,
     fontFamily: FONTS.gilroy.regular,
-    marginTop: SPACE.xs + 2,
+    marginTop: SPACE.xs,
     maxWidth: wp('82%'),
   },
   currentPill: {
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
-    marginTop: SPACE.md,
-    paddingVertical: 5,
-    paddingHorizontal: SPACE.md,
+    marginTop: SPACE.sm,
+    paddingVertical: 3,
+    paddingHorizontal: SPACE.sm + 2,
     borderRadius: RADIUS.pill,
     backgroundColor: ACCENT.successSoft,
   },
@@ -843,26 +841,26 @@ const styles = StyleSheet.create({
 
   fieldGroup: {
     paddingHorizontal: GUTTER,
-    paddingTop: SPACE.lg,
+    paddingTop: SPACE.base,
   },
   field: {
-    marginBottom: SPACE.base,
+    marginBottom: SPACE.md,
   },
   fieldLabel: {
     ...TYPE.micro,
     fontFamily: FONTS.gilroy.semiBold,
     color: INK.muted,
-    letterSpacing: 0.6,
+    letterSpacing: 0.8,
     textTransform: 'uppercase',
-    marginBottom: SPACE.xs + 2,
+    marginBottom: SPACE.xs,
   },
   fieldWell: {
     flexDirection: 'row',
     alignItems: 'center',
-    minHeight: hp('6.6%'),
-    borderRadius: RADIUS.md,
+    minHeight: hp('5.8%'),
+    borderRadius: RADIUS.sm,
     borderWidth: FIELD_BORDER_WIDTH,
-    paddingHorizontal: SPACE.md,
+    paddingHorizontal: SPACE.sm + 2,
   },
   fieldWellError: {
     backgroundColor: ERROR_SOFT,
@@ -879,12 +877,12 @@ const styles = StyleSheet.create({
   },
   prefixRule: {
     width: StyleSheet.hairlineWidth,
-    height: hp('2.6%'),
+    height: hp('2.2%'),
     backgroundColor: 'rgba(17,19,26,0.12)',
-    marginHorizontal: SPACE.md,
+    marginHorizontal: SPACE.sm + 2,
   },
   fieldIcon: {
-    marginRight: SPACE.md,
+    marginRight: SPACE.sm + 2,
   },
   fieldInput: {
     flex: 1,
@@ -893,7 +891,7 @@ const styles = StyleSheet.create({
     ...TYPE.body,
     fontFamily: FONTS.gilroy.medium,
     color: INK.strong,
-    paddingVertical: SPACE.md,
+    paddingVertical: SPACE.sm,
     includeFontPadding: false,
   },
   fieldInputPhone: {
@@ -916,29 +914,30 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     marginTop: SPACE.xs,
-    padding: SPACE.md,
-    borderRadius: RADIUS.sm,
+    padding: SPACE.sm + 2,
+    borderRadius: RADIUS.xs,
     backgroundColor: SURFACE.sunken,
   },
   noteIcon: {
     marginTop: 1,
   },
   noteText: {
-    ...TYPE.caption,
+    ...TYPE.micro,
+    lineHeight: TYPE.caption.lineHeight,
     fontFamily: FONTS.gilroy.regular,
     color: INK.muted,
-    marginLeft: SPACE.sm,
+    marginLeft: SPACE.xs + 2,
     flex: 1,
   },
 
   otpRow: {
     flexDirection: 'row',
-    gap: wp('2.6%'),
+    gap: wp('2.2%'),
   },
   otpBox: {
     flex: 1,
-    height: hp('7%'),
-    borderRadius: RADIUS.md,
+    height: hp('6%'),
+    borderRadius: RADIUS.sm,
     borderWidth: FIELD_BORDER_WIDTH,
     alignItems: 'center',
     justifyContent: 'center',
@@ -958,27 +957,27 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
   },
   resendRow: {
-    minHeight: hp('3%'),
+    minHeight: hp('2.6%'),
     justifyContent: 'center',
-    marginTop: SPACE.base,
+    marginTop: SPACE.md,
   },
   resendActive: {
-    ...TYPE.label,
+    ...TYPE.caption,
     fontFamily: FONTS.gilroy.semiBold,
     color: ACCENT.primary,
   },
   resendIdle: {
-    ...TYPE.label,
+    ...TYPE.caption,
     fontFamily: FONTS.gilroy.regular,
     color: INK.faint,
   },
   changeRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: SPACE.md,
+    marginTop: SPACE.sm,
   },
   changeText: {
-    ...TYPE.label,
+    ...TYPE.caption,
     fontFamily: FONTS.gilroy.semiBold,
     color: ACCENT.primary,
     marginLeft: SPACE.xs + 2,
@@ -986,15 +985,15 @@ const styles = StyleSheet.create({
 
   actionBar: {
     paddingHorizontal: GUTTER,
-    paddingTop: SPACE.md,
+    paddingTop: SPACE.sm + 2,
     backgroundColor: SURFACE.base,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: HAIRLINE,
   },
   actionButton: {
     flexDirection: 'row',
-    minHeight: hp('6.4%'),
-    borderRadius: RADIUS.md,
+    minHeight: hp('5.8%'),
+    borderRadius: RADIUS.sm,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: ACCENT.primary,
@@ -1011,7 +1010,7 @@ const styles = StyleSheet.create({
     elevation: 0,
   },
   actionButtonText: {
-    ...TYPE.body,
+    ...TYPE.label,
     fontFamily: FONTS.gilroy.bold,
     color: INK.onDark,
     letterSpacing: 0.2,
@@ -1020,6 +1019,6 @@ const styles = StyleSheet.create({
     color: RESTING_INK,
   },
   actionButtonIcon: {
-    marginRight: SPACE.sm,
+    marginRight: SPACE.xs + 2,
   },
 });

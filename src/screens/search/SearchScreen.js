@@ -1,4 +1,11 @@
-import { View, Text, Image, Platform, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  Image,
+  Platform,
+  ActivityIndicator,
+  StatusBar,
+} from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedScrollHandler,
@@ -154,6 +161,12 @@ const SearchScreen = () => {
 
   return (
     <SafeAreaView style={styles.mainContainer}>
+      <StatusBar
+        style="dark-content"
+        backgroundColor="transparent"
+        translucent
+      />
+
       <SearchHeader
         title={catName ? catName : staticTitle ? staticTitle : 'Search'}
         searchTerm={searchTerm}

@@ -48,6 +48,8 @@ const ReferralHistoryScreen = () => {
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const pageSize = 20;
 
+  console.log(referrals, 'referrals====>');
+
   const displayReward = Number(
     rewardEarned ?? profile?.referralReward ?? profile?.totalBCoins ?? 0,
   ).toFixed(2);
@@ -123,7 +125,8 @@ const ReferralHistoryScreen = () => {
         </Text>
       </View>
       <Text style={styles.phoneText}>
-        {maskPhone(item.mobileNo || item.phone || item.custMobile)}
+        {}
+        {item.phoneNo || item.phone || item.custMobile}
       </Text>
     </View>
   );
@@ -168,10 +171,7 @@ const ReferralHistoryScreen = () => {
     <SafeAreaView style={styles.mainContainer}>
       <View style={styles.headerContainer}>
         <TouchableOpacity hitSlop={40} onPress={() => navigation.goBack()}>
-          <Image
-            source={icons.backArrowNew}
-            style={styles.backIcon}
-          />
+          <Image source={icons.backArrowNew} style={styles.backIcon} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Refer and Earn</Text>
       </View>

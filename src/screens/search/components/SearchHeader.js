@@ -61,7 +61,7 @@ const SearchHeader = ({
         accessibilityRole="button"
         accessibilityLabel="Search"
       >
-        <Feather name="search" size={20} color={ACCENT.primary} />
+        <Feather name="search" size={20} color={ACCENT.secondary} />
       </TouchableOpacity>
 
       <TextInput

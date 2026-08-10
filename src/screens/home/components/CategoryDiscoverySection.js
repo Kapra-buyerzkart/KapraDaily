@@ -51,6 +51,7 @@ const TAB_PAD_H = 12;
 const TAB_RADIUS = 12;
 const SHOULDER = 8;
 const TAB_GAP = 6;
+const TAB_PEEK = 44;
 
 const TAB_LABEL_IDLE = INK.strong;
 const TAB_LABEL_ACTIVE = ACCENT.primary;
@@ -131,10 +132,8 @@ const TabShapeSvg = React.memo(({ width, height }) => {
 
 const DiscoveryTab = React.memo(function DiscoveryTab({
   item,
-  index,
   isActive,
   onPress,
-  onMeasure,
 }) {
   const activeProgress = useSharedValue(isActive ? 1 : 0);
   const [tabSize, setTabSize] = React.useState({ w: 0, h: 0 });
@@ -162,17 +161,13 @@ const DiscoveryTab = React.memo(function DiscoveryTab({
     onPress(item);
   }, [onPress, item]);
 
-  const handleLayout = useCallback(
-    event => {
-      const { x, width, height } = event.nativeEvent.layout;
-      onMeasure(index, x, width);
-      setTabSize(prev => {
-        if (prev.w > 0) return prev; // already measured, skip
-        return { w: width, h: height };
-      });
-    },
-    [index, onMeasure],
-  );
+  const handleLayout = useCallback(event => {
+    const { width, height } = event.nativeEvent.layout;
+    setTabSize(prev => {
+      if (prev.w > 0) return prev; // already measured, skip
+      return { w: width, h: height };
+    });
+  }, []);
 
   return (
     <TouchableOpacity
@@ -220,7 +215,7 @@ const CategoryDiscoverySection = ({
     selectedDiscoveryCategory?.catName || selectedDiscoveryCategory?.name;
 
   const tabListRef = useRef(null);
-  const tabLayouts = useRef(new Map());
+  const prevActiveIndex = useRef(null);
   const bodyProgress = useSharedValue(1);
   const sweepProgress = useSharedValue(0);
 
@@ -252,20 +247,34 @@ const CategoryDiscoverySection = ({
     bodyProgress.value = withTiming(1, { duration: 260 });
   }, [activeCatId, isDiscoveryLoading, bodyProgress]);
 
-  useEffect(() => {
-    if (activeIndex < 0 || discoveryCategories.length === 0) return;
-    const layout = tabLayouts.current.get(activeIndex);
-    if (!layout) return;
-    const offset = layout.x + layout.width / 2 - width / 2;
-    tabListRef.current?.scrollToOffset({
-      offset: Math.max(offset, 0),
-      animated: true,
-    });
-  }, [activeIndex, discoveryCategories.length, width]);
+  const lastTabIndex = discoveryCategories.length - 1;
 
-  const handleTabMeasure = useCallback((index, x, tabWidth) => {
-    tabLayouts.current.set(index, { x, width: tabWidth });
-  }, []);
+  useEffect(() => {
+    if (activeIndex < 0 || lastTabIndex < 0) return;
+
+    const previous = prevActiveIndex.current;
+    prevActiveIndex.current = activeIndex;
+    if (previous === null || previous === activeIndex) return;
+
+    const forward = activeIndex > previous;
+
+    tabListRef.current?.scrollToIndex({
+      index: activeIndex,
+      animated: true,
+      viewPosition: forward ? 0 : 1,
+      viewOffset: forward ? GUTTER : activeIndex === 0 ? 0 : TAB_PEEK,
+    });
+  }, [activeIndex, lastTabIndex]);
+
+  const handleScrollToIndexFailed = useCallback(
+    ({ averageItemLength, index }) => {
+      tabListRef.current?.scrollToOffset({
+        offset: Math.max(averageItemLength * index - GUTTER, 0),
+        animated: true,
+      });
+    },
+    [],
+  );
 
   const sweepStyle = useAnimatedStyle(() => ({
     transform: [
@@ -292,16 +301,14 @@ const CategoryDiscoverySection = ({
   );
 
   const renderTab = useCallback(
-    ({ item, index }) => (
+    ({ item }) => (
       <DiscoveryTab
         item={item}
-        index={index}
         isActive={activeCatId === item.catId}
         onPress={onSelectCategory}
-        onMeasure={handleTabMeasure}
       />
     ),
-    [activeCatId, onSelectCategory, handleTabMeasure],
+    [activeCatId, onSelectCategory],
   );
 
   if (isHomeLoading && !categoryDiscovery) return <ExploreShimmer />;
@@ -363,6 +370,7 @@ const CategoryDiscoverySection = ({
               extraData={activeCatId}
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.tabRow}
+              onScrollToIndexFailed={handleScrollToIndexFailed}
               initialNumToRender={8}
               maxToRenderPerBatch={8}
               windowSize={5}
@@ -380,7 +388,7 @@ const CategoryDiscoverySection = ({
           <Animated.View style={bodyStyle}>
             {!!activeName && (
               <View style={styles.panelHeader}>
-                <View style={styles.panelBadge}>
+                {/* <View style={styles.panelBadge}>
                   <View style={styles.panelDot} />
                   <Text
                     style={styles.panelBadgeText}
@@ -389,7 +397,7 @@ const CategoryDiscoverySection = ({
                   >
                     {activeName}
                   </Text>
-                </View>
+                </View> */}
                 {isDiscoveryLoading ? (
                   <Text
                     style={styles.panelCount}

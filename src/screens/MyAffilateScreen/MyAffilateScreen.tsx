@@ -202,7 +202,7 @@ const MyAffilateScreen = () => {
               <Text style={styles.levelCountUnit}>people</Text>
             </Text>
             <Text style={styles.levelBt}>
-              {formatBT(item.totalBTEarned)} BT
+              {formatBT(item.totalBTEarned)} UD
             </Text>
           </View>
         </View>

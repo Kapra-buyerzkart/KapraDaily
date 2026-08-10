@@ -39,7 +39,7 @@ export default function ProfileIdentity({
       onLayout={handleLayout}
       entering={entering}
     >
-      <ProfileAvatarBadge size={wp('18%')} isPrivileged={isPrivileged} />
+      <ProfileAvatarBadge size={wp('14.5%')} isPrivileged={isPrivileged} />
 
       <View style={styles.identityText}>
         <Text
@@ -62,7 +62,7 @@ export default function ProfileIdentity({
           <View style={styles.privilegeChip}>
             <MaterialCommunityIcons
               name="crown"
-              size={wp('2.9%')}
+              size={wp('2.7%')}
               color={PRIVILEGE_INK}
             />
             <Text
@@ -89,7 +89,7 @@ export default function ProfileIdentity({
         <Animated.View style={[styles.editChip, chipStyle]}>
           <MaterialCommunityIcons
             name="pencil-outline"
-            size={wp('3.6%')}
+            size={wp('3.2%')}
             color={ACCENT.primary}
           />
           <Text

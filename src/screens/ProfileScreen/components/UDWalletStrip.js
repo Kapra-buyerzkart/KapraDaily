@@ -87,7 +87,7 @@ export default function UDWalletStrip({ walletData, onPress }) {
           </View>
         </View>
 
-        <Ionicons name="chevron-forward" color={INK.faint} size={wp('3.8%')} />
+        <Ionicons name="chevron-forward" color={INK.faint} size={wp('3.4%')} />
       </Animated.View>
     </Pressable>
   );

@@ -7,7 +7,7 @@ import CONFIG from '../../globals/config';
 import icons from '@/assets/icons';
 import { INK, RED } from './styles';
 
-const ICON_SIZE = wp('4.6%');
+const ICON_SIZE = wp('4%');
 
 export const buildOffersItems = ({ onBCoin, onSmartPoint, onCoupons }) => [
   {
@@ -189,7 +189,7 @@ export const buildInformationItems = ({
   },
   {
     key: 'kpc-login',
-    label: 'KPC Login',
+    label: 'UDC Login',
     icon: <Ionicons name="globe-outline" color={INK} size={ICON_SIZE} />,
     onPress: () => Linking.openURL(CONFIG.image_base_url),
   },
