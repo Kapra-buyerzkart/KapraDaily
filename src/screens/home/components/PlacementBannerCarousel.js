@@ -74,7 +74,6 @@ const PlacementBannerCarousel = ({
 
     return {
       SNAP_INTERVAL: bannerWidth + bannerSpacing,
-      ITEM_OFFSET: fullWidth ? 0 : contentPadding + itemMargin,
       cellStyle: [
         !fullWidth && styles.carouselShadowWrapper,
         {
@@ -98,7 +97,7 @@ const PlacementBannerCarousel = ({
       ],
     };
   }, [fullWidth]);
-  const { SNAP_INTERVAL, ITEM_OFFSET } = geometry;
+  const { SNAP_INTERVAL } = geometry;
 
   const scrollHandler = useAnimatedScrollHandler(event => {
     scrollX.value = event.contentOffset.x;
@@ -154,10 +153,10 @@ const PlacementBannerCarousel = ({
   const getItemLayout = useCallback(
     (_, index) => ({
       length: SNAP_INTERVAL,
-      offset: ITEM_OFFSET + SNAP_INTERVAL * index,
+      offset: SNAP_INTERVAL * index,
       index,
     }),
-    [SNAP_INTERVAL, ITEM_OFFSET],
+    [SNAP_INTERVAL],
   );
 
   const onScrollBeginDrag = useCallback(() => {
@@ -257,7 +256,7 @@ const PlacementBannerCarousel = ({
         contentContainerStyle={geometry.listContentStyle}
         renderItem={renderItem}
       />
-      {showDots && (
+      {/* {showDots && (
         <View style={styles.pagination}>
           {banners.map((_, i) => (
             <PaginationDot
@@ -270,7 +269,7 @@ const PlacementBannerCarousel = ({
             />
           ))}
         </View>
-      )}
+      )} */}
     </View>
   );
 };
@@ -288,7 +287,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.18,
     shadowRadius: 4.5,
-    elevation: 6,
+    elevation: 2,
     backgroundColor: '#FFFFFF',
     borderRadius: wp('4%'),
   },

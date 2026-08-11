@@ -61,6 +61,7 @@ export const deriveStoreUnavailableState = ({ homepageData, error, generalSettin
   if (homepageData?.storeStatus === 'CLOSED') {
     return {
       isStoreUnavailable: true,
+      reason: 'closed',
       storeUnavailableData: {
         image: generalSettings?.closed?.image,
         text: homepageData.storeUnavailableMessage || 'Store is currently closed for delivery.',
@@ -68,19 +69,24 @@ export const deriveStoreUnavailableState = ({ homepageData, error, generalSettin
     };
   }
   if (homepageData?.storeStatus === 'NOT_FOUND') {
-    return { isStoreUnavailable: true, storeUnavailableData: generalSettings?.unavailable };
+    return {
+      isStoreUnavailable: true,
+      reason: 'unserved',
+      storeUnavailableData: generalSettings?.unavailable,
+    };
   }
   if (error && !isIgnorableHomepageError(error)) {
     const errorMsg = typeof error === 'string' ? error : (error?.message || error?.Message || '');
     const isClosed = isClosedErrorMessage(errorMsg);
     return {
       isStoreUnavailable: true,
+      reason: isClosed ? 'closed' : 'unserved',
       storeUnavailableData: isClosed
         ? { image: generalSettings?.closed?.image, text: errorMsg }
         : generalSettings?.unavailable,
     };
   }
-  return { isStoreUnavailable: false, storeUnavailableData: null };
+  return { isStoreUnavailable: false, reason: null, storeUnavailableData: null };
 };
 
 export const transformHomepageResponse = (response) => {

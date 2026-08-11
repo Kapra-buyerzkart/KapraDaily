@@ -674,7 +674,7 @@ const CheckoutScreen = () => {
                 >
                   Express Delivery
                 </Text>
-                <Text style={styles.radioSubtitle}>Delivery in 20-30 mins</Text>
+                <Text style={styles.radioSubtitle}>Fastest available delivery</Text>
               </View>
             </TouchableOpacity>
 

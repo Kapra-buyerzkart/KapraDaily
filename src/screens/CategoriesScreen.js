@@ -34,6 +34,7 @@ import {
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
 
+import icons from '../assets/icons';
 import HeaderSearch from '../components/HeaderSearch';
 import TokenProductCard from '../components/TokenProductCard';
 import SelectedProducts from '../components/SelectedProducts';
@@ -121,6 +122,7 @@ export default function () {
     hasFetchedProducts,
     isFetchingMore,
     handleLoadMore,
+    isGlobalFallback,
   } = useCategoriesData(catId, debouncedSearchText, filters);
 
   const { onScrollWorklet } = useTabBarAnimation();
@@ -208,6 +210,16 @@ export default function () {
     setFilters({ sortBy: sort, priceMin: min, priceMax: max });
   };
 
+  const handleSearchChange = useCallback(
+    text => {
+      setSearchText(text);
+      if (text) {
+        setSelectedSubCatId(null);
+      }
+    },
+    [setSelectedSubCatId],
+  );
+
   const renderItem = useCallback(
     ({ item }) => {
       const isSelected = item?.catId?.toString() === selectedId;
@@ -239,9 +251,10 @@ export default function () {
         <SubCategoryPill
           item={item}
           isSelected={isSelected}
-          onPress={() =>
-            setSelectedSubCatId(isSelected ? null : item?.catId?.toString())
-          }
+          onPress={() => {
+            setSearchText('');
+            setSelectedSubCatId(isSelected ? null : item?.catId?.toString());
+          }}
         />
       );
     },
@@ -259,7 +272,7 @@ export default function () {
         <HeaderSearch
           title={categoryName}
           searchText={searchText}
-          onChangeText={setSearchText}
+          onChangeText={handleSearchChange}
           onFilterPress={() => setIsFilterSortModalVisible(true)}
         />
       </View>
@@ -340,11 +353,19 @@ export default function () {
                   paddingTop: hp('0.5%'),
                 }}
                 ListHeaderComponent={
-                  <SubCategoriesHeader
-                    data={subCategoriesList}
-                    renderItem={renderSubCategory}
-                    loading={loading || isFetchingSubCategories}
-                  />
+                  <>
+                    <SubCategoriesHeader
+                      data={subCategoriesList}
+                      renderItem={renderSubCategory}
+                      loading={loading || isFetchingSubCategories}
+                    />
+                    {isGlobalFallback ? (
+                      <Text style={styles.fallbackNotice}>
+                        No matches in {categoryName || 'this category'} —
+                        showing results from all categories.
+                      </Text>
+                    ) : null}
+                  </>
                 }
                 onEndReached={handleLoadMore}
                 onEndReachedThreshold={0.5}
@@ -361,7 +382,7 @@ export default function () {
                     !isFetchingMore ? (
                     <View style={styles.emptyContainer}>
                       <Image
-                        source={require('../assets/images/udenDealNotfound.png')}
+                        source={icons.noProducts}
                         style={styles.emptyImage}
                       />
 
@@ -460,16 +481,23 @@ const styles = StyleSheet.create({
     right: 0,
     alignItems: 'center',
   },
+  fallbackNotice: {
+    fontSize: wp('3.1%'),
+    color: '#7A7A7A',
+    fontFamily: FONTS.gilroy.medium,
+    paddingHorizontal: wp('3%'),
+    paddingBottom: hp('1%'),
+  },
   emptyContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: hp('8%'),
+    marginTop: hp('10%'),
     paddingHorizontal: wp('10%'),
   },
   emptyImage: {
-    width: wp('40%'),
-    height: wp('40%'),
+    width: wp('35%'),
+    height: wp('35%'),
     resizeMode: 'contain',
     marginBottom: hp('2%'),
   },

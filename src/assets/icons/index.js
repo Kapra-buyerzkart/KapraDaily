@@ -13,6 +13,7 @@ const icons = {
   search: require('./search.png'),
   smartPoint: require('./smartPoint.png'),
   tick: require('./tick.png'),
+  noProducts: require('./no_products.png'),
 
   tokenud: require('./tokenud.png'),
   udcoin: require('./udcoin.png'),

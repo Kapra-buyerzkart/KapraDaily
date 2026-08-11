@@ -17,7 +17,7 @@ export const SERVICES = [
   },
   {
     id: 'quickDelivery',
-    title: '20 mins Deal',
+    title: 'Express Deal',
     description: 'Groceries, essentials and more, \n in minutes',
     type: SERVICE_TYPES.INTERNAL,
     route: 'MainTabs',

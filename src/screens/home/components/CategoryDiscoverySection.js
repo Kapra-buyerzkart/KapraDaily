@@ -24,6 +24,7 @@ import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
+import icons from '../../../assets/icons';
 import ShimmerPlaceholder from '../../../components/ShimmerPlaceholder';
 import ProductBlockShimmer from './ProductBlockShimmer';
 import ProductRail from './ProductRail';
@@ -429,10 +430,7 @@ const CategoryDiscoverySection = ({
               />
             ) : selectedDiscoveryCategory ? (
               <View style={styles.emptyContainer}>
-                <Image
-                  source={require('../../../assets/images/udenDealNotfound.png')}
-                  style={styles.emptyImage}
-                />
+                <Image source={icons.noProducts} style={styles.emptyImage} />
                 <Text
                   style={styles.emptyText}
                   maxFontSizeMultiplier={MAX_FONT_SCALE}
@@ -562,8 +560,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACE.lg,
   },
   emptyImage: {
-    width: wp('34%'),
-    height: wp('34%'),
+    width: wp('20%'),
+    height: wp('20%'),
     resizeMode: 'contain',
     marginBottom: hp('1.6%'),
   },

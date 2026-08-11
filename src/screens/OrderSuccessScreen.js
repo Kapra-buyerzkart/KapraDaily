@@ -236,7 +236,7 @@ const OrderSuccessScreen = () => {
                 />
                 <Text style={styles.deliveryBadgeText}>
                   {displayDeliveryMode === 'express'
-                    ? 'Express (20-30 min)'
+                    ? 'Express'
                     : 'Slotted'}
                 </Text>
               </View>

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { StatusBar } from 'react-native';
 import { useAnimatedReaction, runOnJS } from 'react-native-reanimated';
 
-const HomeStatusBar = ({ scrollY, threshold }) => {
+const HomeStatusBar = ({ scrollY, threshold, forceDark }) => {
   const [statusBarStyle, setStatusBarStyle] = useState('light-content');
 
   useAnimatedReaction(
@@ -20,7 +20,7 @@ const HomeStatusBar = ({ scrollY, threshold }) => {
     <StatusBar
       translucent
       backgroundColor="transparent"
-      barStyle={statusBarStyle}
+      barStyle={forceDark ? 'dark-content' : statusBarStyle}
     />
   );
 };

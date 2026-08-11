@@ -143,7 +143,7 @@ export default function WishlistScreen() {
 
   const renderNoitem = () => (
     <View style={styles.footerContainer}>
-      <Image source={images.noWishlist} style={styles.footerImage} />
+      <Image source={icons.noProducts} style={styles.footerImage} />
       <Text style={styles.footerText}>Your Wishlist is Empty</Text>
     </View>
   );
@@ -317,8 +317,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   footerImage: {
+    width: wp('50%'),
+    height: wp('50%'),
     resizeMode: 'contain',
+    marginBottom: hp('1.6%'),
   },
+
   footerText: {
     color: COLORS.black,
     fontSize: 20,

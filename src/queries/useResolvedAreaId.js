@@ -1,34 +1,42 @@
-import { useEffect, useState } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useEffect, useRef, useState } from 'react';
 import secureStore from '../utils/secureStore';
 
-const useResolvedAreaId = (profilePincode) => {
-  const [areaId, setAreaId] = useState(undefined);
-  const [userLocation, setUserLocation] = useState(null);
+const toAreaId = value => {
+  if (value === null || value === undefined || value === '') return undefined;
+  const parsed = typeof value === 'number' ? value : parseInt(value, 10);
+  return Number.isNaN(parsed) ? undefined : parsed;
+};
+
+const useResolvedAreaId = profilePincode => {
+  const [bootstrapAreaId, setBootstrapAreaId] = useState(undefined);
+  const [isBootstrapped, setIsBootstrapped] = useState(false);
+  const isMountedRef = useRef(true);
 
   useEffect(() => {
-    let isMounted = true;
+    isMountedRef.current = true;
     (async () => {
-      const [storedPincodeAreaId, storedLocality, storedArea] = await Promise.all([
-        secureStore.getItem('pincodeAreaId'),
-        AsyncStorage.getItem('locality'),
-        AsyncStorage.getItem('area'),
-      ]);
-
-      if (!isMounted) return;
-
-      const resolvedAreaId = storedPincodeAreaId ? parseInt(storedPincodeAreaId, 10) : (profilePincode || undefined);
-      console.log('[useResolvedAreaId] stored pincodeAreaId:', storedPincodeAreaId, '| profilePincode:', profilePincode, '| resolved:', resolvedAreaId);
-      setAreaId(resolvedAreaId);
-
-      if (storedArea) {
-        setUserLocation({ locality: storedLocality || '', area: storedArea });
+      let stored = null;
+      try {
+        stored = await secureStore.getItem('pincodeAreaId');
+      } catch (error) {
+        stored = null;
       }
+      if (!isMountedRef.current) return;
+      setBootstrapAreaId(toAreaId(stored));
+      setIsBootstrapped(true);
     })();
-    return () => { isMounted = false; };
-  }, [profilePincode]);
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
-  return { areaId, userLocation };
+  const profileAreaId = toAreaId(profilePincode);
+  const hasProfileArea = profileAreaId !== undefined;
+
+  return {
+    areaId: hasProfileArea ? profileAreaId : bootstrapAreaId,
+    isResolvingArea: !hasProfileArea && !isBootstrapped,
+  };
 };
 
 export default useResolvedAreaId;

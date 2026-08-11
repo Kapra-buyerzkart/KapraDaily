@@ -28,7 +28,7 @@ const DeliveryHeader = ({
             color={CART_COLORS.primary}
           />
           <Text style={styles.etaText}>
-            {isScheduled ? scheduleLabel || 'Scheduled' : '20 minutes for'}
+            {isScheduled ? scheduleLabel || 'Scheduled' : 'Express delivery for'}
           </Text>
         </View>
         <Text style={styles.subText}>{itemCount} Items</Text>

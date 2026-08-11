@@ -32,7 +32,7 @@ import useCategoryDiscoveryProductsQuery from '../../queries/useCategoryDiscover
 import { deriveStoreUnavailableState } from '../../queries/transformHomepageResponse';
 
 import useHomePopup from './hooks/useHomePopup';
-import useStickyTopBanner, { EMPTY_BANNERS } from './hooks/useStickyTopBanner';
+import { resolveHeaderInputs } from './components/headerPhase';
 import useHomeAnimations, {
   estimateHeaderMetrics,
 } from './hooks/useHomeAnimations';
@@ -52,6 +52,8 @@ import { ACCENT } from '@/styles/homeTheme';
 import images from '@/assets/images';
 
 const UDENDEAL_SEAL = require('../../assets/images/udendealSeal.png');
+
+const EMPTY_BANNERS = [];
 
 const RAIL_CONTENT_STYLE = {
   paddingLeft: wp('3.2%'),
@@ -130,7 +132,7 @@ const HomeScreen = () => {
     }
   }, [profile, isProfileLoaded]);
 
-  const { areaId } = useResolvedAreaId(profile?.pincode);
+  const { areaId, isResolvingArea } = useResolvedAreaId(profile?.pincode);
   const homepageQuery = useHomepageDataQuery(areaId);
   const generalSettingsQuery = useGeneralSettingsQuery();
   const dashboardQuery = useDashboardQuery(profile?.custId);
@@ -144,7 +146,11 @@ const HomeScreen = () => {
   }, [profile?.pincode]);
 
   const data = homepageQuery.data;
-  const { isStoreUnavailable, storeUnavailableData } = useMemo(
+  const {
+    isStoreUnavailable,
+    reason: storeUnavailableReason,
+    storeUnavailableData,
+  } = useMemo(
     () =>
       deriveStoreUnavailableState({
         homepageData: data,
@@ -200,10 +206,14 @@ const HomeScreen = () => {
   const topBanner = data?.banners?.topBanner || EMPTY_BANNERS;
   const midBanner = data?.banners?.midBanner || EMPTY_BANNERS;
   const bottomBanner = data?.banners?.bottomBanner || EMPTY_BANNERS;
-  const topSectionBanner = useStickyTopBanner(
-    data?.banners?.topSectionBanner,
-    !!data,
-  );
+  const { topSectionBanner, bannerPending: isHeaderDataPending } =
+    resolveHeaderInputs({
+      isResolvingArea,
+      data,
+      error: homepageQuery.error,
+      noLocationSelected,
+      storeUnavailable: isStoreUnavailable,
+    });
   const topAnnouncementBanner =
     data?.banners?.topAnnouncementBanner || EMPTY_BANNERS;
   const topSideBySide = data?.banners?.topSideBySide || EMPTY_BANNERS;
@@ -217,8 +227,6 @@ const HomeScreen = () => {
 
   const isHomeLoading =
     refreshing || (!noLocationSelected && homepageQuery.isLoading);
-  const isHeaderDataPending =
-    !data && !noLocationSelected && !homepageQuery.error;
   const fruits = bottomBanner;
 
   const firstBlockItems = useMemo(
@@ -329,7 +337,11 @@ const HomeScreen = () => {
 
   return (
     <View style={styles.mainContainer}>
-      <HomeStatusBar scrollY={scrollY} threshold={collapseDistance * 0.6} />
+      <HomeStatusBar
+        scrollY={scrollY}
+        threshold={collapseDistance * 0.6}
+        forceDark={isStoreUnavailable}
+      />
       <HomePopupModal
         visible={isHomePopupVisible}
         onClose={handleClose}
@@ -396,16 +408,17 @@ const HomeScreen = () => {
                   onBannerPress={handleBannerPress}
                   style={styles.carouselHeight}
                   showDots={true}
-                  fullWidth={true}
+                  fullWidth={false}
                   infinite
                 />
               </View>
             )}
-
-            <BuyAgainSection
-              products={buyAgainQuery.data}
-              navigation={navigation}
-            />
+            {buyAgainQuery.data?.length > 0 ? (
+              <BuyAgainSection
+                products={buyAgainQuery.data}
+                navigation={navigation}
+              />
+            ) : null}
 
             <CategoryDiscoverySection
               isHomeLoading={isHomeLoading}
@@ -519,6 +532,7 @@ const HomeScreen = () => {
           dashboardData={dashboardData}
           navigation={navigation}
           isStoreUnavailable={isStoreUnavailable}
+          storeUnavailableReason={storeUnavailableReason}
           isLocationPending={isLocationPending}
           profileAvatarSize={PROFILE_AVATAR_SIZE}
           onSearchPressIn={handleSearchPressIn}

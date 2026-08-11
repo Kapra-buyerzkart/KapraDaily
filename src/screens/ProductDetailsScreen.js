@@ -524,8 +524,7 @@ const ProductDetailsScreen = () => {
                           style={styles.currentPrice}
                           maxFontSizeMultiplier={MAX_FONT_SCALE}
                         >
-                          <Text style={styles.priceSymbol}>₹</Text>
-                          {formatAmount(specialPrice) || specialPrice}
+                          ₹{formatAmount(specialPrice) || specialPrice}
                         </Text>
                       </View>
                     </View>
@@ -858,8 +857,8 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: HAIRLINE,
     shadowOpacity: 0.06,
-    shadowRadius: 10,
-    elevation: 2,
+    // shadowRadius: 10,
+    // elevation: 2,
   },
   headerRight: {
     flexDirection: 'row',

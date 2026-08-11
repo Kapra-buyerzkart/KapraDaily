@@ -7,12 +7,7 @@ import {
   StyleSheet,
   Platform,
 } from 'react-native';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  runOnJS,
-} from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
@@ -24,7 +19,12 @@ import ProfileAvatarBadge from '../../../components/ProfileAvatarBadge';
 import RotatingPlaceholder from '../../../components/RotatingPlaceholder';
 import CachedImage from '../../../components/CachedImage';
 import HeaderSkeleton from './HeaderSkeleton';
-import { resolveHeaderPhase, HEADER_PHASE } from './headerPhase';
+import {
+  resolveHeaderPhase,
+  resolveHeaderTone,
+  HEADER_PHASE,
+  HEADER_TONE,
+} from './headerPhase';
 import COLORS from '@/styles/colors';
 import {
   TYPE,
@@ -32,7 +32,9 @@ import {
   ACCENT,
   INK,
   HAIRLINE,
+  SURFACE,
   SPACE,
+  RADIUS,
   FIELD_RULE,
   SEARCH_FIELD,
 } from '@/styles/homeTheme';
@@ -42,13 +44,24 @@ import {
   SEARCH_MARGIN_START,
   SEARCH_HEIGHT,
 } from '../hooks/useHomeAnimations';
+import useBannerPaint from '../hooks/useBannerPaint';
 
 const CHIP_INK = INK.strong;
 const BANNER_BLEED = BANNER_PARALLAX;
 const SEARCH_INSET = wp('4.7%');
 const SEARCH_EXAMPLES = ['Basmati Rice', 'Milk', 'Sunflower Oil', 'Lemons'];
 
-const paintedBanners = new Set();
+const UNAVAILABLE_COPY = {
+  closed: {
+    status: 'Closed right now',
+    search: 'Search opens when the store does',
+  },
+  unserved: {
+    status: 'Not delivering here yet',
+    search: 'Search unlocks once we reach this area',
+  },
+};
+
 const StickyHeader = ({
   top,
   topSectionBanner,
@@ -66,6 +79,7 @@ const StickyHeader = ({
   dashboardData,
   navigation,
   isStoreUnavailable,
+  storeUnavailableReason,
   isLocationPending,
   profileAvatarSize,
   onSearchPressIn,
@@ -87,35 +101,21 @@ const StickyHeader = ({
     [bannerUrl],
   );
 
-  const seen = !!bannerUrl && paintedBanners.has(bannerUrl);
-  const bannerReveal = useSharedValue(seen ? 1 : 0);
-  const [bannerPainted, setBannerPainted] = React.useState(seen);
-  React.useEffect(() => {
-    const alreadyPainted = !!bannerUrl && paintedBanners.has(bannerUrl);
-    bannerReveal.value = alreadyPainted ? 1 : 0;
-    setBannerPainted(alreadyPainted);
-  }, [bannerUrl, bannerReveal]);
-  const onBannerLoad = React.useCallback(() => {
-    if (bannerUrl) {
-      paintedBanners.add(bannerUrl);
-    }
-    if (bannerReveal.value !== 1) {
-      bannerReveal.value = withTiming(1, { duration: 220 }, finished => {
-        if (finished) runOnJS(setBannerPainted)(true);
-      });
-      return;
-    }
-    setBannerPainted(true);
-  }, [bannerReveal, bannerUrl]);
-  const bannerRevealStyle = useAnimatedStyle(() => ({
-    opacity: bannerReveal.value,
-  }));
-  const skeletonStyle = useAnimatedStyle(() => ({
-    opacity: 1 - bannerReveal.value,
-  }));
+  const {
+    painted: bannerPainted,
+    revealStyle: bannerRevealStyle,
+    skeletonStyle,
+    onLoad: onBannerLoad,
+    onError: onBannerError,
+  } = useBannerPaint(bannerUrl);
 
   const phase = resolveHeaderPhase({ bannerUrl, bannerPending, bannerPainted });
-  const showSkeleton = phase === HEADER_PHASE.shimmer;
+  const onSurface =
+    resolveHeaderTone({ storeUnavailable: isStoreUnavailable }) ===
+    HEADER_TONE.surface;
+  const showSkeleton = !onSurface && phase === HEADER_PHASE.shimmer;
+  const copy =
+    UNAVAILABLE_COPY[storeUnavailableReason] || UNAVAILABLE_COPY.unserved;
 
   const handleBannerPress = React.useCallback(
     () => onBannerPress(topSectionBanner?.[0]),
@@ -130,12 +130,28 @@ const StickyHeader = ({
         <Animated.View style={etaAnimStyle}>
           {hasLocation ? (
             <>
-              <Text style={styles.timeText} maxFontSizeMultiplier={1.2}>
-                20 mins
-              </Text>
+              {onSurface ? (
+                <View style={styles.statusPill}>
+                  <View style={styles.statusDot} />
+                  <Text
+                    style={styles.statusText}
+                    numberOfLines={1}
+                    maxFontSizeMultiplier={1.2}
+                  >
+                    {copy.status}
+                  </Text>
+                </View>
+              ) : (
+                <Text style={styles.timeText} maxFontSizeMultiplier={1.2}>
+                  Express Delivery
+                </Text>
+              )}
               <TouchableOpacity
                 hitSlop={40}
-                style={[styles.addressView, { marginTop: hp('0.4%') }]}
+                style={[
+                  styles.addressView,
+                  { marginTop: hp(onSurface ? '0.7%' : '0.4%') },
+                ]}
                 onPress={onPressLocation}
                 accessibilityRole="button"
                 accessibilityLabel={`Delivering to ${profile.pinAddress}. Change delivery location`}
@@ -143,11 +159,14 @@ const StickyHeader = ({
                 <Feather
                   name={'map-pin'}
                   size={wp('4%')}
-                  color={'#FFFFFF'}
+                  color={onSurface ? INK.muted : '#FFFFFF'}
                   style={{ marginRight: wp('1%') }}
                 />
                 <Text
-                  style={styles.addressText}
+                  style={[
+                    styles.addressText,
+                    onSurface && styles.addressTextOnSurface,
+                  ]}
                   numberOfLines={1}
                   ellipsizeMode="tail"
                   maxFontSizeMultiplier={MAX_FONT_SCALE}
@@ -157,7 +176,7 @@ const StickyHeader = ({
                 <Entypo
                   name={'chevron-right'}
                   size={wp('3.6%')}
-                  color={'#FFFFFF'}
+                  color={onSurface ? INK.muted : '#FFFFFF'}
                 />
               </TouchableOpacity>
             </>
@@ -184,7 +203,10 @@ const StickyHeader = ({
           ) : (
             <TouchableOpacity
               hitSlop={20}
-              style={styles.selectLocationButton}
+              style={[
+                styles.selectLocationButton,
+                onSurface && styles.selectLocationButtonOnSurface,
+              ]}
               onPress={onPressLocation}
               activeOpacity={0.85}
               accessibilityRole="button"
@@ -209,7 +231,10 @@ const StickyHeader = ({
           <Animated.View style={etaAnimStyle}>
             <TouchableOpacity
               onPress={() => navigation.navigate('BCoinScreen')}
-              style={styles.bcoinContainer}
+              style={[
+                styles.bcoinContainer,
+                onSurface && styles.bcoinContainerOnSurface,
+              ]}
               accessibilityRole="button"
               accessibilityLabel={`${
                 dashboardData?.wallet?.bCoins || '0'
@@ -256,24 +281,14 @@ const StickyHeader = ({
       onLayout={onSearchLayout}
     >
       <TouchableOpacity
-        onPress={() =>
-          !isStoreUnavailable && navigation.navigate('SearchScreen')
-        }
+        onPress={() => navigation.navigate('SearchScreen')}
         onPressIn={onSearchPressIn}
         onPressOut={onSearchPressOut}
-        style={[
-          styles.searchTouchable,
-          isStoreUnavailable && styles.searchDisabled,
-        ]}
-        activeOpacity={isStoreUnavailable ? 1 : 0.85}
+        style={styles.searchTouchable}
+        activeOpacity={0.85}
         accessibilityRole="search"
         accessibilityLabel="Search for products"
-        accessibilityHint={
-          isStoreUnavailable
-            ? 'Unavailable while the store is closed'
-            : 'Opens product search'
-        }
-        accessibilityState={{ disabled: !!isStoreUnavailable }}
+        accessibilityHint="Opens product search"
       >
         <Feather name="search" color={INK.primary} size={20} />
         <View style={styles.searchProductContainer}>
@@ -296,7 +311,26 @@ const StickyHeader = ({
     </Animated.View>
   );
 
-  if (phase !== HEADER_PHASE.plain) {
+  const renderInertSearch = () => (
+    <View
+      style={styles.inertSearch}
+      onLayout={onSearchLayout}
+      accessible
+      accessibilityRole="text"
+      accessibilityLabel={copy.search}
+    >
+      <Feather name="search" color={INK.faint} size={20} />
+      <Text
+        style={styles.inertSearchText}
+        numberOfLines={1}
+        maxFontSizeMultiplier={MAX_FONT_SCALE}
+      >
+        {copy.search}
+      </Text>
+    </View>
+  );
+
+  if (!onSurface && phase !== HEADER_PHASE.plain) {
     return (
       <Animated.View style={headerCollapseStyle}>
         <TouchableOpacity
@@ -330,6 +364,7 @@ const StickyHeader = ({
                 transitionDuration={0}
                 accessible={false}
                 onLoad={onBannerLoad}
+                onError={onBannerError}
               />
             </Animated.View>
 
@@ -355,6 +390,21 @@ const StickyHeader = ({
             )}
           </View>
         </TouchableOpacity>
+      </Animated.View>
+    );
+  }
+
+  if (onSurface) {
+    return (
+      <Animated.View style={headerCollapseStyle}>
+        <View
+          style={[styles.surfaceHeader, { paddingTop: top }]}
+          onLayout={onFrameLayout}
+        >
+          {renderCollapsibleInfo()}
+          {renderInertSearch()}
+          <View pointerEvents="none" style={styles.surfaceRule} />
+        </View>
       </Animated.View>
     );
   }
@@ -437,6 +487,10 @@ const styles = StyleSheet.create({
     paddingVertical: hp('0.9%'),
     paddingHorizontal: wp('3.5%'),
   },
+  selectLocationButtonOnSurface: {
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: FIELD_RULE,
+  },
   selectLocationText: {
     ...TYPE.label,
     color: CHIP_INK,
@@ -451,6 +505,66 @@ const styles = StyleSheet.create({
     textAlignVertical: 'center',
     flexShrink: 1,
   },
+  addressTextOnSurface: {
+    ...TYPE.body,
+    fontFamily: FONTS.gilroy.semiBold,
+    color: INK.strong,
+  },
+  surfaceHeader: {
+    backgroundColor: SURFACE.base,
+    paddingBottom: hp('1.8%'),
+  },
+  surfaceRule: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: FIELD_RULE,
+  },
+  statusPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: SURFACE.sunken,
+    borderRadius: RADIUS.pill,
+    paddingVertical: hp('0.45%'),
+    paddingHorizontal: wp('2.6%'),
+    gap: wp('1.6%'),
+  },
+  statusDot: {
+    width: wp('1.7%'),
+    height: wp('1.7%'),
+    borderRadius: wp('0.85%'),
+    backgroundColor: INK.faint,
+  },
+  statusText: {
+    ...TYPE.micro,
+    fontFamily: FONTS.gilroy.semiBold,
+    color: INK.muted,
+    letterSpacing: 0.2,
+    includeFontPadding: false,
+  },
+  inertSearch: {
+    marginTop: SEARCH_MARGIN_START,
+    height: SEARCH_HEIGHT,
+    borderRadius: SEARCH_FIELD.radius,
+    marginHorizontal: SEARCH_INSET,
+    paddingHorizontal: SPACE.base,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: SURFACE.sunken,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: HAIRLINE,
+  },
+  inertSearchText: {
+    ...TYPE.body,
+    fontFamily: FONTS.gilroy.regular,
+    color: INK.faint,
+    marginLeft: SPACE.md,
+    flex: 1,
+    includeFontPadding: false,
+  },
   bcoinContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -459,6 +573,10 @@ const styles = StyleSheet.create({
     paddingVertical: hp('0.6%'),
     paddingHorizontal: wp('2.5%'),
     gap: wp('1.5%'),
+  },
+  bcoinContainerOnSurface: {
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: FIELD_RULE,
   },
   bcoinIcon: {
     width: wp('5%'),
@@ -502,9 +620,6 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  searchDisabled: {
-    opacity: 0.6,
   },
   searchProductContainer: {
     height: hp('3.65%'),

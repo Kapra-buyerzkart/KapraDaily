@@ -1,7 +1,10 @@
 import { useState, useEffect, useContext, useRef } from 'react';
 import secureStore from '../utils/secureStore';
 import { getCategoriesApi } from '../api/categoryService';
-import { searchProductsApi } from '../api/productService';
+import {
+  searchProductsApi,
+  getProductSuggestionsApi,
+} from '../api/productService';
 import { AppContext } from '../context/appContext';
 import { shuffle } from '../utils/shuffle';
 
@@ -24,7 +27,32 @@ const useCategoriesData = (catId, debouncedSearchText, filters) => {
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [hasMoreData, setHasMoreData] = useState(true);
   const [locationInitialized, setLocationInitialized] = useState(false);
+  const [isGlobalFallback, setIsGlobalFallback] = useState(false);
   const requestIdRef = useRef(0);
+
+  const fetchGlobalFallback = async requestId => {
+    try {
+      console.log('Global search fallback for:', debouncedSearchText);
+      const response = await getProductSuggestionsApi(
+        debouncedSearchText,
+        pincodeAreaId,
+        PAGE_SIZE,
+      );
+      console.log('Global search fallback response:', response);
+      if (requestId !== requestIdRef.current) return;
+
+      const items = Array.isArray(response?.data) ? response.data : [];
+      setProductsList(items);
+      setIsGlobalFallback(items.length > 0);
+    } catch (error) {
+      console.error('Error in global search fallback:', error);
+      if (requestId !== requestIdRef.current) return;
+      setProductsList([]);
+      setIsGlobalFallback(false);
+    } finally {
+      if (requestId === requestIdRef.current) setHasMoreData(false);
+    }
+  };
 
   const fetchProducts = async (categoryId, page = 1) => {
     const requestId = ++requestIdRef.current;
@@ -33,6 +61,7 @@ const useCategoriesData = (catId, debouncedSearchText, filters) => {
         setProductsList([]);
         setIsFetchingProducts(true);
         setHasMoreData(true);
+        setIsGlobalFallback(false);
       } else {
         setIsFetchingMore(true);
       }
@@ -67,6 +96,10 @@ const useCategoriesData = (catId, debouncedSearchText, filters) => {
       ) {
         const newProducts = shuffle(response.data.items);
         if (page === 1) {
+          if (newProducts.length === 0 && debouncedSearchText) {
+            await fetchGlobalFallback(requestId);
+            return;
+          }
           setProductsList(newProducts);
         } else {
           setProductsList(prev => [...prev, ...newProducts]);
@@ -77,13 +110,25 @@ const useCategoriesData = (catId, debouncedSearchText, filters) => {
           setHasMoreData(false);
         }
       } else {
-        if (page === 1) setProductsList([]);
+        if (page === 1) {
+          setProductsList([]);
+          if (debouncedSearchText) {
+            await fetchGlobalFallback(requestId);
+            return;
+          }
+        }
         setHasMoreData(false);
       }
     } catch (error) {
       console.error('Error fetching products:', error);
       if (requestId !== requestIdRef.current) return;
-      if (page === 1) setProductsList([]);
+      if (page === 1) {
+        setProductsList([]);
+        if (debouncedSearchText) {
+          await fetchGlobalFallback(requestId);
+          return;
+        }
+      }
       setHasMoreData(false);
     } finally {
       if (requestId === requestIdRef.current) {
@@ -237,6 +282,7 @@ const useCategoriesData = (catId, debouncedSearchText, filters) => {
     hasFetchedProducts,
     isFetchingMore,
     handleLoadMore,
+    isGlobalFallback,
   };
 };
 
