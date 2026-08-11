@@ -147,6 +147,10 @@ dependencies {
     // node_modules/react-native/gradle/libs.versions.toml.
     implementation("com.facebook.fresco:animated-gif:3.6.0")
 
+    // Phone Number Hint API used by the PhoneNumberHint TurboModule in
+    // android/app/src/main/java/com/buyerskart/customer/phonehint/.
+    implementation("com.google.android.gms:play-services-auth:21.3.0")
+
     if (hermesEnabled.toBoolean()) {
         implementation("com.facebook.react:hermes-android")
     } else {

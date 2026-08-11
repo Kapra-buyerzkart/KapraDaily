@@ -30,6 +30,7 @@ import LoaderComponent from '../components/LoaderComponent';
 import { LoaderContext } from '../context/loaderContext';
 import { validatePhoneNumbers } from '../utils/validation';
 import images from '../assets/images';
+import { requestPhoneNumberHint } from '../utils/phoneNumberHint';
 
 const LoginScreen = () => {
   const navigation = useNavigation();
@@ -96,10 +97,23 @@ const LoginScreen = () => {
     ]).start();
   }, []);
 
-  const phoneNumber = '8137956574';
+  useEffect(() => {
+    let cancelled = false;
+
+    const timer = setTimeout(async () => {
+      const hinted = await requestPhoneNumberHint();
+      if (!cancelled && hinted) setPhone(hinted);
+    }, 600);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, []);
+
+  // const phoneNumber = '8137956574';
 
   const handleContinueLogin = async () => {
-
     if (!validatePhoneNumbers(phone)) {
       showStatus({
         type: 'error',
@@ -147,7 +161,6 @@ const LoginScreen = () => {
   };
 
   const handleContinueRest = async () => {
-
     if (!validatePhoneNumbers(phone)) {
       showStatus({
         type: 'error',
@@ -245,6 +258,10 @@ const LoginScreen = () => {
                 placeholderTextColor="#c1c1c1"
                 keyboardType="number-pad"
                 style={styles.input}
+                value={phone}
+                maxLength={10}
+                textContentType="telephoneNumber"
+                autoComplete="tel"
                 onChangeText={setPhone}
               />
             </View>
