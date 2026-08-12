@@ -1,24 +1,34 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
-import { heightPercentageToDP as hp } from 'react-native-responsive-screen';
-import { FONTS } from '../../../styles/typography';
-import { CART_COLORS, CART_SPACING } from '../../../styles/cartTheme';
+import CartText from './atoms/CartText';
+import {
+  CART_COLORS,
+  CART_RADIUS,
+  CART_SPACING,
+  wp,
+  hp,
+} from '../../../styles/cartTheme';
 
 const StoreUnavailableBanner = ({ message, onChangePress }) => (
-  <View style={styles.storeNotFoundWarning}>
+  <View style={styles.banner}>
     <MaterialIcons
       name="error-outline"
-      size={wp('4.2%')}
+      size={wp('4.6%')}
       color={CART_COLORS.danger}
     />
-    <Text style={styles.storeNotFoundText}>
+    <CartText variant="caption" tone="danger" style={styles.text}>
       {message ||
         'Store not found for this pincode. Please select another location.'}
-    </Text>
-    <TouchableOpacity onPress={onChangePress} style={styles.changeLocBtn}>
-      <Text style={styles.changeLocText}>Change</Text>
+    </CartText>
+    <TouchableOpacity
+      onPress={onChangePress}
+      style={styles.changeBtn}
+      activeOpacity={0.85}
+    >
+      <CartText variant="micro" tone="onDark">
+        Change
+      </CartText>
     </TouchableOpacity>
   </View>
 );
@@ -26,33 +36,26 @@ const StoreUnavailableBanner = ({ message, onChangePress }) => (
 export default StoreUnavailableBanner;
 
 const styles = StyleSheet.create({
-  storeNotFoundWarning: {
+  banner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFF5F5',
-    paddingHorizontal: CART_SPACING.lg,
+    gap: CART_SPACING.sm,
+    backgroundColor: CART_COLORS.dangerTint,
+    borderWidth: 1,
+    borderColor: 'rgba(217,48,37,0.18)',
+    paddingHorizontal: CART_SPACING.md,
     paddingVertical: hp('1.2%'),
     marginHorizontal: CART_SPACING.lg,
-    marginTop: CART_SPACING.sm,
-    borderRadius: 12,
+    marginTop: CART_SPACING.md,
+    borderRadius: CART_RADIUS.button,
   },
-  storeNotFoundText: {
+  text: {
     flex: 1,
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('3%'),
-    color: CART_COLORS.danger,
-    marginLeft: CART_SPACING.sm,
   },
-  changeLocBtn: {
+  changeBtn: {
     backgroundColor: CART_COLORS.danger,
     paddingHorizontal: CART_SPACING.md,
     paddingVertical: hp('0.5%'),
-    borderRadius: 5,
-    marginLeft: CART_SPACING.sm,
-  },
-  changeLocText: {
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('2.8%'),
-    color: '#FFF',
+    borderRadius: CART_RADIUS.pill,
   },
 });

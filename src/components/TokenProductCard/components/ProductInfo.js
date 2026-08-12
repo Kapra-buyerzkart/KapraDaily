@@ -1,10 +1,16 @@
 import React from 'react';
-import { Image, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { ACCENT, MAX_FONT_SCALE } from '@/styles/homeTheme';
 import PriceSection from './PriceSection';
 import styles from '../styles';
-import { NAME_LINES, UD_TOKEN_ICON } from '../constants';
+import {
+  NAME_LINES,
+  UD_TOKEN_ICON,
+  UD_TOKEN_ICON_SIZE,
+  UD_TOKEN_ICON_SIZE_SMALL,
+} from '../constants';
 
 /**
  * Everything below the media well: price and saving lead, then the UD token the
@@ -37,10 +43,13 @@ const ProductInfo = ({
       />
 
       {showToken && (
-        <View style={styles.tokenRow}>
-          <Image
-            source={UD_TOKEN_ICON}
-            style={[styles.tokenIcon, isThreeColumn && styles.tokenIconSmall]}
+        <View style={[styles.tokenRow, isThreeColumn && styles.tokenRowSmall]}>
+          <MaterialCommunityIcons
+            name={UD_TOKEN_ICON}
+            size={
+              isThreeColumn ? UD_TOKEN_ICON_SIZE_SMALL : UD_TOKEN_ICON_SIZE
+            }
+            color={ACCENT.discount}
           />
           <Text
             style={styles.tokenText}

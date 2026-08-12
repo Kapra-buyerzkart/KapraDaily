@@ -1,22 +1,46 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AntDesign from 'react-native-vector-icons/AntDesign';
-import { FONTS } from '../../../styles/typography';
-import { CART_COLORS, CART_SPACING, wp, hp } from '../../../styles/cartTheme';
+import CartText from './atoms/CartText';
+import IconDisc from './atoms/IconDisc';
+import {
+  CART_COLORS,
+  CART_SPACING,
+  wp,
+  hp,
+} from '../../../styles/cartTheme';
 
 const AddressSelector = ({ address, onPress }) => {
   return (
-    <TouchableOpacity activeOpacity={0.8} onPress={onPress} style={styles.row}>
-      <Ionicons
-        name="location-outline"
-        size={wp('4.2%')}
-        color={CART_COLORS.textPrimary}
-      />
-      <Text style={styles.addressText} numberOfLines={1}>
-        {address || 'Select delivery address'}
-      </Text>
-      <AntDesign name="down" size={wp('3%')} color={CART_COLORS.textPrimary} />
+    <TouchableOpacity activeOpacity={0.75} onPress={onPress} style={styles.row}>
+      <IconDisc size={wp('8.5%')} tone="neutral">
+        <Ionicons
+          name="location-sharp"
+          size={wp('4.2%')}
+          color={CART_COLORS.textSecondary}
+        />
+      </IconDisc>
+
+      <View style={styles.copy}>
+        <CartText variant="micro" tone="muted">
+          DELIVERING TO
+        </CartText>
+        <CartText variant="labelStrong" numberOfLines={1}>
+          {address || 'Select delivery address'}
+        </CartText>
+      </View>
+
+      <View style={styles.changeChip}>
+        <CartText variant="micro" tone="muted">
+          Change
+        </CartText>
+        <AntDesign
+          name="right"
+          size={wp('2.6%')}
+          color={CART_COLORS.textMuted}
+        />
+      </View>
     </TouchableOpacity>
   );
 };
@@ -27,15 +51,23 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: CART_SPACING.md,
     paddingHorizontal: CART_SPACING.lg,
-    paddingVertical: hp('1.2%'),
+    paddingTop: hp('0.4%'),
+    paddingBottom: hp('1.4%'),
     backgroundColor: CART_COLORS.card,
   },
-  addressText: {
+  copy: {
     flex: 1,
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('3.4%'),
-    color: CART_COLORS.textPrimary,
-    marginHorizontal: CART_SPACING.sm,
+    gap: 1,
+  },
+  changeChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    paddingHorizontal: CART_SPACING.sm,
+    paddingVertical: hp('0.4%'),
+    borderRadius: 999,
+    backgroundColor: CART_COLORS.well,
   },
 });

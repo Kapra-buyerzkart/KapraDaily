@@ -1,37 +1,52 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
 import icons from '@/assets/icons';
-import { FONTS } from '../../../styles/typography';
-import { CART_COLORS, CART_SPACING, wp, hp } from '../../../styles/cartTheme';
+import CartText from './atoms/CartText';
+import {
+  CART_COLORS,
+  CART_RADIUS,
+  CART_SPACING,
+  hitSlopTo,
+  wp,
+  hp,
+} from '../../../styles/cartTheme';
 
-const CartHeader = ({ onBack, onClearAll }) => {
+const CartHeader = ({ onBack, onClearAll, itemCount }) => {
   return (
     <View style={styles.header}>
-      <TouchableOpacity onPress={onBack} style={styles.backBtn} hitSlop={40}>
-        <Image
-          source={icons.backArrowNew}
-          style={{
-            resizeMode: 'contain',
-            tintColor: CART_COLORS.textPrimary,
-          }}
-        />
+      <TouchableOpacity
+        onPress={onBack}
+        style={styles.backBtn}
+        hitSlop={hitSlopTo(24)}
+        activeOpacity={0.7}
+      >
+        <Image source={icons.backArrowNew} style={styles.backIcon} />
       </TouchableOpacity>
 
-      <Text style={styles.title}>Cart</Text>
+      <View style={styles.titleBlock}>
+        <CartText variant="title">Cart</CartText>
+        {itemCount > 0 ? (
+          <CartText variant="caption" tone="muted">
+            {itemCount} {itemCount === 1 ? 'item' : 'items'}
+          </CartText>
+        ) : null}
+      </View>
 
       <TouchableOpacity
-        hitSlop={40}
+        hitSlop={hitSlopTo(28)}
         onPress={onClearAll}
-        activeOpacity={0.8}
+        activeOpacity={0.7}
         style={styles.clearAllBtn}
       >
         <Feather
           name="trash-2"
-          size={wp('3.4%')}
+          size={wp('3.6%')}
           color={CART_COLORS.textMuted}
         />
-        <Text style={styles.clearAllText}>Clear all</Text>
+        <CartText variant="micro" tone="muted">
+          Clear all
+        </CartText>
       </TouchableOpacity>
     </View>
   );
@@ -44,32 +59,28 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: CART_SPACING.lg,
-    paddingVertical: hp('1.5%'),
+    paddingVertical: hp('1.2%'),
     backgroundColor: CART_COLORS.card,
+    gap: CART_SPACING.sm,
   },
   backBtn: {
     padding: CART_SPACING.xs,
   },
-  title: {
+  backIcon: {
+    resizeMode: 'contain',
+    tintColor: CART_COLORS.textPrimary,
+  },
+  titleBlock: {
     flex: 1,
-    fontFamily: FONTS.gilroy.bold,
-    fontSize: wp('4.8%'),
-    color: CART_COLORS.textPrimary,
-    marginLeft: CART_SPACING.sm,
+    marginLeft: CART_SPACING.xs,
   },
   clearAllBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: CART_COLORS.border,
-    borderRadius: 20,
+    backgroundColor: CART_COLORS.well,
+    borderRadius: CART_RADIUS.pill,
     paddingHorizontal: CART_SPACING.md,
-    paddingVertical: hp('0.6%'),
+    paddingVertical: hp('0.7%'),
     gap: CART_SPACING.xs,
-  },
-  clearAllText: {
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('3%'),
-    color: CART_COLORS.textMuted,
   },
 });

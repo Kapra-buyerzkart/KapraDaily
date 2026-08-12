@@ -48,6 +48,8 @@ import useBannerPaint from '../hooks/useBannerPaint';
 import icons from '@/assets/icons';
 
 const CHIP_INK = INK.strong;
+const LEADING_ICON = wp('4.6%');
+const LEADING_GAP = wp('1.2%');
 const BANNER_BLEED = BANNER_PARALLAX;
 const SEARCH_INSET = wp('4.7%');
 const SEARCH_EXAMPLES = ['Basmati Rice', 'Milk', 'Sunflower Oil', 'Lemons'];
@@ -144,16 +146,14 @@ const StickyHeader = ({
                 </View>
               ) : (
                 <View style={styles.expressIconStyle}>
-                  <Image
-                    style={{
-                      height: hp('2.5%'),
-                      width: hp('2.5%'),
-                      resizeMode: 'contain',
-                    }}
-                    source={icons.expressicon}
-                  />
+                  <View style={styles.iconSlot}>
+                    <Image
+                      style={styles.expressIcon}
+                      source={icons.expressicon}
+                    />
+                  </View>
                   <Text style={styles.timeText} maxFontSizeMultiplier={1.2}>
-                    Express Delivery
+                    Express
                   </Text>
                 </View>
               )}
@@ -167,12 +167,14 @@ const StickyHeader = ({
                 accessibilityRole="button"
                 accessibilityLabel={`Delivering to ${profile.pinAddress}. Change delivery location`}
               >
-                <Feather
-                  name={'map-pin'}
-                  size={wp('4%')}
-                  color={onSurface ? INK.muted : '#FFFFFF'}
-                  style={{ marginRight: wp('1%') }}
-                />
+                <View style={[styles.iconSlot, styles.addressPinSlot]}>
+                  <Feather
+                    name={'map-pin'}
+                    size={wp('4%')}
+                    color={onSurface ? INK.muted : '#FFFFFF'}
+                    style={styles.addressPin}
+                  />
+                </View>
                 <Text
                   style={[
                     styles.addressText,
@@ -536,7 +538,25 @@ const styles = StyleSheet.create({
   expressIconStyle: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: wp('1.5%'),
+    gap: LEADING_GAP,
+  },
+  iconSlot: {
+    width: LEADING_ICON,
+    height: LEADING_ICON,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  expressIcon: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'contain',
+  },
+  addressPinSlot: {
+    marginRight: LEADING_GAP,
+  },
+  addressPin: {
+    includeFontPadding: false,
+    textAlignVertical: 'center',
   },
   statusPill: {
     flexDirection: 'row',

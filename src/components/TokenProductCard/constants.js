@@ -3,7 +3,9 @@ import { hitSlopTo } from '@/styles/homeTheme';
 export const DEFAULT_TOKEN_VALUE = '1';
 
 export const NO_IMAGE_SOURCE = require('../../assets/images/udenDealNotfound.png');
-export const UD_TOKEN_ICON = require('../../assets/icons/tokenud.png');
+export const UD_TOKEN_ICON = 'ticket-confirmation-outline';
+export const UD_TOKEN_ICON_SIZE = 12;
+export const UD_TOKEN_ICON_SIZE_SMALL = 10;
 
 // The `+` square and the `− qty +` pill it swaps to, matching the buy-again rail.
 export const ADD_SIZE = 34;

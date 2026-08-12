@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { isCartItemSoldOut } from '../utils/cartAvailability';
 
 export const useCartDerivedState = ({
   cartItems,
@@ -13,16 +14,12 @@ export const useCartDerivedState = ({
     0,
   );
 
-  const hasSoldOutItems = useMemo(
-    () =>
-      cartItems.some(
-        item =>
-          item.unavailable === 1 ||
-          item.insufficientStock === 1 ||
-          item.notAvailableInStore === 1,
-      ),
+  const soldOutItems = useMemo(
+    () => cartItems.filter(isCartItemSoldOut),
     [cartItems],
   );
+
+  const hasSoldOutItems = soldOutItems.length > 0;
 
   const isCartStoreNotFound =
     serviceabilityTrigger ||
@@ -56,6 +53,7 @@ export const useCartDerivedState = ({
   return {
     totalCartBTokens,
     hasSoldOutItems,
+    soldOutItems,
     isCartStoreNotFound,
     isPlaceOrderBlocked,
     ctaLabel,

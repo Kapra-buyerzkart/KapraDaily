@@ -250,23 +250,24 @@ export default StyleSheet.create({
   tokenRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    alignSelf: 'flex-start',
     marginTop: SPACE.xs + 2,
     minHeight: TYPE.micro.lineHeight,
+    maxWidth: '100%',
+    backgroundColor: ACCENT.primarySoft,
+    borderRadius: RADIUS.xs,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    gap: 3,
   },
-  tokenIcon: {
-    width: 12,
-    height: 12,
-    resizeMode: 'contain',
-  },
-  tokenIconSmall: {
-    width: 10,
-    height: 10,
+  tokenRowSmall: {
+    paddingHorizontal: 4,
+    gap: 2,
   },
   tokenText: {
     ...TYPE.micro,
-    color: '#5E3568',
-    fontFamily: FONTS.gilroy.semiBold,
-    marginLeft: SPACE.xs,
+    color: ACCENT.discount,
+    fontFamily: FONTS.gilroy.bold,
     flexShrink: 1,
   },
 

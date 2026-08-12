@@ -15,6 +15,7 @@ const icons = {
   tick: require('./tick.png'),
   noProducts: require('./no_products.png'),
   expressicon: require('./expressicon.png'),
+  expressiconDark: require('./expressiconDark.png'),
 
   tokenud: require('./tokenud.png'),
   udcoin: require('./udcoin.png'),

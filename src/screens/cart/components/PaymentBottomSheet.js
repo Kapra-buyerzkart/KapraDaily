@@ -5,37 +5,49 @@ import React, {
   useMemo,
   useRef,
 } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import CustomBottomModal from '../../../components/CustomBottomModal';
-import { FONTS } from '../../../styles/typography';
+import CartText from './atoms/CartText';
+import IconDisc from './atoms/IconDisc';
 import {
   CART_COLORS,
   CART_RADIUS,
   CART_SPACING,
   wp,
+  hp,
 } from '../../../styles/cartTheme';
 import { getPaymentMeta } from '../paymentMeta';
 
 const PaymentOption = ({ mode, selected, onPress }) => {
-  const { label, icon } = getPaymentMeta(mode.paymentModeName);
+  const { label, icon, subtitle } = getPaymentMeta(mode.paymentModeName);
 
   return (
     <TouchableOpacity
-      activeOpacity={0.8}
+      activeOpacity={0.75}
       style={[styles.optionCard, selected && styles.optionCardSelected]}
       onPress={onPress}
     >
-      <View style={[styles.optionIcon, selected && styles.optionIconSelected]}>
+      <IconDisc size={wp('9.5%')} tone={selected ? 'brand' : 'neutral'}>
         <MaterialCommunityIcons
           name={icon}
           size={wp('5%')}
-          color={CART_COLORS.primary}
+          color={selected ? CART_COLORS.primary : CART_COLORS.textMuted}
         />
+      </IconDisc>
+
+      <View style={styles.optionDetails}>
+        <CartText variant="labelStrong" numberOfLines={1}>
+          {label}
+        </CartText>
+        <CartText variant="micro" tone="muted" numberOfLines={1}>
+          {subtitle}
+        </CartText>
       </View>
-      <Text style={styles.optionLabel} numberOfLines={1}>
-        {label}
-      </Text>
+
+      <View style={[styles.radio, selected && styles.radioSelected]}>
+        {selected ? <View style={styles.radioDot} /> : null}
+      </View>
     </TouchableOpacity>
   );
 };
@@ -60,14 +72,19 @@ const PaymentBottomSheet = forwardRef((props, ref) => {
   );
 
   const snapPoints = useMemo(
-    () => [`${Math.min(18 + paymentModes.length * 5, 64)}%`],
+    () => [`${Math.min(15 + paymentModes.length * 10, 70)}%`],
     [paymentModes.length],
   );
 
   const renderContent = useCallback(
     () => (
       <View style={styles.container}>
-        <Text style={styles.title}>Pay using</Text>
+        <View style={styles.headingRow}>
+          <CartText variant="heading">Pay using</CartText>
+          <CartText variant="micro" tone="muted">
+            Choose how you'd like to pay
+          </CartText>
+        </View>
 
         {paymentModes.map(mode => (
           <PaymentOption
@@ -99,44 +116,47 @@ const styles = StyleSheet.create({
     paddingHorizontal: CART_SPACING.lg,
     paddingTop: CART_SPACING.xs,
   },
-  title: {
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('4.2%'),
-    color: CART_COLORS.textPrimary,
+  headingRow: {
     marginBottom: CART_SPACING.md,
+    gap: 1,
   },
   optionCard: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: CART_SPACING.md,
     borderWidth: 1,
     borderColor: CART_COLORS.border,
-    borderRadius: CART_RADIUS.button,
-    paddingVertical: CART_SPACING.md,
+    borderRadius: CART_RADIUS.card,
+    backgroundColor: CART_COLORS.card,
+    paddingVertical: hp('1.4%'),
     paddingHorizontal: CART_SPACING.md,
     marginBottom: CART_SPACING.md,
   },
   optionCardSelected: {
-    borderColor: CART_COLORS.primary,
+    borderColor: CART_COLORS.primaryEdge,
     backgroundColor: CART_COLORS.primaryTint,
   },
-  optionIcon: {
-    width: wp('9%'),
-    height: wp('9%'),
-    borderRadius: wp('4.5%'),
-    borderWidth: 1.5,
-    borderColor: CART_COLORS.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: CART_SPACING.md,
-  },
-  optionIconSelected: {
-    backgroundColor: CART_COLORS.card,
-  },
-  optionLabel: {
+  optionDetails: {
     flex: 1,
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('3.8%'),
-    color: CART_COLORS.textPrimary,
+    gap: 2,
+  },
+  radio: {
+    width: wp('5%'),
+    height: wp('5%'),
+    borderRadius: CART_RADIUS.pill,
+    borderWidth: 1.5,
+    borderColor: CART_COLORS.borderStrong,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  radioSelected: {
+    borderColor: CART_COLORS.primary,
+  },
+  radioDot: {
+    width: wp('2.4%'),
+    height: wp('2.4%'),
+    borderRadius: CART_RADIUS.pill,
+    backgroundColor: CART_COLORS.primary,
   },
 });
 

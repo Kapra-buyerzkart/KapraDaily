@@ -39,6 +39,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import CONFIG from '../globals/config';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Entypo from 'react-native-vector-icons/Entypo';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
 import TokenProductCard from '../components/TokenProductCard';
 import { formatAmount } from '../components/TokenProductCard/utils';
@@ -71,6 +72,7 @@ import {
 
 const PRICE_PILL = '#17853C';
 const SAVINGS_RULE = 'rgba(17,19,26,0.18)';
+const OFFER_NOTCH = 14;
 
 const BUMP_SPRING = { damping: 8, stiffness: 260, mass: 0.4 };
 const HEART_SPRING = { damping: 10, stiffness: 340, mass: 0.5 };
@@ -270,6 +272,13 @@ const ProductDetailsScreen = () => {
     Number(unitPrice) > Number(specialPrice)
       ? Math.round(Number(unitPrice) - Number(specialPrice))
       : 0;
+  const offerPercent = savings
+    ? Math.round(
+        Number(discountPercentage) > 0
+          ? Number(discountPercentage)
+          : (savings / Number(unitPrice)) * 100,
+      )
+    : 0;
   const outOfStock = !isAvailable || stockQty === 0;
 
   if (loading && !product) {
@@ -470,28 +479,29 @@ const ProductDetailsScreen = () => {
             >
               <View style={styles.badgeRow}>
                 {discountPercentage > 0 && (
-                  <View style={styles.discountBadge}>
+                  <View style={[styles.badge, styles.discountBadge]}>
+                    <View style={styles.discountDot} />
                     <Text
                       style={styles.discountText}
                       maxFontSizeMultiplier={MAX_FONT_SCALE}
                     >
-                      {Math.round(discountPercentage) ||
-                        ((unitPrice - specialPrice) / unitPrice) * 100}
-                      % OFF
+                      {Math.round(discountPercentage)}% OFF
                     </Text>
                   </View>
                 )}
 
-                <View style={styles.tokenBadge}>
-                  <Image
-                    style={styles.tokenIconSmall}
-                    source={require('../assets/icons/tokenud.png')}
+                <View style={[styles.badge, styles.tokenBadge]}>
+                  <MaterialCommunityIcons
+                    name="ticket-confirmation-outline"
+                    size={14}
+                    color={ACCENT.discount}
                   />
                   <Text
                     style={styles.tokenBadgeText}
                     maxFontSizeMultiplier={MAX_FONT_SCALE}
                   >
-                    {Number(bTokenValue)} UD Token
+                    {Number(bTokenValue)}
+                    <Text style={styles.tokenBadgeUnit}> UD Token</Text>
                   </Text>
                 </View>
               </View>
@@ -504,7 +514,7 @@ const ProductDetailsScreen = () => {
                   {shortDescription}
                 </Text>
               )}
-              {outOfStock && (
+              {/* {outOfStock && (
                 <View style={styles.outOfStockPill}>
                   <Text
                     style={styles.outOfStockText}
@@ -513,7 +523,7 @@ const ProductDetailsScreen = () => {
                     Out of stock
                   </Text>
                 </View>
-              )}
+              )} */}
 
               <View style={styles.priceBlock}>
                 <View style={styles.priceColumn}>
@@ -644,6 +654,51 @@ const ProductDetailsScreen = () => {
                   })()}
                 </View>
               </View>
+
+              {savings > 0 && (
+                <ReanimatedView.View
+                  style={styles.offerBanner}
+                  entering={scaleFadeIn(SECTION_STAGGER_MS * 2)}
+                  accessibilityRole="text"
+                  accessibilityLabel={`Offer: save ₹${formatAmount(
+                    savings,
+                  )}, ${offerPercent} percent off`}
+                >
+                  <View style={styles.offerNotchLeft} />
+                  <View style={styles.offerTag}>
+                    <Text
+                      style={styles.offerTagText}
+                      maxFontSizeMultiplier={MAX_FONT_SCALE}
+                    >
+                      {offerPercent}%
+                    </Text>
+                  </View>
+                  <View style={styles.offerCopy}>
+                    <View style={styles.offerTitleRow}>
+                      <MaterialCommunityIcons
+                        name="check-decagram"
+                        size={14}
+                        color={ACCENT.successText}
+                      />
+                      <Text
+                        style={styles.offerTitle}
+                        numberOfLines={1}
+                        maxFontSizeMultiplier={MAX_FONT_SCALE}
+                      >
+                        You save ₹{formatAmount(savings) || savings}
+                      </Text>
+                    </View>
+                    <Text
+                      style={styles.offerSubtitle}
+                      numberOfLines={1}
+                      maxFontSizeMultiplier={MAX_FONT_SCALE}
+                    >
+                      Offer price applied at checkout
+                    </Text>
+                  </View>
+                  <View style={styles.offerNotchRight} />
+                </ReanimatedView.View>
+              )}
 
               <View style={styles.rule} />
 
@@ -925,36 +980,45 @@ const styles = StyleSheet.create({
     gap: SPACE.sm,
     marginBottom: SPACE.md,
   },
+  badge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 24,
+    borderRadius: 12,
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: SPACE.sm + 2,
+  },
   discountBadge: {
     backgroundColor: ACCENT.successSoft,
-    borderRadius: RADIUS.xs,
-    paddingHorizontal: SPACE.sm,
-    paddingVertical: 4,
+    borderColor: 'rgba(23,133,74,0.18)',
+  },
+  discountDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: ACCENT.successText,
+    marginRight: SPACE.xs + 1,
   },
   discountText: {
     ...TYPE.micro,
     fontFamily: FONTS.gilroy.bold,
     color: ACCENT.successText,
-    letterSpacing: 0.3,
+    letterSpacing: 0.4,
   },
   tokenBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F5EEF9',
-    borderRadius: RADIUS.xs,
-    paddingHorizontal: SPACE.sm,
-    paddingVertical: 4,
-  },
-  tokenIconSmall: {
-    width: 13,
-    height: 13,
-    resizeMode: 'contain',
+    backgroundColor: ACCENT.primarySoft,
+    borderColor: 'rgba(194,65,12,0.18)',
   },
   tokenBadgeText: {
     ...TYPE.micro,
-    fontFamily: FONTS.gilroy.semiBold,
-    color: '#5E3568',
+    fontFamily: FONTS.gilroy.bold,
+    color: ACCENT.discount,
+    letterSpacing: 0.2,
     marginLeft: SPACE.xs + 1,
+  },
+  tokenBadgeUnit: {
+    fontFamily: FONTS.gilroy.semiBold,
+    color: 'rgba(194,65,12,0.78)',
   },
 
   productName: {
@@ -1031,6 +1095,66 @@ const styles = StyleSheet.create({
     textDecorationLine: 'line-through',
     marginLeft: SPACE.sm,
   },
+  offerBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: ACCENT.successSoft,
+    borderRadius: RADIUS.sm,
+    paddingVertical: SPACE.sm,
+    paddingHorizontal: SPACE.md,
+    marginTop: SPACE.lg,
+    overflow: 'hidden',
+  },
+  offerNotchLeft: {
+    position: 'absolute',
+    left: -OFFER_NOTCH / 2,
+    width: OFFER_NOTCH,
+    height: OFFER_NOTCH,
+    borderRadius: OFFER_NOTCH / 2,
+    backgroundColor: CANVAS,
+  },
+  offerNotchRight: {
+    position: 'absolute',
+    right: -OFFER_NOTCH / 2,
+    width: OFFER_NOTCH,
+    height: OFFER_NOTCH,
+    borderRadius: OFFER_NOTCH / 2,
+    backgroundColor: CANVAS,
+  },
+  offerTag: {
+    backgroundColor: PRICE_PILL,
+    borderRadius: RADIUS.xs,
+    paddingHorizontal: SPACE.sm,
+    paddingVertical: 5,
+    marginRight: SPACE.sm + 2,
+  },
+  offerTagText: {
+    ...TYPE.caption,
+    fontFamily: FONTS.gilroy.bold,
+    color: INK.onDark,
+    letterSpacing: -0.2,
+    includeFontPadding: false,
+  },
+  offerCopy: {
+    flex: 1,
+  },
+  offerTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACE.xs,
+  },
+  offerTitle: {
+    ...TYPE.caption,
+    fontFamily: FONTS.gilroy.bold,
+    color: ACCENT.successText,
+  },
+  offerSubtitle: {
+    ...TYPE.micro,
+    fontFamily: FONTS.gilroy.semiBold,
+    color: INK.muted,
+    marginTop: 1,
+  },
+
   savingsRow: {
     flexDirection: 'row',
     alignItems: 'center',

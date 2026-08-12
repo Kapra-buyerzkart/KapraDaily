@@ -1,54 +1,74 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import AntDesign from 'react-native-vector-icons/AntDesign';
-import { FONTS } from '../../../styles/typography';
+import CartText from './atoms/CartText';
+import Badge from './atoms/Badge';
+import IconDisc from './atoms/IconDisc';
 import {
   CART_COLORS,
-  CART_RADIUS,
   CART_SPACING,
   wp,
   hp,
 } from '../../../styles/cartTheme';
 
+const ICON_TONES = {
+  brand: { disc: 'brand', color: CART_COLORS.primary },
+  pink: { disc: 'pink', color: CART_COLORS.pink },
+  success: { disc: 'success', color: CART_COLORS.successDeep },
+};
+
 const OfferRow = ({
-  iconSource,
+  iconName,
+  iconTone = 'brand',
   title,
   appliedLabel,
   subtitle,
   isApplied,
   onPress,
 }) => {
+  const tone = ICON_TONES[iconTone] || ICON_TONES.brand;
+
   return (
-    <TouchableOpacity activeOpacity={0.8} style={styles.row} onPress={onPress}>
-      <Image source={iconSource} style={styles.icon} />
+    <TouchableOpacity activeOpacity={0.75} style={styles.row} onPress={onPress}>
+      <IconDisc
+        size={wp('9.5%')}
+        tone={isApplied ? 'success' : tone.disc}
+      >
+        <MaterialCommunityIcons
+          name={iconName}
+          size={wp('5%')}
+          color={isApplied ? CART_COLORS.successDeep : tone.color}
+        />
+      </IconDisc>
 
       <View style={styles.details}>
-        <Text style={styles.title}>{title}</Text>
+        <CartText variant="labelStrong">{title}</CartText>
         {isApplied ? (
           <View style={styles.appliedRow}>
             {appliedLabel ? (
-              <View style={styles.appliedTag}>
-                <Text style={styles.appliedTagText}>{appliedLabel}</Text>
-              </View>
+              <Badge tone="neutral" label={appliedLabel} />
             ) : null}
-            <View style={styles.appliedBadge}>
-              <MaterialCommunityIcons
-                name="check-circle"
-                size={wp('3%')}
-                color={CART_COLORS.success}
-              />
-              <Text style={styles.appliedBadgeText}>Applied</Text>
-            </View>
+            <Badge
+              tone="success"
+              label="Applied"
+              icon={
+                <MaterialCommunityIcons
+                  name="check-circle"
+                  size={wp('3%')}
+                  color={CART_COLORS.successDeep}
+                />
+              }
+            />
           </View>
         ) : (
-          <Text style={styles.subtitle} numberOfLines={1}>
+          <CartText variant="micro" tone="muted" numberOfLines={1}>
             {subtitle}
-          </Text>
+          </CartText>
         )}
       </View>
 
-      <AntDesign name="right" size={wp('3.5%')} color={CART_COLORS.textFaint} />
+      <AntDesign name="right" size={wp('3.4%')} color={CART_COLORS.textFaint} />
     </TouchableOpacity>
   );
 };
@@ -59,58 +79,18 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: CART_COLORS.card,
-    borderWidth: 1,
-    borderColor: CART_COLORS.graySoftColor,
-    borderRadius: CART_RADIUS.button,
-    paddingVertical: hp('1.3%'),
-    paddingHorizontal: CART_SPACING.md,
+    gap: CART_SPACING.md,
+    paddingVertical: hp('1.2%'),
+    paddingHorizontal: CART_SPACING.lg,
   },
-  icon: {},
   details: {
     flex: 1,
-    marginLeft: CART_SPACING.md,
-  },
-  title: {
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('3.6%'),
-    color: CART_COLORS.textPrimary,
-  },
-  subtitle: {
-    fontFamily: FONTS.gilroy.regular,
-    fontSize: wp('3.1%'),
-    color: CART_COLORS.textMuted,
-    marginTop: hp('0.3%'),
+    gap: 2,
   },
   appliedRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: hp('0.5%'),
-  },
-  appliedTag: {
-    backgroundColor: CART_COLORS.primaryTint,
-    paddingHorizontal: CART_SPACING.sm,
-    paddingVertical: 2,
-    borderRadius: CART_RADIUS.icon - 4,
-    marginRight: CART_SPACING.sm,
-  },
-  appliedTagText: {
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('2.8%'),
-    color: CART_COLORS.primary,
-  },
-  appliedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: CART_COLORS.successTint,
-    paddingHorizontal: CART_SPACING.sm,
-    paddingVertical: 2,
-    borderRadius: CART_RADIUS.icon - 4,
-  },
-  appliedBadgeText: {
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('2.7%'),
-    color: CART_COLORS.success,
-    marginLeft: 3,
+    gap: CART_SPACING.sm,
+    flexWrap: 'wrap',
   },
 });

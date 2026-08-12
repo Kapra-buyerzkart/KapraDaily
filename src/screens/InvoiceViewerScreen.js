@@ -42,8 +42,6 @@ const InvoiceViewerScreen = () => {
   const { invoiceUrl, invoiceNumber, title, orderId, orderNumber } =
     route.params || {};
 
-  // The backend only serves `.../invoice/{invoiceNo}` once the invoice exists;
-  // a bare `.../invoice` means it was never generated for this order.
   const invoiceGenerated = isInvoiceGenerated(invoiceUrl);
   const urlIsUsable = isSafeUrl(invoiceUrl) && invoiceGenerated;
 
@@ -188,7 +186,11 @@ const InvoiceViewerScreen = () => {
                 setPageInfo({ page, total: numberOfPages })
               }
               onError={error => {
-                logger.error('Failed to render invoice PDF:', error?.message);
+                logger.error(
+                  'Failed to render invoice PDF:',
+                  invoiceUrl,
+                  error?.message,
+                );
                 setLoading(false);
                 setFailed(true);
               }}

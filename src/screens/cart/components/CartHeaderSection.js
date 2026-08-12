@@ -1,15 +1,11 @@
 import React from 'react';
-import { View } from 'react-native';
-import CartHeader from './CartHeader';
-import AddressSelector from './AddressSelector';
+import { View, StyleSheet } from 'react-native';
 import DeliveryHeader from './DeliveryHeader';
 import DeliveryGroupCard from './DeliveryGroupCard';
 import StoreUnavailableBanner from './StoreUnavailableBanner';
+import { CART_SPACING, hp } from '../../../styles/cartTheme';
 
 const CartHeaderSection = ({
-  onBack,
-  onClearAll,
-  address,
   onAddressPress,
   isCartStoreNotFound,
   cartError,
@@ -21,16 +17,15 @@ const CartHeaderSection = ({
   onSwitchToExpress,
 }) => (
   <>
-    <CartHeader onBack={onBack} onClearAll={onClearAll} />
-    <AddressSelector address={address} onPress={onAddressPress} />
-
     {isCartStoreNotFound && (
       <StoreUnavailableBanner
         message={cartError}
         onChangePress={onAddressPress}
       />
     )}
-    <View style={{ marginTop: 20 }} />
+
+    <View style={styles.spacer} />
+
     <DeliveryGroupCard position="top">
       <DeliveryHeader
         itemCount={itemCount}
@@ -45,3 +40,10 @@ const CartHeaderSection = ({
 );
 
 export default CartHeaderSection;
+
+const styles = StyleSheet.create({
+  spacer: {
+    height: hp('1.6%'),
+    marginTop: CART_SPACING.xs,
+  },
+});

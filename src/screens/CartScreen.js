@@ -1,5 +1,11 @@
 import { StatusBar, View } from 'react-native';
-import React, { useContext, useState, useMemo, useRef } from 'react';
+import React, {
+  useContext,
+  useState,
+  useMemo,
+  useRef,
+  useCallback,
+} from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { useNavigation } from '@react-navigation/native';
@@ -14,6 +20,8 @@ import { LoaderContext } from '../context/loaderContext';
 import { AppContext } from '../context/appContext';
 import CartEmptyComponent from '../components/CartEmptyComponent';
 
+import CartHeader from './cart/components/CartHeader';
+import AddressSelector from './cart/components/AddressSelector';
 import CartHeaderSection from './cart/components/CartHeaderSection';
 import CartFooterSection from './cart/components/CartFooterSection';
 import CartList from './cart/components/CartList';
@@ -56,6 +64,7 @@ const CartScreen = () => {
   const {
     cartItems,
     clearCart,
+    removeFromCart,
     getCartSummary,
     error: cartError,
     addresses,
@@ -94,7 +103,8 @@ const CartScreen = () => {
 
   const {
     isCartStoreNotFound,
-    isPlaceOrderBlocked,
+    hasSoldOutItems,
+    soldOutItems,
     ctaLabel,
     scheduleLabel,
     tokenLabel,
@@ -135,12 +145,35 @@ const CartScreen = () => {
     paymentMethod,
   });
 
+  const [isRemovingSoldOut, setIsRemovingSoldOut] = useState(false);
+
+  const handleRemoveSoldOut = useCallback(async () => {
+    if (isRemovingSoldOut || soldOutItems.length === 0) {
+      return;
+    }
+    setIsRemovingSoldOut(true);
+    try {
+      for (const item of soldOutItems) {
+        await removeFromCart(
+          item.cartItemId || item.productId || item.id,
+          selectedAddress?.pincodeAreaId,
+        );
+      }
+      await getCartSummary(selectedAddress?.pincodeAreaId);
+    } finally {
+      setIsRemovingSoldOut(false);
+    }
+  }, [
+    isRemovingSoldOut,
+    soldOutItems,
+    removeFromCart,
+    getCartSummary,
+    selectedAddress?.pincodeAreaId,
+  ]);
+
   const ListHeader = useMemo(
     () => (
       <CartHeaderSection
-        onBack={() => navigation.goBack()}
-        onClearAll={() => setIsClearCartModalVisible(true)}
-        address={selectedAddress?.address}
         onAddressPress={() => setShowAddressModal(true)}
         isCartStoreNotFound={isCartStoreNotFound}
         cartError={cartError}
@@ -153,8 +186,6 @@ const CartScreen = () => {
       />
     ),
     [
-      navigation,
-      selectedAddress?.address,
       isCartStoreNotFound,
       cartError,
       cartItems.length,
@@ -202,19 +233,31 @@ const CartScreen = () => {
 
   if (cartItems.length === 0 && !isFinalizingOrder) {
     return (
-      <View style={[styles.mainContainer]}>
+      <View style={[styles.mainContainer, styles.emptyContainer]}>
         <CartEmptyComponent />
       </View>
     );
   }
 
   return (
-    <View style={[styles.mainContainer, { paddingTop: insets.top }]}>
+    <View style={styles.mainContainer}>
       <StatusBar
         translucent
         backgroundColor={'transparent'}
         barStyle={'dark-content'}
       />
+
+      <View style={[styles.topBar, { paddingTop: insets.top }]}>
+        <CartHeader
+          onBack={() => navigation.goBack()}
+          onClearAll={() => setIsClearCartModalVisible(true)}
+          itemCount={cartItems.length}
+        />
+        <AddressSelector
+          address={selectedAddress?.address}
+          onPress={() => setShowAddressModal(true)}
+        />
+      </View>
 
       <CartList
         listRef={listRef}
@@ -233,9 +276,10 @@ const CartScreen = () => {
         paymentMethod={paymentMethod}
         onPaymentChipPress={() => paymentSheetRef.current?.open()}
         totalToPay={billCalculations.toPay}
-        ctaLabel={ctaLabel}
-        ctaDisabled={isPlaceOrderBlocked}
-        onCheckout={handleConfirmOrder}
+        ctaLabel={isRemovingSoldOut ? 'Removing…' : ctaLabel}
+        ctaDisabled={isCartStoreNotFound || isRemovingSoldOut}
+        ctaShowPrice={!isCartStoreNotFound && !hasSoldOutItems}
+        onCheckout={hasSoldOutItems ? handleRemoveSoldOut : handleConfirmOrder}
         onLayout={e => setCheckoutBarHeight(e.nativeEvent.layout.height)}
       />
 

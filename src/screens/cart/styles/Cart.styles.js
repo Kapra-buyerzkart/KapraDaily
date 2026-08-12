@@ -1,25 +1,35 @@
 import { StyleSheet } from 'react-native';
-import { heightPercentageToDP as hp } from 'react-native-responsive-screen';
-import { CART_COLORS, CART_SPACING } from '../../../styles/cartTheme';
+import {
+  CART_COLORS,
+  CART_GUTTER,
+  CART_SPACING,
+  hp,
+} from '../../../styles/cartTheme';
 
 export const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: CART_COLORS.canvas,
+  },
+  emptyContainer: {
+    backgroundColor: CART_COLORS.card,
+  },
+  topBar: {
+    backgroundColor: CART_COLORS.card,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: CART_COLORS.border,
+    zIndex: 5,
   },
   listContent: {
     paddingBottom: hp('2%'),
   },
   itemCardWrap: {
-    marginHorizontal: CART_SPACING.lg,
+    marginHorizontal: CART_GUTTER,
     paddingHorizontal: CART_SPACING.lg,
     backgroundColor: CART_COLORS.card,
-    borderLeftWidth: 1,
-    borderRightWidth: 1,
-    borderColor: '#E5E7EB',
   },
   itemSeparator: {
-    height: 1,
+    height: StyleSheet.hairlineWidth,
     backgroundColor: CART_COLORS.border,
   },
 });
