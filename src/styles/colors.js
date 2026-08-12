@@ -3,6 +3,7 @@ export const COLORS = {
   primaryDark: '#F04B1B',
   primaryLight: '#F57333',
   primaryTint: '#FFF5F0',
+  complimentary: '#009DFF',
 
   secondary: '#5B2BE0',
 

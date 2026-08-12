@@ -38,7 +38,7 @@ const OfferRow = ({
                 size={wp('3%')}
                 color={CART_COLORS.success}
               />
-              <Text style={styles.appliedBadgeText}>Applies</Text>
+              <Text style={styles.appliedBadgeText}>Applied</Text>
             </View>
           </View>
         ) : (
@@ -66,8 +66,7 @@ const styles = StyleSheet.create({
     paddingVertical: hp('1.3%'),
     paddingHorizontal: CART_SPACING.md,
   },
-  icon: {
-  },
+  icon: {},
   details: {
     flex: 1,
     marginLeft: CART_SPACING.md,

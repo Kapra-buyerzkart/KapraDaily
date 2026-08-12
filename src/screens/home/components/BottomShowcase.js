@@ -90,13 +90,13 @@ const ShowcaseTile = ({ item, index, height, variant, onPress }) => {
   );
 };
 
-const BottomShowcase = ({ banner, products, onBannerPress }) => {
+const BottomShowcase = ({ banner, products, onBannerPress, onSeeAll }) => {
   const grid = useMemo(() => {
     const list = products || [];
     return {
       feature: list[0],
       side: list.slice(1, 3),
-      mini: list.slice(3, 5),
+      mini: list.slice(3, 6),
     };
   }, [products]);
 
@@ -109,7 +109,8 @@ const BottomShowcase = ({ banner, products, onBannerPress }) => {
 
   if (!banner || !products || products.length === 0) return null;
 
-  const openBanner = () => onBannerPress(banner);
+  const openCollection = () =>
+    onSeeAll ? onSeeAll() : onBannerPress(banner);
 
   return (
     <View style={styles.card}>
@@ -137,7 +138,7 @@ const BottomShowcase = ({ banner, products, onBannerPress }) => {
         <View style={styles.ring} pointerEvents="none" />
 
         <AnimatedPressable
-          onPress={openBanner}
+          onPress={openCollection}
           style={styles.header}
           accessibilityRole="button"
           accessibilityLabel={banner.title || 'Bathroom Essentials'}
@@ -212,35 +213,20 @@ const BottomShowcase = ({ banner, products, onBannerPress }) => {
             )}
           </View>
 
-          <View style={styles.miniRow}>
-            {grid.mini.map((item, index) => (
-              <ShowcaseTile
-                key={(item.bannerId || item.id || index).toString()}
-                item={item}
-                index={index + 3}
-                height={MINI_HEIGHT}
-                variant="mini"
-                onPress={() => onBannerPress(item)}
-              />
-            ))}
-
-            <AnimatedPressable
-              onPress={openBanner}
-              style={[styles.seeAllTile, { height: MINI_HEIGHT }]}
-              accessibilityRole="button"
-              accessibilityLabel="See all products"
-            >
-              <View style={styles.seeAllDisc}>
-                <Feather name="arrow-right" size={18} color="#FFFFFF" />
-              </View>
-              <Text
-                style={styles.seeAllText}
-                maxFontSizeMultiplier={MAX_FONT_SCALE}
-              >
-                See all
-              </Text>
-            </AnimatedPressable>
-          </View>
+          {grid.mini.length > 0 && (
+            <View style={styles.miniRow}>
+              {grid.mini.map((item, index) => (
+                <ShowcaseTile
+                  key={(item.bannerId || item.id || index).toString()}
+                  item={item}
+                  index={index + 3}
+                  height={MINI_HEIGHT}
+                  variant="mini"
+                  onPress={() => onBannerPress(item)}
+                />
+              ))}
+            </View>
+          )}
         </View>
       </LinearGradient>
     </View>
@@ -462,27 +448,6 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.gilroy.bold,
     color: INK.strong,
     textAlign: 'center',
-  },
-  seeAllTile: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: RADIUS.md,
-    backgroundColor: INK.strong,
-  },
-  seeAllDisc: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.16)',
-    marginBottom: SPACE.xs + 2,
-  },
-  seeAllText: {
-    ...TYPE.micro,
-    fontFamily: FONTS.gilroy.bold,
-    color: '#FFFFFF',
   },
 });
 

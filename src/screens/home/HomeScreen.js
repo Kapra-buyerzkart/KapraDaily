@@ -308,9 +308,10 @@ const HomeScreen = () => {
           );
           if (foundCat) actualCatName = foundCat.catName || foundCat.name;
         }
+        const bannerTitle = banner.title || banner.Title;
         navigation.navigate('SearchScreen', {
           catId: linkValue,
-          catName: actualCatName || 'Category',
+          catName: actualCatName || bannerTitle || 'Category',
         });
       } else if ((linkType === 'external' || linkType === 'url') && linkValue) {
         openExternalUrl(linkValue);
@@ -318,6 +319,32 @@ const HomeScreen = () => {
     },
     [navigation, categories],
   );
+
+  const handleShowcaseSeeAll = useCallback(() => {
+    const banner = bottomShowcaseBanner;
+    if (!banner) return;
+
+    const linkType = (banner.linkType || banner.LinkType || '').toLowerCase();
+    const linkValue = banner.linkValue || banner.LinkValue;
+    const bannerTitle = banner.title || banner.Title;
+
+    if (linkType === 'category' && linkValue) {
+      let actualCatName = '';
+      if (categories.length > 0) {
+        const foundCat = categories.find(
+          c => String(c.catId || c.id) === String(linkValue),
+        );
+        if (foundCat) actualCatName = foundCat.catName || foundCat.name;
+      }
+      navigation.navigate('SearchScreen', {
+        catId: linkValue,
+        catName: actualCatName || bannerTitle || 'Category',
+      });
+      return;
+    }
+
+    navigation.navigate('SearchScreen', { title: bannerTitle || 'Featured' });
+  }, [navigation, categories, bottomShowcaseBanner]);
 
   const handleOpenLocationModal = useCallback(
     () => locationModalRef.current?.open(),
@@ -487,6 +514,7 @@ const HomeScreen = () => {
               banner={bottomShowcaseBanner}
               products={bottomShowcaseProducts}
               onBannerPress={handleBannerPress}
+              onSeeAll={handleShowcaseSeeAll}
             />
           </>
         )}

@@ -4,6 +4,7 @@ import {
   Text,
   Image,
   FlatList,
+  PixelRatio,
   TouchableOpacity,
   StyleSheet,
   useWindowDimensions,
@@ -46,7 +47,8 @@ import {
 } from '@/styles/homeTheme';
 import { FONTS } from '../../../styles/typography';
 
-const RULE = 1.5;
+const RULE = PixelRatio.roundToNearestPixel(1.5);
+const TAB_BLEED = PixelRatio.roundToNearestPixel(RULE + 1);
 const TAB_H = 34;
 const TAB_PAD_H = 12;
 const TAB_RADIUS = 12;
@@ -103,10 +105,11 @@ const TabShapeSvg = React.memo(({ width, height }) => {
   const r = TAB_RADIUS; // top corner radius
   const s = SHOULDER; // shoulder (inverted arc) radius
   const half = sw / 2;
+  const bleed = height + TAB_BLEED;
 
   // All corners use SVG arc (A) commands — true circular quarter-arcs.
   // A rx,ry rotation large-arc sweep x,y
-  const d = [
+  const outline = [
     `M 0,${height}`,
     // left shoulder — inverted arc curving from bottom up to tab wall
     `A ${s},${s} 0 0,0 ${s},${height - s}`,
@@ -124,9 +127,14 @@ const TabShapeSvg = React.memo(({ width, height }) => {
     `A ${s},${s} 0 0,0 ${width},${height}`,
   ].join(' ');
 
+  // Fill runs past the baseline so it always masks the rule, whatever way the
+  // rule's 1.5dp band and this canvas each land on the device pixel grid.
+  const body = `${outline} L ${width},${bleed} L 0,${bleed} Z`;
+
   return (
-    <Svg width={width} height={height} style={StyleSheet.absoluteFill}>
-      <Path d={d} fill={CANVAS} stroke={ACCENT.primary} strokeWidth={sw} />
+    <Svg width={width} height={bleed} style={StyleSheet.absoluteFill}>
+      <Path d={body} fill={CANVAS} />
+      <Path d={outline} fill="none" stroke={ACCENT.primary} strokeWidth={sw} />
     </Svg>
   );
 });
@@ -164,10 +172,9 @@ const DiscoveryTab = React.memo(function DiscoveryTab({
 
   const handleLayout = useCallback(event => {
     const { width, height } = event.nativeEvent.layout;
-    setTabSize(prev => {
-      if (prev.w > 0) return prev; // already measured, skip
-      return { w: width, h: height };
-    });
+    const w = PixelRatio.roundToNearestPixel(width);
+    const h = PixelRatio.roundToNearestPixel(height);
+    setTabSize(prev => (prev.w === w && prev.h === h ? prev : { w, h }));
   }, []);
 
   return (
@@ -463,6 +470,7 @@ const styles = StyleSheet.create({
   },
   tabRow: {
     paddingHorizontal: GUTTER,
+    paddingBottom: TAB_BLEED,
     alignItems: 'flex-end',
     gap: TAB_GAP,
   },
@@ -470,7 +478,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 0,
     right: 0,
-    bottom: 0,
+    bottom: TAB_BLEED,
     height: RULE,
     backgroundColor: ACCENT.primary,
   },
@@ -481,7 +489,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   tabDecoration: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: -TAB_BLEED,
   },
   tabLabel: {
     ...TYPE.caption,
@@ -491,7 +503,7 @@ const styles = StyleSheet.create({
   sweep: {
     position: 'absolute',
     left: 0,
-    bottom: 0,
+    bottom: TAB_BLEED,
     height: RULE,
   },
   sweepFill: {

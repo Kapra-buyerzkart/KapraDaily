@@ -3,10 +3,6 @@ import CONFIG from '../globals/config';
 export const INVOICE_NOT_GENERATED_MESSAGE =
   "Invoice hasn't been generated yet. Please contact customer support.";
 
-/**
- * The backend exposes a generated invoice as `.../order/{orderId}/invoice/{invoiceNo}`.
- * When the invoice hasn't been generated it stops at `.../invoice`, which 404s.
- */
 const GENERATED_INVOICE_PATTERN = /(?:^|\/)invoice\/[^/?#]+/i;
 
 export const isInvoiceGenerated = url => {

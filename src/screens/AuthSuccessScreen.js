@@ -114,67 +114,67 @@ const AuthSuccessScreen = ({ navigation }) => {
 
   return (
     <View style={styles.screen}>
-      <ImageBackground
+      {/* <ImageBackground
         source={sources.bg}
         resizeMode="cover"
         fadeDuration={0}
         style={styles.container}
+      > */}
+      <StatusBar
+        translucent
+        contentStyle="dark-content"
+        backgroundColor="transparent"
+      />
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
       >
-        <StatusBar
-          translucent
-          contentStyle="dark-content"
-          backgroundColor="transparent"
-        />
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
+        {}
+        <View style={styles.logoContainer}>
+          <Image
+            source={require('../assets/images/splash/header.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+        </View>
+
+        {}
+        <View style={styles.cardsContainer}>
           {}
-          <View style={styles.logoContainer}>
-            <Image
-              source={require('../assets/images/splash/header.png')}
-              style={styles.logo}
-              resizeMode="contain"
-            />
-          </View>
+          <TouchableOpacity activeOpacity={0.9} onPress={handleKapra}>
+            <CardImage source={sources.kapra} style={styles.largeCard} />
+          </TouchableOpacity>
 
           {}
-          <View style={styles.cardsContainer}>
+          <TouchableOpacity
+            activeOpacity={0.9}
+            onPress={handleTicketCollection}
+          >
+            <CardImage source={sources.tickets} style={styles.largeCard} />
+          </TouchableOpacity>
+          {}
+          <View style={styles.row}>
             {}
-            <TouchableOpacity activeOpacity={0.9} onPress={handleKapra}>
-              <CardImage source={sources.kapra} style={styles.largeCard} />
+            <TouchableOpacity activeOpacity={0.9} onPress={handleD2c}>
+              <CardImage source={sources.d2c} style={styles.smallCard} />
             </TouchableOpacity>
-
             {}
-            <TouchableOpacity
-              activeOpacity={0.9}
-              onPress={handleTicketCollection}
-            >
-              <CardImage source={sources.tickets} style={styles.largeCard} />
+            <TouchableOpacity activeOpacity={0.9} onPress={handleKshope}>
+              <CardImage source={sources.kshope} style={styles.smallCard} />
             </TouchableOpacity>
-            {}
-            <View style={styles.row}>
-              {}
-              <TouchableOpacity activeOpacity={0.9} onPress={handleD2c}>
-                <CardImage source={sources.d2c} style={styles.smallCard} />
-              </TouchableOpacity>
-              {}
-              <TouchableOpacity activeOpacity={0.9} onPress={handleKshope}>
-                <CardImage source={sources.kshope} style={styles.smallCard} />
-              </TouchableOpacity>
-            </View>
           </View>
-        </ScrollView>
+        </View>
+      </ScrollView>
 
-        {}
-        {}
+      {}
+      {}
 
-        {}
-        <ComingSoonModal
-          visible={isComingSoonVisible}
-          onClose={() => setIsComingSoonVisible(false)}
-        />
-      </ImageBackground>
+      {}
+      <ComingSoonModal
+        visible={isComingSoonVisible}
+        onClose={() => setIsComingSoonVisible(false)}
+      />
+      {/* </ImageBackground> */}
     </View>
   );
 };
@@ -193,8 +193,7 @@ const styles = StyleSheet.create({
     paddingTop: hp('5%'),
     paddingBottom: hp('8%'),
   },
-  logoContainer: {
-  },
+  logoContainer: {},
   logo: {
     width: wp('70%'),
     height: hp('20%'),

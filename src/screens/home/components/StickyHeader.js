@@ -45,6 +45,7 @@ import {
   SEARCH_HEIGHT,
 } from '../hooks/useHomeAnimations';
 import useBannerPaint from '../hooks/useBannerPaint';
+import icons from '@/assets/icons';
 
 const CHIP_INK = INK.strong;
 const BANNER_BLEED = BANNER_PARALLAX;
@@ -142,9 +143,19 @@ const StickyHeader = ({
                   </Text>
                 </View>
               ) : (
-                <Text style={styles.timeText} maxFontSizeMultiplier={1.2}>
-                  Express Delivery
-                </Text>
+                <View style={styles.expressIconStyle}>
+                  <Image
+                    style={{
+                      height: hp('2.5%'),
+                      width: hp('2.5%'),
+                      resizeMode: 'contain',
+                    }}
+                    source={icons.expressicon}
+                  />
+                  <Text style={styles.timeText} maxFontSizeMultiplier={1.2}>
+                    Express Delivery
+                  </Text>
+                </View>
               )}
               <TouchableOpacity
                 hitSlop={40}
@@ -521,6 +532,11 @@ const styles = StyleSheet.create({
     bottom: 0,
     height: StyleSheet.hairlineWidth,
     backgroundColor: FIELD_RULE,
+  },
+  expressIconStyle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: wp('1.5%'),
   },
   statusPill: {
     flexDirection: 'row',
