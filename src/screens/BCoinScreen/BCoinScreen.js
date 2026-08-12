@@ -18,15 +18,16 @@ import {
   redeemBCoinsApi,
 } from '@/api/userService';
 
-import BCoinHero from './components/BCoinHero';
-import HistoryList from './components/HistoryList';
-import InfoSheet from './components/InfoSheet';
-import RateCard from './components/RateCard';
-import RateHistorySheet from './components/RateHistorySheet';
-import RedeemFooter, { FOOTER_HEIGHT } from './components/RedeemFooter';
-import RedeemSheet from './components/RedeemSheet';
-import TokenStrip from './components/TokenStrip';
-import WalletSegments from './components/WalletSegments';
+import { RateCard, TokenStrip, WalletSegments } from './molecules';
+import {
+  BCoinHero,
+  FOOTER_HEIGHT,
+  HistoryList,
+  InfoSheet,
+  RateHistorySheet,
+  RedeemFooter,
+  RedeemSheet,
+} from './organisms';
 import { PALETTE } from './theme';
 import { groupHistoryByMonth, toNumber, withRateTrend } from './utils';
 
@@ -255,7 +256,7 @@ const BCoinScreen = () => {
         onInfo={() => setShowInfoSheet(true)}
       />
 
-      <View style={styles.sheet}>
+      <View style={styles.body}>
         <RateCard coinValue={coinValue} onPress={openRateSheet} />
         <TokenStrip tokens={tokens} />
         <WalletSegments selected={selected} onChange={setSelected} />
@@ -317,11 +318,11 @@ const BCoinScreen = () => {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: PALETTE.surface,
+    backgroundColor: PALETTE.canvas,
   },
-  sheet: {
+  body: {
     flex: 1,
-    backgroundColor: PALETTE.surface,
+    backgroundColor: PALETTE.canvas,
   },
 });
 

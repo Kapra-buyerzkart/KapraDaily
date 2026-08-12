@@ -118,7 +118,7 @@ const ReferralLevelMembersScreen = () => {
       {item.btEarnedForYou != null && (
         <View style={styles.memberRight}>
           <Text style={styles.memberBt}>
-            {formatBT(item.btEarnedForYou)} BT
+            {formatBT(item.btEarnedForYou)} UD
           </Text>
           <Text style={styles.memberBtLabel}>earned for you</Text>
         </View>

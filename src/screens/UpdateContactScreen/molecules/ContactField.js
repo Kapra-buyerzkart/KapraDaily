@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, TextInput, Platform } from 'react-native';
+import { View, StyleSheet, TextInput } from 'react-native';
 import { useSharedValue, withTiming } from 'react-native-reanimated';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import CartText from '@/screens/cart/components/atoms/CartText';
@@ -103,10 +103,11 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     ...CART_TYPE.bodyStrong,
+    lineHeight: undefined,
     color: CART_COLORS.textPrimary,
     letterSpacing: 1,
-    paddingVertical: CART_SPACING.sm,
-    bottom: Platform.OS === 'ios' ? hp(0.2) : 0,
+    paddingVertical: 0,
+    textAlignVertical: 'center',
     includeFontPadding: false,
   },
 });
