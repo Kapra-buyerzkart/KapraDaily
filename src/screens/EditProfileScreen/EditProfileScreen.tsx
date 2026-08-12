@@ -1,7 +1,6 @@
 import React from 'react';
-import { Platform, StatusBar, TextInput, Text, View } from 'react-native';
+import { Platform, StatusBar, TextInput, View } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
-import LinearGradient from 'react-native-linear-gradient';
 import Animated, {
   Extrapolation,
   interpolate,
@@ -10,26 +9,15 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
 } from 'react-native-reanimated';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
-import StatusModal from '../../components/StatusModal';
-import SectionHeader from '../home/components/SectionHeader';
+import StatusModal from '@/components/StatusModal';
 import { useEditProfileScreen } from './useEditProfileScreen';
-import { styles } from './styles';
-import EditProfileHeader from './components/EditProfileHeader';
-import EditProfileHero from './components/EditProfileHero';
-import ProfileTextField from './components/ProfileTextField';
-import DateOfBirthField from './components/DateOfBirthField';
-import GenderSelector from './components/GenderSelector';
-import SaveBar from './components/SaveBar';
-import {
-  CANVAS,
-  HERO_GRADIENT,
-  HERO_TOP,
-  INK,
-  MAX_FONT_SCALE,
-} from '@/styles/homeTheme';
-import { BAR_SOLID_AT, BORDER_FADE_RANGE, entrance } from '@/styles/motion';
+import { styles, BAR_REST, BAR_SOLID } from './styles';
+import EditProfileHeader from './organisms/EditProfileHeader';
+import IdentityCard from './organisms/IdentityCard';
+import PersonalDetailsCard from './organisms/PersonalDetailsCard';
+import ContactDetailsCard from './organisms/ContactDetailsCard';
+import SaveBar from './organisms/SaveBar';
+import { BAR_SOLID_AT, BORDER_FADE_RANGE, entrance } from './motion';
 
 const EditProfileScreen = () => {
   const {
@@ -44,6 +32,7 @@ const EditProfileScreen = () => {
     setSkId,
     email,
     phone,
+    isPrivileged,
     hasChanges,
     errors,
     statusModalVisible,
@@ -82,19 +71,18 @@ const EditProfileScreen = () => {
 
   const topBarBackgroundStyle = useAnimatedStyle(() => {
     const anchor = heroAnchor.value;
-    if (anchor <= 0) return { backgroundColor: HERO_TOP };
+    if (anchor <= 0) return { backgroundColor: BAR_REST };
     return {
       backgroundColor: interpolateColor(
         scrollY.value,
         [0, anchor * BAR_SOLID_AT],
-        [HERO_TOP, CANVAS],
+        [BAR_REST, BAR_SOLID],
       ),
     };
   });
 
   return (
     <View style={styles.mainContainer}>
-      {}
       <StatusBar
         translucent
         backgroundColor="transparent"
@@ -120,92 +108,35 @@ const EditProfileScreen = () => {
             borderStyle={topBarBorderStyle}
           />
 
-          {}
-          <LinearGradient colors={HERO_GRADIENT} style={styles.hero}>
-            <EditProfileHero
+          <View style={styles.body}>
+            <IdentityCard
               name={fullName}
               phone={phone}
+              isPrivileged={isPrivileged}
               onMeasure={onHeroMeasure}
               entering={entrance(0)}
             />
-          </LinearGradient>
 
-          <Animated.View entering={entrance(1)}>
-            <SectionHeader title="Personal details" variant="screen" />
-            <View style={styles.fieldGroup}>
-              <ProfileTextField
-                label="Full Name"
-                icon="account-outline"
-                placeholder="Enter your name"
-                value={fullName}
-                onChangeText={setFullName}
-                error={errors.fullName}
-                autoCapitalize="words"
-                returnKeyType="next"
-                onSubmitEditing={() => dobRef.current?.focus()}
+            <Animated.View entering={entrance(1)}>
+              <PersonalDetailsCard
+                fullName={fullName}
+                onChangeFullName={setFullName}
+                dob={dob}
+                onChangeDob={setDob}
+                gender={gender}
+                onChangeGender={setGender}
+                skId={skId}
+                onChangeSkId={setSkId}
+                errors={errors}
+                dobRef={dobRef}
+                skIdRef={skIdRef}
               />
+            </Animated.View>
 
-              <DateOfBirthField
-                ref={dobRef}
-                value={dob}
-                onChange={setDob}
-                error={errors.dob}
-              />
-
-              <GenderSelector value={gender} onChange={setGender} />
-
-              <ProfileTextField
-                ref={skIdRef}
-                label="SK Id"
-                icon="card-account-details-outline"
-                optional
-                placeholder="Enter SK Id"
-                value={skId}
-                onChangeText={setSkId}
-                autoCapitalize="characters"
-                returnKeyType="done"
-              />
-            </View>
-          </Animated.View>
-
-          <Animated.View entering={entrance(2)}>
-            <SectionHeader title="Contact details" variant="screen" />
-            <View style={styles.fieldGroup}>
-              {}
-              <ProfileTextField
-                label="Email ID"
-                icon="email-outline"
-                placeholder="Not added yet"
-                value={email}
-                editable={false}
-                verified={!!email}
-              />
-
-              <ProfileTextField
-                label="Phone Number"
-                icon="phone-outline"
-                placeholder="Not added yet"
-                value={phone}
-                editable={false}
-                verified={!!phone}
-              />
-            </View>
-
-            <View style={styles.noteRow}>
-              <MaterialCommunityIcons
-                name="shield-check-outline"
-                size={wp('4%')}
-                color={INK.muted}
-              />
-              <Text
-                style={styles.noteText}
-                maxFontSizeMultiplier={MAX_FONT_SCALE}
-              >
-                Your email and phone are verified. Change them from Security
-                settings so we can confirm it's you.
-              </Text>
-            </View>
-          </Animated.View>
+            <Animated.View entering={entrance(2)}>
+              <ContactDetailsCard email={email} phone={phone} />
+            </Animated.View>
+          </View>
         </Animated.ScrollView>
 
         <SaveBar enabled={hasChanges} onPress={handleSave} />

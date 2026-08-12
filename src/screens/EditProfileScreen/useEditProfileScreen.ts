@@ -59,6 +59,7 @@ export const useEditProfileScreen = () => {
 
   const email = profile?.emailId || '';
   const phone = profile?.phoneNo || '';
+  const isPrivileged = !!profile?.isPrivileged;
 
   const handleSave = async () => {
     const dobValue = dob.trim();
@@ -115,6 +116,7 @@ export const useEditProfileScreen = () => {
     setSkId,
     email,
     phone,
+    isPrivileged,
     hasChanges,
     errors,
     statusModalVisible,

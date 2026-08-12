@@ -23,6 +23,8 @@ import { heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { FONTS } from '@/styles/typography';
 import {
   ACCENT,
+  HAIRLINE,
+  INK,
   RADIUS,
   SPACE,
   SURFACE,
@@ -336,15 +338,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACE.md,
     paddingVertical: SPACE.sm,
     borderRadius: RADIUS.sm,
-    backgroundColor: SURFACE.tint,
-    borderLeftWidth: 3,
-    borderLeftColor: ACCENT.primary,
+    backgroundColor: SURFACE.sunken,
+    borderWidth: 1,
+    borderColor: HAIRLINE,
   },
   noteText: {
     ...TYPE.caption,
     lineHeight: undefined,
     fontFamily: FONTS.gilroy.medium,
-    color: ACCENT.discount,
+    color: INK.muted,
   },
 });
 

@@ -4,7 +4,6 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import { FONTS } from '@/styles/typography';
 import {
-  ACCENT,
   HAIRLINE,
   INK,
   RADIUS,
@@ -86,11 +85,11 @@ const styles = StyleSheet.create({
     marginLeft: SPACE.sm + 2,
   },
   primary: {
-    backgroundColor: ACCENT.primary,
+    backgroundColor: INK.strong,
   },
   ghost: {
-    backgroundColor: SURFACE.base,
-    borderWidth: 1.2,
+    backgroundColor: SURFACE.sunken,
+    borderWidth: 1,
     borderColor: HAIRLINE,
   },
   disabled: {

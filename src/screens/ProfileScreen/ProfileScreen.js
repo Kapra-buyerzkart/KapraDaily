@@ -1,6 +1,5 @@
 import { View, StatusBar } from 'react-native';
 import React from 'react';
-import LinearGradient from 'react-native-linear-gradient';
 import Animated, {
   Extrapolation,
   interpolate,
@@ -14,22 +13,21 @@ import LocationModal from '../../components/LocationModal';
 import ConfirmationModal from '../../components/ConfirmationModal';
 import StatusModal from '../../components/StatusModal';
 import HelpSupportModal from '../../components/HelpSupportModal';
+import LanguageSwitcherModal from '../../components/LanguageSwitcherModal';
 import { useProfileScreen } from './useProfileScreen';
-import { styles, HERO_TOP, HERO_GRADIENT } from './styles';
+import { styles, BAR_REST, BAR_SOLID } from './styles';
 import {
   buildOffersItems,
   buildMyAccountItems,
   buildInformationItems,
 } from './menuItems';
-import ProfileTopBar from './components/ProfileTopBar';
-import ProfileIdentity from './components/ProfileIdentity';
-import UDWalletStrip from './components/UDWalletStrip';
-import ProfileQuickActions from './components/ProfileQuickActions';
-import ListSection from './components/ListSection';
+import ProfileHeaderBar from './organisms/ProfileHeaderBar';
+import ProfileHeroCard from './organisms/ProfileHeroCard';
+import QuickActionsGrid from './organisms/QuickActionsGrid';
+import MenuSection from './organisms/MenuSection';
+import LogoutRow from './molecules/LogoutRow';
+import AppVersion from './molecules/AppVersion';
 import SuggestProductsModal from './components/SuggestProductsModal';
-import LogoutButton from './components/LogoutButton';
-import ProfileFooter from './components/ProfileFooter';
-import LanguageSwitcherModal from '../../components/LanguageSwitcherModal';
 import {
   BAR_SOLID_AT,
   BORDER_FADE_RANGE,
@@ -38,7 +36,6 @@ import {
   TITLE_FADE_OUT,
   entrance,
 } from './motion';
-import { CANVAS } from '@/styles/homeTheme';
 
 export default function ProfileScreen() {
   const {
@@ -81,7 +78,7 @@ export default function ProfileScreen() {
       scrollY.value = event.contentOffset.y;
     },
   });
-  const onIdentityMeasure = React.useCallback(
+  const onHeroMeasure = React.useCallback(
     bottom => {
       swapAnchor.value = bottom;
     },
@@ -127,12 +124,12 @@ export default function ProfileScreen() {
 
   const topBarBackgroundStyle = useAnimatedStyle(() => {
     const a = swapAnchor.value;
-    if (a <= 0) return { backgroundColor: HERO_TOP };
+    if (a <= 0) return { backgroundColor: BAR_REST };
     return {
       backgroundColor: interpolateColor(
         scrollY.value,
         [0, a * BAR_SOLID_AT],
-        [HERO_TOP, CANVAS],
+        [BAR_REST, BAR_SOLID],
       ),
     };
   });
@@ -156,7 +153,6 @@ export default function ProfileScreen() {
 
   return (
     <View style={styles.mainContainer}>
-      {}
       <StatusBar
         translucent
         backgroundColor="transparent"
@@ -170,7 +166,7 @@ export default function ProfileScreen() {
         scrollEventThrottle={16}
         stickyHeaderIndices={[0]}
       >
-        <ProfileTopBar
+        <ProfileHeaderBar
           name={profile?.custName}
           onBack={() => navigation.goBack()}
           backgroundStyle={topBarBackgroundStyle}
@@ -179,46 +175,38 @@ export default function ProfileScreen() {
           nameStyle={barNameStyle}
         />
 
-        {}
-        <LinearGradient colors={HERO_GRADIENT} style={styles.hero}>
-          <ProfileIdentity
+        <View style={styles.heroBlock}>
+          <ProfileHeroCard
             profile={profile}
-            onEditProfile={() => navigation.navigate('EditProfileScreen')}
             isPrivileged={profile?.isPrivileged}
-            onMeasure={onIdentityMeasure}
+            walletData={walletData}
+            onEditProfile={() => navigation.navigate('EditProfileScreen')}
+            onWallet={() => navigation.navigate('BCoinScreen')}
+            onMeasure={onHeroMeasure}
             entering={entrance(0)}
           />
 
           <Animated.View entering={entrance(1)}>
-            <UDWalletStrip
-              walletData={walletData}
-              onPress={() => navigation.navigate('BCoinScreen')}
+            <QuickActionsGrid
+              onMyOrders={() => navigation.navigate('MyOrdersScreen')}
+              onSavedAddress={() => navigation.navigate('SavedAddressScreen')}
+              onCoPartnerDashboard={() =>
+                navigation.navigate('CoPartnerDashboardScreen')
+              }
+              onRefer={() => navigation.navigate('ReferralScreen')}
             />
           </Animated.View>
-        </LinearGradient>
+        </View>
 
         <Animated.View entering={entrance(2)}>
-          <ProfileQuickActions
-            onMyOrders={() => navigation.navigate('MyOrdersScreen')}
-            onSavedAddress={() => navigation.navigate('SavedAddressScreen')}
-            onCoPartnerDashboard={() =>
-              navigation.navigate('CoPartnerDashboardScreen')
-            }
-            onRefer={() => navigation.navigate('ReferralScreen')}
-          />
+          <MenuSection title="Offers" items={offersItems} />
+          <MenuSection title="My Account" items={myAccountItems} />
+          <MenuSection title="Information" items={informationItems} />
         </Animated.View>
 
-        <Animated.View entering={entrance(3)} style={styles.sectionsContainer}>
-          <ListSection title="Offers" items={offersItems} />
-          <View style={styles.sectionGap} />
-          <ListSection title="My Account" items={myAccountItems} />
-          <View style={styles.sectionGap} />
-          <ListSection title="Information" items={informationItems} />
-        </Animated.View>
-
-        <Animated.View entering={entrance(4)}>
-          <LogoutButton onPress={() => setIsLogoutModalVisible(true)} />
-          <ProfileFooter />
+        <Animated.View entering={entrance(3)}>
+          <LogoutRow onPress={() => setIsLogoutModalVisible(true)} />
+          <AppVersion />
         </Animated.View>
       </Animated.ScrollView>
 

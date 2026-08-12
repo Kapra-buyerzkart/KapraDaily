@@ -9,7 +9,6 @@ import Animated, {
 } from 'react-native-reanimated';
 import { FONTS } from '@/styles/typography';
 import {
-  ACCENT,
   HAIRLINE,
   INK,
   RADIUS,
@@ -77,7 +76,7 @@ const TrackingHeader = ({ scrollY, orderNumber, onBack, onHelp }) => {
         <Ionicons
           name="chatbubble-ellipses-outline"
           size={wp('3.8%')}
-          color={ACCENT.primary}
+          color={INK.base}
         />
         <Text style={styles.helpText} maxFontSizeMultiplier={MAX_FONT_SCALE}>
           Help
@@ -127,7 +126,9 @@ const styles = StyleSheet.create({
   help: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFF1E9',
+    backgroundColor: SURFACE.sunken,
+    borderWidth: 1,
+    borderColor: HAIRLINE,
     borderRadius: RADIUS.pill,
     paddingHorizontal: SPACE.md,
     minHeight: TOUCH_MIN - 14,
@@ -136,7 +137,7 @@ const styles = StyleSheet.create({
     ...TYPE.caption,
     lineHeight: undefined,
     fontFamily: FONTS.gilroy.bold,
-    color: ACCENT.primary,
+    color: INK.base,
     marginLeft: SPACE.xs + 1,
     letterSpacing: 0.2,
   },

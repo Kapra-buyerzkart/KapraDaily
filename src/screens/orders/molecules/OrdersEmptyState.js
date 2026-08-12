@@ -4,7 +4,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import { FONTS } from '@/styles/typography';
 import {
-  ACCENT,
+  HAIRLINE,
   INK,
   RADIUS,
   SPACE,
@@ -25,7 +25,7 @@ const OrdersEmptyState = ({
 }) => (
   <View style={styles.wrap}>
     <View style={styles.badge}>
-      <Ionicons name={icon} size={wp('9%')} color={ACCENT.primary} />
+      <Ionicons name={icon} size={wp('9%')} color={INK.strong} />
     </View>
     <Text style={styles.title} maxFontSizeMultiplier={MAX_FONT_SCALE}>
       {title}
@@ -59,7 +59,9 @@ const styles = StyleSheet.create({
     borderRadius: wp('10%'),
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: SURFACE.tint,
+    backgroundColor: SURFACE.sunken,
+    borderWidth: 1,
+    borderColor: HAIRLINE,
   },
   title: {
     ...TYPE.heading,
@@ -82,7 +84,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: SPACE.xl,
     borderRadius: RADIUS.pill,
-    backgroundColor: ACCENT.primary,
+    backgroundColor: INK.strong,
     marginTop: SPACE.lg,
   },
   actionText: {

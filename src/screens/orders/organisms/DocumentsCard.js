@@ -29,7 +29,7 @@ const DocumentsCard = ({ rows = [] }) => {
           accessibilityRole="button"
           accessibilityLabel={row.label}
         >
-          <IconChip name={row.icon} tone={row.tone || 'brand'} />
+          <IconChip name={row.icon} tone={row.tone || 'neutral'} />
           <View style={styles.copy}>
             <Text style={styles.label} maxFontSizeMultiplier={MAX_FONT_SCALE}>
               {row.label}

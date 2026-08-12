@@ -58,7 +58,7 @@ const OrderCard = ({
     {
       label: isLiveOrder(status) ? 'Track order' : 'View details',
       icon: isLiveOrder(status) ? 'navigate-outline' : 'receipt-outline',
-      variant: order?.canReorder ? 'ghost' : 'primary',
+      variant: 'ghost',
       onPress: open,
     },
   ];

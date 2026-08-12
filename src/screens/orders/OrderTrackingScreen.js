@@ -38,6 +38,7 @@ import CountPill from './atoms/CountPill';
 import SurfaceCard from './atoms/SurfaceCard';
 import RouteTimeline from './molecules/RouteTimeline';
 import DetailList from './molecules/DetailList';
+import TrackingSkeleton from './molecules/TrackingSkeleton';
 import TrackingHeader from './organisms/TrackingHeader';
 import TrackingHero from './organisms/TrackingHero';
 import DeliveryPartnerCard from './organisms/DeliveryPartnerCard';
@@ -444,7 +445,7 @@ const OrderTrackingScreen = () => {
       label: 'View invoice',
       caption: invoiceNumber ? `Invoice ${invoiceNumber}` : 'Tax invoice',
       icon: 'receipt-outline',
-      tone: 'brand',
+      tone: 'neutral',
       onPress: handleViewInvoice,
     },
     INVOICE_STATUSES.includes(effectiveOrderStatus) && {
@@ -472,12 +473,29 @@ const OrderTrackingScreen = () => {
     },
   ];
 
+  const showSkeleton = loading && !orderItems?.length;
+
+  if (showSkeleton) {
+    return (
+      <SafeAreaView style={styles.screen} edges={['top', 'left', 'right']}>
+        <StatusBar barStyle="dark-content" backgroundColor={SURFACE.base} />
+        <TrackingHeader
+          scrollY={scrollY}
+          orderNumber={displayOrderId}
+          onBack={goBack}
+          onHelp={openSupportTicket}
+        />
+        <TrackingSkeleton />
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.screen} edges={['top', 'left', 'right']}>
       <StatusBar barStyle="dark-content" backgroundColor={SURFACE.base} />
 
       <CustomLoader
-        visible={loading || retryLoading}
+        visible={retryLoading || loading}
         text={retryLoading ? 'Verifying Payment...' : 'Updating Order...'}
       />
 

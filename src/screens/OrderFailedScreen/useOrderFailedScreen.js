@@ -8,6 +8,7 @@ import {
   CommonActions,
 } from '@react-navigation/native';
 import { getPaymentMeta } from '@/screens/cart/paymentMeta';
+import { resolveFailureMessage } from './failureMessage';
 
 export const useOrderFailedScreen = () => {
   const navigation = useNavigation();
@@ -50,6 +51,10 @@ export const useOrderFailedScreen = () => {
     ? `${totalItems} item${Number(totalItems) !== 1 ? 's' : ''}`
     : null;
   const amountLabel = `₹${Number(totalAmount || 0).toFixed(2)}`;
+  const failureReason = useMemo(
+    () => resolveFailureMessage(errorMessage),
+    [errorMessage],
+  );
 
   const handleRetryPayment = useCallback(() => {
     navigation.dispatch(
@@ -87,7 +92,7 @@ export const useOrderFailedScreen = () => {
     paymentLabel,
     itemsLabel,
     amountLabel,
-    errorMessage,
+    failureReason,
     handleRetryPayment,
     handleBackToHome,
     handleCopyOrderNumber,

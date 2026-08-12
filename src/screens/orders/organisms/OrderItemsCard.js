@@ -9,6 +9,7 @@ import {
   INK,
   RADIUS,
   SPACE,
+  SURFACE,
   TYPE,
   MAX_FONT_SCALE,
 } from '@/styles/homeTheme';
@@ -62,7 +63,7 @@ const OrderItemsCard = ({ items = [], orderStatus, onReturn, bill, total }) => {
           <Ionicons
             name={expanded ? 'chevron-up' : 'chevron-down'}
             size={wp('3.4%')}
-            color={ACCENT.primary}
+            color={INK.base}
             style={styles.toggleIcon}
           />
         </AnimatedPressable>
@@ -116,7 +117,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
-    backgroundColor: '#FFF1E9',
+    backgroundColor: SURFACE.sunken,
+    borderWidth: 1,
+    borderColor: HAIRLINE,
     borderRadius: RADIUS.pill,
     paddingHorizontal: SPACE.md,
     paddingVertical: SPACE.xs + 2,
@@ -126,7 +129,7 @@ const styles = StyleSheet.create({
     ...TYPE.caption,
     lineHeight: undefined,
     fontFamily: FONTS.gilroy.bold,
-    color: ACCENT.primary,
+    color: INK.base,
   },
   toggleIcon: {
     marginLeft: SPACE.xs + 2,

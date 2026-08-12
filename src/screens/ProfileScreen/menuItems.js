@@ -197,6 +197,7 @@ export const buildInformationItems = ({
     key: 'delete-account',
     label: 'Delete Account',
     textColor: RED,
+    tone: 'danger',
     icon: (
       <MaterialCommunityIcons
         name="account-remove-outline"

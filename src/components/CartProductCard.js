@@ -1,5 +1,11 @@
 import { View, Text, StyleSheet, Platform } from 'react-native';
-import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import React, {
+  useState,
+  useMemo,
+  useEffect,
+  useCallback,
+  useRef,
+} from 'react';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -15,7 +21,6 @@ import { getCartItemAvailability } from '../utils/cartAvailability';
 import AnimatedPressable from './AnimatedPressable';
 import CartText from '../screens/cart/components/atoms/CartText';
 import QtyStepper from '../screens/cart/components/atoms/QtyStepper';
-import Badge from '../screens/cart/components/atoms/Badge';
 import {
   CART_COLORS,
   CART_RADIUS,
@@ -23,8 +28,11 @@ import {
   wp,
   hp,
 } from '../styles/cartTheme';
+import { ACCENT, RADIUS, TYPE, MAX_FONT_SCALE } from '../styles/homeTheme';
 
 const SOLD_OUT_IMAGE_OPACITY = 0.4;
+const UD_TOKEN_ICON = 'ticket-confirmation-outline';
+const UD_TOKEN_ICON_SIZE = 12;
 
 const CartProductCard = props => {
   const { changeCartItemQuantity, removeFromCart, updatingItems } = useCart();
@@ -173,17 +181,20 @@ const CartProductCard = props => {
               Remove to place order
             </CartText>
           ) : btokens > 0 ? (
-            <Badge
-              tone="brand"
-              icon={
-                <MaterialCommunityIcons
-                  name="star-four-points"
-                  size={wp('3%')}
-                  color={CART_COLORS.primary}
-                />
-              }
-              label={`${btokens} UD Token`}
-            />
+            <View style={styles.tokenRow}>
+              <MaterialCommunityIcons
+                name={UD_TOKEN_ICON}
+                size={UD_TOKEN_ICON_SIZE}
+                color={ACCENT.discount}
+              />
+              <Text
+                style={styles.tokenText}
+                numberOfLines={1}
+                maxFontSizeMultiplier={MAX_FONT_SCALE}
+              >
+                {`${btokens} UD ${Number(btokens) > 1 ? 'Tokens' : 'Token'}`}
+              </Text>
+            </View>
           ) : null}
         </View>
 
@@ -231,8 +242,10 @@ const styles = StyleSheet.create({
   },
   imageWell: {
     width: wp('20%'),
+    borderWidth: 1,
+    borderColor: 'rgba(208, 207, 207, 0.32)',
     height: wp('20%'),
-    backgroundColor: CART_COLORS.well,
+    backgroundColor: CART_COLORS.card,
     borderRadius: CART_RADIUS.productCard,
     justifyContent: 'center',
     alignItems: 'center',
@@ -303,6 +316,24 @@ const styles = StyleSheet.create({
   },
   copy: {
     gap: CART_SPACING.xs,
+  },
+  tokenRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    maxWidth: '100%',
+    minHeight: TYPE.micro.lineHeight,
+    backgroundColor: ACCENT.primarySoft,
+    borderRadius: RADIUS.xs,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    gap: 3,
+  },
+  tokenText: {
+    ...TYPE.micro,
+    color: ACCENT.discount,
+    fontFamily: FONTS.gilroy.bold,
+    flexShrink: 1,
   },
   footerRow: {
     flexDirection: 'row',

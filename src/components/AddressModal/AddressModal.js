@@ -60,7 +60,7 @@ const AddressModal = ({
       onClose={onClose}
       contentStyle={styles.sheet}
     >
-      <SheetGrabber />
+      {/* <SheetGrabber /> */}
 
       <View style={styles.body}>
         <SheetHeader
@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
     paddingBottom: hp('1.5%'),
   },
   body: {
-    marginTop: hp('1.8%'),
+    marginTop: hp('1.2%'),
   },
   cta: {
     marginTop: hp('2%'),

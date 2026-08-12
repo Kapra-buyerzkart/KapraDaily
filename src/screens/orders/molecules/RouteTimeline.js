@@ -34,7 +34,7 @@ const RouteTimeline = ({ store, destination }) => (
   <View>
     <Stop
       icon="storefront"
-      tone="brand"
+      tone="neutral"
       title={store.title}
       lines={store.lines}
     />

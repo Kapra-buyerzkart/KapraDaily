@@ -30,6 +30,10 @@ export const styles = StyleSheet.create({
     backgroundColor: CART_COLORS.canvas,
   },
 
+  safeTop: {
+    backgroundColor: CART_COLORS.card,
+  },
+
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',

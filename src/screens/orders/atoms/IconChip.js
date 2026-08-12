@@ -5,8 +5,8 @@ import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import { RADIUS } from '@/styles/homeTheme';
 import { CHIP_TONE } from '../tokens/tracking';
 
-const IconChip = ({ name, tone = 'brand', size = wp('9%'), style }) => {
-  const palette = CHIP_TONE[tone] || CHIP_TONE.brand;
+const IconChip = ({ name, tone = 'neutral', size = wp('9%'), style }) => {
+  const palette = CHIP_TONE[tone] || CHIP_TONE.neutral;
   return (
     <View
       style={[

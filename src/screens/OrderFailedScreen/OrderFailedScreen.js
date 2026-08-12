@@ -19,7 +19,7 @@ const OrderFailedScreen = () => {
     paymentLabel,
     itemsLabel,
     amountLabel,
-    errorMessage,
+    failureReason,
     handleRetryPayment,
     handleBackToHome,
     handleCopyOrderNumber,
@@ -33,7 +33,7 @@ const OrderFailedScreen = () => {
         translucent={false}
       />
 
-      <SafeAreaView edges={['top']}>
+      <SafeAreaView edges={['top']} style={styles.safeTop}>
         <FailedTopBar
           title={FAILED_COPY.topBarTitle}
           subtitle={FAILED_COPY.topBarSubtitle}
@@ -48,7 +48,7 @@ const OrderFailedScreen = () => {
         <FailureStatusCard
           title={FAILED_COPY.statusTitle}
           subtitle={FAILED_COPY.statusSubtitle}
-          errorMessage={errorMessage}
+          errorMessage={failureReason}
           refundNote={FAILED_COPY.refundNote}
         />
 

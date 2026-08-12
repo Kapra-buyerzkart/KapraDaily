@@ -26,12 +26,12 @@ import {
 import AnimatedPressable from '@/components/AnimatedPressable';
 
 const VARIANT = {
-  primary: { fill: ACCENT.primary, text: INK.onDark, border: ACCENT.primary },
+  primary: { fill: INK.strong, text: INK.onDark, border: INK.strong },
   success: { fill: ACCENT.success, text: INK.onDark, border: ACCENT.success },
   ghost: {
-    fill: SURFACE.base,
-    text: ACCENT.primary,
-    border: 'rgba(242,80,0,0.32)',
+    fill: SURFACE.sunken,
+    text: INK.base,
+    border: HAIRLINE,
   },
 };
 
