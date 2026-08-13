@@ -1,0 +1,19 @@
+# Secrets template for Android builds.
+#
+# Do NOT put these values in the tracked android/gradle.properties. Instead add
+# them to your per-user global Gradle file (never committed):
+#
+#   ~/.gradle/gradle.properties
+#
+# or inject them as CI/CD secret environment overrides. The build reads them via
+# project.findProperty(...) / project.hasProperty(...), so a global definition is
+# picked up automatically.
+
+# Release signing (was previously committed with password "123456" — rotate it).
+MYAPP_UPLOAD_STORE_FILE=Buyerzkart.keystore
+MYAPP_UPLOAD_KEY_ALIAS=Buyerzkart-alias
+MYAPP_UPLOAD_STORE_PASSWORD=__CHANGE_ME__
+MYAPP_UPLOAD_KEY_PASSWORD=__CHANGE_ME__
+
+# Google Maps SDK key for the native Android map/geo features.
+GOOGLE_MAPS_API_KEY=YOUR_GOOGLE_MAPS_API_KEY

@@ -1,0 +1,16 @@
+<resources>
+
+    <!-- Base application theme. Force a light theme (not DayNight) so devices in
+         system dark mode don't get a black native window/screen background
+         showing through transparent React views while assets load. -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="android:editTextBackground">@drawable/rn_edit_text_material</item>
+        <item name="android:windowBackground">@color/window_background</item>
+    </style>
+
+    <style name="BootTheme" parent="AppTheme">
+        <item name="android:windowBackground">@drawable/bootsplash</item>
+    </style>
+
+</resources>

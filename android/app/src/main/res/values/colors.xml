@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ic_launcher_background">#F25000</color>
+    <color name="bootsplash_background">#F25000</color>
+    <!-- What shows through wherever no React screen is painted. Matches the
+         default contentStyle in src/navigation/RootNavigator.js so those gaps
+         are invisible on the (mostly white) app; the dark ticket/event flow
+         sets its own opaque contentStyle. -->
+    <color name="window_background">#FFFFFF</color>
+</resources>

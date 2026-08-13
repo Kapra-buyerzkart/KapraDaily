@@ -1,0 +1,12 @@
+diff --git a/node_modules/react-native-otp-verify/android/build.gradle b/node_modules/react-native-otp-verify/android/build.gradle
+index 7e52db0..8fd5bad 100644
+--- a/node_modules/react-native-otp-verify/android/build.gradle
++++ b/node_modules/react-native-otp-verify/android/build.gradle
+@@ -50,7 +50,6 @@ repositories {
+     }
+     google()
+     mavenCentral()
+-    jcenter()
+ }
+ 
+ dependencies {

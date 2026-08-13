@@ -1,0 +1,9 @@
+<resources>
+
+    <style name="BootTheme" parent="AppTheme">
+        <item name="android:windowBackground">@drawable/bootsplash</item>
+        <item name="android:windowSplashScreenBackground">@color/bootsplash_background</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+    </style>
+
+</resources>

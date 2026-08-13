@@ -1,0 +1,22 @@
+diff --git a/node_modules/react-native-image-colors/android/build.gradle b/node_modules/react-native-image-colors/android/build.gradle
+index 2e357f2..2429811 100644
+--- a/node_modules/react-native-image-colors/android/build.gradle
++++ b/node_modules/react-native-image-colors/android/build.gradle
+@@ -26,6 +26,7 @@ def getExtOrIntegerDefault(name) {
+ }
+ 
+ android {
++  namespace "com.reactnativeimagecolors"
+   compileSdkVersion getExtOrIntegerDefault('compileSdkVersion')
+   buildToolsVersion getExtOrDefault('buildToolsVersion')
+   defaultConfig {
+diff --git a/node_modules/react-native-image-colors/android/src/main/AndroidManifest.xml b/node_modules/react-native-image-colors/android/src/main/AndroidManifest.xml
+index 3148024..0a0938a 100644
+--- a/node_modules/react-native-image-colors/android/src/main/AndroidManifest.xml
++++ b/node_modules/react-native-image-colors/android/src/main/AndroidManifest.xml
+@@ -1,4 +1,3 @@
+-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+-          package="com.reactnativeimagecolors">
++<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+ 
+ </manifest>

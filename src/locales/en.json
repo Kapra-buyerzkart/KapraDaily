@@ -1,0 +1,58 @@
+{
+  "common": {
+    "ok": "OK",
+    "cancel": "Cancel",
+    "save": "Save",
+    "submit": "Submit",
+    "continue": "Continue",
+    "retry": "Retry",
+    "loading": "Loading...",
+    "search": "Search",
+    "seeAll": "See All",
+    "back": "Back",
+    "close": "Close",
+    "done": "Done",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "nav": {
+    "home": "Home",
+    "cart": "Cart",
+    "wishlist": "Wishlist",
+    "profile": "Profile",
+    "search": "Search"
+  },
+  "profile": {
+    "editProfile": "Edit Profile",
+    "myAccount": "My Account",
+    "myOrders": "My Orders",
+    "myWishlist": "My Wishlist",
+    "myCart": "My Cart",
+    "myAffiliates": "My Affiliates",
+    "updatePhoneNumber": "Update Phone Number",
+    "updateEmailId": "Update Email ID",
+    "updatePassword": "Update Password",
+    "language": "Language",
+    "suggestProducts": "Suggest Products",
+    "customerSupport": "Customer Support",
+    "faq": "F&Q",
+    "privacyPolicy": "Privacy Policy",
+    "termsOfUse": "Terms Of Use",
+    "aboutUs": "About Us",
+    "supportTickets": "Support Tickets",
+    "kpcLogin": "KPC Login",
+    "deleteAccount": "Delete Account",
+    "logout": "Logout"
+  },
+  "auth": {
+    "login": "Login",
+    "logout": "Logout",
+    "sessionExpired": "Session expired, please login again."
+  },
+  "cart": {
+    "addToCart": "Add to Cart",
+    "buyNow": "Buy Now",
+    "emptyCart": "Your cart is empty",
+    "checkout": "Checkout"
+  }
+}
