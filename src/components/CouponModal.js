@@ -28,7 +28,7 @@ const CouponModal = ({
   isCopyOnly = false,
 }) => {
   const modalRef = useRef(null);
-
+  console.log(availableCoupons, 'availableCoupons=====>');
   useEffect(() => {
     if (visible) {
       modalRef.current?.open();

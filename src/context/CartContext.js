@@ -1250,6 +1250,14 @@ export const CartProvider = ({ children }) => {
           };
         } else {
           const msg = response?.message || 'Failed to apply coupon';
+          console.log('❌ [CART] applyCoupon failed:', {
+            couponCode,
+            cartVersion: version,
+            cartId: cartIdRef.current,
+            status: response?.status,
+            message: msg,
+            response,
+          });
           if (msg.toLowerCase().includes('modified')) {
             logger.log(
               '🔄 [CART] Auto-refreshing cart due to modified error in applyCoupon',
@@ -1260,6 +1268,13 @@ export const CartProvider = ({ children }) => {
         }
       } catch (error) {
         logger.error('Error applying coupon:', error);
+        console.log('❌ [CART] applyCoupon threw:', {
+          couponCode,
+          status: error?.response?.status || error?.status,
+          data: error?.response?.data || error?.data,
+          message: error?.message || error?.Message,
+          error,
+        });
         const msg =
           error.message ||
           error.Message ||
@@ -1314,7 +1329,8 @@ export const CartProvider = ({ children }) => {
             message: response.message || 'UD Coins applied successfully',
           };
         } else {
-          if (msg?.toLowerCase().includes('modified')) {
+          const msg = response?.message || 'Failed to apply UD Coins';
+          if (msg.toLowerCase().includes('modified')) {
             logger.log('🚫 [CART] Suppressing modified Toast:', msg);
           } else {
             Toast.show(msg, Toast.LONG);
@@ -1352,7 +1368,8 @@ export const CartProvider = ({ children }) => {
         await refreshCart();
         return { success: true };
       } else {
-        if (msg?.toLowerCase().includes('modified')) {
+        const msg = response?.message || 'Failed to remove UD Coins';
+        if (msg.toLowerCase().includes('modified')) {
           logger.log('🚫 [CART] Suppressing modified Toast:', msg);
         } else {
           Toast.show(msg, Toast.LONG);

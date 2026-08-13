@@ -10,6 +10,8 @@ const CartFooterSection = ({
   onWishlistPress,
   appliedCouponCode,
   appliedGiftCardCode,
+  isCouponApplied,
+  isGiftCardApplied,
   bcoinsAppliedValue,
   availableBCoins,
   onApplyOffer,
@@ -27,6 +29,8 @@ const CartFooterSection = ({
     <SavingsSection
       appliedCouponCode={appliedCouponCode}
       appliedGiftCardCode={appliedGiftCardCode}
+      isCouponApplied={isCouponApplied}
+      isGiftCardApplied={isGiftCardApplied}
       bcoinsAppliedValue={bcoinsAppliedValue}
       availableBCoins={availableBCoins}
       onApplyOffer={onApplyOffer}

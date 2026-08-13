@@ -127,6 +127,21 @@ export const useOffers = (deliveryHook, addressHook) => {
     }
   }, [cartSummary]);
 
+  const couponCodeFromSummary =
+    cartSummary?.couponCode || cartSummary?.appliedCouponCode || null;
+  const giftCardCodeFromSummary =
+    cartSummary?.giftCode || cartSummary?.giftCardCode || null;
+
+  const isCouponApplied =
+    !!appliedCouponCode ||
+    !!couponCodeFromSummary ||
+    (cartSummary?.couponAmount ?? 0) > 0;
+
+  const isGiftCardApplied =
+    !!appliedGiftCardCode ||
+    !!giftCardCodeFromSummary ||
+    (cartSummary?.giftCardAmount ?? 0) > 0;
+
   const updateOfferState = useCallback((offerId, applied) => {
     setOffers(prev =>
       prev.map(item =>
@@ -198,33 +213,51 @@ export const useOffers = (deliveryHook, addressHook) => {
   const onRejectOffer = useCallback(
     async offerId => {
       if (offerId === '2') {
-        const res = await removeCoupon();
-        if (res.success) {
-          updateOfferState(offerId, false);
-          setAppliedCouponCode(null);
-          const selectedAddr = addressHook?.addresses?.find(a => a.selected);
-          getCartSummary(
-            deliveryHook?.deliveryMode,
-            deliveryHook?.selectedSlot,
-            null,
-            selectedAddr?.pincodeAreaId,
-          );
+        try {
+          showLoader(true);
+          const res = await removeCoupon();
+          showLoader(false);
+          if (res.success) {
+            updateOfferState(offerId, false);
+            setAppliedCouponCode(null);
+            const selectedAddr = addressHook?.addresses?.find(a => a.selected);
+            getCartSummary(
+              deliveryHook?.deliveryMode,
+              deliveryHook?.selectedSlot,
+              null,
+              selectedAddr?.pincodeAreaId,
+            );
+          } else {
+            Toast.show(res.message || 'Failed to remove coupon', Toast.LONG);
+          }
+        } catch (error) {
+          showLoader(false);
+          Toast.show('Failed to remove coupon', Toast.LONG);
         }
         return;
       }
 
       if (offerId === '4') {
-        const res = await removeGiftCard();
-        if (res.success) {
-          updateOfferState(offerId, false);
-          setAppliedGiftCardCode(null);
-          const selectedAddr = addressHook?.addresses?.find(a => a.selected);
-          getCartSummary(
-            deliveryHook?.deliveryMode,
-            deliveryHook?.selectedSlot,
-            null,
-            selectedAddr?.pincodeAreaId,
-          );
+        try {
+          showLoader(true);
+          const res = await removeGiftCard();
+          showLoader(false);
+          if (res.success) {
+            updateOfferState(offerId, false);
+            setAppliedGiftCardCode(null);
+            const selectedAddr = addressHook?.addresses?.find(a => a.selected);
+            getCartSummary(
+              deliveryHook?.deliveryMode,
+              deliveryHook?.selectedSlot,
+              null,
+              selectedAddr?.pincodeAreaId,
+            );
+          } else {
+            Toast.show(res.message || 'Failed to remove gift card', Toast.LONG);
+          }
+        } catch (error) {
+          showLoader(false);
+          Toast.show('Failed to remove gift card', Toast.LONG);
         }
         return;
       }
@@ -300,12 +333,35 @@ export const useOffers = (deliveryHook, addressHook) => {
             (isGiftCard
               ? 'Failed to apply gift card'
               : 'Failed to apply coupon');
+          console.log('❌ [OFFERS] Apply failed:', {
+            code: codeToApply,
+            isGiftCard,
+            message: errorMsg,
+            status: result?.status,
+            result,
+          });
           if (errorMsg.toLowerCase().includes('modified')) {
             console.log('🚫 [OFFERS] Suppressing modified Toast:', errorMsg);
           } else {
             Toast.show(errorMsg, Toast.LONG);
           }
         }
+      } catch (error) {
+        console.log('❌ [OFFERS] Apply threw:', {
+          code: codeToApply,
+          isGiftCard,
+          message: error?.message || error?.Message || error,
+          status: error?.response?.status,
+          data: error?.response?.data || error?.data,
+          error,
+        });
+        Toast.show(
+          error?.message ||
+            (isGiftCard
+              ? 'Failed to apply gift card'
+              : 'Failed to apply coupon'),
+          Toast.LONG,
+        );
       } finally {
         isApplyingRef.current = false;
         showLoader(false);
@@ -346,7 +402,9 @@ export const useOffers = (deliveryHook, addressHook) => {
     onRejectOffer,
     handleApplyCoupon,
     handleCouponClick,
-    appliedCouponCode,
-    appliedGiftCardCode,
+    appliedCouponCode: appliedCouponCode || couponCodeFromSummary,
+    appliedGiftCardCode: appliedGiftCardCode || giftCardCodeFromSummary,
+    isCouponApplied,
+    isGiftCardApplied,
   };
 };

@@ -7,9 +7,11 @@ import Badge from './atoms/Badge';
 import IconDisc from './atoms/IconDisc';
 import {
   CART_COLORS,
+  CART_RADIUS,
   CART_SPACING,
   wp,
   hp,
+  hitSlopTo,
 } from '../../../styles/cartTheme';
 
 const ICON_TONES = {
@@ -23,14 +25,21 @@ const OfferRow = ({
   iconTone = 'brand',
   title,
   appliedLabel,
+  appliedSubtitle,
   subtitle,
   isApplied,
   onPress,
+  onRemove,
+  removeLabel = 'Remove',
 }) => {
   const tone = ICON_TONES[iconTone] || ICON_TONES.brand;
+  const Wrapper = isApplied ? View : TouchableOpacity;
+  const wrapperProps = isApplied
+    ? {}
+    : { activeOpacity: 0.75, onPress, accessibilityRole: 'button' };
 
   return (
-    <TouchableOpacity activeOpacity={0.75} style={styles.row} onPress={onPress}>
+    <Wrapper style={styles.row} {...wrapperProps}>
       <IconDisc
         size={wp('9.5%')}
         tone={isApplied ? 'success' : tone.disc}
@@ -51,7 +60,7 @@ const OfferRow = ({
             ) : null}
             <Badge
               tone="success"
-              label="Applied"
+              label={appliedSubtitle || 'Applied'}
               icon={
                 <MaterialCommunityIcons
                   name="check-circle"
@@ -68,8 +77,32 @@ const OfferRow = ({
         )}
       </View>
 
-      <AntDesign name="right" size={wp('3.4%')} color={CART_COLORS.textFaint} />
-    </TouchableOpacity>
+      {isApplied ? (
+        <TouchableOpacity
+          activeOpacity={0.75}
+          style={styles.removeButton}
+          onPress={onRemove}
+          hitSlop={hitSlopTo(hp('3.2%'))}
+          accessibilityRole="button"
+          accessibilityLabel={`${removeLabel} ${title}`}
+        >
+          <MaterialCommunityIcons
+            name="close"
+            size={wp('3.2%')}
+            color={CART_COLORS.danger}
+          />
+          <CartText variant="micro" tone="danger">
+            {removeLabel}
+          </CartText>
+        </TouchableOpacity>
+      ) : (
+        <AntDesign
+          name="right"
+          size={wp('3.4%')}
+          color={CART_COLORS.textFaint}
+        />
+      )}
+    </Wrapper>
   );
 };
 
@@ -92,5 +125,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: CART_SPACING.sm,
     flexWrap: 'wrap',
+  },
+  removeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: CART_SPACING.xs / 2,
+    paddingHorizontal: CART_SPACING.sm,
+    paddingVertical: CART_SPACING.xs,
+    borderRadius: CART_RADIUS.pill,
+    borderWidth: 1,
+    borderColor: CART_COLORS.danger,
+    backgroundColor: CART_COLORS.dangerTint,
   },
 });

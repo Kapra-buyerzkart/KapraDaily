@@ -7,8 +7,12 @@ const CoinCard = ({ bcoinsApplied, availableBCoins, onApply, onRemove }) => (
     iconTone="brand"
     title="UD Coin"
     subtitle={`Available UD Coins : ${availableBCoins || 0}`}
+    appliedSubtitle={
+      bcoinsApplied > 0 ? `₹${Number(bcoinsApplied).toFixed(2)} applied` : null
+    }
     isApplied={bcoinsApplied > 0}
-    onPress={bcoinsApplied > 0 ? onRemove : onApply}
+    onPress={onApply}
+    onRemove={onRemove}
   />
 );
 

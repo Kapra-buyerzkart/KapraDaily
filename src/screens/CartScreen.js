@@ -48,6 +48,8 @@ const CartScreen = () => {
     availableGiftCards,
     appliedCouponCode,
     appliedGiftCardCode,
+    isCouponApplied,
+    isGiftCardApplied,
     onApplyOffer,
     onRejectOffer,
     handleApplyCoupon,
@@ -206,6 +208,8 @@ const CartScreen = () => {
         }
         appliedCouponCode={appliedCouponCode}
         appliedGiftCardCode={appliedGiftCardCode}
+        isCouponApplied={isCouponApplied}
+        isGiftCardApplied={isGiftCardApplied}
         bcoinsAppliedValue={billCalculations.bcoinsAppliedValue}
         availableBCoins={profile?.totalBCoins || profile?.bCoins || 0}
         onApplyOffer={onApplyOffer}
@@ -220,6 +224,8 @@ const CartScreen = () => {
       navigation,
       appliedCouponCode,
       appliedGiftCardCode,
+      isCouponApplied,
+      isGiftCardApplied,
       billCalculations,
       profile?.totalBCoins,
       profile?.bCoins,

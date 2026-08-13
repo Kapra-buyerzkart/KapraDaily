@@ -11,6 +11,8 @@ import { CART_SPACING, hp } from '../../../styles/cartTheme';
 const SavingsSection = ({
   appliedCouponCode,
   appliedGiftCardCode,
+  isCouponApplied,
+  isGiftCardApplied,
   bcoinsAppliedValue,
   availableBCoins,
   onApplyOffer,
@@ -29,12 +31,14 @@ const SavingsSection = ({
         <View style={styles.body}>
           <CouponCard
             appliedCouponCode={appliedCouponCode}
+            isApplied={isCouponApplied}
             onApply={() => onApplyOffer('2')}
             onRemove={() => onRejectOffer('2')}
           />
           <Divider inset={CART_SPACING.lg} />
           <RewardsCard
             appliedGiftCardCode={appliedGiftCardCode}
+            isApplied={isGiftCardApplied}
             onApply={() => onApplyOffer('4')}
             onRemove={() => onRejectOffer('4')}
           />
