@@ -5,6 +5,7 @@ import {
   CART_RADIUS,
   CART_SPACING,
 } from '@/styles/cartTheme';
+import { ACCENT } from '@/styles/homeTheme';
 
 export const PALETTE = {
   gold: '#F6C445',
@@ -12,6 +13,7 @@ export const PALETTE = {
   goldTint: '#FDF6E3',
   violet: '#6E34C0',
   violetTint: '#F3EEFF',
+  token: ACCENT.discount,
   orange: CART_COLORS.primary,
   orangeTint: CART_COLORS.primaryTint,
   surface: CART_COLORS.card,

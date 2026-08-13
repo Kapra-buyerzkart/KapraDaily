@@ -86,6 +86,7 @@ const images = {
   claimticketBtn: require('./claimticketBtn.png'),
   no_vocher_booking: require('./noimages/no_vocher_booking.png'),
   maplocationnbanner: require('./maplocationnbanner.png'),
+  test: require('./test.png'),
 };
 
 export default images;

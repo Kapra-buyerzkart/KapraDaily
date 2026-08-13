@@ -443,13 +443,13 @@ const OrderTrackingScreen = () => {
       tone: 'neutral',
       onPress: handleViewInvoice,
     },
-    INVOICE_STATUSES.includes(effectiveOrderStatus) && {
-      label: 'Download bill',
-      caption: 'Save a copy as PDF',
-      icon: 'download-outline',
-      tone: 'neutral',
-      onPress: handleDownloadBill,
-    },
+    // INVOICE_STATUSES.includes(effectiveOrderStatus) && {
+    //   label: 'Download bill',
+    //   caption: 'Save a copy as PDF',
+    //   icon: 'download-outline',
+    //   tone: 'neutral',
+    //   onPress: handleDownloadBill,
+    // },
   ];
 
   const barActions = [

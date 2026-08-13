@@ -103,6 +103,7 @@ export const removeFromCartApi = async (
 };
 
 export const getCartApi = async pincodeAreaId => {
+  console.log(pincodeAreaId, 'pincodeAreaId===>');
   const areaId = pincodeAreaId || (await getPincodeAreaId());
   return get(`cart/list`, {
     params: { pincodeAreaId: areaId },
@@ -172,6 +173,12 @@ export const applyCouponApi = async (
     ifMatchCartVersion: cartVersion,
   };
   logger.log('Applying coupon');
+  console.log('[APPLY COUPON API] cartId:', {
+    cartId,
+    userId,
+    idToUse,
+    url: `cart/${idToUse}/applycoupon`,
+  });
   const response = await post(`cart/${idToUse}/applycoupon`, payload);
 
   console.log(payload, 'payloadddd====>');

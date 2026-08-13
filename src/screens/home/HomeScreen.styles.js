@@ -53,6 +53,11 @@ const styles = StyleSheet.create({
     width: wp('42%'),
     height: wp('42%'),
   },
+  promoImage: {
+    width: '100%',
+    marginTop: -hp('50%'),
+    resizeMode: 'cover',
+  },
 });
 
 export default styles;

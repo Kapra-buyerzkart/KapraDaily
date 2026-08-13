@@ -1,18 +1,23 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { CART_SPACING } from '@/styles/cartTheme';
 
 import { CoinSurface, CoinText, IconTile } from '../atoms';
-import { TOKEN_ICON } from '../constants';
+import { TOKEN_GLYPH } from '../constants';
+import { PALETTE } from '../theme';
+
+const GLYPH_SIZE = 22;
 
 const TokenStrip = ({ tokens }) => (
   <CoinSurface style={styles.card}>
-    <IconTile
-      tone="violet"
-      size={40}
-      source={TOKEN_ICON}
-      imageStyle={styles.icon}
-    />
+    <IconTile tone="violet" size={40}>
+      <MaterialCommunityIcons
+        name={TOKEN_GLYPH}
+        size={GLYPH_SIZE}
+        color={PALETTE.token}
+      />
+    </IconTile>
 
     <View style={styles.copy}>
       <CoinText variant="bodyStrong">UD Token</CoinText>
@@ -39,11 +44,6 @@ const styles = StyleSheet.create({
     marginTop: CART_SPACING.md,
     paddingVertical: CART_SPACING.md,
     paddingHorizontal: CART_SPACING.lg,
-  },
-  icon: {
-    width: 24,
-    height: 18,
-    resizeMode: 'contain',
   },
   copy: {
     flex: 1,

@@ -5,18 +5,20 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { CART_SPACING } from '@/styles/cartTheme';
 
 import { CoinText } from '../atoms';
-import { COIN_ICON, TOKEN_ICON } from '../constants';
+import { COIN_ICON, TOKEN_GLYPH } from '../constants';
 import { GUTTER, PALETTE, RADIUS, SHADOW } from '../theme';
 
 const TRACK_PADDING = 4;
 const SPRING = { damping: 18, stiffness: 190, mass: 0.6 };
+const GLYPH_SIZE = 17;
 
 const SEGMENTS = [
-  { id: 'bcoin', label: 'UD Coin', icon: COIN_ICON, iconStyle: 'coin' },
-  { id: 'btoken', label: 'UD Token', icon: TOKEN_ICON, iconStyle: 'token' },
+  { id: 'bcoin', label: 'UD Coin', image: COIN_ICON },
+  { id: 'btoken', label: 'UD Token', glyph: TOKEN_GLYPH },
 ];
 
 const WalletSegments = ({ selected, onChange }) => {
@@ -59,15 +61,19 @@ const WalletSegments = ({ selected, onChange }) => {
             accessibilityState={{ selected: isActive }}
             onPress={() => onChange(segment.id)}
           >
-            <Image
-              source={segment.icon}
-              style={[
-                segment.iconStyle === 'coin'
-                  ? styles.coinIcon
-                  : styles.tokenIcon,
-                !isActive && styles.iconIdle,
-              ]}
-            />
+            {segment.image ? (
+              <Image
+                source={segment.image}
+                style={[styles.coinIcon, !isActive && styles.iconIdle]}
+              />
+            ) : (
+              <MaterialCommunityIcons
+                name={segment.glyph}
+                size={GLYPH_SIZE}
+                color={PALETTE.token}
+                style={!isActive && styles.iconIdle}
+              />
+            )}
             <CoinText
               variant="labelStrong"
               tone={isActive ? 'primary' : 'muted'}
@@ -110,11 +116,6 @@ const styles = StyleSheet.create({
   coinIcon: {
     width: 17,
     height: 17,
-    resizeMode: 'contain',
-  },
-  tokenIcon: {
-    width: 22,
-    height: 15,
     resizeMode: 'contain',
   },
   iconIdle: {

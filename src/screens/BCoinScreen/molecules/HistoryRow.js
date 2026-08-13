@@ -1,23 +1,31 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Image, StyleSheet, View } from 'react-native';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { CART_SPACING } from '@/styles/cartTheme';
 
 import { AmountPill, CoinSurface, CoinText, IconTile } from '../atoms';
-import { COIN_ICON, TOKEN_ICON } from '../constants';
+import { COIN_ICON, TOKEN_GLYPH } from '../constants';
 import { formatAmount, formatShortDate, toNumber } from '../utils';
 import { PALETTE } from '../theme';
+
+const GLYPH_SIZE = 20;
 
 const HistoryRow = ({ item, isCoin, position = 'middle' }) => {
   const isCredit = String(item.transactionType).toLowerCase() === 'credit';
 
   return (
     <CoinSurface position={position} elevated={false} style={styles.row}>
-      <IconTile
-        size={38}
-        tone={isCoin ? 'gold' : 'violet'}
-        source={isCoin ? COIN_ICON : TOKEN_ICON}
-        imageStyle={isCoin ? styles.coinIcon : styles.tokenIcon}
-      />
+      <IconTile size={38} tone={isCoin ? 'gold' : 'violet'}>
+        {isCoin ? (
+          <Image source={COIN_ICON} style={styles.coinIcon} />
+        ) : (
+          <MaterialCommunityIcons
+            name={TOKEN_GLYPH}
+            size={GLYPH_SIZE}
+            color={PALETTE.token}
+          />
+        )}
+      </IconTile>
 
       <View style={styles.copy}>
         <CoinText variant="bodyStrong" numberOfLines={2}>
@@ -63,11 +71,6 @@ const styles = StyleSheet.create({
   coinIcon: {
     width: 20,
     height: 20,
-    resizeMode: 'contain',
-  },
-  tokenIcon: {
-    width: 22,
-    height: 15,
     resizeMode: 'contain',
   },
   copy: {

@@ -1,13 +1,15 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Image, StyleSheet, View } from 'react-native';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import ShimmerPlaceholder from '@/components/ShimmerPlaceholder';
 import { CART_SPACING } from '@/styles/cartTheme';
 
 import { CoinSurface, CoinText, IconTile } from '../atoms';
-import { COIN_ICON, TOKEN_ICON } from '../constants';
-import { RADIUS } from '../theme';
+import { COIN_ICON, TOKEN_GLYPH } from '../constants';
+import { PALETTE, RADIUS } from '../theme';
 
 const SKELETON_ROWS = [0, 1, 2, 3, 4, 5];
+const GLYPH_SIZE = 30;
 
 export const HistorySkeleton = () => (
   <CoinSurface style={styles.skeletonWrap}>
@@ -26,13 +28,18 @@ export const HistorySkeleton = () => (
 
 export const HistoryEmpty = ({ isCoin }) => (
   <CoinSurface style={styles.emptyWrap}>
-    <IconTile
-      size={66}
-      tone="neutral"
-      radius={RADIUS.card}
-      source={isCoin ? COIN_ICON : TOKEN_ICON}
-      imageStyle={isCoin ? styles.emptyCoin : styles.emptyToken}
-    />
+    <IconTile size={66} tone="neutral" radius={RADIUS.card}>
+      {isCoin ? (
+        <Image source={COIN_ICON} style={styles.emptyCoin} />
+      ) : (
+        <MaterialCommunityIcons
+          name={TOKEN_GLYPH}
+          size={GLYPH_SIZE}
+          color={PALETTE.token}
+          style={styles.emptyToken}
+        />
+      )}
+    </IconTile>
     <CoinText variant="heading" style={styles.emptyTitle}>
       No {isCoin ? 'UD Coin' : 'UD Token'} activity yet
     </CoinText>
@@ -93,9 +100,6 @@ const styles = StyleSheet.create({
     opacity: 0.55,
   },
   emptyToken: {
-    width: 34,
-    height: 24,
-    resizeMode: 'contain',
     opacity: 0.55,
   },
   emptyTitle: {

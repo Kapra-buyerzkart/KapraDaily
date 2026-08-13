@@ -82,8 +82,6 @@ const styles = StyleSheet.create({
     padding: CART_SPACING.xs,
   },
   backIcon: {
-    width: 15,
-    height: 15,
     resizeMode: 'contain',
     tintColor: PALETTE.textPrimary,
   },

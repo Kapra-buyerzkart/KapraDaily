@@ -22,7 +22,9 @@ export const sendRegisterOtp = async (phone: string): Promise<any> => {
 
 export const verifyLoginOtp = async (phone: string, otp: string): Promise<any> => {
   const payload = { phone, otp, otpType: 'login', loggedInFromDevice: "app" };
-  return post('auth/verifyotp', payload);
+  const response = await post('auth/verifyotp', payload);
+  console.log('[verifyLoginOtp] response:', response);
+  return response;
 };
 
 export const verifyForgotPwdOtp = async (phone: string, otp: string): Promise<any> => {

@@ -54,7 +54,6 @@ const LoginPwdScreen = () => {
   const { phone } = route.params || {};
 
   const handleContinue = async () => {
-
     if (!password) {
       showStatus({
         type: 'error',
@@ -66,10 +65,23 @@ const LoginPwdScreen = () => {
 
     try {
       setLoading(true);
+      console.log('[LOGIN PWD] request:', {
+        phone,
+        password: password ? `***${password.length}chars` : password,
+      });
+
       const response = await loginWithPassword(phone, password);
 
+      console.log('[LOGIN PWD] response:', JSON.stringify(response, null, 2));
+
       if (response?.success && response?.data) {
+        console.log('token data', response.data);
         const { accessToken, refreshToken, custId } = response.data;
+
+        console.log('[LOGIN PWD] accessToken:', accessToken);
+        console.log('[LOGIN PWD] refreshToken:', refreshToken);
+        console.log('[LOGIN PWD] custId:', custId);
+
         await setTokens(accessToken, refreshToken);
 
         if (custId) {
@@ -87,6 +99,11 @@ const LoginPwdScreen = () => {
         });
       }
     } catch (error) {
+      console.log('[LOGIN PWD] error:', error?.message);
+      console.log(
+        '[LOGIN PWD] error response:',
+        JSON.stringify(error?.data || error?.response?.data, null, 2),
+      );
       logger.log('Login Error:', error);
       showStatus({
         type: 'error',

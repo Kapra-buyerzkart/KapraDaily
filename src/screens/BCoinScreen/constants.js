@@ -48,6 +48,6 @@ export const QUICK_AMOUNTS = [
 ];
 
 export const COIN_ICON = require('../../assets/icons/udcoinUpdated.png');
-export const TOKEN_ICON = require('../../assets/icons/tokenud.png');
+export const TOKEN_GLYPH = 'ticket-confirmation-outline';
 export const TREND_UP = require('../../assets/images/up.png');
 export const TREND_DOWN = require('../../assets/images/down.png');

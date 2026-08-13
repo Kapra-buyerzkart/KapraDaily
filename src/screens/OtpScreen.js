@@ -92,8 +92,7 @@ const OtpScreen = () => {
 
   useEffect(() => {
     const sendOtpOnLoad = async () => {
-      const maskedPhone = phone ? `••••${String(phone).slice(-4)}` : phone;
-      logger.log('[OTP] screen mounted — type:', type, '| phone:', maskedPhone);
+      logger.log('[OTP] screen mounted — type:', type, '| phone:', phone);
       if (!phone) {
         logger.warn('[OTP] phone is undefined/null — OTP not sent');
         return;
@@ -103,13 +102,13 @@ const OtpScreen = () => {
         setLoading(true);
 
         if (type === 'login') {
-          logger.log('[OTP] sending login OTP to', maskedPhone);
+          logger.log('[OTP] sending login OTP to', phone);
           await sendLoginOtp(phone);
           logger.log('[OTP] login OTP request sent');
         }
 
         if (type === 'register') {
-          logger.log('[OTP] sending register OTP to', maskedPhone);
+          logger.log('[OTP] sending register OTP to', phone);
           await sendRegisterOtp(phone);
           logger.log('[OTP] register OTP request sent');
         }
@@ -203,6 +202,13 @@ const OtpScreen = () => {
         ? await verifyLoginOtpEmail(otpEmail, enteredOtp)
         : await verifyLoginOtp(phone, enteredOtp);
 
+      console.log('[OTP VERIFY login] request:', {
+        otpEmail,
+        phone,
+        enteredOtp,
+      });
+      console.log('[OTP VERIFY login] response:', response);
+
       if (response?.success && response?.data) {
         const { accessToken, refreshToken, custId } = response.data;
         await setTokens(accessToken, refreshToken);
@@ -228,7 +234,7 @@ const OtpScreen = () => {
         });
       }
     } catch (error) {
-      logger.log('Verify OTP Error:', error);
+      console.log('[OTP VERIFY] error:', error);
       showStatus({
         type: 'error',
         title: 'Error',
@@ -254,6 +260,9 @@ const OtpScreen = () => {
       setLoading(true);
       const response = await verifyRegisterOtp(phone, enteredOtp);
 
+      console.log('[OTP VERIFY register] request:', { phone, enteredOtp });
+      console.log('[OTP VERIFY register] response:', response);
+
       if (response?.success && response?.data) {
         const registerToken = response.data.registerToken;
         navigation.navigate('RegistraionScreen', {
@@ -269,7 +278,7 @@ const OtpScreen = () => {
         });
       }
     } catch (error) {
-      logger.log('Verify OTP Error:', error);
+      console.log('[OTP VERIFY] error:', error);
       showStatus({
         type: 'error',
         title: 'Error',
@@ -295,6 +304,9 @@ const OtpScreen = () => {
       setLoading(true);
       const response = await verifyForgotPwdOtp(phone, enteredOtp);
 
+      console.log('[OTP VERIFY reset] request:', { phone, enteredOtp });
+      console.log('[OTP VERIFY reset] response:', response);
+
       if (response?.success && response?.data) {
 
         navigation.reset({
@@ -314,7 +326,7 @@ const OtpScreen = () => {
         });
       }
     } catch (error) {
-      logger.log('Verify OTP Error:', error);
+      console.log('[OTP VERIFY] error:', error);
       showStatus({
         type: 'error',
         title: 'Error',

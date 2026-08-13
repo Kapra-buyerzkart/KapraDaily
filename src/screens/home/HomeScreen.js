@@ -44,7 +44,7 @@ import ProductBlock from './components/ProductBlock';
 import CategoryDiscoverySection from './components/CategoryDiscoverySection';
 import BuyAgainSection from './components/buyAgain/BuyAgainSection';
 import TopShowcase from './components/TopShowcase';
-import BottomShowcase from './components/BottomShowcase';
+import DealsShowcase from './components/DealsShowcase';
 import {
   CategoryGridSkeleton,
   SeasonalBannerSkeleton,
@@ -139,7 +139,6 @@ const HomeScreen = () => {
   const homepageQuery = useHomepageDataQuery(areaId);
   const generalSettingsQuery = useGeneralSettingsQuery();
   const dashboardQuery = useDashboardQuery(profile?.custId);
-  const dashboardData = dashboardQuery.data;
 
   useEffect(() => {
     if (profile?.pincode) {
@@ -512,8 +511,8 @@ const HomeScreen = () => {
               trailingSpacer
               navigation={navigation}
             />
-
-            {/* <BottomShowcase
+            {/* 
+            <DealsShowcase
               banner={bottomShowcaseBanner}
               products={bottomShowcaseProducts}
               onBannerPress={handleBannerPress}
@@ -533,7 +532,7 @@ const HomeScreen = () => {
           </View>
         )}
 
-        {!isStoreUnavailable && !!data && (
+        {/* {!isStoreUnavailable && !!data && (
           <View style={styles.sealWrap}>
             <Image
               source={UDENDEAL_SEAL}
@@ -541,7 +540,7 @@ const HomeScreen = () => {
               style={styles.sealImage}
             />
           </View>
-        )}
+        )} */}
       </Animated.ScrollView>
 
       {}
@@ -560,7 +559,6 @@ const HomeScreen = () => {
           stickyBorderAnimStyle={stickyBorderAnimStyle}
           onHeaderMetrics={handleHeaderMetrics}
           profile={profile}
-          dashboardData={dashboardData}
           navigation={navigation}
           isStoreUnavailable={isStoreUnavailable}
           storeUnavailableReason={storeUnavailableReason}

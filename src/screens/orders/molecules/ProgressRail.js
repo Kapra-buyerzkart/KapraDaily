@@ -12,7 +12,10 @@ const ProgressRail = ({ step = 0, tone, steps = TRACK_STEPS, style }) => (
       {steps.map((label, index) => {
         const reached = index <= step;
         return (
-          <View key={label} style={styles.segment}>
+          <View
+            key={label}
+            style={[styles.segment, index > 0 && styles.segmentFill]}
+          >
             {index > 0 && (
               <View
                 style={[
@@ -71,6 +74,8 @@ const styles = StyleSheet.create({
   segment: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  segmentFill: {
     flex: 1,
   },
   link: {
