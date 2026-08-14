@@ -185,7 +185,7 @@ const CartProductCard = props => {
               <MaterialCommunityIcons
                 name={UD_TOKEN_ICON}
                 size={UD_TOKEN_ICON_SIZE}
-                color={ACCENT.discount}
+                color={ACCENT.action}
               />
               <Text
                 style={styles.tokenText}
@@ -323,7 +323,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     maxWidth: '100%',
     minHeight: TYPE.micro.lineHeight,
-    backgroundColor: ACCENT.primarySoft,
+    backgroundColor: ACCENT.actionSoft,
     borderRadius: RADIUS.xs,
     paddingHorizontal: 5,
     paddingVertical: 1,
@@ -331,7 +331,7 @@ const styles = StyleSheet.create({
   },
   tokenText: {
     ...TYPE.micro,
-    color: ACCENT.discount,
+    color: ACCENT.action,
     fontFamily: FONTS.gilroy.bold,
     flexShrink: 1,
   },

@@ -30,6 +30,7 @@ import { LoaderContext } from '../context/loaderContext';
 import { validatePhoneNumbers } from '../utils/validation';
 import images from '../assets/images';
 import { requestPhoneNumberHint } from '../utils/phoneNumberHint';
+import BallPulse from '../components/BallPulse';
 
 const LoginScreen = () => {
   const navigation = useNavigation();
@@ -271,8 +272,13 @@ const LoginScreen = () => {
                   : handleContinueRest
               }
               style={styles.continueButton}
+              disabled={loading}
             >
-              <Text style={styles.continueButtonText}>Continue</Text>
+              {loading ? (
+                <BallPulse size={'large'} color={'#FFFFFF'} />
+              ) : (
+                <Text style={styles.continueButtonText}>Continue</Text>
+              )}
             </TouchableOpacity>
           </Animated.View>
           {}

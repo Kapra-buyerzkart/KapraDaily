@@ -131,9 +131,9 @@ const BillSummary = ({ billCalculations }) => {
                 <MaterialCommunityIcons
                   name="star-four-points"
                   size={wp('4%')}
-                  color={CART_COLORS.successDeep}
+                  color={CART_COLORS.token}
                 />
-                <CartText variant="captionStrong" tone="success">
+                <CartText variant="captionStrong" tone="token">
                   Earn {totalBtokens} UD Tokens
                 </CartText>
               </View>

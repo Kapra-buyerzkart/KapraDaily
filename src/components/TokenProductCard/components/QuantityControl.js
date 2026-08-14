@@ -72,8 +72,6 @@ const QuantityControl = ({
     );
   }
 
-  // Nothing to dock when the product cannot be bought: the well already carries
-  // the "Out of stock" pill, so a disabled button would only add noise.
   if (isOutOfStock) return null;
 
   return (

@@ -557,6 +557,7 @@ const OtpScreen = () => {
                   ? handleContinueReset
                   : handleContinueRegister
               }
+              disabled={loading}
             >
               {loading ? (
                 <BallPulse size={'large'} color={'#FFFFFF'} />

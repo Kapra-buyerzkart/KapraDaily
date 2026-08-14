@@ -11,7 +11,7 @@ const TONES = {
   faint: PALETTE.textFaint,
   brand: PALETTE.orange,
   gold: PALETTE.goldDeep,
-  violet: PALETTE.violet,
+  token: PALETTE.token,
   credit: PALETTE.credit,
   debit: PALETTE.debit,
   onDark: PALETTE.surface,

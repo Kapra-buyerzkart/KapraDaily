@@ -76,6 +76,14 @@ const PaymentBottomSheet = forwardRef((props, ref) => {
     [paymentModes.length],
   );
 
+  const handleSelect = useCallback(
+    modeName => {
+      setPaymentMethod(modeName);
+      sheetRef.current?.close();
+    },
+    [setPaymentMethod],
+  );
+
   const renderContent = useCallback(
     () => (
       <View style={styles.container}>
@@ -91,12 +99,12 @@ const PaymentBottomSheet = forwardRef((props, ref) => {
             key={mode.paymentModeId}
             mode={mode}
             selected={paymentMethod === mode.paymentModeName}
-            onPress={() => setPaymentMethod(mode.paymentModeName)}
+            onPress={() => handleSelect(mode.paymentModeName)}
           />
         ))}
       </View>
     ),
-    [paymentModes, paymentMethod, setPaymentMethod],
+    [paymentModes, paymentMethod, handleSelect],
   );
 
   return (

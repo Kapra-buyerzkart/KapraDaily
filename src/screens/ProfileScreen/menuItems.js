@@ -134,11 +134,6 @@ export const buildInformationItems = ({
     onPress: () => helpSheetRef.current?.open(),
   },
   {
-    key: 'faq',
-    label: 'F&Q',
-    icon: <Ionicons name="help-circle-outline" color={INK} size={ICON_SIZE} />,
-  },
-  {
     key: 'privacy-policy',
     label: 'Privacy Policy',
     icon: (
@@ -169,17 +164,6 @@ export const buildInformationItems = ({
         settingKey: 'terms_of_use',
         title: 'Terms Of Use',
       }),
-  },
-  {
-    key: 'about-us',
-    label: 'About Us',
-    icon: (
-      <Ionicons
-        name="information-circle-outline"
-        color={INK}
-        size={ICON_SIZE}
-      />
-    ),
   },
   {
     key: 'support-tickets',

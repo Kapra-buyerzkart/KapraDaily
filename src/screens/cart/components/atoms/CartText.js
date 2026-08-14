@@ -13,6 +13,7 @@ const TONES = {
   faint: CART_COLORS.textFaint,
   brand: CART_COLORS.primary,
   success: CART_COLORS.successDeep,
+  token: CART_COLORS.token,
   danger: CART_COLORS.danger,
   onDark: CART_COLORS.onPrimary,
   pink: CART_COLORS.pink,

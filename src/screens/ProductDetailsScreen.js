@@ -494,7 +494,7 @@ const ProductDetailsScreen = () => {
                   <MaterialCommunityIcons
                     name="ticket-confirmation-outline"
                     size={14}
-                    color={ACCENT.discount}
+                    color={ACCENT.action}
                   />
                   <Text
                     style={styles.tokenBadgeText}
@@ -1006,19 +1006,19 @@ const styles = StyleSheet.create({
     letterSpacing: 0.4,
   },
   tokenBadge: {
-    backgroundColor: ACCENT.primarySoft,
-    borderColor: 'rgba(194,65,12,0.18)',
+    backgroundColor: ACCENT.actionSoft,
+    borderColor: 'rgba(49,46,129,0.18)',
   },
   tokenBadgeText: {
     ...TYPE.micro,
     fontFamily: FONTS.gilroy.bold,
-    color: ACCENT.discount,
+    color: ACCENT.action,
     letterSpacing: 0.2,
     marginLeft: SPACE.xs + 1,
   },
   tokenBadgeUnit: {
     fontFamily: FONTS.gilroy.semiBold,
-    color: 'rgba(194,65,12,0.78)',
+    color: 'rgba(49,46,129,0.78)',
   },
 
   productName: {
@@ -1187,7 +1187,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   addBtn: {
-    backgroundColor: ACCENT.primary,
+    backgroundColor: ACCENT.action,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1223,7 +1223,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.4,
   },
   quantitySelector: {
-    backgroundColor: ACCENT.primary,
+    backgroundColor: ACCENT.action,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',

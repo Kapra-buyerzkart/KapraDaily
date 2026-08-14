@@ -6,6 +6,7 @@ import {
 import { FONTS } from '@/styles/typography';
 import { INK, ACCENT, SURFACE, RADIUS, SPACE, TYPE } from '@/styles/homeTheme';
 import {
+  ADD_OFFSET,
   ADD_SIZE,
   ADD_SIZE_SMALL,
   DOCK_OVERHANG,
@@ -120,17 +121,33 @@ export default StyleSheet.create({
   addButton: {
     width: ADD_SIZE,
     height: ADD_SIZE,
-    borderRadius: RADIUS.sm,
+    borderRadius: RADIUS.xxs + 2,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: SURFACE.base,
     borderWidth: 1.6,
+    right: ADD_OFFSET,
+    bottom: ADD_OFFSET,
     borderColor: ACCENT.primary,
   },
+  addButtonWrapper: {
+    width: ADD_SIZE,
+    height: ADD_SIZE,
+    borderRadius: RADIUS.xxs + 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: ACCENT.primary,
+  },
+
   addButtonSmall: {
     width: ADD_SIZE_SMALL,
     height: ADD_SIZE_SMALL,
-    borderRadius: RADIUS.xs,
+    borderRadius: RADIUS.xxs + 2,
+  },
+  addButtonWrapperSmall: {
+    width: ADD_SIZE_SMALL,
+    height: ADD_SIZE_SMALL,
+    borderRadius: RADIUS.xxs + 2,
   },
 
   counterContainer: {
@@ -138,13 +155,13 @@ export default StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     width: '100%',
-    height: ADD_SIZE,
-    borderRadius: RADIUS.sm,
+    height: ADD_SIZE + ADD_OFFSET,
+    borderRadius: RADIUS.xxs + 2,
     backgroundColor: ACCENT.primary,
   },
   counterContainerSmall: {
-    height: ADD_SIZE_SMALL,
-    borderRadius: RADIUS.xs,
+    height: ADD_SIZE_SMALL + ADD_OFFSET,
+    borderRadius: RADIUS.xs + 2,
   },
   // Narrower than the pill's height so a two-digit quantity still has room.
   counterBtn: {
@@ -254,7 +271,7 @@ export default StyleSheet.create({
     marginTop: SPACE.xs + 2,
     minHeight: TYPE.micro.lineHeight,
     maxWidth: '100%',
-    backgroundColor: ACCENT.primarySoft,
+    backgroundColor: ACCENT.actionSoft,
     borderRadius: RADIUS.xs,
     paddingHorizontal: 5,
     paddingVertical: 1,
@@ -266,9 +283,27 @@ export default StyleSheet.create({
   },
   tokenText: {
     ...TYPE.micro,
-    color: ACCENT.discount,
+    color: ACCENT.action,
     fontFamily: FONTS.gilroy.bold,
     flexShrink: 1,
+  },
+  rewardCoin: {
+    width: 12,
+    height: 12,
+    resizeMode: 'contain',
+  },
+  rewardCoinSmall: {
+    width: 10,
+    height: 10,
+  },
+  rewardToken: {
+    width: 14,
+    height: 12,
+    resizeMode: 'contain',
+  },
+  rewardTokenSmall: {
+    width: 12,
+    height: 10,
   },
 
   metaRow: {

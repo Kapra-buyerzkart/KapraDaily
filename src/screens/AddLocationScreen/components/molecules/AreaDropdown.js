@@ -55,7 +55,7 @@ const AreaDropdown = ({
       ArrowUpIconComponent={ArrowUp}
       TickIconComponent={Tick}
     />
-    <FieldLabel label="Area" required isActive={open} />
+    <FieldLabel label="Area" required isActive={open} style={styles.label} />
   </View>
 );
 
@@ -74,6 +74,9 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.input,
     paddingHorizontal: SPACING.lg,
     backgroundColor: COLORS.well,
+  },
+  label: {
+    zIndex: 7000,
   },
   container: {
     borderWidth: HAIRLINE,

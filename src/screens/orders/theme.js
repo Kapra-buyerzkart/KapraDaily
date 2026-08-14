@@ -36,6 +36,7 @@ export const COLORS = {
   warn: '#B45309',
   warnTint: '#FDF4E4',
   onDark: CART_COLORS.onPrimary,
+  inkLight: CART_COLORS.textMuted,
 };
 
 export const STATUS_TONE = {

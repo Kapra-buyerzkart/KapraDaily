@@ -11,7 +11,7 @@ const GLYPH_SIZE = 22;
 
 const TokenStrip = ({ tokens }) => (
   <CoinSurface style={styles.card}>
-    <IconTile tone="violet" size={40}>
+    <IconTile tone="token" size={40}>
       <MaterialCommunityIcons
         name={TOKEN_GLYPH}
         size={GLYPH_SIZE}
@@ -27,7 +27,7 @@ const TokenStrip = ({ tokens }) => (
     </View>
 
     <View style={styles.right}>
-      <CoinText variant="priceLarge" tone="violet">
+      <CoinText variant="priceLarge" tone="token">
         {tokens}
       </CoinText>
       <CoinText variant="micro" tone="muted">

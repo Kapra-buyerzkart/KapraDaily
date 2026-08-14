@@ -76,6 +76,12 @@ const RegistrationScreen = () => {
       type: 'login',
     });
 
+  const handlePressTerms = () =>
+    navigation.navigate('LegalContentScreen', {
+      settingKey: 'terms_of_use',
+      title: 'Terms Of Use',
+    });
+
   const handleContinue = async () => {
     if (loading) {
       return;
@@ -211,6 +217,7 @@ const RegistrationScreen = () => {
               onToggleTerms={() =>
                 setTermsAndConditionsClicked(!termsAndConditionsClicked)
               }
+              onPressTerms={handlePressTerms}
               loading={loading}
               onSubmit={handleContinue}
             />

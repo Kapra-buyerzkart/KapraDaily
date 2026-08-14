@@ -47,7 +47,7 @@ const ProductInfo = ({
           <MaterialCommunityIcons
             name={UD_TOKEN_ICON}
             size={isThreeColumn ? UD_TOKEN_ICON_SIZE_SMALL : UD_TOKEN_ICON_SIZE}
-            color={ACCENT.discount}
+            color={ACCENT.action}
           />
           <Text
             style={styles.tokenText}

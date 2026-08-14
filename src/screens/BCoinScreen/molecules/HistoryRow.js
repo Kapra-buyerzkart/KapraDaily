@@ -12,10 +12,13 @@ const GLYPH_SIZE = 20;
 
 const HistoryRow = ({ item, isCoin, position = 'middle' }) => {
   const isCredit = String(item.transactionType).toLowerCase() === 'credit';
+  const description = item.description || 'Unknown transaction';
+  const showOrderId =
+    Boolean(item.orderId) && !(!isCoin && /\border\b/i.test(description));
 
   return (
     <CoinSurface position={position} elevated={false} style={styles.row}>
-      <IconTile size={38} tone={isCoin ? 'gold' : 'violet'}>
+      <IconTile size={38} tone={isCoin ? 'gold' : 'token'}>
         {isCoin ? (
           <Image source={COIN_ICON} style={styles.coinIcon} />
         ) : (
@@ -29,14 +32,14 @@ const HistoryRow = ({ item, isCoin, position = 'middle' }) => {
 
       <View style={styles.copy}>
         <CoinText variant="bodyStrong" numberOfLines={2}>
-          {item.description || 'Unknown transaction'}
+          {description}
         </CoinText>
 
         <View style={styles.metaRow}>
           <CoinText variant="caption" tone="muted" style={styles.meta}>
             {formatShortDate(item.transactionDate)}
           </CoinText>
-          {item.orderId ? (
+          {showOrderId ? (
             <>
               <View style={styles.dot} />
               <CoinText

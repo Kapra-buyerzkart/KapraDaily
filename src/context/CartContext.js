@@ -92,8 +92,14 @@ export const CartProvider = ({ children }) => {
   const pendingAddRef = useRef({});
   const flushAddRef = useRef(null);
 
-  const [addresses, setAddresses] = useState([]);
+  const [addresses, setAddressesState] = useState([]);
   const addressesRef = useRef([]);
+  const setAddresses = useCallback(update => {
+    const next =
+      typeof update === 'function' ? update(addressesRef.current) : update;
+    addressesRef.current = next;
+    setAddressesState(next);
+  }, []);
   const [isLoadingAddresses, setIsLoadingAddresses] = useState(false);
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [addressConfirmationData, setAddressConfirmationData] = useState(null);
@@ -238,18 +244,16 @@ export const CartProvider = ({ children }) => {
         }
         logger.log('📍 [ADDRESS] Mapped addresses:', mappedAddresses.length);
         setAddresses(mappedAddresses);
-        addressesRef.current = mappedAddresses;
       } else {
         logger.log('📍 [ADDRESS] No addresses found in response');
         setAddresses([]);
-        addressesRef.current = [];
       }
     } catch (error) {
       logger.error('Error fetching addresses:', error);
     } finally {
       setIsLoadingAddresses(false);
     }
-  }, []);
+  }, [setAddresses]);
 
   const onSelectAddress = useCallback(
     async (addressId, showConfirmationPopup = true) => {
@@ -273,7 +277,7 @@ export const CartProvider = ({ children }) => {
         logger.log('Error saving selectedAddressId', e);
       }
 
-      const selectedAddr = addresses.find(
+      const selectedAddr = addressesRef.current.find(
         item => String(item.id) === String(addressId),
       );
       if (!selectedAddr) {
@@ -340,14 +344,14 @@ export const CartProvider = ({ children }) => {
         refreshCart(selectedAddr.pincodeAreaId);
       }
     },
-    [addresses, refreshCart, loadCart],
+    [setAddresses, refreshCart, loadCart],
   );
 
   const onThreeDotsClicked = useCallback(addressId => {
     setAddresses(prev =>
       prev.map(item => ({ ...item, threeDotsClicked: item.id === addressId })),
     );
-  }, []);
+  }, [setAddresses]);
 
   const onDeleteClicked = useCallback(
     async addressId => {
@@ -394,14 +398,14 @@ export const CartProvider = ({ children }) => {
         });
       }, 400);
     },
-    [deleteAddressApi, showConfirmation, showStatus],
+    [deleteAddressApi, setAddresses, showConfirmation, showStatus],
   );
 
   const onCloseThreeDots = useCallback(() => {
     setAddresses(prev =>
       prev.map(item => ({ ...item, threeDotsClicked: false })),
     );
-  }, []);
+  }, [setAddresses]);
 
   const clearSelectedAddress = useCallback(async () => {
     try {
@@ -410,7 +414,7 @@ export const CartProvider = ({ children }) => {
       logger.log('Error clearing selectedAddressId', e);
     }
     setAddresses(prev => prev.map(item => ({ ...item, selected: false })));
-  }, []);
+  }, [setAddresses]);
 
   const loadCart = useCallback(
     async pincodeAreaIdOverride => {
@@ -966,7 +970,7 @@ export const CartProvider = ({ children }) => {
         await refreshCart(pincodeAreaIdOverride);
       }
     },
-    [cartItems, refreshCart],
+    [cartItems, refreshCart, setAddresses],
   );
 
   const updateCartItemQuantity = useCallback(
@@ -1223,13 +1227,13 @@ export const CartProvider = ({ children }) => {
       setCartItems(previousItems);
       await refreshCart();
     }
-  }, [cartItems, refreshCart, discardPendingCartWrites]);
+  }, [cartItems, refreshCart, discardPendingCartWrites, setAddresses]);
 
   const applyCoupon = useCallback(
     async couponCode => {
       try {
         const version = cartVersionRef.current;
-        const selectedAddress = addresses.find(a => a.selected);
+        const selectedAddress = addressesRef.current.find(a => a.selected);
         const pincodeAreaId = selectedAddress?.pincodeAreaId;
 
         const response = await applyCouponApi(
@@ -1399,7 +1403,7 @@ export const CartProvider = ({ children }) => {
     async giftCode => {
       try {
         const version = cartVersionRef.current;
-        const selectedAddress = addresses.find(a => a.selected);
+        const selectedAddress = addressesRef.current.find(a => a.selected);
         const pincodeAreaId = selectedAddress?.pincodeAreaId;
 
         const response = await applyGiftCardApi(

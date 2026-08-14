@@ -176,6 +176,7 @@ const LoginPwdScreen = () => {
             <TouchableOpacity
               onPress={handleContinue}
               style={styles.continueButton}
+              disabled={loading}
             >
               {loading ? (
                 <BallPulse size="large" color="#FFFFFF" />

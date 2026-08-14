@@ -1,9 +1,14 @@
 const ONLINE_KEYS = ['online', 'razorpay', 'upi'];
 
+export const isCashOnDelivery = (name = '') => {
+  const key = String(name).toLowerCase();
+  return key === 'cod' || key.includes('cash');
+};
+
 export const getPaymentMeta = (name = '') => {
   const key = String(name).toLowerCase();
 
-  if (key === 'cod' || key.includes('cash')) {
+  if (isCashOnDelivery(key)) {
     return {
       label: 'Cash on delivery',
       icon: 'cash',

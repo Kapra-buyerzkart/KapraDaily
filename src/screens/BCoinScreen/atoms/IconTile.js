@@ -5,7 +5,7 @@ import { PALETTE, RADIUS } from '../theme';
 
 const TONES = {
   gold: PALETTE.goldTint,
-  violet: PALETTE.violetTint,
+  token: PALETTE.tokenTint,
   neutral: PALETTE.well,
   credit: PALETTE.creditTint,
 };

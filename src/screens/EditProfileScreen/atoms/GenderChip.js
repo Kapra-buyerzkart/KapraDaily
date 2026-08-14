@@ -15,13 +15,11 @@ const GenderChip = ({ label, selected, onPress }) => (
     accessibilityState={{ selected }}
     accessibilityLabel={label}
   >
-    {selected && (
-      <MaterialCommunityIcons
-        name="check"
-        size={wp('3.4%')}
-        color={CART_COLORS.primary}
-      />
-    )}
+    <MaterialCommunityIcons
+      name="check"
+      size={wp('3.4%')}
+      color={selected ? CART_COLORS.primary : 'transparent'}
+    />
     <EditText
       variant={selected ? 'labelStrong' : 'label'}
       tone={selected ? 'primary' : 'muted'}
@@ -44,7 +42,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: CART_SPACING.xs,
     minHeight: hp('5.4%'),
-    paddingHorizontal: CART_SPACING.sm,
+    paddingHorizontal: CART_SPACING.xs,
     borderRadius: CART_RADIUS.input,
     borderWidth: 1,
     borderColor: CART_COLORS.border,

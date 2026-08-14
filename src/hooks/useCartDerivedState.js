@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { isCartItemSoldOut } from '../utils/cartAvailability';
+import { isCashOnDelivery } from '../screens/cart/paymentMeta';
 
 export const useCartDerivedState = ({
   cartItems,
@@ -7,6 +8,7 @@ export const useCartDerivedState = ({
   cartError,
   serviceabilityTrigger,
   chosenSlot,
+  paymentMethod,
 }) => {
   const totalCartBTokens = cartItems.reduce(
     (sum, item) =>
@@ -39,6 +41,8 @@ export const useCartDerivedState = ({
     ? 'Unavailable'
     : hasSoldOutItems
     ? 'Remove Sold Out'
+    : isCashOnDelivery(paymentMethod)
+    ? 'Place Order'
     : 'Pay';
 
   const scheduleLabel = chosenSlot

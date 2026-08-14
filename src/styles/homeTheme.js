@@ -22,11 +22,15 @@ export const INK = {
 export const ACCENT = {
   primary: '#F25000',
   primarySoft: '#FFE9E0',
+  primaryDeep: '#9A3200',
   success: '#0E9F4F',
   successSoft: '#E7F7EE',
   successText: '#0B7A3D',
   savings: '#0B7A3D',
   discount: '#C2410C',
+  action: '#312E81',
+  actionSoft: '#EEF0FF',
+  actionDeep: '#1E1B4B',
 };
 
 export const RADIUS = {

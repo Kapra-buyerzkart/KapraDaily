@@ -117,6 +117,7 @@ const CartScreen = () => {
     cartError,
     serviceabilityTrigger,
     chosenSlot,
+    paymentMethod,
   });
 
   const {
@@ -161,7 +162,12 @@ const CartScreen = () => {
           selectedAddress?.pincodeAreaId,
         );
       }
-      await getCartSummary(selectedAddress?.pincodeAreaId);
+      await getCartSummary(
+        'express',
+        null,
+        null,
+        selectedAddress?.pincodeAreaId,
+      );
     } finally {
       setIsRemovingSoldOut(false);
     }

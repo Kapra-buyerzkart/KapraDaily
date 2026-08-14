@@ -7,14 +7,11 @@ export const UD_TOKEN_ICON = 'ticket-confirmation-outline';
 export const UD_TOKEN_ICON_SIZE = 12;
 export const UD_TOKEN_ICON_SIZE_SMALL = 10;
 
-// The `+` square and the `− qty +` pill it swaps to, matching the buy-again rail.
 export const ADD_SIZE = 34;
 export const ADD_SIZE_SMALL = 30;
-// How far the action dock hangs below the image well, as a share of its height.
+export const ADD_OFFSET = 1.25;
 export const DOCK_OVERHANG = ADD_SIZE / 3;
 export const DOCK_OVERHANG_SMALL = ADD_SIZE_SMALL / 3;
-// The dock is sized as a share of the card so the counter tracks any card width,
-// including the ones callers override through `containerStyle`.
 export const DOCK_WIDTH = '66%';
 
 export const HEART_SIZE = 26;
