@@ -111,6 +111,9 @@ const D2cScreen = lazyScreen(() => require('../screens/D2cScreen'));
 const LegalContentScreen = lazyScreen(() =>
   require('../screens/LegalContentScreen'),
 );
+const TermsOfUseScreen = lazyScreen(() =>
+  require('../screens/TermsOfUseScreen'),
+);
 const QRScannerScreen = lazyScreen(() =>
   require('../screens/QRScannerScreen/QRScannerScreen'),
 );
@@ -276,6 +279,7 @@ export default function RootNavigator() {
           name="LegalContentScreen"
           component={LegalContentScreen}
         />
+        <Stack.Screen name="TermsOfUseScreen" component={TermsOfUseScreen} />
         <Stack.Screen
           name="QRScannerScreen"
           component={QRScannerScreen}

@@ -24,7 +24,7 @@ const PaymentSummaryCard = ({ label, amount, badge }) => (
         {label}
       </OrderText>
       <OrderText variant="caption" tone="muted" style={styles.caption}>
-        Amount payable
+        Total Amount
       </OrderText>
     </View>
 

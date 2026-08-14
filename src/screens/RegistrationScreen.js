@@ -77,8 +77,7 @@ const RegistrationScreen = () => {
     });
 
   const handlePressTerms = () =>
-    navigation.navigate('LegalContentScreen', {
-      settingKey: 'terms_of_use',
+    navigation.navigate('TermsOfUseScreen', {
       title: 'Terms Of Use',
     });
 

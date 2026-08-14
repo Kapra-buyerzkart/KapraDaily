@@ -1,4 +1,4 @@
-import { View, Image, RefreshControl } from 'react-native';
+import { View, Image, RefreshControl, AppState } from 'react-native';
 import Animated from 'react-native-reanimated';
 import React, {
   useContext,
@@ -13,7 +13,7 @@ import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 
 import SelectedProducts from '../../components/SelectedProducts';
 import LocationModal from '../../components/LocationModal';
@@ -139,6 +139,18 @@ const HomeScreen = () => {
   const homepageQuery = useHomepageDataQuery(areaId);
   const generalSettingsQuery = useGeneralSettingsQuery();
   const dashboardQuery = useDashboardQuery(profile?.custId);
+
+  const refetchDashboard = dashboardQuery.refetch;
+  useFocusEffect(
+    useCallback(() => {
+      if (!profile?.custId) return undefined;
+      refetchDashboard();
+      const sub = AppState.addEventListener('change', nextState => {
+        if (nextState === 'active') refetchDashboard();
+      });
+      return () => sub.remove();
+    }, [profile?.custId, refetchDashboard]),
+  );
 
   useEffect(() => {
     if (profile?.pincode) {
@@ -559,6 +571,7 @@ const HomeScreen = () => {
           stickyBorderAnimStyle={stickyBorderAnimStyle}
           onHeaderMetrics={handleHeaderMetrics}
           profile={profile}
+          dashboardData={dashboardQuery.data}
           navigation={navigation}
           isStoreUnavailable={isStoreUnavailable}
           storeUnavailableReason={storeUnavailableReason}

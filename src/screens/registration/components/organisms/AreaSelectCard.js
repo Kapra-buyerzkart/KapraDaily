@@ -24,7 +24,7 @@ const AreaSelectCard = ({ areas, selectedArea, onSelect }) => (
       <View style={styles.copy}>
         <CartText variant="labelStrong">Select your area</CartText>
         <CartText variant="micro" tone="muted">
-          please select you pin code area
+          Please select your Pincode area
         </CartText>
       </View>
     </View>

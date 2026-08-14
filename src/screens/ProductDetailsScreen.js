@@ -1187,7 +1187,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   addBtn: {
-    backgroundColor: ACCENT.action,
+    backgroundColor: ACCENT.primary,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1223,7 +1223,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.4,
   },
   quantitySelector: {
-    backgroundColor: ACCENT.action,
+    backgroundColor: ACCENT.primary,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
