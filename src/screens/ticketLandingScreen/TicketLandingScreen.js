@@ -17,9 +17,12 @@ import { TAB_IDS } from '@/components/events/EventCategoryTabs';
 import { AppContext } from '../../context/appContext';
 import logger from '../../utils/logger';
 import styles from './styles';
-import TicketLandingList from './components/TicketLandingList';
-import UdenTicketModal from './components/UdenTicketModal';
-import BottomTabBar from './components/BottomTabBar';
+import { COLORS } from './theme';
+import {
+  BottomTabBar,
+  TicketLandingList,
+  UdenTicketModal,
+} from './components/organisms';
 import ServiceSwitcherModal from '../../components/ServiceSwitcherModal';
 import useVoucherData from './hooks/useVoucherData';
 import useEventsData from './hooks/useEventsData';
@@ -239,7 +242,7 @@ const TicketLandingScreen = ({ navigation }) => {
       </View>
 
       <LinearGradient
-        colors={['rgba(0,0,0,0.55)', 'rgba(0,0,0,0)']}
+        colors={[COLORS.scrimStrong, COLORS.scrimClear]}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         pointerEvents="none"

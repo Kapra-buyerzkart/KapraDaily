@@ -128,8 +128,8 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   factStrip: {
-    height: 62,
-    borderRadius: 14,
+    height: 78,
+    borderRadius: 16,
     marginTop: 14,
   },
   mapStrip: {

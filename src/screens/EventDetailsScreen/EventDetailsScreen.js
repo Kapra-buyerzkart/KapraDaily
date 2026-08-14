@@ -36,8 +36,8 @@ import ArtistList from './components/ArtistList';
 import EventAccordions from './components/EventAccordions';
 import EventDetailsSkeleton from './components/EventDetailsSkeleton';
 import TicketSelectionModal from './components/TicketSelectionModal';
-import RedeemSuccessModal from '../ticketLandingScreen/components/RedeemSuccessModal';
-import PaymentFailedModal from '../ticketLandingScreen/components/PaymentFailedModal';
+import RedeemSuccessModal from '../ticketLandingScreen/components/organisms/RedeemSuccessModal';
+import PaymentFailedModal from '../ticketLandingScreen/components/organisms/PaymentFailedModal';
 import { useEventPayment } from '../../hooks/useEventPayment';
 import prefetchMyBookings from '../../queries/prefetchMyBookings';
 

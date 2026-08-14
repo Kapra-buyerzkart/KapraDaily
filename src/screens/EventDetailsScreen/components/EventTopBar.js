@@ -117,7 +117,7 @@ const EventTopBar = ({ insets, scrollY, progress, title, onBack, onShare }) => {
         </Animated.View>
       </View>
 
-      <AnimatedPressable
+      {/* <AnimatedPressable
         onPress={onShare}
         hitSlop={12}
         accessibilityRole="button"
@@ -130,7 +130,7 @@ const EventTopBar = ({ insets, scrollY, progress, title, onBack, onShare }) => {
         >
           <Ionicons name="share-social-outline" size={19} color={COLORS.white} />
         </ImageBackground>
-      </AnimatedPressable>
+      </AnimatedPressable> */}
 
       <View style={styles.topBarProgressTrack} pointerEvents="none">
         <Animated.View style={[styles.topBarProgressFill, progressStyle]} />

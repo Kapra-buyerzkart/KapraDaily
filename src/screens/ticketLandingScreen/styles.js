@@ -1,14 +1,14 @@
 import { StyleSheet } from 'react-native';
-import COLORS from '@/styles/colors';
+import { COLORS } from './theme';
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.bg,
+    backgroundColor: COLORS.canvas,
   },
   contentBg: {
     flex: 1,
-    backgroundColor: COLORS.bg,
+    backgroundColor: COLORS.canvas,
   },
   backdrop: {
     flex: 1,

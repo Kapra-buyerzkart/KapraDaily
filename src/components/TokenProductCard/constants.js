@@ -16,8 +16,8 @@ export const DOCK_WIDTH = '66%';
 
 export const HEART_SIZE = 26;
 
-export const ADD_HIT_SLOP = hitSlopTo(ADD_SIZE);
-export const COUNTER_HIT_SLOP = { top: 10, bottom: 10, left: 6, right: 6 };
+export const ADD_HIT_SLOP = { top: 14, bottom: 14, left: 14, right: 14 };
+export const COUNTER_HIT_SLOP = { top: 14, bottom: 14, left: 12, right: 12 };
 export const WISHLIST_HIT_SLOP = hitSlopTo(HEART_SIZE);
 
 export const NAME_LINES = 2;

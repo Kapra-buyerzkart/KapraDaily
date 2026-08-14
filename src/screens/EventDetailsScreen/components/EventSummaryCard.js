@@ -9,30 +9,25 @@ import { formatPrice } from '../utils';
 import VenueMapStrip from './VenueMapStrip';
 import { hp, wp } from '@/utils/responsive';
 
-const FACT_ICON_SIZE = wp(10);
+const FACT_ICON_SIZE = wp(5);
 
 // Native blur crashes on low-end Android devices, so we fall back to a solid tint.
 const IS_ANDROID = Platform.OS === 'android';
 
-const FactCell = ({ Icon, primary, secondary, secondaryStyle }) => (
-  <View style={styles.factCell}>
-    <Icon
-      width={FACT_ICON_SIZE}
-      height={FACT_ICON_SIZE}
-      style={styles.factIcon}
-    />
-    <View style={styles.factTextGroup}>
-      {!!primary && (
-        <Text style={styles.factPrimary} numberOfLines={2}>
-          {primary}
-        </Text>
-      )}
-      {!!secondary && (
-        <Text style={[styles.factSecondary, secondaryStyle]} numberOfLines={2}>
-          {secondary}
-        </Text>
-      )}
-    </View>
+const FactChip = ({ Icon, value, meta, accent }) => (
+  <View style={[styles.factChip, accent && styles.factChipAccent]}>
+    <Icon width={FACT_ICON_SIZE} height={FACT_ICON_SIZE} />
+    <Text
+      style={[styles.factChipValue, accent && styles.factChipValueAccent]}
+      numberOfLines={1}
+    >
+      {value}
+    </Text>
+    {!!meta && (
+      <Text style={styles.factChipMeta} numberOfLines={1}>
+        {meta}
+      </Text>
+    )}
   </View>
 );
 
@@ -52,29 +47,23 @@ const EventSummaryCard = ({
 
   const facts = [
     !!dateText && (
-      <FactCell
+      <FactChip
         key="date"
         Icon={CalendarIcon}
-        primary={dateText}
-        secondary={timeText}
+        value={dateText}
+        meta={timeText}
       />
     ),
     (!!venue || !!city) && (
-      <FactCell
+      <FactChip
         key="venue"
         Icon={LocationPinIcon}
-        primary={venue}
-        secondary={city}
+        value={venue || city}
+        meta={venue ? city : ''}
       />
     ),
     !!price && (
-      <FactCell
-        key="price"
-        Icon={PriceIcon}
-        primary="Starts from"
-        secondary={price}
-        secondaryStyle={styles.factPrice}
-      />
+      <FactChip key="price" Icon={PriceIcon} value={price} accent meta="onwards" />
     ),
   ].filter(Boolean);
 
@@ -96,14 +85,7 @@ const EventSummaryCard = ({
         </View>
       )}
       {facts.length > 0 && (
-        <View style={styles.factStrip}>
-          {facts.map((fact, index) => (
-            <React.Fragment key={fact.key}>
-              {index > 0 && <View style={styles.factDivider} />}
-              {fact}
-            </React.Fragment>
-          ))}
-        </View>
+        <View style={styles.factChipRow}>{facts}</View>
       )}
       <View style={{ paddingTop: hp(1.5) }} />
       <VenueMapStrip venue={venue} city={city} />

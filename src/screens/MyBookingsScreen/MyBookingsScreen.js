@@ -3,8 +3,8 @@ import { Image, StatusBar, StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import images from '@/assets/images';
-import VoucherGrid from '../ticketLandingScreen/components/VoucherGrid';
-import VoucherBottomSheet from '../ticketLandingScreen/components/VoucherBottomSheet';
+import VoucherGrid from '../ticketLandingScreen/components/organisms/VoucherGrid';
+import VoucherBottomSheet from '../ticketLandingScreen/components/organisms/VoucherBottomSheet';
 import BookingCategoryTabs, {
   BOOKING_TAB_IDS,
 } from './components/BookingCategoryTabs';

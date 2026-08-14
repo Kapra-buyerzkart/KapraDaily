@@ -252,50 +252,48 @@ const styles = StyleSheet.create({
     fontFamily: 'Gilroy-SemiBold',
   },
 
-  factStrip: {
+  factChipRow: {
     flexDirection: 'row',
-    alignItems: 'stretch',
+    flexWrap: 'wrap',
+    alignItems: 'center',
     marginTop: 14,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.14)',
-    overflow: 'hidden',
+    marginHorizontal: -3,
   },
-  factCell: {
-    flex: 1,
+  factChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 8,
+    maxWidth: '100%',
+    margin: 3,
+    paddingVertical: 7,
+    paddingHorizontal: 10,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: 'rgba(255,255,255,0.05)',
   },
-  factDivider: {
-    width: 1,
-    marginVertical: 10,
-    backgroundColor: 'rgba(255,255,255,0.14)',
+  factChipAccent: {
+    borderColor: 'rgba(245,197,66,0.35)',
+    backgroundColor: 'rgba(245,197,66,0.12)',
   },
-  factIcon: {
-    marginRight: 7,
-  },
-  factTextGroup: {
-    flex: 1,
-  },
-  factPrimary: {
+  factChipValue: {
+    flexShrink: 1,
+    marginLeft: 6,
     color: COLORS.white,
-    fontSize: 11,
-    lineHeight: 15,
+    fontSize: 13,
+    lineHeight: 17,
     fontFamily: 'Gilroy-SemiBold',
   },
-  factSecondary: {
-    color: 'rgba(255,255,255,0.62)',
-    fontSize: 11,
-    lineHeight: 15,
-    fontFamily: 'Gilroy-Medium',
-  },
-  factPrice: {
+  factChipValueAccent: {
     color: '#F5C542',
+    fontFamily: 'Gilroy-Bold',
+  },
+  factChipMeta: {
+    flexShrink: 1,
+    marginLeft: 5,
+    color: 'rgba(255,255,255,0.55)',
     fontSize: 12,
     lineHeight: 16,
-    fontFamily: 'Gilroy-Bold',
+    fontFamily: 'Gilroy-Medium',
   },
 
   mapStrip: {
