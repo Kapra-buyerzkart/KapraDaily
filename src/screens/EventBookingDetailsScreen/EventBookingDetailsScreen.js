@@ -5,14 +5,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  Pressable,
-  StatusBar,
-  ActivityIndicator,
-} from 'react-native';
+import { View, Text, ScrollView, Pressable, StatusBar } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
   FadeIn,
@@ -40,6 +33,7 @@ import useEventBookingDetailQuery from '@/queries/useEventBookingDetailQuery';
 import logger from '@/utils/logger';
 import useCollapsibleBanner from './hooks/useCollapsibleBanner';
 import styles from './styles';
+import BallPulse from '@/components/BallPulse';
 
 const STATUS_COLORS = {
   confirmed: '#4CD98A',
@@ -395,7 +389,7 @@ const EventBookingDetailsScreen = ({ navigation, route }) => {
         />
         {renderHeader()}
         <View style={styles.stateWrap}>
-          <ActivityIndicator size="large" color="#B98CFF" />
+          <BallPulse size="large" color="#B98CFF" />
         </View>
       </View>
     );

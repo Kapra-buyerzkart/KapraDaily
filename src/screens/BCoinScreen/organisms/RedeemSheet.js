@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import {
-  ActivityIndicator,
   Image,
   Pressable,
   StyleSheet,
@@ -18,6 +17,7 @@ import { SheetHeader } from '../molecules';
 import { COIN_ICON, QUICK_AMOUNTS, REDEEM_METHODS } from '../constants';
 import { formatAmount, formatCurrency, toNumber } from '../utils';
 import { PALETTE, RADIUS } from '../theme';
+import BallPulse from '@/components/BallPulse';
 
 const RedeemSheet = ({
   visible,
@@ -187,7 +187,7 @@ const RedeemSheet = ({
           onPress={onSubmit}
         >
           {isSubmitting ? (
-            <ActivityIndicator color={PALETTE.surface} />
+            <BallPulse color={PALETTE.surface} />
           ) : (
             <CoinText variant="cta" tone={canSubmit ? 'onDark' : 'faint'}>
               Submit request

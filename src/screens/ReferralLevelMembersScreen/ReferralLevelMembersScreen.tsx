@@ -4,7 +4,6 @@ import {
   Text,
   FlatList,
   TouchableOpacity,
-  ActivityIndicator,
   ListRenderItemInfo,
   Image,
 } from 'react-native';
@@ -18,6 +17,7 @@ import icons from '@/assets/icons';
 import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import { useReferralLevelMembersScreen } from './useReferralLevelMembersScreen';
 import styles from './styles';
+import BallPulse from '@/components/BallPulse';
 
 export interface ReferralLevelMember {
   custId: number;
@@ -131,7 +131,7 @@ const ReferralLevelMembersScreen = () => {
       <View style={[styles.container, { paddingTop: insets.top }]}>
         {renderHeader()}
         <View style={[styles.container, styles.centered]}>
-          <ActivityIndicator color="#1A1A1A" />
+          <BallPulse color="#1A1A1A" />
         </View>
       </View>
     );

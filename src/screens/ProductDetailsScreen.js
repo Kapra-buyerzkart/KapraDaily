@@ -7,7 +7,6 @@ import {
   FlatList,
   ScrollView,
   Animated,
-  ActivityIndicator,
   Share,
 } from 'react-native';
 import React, {
@@ -69,6 +68,7 @@ import {
   MAX_FONT_SCALE,
   hitSlopTo,
 } from '@/styles/homeTheme';
+import BallPulse from '@/components/BallPulse';
 
 const PRICE_PILL = '#17853C';
 const SAVINGS_RULE = 'rgba(17,19,26,0.18)';
@@ -818,7 +818,7 @@ const ProductDetailsScreen = () => {
                 Similar products
               </Text>
               {relatedLoading ? (
-                <ActivityIndicator
+                <BallPulse
                   size="small"
                   color={ACCENT.primary}
                   style={{ marginVertical: hp('2%') }}

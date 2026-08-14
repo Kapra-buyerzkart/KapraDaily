@@ -1,16 +1,11 @@
 import React from 'react';
-import {
-  TouchableOpacity,
-  Text,
-  ActivityIndicator,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { TouchableOpacity, Text, StyleSheet, View } from 'react-native';
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
 import { FONTS } from '../styles/typography';
+import BallPulse from './BallPulse';
 
 const AppButton = ({
   title,
@@ -50,7 +45,7 @@ const AppButton = ({
       ]}
     >
       {isLoading ? (
-        <ActivityIndicator size="small" color={finalLoaderColor} />
+        <BallPulse size="small" color={finalLoaderColor} />
       ) : (
         <View
           style={[

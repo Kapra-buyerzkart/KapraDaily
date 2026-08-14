@@ -1,12 +1,13 @@
 import React from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { AddrText } from '../atoms';
 import { COLORS, RADIUS, SHADOW, SPACING } from '../../theme';
+import BallPulse from '../../../../components/BallPulse';
 
 const GeocodingBanner = () => (
   <View style={styles.banner}>
-    <ActivityIndicator size="small" color={COLORS.textMuted} />
+    <BallPulse size="small" color={COLORS.textMuted} />
     <AddrText variant="caption" tone="secondary" style={styles.text}>
       Fetching address…
     </AddrText>

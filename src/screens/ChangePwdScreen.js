@@ -8,7 +8,6 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   ScrollView,
-  ActivityIndicator,
 } from 'react-native';
 import React, { useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -23,6 +22,7 @@ import { Alert } from 'react-native';
 import { getResetToken } from '../api/tokenService';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useCart } from '../context/CartContext';
+import BallPulse from '../components/BallPulse';
 
 const ChangePwdScreen = () => {
   const navigation = useNavigation();
@@ -182,7 +182,7 @@ const ChangePwdScreen = () => {
               disabled={loading}
             >
               {loading ? (
-                <ActivityIndicator size={'large'} color={'#FFFFFF'} />
+                <BallPulse size={'large'} color={'#FFFFFF'} />
               ) : (
                 <Text style={styles.continueButtonText}>Continue</Text>
               )}

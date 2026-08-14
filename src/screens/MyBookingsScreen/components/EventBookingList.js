@@ -1,6 +1,5 @@
 import React, { useCallback } from 'react';
 import {
-  ActivityIndicator,
   FlatList,
   Image,
   RefreshControl,
@@ -11,6 +10,7 @@ import {
 import images from '@/assets/images';
 import EventBookingCard from './EventBookingCard';
 import EventBookingSkeleton from './EventBookingSkeleton';
+import BallPulse from '@/components/BallPulse';
 
 const keyExtractor = (item, index) =>
   String(item?.bookingId || item?.id || index);
@@ -62,9 +62,7 @@ const EventBookingList = ({
       onEndReached={onEndReached}
       onEndReachedThreshold={0.5}
       ListFooterComponent={
-        loadingMore ? (
-          <ActivityIndicator color="#9A5CFF" style={styles.footer} />
-        ) : null
+        loadingMore ? <BallPulse color="#9A5CFF" style={styles.footer} /> : null
       }
       ListEmptyComponent={
         <View style={styles.centered}>

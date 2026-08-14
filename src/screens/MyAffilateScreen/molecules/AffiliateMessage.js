@@ -1,14 +1,15 @@
 import React from 'react';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import CartText from '@/screens/cart/components/atoms/CartText';
 import IconDisc from '@/screens/cart/components/atoms/IconDisc';
 import { CART_COLORS, CART_SPACING, wp } from '@/styles/cartTheme';
+import BallPulse from '@/components/BallPulse';
 
 const AffiliateMessage = ({ loading = false, title = '', message = '' }) => (
   <View style={styles.wrap}>
     {loading ? (
-      <ActivityIndicator color={CART_COLORS.textSecondary} />
+      <BallPulse color={CART_COLORS.textSecondary} />
     ) : (
       <IconDisc size={wp('12%')} tone="neutral">
         <MaterialCommunityIcons

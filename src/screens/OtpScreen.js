@@ -10,7 +10,6 @@ import {
   ScrollView,
   Platform,
   Alert,
-  ActivityIndicator,
   Keyboard,
 } from 'react-native';
 import React, { useRef, useState, useEffect } from 'react';
@@ -42,6 +41,7 @@ import HelpSupportModal from '../components/HelpSupportModal';
 import EmailOtpBottomSheet from '../components/EmailOtpBottomSheet';
 import { setTokens } from '../api/tokenService';
 import images from '@/assets/images';
+import BallPulse from '@/components/BallPulse';
 
 const EMAIL_OTP_FALLBACK_RESEND_THRESHOLD = 1;
 
@@ -269,7 +269,6 @@ const OtpScreen = () => {
           registerToken,
           phone,
         });
-
       } else {
         showStatus({
           type: 'error',
@@ -308,7 +307,6 @@ const OtpScreen = () => {
       console.log('[OTP VERIFY reset] response:', response);
 
       if (response?.success && response?.data) {
-
         navigation.reset({
           index: 0,
           routes: [
@@ -561,7 +559,7 @@ const OtpScreen = () => {
               }
             >
               {loading ? (
-                <ActivityIndicator size={'large'} color={'#FFFFFF'} />
+                <BallPulse size={'large'} color={'#FFFFFF'} />
               ) : (
                 <Text style={styles.continueButtonText}>Continue</Text>
               )}

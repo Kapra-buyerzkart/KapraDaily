@@ -1,28 +1,16 @@
-import {
-  View,
-  Text,
-  StyleSheet,
-  ImageBackground,
-  Image,
-  TextInput,
-  TouchableOpacity,
-  KeyboardAvoidingView,
-  ScrollView,
-} from 'react-native';
-import React, { useEffect, useState } from 'react';
+import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
+import React, { useState } from 'react';
 import logger from '../utils/logger';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import {
-  widthPercentageToDP as wp,
-  heightPercentageToDP as hp,
-} from 'react-native-responsive-screen';
-import { FONTS } from '../styles/typography';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { getAreasByPincode, registerUser, sendRegisterOtp } from '../api';
+import { getAreasByPincode, registerUser } from '../api';
 import { useCart } from '../context/CartContext';
 import secureStore from '../utils/secureStore';
 import { OneSignal } from 'react-native-onesignal';
 import { setTokens } from '../api/tokenService';
+import RegistrationHero from './registration/components/organisms/RegistrationHero';
+import RegistrationForm from './registration/components/organisms/RegistrationForm';
+import { styles } from './registration/styles/Registration.styles';
 
 const PINCODE_AREA_MAP = {
   676519: ['Chungathara', 'Pukkottumanna', 'Manjeri'],
@@ -42,7 +30,6 @@ const mergeCustomerIdIntoProfile = async custId => {
 };
 
 const RegistrationScreen = () => {
-  const [showPassword, setShowPassword] = useState(false);
   const [selectedArea, setSelectedArea] = useState(null);
   const [pincode, setPincode] = useState('');
   const [areas, setAreas] = useState([]);
@@ -79,7 +66,21 @@ const RegistrationScreen = () => {
     }
   };
 
+  const handleSelectArea = area => {
+    setSelectedArea(area);
+    setAreas([area]);
+  };
+
+  const handleEditPhone = () =>
+    navigation.navigate('LoginScreen', {
+      type: 'login',
+    });
+
   const handleContinue = async () => {
+    if (loading) {
+      return;
+    }
+
     if (!name || !password) {
       showStatus({
         type: 'error',
@@ -126,28 +127,40 @@ const RegistrationScreen = () => {
           title: 'Success',
           message: 'Registration completed successfully',
           onClose: async () => {
-            const { accessToken, refreshToken, custId } = registerResponse.data;
-            await setTokens(accessToken, refreshToken);
-            if (custId) {
-              await mergeCustomerIdIntoProfile(custId);
-              OneSignal.login(custId.toString());
-            }
+            try {
+              const { accessToken, refreshToken, custId } =
+                registerResponse.data;
+              await setTokens(accessToken, refreshToken);
+              if (custId) {
+                await mergeCustomerIdIntoProfile(custId);
+                OneSignal.login(custId.toString());
+              }
 
-            navigation.reset({
-              index: 0,
-              routes: [{ name: 'AuthSuccessScreen' }],
-            });
+              navigation.reset({
+                index: 0,
+                routes: [{ name: 'AuthSuccessScreen' }],
+              });
+            } catch (error) {
+              logger.log('Post-registration setup error:', error);
+              setLoading(false);
+              showStatus({
+                type: 'error',
+                title: 'Something Went Wrong',
+                message: 'Could not complete sign in. Please try again.',
+              });
+            }
           },
         });
-      } else {
-        showStatus({
-          type: 'error',
-          title: 'Registration Failed',
-          message:
-            registerResponse?.message ||
-            'Registration failed. Please try again.',
-        });
+        return;
       }
+
+      setLoading(false);
+      showStatus({
+        type: 'error',
+        title: 'Registration Failed',
+        message:
+          registerResponse?.message || 'Registration failed. Please try again.',
+      });
     } catch (error) {
       logger.log('Registration error:', error);
       const errorMessage =
@@ -157,210 +170,50 @@ const RegistrationScreen = () => {
         (typeof error === 'string'
           ? error
           : 'Something went wrong. Please try again.');
+      setLoading(false);
       showStatus({
         type: 'error',
         title: 'Registration Failed',
         message: errorMessage,
       });
-    } finally {
-      setLoading(false);
     }
   };
 
   return (
-    <SafeAreaView style={styles.mainContainer}>
-      {}
+    <SafeAreaView edges={['bottom']} style={styles.screen}>
       <KeyboardAvoidingView
-        style={{ flex: 1 }}
+        style={styles.keyboardView}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <ScrollView
-          contentContainerStyle={{ flexGrow: 1 }}
+          contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
-          <ImageBackground
-            style={styles.backgroundImage}
-            source={require('../assets/images/login_background_image.jpg')}
-          >
-            <Image
-              style={styles.kapraLogo}
-              source={require('../assets/images/kapra_logo.png')}
-            />
-            <Image
-              style={styles.tagLine}
-              source={require('../assets/images/login_content.png')}
-            />
-          </ImageBackground>
-          <View style={styles.registrationContainer}>
-            <Text
-              style={[
-                styles.headerText,
-                {
-                  marginBottom: hp('1%'),
-                },
-              ]}
-            >
-              Registration
-            </Text>
-            <Text style={styles.mandatoryInfoText}>
-              <Text style={{ color: 'red' }}>*</Text> marked fields are
-              mandatory
-            </Text>
-            <TouchableOpacity
-              onPress={() =>
-                navigation.navigate('LoginScreen', {
-                  type: 'login',
-                })
+          <RegistrationHero />
+
+          <View style={styles.sheetWrap}>
+            <RegistrationForm
+              phone={phone}
+              onEditPhone={handleEditPhone}
+              name={name}
+              onChangeName={setName}
+              email={email}
+              onChangeEmail={setEmail}
+              password={password}
+              onChangePassword={setPassword}
+              pincode={pincode}
+              onChangePincode={handlePincodeChange}
+              areas={areas}
+              selectedArea={selectedArea}
+              onSelectArea={handleSelectArea}
+              termsAccepted={termsAndConditionsClicked}
+              onToggleTerms={() =>
+                setTermsAndConditionsClicked(!termsAndConditionsClicked)
               }
-              style={styles.mobilenoContainer}
-            >
-              <Text style={styles.mobilenoText}>+91 {phone}</Text>
-              {}
-              <Image
-                style={[
-                  styles.editIcon,
-                  {
-                    bottom: 1,
-                  },
-                ]}
-                source={require('../assets/images/edit_icon.png')}
-              />
-              {}
-            </TouchableOpacity>
-            <View style={styles.inputContainer}>
-              <Text style={styles.enterNumberText}>
-                Name<Text style={styles.mandatoryStar}>*</Text>
-              </Text>
-              <View style={styles.inputWrapper}>
-                <TextInput
-                  placeholder="Enter name"
-                  placeholderTextColor="#DADADA"
-                  style={styles.input}
-                  value={name}
-                  onChangeText={setName}
-                />
-              </View>
-            </View>
-            <View style={styles.inputContainer}>
-              <Text style={styles.enterNumberText}>Email ID</Text>
-              <View style={styles.inputWrapper}>
-                <TextInput
-                  placeholder="Enter email ID"
-                  placeholderTextColor="#DADADA"
-                  style={styles.input}
-                  value={email}
-                  onChangeText={setEmail}
-                  keyboardType="email-address"
-                />
-              </View>
-            </View>
-            <View style={styles.inputContainer}>
-              <Text style={styles.enterNumberText}>
-                Password<Text style={styles.mandatoryStar}>*</Text>
-              </Text>
-              <View style={styles.inputWrapper}>
-                <TextInput
-                  placeholder="Enter password"
-                  placeholderTextColor="#DADADA"
-                  style={styles.input}
-                  secureTextEntry={!showPassword}
-                  value={password}
-                  onChangeText={setPassword}
-                />
-                <TouchableOpacity
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                  onPress={() => setShowPassword(!showPassword)}
-                >
-                  <Image
-                    tintColor={showPassword ? 'red' : undefined}
-                    style={styles.eyeIcon}
-                    source={require('../assets/images/eye_icon.png')}
-                  />
-                </TouchableOpacity>
-              </View>
-            </View>
-            <View style={styles.inputContainer}>
-              <Text style={styles.enterNumberText}>
-                Pincode<Text style={styles.mandatoryStar}>*</Text>
-              </Text>
-              <View style={styles.inputWrapper}>
-                <TextInput
-                  placeholder="00 00 00"
-                  placeholderTextColor="#DADADA"
-                  style={styles.input}
-                  value={pincode}
-                  onChangeText={handlePincodeChange}
-                  keyboardType="number-pad"
-                  maxLength={6}
-                />
-              </View>
-            </View>
-            {}
-            {areas.length > 0 && (
-              <View style={styles.areaCard}>
-                <Text style={styles.title}>Select your area</Text>
-
-                {areas.map((area, index) => (
-                  <TouchableOpacity
-                    key={index}
-                    style={styles.row}
-                    onPress={() => {
-                      setSelectedArea(area);
-                      setAreas([area]);
-                    }}
-                  >
-                    <Text style={styles.areaText}>{area.areaName}</Text>
-                    {}
-                    {selectedArea?.areaName !== area?.areaName ? (
-                      <View style={styles.radioOuter} />
-                    ) : (
-                      <Image
-                        style={styles.successIcon}
-                        source={require('../assets/images/success.png')}
-                      />
-                    )}
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
-            <View style={styles.termsAndConditionsContainer}>
-              <TouchableOpacity
-                onPress={() =>
-                  setTermsAndConditionsClicked(!termsAndConditionsClicked)
-                }
-                style={styles.termsAndConditionsToggle}
-                hitSlop={{ top: 12, bottom: 12, left: 12, right: 8 }}
-                accessibilityRole="checkbox"
-                accessibilityState={{ checked: termsAndConditionsClicked }}
-                accessibilityLabel="I have read and agree to the terms and conditions"
-                accessibilityHint="Double tap to accept or decline the terms and conditions"
-              >
-                <View style={styles.termsAndConditionsRadioOuter}>
-                  {termsAndConditionsClicked && (
-                    <View style={styles.termsAndConditionsRadioInner} />
-                  )}
-                </View>
-                <Text style={styles.agreeText}>I have read and agree to</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.termsAndConditionsLink}
-                hitSlop={{ top: 12, bottom: 12, left: 8, right: 12 }}
-                accessibilityRole="link"
-                accessibilityLabel="Terms and conditions"
-              >
-                <Text style={styles.termsAndConditionsText}>
-                  Terms and conditions
-                  <Text style={styles.mandatoryStar}>*</Text>
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            <TouchableOpacity
-              onPress={handleContinue}
-              style={[styles.continueButton, {}]}
-            >
-              <Text style={styles.continueButtonText}>Continue</Text>
-            </TouchableOpacity>
+              loading={loading}
+              onSubmit={handleContinue}
+            />
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -369,212 +222,3 @@ const RegistrationScreen = () => {
 };
 
 export default RegistrationScreen;
-
-const styles = StyleSheet.create({
-  mainContainer: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-  },
-  inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    height: hp('5.36%'),
-    borderRadius: wp('2.33%'),
-    borderWidth: 1,
-    borderColor: '#E5E5E5',
-    paddingHorizontal: wp('4.18%'),
-    backgroundColor: '#fff',
-  },
-  countryCode: {
-    fontSize: wp('4.19%'),
-    color: '#000000',
-    marginRight: 12,
-  },
-  divider: {
-    width: 1,
-    height: hp('4%'),
-    backgroundColor: '#E5E5E5',
-    marginRight: wp('4%'),
-  },
-  input: {
-    flex: 1,
-    color: '#000',
-    fontSize: wp('4.19%'),
-  },
-  backgroundImage: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: hp('6%'),
-    paddingBottom: hp('7.5%'),
-  },
-  kapraLogo: {
-    width: wp('47%'),
-    height: hp('10%'),
-    resizeMode: 'cover',
-  },
-  tagLine: {
-    width: wp('50.7%'),
-    height: hp('16.95%'),
-    resizeMode: 'cover',
-  },
-  bottomContainer: {
-    height: hp('30.33%'),
-    paddingHorizontal: wp('5.8%'),
-    paddingTop: hp('3.5%'),
-    borderTopLeftRadius: wp('9.3%'),
-    borderTopRightRadius: wp('9.3%'),
-    backgroundColor: '#FFFFFF',
-    bottom: hp('4%'),
-  },
-  headerText: {
-    fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('4.65%'),
-    color: '#000000',
-    alignSelf: 'center',
-    marginBottom: hp('3.5%'),
-  },
-  enterNumberText: {
-    fontFamily: FONTS.gilroy.regular,
-    fontSize: wp('3.72%'),
-    color: '#616161',
-    marginBottom: hp('0.5%'),
-  },
-  continueButton: {
-    backgroundColor: '#F25000',
-    width: '100%',
-    height: hp('6.11%'),
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: wp('2.33%'),
-    marginTop: hp('5%'),
-  },
-  continueButtonText: {
-    fontFamily: FONTS.gilroy.bold,
-    fontSize: wp('4.18%'),
-    color: '#FFFFFF',
-  },
-  areaCard: {
-    borderWidth: 1,
-    borderColor: '#DADADA',
-    paddingVertical: hp('1.28%'),
-    borderBottomLeftRadius: wp('2.33%'),
-    borderBottomRightRadius: wp('2.33%'),
-  },
-  title: {
-    textAlign: 'center',
-    fontSize: wp('3.72%'),
-    marginBottom: hp('1%'),
-    fontFamily: FONTS.gilroy.semiBold,
-    color: '#000000',
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: wp('3.72%'),
-    paddingVertical: hp('1.2%'),
-  },
-  areaText: {
-    fontSize: wp('3.72%'),
-    fontFamily: FONTS.gilroy.regular,
-    color: '#000000',
-  },
-  radioOuter: {
-    width: wp('4.65%'),
-    height: wp('4.65%'),
-    borderRadius: wp('2.33%'),
-    borderWidth: 2,
-    borderColor: '#ccc',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  registrationContainer: {
-    paddingHorizontal: wp('5.8%'),
-    paddingTop: hp('3.5%'),
-    paddingBottom: hp('4%'),
-    borderTopLeftRadius: wp('9.3%'),
-    borderTopRightRadius: wp('9.3%'),
-    backgroundColor: '#FFFFFF',
-    bottom: hp('4%'),
-  },
-  mobilenoContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'center',
-  },
-  mobilenoText: {
-    color: '#000000',
-    fontFamily: FONTS.gilroy.light,
-    fontSize: wp('3.72%'),
-  },
-  editIcon: {
-    height: wp('2.79%'),
-    width: wp('2.79%'),
-    marginLeft: wp('3%'),
-  },
-  eyeIcon: {
-    width: wp('4.19%'),
-    height: hp('1.29%'),
-    resizeMode: 'contain',
-  },
-  successIcon: {
-    height: wp('4.65%'),
-    width: wp('4.65%'),
-  },
-  inputContainer: {
-    marginTop: hp('1.5%'),
-  },
-  termsAndConditionsContainer: {
-    flexDirection: 'row',
-    marginTop: hp('0.6%'),
-    alignItems: 'center',
-    flexWrap: 'wrap',
-  },
-  termsAndConditionsToggle: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: hp('1.1%'),
-  },
-  termsAndConditionsLink: {
-    paddingVertical: hp('1.1%'),
-  },
-  termsAndConditionsRadioOuter: {
-    width: wp('4.3%'),
-    height: wp('4.3%'),
-    borderRadius: 30,
-    borderWidth: 1,
-    borderColor: '#F25000',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  termsAndConditionsRadioInner: {
-    width: wp('2.6%'),
-    height: wp('2.6%'),
-    backgroundColor: '#F25000',
-    borderRadius: 30,
-  },
-  agreeText: {
-    color: '#616161',
-    fontFamily: FONTS.gilroy.regular,
-    fontSize: wp('3.25%'),
-    marginLeft: wp('2%'),
-  },
-  termsAndConditionsText: {
-    color: '#F25000',
-    fontFamily: FONTS.gilroy.regular,
-    fontSize: wp('3.25%'),
-    marginLeft: wp('1%'),
-  },
-  mandatoryStar: {
-    color: 'red',
-    fontSize: wp('3.72%'),
-  },
-  mandatoryInfoText: {
-    fontFamily: FONTS.gilroy.regular,
-    fontSize: wp('3%'),
-    color: '#616161',
-    textAlign: 'center',
-    marginBottom: hp('1%'),
-  },
-});

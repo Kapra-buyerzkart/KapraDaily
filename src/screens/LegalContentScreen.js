@@ -4,7 +4,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  ActivityIndicator,
   Dimensions,
   Image,
 } from 'react-native';
@@ -20,6 +19,7 @@ import icons from '@/assets/icons';
 import SafeRenderHtml from '../components/SafeRenderHtml';
 import { getGeneralSettingsApi } from '../api/userService';
 import logger from '../utils/logger';
+import BallPulse from '@/components/BallPulse';
 
 const { width } = Dimensions.get('window');
 
@@ -71,7 +71,7 @@ const LegalContentScreen = () => {
 
       {loading ? (
         <View style={styles.loaderContainer}>
-          <ActivityIndicator size="large" color="#F25000" />
+          <BallPulse size="large" color="#F25000" />
         </View>
       ) : (
         <ScrollView contentContainerStyle={styles.container}>

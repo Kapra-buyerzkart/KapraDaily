@@ -1,15 +1,10 @@
 import React from 'react';
-import {
-  ActivityIndicator,
-  Animated,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { Animated, Text, TouchableOpacity, View } from 'react-native';
 import COLORS from '@/styles/colors';
 import { styles } from '../styles';
 import VerdictBanner from './VerdictBanner';
 import TicketSummary from './TicketSummary';
+import BallPulse from '@/components/BallPulse';
 
 const ResultSheet = ({
   validating,
@@ -44,7 +39,7 @@ const ResultSheet = ({
       <View style={styles.resultCard}>
         {validating || !result ? (
           <View style={styles.validatingRow}>
-            <ActivityIndicator color={COLORS.primary} />
+            <BallPulse color={COLORS.primary} />
             <Text style={styles.validatingText}>Validating ticket…</Text>
           </View>
         ) : (

@@ -6,13 +6,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ActivityIndicator,
-  StyleSheet,
-} from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import {
@@ -22,6 +16,7 @@ import {
 import { FONTS } from '../styles/typography';
 import CustomBottomModal from './CustomBottomModal';
 import { sendLoginOtpToEmail } from '../api';
+import BallPulse from './BallPulse';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -137,7 +132,7 @@ const EmailOtpBottomSheet = forwardRef((props, ref) => {
             disabled={!isValidEmail || submitting}
           >
             {submitting ? (
-              <ActivityIndicator size="small" color="#FFFFFF" />
+              <BallPulse size="small" color="#FFFFFF" />
             ) : (
               <Text style={styles.sendButtonText}>Send OTP</Text>
             )}

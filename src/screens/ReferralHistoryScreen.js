@@ -6,7 +6,6 @@ import {
   Image,
   TouchableOpacity,
   FlatList,
-  ActivityIndicator,
   Share,
 } from 'react-native';
 import icons from '@/assets/icons';
@@ -22,6 +21,7 @@ import { getReferralHistoryApi } from '../api/userService';
 import { LoaderContext } from '../context/loaderContext';
 import { AppContext } from '../context/appContext';
 import CONFIG from '../globals/config';
+import BallPulse from '@/components/BallPulse';
 
 const maskPhone = phone => {
   const digits = String(phone || '').replace(/\D/g, '');
@@ -187,7 +187,7 @@ const ReferralHistoryScreen = () => {
         ItemSeparatorComponent={() => <View style={{ height: hp('1.2%') }} />}
         ListFooterComponent={() =>
           isFetchingMore ? (
-            <ActivityIndicator
+            <BallPulse
               size="small"
               color="#F25000"
               style={{ paddingVertical: 10 }}

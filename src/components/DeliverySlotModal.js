@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  ActivityIndicator,
   ScrollView,
 } from 'react-native';
 import {
@@ -17,6 +16,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import LinearGradient from 'react-native-linear-gradient';
 import { getDeliverySlotsApi } from '../api/cartService';
 import CustomModal, { MODAL_POSITION } from './modal/CustomModal';
+import BallPulse from './BallPulse';
 
 const DeliverySlotModal = ({
   visible,
@@ -109,7 +109,7 @@ const DeliverySlotModal = ({
 
       {loading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#F25000" />
+          <BallPulse size="large" color="#F25000" />
           <Text style={styles.loadingText}>Loading available slots...</Text>
         </View>
       ) : slotGroups.length === 0 ? (

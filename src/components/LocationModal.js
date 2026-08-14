@@ -13,7 +13,6 @@ import {
   Image,
   TouchableOpacity,
   StyleSheet,
-  ActivityIndicator,
   Keyboard,
 } from 'react-native';
 import {
@@ -27,6 +26,7 @@ import { useDebounce } from '../hooks/useDebounce';
 import { FONTS } from '../styles/typography';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import CustomBottomModal from './CustomBottomModal';
+import BallPulse from './BallPulse';
 const SEARCH_DEBOUNCE_MS = 1200;
 const MIN_SEARCH_LENGTH = 3;
 
@@ -151,7 +151,7 @@ const LocationModal = forwardRef(({ onClose }, ref) => {
 
         {searching ? (
           <View style={styles.loaderContainer}>
-            <ActivityIndicator color={'#FF7148'} size="large" />
+            <BallPulse color={'#FF7148'} size="large" />
           </View>
         ) : noResults ? (
           <View style={styles.emptyState}>
@@ -188,7 +188,7 @@ const LocationModal = forwardRef(({ onClose }, ref) => {
                     {item.areaName} {item.pincode ? `(${item.pincode})` : ''}
                   </Text>
                   {isSelecting && (
-                    <ActivityIndicator
+                    <BallPulse
                       size="small"
                       color="#FF7148"
                       style={styles.itemSpinner}

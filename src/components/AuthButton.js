@@ -6,10 +6,10 @@ import {
   StyleSheet,
   Dimensions,
   Platform,
-  ActivityIndicator,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { getFontontSize } from '../globals/GroFunctions';
+import BallPulse from './BallPulse';
 
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
@@ -72,7 +72,7 @@ export default function AuthButton({
           }}
         >
           {loading ? (
-            <ActivityIndicator color={FColor || '#ffffff'} size="small" />
+            <BallPulse color={FColor || '#ffffff'} size="small" />
           ) : (
             <Text
               style={[

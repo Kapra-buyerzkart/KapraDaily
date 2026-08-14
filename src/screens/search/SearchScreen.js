@@ -1,11 +1,4 @@
-import {
-  View,
-  Text,
-  Image,
-  Platform,
-  ActivityIndicator,
-  StatusBar,
-} from 'react-native';
+import { View, Text, Image, Platform, StatusBar } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedScrollHandler,
@@ -37,6 +30,7 @@ import SearchResultsHeader from './components/SearchResultsHeader';
 import SearchHeader from './components/SearchHeader';
 import styles from './SearchScreen.styles';
 import { BORDER_FADE_RANGE } from '@/styles/motion';
+import BallPulse from '@/components/BallPulse';
 
 const SearchScreen = () => {
   const navigation = useNavigation();
@@ -227,7 +221,7 @@ const SearchScreen = () => {
             ListEmptyComponent={
               searching ? (
                 <View style={styles.loaderContainer}>
-                  <ActivityIndicator size="large" color="#F25000" />
+                  <BallPulse size="large" color="#F25000" />
                 </View>
               ) : (
                 displayedSuggestions.length === 0 &&

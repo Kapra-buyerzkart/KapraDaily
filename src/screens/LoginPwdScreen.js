@@ -8,7 +8,6 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
-  ActivityIndicator,
   Platform,
 } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
@@ -26,6 +25,7 @@ import { loginWithPassword, sendLoginOtp } from '../api';
 import secureStore from '../utils/secureStore';
 import { setTokens } from '../api/tokenService';
 import images from '@/assets/images';
+import BallPulse from '@/components/BallPulse';
 
 const mergeCustomerIdIntoProfile = async custId => {
   logger.log('????????', custId);
@@ -178,7 +178,7 @@ const LoginPwdScreen = () => {
               style={styles.continueButton}
             >
               {loading ? (
-                <ActivityIndicator size="large" color="#FFFFFF" />
+                <BallPulse size="large" color="#FFFFFF" />
               ) : (
                 <Text style={styles.continueButtonText}>Continue</Text>
               )}

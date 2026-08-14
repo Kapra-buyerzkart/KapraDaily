@@ -1,8 +1,9 @@
 import React from 'react';
-import { ActivityIndicator, StyleSheet, TouchableOpacity } from 'react-native';
+import { StyleSheet, TouchableOpacity } from 'react-native';
 
 import { AddrText } from '../atoms';
 import { COLORS, RADIUS, SPACING, hp } from '../../theme';
+import BallPulse from '../../../../components/BallPulse';
 
 const SaveButton = ({ label, isBusy, onPress }) => (
   <TouchableOpacity
@@ -15,7 +16,7 @@ const SaveButton = ({ label, isBusy, onPress }) => (
     style={[styles.button, isBusy && styles.buttonBusy]}
   >
     {isBusy ? (
-      <ActivityIndicator color={COLORS.onDark} />
+      <BallPulse color={COLORS.onDark} />
     ) : (
       <AddrText variant="cta" tone="onDark">
         {label}

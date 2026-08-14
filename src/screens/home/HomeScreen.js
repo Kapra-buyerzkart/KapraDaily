@@ -532,7 +532,7 @@ const HomeScreen = () => {
           </View>
         )}
 
-        {/* {!isStoreUnavailable && !!data && (
+        {!isStoreUnavailable && !!data && (
           <View style={styles.sealWrap}>
             <Image
               source={UDENDEAL_SEAL}
@@ -540,7 +540,7 @@ const HomeScreen = () => {
               style={styles.sealImage}
             />
           </View>
-        )} */}
+        )}
       </Animated.ScrollView>
 
       {}

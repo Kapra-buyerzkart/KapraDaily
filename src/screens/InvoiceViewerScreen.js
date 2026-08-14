@@ -3,7 +3,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  ActivityIndicator,
   Image,
   Platform,
 } from 'react-native';
@@ -24,6 +23,7 @@ import { COLORS } from '../styles/colors';
 import { isSafeUrl, openExternalUrl } from '../utils/safeUrl';
 import { isInvoiceGenerated } from '../utils/invoiceUrl';
 import logger from '../utils/logger';
+import BallPulse from '@/components/BallPulse';
 
 const buildFileName = (invoiceNumber, url) => {
   const fromNumber = (invoiceNumber || '').replace(/[^A-Za-z0-9-]+/g, '_');
@@ -101,10 +101,7 @@ const InvoiceViewerScreen = () => {
           onPress={() => navigation.goBack()}
           style={styles.backButton}
         >
-          <Image
-            source={icons.backArrowNew}
-            style={styles.backIcon}
-          />
+          <Image source={icons.backArrowNew} style={styles.backIcon} />
         </TouchableOpacity>
         <View style={styles.headerTextWrap}>
           <Text style={styles.headerTitle} numberOfLines={1}>
@@ -125,7 +122,7 @@ const InvoiceViewerScreen = () => {
           accessibilityLabel="Download invoice"
         >
           {downloading ? (
-            <ActivityIndicator size="small" color={COLORS.primary} />
+            <BallPulse size="small" color={COLORS.primary} />
           ) : (
             <Feather
               name="download"
@@ -197,7 +194,7 @@ const InvoiceViewerScreen = () => {
             />
             {loading && (
               <View style={styles.loaderOverlay}>
-                <ActivityIndicator size="large" color={COLORS.primary} />
+                <BallPulse size="large" color={COLORS.primary} />
                 <Text style={styles.loaderText}>Loading invoice…</Text>
               </View>
             )}

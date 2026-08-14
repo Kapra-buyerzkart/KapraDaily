@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useVoucherPayment } from '../../../hooks/useVoucherPayment';
 import {
-  ActivityIndicator,
   Animated,
   Dimensions,
   Image,
@@ -24,6 +23,7 @@ import SafeRenderHtml from '../../../components/SafeRenderHtml';
 import CONFIG from '../../../globals/config';
 import { getVoucherQuoteApi } from '../../../api/voucherService';
 import COLORS from '@/styles/colors';
+import BallPulse from '@/components/BallPulse';
 
 const { width, height } = Dimensions.get('window');
 
@@ -551,7 +551,7 @@ const UdenTicketModal = ({
               <View style={styles.priceRow}>
                 <View style={styles.priceLeft}>
                   {quoteLoading && !quoteData ? (
-                    <ActivityIndicator size="small" color="#5B2BE0" />
+                    <BallPulse size="small" color="#5B2BE0" />
                   ) : (
                     <Animated.View
                       style={{

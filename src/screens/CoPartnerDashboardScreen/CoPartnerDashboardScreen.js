@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, ScrollView, StatusBar, ActivityIndicator } from 'react-native';
+import { View, ScrollView, StatusBar } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated from 'react-native-reanimated';
 import { CART_COLORS } from '@/styles/cartTheme';
@@ -13,11 +13,16 @@ import ActivityCard from './organisms/ActivityCard';
 import DateRangeSheet from './organisms/DateRangeSheet';
 import DashboardEmptyState from './organisms/DashboardEmptyState';
 import DateRangeBar from './molecules/DateRangeBar';
+import BallPulse from '@/components/BallPulse';
 
 const SECTIONS = [
   { key: 'customers', title: 'Customers', icon: 'account-multiple' },
   { key: 'orders', title: 'Orders', icon: 'cart-outline' },
-  { key: 'copartners', title: 'Co-partners in area', icon: 'handshake-outline' },
+  {
+    key: 'copartners',
+    title: 'Co-partners in area',
+    icon: 'handshake-outline',
+  },
   { key: 'payouts', title: 'Payouts', icon: 'wallet-outline' },
 ];
 
@@ -67,7 +72,7 @@ const CoPartnerDashboardScreen = () => {
   if (isLoading && areas.length === 0) {
     return renderShell(
       <View style={styles.centerFill}>
-        <ActivityIndicator size="large" color={CART_COLORS.textSecondary} />
+        <BallPulse size="large" color={CART_COLORS.textSecondary} />
       </View>,
     );
   }

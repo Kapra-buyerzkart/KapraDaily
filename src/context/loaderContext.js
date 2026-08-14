@@ -1,6 +1,6 @@
 import React, { createContext, useState } from 'react';
 import { Dimensions } from 'react-native';
-import { Modal, View, ActivityIndicator } from 'react-native';
+import { Modal, View } from 'react-native';
 import LottieView from 'lottie-react-native';
 
 const windowHeight = Dimensions.get('window').height;

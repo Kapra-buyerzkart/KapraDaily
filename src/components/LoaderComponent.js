@@ -1,11 +1,12 @@
 import React from 'react';
-import { View, ActivityIndicator, StyleSheet, Modal } from 'react-native';
+import { View, StyleSheet, Modal } from 'react-native';
+import BallPulse from './BallPulse';
 
 const LoaderComponent = ({ visible }) => {
     return (
         <Modal transparent={true} animationType="none" visible={visible}>
             <View style={styles.container}>
-                <ActivityIndicator size="large" color="#F25000" />
+                <BallPulse size="large" color="#F25000" />
             </View>
         </Modal>
     );

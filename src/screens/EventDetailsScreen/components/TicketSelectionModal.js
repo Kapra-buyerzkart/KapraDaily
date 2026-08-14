@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
   Dimensions,
   Image,
   ImageBackground,
@@ -30,6 +29,7 @@ import { wp, hp } from '../../../utils/responsive';
 import { getDashboardDataApi } from '../../../api/userService';
 import { checkTicketAvailabilityApi } from '../../../api/eventService';
 import { formatPrice } from '../utils';
+import BallPulse from '@/components/BallPulse';
 
 const { width, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const PRESS_IN_SPRING = {
@@ -99,7 +99,7 @@ const TicketRow = React.memo(
                 <Text style={styles.stepperBtnText}>−</Text>
               </AnimatedPressable>
               {checking ? (
-                <ActivityIndicator
+                <BallPulse
                   size="small"
                   color={COLORS.purple}
                   style={styles.stepperValue}
@@ -131,7 +131,7 @@ const TicketRow = React.memo(
               disabled={soldOut || checking}
             >
               {checking ? (
-                <ActivityIndicator size="small" color={COLORS.purple} />
+                <BallPulse size="small" color={COLORS.purple} />
               ) : (
                 <Text
                   style={[
@@ -400,7 +400,7 @@ const TicketSelectionModal = ({
                 disabled={totalTickets === 0 || submitting}
               >
                 {submitting ? (
-                  <ActivityIndicator size="small" color={COLORS.white} />
+                  <BallPulse size="small" color={COLORS.white} />
                 ) : (
                   <Text style={styles.buyNowText}>BUY NOW</Text>
                 )}

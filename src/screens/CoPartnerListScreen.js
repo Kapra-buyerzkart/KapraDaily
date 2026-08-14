@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   SafeAreaView,
   FlatList,
-  ActivityIndicator,
   Platform,
   StatusBar,
   Image,
@@ -19,6 +18,7 @@ import {
 } from 'react-native-responsive-screen';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { FONTS } from '../styles/typography';
+import BallPulse from '@/components/BallPulse';
 
 const formatDate = dateStr => {
   if (!dateStr) return '';
@@ -172,7 +172,7 @@ const CoPartnerListScreen = () => {
       );
     return (
       <View style={styles.footerWrap}>
-        <ActivityIndicator size="small" color="#F25000" />
+        <BallPulse size="small" color="#F25000" />
       </View>
     );
   };

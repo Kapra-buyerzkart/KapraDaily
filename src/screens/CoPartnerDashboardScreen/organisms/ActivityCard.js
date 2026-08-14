@@ -1,19 +1,15 @@
 import React from 'react';
-import { View, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Surface from '@/screens/cart/components/atoms/Surface';
 import Divider from '@/screens/cart/components/atoms/Divider';
 import CartText from '@/screens/cart/components/atoms/CartText';
 import IconDisc from '@/screens/cart/components/atoms/IconDisc';
 import Badge from '@/screens/cart/components/atoms/Badge';
-import {
-  CART_COLORS,
-  CART_SPACING,
-  hitSlopTo,
-  wp,
-} from '@/styles/cartTheme';
+import { CART_COLORS, CART_SPACING, hitSlopTo, wp } from '@/styles/cartTheme';
 import ActivityRow from '../molecules/ActivityRow';
 import { LIST_PREVIEW_LIMIT } from '../constants';
+import BallPulse from '@/components/BallPulse';
 
 const ActivityCard = ({ title, icon, items, type, isLoading, onViewAll }) => {
   if (items.length === 0 && !isLoading) return null;
@@ -32,7 +28,11 @@ const ActivityCard = ({ title, icon, items, type, isLoading, onViewAll }) => {
         </IconDisc>
 
         <View style={styles.headerCopy}>
-          <CartText variant="heading" numberOfLines={1} accessibilityRole="header">
+          <CartText
+            variant="heading"
+            numberOfLines={1}
+            accessibilityRole="header"
+          >
             {title}
           </CartText>
         </View>
@@ -68,7 +68,7 @@ const ActivityCard = ({ title, icon, items, type, isLoading, onViewAll }) => {
       ))}
 
       {items.length === 0 && isLoading && (
-        <ActivityIndicator
+        <BallPulse
           size="small"
           color={CART_COLORS.textSecondary}
           style={styles.loader}
