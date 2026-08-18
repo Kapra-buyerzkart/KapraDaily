@@ -5,6 +5,8 @@ import {
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
 import ShimmerPlaceholder from './ShimmerPlaceholder';
+import { RADIUS } from '../styles/homeTheme';
+import { PILL_HEIGHT } from './SubCategoryPill';
 
 const PillShimmer = ({ width }) => (
   <ShimmerPlaceholder style={[styles.pill, { width }]} />
@@ -33,7 +35,7 @@ const styles = StyleSheet.create({
     gap: wp('2.5%'),
   },
   pill: {
-    height: 44,
-    borderRadius: 22,
+    height: PILL_HEIGHT,
+    borderRadius: RADIUS.sm,
   },
 });

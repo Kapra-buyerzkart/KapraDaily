@@ -5,22 +5,30 @@ import Animated, {
   useAnimatedStyle,
   withTiming,
   interpolateColor,
+  interpolate,
 } from 'react-native-reanimated';
-import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import { FONTS } from '../styles/typography';
+import COLORS from '../styles/colors';
+import {
+  CATEGORY_SELECT,
+  INK,
+  SURFACE,
+  RADIUS,
+  SPACE,
+  TYPE,
+  MAX_FONT_SCALE,
+} from '../styles/homeTheme';
 import { getImageUrl } from '../utils/imageUrl';
 import AnimatedPressable from './AnimatedPressable';
 import CachedImage from './CachedImage';
 
 const AnimatedText = Animated.createAnimatedComponent(Animated.Text);
 
-const BG_INACTIVE = '#FFFFFF';
-const BG_ACTIVE = '#FFF3EA';
-const BORDER_INACTIVE = '#EFEFEF';
-const BORDER_ACTIVE = '#FF6B00';
-const TEXT_INACTIVE = '#6B7280';
-const TEXT_ACTIVE = '#FF6B00';
 const SELECTION_DURATION = 180;
+
+export const PILL_HEIGHT = 40;
+const WELL_SIZE = 26;
+const LIFT = 4;
 
 const SubCategoryPill = ({ item, isSelected, onPress }) => {
   const progress = useSharedValue(isSelected ? 1 : 0);
@@ -32,23 +40,22 @@ const SubCategoryPill = ({ item, isSelected, onPress }) => {
   }, [isSelected, progress]);
 
   const containerStyle = useAnimatedStyle(() => ({
-    backgroundColor: interpolateColor(
-      progress.value,
-      [0, 1],
-      [BG_INACTIVE, BG_ACTIVE],
-    ),
     borderColor: interpolateColor(
       progress.value,
       [0, 1],
-      [BORDER_INACTIVE, BORDER_ACTIVE],
+      [COLORS.border, CATEGORY_SELECT.edge],
     ),
+  }));
+
+  const wellStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: interpolate(progress.value, [0, 1], [0, -LIFT]) }],
   }));
 
   const textStyle = useAnimatedStyle(() => ({
     color: interpolateColor(
       progress.value,
       [0, 1],
-      [TEXT_INACTIVE, TEXT_ACTIVE],
+      [INK.muted, CATEGORY_SELECT.text],
     ),
   }));
 
@@ -57,11 +64,13 @@ const SubCategoryPill = ({ item, isSelected, onPress }) => {
       onPress={onPress}
       style={[styles.subCatPill, containerStyle]}
     >
-      <CachedImage
-        style={styles.subCatPillImage}
-        source={getImageUrl(item.imageUrl)}
-        accessible={false}
-      />
+      <Animated.View style={[styles.subCatPillWell, wellStyle]}>
+        <CachedImage
+          style={styles.subCatPillImage}
+          source={getImageUrl(item.imageUrl)}
+          accessible={false}
+        />
+      </Animated.View>
       <AnimatedText
         style={[
           isSelected
@@ -69,6 +78,8 @@ const SubCategoryPill = ({ item, isSelected, onPress }) => {
             : styles.subCatPillTextInactive,
           textStyle,
         ]}
+        numberOfLines={1}
+        maxFontSizeMultiplier={MAX_FONT_SCALE}
       >
         {item.catName}
       </AnimatedText>
@@ -82,25 +93,33 @@ const styles = StyleSheet.create({
   subCatPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 44,
-    paddingHorizontal: wp('3%'),
-    borderRadius: 22,
+    height: PILL_HEIGHT,
+    paddingLeft: SPACE.xs + 1,
+    paddingRight: SPACE.md,
+    borderRadius: RADIUS.sm,
+    borderWidth: StyleSheet.hairlineWidth,
+    backgroundColor: SURFACE.base,
+  },
+  subCatPillWell: {
+    borderRadius: RADIUS.xs,
+    marginRight: SPACE.sm,
   },
   subCatPillImage: {
-    width: wp('7%'),
-    height: wp('7%'),
-    borderRadius: wp('3.5%'),
-    marginRight: wp('2%'),
+    width: WELL_SIZE,
+    height: WELL_SIZE,
+    borderRadius: RADIUS.xs,
     resizeMode: 'cover',
   },
   subCatPillTextActive: {
+    ...TYPE.caption,
+    lineHeight: undefined,
     fontFamily: FONTS.gilroy.bold,
-    fontSize: wp('3.4%'),
-    marginRight: wp('1.5%'),
+    includeFontPadding: false,
   },
   subCatPillTextInactive: {
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('3.4%'),
-    marginRight: wp('1.5%'),
+    ...TYPE.caption,
+    lineHeight: undefined,
+    fontFamily: FONTS.gilroy.semiBold,
+    includeFontPadding: false,
   },
 });

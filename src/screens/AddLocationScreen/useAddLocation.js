@@ -1,6 +1,7 @@
 import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { Platform, PermissionsAndroid } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { useForm } from 'react-hook-form';
 import Geolocation from '@react-native-community/geolocation';
 import Toast from 'react-native-simple-toast';
 import axios from 'axios';
@@ -11,9 +12,14 @@ import { AppContext } from '@/context/appContext';
 import { useAddresses } from '@/hooks/useAddresses';
 import { GOOGLE_MAPS_API_KEY } from '@/globals/secrets';
 import secureStore from '@/utils/secureStore';
-import { validatePhoneNumbers } from '@/utils/validation';
 
 import { DEFAULT_COORDS, REGION_DELTA } from './constants';
+import {
+  ADDRESS_MESSAGES,
+  FORM_OPTIONS,
+  PINCODE_LENGTH,
+  buildDefaultValues,
+} from './validationSchema';
 
 const geolocationError = error => {
   if (error.code === 1) return 'Permission denied';
@@ -37,21 +43,23 @@ const useAddLocation = () => {
   const isEditMode = !!editAddress;
   const apiKey = GOOGLE_MAPS_API_KEY;
 
+  const {
+    control,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors, isValid },
+  } = useForm({
+    ...FORM_OPTIONS,
+    defaultValues: buildDefaultValues(editAddress),
+  });
+
+  const addLine1 = watch('addLine1');
+  const addLine2 = watch('addLine2');
+  const pincode = watch('pincode');
+
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState([]);
-  const [pincodeAreaId, setPincodeAreaId] = useState(
-    editAddress?.pincodeAreaId || null,
-  );
-
-  const [custName, setCustName] = useState(editAddress?.custName || '');
-  const [addLine1, setAddLine1] = useState(editAddress?.addLine1 || '');
-  const [addLine2, setAddLine2] = useState(editAddress?.addLine2 || '');
-  const [landmark, setLandmark] = useState(editAddress?.landmark || '');
-  const [phone, setPhone] = useState(editAddress?.phone || '');
-  const [pincode, setPincode] = useState(editAddress?.pincode || '');
-  const [addressType, setAddressType] = useState(
-    editAddress?.addressType || 'HOME',
-  );
 
   const [isLoading, setIsLoading] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(!isEditMode);
@@ -70,6 +78,15 @@ const useAddLocation = () => {
       isMountedRef.current = false;
     };
   }, []);
+
+  const applyValue = useCallback(
+    (name, value) =>
+      setValue(name, value, {
+        shouldDirty: true,
+        shouldValidate: value !== '' && value !== null && value !== undefined,
+      }),
+    [setValue],
+  );
 
   const reverseGeocode = useCallback(
     async (lat, lng) => {
@@ -91,14 +108,18 @@ const useAddLocation = () => {
           const locality = pick('locality');
           const postalCode = pick('postal_code');
 
-          setAddLine1(
+          applyValue(
+            'addLine1',
             `${streetNumber} ${routeName}`.trim() ||
               sublocality2 ||
               sublocality1 ||
               '',
           );
-          setAddLine2((sublocality1 || neighborhood || locality).trim());
-          if (postalCode) setPincode(postalCode);
+          applyValue(
+            'addLine2',
+            (sublocality1 || neighborhood || locality).trim(),
+          );
+          if (postalCode) applyValue('pincode', postalCode);
         }
       } catch (error) {
         console.error('Reverse geocode error', error);
@@ -106,7 +127,7 @@ const useAddLocation = () => {
         if (isMountedRef.current) setIsGeocoding(false);
       }
     },
-    [apiKey],
+    [apiKey, applyValue],
   );
 
   const getCurrentLocation = useCallback(
@@ -215,7 +236,7 @@ const useAddLocation = () => {
           }));
           setItems(formattedAreas);
           if (formattedAreas.length > 0 && !isEditMode) {
-            setPincodeAreaId(formattedAreas[0].value);
+            applyValue('pincodeAreaId', formattedAreas[0].value);
           }
         } else {
           setItems([]);
@@ -227,17 +248,17 @@ const useAddLocation = () => {
         setIsAreasLoading(false);
       }
     },
-    [isEditMode],
+    [applyValue, isEditMode],
   );
 
   useEffect(() => {
-    if (pincode && pincode.length === 6) {
+    if (pincode && pincode.length === PINCODE_LENGTH) {
       fetchAreas(pincode);
     } else {
       setItems([]);
-      if (!isEditMode) setPincodeAreaId(null);
+      if (!isEditMode) setValue('pincodeAreaId', null);
     }
-  }, [fetchAreas, isEditMode, pincode]);
+  }, [fetchAreas, isEditMode, pincode, setValue]);
 
   const onRegionChange = useCallback(() => setIsDragging(true), []);
 
@@ -267,91 +288,92 @@ const useAddLocation = () => {
     [reverseGeocode],
   );
 
-  const handleSave = useCallback(async () => {
-    if (!custName || !addLine1 || !phone || !pincode || !pincodeAreaId) {
-      Toast.show('Please fill all required fields', Toast.SHORT);
-      return;
-    }
-    if (!validatePhoneNumbers(phone)) {
-      Toast.show('Please enter a valid 10-digit phone number', Toast.SHORT);
-      return;
-    }
+  const onValid = useCallback(
+    async values => {
+      const selectedAreaName =
+        items.find(i => i.value === values.pincodeAreaId)?.label || '';
 
-    const selectedAreaName =
-      items.find(i => i.value === pincodeAreaId)?.label || '';
+      const payload = {
+        custName: values.custName.trim(),
+        addLine1: values.addLine1.trim(),
+        addLine2: values.addLine2.trim(),
+        landmark: values.landmark.trim(),
+        phone: values.phone,
+        country: 'India',
+        state: 'Kerala',
+        district: 'Ernakulam',
+        pincode: values.pincode,
+        pincodeAreaId: values.pincodeAreaId,
+        pincodeAreaName: selectedAreaName,
+        latitude: Number(region.latitude),
+        longitude: Number(region.longitude),
+        addressType: values.addressType,
+        isDefaultBillingAddress: true,
+        isDefaultShippingAddress: true,
+      };
 
-    const payload = {
-      custName,
-      addLine1,
-      addLine2,
-      landmark,
-      phone,
-      country: 'India',
-      state: 'Kerala',
-      district: 'Ernakulam',
-      pincode,
-      pincodeAreaId,
-      pincodeAreaName: selectedAreaName,
-      latitude: Number(region.latitude),
-      longitude: Number(region.longitude),
-      addressType,
-      isDefaultBillingAddress: true,
-      isDefaultShippingAddress: true,
-    };
+      setIsLoading(true);
+      try {
+        const response = isEditMode
+          ? await updateAddressApi(editAddress.addressId, payload)
+          : await addAddressApi(payload);
 
-    setIsLoading(true);
-    try {
-      const response = isEditMode
-        ? await updateAddressApi(editAddress.addressId, payload)
-        : await addAddressApi(payload);
+        if (response && response.success !== false) {
+          Toast.show(
+            isEditMode ? 'Address updated' : 'Address added',
+            Toast.SHORT,
+          );
 
-      if (response && response.success !== false) {
-        Toast.show(
-          isEditMode ? 'Address updated' : 'Address added',
-          Toast.SHORT,
-        );
+          await editPincode({
+            pincodeAreaId: values.pincodeAreaId,
+            areaName: selectedAreaName,
+          });
 
-        await editPincode({ pincodeAreaId, areaName: selectedAreaName });
+          const savedAddressId =
+            response?.data?.custAddressId ||
+            response?.data?.addressId ||
+            response?.data?.id;
+          if (savedAddressId) {
+            await secureStore.setItem(
+              'selectedAddressId',
+              String(savedAddressId),
+            );
+          }
 
-        const savedAddressId =
-          response?.data?.custAddressId ||
-          response?.data?.addressId ||
-          response?.data?.id;
-        if (savedAddressId) {
-          await secureStore.setItem(
-            'selectedAddressId',
-            String(savedAddressId),
+          await refreshAddresses();
+          navigation.goBack();
+        } else {
+          Toast.show(
+            response?.message || 'Failed to save address',
+            Toast.SHORT,
           );
         }
-
-        await refreshAddresses();
-        navigation.goBack();
-      } else {
-        Toast.show(response?.message || 'Failed to save address', Toast.SHORT);
+      } catch (error) {
+        console.error('Error saving address:', error);
+        Toast.show('An error occurred', Toast.SHORT);
+      } finally {
+        if (isMountedRef.current) setIsLoading(false);
       }
-    } catch (error) {
-      console.error('Error saving address:', error);
-      Toast.show('An error occurred', Toast.SHORT);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [
-    addLine1,
-    addLine2,
-    addressType,
-    custName,
-    editAddress,
-    editPincode,
-    isEditMode,
-    items,
-    landmark,
-    navigation,
-    phone,
-    pincode,
-    pincodeAreaId,
-    refreshAddresses,
-    region,
-  ]);
+    },
+    [
+      editAddress,
+      editPincode,
+      isEditMode,
+      items,
+      navigation,
+      refreshAddresses,
+      region,
+    ],
+  );
+
+  const onInvalid = useCallback(() => {
+    Toast.show(ADDRESS_MESSAGES.submitBlocked, Toast.SHORT);
+  }, []);
+
+  const handleSave = useCallback(
+    () => handleSubmit(onValid, onInvalid)(),
+    [handleSubmit, onInvalid, onValid],
+  );
 
   return {
     apiKey,
@@ -365,31 +387,19 @@ const useAddLocation = () => {
     onPlaceSelected,
     getCurrentLocation,
     form: {
-      custName,
-      setCustName,
+      control,
+      errors,
       addLine1,
-      setAddLine1,
       addLine2,
-      setAddLine2,
-      landmark,
-      setLandmark,
-      phone,
-      setPhone,
-      pincode,
-      setPincode,
-      addressType,
-      setAddressType,
     },
     area: {
       open,
       setOpen,
       items,
       setItems,
-      pincodeAreaId,
-      setPincodeAreaId,
       isAreasLoading,
     },
-    status: { isLoading, isInitialLoading, isGeocoding },
+    status: { isLoading, isInitialLoading, isGeocoding, isValid },
     onBack: () => navigation.goBack(),
     handleSave,
   };

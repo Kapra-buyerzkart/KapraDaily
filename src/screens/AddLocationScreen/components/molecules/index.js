@@ -1,9 +1,13 @@
 export { default as FormField } from './FormField';
+export { default as ControlledFormField } from './ControlledFormField';
 export { default as AreaDropdown } from './AreaDropdown';
+export { default as ControlledAreaDropdown } from './ControlledAreaDropdown';
 export { default as AddressTypeSelector } from './AddressTypeSelector';
+export { default as ControlledAddressTypeSelector } from './ControlledAddressTypeSelector';
 export { default as ResolvedAddressCard } from './ResolvedAddressCard';
 export { default as DeliveryNote } from './DeliveryNote';
 export { default as GeocodingBanner } from './GeocodingBanner';
 export { default as RecenterButton } from './RecenterButton';
+export { default as FloatingIconButton } from './FloatingIconButton';
 export { default as SheetHeader } from './SheetHeader';
 export { default as SaveButton } from './SaveButton';

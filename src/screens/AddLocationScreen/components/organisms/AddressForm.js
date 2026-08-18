@@ -1,18 +1,18 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { AddrText } from '../atoms';
+import { SectionCard, SectionTitle } from '../atoms';
 import {
-  AddressTypeSelector,
-  AreaDropdown,
+  ControlledAddressTypeSelector,
+  ControlledAreaDropdown,
+  ControlledFormField,
   DeliveryNote,
-  FormField,
   ResolvedAddressCard,
-  SaveButton,
 } from '../molecules';
+import { ADDRESS_RULES } from '../../validationSchema';
 import { SPACING, hp } from '../../theme';
 
-const AddressForm = ({ form, area, status, isEditMode, onSave }) => (
+const AddressForm = ({ form, area, status }) => (
   <>
     <ResolvedAddressCard
       line1={form.addLine1}
@@ -20,91 +20,100 @@ const AddressForm = ({ form, area, status, isEditMode, onSave }) => (
       isResolving={status.isGeocoding || status.isInitialLoading}
     />
 
-    <DeliveryNote />
+    <SectionCard>
+      <SectionTitle title="Save this address as" />
+      <ControlledAddressTypeSelector
+        control={form.control}
+        name="addressType"
+        rules={ADDRESS_RULES.addressType}
+      />
+    </SectionCard>
 
-    <AddrText variant="labelStrong" tone="muted" style={styles.saveAs}>
-      Save as
-    </AddrText>
-    <AddressTypeSelector
-      selected={form.addressType}
-      onChange={form.setAddressType}
-    />
+    <SectionCard>
+      <SectionTitle
+        title="Address details"
+        hint="Used by the rider to reach your door"
+      />
 
-    <FormField
-      label="Full Address House / Flat / Block no"
-      required
-      value={form.addLine1}
-      onChangeText={form.setAddLine1}
-    />
-
-    <FormField
-      label="Appartment / Road / Area"
-      value={form.addLine2}
-      onChangeText={form.setAddLine2}
-    />
-
-    <View style={styles.pincodeRow}>
-      <FormField
-        label="PIN Code"
+      <ControlledFormField
+        control={form.control}
+        name="addLine1"
+        rules={ADDRESS_RULES.addLine1}
+        label="Full Address House / Flat / Block no"
         required
-        wrapperStyle={styles.pincodeField}
-        value={form.pincode}
-        onChangeText={form.setPincode}
-        keyboardType="numeric"
-        maxLength={6}
       />
-      <AreaDropdown
-        open={area.open}
-        setOpen={area.setOpen}
-        value={area.pincodeAreaId}
-        setValue={area.setPincodeAreaId}
-        items={area.items}
-        setItems={area.setItems}
-        isLoading={area.isAreasLoading}
+
+      <ControlledFormField
+        control={form.control}
+        name="addLine2"
+        rules={ADDRESS_RULES.addLine2}
+        label="Appartment / Road / Area"
       />
-    </View>
 
-    <FormField
-      label="Land mark / Delivery instruction"
-      inputStyle={styles.landmarkInput}
-      placeholder="eg. Near Lulu Mall"
-      value={form.landmark}
-      onChangeText={form.setLandmark}
-      multiline
-    />
+      <View style={styles.pincodeRow}>
+        <ControlledFormField
+          control={form.control}
+          name="pincode"
+          rules={ADDRESS_RULES.pincode}
+          label="PIN Code"
+          required
+          wrapperStyle={styles.pincodeField}
+          keyboardType="numeric"
+          maxLength={6}
+        />
+        <ControlledAreaDropdown
+          control={form.control}
+          name="pincodeAreaId"
+          rules={ADDRESS_RULES.pincodeAreaId}
+          open={area.open}
+          setOpen={area.setOpen}
+          items={area.items}
+          setItems={area.setItems}
+          isLoading={area.isAreasLoading}
+        />
+      </View>
 
-    <FormField
-      label="Customer name"
-      required
-      value={form.custName}
-      onChangeText={form.setCustName}
-    />
+      <ControlledFormField
+        control={form.control}
+        name="landmark"
+        rules={ADDRESS_RULES.landmark}
+        label="Land mark / Delivery instruction"
+        inputStyle={styles.landmarkInput}
+        placeholder="eg. Near Lulu Mall"
+        multiline
+      />
 
-    <FormField
-      label="Phone number"
-      required
-      placeholder="Enter mobile number"
-      value={form.phone}
-      onChangeText={form.setPhone}
-      keyboardType="phone-pad"
-      maxLength={10}
-    />
+      <DeliveryNote />
+    </SectionCard>
 
-    <SaveButton
-      label={isEditMode ? 'Update address' : 'Save address'}
-      isBusy={status.isLoading}
-      onPress={onSave}
-    />
+    <SectionCard>
+      <SectionTitle title="Contact details" />
+
+      <ControlledFormField
+        control={form.control}
+        name="custName"
+        rules={ADDRESS_RULES.custName}
+        label="Customer name"
+        required
+      />
+
+      <ControlledFormField
+        control={form.control}
+        name="phone"
+        rules={ADDRESS_RULES.phone}
+        label="Phone number"
+        required
+        placeholder="Enter mobile number"
+        keyboardType="phone-pad"
+        maxLength={10}
+      />
+    </SectionCard>
   </>
 );
 
 export default React.memo(AddressForm);
 
 const styles = StyleSheet.create({
-  saveAs: {
-    marginTop: SPACING.lg,
-    marginBottom: SPACING.sm,
-  },
   pincodeRow: {
     flexDirection: 'row',
     gap: SPACING.md,

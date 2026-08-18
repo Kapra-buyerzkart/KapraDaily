@@ -4,7 +4,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { ACCENT, MAX_FONT_SCALE } from '@/styles/homeTheme';
 import PriceSection from './PriceSection';
-import styles from '../styles';
+import styles, { TOKEN_INK } from '../styles';
 import {
   NAME_LINES,
   UD_TOKEN_ICON,
@@ -47,7 +47,7 @@ const ProductInfo = ({
           <MaterialCommunityIcons
             name={UD_TOKEN_ICON}
             size={isThreeColumn ? UD_TOKEN_ICON_SIZE_SMALL : UD_TOKEN_ICON_SIZE}
-            color={ACCENT.action}
+            color={TOKEN_INK}
           />
           <Text
             style={styles.tokenText}

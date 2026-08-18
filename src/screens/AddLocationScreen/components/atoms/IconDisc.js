@@ -31,6 +31,6 @@ const styles = StyleSheet.create({
   disc: {
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: RADIUS.pill,
+    borderRadius: RADIUS.sm,
   },
 });

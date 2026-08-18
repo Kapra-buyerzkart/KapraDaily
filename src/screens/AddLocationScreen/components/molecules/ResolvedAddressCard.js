@@ -3,15 +3,18 @@ import { Image, StyleSheet, View } from 'react-native';
 
 import { AddrText, IconDisc } from '../atoms';
 import { PIN_ICON } from '../../constants';
-import { COLORS, RADIUS, SPACING, wp } from '../../theme';
+import { COLORS, HAIRLINE, RADIUS, SPACING, wp } from '../../theme';
 
 const ResolvedAddressCard = ({ line1, line2, isResolving }) => (
   <View style={styles.card}>
-    <IconDisc tone="neutral">
+    <IconDisc tone="neutral" size={wp('10%')}>
       <Image source={PIN_ICON} style={styles.icon} />
     </IconDisc>
 
     <View style={styles.copy}>
+      <AddrText variant="micro" tone="muted" style={styles.eyebrow}>
+        {isResolving ? 'LOCATING…' : 'SELECTED LOCATION'}
+      </AddrText>
       <AddrText variant="bodyStrong" numberOfLines={2}>
         {line1 || (isResolving ? 'Fetching location…' : 'Address not found')}
       </AddrText>
@@ -39,7 +42,9 @@ const styles = StyleSheet.create({
     padding: SPACING.md,
     marginTop: SPACING.lg,
     borderRadius: RADIUS.card,
-    backgroundColor: COLORS.well,
+    borderWidth: HAIRLINE,
+    borderColor: COLORS.line,
+    backgroundColor: COLORS.surface,
   },
   icon: {
     width: wp('4%'),
@@ -49,6 +54,10 @@ const styles = StyleSheet.create({
   },
   copy: {
     flex: 1,
+  },
+  eyebrow: {
+    letterSpacing: 0.6,
+    marginBottom: 2,
   },
   line2: {
     marginTop: 2,

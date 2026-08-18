@@ -3,11 +3,16 @@ import { StyleSheet, Text } from 'react-native';
 
 import { COLORS, MAX_FONT_SCALE, SPACING, TYPE, hp } from '../../theme';
 
-const FieldLabel = ({ label, required, isActive, style }) => (
+const FieldLabel = ({ label, required, isActive, hasError, style }) => (
   <Text
     maxFontSizeMultiplier={MAX_FONT_SCALE}
     numberOfLines={1}
-    style={[styles.label, isActive && styles.labelActive, style]}
+    style={[
+      styles.label,
+      isActive && styles.labelActive,
+      hasError && styles.labelError,
+      style,
+    ]}
   >
     {label}
     {required ? <Text style={styles.required}> *</Text> : null}
@@ -24,12 +29,14 @@ const styles = StyleSheet.create({
     zIndex: 1,
     paddingHorizontal: SPACING.xs,
     backgroundColor: COLORS.surface,
-    ...TYPE.caption,
+    ...TYPE.micro,
     color: COLORS.textMuted,
   },
   labelActive: {
-    ...TYPE.captionStrong,
     color: COLORS.textPrimary,
+  },
+  labelError: {
+    color: COLORS.danger,
   },
   required: {
     color: COLORS.danger,

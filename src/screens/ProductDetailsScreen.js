@@ -60,6 +60,7 @@ import {
   HAIRLINE,
   INK,
   ACCENT,
+  TOKEN,
   RADIUS,
   SPACE,
   TYPE,
@@ -494,7 +495,7 @@ const ProductDetailsScreen = () => {
                   <MaterialCommunityIcons
                     name="ticket-confirmation-outline"
                     size={14}
-                    color={ACCENT.action}
+                    color={TOKEN.ink}
                   />
                   <Text
                     style={styles.tokenBadgeText}
@@ -1006,19 +1007,19 @@ const styles = StyleSheet.create({
     letterSpacing: 0.4,
   },
   tokenBadge: {
-    backgroundColor: ACCENT.actionSoft,
-    borderColor: 'rgba(49,46,129,0.18)',
+    backgroundColor: TOKEN.tint,
+    borderColor: TOKEN.edge,
   },
   tokenBadgeText: {
     ...TYPE.micro,
     fontFamily: FONTS.gilroy.bold,
-    color: ACCENT.action,
+    color: TOKEN.ink,
     letterSpacing: 0.2,
     marginLeft: SPACE.xs + 1,
   },
   tokenBadgeUnit: {
     fontFamily: FONTS.gilroy.semiBold,
-    color: 'rgba(49,46,129,0.78)',
+    color: TOKEN.inkSoft,
   },
 
   productName: {

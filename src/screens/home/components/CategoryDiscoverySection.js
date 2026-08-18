@@ -53,6 +53,7 @@ const TAB_PAD_H = 12;
 const TAB_RADIUS = 12;
 const SHOULDER = 8;
 const TAB_GAP = 6;
+const TAB_OVERHANG = TAB_GAP / 2;
 const TAB_PEEK = 44;
 
 const TAB_LABEL_IDLE = INK.strong;
@@ -68,42 +69,38 @@ const SWEEP_COLORS = [
 const SWEEP_START = { x: 0, y: 0 };
 const SWEEP_END = { x: 1, y: 0 };
 
-/** SVG tab shape with smooth circular arc corners & inverted-arc shoulders. */
 const TabShapeSvg = React.memo(({ width, height }) => {
   if (!width || !height) return null;
 
-  const sw = RULE; // stroke width
-  const r = TAB_RADIUS; // top corner radius
-  const s = SHOULDER; // shoulder (inverted arc) radius
+  const sw = RULE;
+  const s = SHOULDER;
   const half = sw / 2;
-  const bleed = height + TAB_BLEED;
 
-  // All corners use SVG arc (A) commands — true circular quarter-arcs.
-  // A rx,ry rotation large-arc sweep x,y
+  const canvasW = width + TAB_OVERHANG * 2;
+  const bleed = height + TAB_BLEED;
+  const left = TAB_OVERHANG;
+  const right = canvasW - TAB_OVERHANG;
+  const top = half;
+  const base = height - half;
+
+  const r = Math.min(TAB_RADIUS, (right - left) / 2 - s);
   const outline = [
-    `M 0,${height}`,
-    // left shoulder — inverted arc curving from bottom up to tab wall
-    `A ${s},${s} 0 0,0 ${s},${height - s}`,
-    // left wall straight up
-    `L ${s},${r + half}`,
-    // top-left corner — standard rounded corner
-    `A ${r},${r} 0 0,1 ${s + r},${half}`,
-    // top edge straight across
-    `L ${width - s - r},${half}`,
-    // top-right corner — standard rounded corner
-    `A ${r},${r} 0 0,1 ${width - s},${r + half}`,
-    // right wall straight down
-    `L ${width - s},${height - s}`,
-    // right shoulder — inverted arc curving from tab wall down to bottom
-    `A ${s},${s} 0 0,0 ${width},${height}`,
+    `M 0,${base}`,
+    `L ${left},${base}`,
+    `A ${s},${s} 0 0,0 ${left + s},${base - s}`,
+    `L ${left + s},${top + r}`,
+    `A ${r},${r} 0 0,1 ${left + s + r},${top}`,
+    `L ${right - s - r},${top}`,
+    `A ${r},${r} 0 0,1 ${right - s},${top + r}`,
+    `L ${right - s},${base - s}`,
+    `A ${s},${s} 0 0,0 ${right},${base}`,
+    `L ${canvasW},${base}`,
   ].join(' ');
 
-  // Fill runs past the baseline so it always masks the rule, whatever way the
-  // rule's 1.5dp band and this canvas each land on the device pixel grid.
-  const body = `${outline} L ${width},${bleed} L 0,${bleed} Z`;
+  const body = `${outline} L ${canvasW},${bleed} L 0,${bleed} Z`;
 
   return (
-    <Svg width={width} height={bleed} style={StyleSheet.absoluteFill}>
+    <Svg width={canvasW} height={bleed} style={StyleSheet.absoluteFill}>
       <Path d={body} fill={CANVAS} />
       <Path d={outline} fill="none" stroke={ACCENT.primary} strokeWidth={sw} />
     </Svg>
@@ -462,8 +459,8 @@ const styles = StyleSheet.create({
   tabDecoration: {
     position: 'absolute',
     top: 0,
-    left: 0,
-    right: 0,
+    left: -TAB_OVERHANG,
+    right: -TAB_OVERHANG,
     bottom: -TAB_BLEED,
   },
   tabLabel: {

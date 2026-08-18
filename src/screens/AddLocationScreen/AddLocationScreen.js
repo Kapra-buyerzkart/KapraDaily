@@ -1,21 +1,12 @@
 import React from 'react';
-import { Platform, StyleSheet } from 'react-native';
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+import { StatusBar, StyleSheet, View } from 'react-native';
 import CustomLoader from '@/components/CustomLoader';
 
-import {
-  AddressSheet,
-  LocationMap,
-  PlacesSearchBar,
-} from './components/organisms';
+import { AddressSheet, LocationMap, MapOverlay } from './components/organisms';
 import useAddLocation from './useAddLocation';
 import { COLORS } from './theme';
 
 const AddLocationScreen = () => {
-  const insets = useSafeAreaInsets();
   const {
     apiKey,
     isEditMode,
@@ -41,13 +32,9 @@ const AddLocationScreen = () => {
         text="Fetching your location..."
       />
 
-      <SafeAreaView
-        edges={['top']}
-        style={[
-          styles.screen,
-          Platform.OS === 'android' && { paddingBottom: insets.bottom },
-        ]}
-      >
+      <StatusBar barStyle="dark-content" backgroundColor={COLORS.surface} />
+
+      <View style={styles.screen}>
         <LocationMap
           mapRef={mapRef}
           region={region}
@@ -57,11 +44,12 @@ const AddLocationScreen = () => {
           onRecenter={() => getCurrentLocation(true)}
         />
 
-        <PlacesSearchBar
+        <MapOverlay
           searchRef={searchRef}
           apiKey={apiKey}
           onPlaceSelected={onPlaceSelected}
           isBusy={status.isGeocoding && !status.isInitialLoading}
+          onBack={onBack}
         />
 
         <AddressSheet
@@ -69,10 +57,9 @@ const AddLocationScreen = () => {
           form={form}
           area={area}
           status={status}
-          onBack={onBack}
           onSave={handleSave}
         />
-      </SafeAreaView>
+      </View>
     </>
   );
 };

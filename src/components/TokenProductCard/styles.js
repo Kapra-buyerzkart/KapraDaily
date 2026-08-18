@@ -4,7 +4,15 @@ import {
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
 import { FONTS } from '@/styles/typography';
-import { INK, ACCENT, SURFACE, RADIUS, SPACE, TYPE } from '@/styles/homeTheme';
+import {
+  INK,
+  ACCENT,
+  TOKEN,
+  SURFACE,
+  RADIUS,
+  SPACE,
+  TYPE,
+} from '@/styles/homeTheme';
 import {
   ADD_OFFSET,
   ADD_SIZE,
@@ -20,6 +28,9 @@ import COLORS from '@/styles/colors';
 const SAVINGS_RULE = 'rgba(17,19,26,0.18)';
 const CARD_BORDER = '#E5E7EB';
 const PRICE_PILL = '#17853C';
+
+export const TOKEN_TINT = TOKEN.tint;
+export const TOKEN_INK = TOKEN.ink;
 
 export default StyleSheet.create({
   cardContainer: {
@@ -271,7 +282,7 @@ export default StyleSheet.create({
     marginTop: SPACE.xs + 2,
     minHeight: TYPE.micro.lineHeight,
     maxWidth: '100%',
-    backgroundColor: ACCENT.actionSoft,
+    backgroundColor: TOKEN_TINT,
     borderRadius: RADIUS.xs,
     paddingHorizontal: 5,
     paddingVertical: 1,
@@ -283,7 +294,7 @@ export default StyleSheet.create({
   },
   tokenText: {
     ...TYPE.micro,
-    color: ACCENT.action,
+    color: TOKEN_INK,
     fontFamily: FONTS.gilroy.bold,
     flexShrink: 1,
   },

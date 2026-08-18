@@ -5,6 +5,7 @@ import {
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
 import ShimmerPlaceholder from './ShimmerPlaceholder';
+import { RADIUS, SPACE, TYPE } from '../styles/homeTheme';
 
 const SidebarItemShimmer = () => (
   <View style={styles.itemContainer}>
@@ -29,20 +30,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: wp('1.5%'),
   },
   itemContainer: {
-    borderRadius: 20,
-    paddingVertical: hp('1.3%'),
-    marginBottom: hp('1.4%'),
+    borderRadius: RADIUS.md,
+    paddingVertical: SPACE.sm,
+    marginBottom: hp('0.6%'),
     alignItems: 'center',
   },
   circle: {
-    width: wp('11%'),
-    height: wp('11%'),
-    borderRadius: 14,
-    marginBottom: hp('0.8%'),
+    width: wp('12%'),
+    height: wp('12%'),
+    borderRadius: RADIUS.sm,
+    marginBottom: SPACE.xs + 2,
   },
   label: {
-    width: '70%',
-    height: hp('1.3%'),
-    borderRadius: 4,
+    width: '74%',
+    height: TYPE.micro.lineHeight,
+    borderRadius: RADIUS.xxs,
   },
 });

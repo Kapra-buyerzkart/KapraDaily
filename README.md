@@ -82,6 +82,36 @@ You've successfully run and modified your React Native App. :partying_face:
 - If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
 - If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
 
+# Distributing Android builds
+
+Release builds go to testers through Firebase App Distribution.
+
+One-time setup — log in with the Firebase CLI account that has access to the `buyerzkart-8d7bd` project:
+
+```sh
+npx firebase-tools login
+```
+
+Then, from the repo root:
+
+```sh
+npm run distribute:android
+```
+
+That builds a signed release APK (`./gradlew assembleRelease`) and uploads it to the App Distribution app matching `applicationId` in `android/app/build.gradle`. Signing uses the `MYAPP_UPLOAD_*` properties from `~/.gradle/gradle.properties`.
+
+Flags:
+
+| Flag | Effect |
+| --- | --- |
+| `--groups <alias,alias>` | Tester groups to distribute to. Without this (or `--testers`) the build uploads but notifies nobody. |
+| `--testers <email,email>` | Individual tester emails. |
+| `--notes "<text>"` | Release notes. Defaults to the version, branch, and latest commit. |
+| `--no-build` | Skip Gradle and upload the existing artifact. |
+| `--aab` | Build and upload an `.aab` instead of an `.apk`. |
+
+Environment overrides: `FIREBASE_ANDROID_APP_ID`, `FIREBASE_TESTER_GROUPS`, `FIREBASE_TESTERS`, `FIREBASE_RELEASE_NOTES`.
+
 # Troubleshooting
 
 If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.

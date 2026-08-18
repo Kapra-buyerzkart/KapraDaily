@@ -33,6 +33,13 @@ export const ACCENT = {
   actionDeep: '#1E1B4B',
 };
 
+export const TOKEN = {
+  tint: '#FFF3D4',
+  ink: '#8A5A00',
+  inkSoft: 'rgba(138,90,0,0.78)',
+  edge: 'rgba(138,90,0,0.20)',
+};
+
 export const RADIUS = {
   xxs: 4,
   xs: 8,
@@ -105,6 +112,23 @@ export const divider = {
 
 export const CATEGORY_WELL = '#F7F4F1';
 
+export const CATEGORY_SELECT = {
+  rail: ACCENT.action,
+  tint: ACCENT.actionSoft,
+  edge: 'rgba(49,46,129,0.35)',
+  text: ACCENT.actionDeep,
+};
+
+export const CATEGORY_FOCUS = {
+  track: '#F4F5F8',
+  trackEdge: 'rgba(17,19,26,0.06)',
+  card: SURFACE.base,
+  cardEdge: 'rgba(17,19,26,0.07)',
+  well: '#E9EAF0',
+  wellEdge: 'rgba(49,46,129,0.18)',
+  shadow: '#0B1020',
+};
+
 export const EXPLORE_PANEL = '#FFF0E7';
 export const EXPLORE_PANEL_EDGE = 'rgba(242,80,0,0.26)';
 
@@ -151,6 +175,8 @@ export default {
   GUTTER,
   divider,
   CATEGORY_WELL,
+  CATEGORY_SELECT,
+  CATEGORY_FOCUS,
   EXPLORE_PANEL,
   EXPLORE_PANEL_EDGE,
   CATEGORY_TINTS,

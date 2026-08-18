@@ -24,7 +24,7 @@ const styles = StyleSheet.create({
     marginTop: SPACING.sm,
     paddingVertical: SPACING.xs,
     paddingHorizontal: SPACING.md,
-    borderRadius: RADIUS.pill,
+    borderRadius: RADIUS.sm,
     backgroundColor: COLORS.surface,
     ...SHADOW.raised,
   },

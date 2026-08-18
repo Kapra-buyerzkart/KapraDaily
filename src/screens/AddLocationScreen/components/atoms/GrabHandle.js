@@ -9,8 +9,8 @@ export default React.memo(GrabHandle);
 
 const styles = StyleSheet.create({
   handle: {
-    width: wp('11%'),
-    height: 4,
+    width: wp('10%'),
+    height: 5,
     borderRadius: RADIUS.pill,
     backgroundColor: COLORS.lineStrong,
     alignSelf: 'center',

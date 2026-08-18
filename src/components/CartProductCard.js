@@ -28,7 +28,7 @@ import {
   wp,
   hp,
 } from '../styles/cartTheme';
-import { ACCENT, RADIUS, TYPE, MAX_FONT_SCALE } from '../styles/homeTheme';
+import { TOKEN, RADIUS, TYPE, MAX_FONT_SCALE } from '../styles/homeTheme';
 
 const SOLD_OUT_IMAGE_OPACITY = 0.4;
 const UD_TOKEN_ICON = 'ticket-confirmation-outline';
@@ -185,7 +185,7 @@ const CartProductCard = props => {
               <MaterialCommunityIcons
                 name={UD_TOKEN_ICON}
                 size={UD_TOKEN_ICON_SIZE}
-                color={ACCENT.action}
+                color={TOKEN.ink}
               />
               <Text
                 style={styles.tokenText}
@@ -323,7 +323,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     maxWidth: '100%',
     minHeight: TYPE.micro.lineHeight,
-    backgroundColor: ACCENT.actionSoft,
+    backgroundColor: TOKEN.tint,
     borderRadius: RADIUS.xs,
     paddingHorizontal: 5,
     paddingVertical: 1,
@@ -331,7 +331,7 @@ const styles = StyleSheet.create({
   },
   tokenText: {
     ...TYPE.micro,
-    color: ACCENT.action,
+    color: TOKEN.ink,
     fontFamily: FONTS.gilroy.bold,
     flexShrink: 1,
   },

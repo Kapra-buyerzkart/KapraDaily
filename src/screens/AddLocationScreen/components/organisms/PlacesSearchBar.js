@@ -7,7 +7,6 @@ import { GeocodingBanner } from '../molecules';
 import {
   COLORS,
   FIELD_HEIGHT,
-  GUTTER,
   HAIRLINE,
   MAX_FONT_SCALE,
   RADIUS,
@@ -18,32 +17,36 @@ import {
   wp,
 } from '../../theme';
 
-const PlacesSearchBar = ({ searchRef, apiKey, onPlaceSelected, isBusy }) => (
-  <View style={styles.layer}>
-    <View style={styles.field}>
-      <GooglePlacesAutocomplete
-        ref={searchRef}
-        onFail={error => Alert.alert('Google Places Error', String(error))}
-        placeholder="Search for an area, street or landmark"
-        textInputProps={{
-          placeholderTextColor: COLORS.textFaint,
-          returnKeyType: 'search',
-          maxFontSizeMultiplier: MAX_FONT_SCALE,
-        }}
-        renderLeftButton={() => (
-          <Ionicons
-            name="search"
-            size={wp('4.4%')}
-            color={COLORS.textMuted}
-            style={styles.icon}
-          />
-        )}
-        fetchDetails
-        onPress={onPlaceSelected}
-        query={{ key: apiKey, language: 'en', components: 'country:in' }}
-        styles={AUTOCOMPLETE_STYLES}
-      />
-    </View>
+const PlacesSearchBar = ({
+  searchRef,
+  apiKey,
+  onPlaceSelected,
+  isBusy,
+  style,
+}) => (
+  <View style={[styles.layer, style]}>
+    <GooglePlacesAutocomplete
+      ref={searchRef}
+      onFail={error => Alert.alert('Google Places Error', String(error))}
+      placeholder="Search area, street or landmark"
+      textInputProps={{
+        placeholderTextColor: COLORS.textFaint,
+        returnKeyType: 'search',
+        maxFontSizeMultiplier: MAX_FONT_SCALE,
+      }}
+      renderLeftButton={() => (
+        <Ionicons
+          name="search"
+          size={wp('4.4%')}
+          color={COLORS.textMuted}
+          style={styles.icon}
+        />
+      )}
+      fetchDetails
+      onPress={onPlaceSelected}
+      query={{ key: apiKey, language: 'en', components: 'country:in' }}
+      styles={AUTOCOMPLETE_STYLES}
+    />
 
     {isBusy ? <GeocodingBanner /> : null}
   </View>
@@ -57,10 +60,12 @@ const AUTOCOMPLETE_STYLES = {
     flexDirection: 'row',
     alignItems: 'center',
     height: FIELD_HEIGHT,
-    paddingHorizontal: SPACING.md,
+    paddingHorizontal: SPACING.lg,
     borderRadius: RADIUS.button,
+    borderWidth: HAIRLINE,
+    borderColor: COLORS.line,
     backgroundColor: COLORS.surface,
-    ...SHADOW.raised,
+    ...SHADOW.float,
   },
   textInput: {
     ...TYPE.label,
@@ -78,20 +83,20 @@ const AUTOCOMPLETE_STYLES = {
   predefinedPlacesDescription: { color: COLORS.textSecondary },
   listView: {
     position: 'absolute',
-    top: hp('6%'),
+    top: FIELD_HEIGHT,
     width: '100%',
     zIndex: 100,
     marginTop: SPACING.sm,
     borderRadius: RADIUS.card,
     backgroundColor: COLORS.surface,
     overflow: 'hidden',
-    ...SHADOW.raised,
+    ...SHADOW.float,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     minHeight: hp('6%'),
-    paddingHorizontal: SPACING.md,
+    paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.md,
     backgroundColor: COLORS.surface,
   },
@@ -108,13 +113,7 @@ const AUTOCOMPLETE_STYLES = {
 
 const styles = StyleSheet.create({
   layer: {
-    zIndex: 999,
-    elevation: 10,
-  },
-  field: {
-    width: wp('100%') - GUTTER * 2,
-    alignSelf: 'center',
-    marginTop: SPACING.md,
+    flex: 1,
     zIndex: 999,
     elevation: 10,
   },

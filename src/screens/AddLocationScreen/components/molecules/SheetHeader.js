@@ -1,25 +1,24 @@
 import React from 'react';
-import { Image, StyleSheet, TouchableOpacity, View } from 'react-native';
-import icons from '@/assets/icons';
+import { StyleSheet, View } from 'react-native';
 
 import { AddrText } from '../atoms';
-import { COLORS, GUTTER, HAIRLINE, SPACING, hitSlopTo } from '../../theme';
+import { COLORS, GUTTER, HAIRLINE, SPACING } from '../../theme';
 
-const SheetHeader = ({ title, onBack }) => (
+const SheetHeader = ({ title, subtitle }) => (
   <View style={styles.header}>
-    <TouchableOpacity
-      style={styles.backBtn}
-      accessibilityRole="button"
-      accessibilityLabel="Go back"
-      hitSlop={hitSlopTo(28)}
-      onPress={onBack}
-    >
-      <Image source={icons.backArrowNew} style={styles.backIcon} />
-    </TouchableOpacity>
-
-    <AddrText variant="title" style={styles.title}>
+    <AddrText variant="heading" numberOfLines={1}>
       {title}
     </AddrText>
+    {subtitle ? (
+      <AddrText
+        variant="caption"
+        tone="muted"
+        numberOfLines={1}
+        style={styles.subtitle}
+      >
+        {subtitle}
+      </AddrText>
+    ) : null}
   </View>
 );
 
@@ -27,22 +26,13 @@ export default React.memo(SheetHeader);
 
 const styles = StyleSheet.create({
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
     paddingHorizontal: GUTTER,
-    paddingVertical: SPACING.md,
+    paddingTop: SPACING.md,
+    paddingBottom: SPACING.md,
     borderBottomWidth: HAIRLINE,
     borderBottomColor: COLORS.line,
   },
-  backBtn: {
-    padding: SPACING.xs,
-  },
-  backIcon: {
-    resizeMode: 'contain',
-    tintColor: COLORS.textPrimary,
-  },
-  title: {
-    flex: 1,
-    marginLeft: SPACING.md,
+  subtitle: {
+    marginTop: 2,
   },
 });

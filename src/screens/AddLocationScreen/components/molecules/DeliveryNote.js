@@ -3,16 +3,16 @@ import { Image, StyleSheet, View } from 'react-native';
 
 import { AddrText } from '../atoms';
 import { DELIVERY_ICON } from '../../constants';
-import { COLORS, RADIUS, SPACING, hp, wp } from '../../theme';
+import { COLORS, HAIRLINE, RADIUS, SPACING, hp, wp } from '../../theme';
 
 const DeliveryNote = () => (
   <View style={styles.strip}>
     <Image source={DELIVERY_ICON} style={styles.image} />
     <View style={styles.copy}>
-      <AddrText variant="caption" tone="secondary">
-        Detailed location for helping our
+      <AddrText variant="captionStrong">Help your delivery partner</AddrText>
+      <AddrText variant="caption" tone="muted">
+        A precise address means a faster drop-off
       </AddrText>
-      <AddrText variant="captionStrong">delivery boy</AddrText>
     </View>
   </View>
 );
@@ -27,6 +27,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.md,
     marginTop: SPACING.md,
     borderRadius: RADIUS.card,
+    borderWidth: HAIRLINE,
+    borderColor: COLORS.line,
     backgroundColor: COLORS.well,
   },
   image: {

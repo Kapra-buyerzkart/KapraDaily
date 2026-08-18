@@ -1,65 +1,70 @@
 import React from 'react';
 import { Image, StyleSheet, TouchableOpacity, View } from 'react-native';
 
-import { AddrText } from '../atoms';
+import { AddrText, FieldError } from '../atoms';
 import { ADDRESS_TYPES } from '../../constants';
 import { COLORS, HAIRLINE, RADIUS, SPACING, hp, wp } from '../../theme';
 
-const AddressTypeSelector = ({ selected, onChange }) => (
-  <View style={styles.row}>
-    {ADDRESS_TYPES.map(({ key, label, icon }) => {
-      const isActive = selected === key;
-      return (
-        <TouchableOpacity
-          key={key}
-          activeOpacity={0.85}
-          accessibilityRole="button"
-          accessibilityState={{ selected: isActive }}
-          accessibilityLabel={`Save as ${label}`}
-          onPress={() => onChange(key)}
-          style={[styles.chip, isActive && styles.chipActive]}
-        >
-          <Image
-            source={icon}
-            style={[styles.icon, isActive && styles.iconActive]}
-          />
-          <AddrText
-            variant={isActive ? 'labelStrong' : 'label'}
-            tone={isActive ? 'primary' : 'muted'}
-            numberOfLines={1}
-            style={styles.label}
+const AddressTypeSelector = ({ selected, onChange, error }) => (
+  <View style={styles.wrap}>
+    <View style={styles.row}>
+      {ADDRESS_TYPES.map(({ key, label, icon }) => {
+        const isActive = selected === key;
+        return (
+          <TouchableOpacity
+            key={key}
+            activeOpacity={0.85}
+            accessibilityRole="button"
+            accessibilityState={{ selected: isActive }}
+            accessibilityLabel={`Save as ${label}`}
+            onPress={() => onChange(key)}
+            style={[styles.chip, isActive && styles.chipActive]}
           >
-            {label}
-          </AddrText>
-        </TouchableOpacity>
-      );
-    })}
+            <Image
+              source={icon}
+              style={[styles.icon, isActive && styles.iconActive]}
+            />
+            <AddrText
+              variant={isActive ? 'labelStrong' : 'label'}
+              tone={isActive ? 'primary' : 'muted'}
+              numberOfLines={1}
+              style={styles.label}
+            >
+              {label}
+            </AddrText>
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+    <FieldError message={error} />
   </View>
 );
 
 export default React.memo(AddressTypeSelector);
 
 const styles = StyleSheet.create({
+  wrap: {
+    marginBottom: SPACING.md,
+  },
   row: {
     flexDirection: 'row',
     gap: SPACING.sm,
-    marginBottom: SPACING.xl,
   },
   chip: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: hp('5%'),
+    minHeight: hp('5.4%'),
     paddingHorizontal: SPACING.sm,
     paddingVertical: SPACING.sm,
-    borderRadius: RADIUS.button,
+    borderRadius: RADIUS.chip,
     borderWidth: HAIRLINE,
     borderColor: COLORS.line,
     backgroundColor: COLORS.well,
   },
   chipActive: {
-    borderWidth: 1,
+    borderWidth: 1.2,
     borderColor: COLORS.lineStrong,
     backgroundColor: COLORS.selectedTint,
   },

@@ -78,8 +78,8 @@ const useCategoriesData = (catId, debouncedSearchText, filters) => {
         pageSize: PAGE_SIZE,
       };
       console.log(
-        'Fetching Products Payload:',
-        payload,
+        'POST product/search payload:',
+        JSON.stringify(payload, null, 2),
       );
       const response = await searchProductsApi(payload);
       console.log('Products Response:', response);
@@ -144,6 +144,10 @@ const useCategoriesData = (catId, debouncedSearchText, filters) => {
   const fetchCategories = async () => {
     try {
       setLoading(true);
+      console.log(
+        'GET categories/list params:',
+        JSON.stringify({ parentCatId: 1 }, null, 2),
+      );
       const response = await getCategoriesApi(1);
       console.log('Categories Response:', response);
       if (
@@ -179,6 +183,10 @@ const useCategoriesData = (catId, debouncedSearchText, filters) => {
   const fetchSubCategories = async parentId => {
     try {
       setIsFetchingSubCategories(true);
+      console.log(
+        'GET categories/list (subcategories) params:',
+        JSON.stringify({ parentCatId: parentId }, null, 2),
+      );
       const response = await getCategoriesApi(parentId);
       console.log('SubCategories Response:', response);
       if (

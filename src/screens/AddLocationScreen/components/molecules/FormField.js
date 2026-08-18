@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { forwardRef, useState } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
 
-import { FieldLabel } from '../atoms';
+import { FieldError, FieldLabel } from '../atoms';
 import {
   COLORS,
   FIELD_HEIGHT,
@@ -12,29 +12,59 @@ import {
   TYPE,
 } from '../../theme';
 
-const FormField = ({
-  label,
-  required,
-  wrapperStyle,
-  inputStyle,
-  ...inputProps
-}) => {
-  const [focused, setFocused] = useState(false);
+const FormField = forwardRef(
+  (
+    {
+      label,
+      required,
+      error,
+      wrapperStyle,
+      inputStyle,
+      onFocus,
+      onBlur,
+      ...inputProps
+    },
+    ref,
+  ) => {
+    const [focused, setFocused] = useState(false);
+    const hasError = !!error;
 
-  return (
-    <View style={[styles.wrapper, wrapperStyle]}>
-      <FieldLabel label={label} required={required} isActive={focused} />
-      <TextInput
-        placeholderTextColor={COLORS.textFaint}
-        maxFontSizeMultiplier={MAX_FONT_SCALE}
-        {...inputProps}
-        style={[styles.input, focused && styles.inputFocused, inputStyle]}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
-      />
-    </View>
-  );
-};
+    return (
+      <View style={[styles.wrapper, wrapperStyle]}>
+        <FieldLabel
+          label={label}
+          required={required}
+          isActive={focused}
+          hasError={hasError}
+        />
+        <TextInput
+          ref={ref}
+          placeholderTextColor={COLORS.textFaint}
+          maxFontSizeMultiplier={MAX_FONT_SCALE}
+          accessibilityLabel={label}
+          {...inputProps}
+          style={[
+            styles.input,
+            focused && styles.inputFocused,
+            hasError && styles.inputError,
+            inputStyle,
+          ]}
+          onFocus={event => {
+            setFocused(true);
+            onFocus?.(event);
+          }}
+          onBlur={event => {
+            setFocused(false);
+            onBlur?.(event);
+          }}
+        />
+        <FieldError message={error} />
+      </View>
+    );
+  },
+);
+
+FormField.displayName = 'FormField';
 
 export default React.memo(FormField);
 
@@ -55,8 +85,13 @@ const styles = StyleSheet.create({
     color: COLORS.textPrimary,
   },
   inputFocused: {
-    borderWidth: 1,
+    borderWidth: 1.2,
     borderColor: COLORS.lineStrong,
+    backgroundColor: COLORS.surface,
+  },
+  inputError: {
+    borderWidth: 1.2,
+    borderColor: COLORS.danger,
     backgroundColor: COLORS.surface,
   },
 });
