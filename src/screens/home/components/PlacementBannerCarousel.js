@@ -283,11 +283,11 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   carouselShadowWrapper: {
-    shadowColor: '#000000',
+    shadowColor: '#ff4d00ff',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.18,
     shadowRadius: 4.5,
-    elevation: 2,
+    elevation: 3,
     backgroundColor: '#FFFFFF',
     borderRadius: wp('4%'),
   },

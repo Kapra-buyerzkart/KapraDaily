@@ -17,20 +17,55 @@ import {
   BottomSheetView,
   BottomSheetBackdrop,
 } from '@gorhom/bottom-sheet';
-import {
-  widthPercentageToDP as wp,
-  heightPercentageToDP as hp,
-} from 'react-native-responsive-screen';
-import { FONTS } from '../styles/typography';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import {
+  CART_COLORS,
+  CART_RADIUS,
+  CART_SPACING,
+  CART_TYPE,
+  MAX_FONT_SCALE,
+  hitSlopTo,
+  wp,
+  hp,
+} from '../styles/cartTheme';
 
 const HELPLINE_PHONE = '+91 9048801110';
 const HELPLINE_EMAIL = 'support@udendeal.com';
 
+const HelpOption = ({ icon, iconColor, tint, label, value, onPress }) => (
+  <TouchableOpacity
+    activeOpacity={0.75}
+    style={styles.optionCard}
+    onPress={onPress}
+    hitSlop={hitSlopTo(44)}
+  >
+    <View style={[styles.iconDisc, { backgroundColor: tint }]}>{icon}</View>
+
+    <View style={styles.optionDetails}>
+      <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={styles.optionLabel}>
+        {label}
+      </Text>
+      <Text
+        maxFontSizeMultiplier={MAX_FONT_SCALE}
+        style={styles.optionValue}
+        numberOfLines={1}
+      >
+        {value}
+      </Text>
+    </View>
+
+    <MaterialIcons
+      name="chevron-right"
+      size={wp('5%')}
+      color={CART_COLORS.textFaint}
+    />
+  </TouchableOpacity>
+);
+
 const HelpSupportModal = forwardRef((_props, ref) => {
   const sheetRef = useRef(null);
-  const snapPoints = useMemo(() => ['38%'], []);
+  const snapPoints = useMemo(() => ['46%'], []);
 
   useImperativeHandle(ref, () => ({
     open: () => sheetRef.current?.present(),
@@ -76,102 +111,119 @@ const HelpSupportModal = forwardRef((_props, ref) => {
       handleIndicatorStyle={styles.handleIndicator}
     >
       <BottomSheetView style={styles.content}>
-        <Text style={styles.title}>Need Help?</Text>
-        <Text style={styles.subtitle}>Reach out to us anytime</Text>
+        <View style={styles.headingRow}>
+          <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={styles.title}>
+            Need Help?
+          </Text>
+          <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={styles.subtitle}>
+            Reach out to us anytime
+          </Text>
+        </View>
 
-        <TouchableOpacity style={styles.optionRow} onPress={callNumber}>
-          <View style={[styles.iconCircle, { backgroundColor: '#FFE9DD' }]}>
-            <MaterialIcons name="call" size={wp('5.5%')} color="#F25000" />
-          </View>
-          <View style={styles.optionTextContainer}>
-            <Text style={styles.optionLabel}>Call us</Text>
-            <Text style={styles.optionValue}>{HELPLINE_PHONE}</Text>
-          </View>
-          <MaterialIcons name="chevron-right" size={wp('6%')} color="#BDBDBD" />
-        </TouchableOpacity>
+        <HelpOption
+          tint={CART_COLORS.primaryTint}
+          icon={
+            <MaterialIcons
+              name="call"
+              size={wp('5%')}
+              color={CART_COLORS.primary}
+            />
+          }
+          label="Call us"
+          value={HELPLINE_PHONE}
+          onPress={callNumber}
+        />
 
-        <TouchableOpacity style={styles.optionRow} onPress={openWhatsApp}>
-          <View style={[styles.iconCircle, { backgroundColor: '#DDF5E4' }]}>
+        <HelpOption
+          tint={CART_COLORS.successTint}
+          icon={
             <MaterialCommunityIcons
               name="whatsapp"
-              size={wp('5.5%')}
-              color="#25D366"
+              size={wp('5%')}
+              color={CART_COLORS.successDeep}
             />
-          </View>
-          <View style={styles.optionTextContainer}>
-            <Text style={styles.optionLabel}>WhatsApp us</Text>
-            <Text style={styles.optionValue}>{HELPLINE_PHONE}</Text>
-          </View>
-          <MaterialIcons name="chevron-right" size={wp('6%')} color="#BDBDBD" />
-        </TouchableOpacity>
+          }
+          label="WhatsApp us"
+          value={HELPLINE_PHONE}
+          onPress={openWhatsApp}
+        />
 
-        <TouchableOpacity style={styles.optionRow} onPress={sendEmail}>
-          <View style={[styles.iconCircle, { backgroundColor: '#DDEAFF' }]}>
-            <MaterialIcons name="email" size={wp('5.5%')} color="#1E6FE0" />
-          </View>
-          <View style={styles.optionTextContainer}>
-            <Text style={styles.optionLabel}>Email us</Text>
-            <Text style={styles.optionValue}>{HELPLINE_EMAIL}</Text>
-          </View>
-          <MaterialIcons name="chevron-right" size={wp('6%')} color="#BDBDBD" />
-        </TouchableOpacity>
+        <HelpOption
+          tint={CART_COLORS.tokenTint}
+          icon={
+            <MaterialIcons
+              name="email"
+              size={wp('5%')}
+              color={CART_COLORS.token}
+            />
+          }
+          label="Email us"
+          value={HELPLINE_EMAIL}
+          onPress={sendEmail}
+        />
       </BottomSheetView>
     </BottomSheetModal>
   );
 });
 
+HelpSupportModal.displayName = 'HelpSupportModal';
+
 const styles = StyleSheet.create({
   background: {
-    borderTopLeftRadius: wp('6%'),
-    borderTopRightRadius: wp('6%'),
+    backgroundColor: CART_COLORS.card,
+    borderTopLeftRadius: CART_RADIUS.card,
+    borderTopRightRadius: CART_RADIUS.card,
   },
   handleIndicator: {
-    backgroundColor: '#DADADA',
+    backgroundColor: CART_COLORS.graySoftColor,
     width: wp('12%'),
   },
   content: {
-    paddingHorizontal: wp('5.8%'),
-    paddingTop: hp('0.5%'),
+    paddingHorizontal: CART_SPACING.lg,
+    paddingTop: CART_SPACING.xs,
+  },
+  headingRow: {
+    marginBottom: CART_SPACING.md,
+    gap: 2,
   },
   title: {
-    fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('4.65%'),
-    color: '#000000',
+    ...CART_TYPE.heading,
+    color: CART_COLORS.textPrimary,
   },
   subtitle: {
-    fontFamily: FONTS.gilroy.regular,
-    fontSize: wp('3.25%'),
-    color: '#616161',
-    marginBottom: hp('2.5%'),
+    ...CART_TYPE.micro,
+    color: CART_COLORS.textMuted,
   },
-  optionRow: {
+  optionCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: hp('1.5%'),
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    gap: CART_SPACING.md,
+    borderWidth: 1,
+    borderColor: CART_COLORS.border,
+    borderRadius: CART_RADIUS.card,
+    backgroundColor: CART_COLORS.card,
+    paddingVertical: hp('1.4%'),
+    paddingHorizontal: CART_SPACING.md,
+    marginBottom: CART_SPACING.md,
   },
-  iconCircle: {
-    width: wp('11%'),
-    height: wp('11%'),
-    borderRadius: wp('5.5%'),
-    justifyContent: 'center',
+  iconDisc: {
+    width: wp('9.5%'),
+    height: wp('9.5%'),
+    borderRadius: CART_RADIUS.icon,
     alignItems: 'center',
-    marginRight: wp('3.5%'),
+    justifyContent: 'center',
   },
-  optionTextContainer: {
+  optionDetails: {
     flex: 1,
+    gap: 2,
   },
   optionLabel: {
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('3.72%'),
-    color: '#000000',
+    ...CART_TYPE.labelStrong,
+    color: CART_COLORS.textPrimary,
   },
   optionValue: {
-    fontFamily: FONTS.gilroy.regular,
-    fontSize: wp('3.25%'),
-    color: '#616161',
-    marginTop: 2,
+    ...CART_TYPE.micro,
+    color: CART_COLORS.textMuted,
   },
 });
 

@@ -1,23 +1,19 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
-  ListRenderItemInfo,
-  Image,
-} from 'react-native';
+import { View, FlatList, StatusBar, ListRenderItemInfo } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   useNavigation,
   useRoute,
   NavigationProp,
 } from '@react-navigation/native';
-import icons from '@/assets/icons';
-import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
+import Animated from 'react-native-reanimated';
+import { entrance } from '@/styles/motion';
+import AffiliateMessage from '@/screens/MyAffilateScreen/molecules/AffiliateMessage';
 import { useReferralLevelMembersScreen } from './useReferralLevelMembersScreen';
-import styles from './styles';
-import BallPulse from '@/components/BallPulse';
+import { extractMembers } from './utils';
+import MembersHeader from './organisms/MembersHeader';
+import MemberCard from './molecules/MemberCard';
+import { styles } from './styles';
 
 export interface ReferralLevelMember {
   custId: number;
@@ -30,28 +26,6 @@ export interface ReferralLevelMember {
   ordersThatEarnedYou?: number;
 }
 
-const formatBT = (n: number): string => {
-  const rounded = Math.round(n * 100) / 100;
-  const [intPart, decPart] = rounded.toString().split('.');
-  const withSep = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-  return decPart ? `${withSep}.${decPart}` : withSep;
-};
-
-const formatDate = (dateString?: string): string => {
-  if (!dateString) return '';
-  const [date] = dateString.split('T');
-  const [year, month, day] = date.split('-');
-  return `${day}-${month}-${year}`;
-};
-
-const extractMembers = (data: any): ReferralLevelMember[] => {
-  if (!data) return [];
-  if (Array.isArray(data)) return data;
-  if (Array.isArray(data.members)) return data.members;
-  if (Array.isArray(data.items)) return data.items;
-  return [];
-};
-
 const ReferralLevelMembersScreen = () => {
   const insets = useSafeAreaInsets();
   const navigation =
@@ -61,112 +35,74 @@ const ReferralLevelMembersScreen = () => {
 
   const { members, isLoading, error } =
     useReferralLevelMembersScreen(levelNumber);
-  const memberList = extractMembers(members);
+  const memberList: ReferralLevelMember[] = extractMembers(members);
 
-  const renderBackButton = () => (
-    <TouchableOpacity
-      style={styles.backButton}
-      activeOpacity={0.7}
-      accessibilityRole="button"
-      accessibilityLabel="Go back"
-      onPress={() => navigation.goBack()}
-    >
-      <Image
-        source={icons.backArrowNew}
-        style={{
-          resizeMode: 'contain',
-          tintColor: '#1A1A1A',
-        }}
+  const renderShell = (children: React.ReactNode) => (
+    <View style={styles.mainContainer}>
+      <StatusBar
+        translucent
+        backgroundColor="transparent"
+        barStyle="dark-content"
       />
-    </TouchableOpacity>
-  );
 
-  const renderHeader = () => (
-    <View style={styles.header}>
-      {renderBackButton()}
-      <View style={styles.headerTextWrap}>
-        <Text style={styles.headerTitle}>
-          {label || `Level ${levelNumber}`}
-        </Text>
-        <Text style={styles.headerSub}>
-          {memberList.length} {memberList.length === 1 ? 'member' : 'members'}
-        </Text>
+      <View style={[styles.topBar, { paddingTop: insets.top }]}>
+        <MembersHeader
+          onBack={() => navigation.goBack()}
+          levelNumber={levelNumber}
+          label={label}
+          countLabel={
+            members
+              ? `${memberList.length} ${
+                  memberList.length === 1 ? 'member' : 'members'
+                }`
+              : ''
+          }
+        />
       </View>
-    </View>
-  );
 
-  const renderMember = ({ item }: ListRenderItemInfo<ReferralLevelMember>) => (
-    <View style={styles.memberRow}>
-      <View style={styles.avatar}>
-        <Text style={styles.avatarText}>
-          {(item.custName || 'U').charAt(0).toUpperCase()}
-        </Text>
-      </View>
-      <View style={styles.memberInfo}>
-        <Text style={styles.memberName}>{item.custName || 'User'}</Text>
-        <Text style={styles.memberSub}>
-          Joined {formatDate(item.joinedAt)}
-          {item.phoneNo ? ` · ${item.phoneNo}` : ''}
-        </Text>
-        {item.ordersThatEarnedYou != null && (
-          <Text style={styles.memberSub}>
-            {item.ordersThatEarnedYou}{' '}
-            {item.ordersThatEarnedYou === 1 ? 'order' : 'orders'} earned you BT
-          </Text>
-        )}
-      </View>
-      {item.btEarnedForYou != null && (
-        <View style={styles.memberRight}>
-          <Text style={styles.memberBt}>
-            {formatBT(item.btEarnedForYou)} UD
-          </Text>
-          <Text style={styles.memberBtLabel}>earned for you</Text>
-        </View>
-      )}
+      {children}
     </View>
   );
 
   if (isLoading && !members) {
-    return (
-      <View style={[styles.container, { paddingTop: insets.top }]}>
-        {renderHeader()}
-        <View style={[styles.container, styles.centered]}>
-          <BallPulse color="#1A1A1A" />
-        </View>
-      </View>
-    );
+    return renderShell(<AffiliateMessage loading />);
   }
 
   if (error && !members) {
-    return (
-      <View style={[styles.container, { paddingTop: insets.top }]}>
-        {renderHeader()}
-        <View style={[styles.container, styles.centered]}>
-          <Text style={styles.errorText}>Failed to load members</Text>
-        </View>
-      </View>
+    return renderShell(
+      <AffiliateMessage
+        title="Couldn’t load members"
+        message="Check your connection and try again in a moment."
+      />,
     );
   }
 
-  return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      {renderHeader()}
-      <FlatList
-        data={memberList}
-        keyExtractor={(item, index) => `M${item.custId ?? index}`}
-        renderItem={renderMember}
-        contentContainerStyle={[
-          styles.listContent,
-          { paddingBottom: insets.bottom + 24 },
-        ]}
-        ListEmptyComponent={
-          <View style={styles.emptyWrap}>
-            <Text style={styles.emptyText}>No members found at this level</Text>
-          </View>
-        }
-        showsVerticalScrollIndicator={false}
-      />
-    </View>
+  const renderMember = ({
+    item,
+    index,
+  }: ListRenderItemInfo<ReferralLevelMember>) => (
+    <Animated.View entering={entrance(Math.min(index, 4))}>
+      <MemberCard member={item} />
+    </Animated.View>
+  );
+
+  return renderShell(
+    <FlatList
+      data={memberList}
+      keyExtractor={(item, index) => `M${item.custId ?? index}`}
+      renderItem={renderMember}
+      contentContainerStyle={[
+        styles.listContent,
+        { paddingBottom: insets.bottom + 24 },
+      ]}
+      ListEmptyComponent={
+        <AffiliateMessage
+          title="No members yet"
+          message="Members who join at this level will show up here with the UD they earn you."
+        />
+      }
+      showsVerticalScrollIndicator={false}
+    />,
   );
 };
 
