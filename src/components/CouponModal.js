@@ -33,6 +33,8 @@ const formatExpiry = validTo =>
 
 const describeOffer = item => {
   if (item.description) return item.description;
+  console.log(item, 'item======>');
+
   if (item.discountType === 'PERCENT') {
     return `Get ${item.discountValue}% OFF up to ₹${item.maxDiscountAmount}`;
   }
@@ -132,6 +134,8 @@ const CouponModal = ({
     () => (isGiftCard ? availableGiftCards : availableCoupons) || [],
     [isGiftCard, availableGiftCards, availableCoupons],
   );
+
+  console.log(data, 'data====>');
 
   const noun = isGiftCard ? 'gift card' : 'coupon';
   const typedCode = (couponCode || '').trim();

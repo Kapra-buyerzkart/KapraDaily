@@ -1,6 +1,7 @@
 import React, { createContext, useState, useContext, useCallback, useMemo, useRef, useEffect } from 'react';
 import { addToWishlistApi, removeFromWishlistApi, getWishlistApi } from '../api/services/wishlistService';
 import { getPincodeAreaId } from '../globals/storage';
+import { getAccessToken } from '../api/services/tokenService';
 
 interface WishlistContextType {
     wishlistItems: any[];
@@ -33,6 +34,11 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setIsLoading(true);
         const promise = (async () => {
             try {
+                const token = await getAccessToken();
+                if (!token) {
+                    setWishlistItems([]);
+                    return;
+                }
                 const storedPincodeAreaId = await getPincodeAreaId();
                 const areaId = storedPincodeAreaId ? parseInt(storedPincodeAreaId) : 105;
                 const response = await getWishlistApi(areaId);

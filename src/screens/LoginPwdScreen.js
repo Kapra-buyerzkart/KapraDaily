@@ -24,6 +24,7 @@ import { useCart } from '../context/CartContext';
 import { loginWithPassword, sendLoginOtp } from '../api';
 import secureStore from '../utils/secureStore';
 import { setTokens } from '../api/tokenService';
+import { syncDeals48Session } from '../modules/deals48/api/session';
 import images from '@/assets/images';
 import BallPulse from '@/components/BallPulse';
 
@@ -83,6 +84,7 @@ const LoginPwdScreen = () => {
         console.log('[LOGIN PWD] custId:', custId);
 
         await setTokens(accessToken, refreshToken);
+        await syncDeals48Session(response.data);
 
         if (custId) {
           await mergeCustomerIdIntoProfile(custId);

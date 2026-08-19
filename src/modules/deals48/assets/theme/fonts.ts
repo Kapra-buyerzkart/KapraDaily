@@ -10,4 +10,11 @@ export const Fonts = {
     gilroyBold: 'Gilroy-Bold',
     gilroyExtraBold: 'Gilroy-ExtraBold',
     gilroyLight: 'Gilroy-Light',
+    poppins: {
+        regular: 'Gilroy-Regular',
+        medium: 'Gilroy-Medium',
+        semiBold: 'Gilroy-SemiBold',
+        bold: 'Gilroy-Bold',
+        light: 'Gilroy-Light',
+    },
 };

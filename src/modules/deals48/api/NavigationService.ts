@@ -5,4 +5,4 @@ export {
   replace,
 } from '../../../api/NavigationService';
 
-export const AUTH_FALLBACK_ROUTE = 'Deals48';
+export const AUTH_FALLBACK_ROUTE = 'LoginScreen';

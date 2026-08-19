@@ -8,6 +8,7 @@ import { useCart } from '../context/CartContext';
 import secureStore from '../utils/secureStore';
 import { OneSignal } from 'react-native-onesignal';
 import { setTokens } from '../api/tokenService';
+import { syncDeals48Session } from '../modules/deals48/api/session';
 import RegistrationHero from './registration/components/organisms/RegistrationHero';
 import RegistrationForm from './registration/components/organisms/RegistrationForm';
 import { styles } from './registration/styles/Registration.styles';
@@ -126,6 +127,7 @@ const RegistrationScreen = () => {
         pincodeAreaId: selectedArea.pincodeAreaId,
       };
       const registerResponse = await registerUser(payload);
+      logger.log('Register response:', JSON.stringify(registerResponse, null, 2));
       if (registerResponse?.success) {
         showStatus({
           type: 'success',
@@ -136,6 +138,7 @@ const RegistrationScreen = () => {
               const { accessToken, refreshToken, custId } =
                 registerResponse.data;
               await setTokens(accessToken, refreshToken);
+              await syncDeals48Session(registerResponse.data);
               if (custId) {
                 await mergeCustomerIdIntoProfile(custId);
                 OneSignal.login(custId.toString());
