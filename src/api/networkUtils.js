@@ -101,7 +101,6 @@ const errorHandler = error => {
 
   const isAuthApi = checkAuthApi(error?.config?.url);
 
-
   if (
     typeof message === 'string' &&
     (message.includes('FK_Carts_Customers') ||
@@ -120,16 +119,28 @@ const errorHandler = error => {
     throw { Message: 'Session expired, please login again.', status: 401 };
   }
 
+  const requestUrl = error?.config?.baseURL
+    ? `${error.config.baseURL}${error?.config?.url}`
+    : error?.config?.url;
+  const requestMethod = error?.config?.method?.toUpperCase();
+
   if (typeof message === 'string' && message.length > 0) {
     const errorWithMeta = new Error(message);
     errorWithMeta.data = error?.response?.data;
     errorWithMeta.status = status;
     errorWithMeta.response = error?.response;
+    errorWithMeta.url = requestUrl;
+    errorWithMeta.method = requestMethod;
+    errorWithMeta.requestBody = safeParse(error?.config?.data);
     throw errorWithMeta;
   }
 
   const genericError = new Error('Something went wrong.');
   genericError.data = error?.response?.data;
+  genericError.status = status;
+  genericError.url = requestUrl;
+  genericError.method = requestMethod;
+  genericError.requestBody = safeParse(error?.config?.data);
   throw genericError;
 };
 

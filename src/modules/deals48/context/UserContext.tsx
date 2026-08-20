@@ -10,6 +10,7 @@ import {
 
 import { getProfile } from '../api/services';
 import { getAccessToken, clearTokens } from '../api/services/tokenService';
+import { ensureDeals48Session } from '../api/session';
 
 interface UserContextType {
     user: User | null;
@@ -42,6 +43,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     useEffect(() => {
         const rehydrateSession = async () => {
             try {
+                await ensureDeals48Session();
                 const token = await getAccessToken();
                 if (token) {
                     const cachedProfile = await getCachedProfile();

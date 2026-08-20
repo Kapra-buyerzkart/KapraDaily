@@ -37,7 +37,6 @@ export const SERVICES = [
     iconColor: '#00BCD4',
     logo: require('../assets/images/modal/48hrDealIcon.png'),
     titleImage: require('../assets/images/modal/48hrImage.png'),
-    enabledSettingKey: 'showkshope',
   },
   {
     id: 'quickCommerce',

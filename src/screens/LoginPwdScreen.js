@@ -68,7 +68,8 @@ const LoginPwdScreen = () => {
       setLoading(true);
       console.log('[LOGIN PWD] request:', {
         phone,
-        password: password ? `***${password.length}chars` : password,
+        phoneType: typeof phone,
+        passwordLength: password.length,
       });
 
       const response = await loginWithPassword(phone, password);
@@ -101,16 +102,21 @@ const LoginPwdScreen = () => {
         });
       }
     } catch (error) {
-      console.log('[LOGIN PWD] error:', error?.message);
-      console.log(
-        '[LOGIN PWD] error response:',
-        JSON.stringify(error?.data || error?.response?.data, null, 2),
-      );
+      console.log('[LOGIN PWD] failed request');
+      console.log('  url:', error?.url);
+      console.log('  method:', error?.method);
+      console.log('  status:', error?.status);
+      console.log('  message:', error?.message ?? error);
+      console.log('  requestBody:', error?.requestBody);
+      console.log('  responseBody:', error?.data ?? error?.response?.data);
       logger.log('Login Error:', error);
       showStatus({
         type: 'error',
         title: 'Error',
-        message: error || 'Failed to login',
+        message:
+          typeof error === 'string'
+            ? error
+            : error?.message || 'Failed to login',
       });
     } finally {
       setLoading(false);

@@ -1,139 +1,186 @@
-import React, { createContext, useState, useContext, useCallback, useMemo, useRef, useEffect } from 'react';
-import { addToWishlistApi, removeFromWishlistApi, getWishlistApi } from '../api/wishlistService';
+import React, {
+  createContext,
+  useState,
+  useContext,
+  useCallback,
+  useMemo,
+  useRef,
+  useEffect,
+} from 'react';
+import {
+  addToWishlistApi,
+  removeFromWishlistApi,
+  getWishlistApi,
+} from '../api/wishlistService';
 import secureStore from '../utils/secureStore';
 
 export const WishlistContext = createContext();
 
-// Narrow contexts for list cells: an id Set that only changes when membership
-// changes, and a permanently stable toggle. Keeps cards out of the re-render
-// path of unrelated wishlist state (loading/error).
 const EMPTY_ID_SET = new Set();
 export const WishlistIdsContext = createContext(EMPTY_ID_SET);
 export const WishlistActionsContext = createContext(null);
 
 export const WishlistProvider = ({ children }) => {
-    const [wishlistItems, setWishlistItems] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const lastFetchedRef = useRef(0);
-    const loadRequestRef = useRef(null);
+  const [wishlistItems, setWishlistItems] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const lastFetchedRef = useRef(0);
+  const loadRequestRef = useRef(null);
 
-    const loadWishlist = useCallback(async (force = false) => {
-        const now = Date.now();
-        if (!force && lastFetchedRef.current && (now - lastFetchedRef.current < 30000)) {
-            return;
+  const loadWishlist = useCallback(async (force = false) => {
+    const now = Date.now();
+    if (
+      !force &&
+      lastFetchedRef.current &&
+      now - lastFetchedRef.current < 30000
+    ) {
+      return;
+    }
+
+    if (loadRequestRef.current) {
+      return loadRequestRef.current;
+    }
+
+    setIsLoading(true);
+    const promise = (async () => {
+      try {
+        const storedPincodeAreaId = await secureStore.getItem('pincodeAreaId');
+        const areaId = storedPincodeAreaId
+          ? parseInt(storedPincodeAreaId)
+          : null;
+        const response = await getWishlistApi(areaId);
+        const items = Array.isArray(response?.data?.items)
+          ? response.data.items
+          : [];
+        setWishlistItems(items);
+        setError(null);
+        lastFetchedRef.current = Date.now();
+      } catch (err) {
+        console.error('Error loading wishlist:', err);
+        setError(err);
+      } finally {
+        setIsLoading(false);
+        loadRequestRef.current = null;
+      }
+    })();
+
+    loadRequestRef.current = promise;
+    return promise;
+  }, []);
+
+  const addToWishlist = useCallback(
+    async item => {
+      const productId = item.productId || item.id;
+
+      setWishlistItems(prevItems => {
+        if (!prevItems.find(i => (i.productId || i.id) === productId)) {
+          return [...prevItems, { ...item, productId }];
         }
+        return prevItems;
+      });
 
-        if (loadRequestRef.current) {
-            return loadRequestRef.current;
+      try {
+        await addToWishlistApi(productId);
+      } catch (err) {
+        console.error('Error adding to wishlist API:', err);
+        setWishlistItems(prevItems =>
+          prevItems.filter(i => (i.productId || i.id) !== productId),
+        );
+        loadWishlist(true);
+      }
+    },
+    [loadWishlist],
+  );
+
+  const removeFromWishlist = useCallback(
+    async itemId => {
+      let removedItem = null;
+
+      setWishlistItems(prevItems => {
+        removedItem = prevItems.find(
+          item => (item.productId || item.id) === itemId,
+        );
+        return prevItems.filter(item => (item.productId || item.id) !== itemId);
+      });
+
+      try {
+        await removeFromWishlistApi(itemId);
+      } catch (err) {
+        console.error('Error removing from wishlist API:', err);
+        if (removedItem) {
+          setWishlistItems(prevItems => [...prevItems, removedItem]);
         }
+        loadWishlist(true);
+      }
+    },
+    [loadWishlist],
+  );
 
-        setIsLoading(true);
-        const promise = (async () => {
-            try {
-                const storedPincodeAreaId = await secureStore.getItem('pincodeAreaId');
-                const areaId = storedPincodeAreaId ? parseInt(storedPincodeAreaId) : null;
-                const response = await getWishlistApi(areaId);
-                const items = Array.isArray(response?.data?.items) ? response.data.items : [];
-                setWishlistItems(items);
-                setError(null);
-                lastFetchedRef.current = Date.now();
-            } catch (err) {
-                console.error('Error loading wishlist:', err);
-                setError(err);
-            } finally {
-                setIsLoading(false);
-                loadRequestRef.current = null;
-            }
-        })();
+  const isInWishlist = useCallback(
+    itemId => {
+      return wishlistItems.some(
+        wishlistItem => wishlistItem.productId === itemId,
+      );
+    },
+    [wishlistItems],
+  );
 
-        loadRequestRef.current = promise;
-        return promise;
-    }, []);
+  const toggleWishlist = useCallback(
+    item => {
+      const id = item.productId || item.id;
+      if (isInWishlist(id)) {
+        removeFromWishlist(id);
+      } else {
+        addToWishlist(item);
+      }
+    },
+    [isInWishlist, addToWishlist, removeFromWishlist],
+  );
 
-    const addToWishlist = useCallback(async (item) => {
-        const productId = item.productId || item.id;
+  const wishlistIds = useMemo(
+    () => new Set(wishlistItems.map(item => item.productId)),
+    [wishlistItems],
+  );
 
-        setWishlistItems(prevItems => {
-            if (!prevItems.find(i => (i.productId || i.id) === productId)) {
-                return [...prevItems, { ...item, productId }];
-            }
-            return prevItems;
-        });
+  const latestToggleRef = useRef(toggleWishlist);
+  latestToggleRef.current = toggleWishlist;
+  const wishlistActions = useMemo(
+    () => ({ toggleWishlist: item => latestToggleRef.current(item) }),
+    [],
+  );
 
-        try {
-            await addToWishlistApi(productId);
-        } catch (err) {
-            console.error('Error adding to wishlist API:', err);
-            setWishlistItems(prevItems => prevItems.filter(i => (i.productId || i.id) !== productId));
-            loadWishlist(true);
-        }
-    }, [loadWishlist]);
+  const value = useMemo(
+    () => ({
+      wishlistItems,
+      isLoading,
+      error,
+      addToWishlist,
+      removeFromWishlist,
+      isInWishlist,
+      toggleWishlist,
+      loadWishlist,
+    }),
+    [
+      wishlistItems,
+      isLoading,
+      error,
+      addToWishlist,
+      removeFromWishlist,
+      isInWishlist,
+      toggleWishlist,
+      loadWishlist,
+    ],
+  );
 
-    const removeFromWishlist = useCallback(async (itemId) => {
-        let removedItem = null;
-
-        setWishlistItems(prevItems => {
-            removedItem = prevItems.find(item => (item.productId || item.id) === itemId);
-            return prevItems.filter(item => (item.productId || item.id) !== itemId);
-        });
-
-        try {
-            await removeFromWishlistApi(itemId);
-        } catch (err) {
-            console.error('Error removing from wishlist API:', err);
-            if (removedItem) {
-                setWishlistItems(prevItems => [...prevItems, removedItem]);
-            }
-            loadWishlist(true);
-        }
-    }, [loadWishlist]);
-
-    const isInWishlist = useCallback((itemId) => {
-        return wishlistItems.some(wishlistItem => wishlistItem.productId === itemId);
-    }, [wishlistItems]);
-
-    const toggleWishlist = useCallback((item) => {
-        const id = item.productId || item.id;
-        if (isInWishlist(id)) {
-            removeFromWishlist(id);
-        } else {
-            addToWishlist(item);
-        }
-    }, [isInWishlist, addToWishlist, removeFromWishlist]);
-
-    const wishlistIds = useMemo(
-        () => new Set(wishlistItems.map(item => item.productId)),
-        [wishlistItems],
-    );
-
-    const latestToggleRef = useRef(toggleWishlist);
-    latestToggleRef.current = toggleWishlist;
-    const wishlistActions = useMemo(
-        () => ({ toggleWishlist: item => latestToggleRef.current(item) }),
-        [],
-    );
-
-    const value = useMemo(() => ({
-        wishlistItems,
-        isLoading,
-        error,
-        addToWishlist,
-        removeFromWishlist,
-        isInWishlist,
-        toggleWishlist,
-        loadWishlist
-    }), [wishlistItems, isLoading, error, addToWishlist, removeFromWishlist, isInWishlist, toggleWishlist, loadWishlist]);
-
-    return (
-        <WishlistContext.Provider value={value}>
-            <WishlistActionsContext.Provider value={wishlistActions}>
-                <WishlistIdsContext.Provider value={wishlistIds}>
-                    {children}
-                </WishlistIdsContext.Provider>
-            </WishlistActionsContext.Provider>
-        </WishlistContext.Provider>
-    );
+  return (
+    <WishlistContext.Provider value={value}>
+      <WishlistActionsContext.Provider value={wishlistActions}>
+        <WishlistIdsContext.Provider value={wishlistIds}>
+          {children}
+        </WishlistIdsContext.Provider>
+      </WishlistActionsContext.Provider>
+    </WishlistContext.Provider>
+  );
 };
 
 export const useWishlist = () => useContext(WishlistContext);
@@ -141,6 +188,6 @@ export const useWishlist = () => useContext(WishlistContext);
 export const useWishlistActions = () => useContext(WishlistActionsContext);
 
 export const useIsWishlisted = productId => {
-    const ids = useContext(WishlistIdsContext);
-    return ids.has(productId);
+  const ids = useContext(WishlistIdsContext);
+  return ids.has(productId);
 };

@@ -5,10 +5,14 @@ const getItem = async key => {
   return result ? result.password : null;
 };
 
-const setItem = (key, value) =>
-  Keychain.setGenericPassword(key, value, { service: key });
-
 const removeItem = key => Keychain.resetGenericPassword({ service: key });
+
+const setItem = (key, value) => {
+  if (value === null || value === undefined || value === '') {
+    return removeItem(key);
+  }
+  return Keychain.setGenericPassword(key, String(value), { service: key });
+};
 
 const multiSet = pairs =>
   Promise.all(pairs.map(([key, value]) => setItem(key, value)));
