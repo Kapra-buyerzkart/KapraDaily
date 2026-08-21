@@ -25,6 +25,8 @@ const QtyStepper = ({
   onDecrease,
   disabled = false,
   updating = false,
+  atMaxQty = false,
+  productName = 'item',
 }) => {
   const bump = useSharedValue(1);
 
@@ -55,6 +57,12 @@ const QtyStepper = ({
         style={styles.btn}
         onPress={onDecrease}
         hitSlop={{ top: 8, bottom: 8, left: 8, right: 4 }}
+        accessibilityRole="button"
+        accessibilityLabel={
+          quantity === 1
+            ? `Remove ${productName} from cart`
+            : `Decrease ${productName} quantity`
+        }
       >
         <Entypo name="minus" size={wp('4%')} color={iconColor} />
       </AnimatedPressable>
@@ -67,10 +75,16 @@ const QtyStepper = ({
       </Animated.Text>
 
       <AnimatedPressable
-        style={styles.btn}
+        style={[styles.btn, atMaxQty && styles.btnCapped]}
         onPress={onIncrease}
         disabled={disabled}
         hitSlop={{ top: 8, bottom: 8, left: 4, right: 8 }}
+        accessibilityRole="button"
+        accessibilityLabel={
+          atMaxQty
+            ? `Maximum quantity reached for ${productName}`
+            : `Increase ${productName} quantity`
+        }
       >
         <Entypo name="plus" size={wp('4%')} color={iconColor} />
       </AnimatedPressable>
@@ -104,6 +118,9 @@ const styles = StyleSheet.create({
     height: wp('8%'),
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  btnCapped: {
+    opacity: 0.4,
   },
   count: {
     ...CART_TYPE.labelStrong,

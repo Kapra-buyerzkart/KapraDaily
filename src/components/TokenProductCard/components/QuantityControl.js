@@ -21,6 +21,7 @@ import {
  */
 const QuantityControl = ({
   quantity,
+  isAtMaxQty,
   isOutOfStock,
   isThreeColumn,
   productName,
@@ -63,6 +64,7 @@ const QuantityControl = ({
     return (
       <CartCounter
         quantity={quantity}
+        isAtMaxQty={isAtMaxQty}
         isThreeColumn={isThreeColumn}
         productName={productName}
         animatedStyle={counterAnimatedStyle}

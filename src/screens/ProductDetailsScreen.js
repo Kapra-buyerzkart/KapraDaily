@@ -15,6 +15,7 @@ import React, {
   useEffect,
   useContext,
   useCallback,
+  useMemo,
 } from 'react';
 import {
   SafeAreaView,
@@ -37,6 +38,7 @@ import { FONTS } from '../styles/typography';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import CONFIG from '../globals/config';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import Toast from 'react-native-simple-toast';
 import Entypo from 'react-native-vector-icons/Entypo';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
@@ -48,6 +50,10 @@ import { useCart } from '../context/CartContext';
 import { useProductDetails } from '../hooks/useProductDetails';
 import { getStaggerDelay } from '../utils/staggerDelay';
 import { impactTick, selectionTick } from '../utils/haptics';
+import {
+  maxQtyMessage,
+  resolveQuantityCeiling,
+} from '../utils/cartQuantityLimits';
 import StoreUnavailable from '../components/StoreUnavailable';
 import LocationModal from '../components/LocationModal';
 import { AppContext } from '../context/appContext';
@@ -227,6 +233,15 @@ const ProductDetailsScreen = () => {
       withSpring(1, BUMP_SPRING),
     );
   }, [qtyScale]);
+
+  const { maxQty, maxQtyIsStock } = useMemo(
+    () => resolveQuantityCeiling(product),
+    [product],
+  );
+
+  const notifyMaxQty = useCallback(() => {
+    Toast.show(maxQtyMessage({ maxQty, maxQtyIsStock }), Toast.SHORT);
+  }, [maxQty, maxQtyIsStock]);
 
   const toggleDetails = () => {
     const isExpanding = !showDetails;
@@ -574,6 +589,7 @@ const ProductDetailsScreen = () => {
                     );
                     const quantity = cartItem ? cartItem.quantity : 0;
                     const cartItemId = cartItem?.cartItemId || finalProductId;
+                    const atMaxQty = maxQty !== null && quantity >= maxQty;
 
                     if (quantity > 0) {
                       return (
@@ -599,10 +615,21 @@ const ProductDetailsScreen = () => {
                           </ReanimatedView.Text>
                           <AnimatedPressable
                             hitSlop={STEP_HIT_SLOP}
-                            style={styles.stepButton}
+                            style={[
+                              styles.stepButton,
+                              atMaxQty && styles.stepButtonCapped,
+                            ]}
                             accessibilityRole="button"
-                            accessibilityLabel="Increase quantity"
+                            accessibilityLabel={
+                              atMaxQty
+                                ? 'Maximum quantity reached'
+                                : 'Increase quantity'
+                            }
                             onPress={() => {
+                              if (atMaxQty) {
+                                notifyMaxQty();
+                                return;
+                              }
                               selectionTick();
                               bumpQty();
                               changeCartItemQuantity(cartItemId, 1);
@@ -1236,6 +1263,9 @@ const styles = StyleSheet.create({
   stepButton: {
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  stepButtonCapped: {
+    opacity: 0.4,
   },
   qtyValue: {
     ...TYPE.heading,

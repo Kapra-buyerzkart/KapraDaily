@@ -11,6 +11,7 @@ import Animated, {
   useAnimatedStyle,
   withTiming,
 } from 'react-native-reanimated';
+import Toast from 'react-native-simple-toast';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useCart } from '../context/CartContext';
@@ -18,6 +19,10 @@ import CONFIG from '../globals/config';
 import ConfirmationModal from './ConfirmationModal';
 import { FONTS } from '../styles/typography';
 import { getCartItemAvailability } from '../utils/cartAvailability';
+import {
+  maxQtyMessage,
+  resolveQuantityCeiling,
+} from '../utils/cartQuantityLimits';
 import AnimatedPressable from './AnimatedPressable';
 import CartText from '../screens/cart/components/atoms/CartText';
 import QtyStepper from '../screens/cart/components/atoms/QtyStepper';
@@ -56,6 +61,7 @@ const CartProductCard = props => {
   const unitPrice = itemUnitPrice || mrp || 0;
   const specialPrice = itemSpecialPrice || price || 0;
   const { isSoldOut, label: soldOutLabel } = getCartItemAvailability(item);
+  const { maxQty, maxQtyIsStock } = resolveQuantityCeiling(item);
   const isUpdating = updatingItems.includes(String(cartItemId));
   const btokens = item.totalBtokens || item.bTokenValue || item.bTokens || 0;
 
@@ -106,10 +112,20 @@ const CartProductCard = props => {
   }, [isSoldOut, cartItemId, pincodeAreaIdOverride, changeCartItemQuantity]);
 
   const handleIncrease = useCallback(() => {
+    if (maxQty !== null && quantityRef.current >= maxQty) {
+      Toast.show(maxQtyMessage({ maxQty, maxQtyIsStock }), Toast.SHORT);
+      return;
+    }
     quantityRef.current += 1;
     setQuantity(quantityRef.current);
     changeCartItemQuantity(cartItemId, 1, pincodeAreaIdOverride);
-  }, [cartItemId, pincodeAreaIdOverride, changeCartItemQuantity]);
+  }, [
+    cartItemId,
+    pincodeAreaIdOverride,
+    changeCartItemQuantity,
+    maxQty,
+    maxQtyIsStock,
+  ]);
 
   const handleDelete = useCallback(() => {
     setIsRemovalModalVisible(true);
@@ -217,6 +233,8 @@ const CartProductCard = props => {
               onDecrease={handleDecrease}
               disabled={isSoldOut}
               updating={isUpdating}
+              atMaxQty={maxQty !== null && quantity >= maxQty}
+              productName={productName}
             />
           )}
         </View>

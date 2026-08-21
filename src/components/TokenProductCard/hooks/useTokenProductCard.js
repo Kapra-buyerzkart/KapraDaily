@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import Toast from 'react-native-simple-toast';
 import { useCartActions, useCartEntry } from '@/context/CartContext';
-import {
-  useIsWishlisted,
-  useWishlistActions,
-} from '@/context/WishlistContext';
+import { maxQtyMessage } from '@/utils/cartQuantityLimits';
+import { useIsWishlisted, useWishlistActions } from '@/context/WishlistContext';
 import { impactTick, selectionTick } from '@/utils/haptics';
 import useOpaqueImageWell from '@/hooks/useOpaqueImageWell';
 import { NO_IMAGE_SOURCE } from '../constants';
@@ -33,9 +32,25 @@ const useTokenProductCard = ({
   const { toggleWishlist } = useWishlistActions();
 
   const product = useMemo(() => deriveProductFields(item), [item]);
-  const { productId, name, mrp, price, offer, weight, isOutOfStock } = product;
+  const {
+    productId,
+    name,
+    mrp,
+    price,
+    offer,
+    weight,
+    isOutOfStock,
+    maxQty,
+    maxQtyIsStock,
+  } = product;
 
   const { quantity, cartItemId } = useCartEntry(productId);
+
+  const isAtMaxQty = maxQty !== null && quantity >= maxQty;
+
+  const notifyMaxQty = useCallback(() => {
+    Toast.show(maxQtyMessage({ maxQty, maxQtyIsStock }), Toast.SHORT);
+  }, [maxQty, maxQtyIsStock]);
 
   const isWishlisted = useIsWishlisted(productId);
   const liked = propIsInWishlist ? propIsInWishlist(productId) : isWishlisted;
@@ -74,18 +89,26 @@ const useTokenProductCard = ({
   }, [cartItemId, changeCartItemQuantity]);
 
   const handleIncrement = useCallback(() => {
+    if (isAtMaxQty) {
+      notifyMaxQty();
+      return;
+    }
     selectionTick();
     changeCartItemQuantity(cartItemId, 1);
-  }, [cartItemId, changeCartItemQuantity]);
+  }, [cartItemId, changeCartItemQuantity, isAtMaxQty, notifyMaxQty]);
 
   const handleAdd = useCallback(() => {
+    if (isAtMaxQty) {
+      notifyMaxQty();
+      return;
+    }
     impactTick();
     if (onAdd) {
       onAdd(item);
     } else {
       addToCart(item);
     }
-  }, [onAdd, addToCart, item]);
+  }, [onAdd, addToCart, item, isAtMaxQty, notifyMaxQty]);
 
   const cardAccessibilityLabel = useMemo(
     () =>
@@ -107,8 +130,9 @@ const useTokenProductCard = ({
         quantity,
         hideWishlist,
         liked,
+        isAtMaxQty,
       }),
-    [isOutOfStock, quantity, hideWishlist, liked],
+    [isOutOfStock, quantity, hideWishlist, liked, isAtMaxQty],
   );
 
   const handleAccessibilityAction = useCallback(
@@ -130,12 +154,19 @@ const useTokenProductCard = ({
           onPress?.();
       }
     },
-    [handleAdd, handleIncrement, handleDecrement, handleToggleWishlist, onPress],
+    [
+      handleAdd,
+      handleIncrement,
+      handleDecrement,
+      handleToggleWishlist,
+      onPress,
+    ],
   );
 
   return {
     product,
     quantity,
+    isAtMaxQty,
     liked,
     imageSource,
     isPlaceholder: imageSource === NO_IMAGE_SOURCE,

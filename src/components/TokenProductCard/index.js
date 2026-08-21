@@ -23,6 +23,7 @@ const TokenProductCard = ({
   const {
     product,
     quantity,
+    isAtMaxQty,
     liked,
     imageSource,
     isPlaceholder,
@@ -90,6 +91,7 @@ const TokenProductCard = ({
         hideWishlist={hideWishlist}
         onToggleWishlist={handleToggleWishlist}
         quantity={quantity}
+        isAtMaxQty={isAtMaxQty}
         isThreeColumn={isThreeColumn}
         onIncrement={handleIncrement}
         onDecrement={handleDecrement}

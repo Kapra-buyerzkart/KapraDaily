@@ -1,5 +1,8 @@
 import CONFIG from '@/globals/config';
+import { resolveQuantityCeiling } from '@/utils/cartQuantityLimits';
 import { DEFAULT_TOKEN_VALUE, NO_IMAGE_SOURCE } from './constants';
+
+export { resolveQuantityCeiling };
 
 /** Picks the first supplied value, treating only null/undefined/'' as missing so a real 0 survives. */
 const firstPresent = (values, fallback) => {
@@ -54,6 +57,7 @@ export const resolveTintIndex = (index, productId) => {
  */
 export const deriveProductFields = item => {
   const derivedProductId = item?.productId || item?.id;
+  const { maxQty, maxQtyIsStock } = resolveQuantityCeiling(item);
   const derivedTokenValue = firstPresent(
     [item?.bTokenValue, item?.token, item?.btokens],
     DEFAULT_TOKEN_VALUE,
@@ -80,6 +84,8 @@ export const deriveProductFields = item => {
       item?.isAvailable === false,
     rating: derivedRating ? Number(derivedRating).toFixed(1) : null,
     deliveryEta: derivedEta,
+    maxQty,
+    maxQtyIsStock,
   };
 };
 
@@ -133,11 +139,14 @@ export const buildAccessibilityActions = ({
   quantity,
   hideWishlist,
   liked,
+  isAtMaxQty,
 }) => {
   const actions = [{ name: 'activate', label: 'View product' }];
   if (!isOutOfStock) {
     if (quantity > 0) {
-      actions.push({ name: 'increment', label: 'Increase quantity' });
+      if (!isAtMaxQty) {
+        actions.push({ name: 'increment', label: 'Increase quantity' });
+      }
       actions.push({ name: 'decrement', label: 'Decrease quantity' });
     } else {
       actions.push({ name: 'addToCart', label: 'Add to cart' });

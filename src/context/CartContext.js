@@ -12,6 +12,12 @@ import secureStore from '../utils/secureStore';
 import { AppContext } from './appContext';
 import Toast from 'react-native-simple-toast';
 import {
+  isMaxQuantityMessage,
+  parseMaxQuantity,
+  resolveQuantityCeiling,
+  resolveRejectedQuantity,
+} from '@/utils/cartQuantityLimits';
+import {
   addToCartApi,
   removeFromCartApi,
   updateCartItemApi,
@@ -49,16 +55,6 @@ const QTY_DEBOUNCE_MS = 500;
 const matchesIdentifier = (item, identifier) =>
   String(item.cartItemId ?? '') === identifier ||
   String(item.productId || item.id) === identifier;
-
-const isMaxQuantityMessage = message =>
-  /max(imum)?\s+(quantity|qty)/i.test(message || '');
-
-const parseMaxQuantity = message => {
-  const match = /\b(?:is|of|limit(?:ed)?\s*(?:to)?)\s*:?\s*(\d+)/i.exec(
-    message || '',
-  );
-  return match ? Number(match[1]) : null;
-};
 
 export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
@@ -184,10 +180,7 @@ export const CartProvider = ({ children }) => {
     setIsLoadingAddresses(true);
     try {
       const response = await getAddressListApi();
-      logger.log(
-        '📍 [ADDRESS] Raw API Response:',
-        response,
-      );
+      logger.log('📍 [ADDRESS] Raw API Response:', response);
 
       const addressList = Array.isArray(response?.data)
         ? response.data
@@ -308,10 +301,7 @@ export const CartProvider = ({ children }) => {
 
         try {
           const loadRes = await loadCart(selectedAddr.pincodeAreaId);
-          logger.log(
-            '📍 [ADDRESS] Selection List Response:',
-            loadRes,
-          );
+          logger.log('📍 [ADDRESS] Selection List Response:', loadRes);
 
           const isUnserviceable = loadRes?.isUnserviceable;
 
@@ -347,11 +337,17 @@ export const CartProvider = ({ children }) => {
     [setAddresses, refreshCart, loadCart],
   );
 
-  const onThreeDotsClicked = useCallback(addressId => {
-    setAddresses(prev =>
-      prev.map(item => ({ ...item, threeDotsClicked: item.id === addressId })),
-    );
-  }, [setAddresses]);
+  const onThreeDotsClicked = useCallback(
+    addressId => {
+      setAddresses(prev =>
+        prev.map(item => ({
+          ...item,
+          threeDotsClicked: item.id === addressId,
+        })),
+      );
+    },
+    [setAddresses],
+  );
 
   const onDeleteClicked = useCallback(
     async addressId => {
@@ -426,10 +422,7 @@ export const CartProvider = ({ children }) => {
       const promise = (async () => {
         try {
           const response = await getCartApi(pincodeAreaIdOverride);
-          logger.log(
-            '🛒 [CART] API Response:',
-            response,
-          );
+          logger.log('🛒 [CART] API Response:', response);
           let fetchedCartVersion = null;
           let normalizedItems = [];
 
@@ -541,10 +534,7 @@ export const CartProvider = ({ children }) => {
             idToUse,
             pincodeAreaId,
           );
-          logger.log(
-            '📊 [SUMMARY] Response:',
-            response,
-          );
+          logger.log('📊 [SUMMARY] Response:', response);
 
           if (response && response.success && response.data) {
             setCartSummary(response.data);
@@ -990,12 +980,15 @@ export const CartProvider = ({ children }) => {
       // request fails. Later taps must not overwrite it with their own
       // optimistic value.
       const hadPendingRequest = !!debounceTimersRef.current[cartItemIdStr];
+      const existingLine = cartItemsRef.current.find(item =>
+        matchesIdentifier(item, cartItemIdStr),
+      );
       if (!hadPendingRequest) {
-        const existing = cartItemsRef.current.find(item =>
-          matchesIdentifier(item, cartItemIdStr),
-        );
         rollbackQtyRef.current[cartItemIdStr] =
-          existing?.quantity ?? existing?.addedQty ?? 1;
+          existingLine?.quantity ??
+          existingLine?.addedQty ??
+          resolveQuantityCeiling(existingLine).maxQty ??
+          1;
       }
       const oldQuantity = rollbackQtyRef.current[cartItemIdStr] ?? 1;
 
@@ -1031,10 +1024,7 @@ export const CartProvider = ({ children }) => {
             null,
             pincodeAreaIdOverride,
           );
-          logger.log(
-            '🔄 [UPDATE QTY] API Response:',
-            response,
-          );
+          logger.log('🔄 [UPDATE QTY] API Response:', response);
 
           if (response && response.success) {
             const freshVersion = response.data?.cart?.cartVersion;
@@ -1104,11 +1094,17 @@ export const CartProvider = ({ children }) => {
             }
           }
 
+          const restoredQty = resolveRejectedQuantity({
+            message: errorMsg,
+            item: existingLine,
+            fallback: oldQuantity,
+          });
+
           setCartItems(prevItems =>
             prevItems.map(item =>
               String(item.cartItemId || item.productId || item.id) ===
               cartItemIdStr
-                ? { ...item, quantity: oldQuantity, addedQty: oldQuantity }
+                ? { ...item, quantity: restoredQty, addedQty: restoredQty }
                 : item,
             ),
           );
@@ -1174,10 +1170,7 @@ export const CartProvider = ({ children }) => {
       }
 
       const base =
-        pendingQtyRef.current[key] ??
-        entry?.quantity ??
-        entry?.addedQty ??
-        0;
+        pendingQtyRef.current[key] ?? entry?.quantity ?? entry?.addedQty ?? 0;
       const next = Math.max(0, base + delta);
       pendingQtyRef.current[key] = next;
 

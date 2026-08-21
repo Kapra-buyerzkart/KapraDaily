@@ -184,6 +184,9 @@ export default StyleSheet.create({
   counterBtnSmall: {
     width: ADD_SIZE_SMALL - 4,
   },
+  counterBtnCapped: {
+    opacity: 0.4,
+  },
   counterQty: {
     ...TYPE.label,
     lineHeight: undefined,

@@ -1,6 +1,8 @@
 import {
+  buildAccessibilityActions,
   deriveProductFields,
   formatAmount,
+  resolveQuantityCeiling,
   resolveSavings,
   resolveTintIndex,
 } from '../src/components/TokenProductCard/utils';
@@ -75,5 +77,70 @@ describe('opaque image detection', () => {
     expect(hasOpaqueBackground(undefined)).toBe(false);
     expect(hasOpaqueBackground(null)).toBe(false);
     expect(hasOpaqueBackground(42)).toBe(false);
+  });
+});
+
+describe('quantity ceiling', () => {
+  it('reads a positive maxQtyInOrders as the ceiling', () => {
+    expect(resolveQuantityCeiling({ maxQtyInOrders: 3 })).toEqual({
+      maxQty: 3,
+      maxQtyIsStock: false,
+    });
+    expect(resolveQuantityCeiling({ maxQtyInOrders: '2' }).maxQty).toBe(2);
+    expect(resolveQuantityCeiling({ maxQtyInOrders: 2.7 }).maxQty).toBe(2);
+  });
+
+  it('never lets the ceiling exceed the stock on hand', () => {
+    expect(resolveQuantityCeiling({ maxQtyInOrders: 5, stockQty: 2 })).toEqual({
+      maxQty: 2,
+      maxQtyIsStock: true,
+    });
+    expect(resolveQuantityCeiling({ maxQtyInOrders: 2, stockQty: 5 })).toEqual({
+      maxQty: 2,
+      maxQtyIsStock: false,
+    });
+    expect(resolveQuantityCeiling({ maxQtyInOrders: 2, stockQty: 2 })).toEqual({
+      maxQty: 2,
+      maxQtyIsStock: false,
+    });
+  });
+
+  it('falls back to stock when no per-order limit is stated', () => {
+    expect(resolveQuantityCeiling({ maxQtyInOrders: 0, stockQty: 4 })).toEqual({
+      maxQty: 4,
+      maxQtyIsStock: true,
+    });
+    expect(resolveQuantityCeiling({ stockQty: 4 }).maxQty).toBe(4);
+  });
+
+  it('treats zero, missing and junk values as unlimited', () => {
+    expect(resolveQuantityCeiling({ maxQtyInOrders: 0 }).maxQty).toBeNull();
+    expect(resolveQuantityCeiling({ maxQtyInOrders: '0' }).maxQty).toBeNull();
+    expect(resolveQuantityCeiling({ maxQtyInOrders: -1 }).maxQty).toBeNull();
+    expect(resolveQuantityCeiling({ maxQtyInOrders: 'abc' }).maxQty).toBeNull();
+    expect(resolveQuantityCeiling({}).maxQty).toBeNull();
+    expect(resolveQuantityCeiling(undefined).maxQty).toBeNull();
+  });
+
+  it('carries the ceiling onto the derived product', () => {
+    const capped = deriveProductFields({ maxQtyInOrders: 5, stockQty: 3 });
+    expect(capped.maxQty).toBe(3);
+    expect(capped.maxQtyIsStock).toBe(true);
+    expect(deriveProductFields({ maxQtyInOrders: 0 }).maxQty).toBeNull();
+  });
+
+  it('stops advertising increment once the ceiling is hit', () => {
+    const names = extra =>
+      buildAccessibilityActions({
+        isOutOfStock: false,
+        quantity: 2,
+        hideWishlist: true,
+        liked: false,
+        ...extra,
+      }).map(action => action.name);
+
+    expect(names({ isAtMaxQty: false })).toContain('increment');
+    expect(names({ isAtMaxQty: true })).not.toContain('increment');
+    expect(names({ isAtMaxQty: true })).toContain('decrement');
   });
 });
