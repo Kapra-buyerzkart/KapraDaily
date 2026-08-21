@@ -14,6 +14,7 @@ import { COUNTER_HIT_SLOP } from '../constants';
  */
 const CartCounter = ({
   quantity,
+  isAtMaxQty,
   isThreeColumn,
   productName,
   animatedStyle,
@@ -53,11 +54,19 @@ const CartCounter = ({
       </Text>
 
       <AnimatedPressable
-        style={[styles.counterBtn, isThreeColumn && styles.counterBtnSmall]}
+        style={[
+          styles.counterBtn,
+          isThreeColumn && styles.counterBtnSmall,
+          isAtMaxQty && styles.counterBtnCapped,
+        ]}
         hitSlop={COUNTER_HIT_SLOP}
         onPress={onIncrement}
         accessibilityRole="button"
-        accessibilityLabel={`Increase ${productName} quantity`}
+        accessibilityLabel={
+          isAtMaxQty
+            ? `Maximum quantity reached for ${productName}`
+            : `Increase ${productName} quantity`
+        }
       >
         <Entypo name="plus" size={iconSize} color={INK.onDark} />
       </AnimatedPressable>

@@ -21,6 +21,7 @@ const ProductMedia = ({
   hideWishlist,
   onToggleWishlist,
   quantity,
+  isAtMaxQty,
   isThreeColumn,
   onIncrement,
   onDecrement,
@@ -63,6 +64,7 @@ const ProductMedia = ({
       >
         <QuantityControl
           quantity={quantity}
+          isAtMaxQty={isAtMaxQty}
           isOutOfStock={isOutOfStock}
           isThreeColumn={isThreeColumn}
           productName={name}
