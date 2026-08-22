@@ -96,31 +96,85 @@ test('never touches host tokens', async () => {
   expect(await hostTokenStore.getAccessToken()).toBe('host-a');
 });
 
-test('ensureKshopeSession is false when no module token is stored', async () => {
-  expect(await ensureKshopeSession()).toBe(false);
-});
+test('syncKshopeSession persists the host cust id from authData.custId', async () => {
+  await syncKshopeSession({
+    custId: 42,
+    kshope: { success: true, accessToken: 'k-access', refreshToken: 'k-refresh' },
+  });
 
-test('ensureKshopeSession is true when host and module custIds match', async () => {
   await hostTokenStore.setTokens(tokenForCustId(42), 'host-r');
-  await kshopeTokenStore.setTokens(tokenForCustId(42), 'k-r');
+  await kshopeTokenStore.setTokens('k-access', 'k-refresh');
 
   expect(await ensureKshopeSession()).toBe(true);
 });
 
-test('ensureKshopeSession wipes the module session when custIds differ', async () => {
+test('syncKshopeSession falls back to the host token when authData.custId is absent', async () => {
   await hostTokenStore.setTokens(tokenForCustId(42), 'host-r');
-  await kshopeTokenStore.setTokens(tokenForCustId(99), 'k-r');
+
+  await syncKshopeSession({
+    kshope: { success: true, accessToken: 'k-access', refreshToken: 'k-refresh' },
+  });
+
+  expect(await ensureKshopeSession()).toBe(true);
+});
+
+test('ensureKshopeSession is false when no module token is stored', async () => {
+  expect(await ensureKshopeSession()).toBe(false);
+});
+
+test('ensureKshopeSession succeeds when stored and current host cust ids match', async () => {
+  await hostTokenStore.setTokens(tokenForCustId(42), 'host-r');
+  await syncKshopeSession({
+    kshope: { success: true, accessToken: 'k-access', refreshToken: 'k-refresh' },
+  });
+
+  expect(await ensureKshopeSession()).toBe(true);
+});
+
+test('ensureKshopeSession wipes and returns false when stored and current host cust ids differ', async () => {
+  await hostTokenStore.setTokens(tokenForCustId(42), 'host-r');
+  await syncKshopeSession({
+    kshope: { success: true, accessToken: 'k-access', refreshToken: 'k-refresh' },
+  });
+
+  await hostTokenStore.setTokens(tokenForCustId(99), 'host-r');
 
   expect(await ensureKshopeSession()).toBe(false);
   expect(await kshopeTokenStore.getAccessToken()).toBeNull();
   expect(await hostTokenStore.getAccessToken()).not.toBeNull();
 });
 
-test('ensureKshopeSession allows an undecodable token rather than locking the user out', async () => {
-  await hostTokenStore.setTokens('not-a-jwt', 'host-r');
-  await kshopeTokenStore.setTokens('also-not-a-jwt', 'k-r');
+test('ensureKshopeSession wipes and returns false when the stored host cust id is missing', async () => {
+  await hostTokenStore.setTokens(tokenForCustId(42), 'host-r');
+  await kshopeTokenStore.setTokens(tokenForCustId(42), 'k-r');
 
-  expect(await ensureKshopeSession()).toBe(true);
+  expect(await ensureKshopeSession()).toBe(false);
+  expect(await kshopeTokenStore.getAccessToken()).toBeNull();
+  expect(await hostTokenStore.getAccessToken()).not.toBeNull();
+});
+
+test('ensureKshopeSession wipes and returns false when the host token is undecodable', async () => {
+  await hostTokenStore.setTokens(tokenForCustId(42), 'host-r');
+  await syncKshopeSession({
+    kshope: { success: true, accessToken: 'k-access', refreshToken: 'k-refresh' },
+  });
+
+  await hostTokenStore.setTokens('not-a-jwt', 'host-r');
+
+  expect(await ensureKshopeSession()).toBe(false);
+  expect(await kshopeTokenStore.getAccessToken()).toBeNull();
+});
+
+test('wipe clears the stored host cust id so a later mismatch check fails closed again', async () => {
+  await hostTokenStore.setTokens(tokenForCustId(42), 'host-r');
+  await syncKshopeSession({
+    kshope: { success: true, accessToken: 'k-access', refreshToken: 'k-refresh' },
+  });
+
+  await clearKshopeSession();
+  await kshopeTokenStore.setTokens(tokenForCustId(42), 'k-r');
+
+  expect(await ensureKshopeSession()).toBe(false);
 });
 
 test('clearKshopeSession removes module tokens and leaves host tokens alone', async () => {

@@ -20,7 +20,8 @@ export interface HostAuthData {
   };
 }
 
-const KSHOPE_LOCAL_KEYS = ['KSHOPE_PROFILE', 'KSHOPE_PINCODE_AREA_ID'];
+const KSHOPE_LOCAL_KEYS = ['KSHOPE_PROFILE', 'KSHOPE_PINCODE_AREA_ID', 'KSHOPE_HOST_CUST_ID'];
+const KSHOPE_HOST_CUST_ID_KEY = 'KSHOPE_HOST_CUST_ID';
 
 const wipe = async (): Promise<void> => {
   await kshopeTokenStore.clearTokens();
@@ -39,6 +40,13 @@ export const syncKshopeSession = async (
     }
 
     await kshopeTokenStore.setTokens(kshope.accessToken, kshope.refreshToken || '');
+
+    const hostCustId =
+      authData?.custId ?? getUserIdFromToken(await getHostAccessToken());
+    if (hostCustId !== null && hostCustId !== undefined) {
+      await secureStore.setItem(KSHOPE_HOST_CUST_ID_KEY, String(hostCustId));
+    }
+
     return true;
   } catch (error) {
     logger.error('[kshope] syncKshopeSession failed', error);
@@ -50,11 +58,14 @@ export const ensureKshopeSession = async (): Promise<boolean> => {
   const moduleToken = await kshopeTokenStore.getAccessToken();
   if (!moduleToken) return false;
 
-  const hostToken = await getHostAccessToken();
-  const hostCustId = getUserIdFromToken(hostToken);
-  const moduleCustId = getUserIdFromToken(moduleToken);
+  const storedHostCustId = await secureStore.getItem(KSHOPE_HOST_CUST_ID_KEY);
+  const currentHostCustId = getUserIdFromToken(await getHostAccessToken());
 
-  if (hostCustId !== null && moduleCustId !== null && hostCustId !== moduleCustId) {
+  if (
+    !storedHostCustId ||
+    currentHostCustId === null ||
+    storedHostCustId !== String(currentHostCustId)
+  ) {
     await wipe();
     return false;
   }
