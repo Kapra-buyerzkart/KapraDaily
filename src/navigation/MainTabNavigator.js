@@ -19,7 +19,7 @@ const CategoriesScreen = lazyScreen(() =>
   require('../screens/CategoriesScreen'),
 );
 const WishlistScreen = lazyScreen(() => require('../screens/WishlistScreen'));
-const KshopeScreen = lazyScreen(() => require('../screens/KshopeScreen'));
+const KshopeScreen = lazyScreen(() => require('../kshope'));
 
 const Tab = createBottomTabNavigator();
 

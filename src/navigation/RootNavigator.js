@@ -76,7 +76,7 @@ const TicketDetailsScreen = lazyScreen(() =>
 const AuthSuccessScreen = lazyScreen(() =>
   require('../screens/AuthSuccessScreen'),
 );
-const KshopeScreen = lazyScreen(() => require('../screens/KshopeScreen'));
+const KshopeScreen = lazyScreen(() => require('../kshope'));
 const CoPartnerDashboardScreen = lazyScreen(() =>
   require('../screens/CoPartnerDashboardScreen'),
 );
