@@ -17,7 +17,7 @@ test.each(AUTH_SUCCESS_SITES)('%s syncs the kshope session after storing host to
 
 test('logout clears the kshope session', () => {
   const source = read('src/context/appContext.js');
-  expect(source).toMatch(/clearKshopeSession/);
+  expect(source).toMatch(/clearKshopeSession\(/);
 });
 
 test('every host setTokens call site also syncs kshope', () => {

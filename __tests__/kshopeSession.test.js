@@ -132,3 +132,44 @@ test('clearKshopeSession removes module tokens and leaves host tokens alone', as
   expect(await kshopeTokenStore.getAccessToken()).toBeNull();
   expect(await hostTokenStore.getAccessToken()).toBe('host-a');
 });
+
+test('syncKshopeSession returns false instead of throwing when the token store fails', async () => {
+  const setTokensSpy = jest
+    .spyOn(kshopeTokenStore, 'setTokens')
+    .mockRejectedValueOnce(new Error('keychain write failed'));
+
+  await expect(
+    syncKshopeSession({
+      kshope: { success: true, accessToken: 'k-access', refreshToken: 'k-refresh', custId: 42 },
+    }),
+  ).resolves.toBe(false);
+
+  setTokensSpy.mockRestore();
+});
+
+test('clearKshopeSession resolves instead of throwing when the store fails', async () => {
+  const clearTokensSpy = jest
+    .spyOn(kshopeTokenStore, 'clearTokens')
+    .mockRejectedValueOnce(new Error('keychain wipe failed'));
+
+  await expect(clearKshopeSession()).resolves.toBeUndefined();
+
+  clearTokensSpy.mockRestore();
+});
+
+test('the fail-safe guard does not swallow a real successful sync', async () => {
+  const ok = await syncKshopeSession({
+    kshope: { success: true, accessToken: 'k-access-2', refreshToken: 'k-refresh-2', custId: 42 },
+  });
+
+  expect(ok).toBe(true);
+  expect(await kshopeTokenStore.getAccessToken()).toBe('k-access-2');
+});
+
+test('the fail-safe guard does not swallow a real successful clear', async () => {
+  await kshopeTokenStore.setTokens('k-a', 'k-r');
+
+  await clearKshopeSession();
+
+  expect(await kshopeTokenStore.getAccessToken()).toBeNull();
+});
