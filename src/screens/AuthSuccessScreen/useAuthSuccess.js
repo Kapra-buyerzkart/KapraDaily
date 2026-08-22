@@ -42,7 +42,7 @@ export const useAuthSuccess = () => {
       d2c: () => navigation.navigate('D2cScreen'),
       kshope: () =>
         isKshopeEnabled
-          ? navigation.navigate('Deals48')
+          ? navigation.navigate('KshopeScreen')
           : setIsComingSoonVisible(true),
     }),
     [isKshopeEnabled, navigation],

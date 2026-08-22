@@ -2,7 +2,7 @@ import React, { useContext, useEffect } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { AppContext } from '../context/appContext';
 import AppLoader from '../components/AppLoader';
-import lazyScreen, { lazyNamedScreen } from './lazyScreen';
+import lazyScreen from './lazyScreen';
 
 import AppUpdateModal from '../components/AppUpdateModal';
 import { COLORS } from '../styles/colors';
@@ -117,11 +117,6 @@ const TermsOfUseScreen = lazyScreen(() =>
 const QRScannerScreen = lazyScreen(() =>
   require('../screens/QRScannerScreen/QRScannerScreen'),
 );
-const Deals48Stack = lazyNamedScreen(
-  () => require('../modules/deals48'),
-  'Deals48Stack',
-);
-
 const Stack = createNativeStackNavigator();
 
 const SCREEN_OPTIONS = {
@@ -285,8 +280,6 @@ export default function RootNavigator() {
           component={QRScannerScreen}
           options={BLACK_CONTENT}
         />
-        {}
-        <Stack.Screen name="Deals48" component={Deals48Stack} />
       </Stack.Navigator>
 
       <AppUpdateModal

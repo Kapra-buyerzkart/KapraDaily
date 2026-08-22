@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { Image, StyleSheet } from 'react-native';
 
+import TileFallback from './TileFallback';
 import TileSkeleton from './TileSkeleton';
 
 const TileArtwork = ({ source, label, caption, onNaturalSize }) => {
@@ -34,8 +35,10 @@ const TileArtwork = ({ source, label, caption, onNaturalSize }) => {
         />
       ) : null}
 
-      {showArtwork && isLoaded ? null : (
-        <TileSkeleton label={label} caption={caption} />
+      {showArtwork ? (
+        isLoaded ? null : <TileSkeleton label={label} caption={caption} />
+      ) : (
+        <TileFallback label={label} caption={caption} />
       )}
     </>
   );

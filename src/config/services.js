@@ -32,11 +32,12 @@ export const SERVICES = [
     title: '48hrs Deals',
     description: 'Electronics, kitchen Appliances \n & More',
     type: SERVICE_TYPES.INTERNAL,
-    route: 'Deals48',
+    route: 'KshopeScreen',
     icon: 'apps-outline',
     iconColor: '#00BCD4',
     logo: require('../assets/images/modal/48hrDealIcon.png'),
     titleImage: require('../assets/images/modal/48hrImage.png'),
+    enabledSettingKey: 'showkshope',
   },
   {
     id: 'quickCommerce',

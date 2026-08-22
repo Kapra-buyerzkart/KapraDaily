@@ -8,7 +8,6 @@ import { useCart } from '../context/CartContext';
 import secureStore from '../utils/secureStore';
 import { OneSignal } from 'react-native-onesignal';
 import { setTokens } from '../api/tokenService';
-import { syncDeals48Session } from '../modules/deals48/api/session';
 import RegistrationHero from './registration/components/organisms/RegistrationHero';
 import RegistrationForm from './registration/components/organisms/RegistrationForm';
 import { styles } from './registration/styles/Registration.styles';
@@ -129,34 +128,34 @@ const RegistrationScreen = () => {
       const registerResponse = await registerUser(payload);
       logger.log('Register response:', JSON.stringify(registerResponse, null, 2));
       if (registerResponse?.success) {
+        try {
+          const { accessToken, refreshToken, custId } = registerResponse.data;
+          await setTokens(accessToken, refreshToken);
+          if (custId) {
+            await mergeCustomerIdIntoProfile(custId);
+            OneSignal.login(custId.toString());
+          }
+        } catch (error) {
+          logger.log('Post-registration setup error:', error);
+          setLoading(false);
+          showStatus({
+            type: 'error',
+            title: 'Something Went Wrong',
+            message: 'Could not complete sign in. Please try again.',
+          });
+          return;
+        }
+
         showStatus({
           type: 'success',
           title: 'Success',
           message: 'Registration completed successfully',
-          onClose: async () => {
-            try {
-              const { accessToken, refreshToken, custId } =
-                registerResponse.data;
-              await setTokens(accessToken, refreshToken);
-              await syncDeals48Session(registerResponse.data);
-              if (custId) {
-                await mergeCustomerIdIntoProfile(custId);
-                OneSignal.login(custId.toString());
-              }
-
-              navigation.reset({
-                index: 0,
-                routes: [{ name: 'AuthSuccessScreen' }],
-              });
-            } catch (error) {
-              logger.log('Post-registration setup error:', error);
-              setLoading(false);
-              showStatus({
-                type: 'error',
-                title: 'Something Went Wrong',
-                message: 'Could not complete sign in. Please try again.',
-              });
-            }
+          autoCloseMs: 2500,
+          onClose: () => {
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'AuthSuccessScreen' }],
+            });
           },
         });
         return;

@@ -95,4 +95,6 @@ export const TILE_RATIO = {
 
 export const LOGO_RATIO = 900 / 465;
 
+export const FALLBACK_LOGO_RATIO = 2229 / 1124;
+
 export { hp, wp };

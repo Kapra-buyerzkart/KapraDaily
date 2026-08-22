@@ -1,11 +1,13 @@
 export const BRAND_LOGO = require('../../assets/images/splash/header.png');
 
+export const FALLBACK_LOGO = require('../../assets/images/udendeal.png');
+
 export const SERVICE_TILES = [
   {
     id: 'kapra',
     image: '20min.png',
     span: 'wide',
-    label: 'Kapra Daily',
+    label: 'Uden Deal',
     caption: 'Groceries in 20 minutes',
   },
   {

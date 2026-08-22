@@ -6,7 +6,6 @@ import { InteractionManager, Platform } from 'react-native';
 import DeviceInfo from 'react-native-device-info';
 import { getProfile } from '../api';
 import { clearTokens } from '../api/tokenService';
-import { clearDeals48Session } from '../modules/deals48/api/session';
 import { getGeneralSettingsApi, getAppUpdateCheckApi } from '../api/userService';
 import { setLogoutHandler, resetNetworkState } from '../api/networkUtils';
 import * as NavigationService from '../api/NavigationService';
@@ -203,7 +202,6 @@ export const AppContextProvider = ({ children }) => {
       resetNetworkState();
 
       await clearTokens();
-      await clearDeals48Session();
       await secureStore.multiRemove(['profile', 'pincodeAreaId', 'selectedAddressId']);
 
       await AsyncStorage.clear();

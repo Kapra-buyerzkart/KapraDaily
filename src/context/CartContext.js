@@ -1617,6 +1617,7 @@ export const CartProvider = ({ children }) => {
           type={statusConfig.type}
           title={statusConfig.title}
           message={statusConfig.message}
+          autoCloseMs={statusConfig.autoCloseMs}
           onClose={() => {
             statusConfig.onClose?.();
             setStatusConfig(null);

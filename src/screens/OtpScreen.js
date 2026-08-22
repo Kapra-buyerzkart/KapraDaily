@@ -40,7 +40,6 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import HelpSupportModal from '../components/HelpSupportModal';
 import EmailOtpBottomSheet from '../components/EmailOtpBottomSheet';
 import { setTokens } from '../api/tokenService';
-import { syncDeals48Session } from '../modules/deals48/api/session';
 import images from '@/assets/images';
 import BallPulse from '@/components/BallPulse';
 
@@ -213,7 +212,6 @@ const OtpScreen = () => {
       if (response?.success && response?.data) {
         const { accessToken, refreshToken, custId } = response.data;
         await setTokens(accessToken, refreshToken);
-        await syncDeals48Session(response.data);
 
         if (custId) {
           await mergeCustomerIdIntoProfile(custId);

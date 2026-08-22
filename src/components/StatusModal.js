@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import {
   widthPercentageToDP as wp,
@@ -14,6 +14,7 @@ const StatusModal = ({
   type = 'success',
   title,
   message,
+  autoCloseMs = 0,
 }) => {
   const isSuccess = type === 'success';
   const isOrange = type === 'orange';
@@ -22,21 +23,40 @@ const StatusModal = ({
   const buttonColor = isOrange ? '#F25000' : isSuccess ? '#0CA201' : '#FF0000';
 
   const modalRef = useRef(null);
+  const onCloseRef = useRef(onClose);
+  const hasClosedRef = useRef(false);
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  });
+
+  const handleClose = useCallback(() => {
+    if (hasClosedRef.current) return;
+    hasClosedRef.current = true;
+    onCloseRef.current?.();
+  }, []);
 
   useEffect(() => {
     if (visible) {
+      hasClosedRef.current = false;
       modalRef.current?.open();
     } else {
       modalRef.current?.close();
     }
   }, [visible]);
 
+  useEffect(() => {
+    if (!visible || !autoCloseMs) return undefined;
+    const timer = setTimeout(handleClose, autoCloseMs);
+    return () => clearTimeout(timer);
+  }, [visible, autoCloseMs, handleClose]);
+
   return (
     <CustomModal
       ref={modalRef}
       position={MODAL_POSITION.CENTER}
       width={wp('85%')}
-      onClose={onClose}
+      onClose={handleClose}
       contentStyle={styles.content}
     >
       <View style={styles.iconContainer}>
@@ -49,7 +69,7 @@ const StatusModal = ({
       <View style={styles.buttonContainer}>
         <TouchableOpacity
           style={[styles.button, { backgroundColor: buttonColor }]}
-          onPress={onClose}
+          onPress={handleClose}
         >
           <Text style={styles.buttonText}>OK</Text>
         </TouchableOpacity>
