@@ -24,6 +24,7 @@ import { useCart } from '../context/CartContext';
 import { loginWithPassword, sendLoginOtp } from '../api';
 import secureStore from '../utils/secureStore';
 import { setTokens } from '../api/tokenService';
+import { syncKshopeSession } from '../kshope/api/session';
 import images from '@/assets/images';
 import BallPulse from '@/components/BallPulse';
 
@@ -84,6 +85,7 @@ const LoginPwdScreen = () => {
         console.log('[LOGIN PWD] custId:', custId);
 
         await setTokens(accessToken, refreshToken);
+        await syncKshopeSession(response.data);
 
         if (custId) {
           await mergeCustomerIdIntoProfile(custId);

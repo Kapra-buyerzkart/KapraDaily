@@ -8,6 +8,7 @@ import { useCart } from '../context/CartContext';
 import secureStore from '../utils/secureStore';
 import { OneSignal } from 'react-native-onesignal';
 import { setTokens } from '../api/tokenService';
+import { syncKshopeSession } from '../kshope/api/session';
 import RegistrationHero from './registration/components/organisms/RegistrationHero';
 import RegistrationForm from './registration/components/organisms/RegistrationForm';
 import { styles } from './registration/styles/Registration.styles';
@@ -131,6 +132,7 @@ const RegistrationScreen = () => {
         try {
           const { accessToken, refreshToken, custId } = registerResponse.data;
           await setTokens(accessToken, refreshToken);
+          await syncKshopeSession(registerResponse.data);
           if (custId) {
             await mergeCustomerIdIntoProfile(custId);
             OneSignal.login(custId.toString());
