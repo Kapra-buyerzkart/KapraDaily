@@ -26,6 +26,13 @@ test('the existing entry points still target the KshopeScreen route', () => {
   );
 });
 
+const KSHOPE_DEEP_IMPORT_RE = /(?:from '|require\('|require\(")[^'"]*kshope\/[^'"]+['"]/g;
+
+const findKshopeOffenders = source =>
+  (source.match(KSHOPE_DEEP_IMPORT_RE) || []).filter(
+    m => !m.includes('kshope/api/session'),
+  );
+
 test('nothing outside the module imports from inside it except the mount point', () => {
   const offenders = [];
   const walk = dir => {
@@ -37,12 +44,21 @@ test('nothing outside the module imports from inside it except the mount point',
       }
       if (!/\.(ts|tsx|js|jsx)$/.test(entry.name)) return;
       const source = fs.readFileSync(full, 'utf8');
-      const matches = source.match(/from '[^']*kshope\/[^']+'/g) || [];
-      matches
-        .filter(m => !m.includes('kshope/api/session'))
-        .forEach(m => offenders.push(`${full}: ${m}`));
+      findKshopeOffenders(source).forEach(m => offenders.push(`${full}: ${m}`));
     });
   };
   walk(path.join(__dirname, '..', 'src'));
   expect(offenders).toEqual([]);
+});
+
+test('the offender matcher catches a CommonJS deep-require, not just ESM imports', () => {
+  const esmDeepImport = `import KshopeRoot from '../kshope/navigation/KshopeRoot';`;
+  const cjsDeepRequire = `const KshopeRoot = require('../kshope/navigation/KshopeRoot');`;
+  const cjsBarrelRequire = `const KshopeScreen = lazyScreen(() => require('../kshope'));`;
+  const cjsSessionRequire = `const { ensureKshopeSession } = require('../kshope/api/session');`;
+
+  expect(findKshopeOffenders(esmDeepImport)).toHaveLength(1);
+  expect(findKshopeOffenders(cjsDeepRequire)).toHaveLength(1);
+  expect(findKshopeOffenders(cjsBarrelRequire)).toHaveLength(0);
+  expect(findKshopeOffenders(cjsSessionRequire)).toHaveLength(0);
 });

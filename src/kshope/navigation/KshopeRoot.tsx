@@ -3,6 +3,7 @@ import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { ensureKshopeSession } from '../api/session';
 import KshopeUnavailable from '../screens/KshopeUnavailable';
+import logger from '../../utils/logger';
 
 const Stack = createNativeStackNavigator();
 
@@ -13,9 +14,14 @@ const KshopeRoot: React.FC = () => {
 
   useEffect(() => {
     let cancelled = false;
-    ensureKshopeSession().then(ok => {
-      if (!cancelled) setSessionState(ok ? 'ready' : 'unavailable');
-    });
+    ensureKshopeSession()
+      .then(ok => {
+        if (!cancelled) setSessionState(ok ? 'ready' : 'unavailable');
+      })
+      .catch(error => {
+        logger.error('[KSHOPE] session check failed', error);
+        if (!cancelled) setSessionState('unavailable');
+      });
     return () => {
       cancelled = true;
     };
