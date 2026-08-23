@@ -3,6 +3,7 @@ import { getAccessToken as getHostAccessToken } from '../../api/tokenService';
 import { getUserIdFromToken } from '../../utils/jwt';
 import secureStore from '../../utils/secureStore';
 import logger from '../../utils/logger';
+import { clearKshopeLocalData } from '../globals/storage';
 
 export interface HostAuthData {
   custId?: number | null;
@@ -20,12 +21,13 @@ export interface HostAuthData {
   };
 }
 
-const KSHOPE_LOCAL_KEYS = ['KSHOPE_PROFILE', 'KSHOPE_PINCODE_AREA_ID', 'KSHOPE_HOST_CUST_ID'];
+const KSHOPE_LOCAL_KEYS = ['KSHOPE_HOST_CUST_ID'];
 const KSHOPE_HOST_CUST_ID_KEY = 'KSHOPE_HOST_CUST_ID';
 
 const wipe = async (): Promise<void> => {
   await kshopeTokenStore.clearTokens();
   await secureStore.multiRemove(KSHOPE_LOCAL_KEYS);
+  await clearKshopeLocalData();
 };
 
 export const syncKshopeSession = async (

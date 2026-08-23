@@ -4,10 +4,32 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { ensureKshopeSession } from '../api/session';
 import KshopeUnavailable from '../screens/KshopeUnavailable';
 import logger from '../../utils/logger';
+import { LoaderContextProvider } from '../context/loaderContext';
+import { AlertProvider } from '../context/AlertContext';
+import { UserProvider } from '../context/UserContext';
+import { WishlistProvider } from '../context/WishlistContext';
+import { CartProvider } from '../context/CartContext';
+import KshopeTabs from './KshopeTabs';
+import SearchScreen from '../screens/Search/SearchScreen';
+import ProductDetailsScreen from '../screens/Product/ProductDetailsScreen';
+import ProductCategoryDetailScreen from '../screens/Product/ProductCategoryDetailScreen';
+import CartScreen from '../screens/Cart/CartScreen';
+import OrderSuccessScreen from '../screens/Order/OrderSuccessScreen';
+import OrderFailedScreen from '../screens/Order/OrderFailedScreen';
+import OrderPendingScreen from '../screens/Order/OrderPendingScreen';
+import MyOrderScreen from '../screens/Order/MyOrderScreen';
+import MyOrderDetailsScreen from '../screens/Order/MyOrderDetailsScreen';
+import ProfileScreen from '../screens/Profile/ProfileScreen';
+import EditProfileScreen from '../screens/Profile/EditProfileScreen';
+import UpdateContactScreen from '../screens/Profile/UpdateContactScreen';
+import UpdateContactOtpScreen from '../screens/Profile/UpdateContactOtpScreen';
+import SavedAddressScreen from '../screens/SavedAddress/SavedAddressScreen';
+import AddLocationScreen from '../screens/AddLocation/AddLocationScreen';
+import ReferralScreen from '../screens/Referral/ReferralScreen';
+import BCoinScreen from '../screens/BCoin/BCoinScreen';
+import ShopWithUsScreen from '../screens/ShopWithUs/ShopWithUsScreen';
 
 const Stack = createNativeStackNavigator();
-
-const KshopePlaceholderHome: React.FC = () => <View style={styles.centered} />;
 
 const KshopeRoot: React.FC = () => {
   const [sessionState, setSessionState] = useState<'checking' | 'ready' | 'unavailable'>('checking');
@@ -40,9 +62,37 @@ const KshopeRoot: React.FC = () => {
   }
 
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="KshopeHome" component={KshopePlaceholderHome} />
-    </Stack.Navigator>
+    <LoaderContextProvider>
+      <AlertProvider>
+        <UserProvider>
+          <WishlistProvider>
+            <CartProvider>
+              <Stack.Navigator screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="KshopeHome" component={KshopeTabs} />
+                <Stack.Screen name="KshopeSearch" component={SearchScreen} />
+                <Stack.Screen name="KshopeProductDetails" component={ProductDetailsScreen} />
+                <Stack.Screen name="KshopeProductCategoryDetail" component={ProductCategoryDetailScreen} />
+                <Stack.Screen name="KshopeCart" component={CartScreen} />
+                <Stack.Screen name="KshopeOrderSuccess" component={OrderSuccessScreen} />
+                <Stack.Screen name="KshopeOrderFailed" component={OrderFailedScreen} />
+                <Stack.Screen name="KshopeOrderPending" component={OrderPendingScreen} />
+                <Stack.Screen name="KshopeMyOrders" component={MyOrderScreen} />
+                <Stack.Screen name="KshopeMyOrderDetails" component={MyOrderDetailsScreen} />
+                <Stack.Screen name="KshopeProfile" component={ProfileScreen} />
+                <Stack.Screen name="KshopeEditProfile" component={EditProfileScreen} />
+                <Stack.Screen name="KshopeUpdateContact" component={UpdateContactScreen} />
+                <Stack.Screen name="KshopeUpdateContactOtp" component={UpdateContactOtpScreen} />
+                <Stack.Screen name="KshopeSavedAddress" component={SavedAddressScreen} />
+                <Stack.Screen name="KshopeAddLocation" component={AddLocationScreen} />
+                <Stack.Screen name="KshopeReferral" component={ReferralScreen} />
+                <Stack.Screen name="KshopeBCoin" component={BCoinScreen} />
+                <Stack.Screen name="KshopeShopWithUs" component={ShopWithUsScreen} />
+              </Stack.Navigator>
+            </CartProvider>
+          </WishlistProvider>
+        </UserProvider>
+      </AlertProvider>
+    </LoaderContextProvider>
   );
 };
 

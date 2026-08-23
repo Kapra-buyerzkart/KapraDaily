@@ -1,0 +1,24 @@
+export type KshopeStackParamList = {
+  KshopeTabs: undefined;
+  KshopeHome: undefined;
+  KshopeCategory: { categoryId?: string | number; categoryName?: string } | undefined;
+  KshopeSearch: undefined;
+  KshopeProductDetails: { productId: string | number; product?: any };
+  KshopeProductCategoryDetail: { categoryId: string | number; title?: string };
+  KshopeWishlist: undefined;
+  KshopeCart: undefined;
+  KshopeOrderSuccess: { orderId?: string | number; orderNumber?: string | number; paymentMethod?: string; totalItems?: number; totalAmount?: number; deliveryMode?: string; address?: string } | undefined;
+  KshopeOrderFailed: { errorMessage?: string; orderId?: string | number; orderNumber?: string | number; paymentMethod?: string; totalItems?: number; totalAmount?: number } | undefined;
+  KshopeOrderPending: { orderId?: string | number; orderNumber?: string | number; razorpayOrderId?: string; razorpayAmount?: number; razorpayKeyId?: string } | undefined;
+  KshopeMyOrders: undefined;
+  KshopeMyOrderDetails: { orderId?: string | number; order?: any; selectedItem?: any } | undefined;
+  KshopeProfile: undefined;
+  KshopeEditProfile: undefined;
+  KshopeUpdateContact: { type: 'phone' | 'email' } | undefined;
+  KshopeUpdateContactOtp: { type: 'phone' | 'email'; contactValue: string } | undefined;
+  KshopeSavedAddress: undefined;
+  KshopeAddLocation: { address?: any } | undefined;
+  KshopeReferral: undefined;
+  KshopeBCoin: undefined;
+  KshopeShopWithUs: undefined;
+};

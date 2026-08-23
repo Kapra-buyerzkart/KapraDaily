@@ -21,6 +21,14 @@ jest.mock('../src/utils/logger', () => ({
   log: jest.fn(), warn: jest.fn(), debug: jest.fn(), error: jest.fn(),
 }));
 
+const mockAsyncStore = new Map();
+jest.mock('@react-native-async-storage/async-storage', () => ({
+  getItem: jest.fn(async k => (mockAsyncStore.has(k) ? mockAsyncStore.get(k) : null)),
+  setItem: jest.fn(async (k, v) => { mockAsyncStore.set(k, v); }),
+  removeItem: jest.fn(async k => { mockAsyncStore.delete(k); }),
+  multiRemove: jest.fn(async ks => { ks.forEach(k => mockAsyncStore.delete(k)); }),
+}));
+
 const Keychain = require('react-native-keychain');
 const kshopeTokenStore = require('../src/kshope/api/tokenService').default;
 const hostTokenStore = require('../src/api/tokenService').default;
@@ -29,6 +37,7 @@ const {
   ensureKshopeSession,
   clearKshopeSession,
 } = require('../src/kshope/api/session');
+const storage = require('../src/kshope/globals/storage');
 
 const tokenForCustId = custId => {
   const header = Buffer.from(JSON.stringify({ alg: 'none', typ: 'JWT' })).toString('base64url');
@@ -38,6 +47,7 @@ const tokenForCustId = custId => {
 
 beforeEach(async () => {
   Keychain.__store.clear();
+  mockAsyncStore.clear();
   jest.clearAllMocks();
   await kshopeTokenStore.clearTokens();
   await hostTokenStore.clearTokens();
@@ -226,4 +236,18 @@ test('the fail-safe guard does not swallow a real successful clear', async () =>
   await clearKshopeSession();
 
   expect(await kshopeTokenStore.getAccessToken()).toBeNull();
+});
+
+test('clearKshopeSession also clears AsyncStorage-backed module data, leaving host keys alone', async () => {
+  mockAsyncStore.set('pincodeAreaId', '999');
+  mockAsyncStore.set('profile', '{"host":true}');
+  await storage.setKshopeAreaId(207);
+  await storage.setCachedProfile({ name: 'module' });
+
+  await clearKshopeSession();
+
+  expect(await storage.getKshopeAreaId()).toBeNull();
+  expect(await storage.getCachedProfile()).toBeNull();
+  expect(mockAsyncStore.get('pincodeAreaId')).toBe('999');
+  expect(mockAsyncStore.get('profile')).toBe('{"host":true}');
 });
