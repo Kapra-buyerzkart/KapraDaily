@@ -10,7 +10,6 @@ import {
   StatusBar,
   SafeAreaView,
   StyleSheet,
-  Alert,
 } from 'react-native';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { AppIcons } from '../../assets/icons';
@@ -27,6 +26,10 @@ import {
 } from '../../api/services/cartService';
 import FloatingCartButton from '../../components/FloatingCartButton';
 import ConfirmationModal from '../../components/ConfirmationModal';
+import Toast from 'react-native-simple-toast';
+import { isCartSuccess, cartErrorMessage } from '../../utils/cartFeedback';
+
+const CART_TOGGLE_FAILED = 'Could not update your cart';
 
 const WishlistScreen: React.FC = () => {
   const navigation = useNavigation<any>();
@@ -40,19 +43,24 @@ const WishlistScreen: React.FC = () => {
     const existingCartItem = cartItems.find(c => c.productId === productId);
 
     try {
-      if (existingCartItem) {
-        await removeFromCartApi(
-          existingCartItem.cartItemId,
-          cartSummary?.cartVersion,
-          productId,
+      const response = existingCartItem
+        ? await removeFromCartApi(
+            existingCartItem.cartItemId,
+            cartSummary?.cartVersion,
+            productId,
+          )
+        : await addToCartApi(productId, 1);
+
+      if (!isCartSuccess(response)) {
+        Toast.show(
+          cartErrorMessage(response, CART_TOGGLE_FAILED),
+          Toast.SHORT,
         );
-      } else {
-        await addToCartApi(productId, 1);
       }
+
       await loadCart();
     } catch (error) {
-      console.error('Error toggling cart item:', error);
-      Alert.alert('Error', 'Failed to update cart. Please try again.');
+      Toast.show(cartErrorMessage(error, CART_TOGGLE_FAILED), Toast.SHORT);
     }
   };
 

@@ -12,15 +12,25 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigation } from '@react-navigation/native';
 import CartItemCard from '../../components/CartItemCard';
 import SaveMoneySection from '../../components/SaveMoneySection';
+import { AppText, Badge } from '../../components/atoms';
+import CartStepper from './components/CartStepper';
+import AddressCard from './components/AddressCard';
+import CheckoutBar from './components/CheckoutBar';
+import {
+  UI_COLORS,
+  UI_ELEVATION,
+  UI_RADIUS,
+  UI_SPACING,
+  hp,
+  wp,
+} from '../../theme/tokens';
 import { colors } from '../../theme/colours';
 import { Fonts } from '../../theme/fonts';
 import { AppIcons } from '../../assets/icons';
-import LinearGradient from 'react-native-linear-gradient';
 import { useCartScreen } from '../../hooks/useCartScreen';
 import { useCart } from '../../context/CartContext';
 import { LoaderContext } from '../../context/loaderContext';
@@ -36,6 +46,11 @@ import {
   removeFromCartApi,
 } from '../../api/services/cartService';
 import RazorpayCheckout from 'react-native-razorpay';
+import Toast from 'react-native-simple-toast';
+import { isCartSuccess, cartErrorMessage } from '../../utils/cartFeedback';
+
+const QTY_UPDATE_FAILED = 'Could not update the quantity';
+const ITEM_REMOVE_FAILED = 'Could not remove this item';
 
 import AddressModal from '../../components/AddressModal';
 import AddressConfirmationModal from '../../components/AddressConfirmationModal';
@@ -119,7 +134,7 @@ const CartScreen = () => {
         item.productId,
         selectedAddress?.pincodeAreaId,
       );
-      if (res?.success) {
+      if (isCartSuccess(res)) {
         await refreshCart();
         await getCartSummary(
           selectedDeliveryType,
@@ -128,9 +143,12 @@ const CartScreen = () => {
           null,
           selectedAddress?.pincodeAreaId,
         );
+      } else {
+        Toast.show(cartErrorMessage(res, QTY_UPDATE_FAILED), Toast.SHORT);
+        await refreshCart();
       }
     } catch (err) {
-      console.error('Error updating qty:', err);
+      Toast.show(cartErrorMessage(err, QTY_UPDATE_FAILED), Toast.SHORT);
     } finally {
       showLoader(false);
     }
@@ -145,7 +163,7 @@ const CartScreen = () => {
         item.productId,
         selectedAddress?.pincodeAreaId,
       );
-      if (res?.success) {
+      if (isCartSuccess(res)) {
         await refreshCart();
         await getCartSummary(
           selectedDeliveryType,
@@ -154,9 +172,12 @@ const CartScreen = () => {
           null,
           selectedAddress?.pincodeAreaId,
         );
+      } else {
+        Toast.show(cartErrorMessage(res, ITEM_REMOVE_FAILED), Toast.SHORT);
+        await refreshCart();
       }
     } catch (err) {
-      console.error('Error removing item:', err);
+      Toast.show(cartErrorMessage(err, ITEM_REMOVE_FAILED), Toast.SHORT);
     } finally {
       showLoader(false);
     }
@@ -559,10 +580,9 @@ const CartScreen = () => {
             onPress={() => navigation.goBack()}
             style={styles.backButton}
           >
-            <AppIcons.Back color={colors.black} size={24} />
+            <AppIcons.Back color={UI_COLORS.textPrimary} size={22} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Cart</Text>
-          <View style={{ width: 44 }} />
+          <AppText variant="title">Cart</AppText>
         </View>
         <View
           style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
@@ -581,58 +601,18 @@ const CartScreen = () => {
             onPress={() => navigation.goBack()}
             style={styles.backButton}
           >
-            <AppIcons.Back color={colors.black} size={24} />
+            <AppIcons.Back color={UI_COLORS.textPrimary} size={22} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Summary</Text>
-          <View style={{ width: 34 }} />
+          <AppText variant="title">Summary</AppText>
         </View>
 
-        <View style={styles.stepperContainer}>
-          <View style={styles.stepperRow}>
-            <View style={styles.stepDotSmallOrange} />
-            <View style={[styles.stepLine, { backgroundColor: '#F25000' }]} />
-            <View style={styles.stepDotLargeContainer}>
-              <View style={styles.stepDotLargeInner} />
-            </View>
-            <View style={[styles.stepLine, { backgroundColor: '#E0E0E0' }]} />
-            <View style={styles.stepDotSmallGrey} />
-          </View>
-          <View style={styles.stepperTextRow}>
-            <Text style={styles.stepTextSmall}>Address</Text>
-            <Text style={styles.stepTextOrange}>Summary</Text>
-            <Text style={styles.stepTextSmall}>Payment</Text>
-          </View>
-        </View>
+        <CartStepper current={1} />
 
-        <View style={styles.addressSection}>
-          <View style={styles.addressRow}>
-            <MaterialIcons
-              name="location-on"
-              color={'#F25000'}
-              size={24}
-              style={{ marginTop: -2 }}
-            />
-            <View style={styles.addressInfo}>
-              <View style={styles.deliveringToRow}>
-                <Text style={styles.deliveringToText}>Delivering to : </Text>
-                <Text style={styles.addressType}>
-                  {selectedAddress?.type || 'Home'}
-                </Text>
-              </View>
-              <Text style={styles.addressDetail} numberOfLines={2}>
-                {selectedAddress
-                  ? selectedAddress.address
-                  : 'No address selected'}
-              </Text>
-              <TouchableOpacity
-                onPress={() => setShowAddressModal(true)}
-                style={{ marginTop: 8 }}
-              >
-                <Text style={styles.changeLink}>Change</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
+        <AddressCard
+          addressType={selectedAddress?.type}
+          addressLine={selectedAddress?.address}
+          onChange={() => setShowAddressModal(true)}
+        />
       </View>
 
       <ScrollView
@@ -643,7 +623,16 @@ const CartScreen = () => {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        <View style={styles.itemsSection}>
+        <View>
+          <View style={styles.itemsHeading}>
+            <AppText variant="heading">Your items</AppText>
+            <Badge
+              tone="neutral"
+              label={`${cartItems.length} ${
+                cartItems.length === 1 ? 'item' : 'items'
+              }`}
+            />
+          </View>
           {mappedItems.map(item => (
             <CartItemCard
               key={item.id}
@@ -699,69 +688,13 @@ const CartScreen = () => {
         <BillSection billCalculations={billCalculations} />
       </ScrollView>
 
-      <View style={styles.bottomBar}>
-        {billCalculations.totalSavings > 0 && (
-          <View style={styles.savingsBanner}>
-            <Text style={styles.savingsBannerText}>
-              Yay! You are saving{' '}
-              <Text style={styles.savingsBold}>
-                ₹{billCalculations.totalSavings.toFixed(2)}
-              </Text>
-            </Text>
-          </View>
-        )}
-        <View style={styles.paymentActionRow}>
-          <TouchableOpacity
-            style={styles.paymentInfo}
-            onPress={() => setShowPaymentModal(true)}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.payUsingLabel}>PAY USING</Text>
-            <View style={styles.paymentMethod}>
-              <View style={styles.paymentIconCircleOrange}>
-                <MaterialCommunityIcons
-                  name={
-                    paymentMethod?.toUpperCase() === 'COD'
-                      ? 'cash'
-                      : 'cellphone'
-                  }
-                  color="#F25000"
-                  size={16}
-                />
-              </View>
-              <Text style={styles.payUsingValue}>{paymentMethod}</Text>
-              <MaterialCommunityIcons
-                name="menu-up"
-                color="#000"
-                size={24}
-                style={{ marginLeft: 4 }}
-              />
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            activeOpacity={0.8}
-            onPress={handleConfirmOrder}
-            style={styles.payButtonContainer}
-          >
-            <LinearGradient
-              colors={['#F25000', '#FF7A00']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.payButton}
-            >
-              <Text style={styles.payButtonText}>
-                Pay ₹{billCalculations.toPay.toFixed(2)}
-              </Text>
-              <MaterialCommunityIcons
-                name="menu-right"
-                color={colors.white}
-                size={20}
-              />
-            </LinearGradient>
-          </TouchableOpacity>
-        </View>
-      </View>
+      <CheckoutBar
+        totalSavings={billCalculations.totalSavings}
+        toPay={billCalculations.toPay}
+        paymentMethod={paymentMethod}
+        onSelectPayment={() => setShowPaymentModal(true)}
+        onPay={handleConfirmOrder}
+      />
 
       <StatusModal
         visible={statusModalVisible}
@@ -939,464 +872,118 @@ export default CartScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.figmaTeal,
+    backgroundColor: UI_COLORS.canvas,
+  },
+  topContainer: {
+    backgroundColor: UI_COLORS.card,
+    borderBottomLeftRadius: UI_RADIUS.card + 8,
+    borderBottomRightRadius: UI_RADIUS.card + 8,
+    paddingBottom: UI_SPACING.lg,
+    marginBottom: UI_SPACING.xs,
+    zIndex: 10,
+    ...UI_ELEVATION.raised,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    backgroundColor: colors.white,
+    gap: UI_SPACING.sm,
+    paddingHorizontal: UI_SPACING.lg,
+    paddingVertical: UI_SPACING.md,
   },
   backButton: {
-    padding: 5,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontFamily: Fonts.bold,
-    color: colors.black,
-  },
-  heartButton: {
-    padding: 5,
-  },
-  heartCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.themeTeal,
-    justifyContent: 'center',
+    width: wp('9%'),
+    height: wp('9%'),
+    borderRadius: UI_RADIUS.pill,
+    backgroundColor: UI_COLORS.well,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   scrollContent: {
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 120,
+    paddingHorizontal: UI_SPACING.lg,
+    paddingTop: UI_SPACING.md,
+    paddingBottom: hp('20%'),
   },
-  addressCard: {
-    backgroundColor: colors.white,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: '#E8F8FA',
-  },
-  addressRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-  },
-  locationIconContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#E8F8FA',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 10,
-  },
-  addressInfo: {
-    flex: 1,
-  },
-  deliveringToRow: {
+  itemsHeading: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 4,
-  },
-  deliveringToText: {
-    fontSize: 16,
-    color: colors.black,
-    fontFamily: Fonts.gilroyRegular,
-  },
-  addressType: {
-    fontSize: 14,
-    color: colors.black,
-    fontFamily: Fonts.semiBold,
-    fontWeight: '600',
-  },
-  addressDetail: {
-    fontSize: 14,
-    color: colors.black,
-    fontFamily: Fonts.gilroyLight,
-    lineHeight: 16,
-  },
-  changeLink: {
-    fontSize: 14,
-    color: colors.themeTeal,
-    fontFamily: Fonts.bold,
-    fontWeight: '400',
-  },
-  topContainer: {
-    backgroundColor: colors.white,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-    paddingBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 4,
-    marginBottom: 8,
-    zIndex: 10,
-  },
-  stepperContainer: {
-    paddingHorizontal: 30,
-    marginTop: 10,
-    marginBottom: 20,
-  },
-  stepperRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  stepDotSmallOrange: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#F25000',
-  },
-  stepDotSmallGrey: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#E0E0E0',
-  },
-  stepDotLargeContainer: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: '#FFD9C6',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  stepDotLargeInner: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#F25000',
-  },
-  stepLine: {
-    flex: 1,
-    height: 2,
-    marginHorizontal: 4,
-  },
-  stepperTextRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 8,
-  },
-  stepTextSmall: {
-    fontSize: 10,
-    color: '#999999',
-    fontFamily: Fonts.gilroyMedium,
-  },
-  stepTextOrange: {
-    fontSize: 10,
-    color: '#F25000',
-    fontFamily: Fonts.gilroyBold,
-  },
-  addressSection: {
-    paddingHorizontal: 20,
-  },
-  separator: {
-    height: 1,
-    backgroundColor: '#F0F0F0',
-    marginVertical: 12,
-  },
-  deliveryDateRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  calendarIconContainer: {
-    width: 28,
-    height: 28,
-    borderRadius: 4,
-    backgroundColor: '#E8F8FA',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 10,
-  },
-  deliveryByText: {
-    fontSize: 14,
-    color: colors.black,
-    fontFamily: Fonts.gilroyRegular,
-  },
-  deliveryDate: {
-    fontSize: 14,
-    color: colors.black,
-    fontFamily: Fonts.gilroyBold,
-  },
-  deliveryToggleRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-    gap: 12,
-  },
-  toggleButton: {
-    flex: 1,
-    borderRadius: 12,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: colors.themeTeal,
-    height: 48,
-  },
-  toggleButtonActive: {
-    borderColor: colors.themeDarkTeal,
-  },
-  toggleGradient: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  toggleText: {
-    fontSize: 14,
-    fontFamily: Fonts.gilroyBold,
-    color: colors.themeTeal,
-  },
-  toggleTextActive: {
-    color: colors.white,
-  },
-  itemsSection: {
-    backgroundColor: colors.figmaTeal,
-    borderRadius: 16,
+    gap: UI_SPACING.sm,
+    marginBottom: UI_SPACING.md,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: UI_COLORS.overlay,
     justifyContent: 'flex-end',
   },
   paymentModalContent: {
-    backgroundColor: colors.white,
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-    padding: 24,
-    paddingBottom: 40,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontFamily: Fonts.bold,
-    color: colors.black,
-  },
-  paymentSection: {
-    backgroundColor: colors.white,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: '#E8F8FA',
-  },
-  paymentSectionTitle: {
-    fontSize: 16,
-    fontFamily: Fonts.gilroyBold,
-    color: colors.black,
-    marginBottom: 12,
-  },
-  paymentOptionsGrid: {
-    gap: 8,
-  },
-  paymentSectionTriggerCard: {
-    backgroundColor: colors.white,
-    borderRadius: 16,
-    padding: 16,
-    marginTop: 16,
-    borderWidth: 1,
-    borderColor: '#E8F8FA',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  paymentTriggerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  paymentIconBackground: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#F5F7F9',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  paymentTriggerTextContainer: {
-    flex: 1,
-  },
-  paymentTriggerLabel: {
-    fontSize: 12,
-    color: '#999',
-    fontFamily: Fonts.gilroyMedium,
-  },
-  paymentTriggerValue: {
-    fontSize: 15,
-    color: colors.black,
-    fontFamily: Fonts.gilroyBold,
-    marginTop: 2,
-  },
-  paymentTriggerChangeButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    backgroundColor: '#FFF0E6',
-  },
-  paymentTriggerChangeText: {
-    fontSize: 13,
-    color: '#F25000',
-    fontFamily: Fonts.gilroyBold,
+    backgroundColor: UI_COLORS.card,
+    borderTopLeftRadius: UI_RADIUS.card + 8,
+    borderTopRightRadius: UI_RADIUS.card + 8,
+    padding: UI_SPACING.xxl,
+    paddingBottom: hp('5%'),
   },
   modalHeaderIndicator: {
-    width: 40,
+    width: wp('11%'),
     height: 4,
-    backgroundColor: '#E0E0E0',
+    backgroundColor: UI_COLORS.borderStrong,
     borderRadius: 2,
     alignSelf: 'center',
-    marginBottom: 16,
+    marginBottom: UI_SPACING.lg,
   },
   modalHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: UI_SPACING.xl,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontFamily: Fonts.gilroyBold,
+    color: UI_COLORS.textPrimary,
+  },
+  paymentOptionsGrid: {
+    gap: UI_SPACING.sm,
+  },
+  paymentMethodOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: UI_SPACING.lg,
+    paddingHorizontal: UI_SPACING.lg,
+    borderRadius: UI_RADIUS.productCard,
+    borderWidth: 1,
+    borderColor: UI_COLORS.border,
+    backgroundColor: UI_COLORS.card,
+    marginBottom: UI_SPACING.md,
+  },
+  paymentMethodOptionActive: {
+    borderColor: UI_COLORS.primary,
+    backgroundColor: UI_COLORS.primaryTint,
+  },
+  paymentMethodName: {
+    fontSize: 15,
+    fontFamily: Fonts.gilroyMedium,
+    color: UI_COLORS.textPrimary,
+  },
+  paymentMethodNameActive: {
+    fontFamily: Fonts.gilroyBold,
+    color: UI_COLORS.primary,
   },
   radioCircle: {
     width: 20,
     height: 20,
     borderRadius: 10,
     borderWidth: 2,
-    borderColor: '#CCC',
+    borderColor: UI_COLORS.borderStrong,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: UI_SPACING.md,
   },
   radioCircleActive: {
-    borderColor: '#F25000',
+    borderColor: UI_COLORS.primary,
   },
   radioInner: {
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#F25000',
-  },
-  paymentMethodOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    borderWidth: 0.5,
-    borderColor: '#F0F0F0',
-    marginBottom: 12,
-  },
-  paymentMethodOptionActive: {
-    borderColor: colors.themeTeal,
-    backgroundColor: colors.figmaTeal,
-  },
-  paymentMethodName: {
-    fontSize: 16,
-    fontFamily: Fonts.gilroyMedium,
-    color: colors.black,
-  },
-  paymentMethodNameActive: {
-    fontFamily: Fonts.gilroyBold,
-    color: colors.themeTeal,
-  },
-  bottomBar: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: colors.white,
-    paddingBottom: 34,
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -5 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 20,
-  },
-  savingsBanner: {
-    backgroundColor: colors.figmaTeal,
-    paddingVertical: 10,
-    alignItems: 'center',
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-  },
-  savingsBannerText: {
-    fontSize: 14,
-    color: colors.black,
-    fontFamily: Fonts.gilroyMedium,
-  },
-  savingsBold: {
-    color: colors.green,
-    fontFamily: Fonts.gilroyBold,
-  },
-  paymentActionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 15,
-    paddingTop: 15,
-  },
-  paymentInfo: {
-    flex: 1,
-  },
-  payUsingLabel: {
-    fontSize: 10,
-    color: '#999',
-    fontFamily: Fonts.gilroyBold,
-    marginBottom: 4,
-  },
-  paymentMethod: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  paymentIconCircle: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: colors.themeTeal,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 8,
-  },
-  paymentIconCircleOrange: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#FFF0E6',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 8,
-    borderWidth: 1,
-    borderColor: '#FFD9C6',
-  },
-  payUsingValue: {
-    fontSize: 14,
-    color: colors.black,
-    fontFamily: Fonts.gilroyMedium,
-  },
-  payButtonContainer: {
-    borderRadius: 25,
-    overflow: 'hidden',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-  },
-  payButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 48,
-    minWidth: 160,
-  },
-  payButtonText: {
-    color: colors.white,
-    fontSize: 16,
-    fontFamily: Fonts.gilroyBold,
-    marginRight: 8,
+    backgroundColor: UI_COLORS.primary,
   },
 });

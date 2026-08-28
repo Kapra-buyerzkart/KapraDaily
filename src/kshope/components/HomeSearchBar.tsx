@@ -1,5 +1,12 @@
 import React from 'react';
-import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import {
+  View,
+  TouchableOpacity,
+  Text,
+  StyleSheet,
+  StyleProp,
+  ViewStyle,
+} from 'react-native';
 import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import { colors } from '../theme/colours';
 import { fonts } from '../theme/typography';
@@ -10,18 +17,20 @@ import { useNavigation } from '@react-navigation/native';
 interface HomeSearchBarProps {
   placeholder?: string;
   onPress?: () => void;
+  style?: StyleProp<ViewStyle>;
 }
 
 const HomeSearchBar: React.FC<HomeSearchBarProps> = ({
   placeholder = 'Search for Product...',
   onPress,
+  style,
 }) => {
   const navigation = useNavigation<any>();
 
   return (
     <TouchableOpacity
       activeOpacity={0.9}
-      style={styles.searchBarContainer}
+      style={[styles.searchBarContainer, style]}
       onPress={onPress || (() => navigation.navigate('KshopeSearch' as never))}
     >
       <View style={styles.iconLeftContainer}>

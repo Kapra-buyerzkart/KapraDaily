@@ -38,6 +38,7 @@ const {
   clearKshopeSession,
 } = require('../src/kshope/api/session');
 const storage = require('../src/kshope/globals/storage');
+const KSHOPE_CONFIG = require('../src/kshope/globals/config').default;
 
 const tokenForCustId = custId => {
   const header = Buffer.from(JSON.stringify({ alg: 'none', typ: 'JWT' })).toString('base64url');
@@ -250,4 +251,38 @@ test('clearKshopeSession also clears AsyncStorage-backed module data, leaving ho
   expect(await storage.getCachedProfile()).toBeNull();
   expect(mockAsyncStore.get('pincodeAreaId')).toBe('999');
   expect(mockAsyncStore.get('profile')).toBe('{"host":true}');
+});
+
+test('seeds the default area id when a login payload establishes the session', async () => {
+  expect(await storage.getKshopeAreaId()).toBeNull();
+
+  await syncKshopeSession({
+    custId: 42,
+    kshope: { success: true, accessToken: 'k-access', refreshToken: 'k-refresh', custId: 42 },
+  });
+
+  expect(await storage.getKshopeAreaId()).toBe(KSHOPE_CONFIG.default_pincode_area_id);
+});
+
+test('seeds the default area id when an already-logged-in session is resumed', async () => {
+  await syncKshopeSession({
+    custId: 42,
+    kshope: { success: true, accessToken: 'k-access', refreshToken: 'k-refresh', custId: 42 },
+  });
+  await storage.setKshopeAreaId(null);
+  await hostTokenStore.setTokens(tokenForCustId(42), 'h-refresh');
+
+  expect(await ensureKshopeSession()).toBe(true);
+  expect(await storage.getKshopeAreaId()).toBe(KSHOPE_CONFIG.default_pincode_area_id);
+});
+
+test('does not overwrite an area id that is already stored', async () => {
+  await storage.setKshopeAreaId(99999);
+
+  await syncKshopeSession({
+    custId: 42,
+    kshope: { success: true, accessToken: 'k-access', refreshToken: 'k-refresh', custId: 42 },
+  });
+
+  expect(await storage.getKshopeAreaId()).toBe(99999);
 });

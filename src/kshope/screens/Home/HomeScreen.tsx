@@ -12,7 +12,7 @@ import {
   RefreshControl,
   ActivityIndicator,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
@@ -35,6 +35,7 @@ const { width, height } = Dimensions.get('window');
 
 const HomeScreen: React.FC = () => {
   const navigation = useNavigation<any>();
+  const insets = useSafeAreaInsets();
   const { profile } = useUser();
   const { toggleWishlist, isInWishlist } = useWishlist();
 
@@ -448,7 +449,7 @@ const HomeScreen: React.FC = () => {
             resizeMode="cover"
           />
         </View>
-        <View style={{ height: 10, backgroundColor: '#FF52000' }}></View>
+        <View style={{ height: 6 }} />
         <Text
           style={[
             styles.accessorizeLabel,
@@ -533,13 +534,13 @@ const HomeScreen: React.FC = () => {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container} edges={['top']}>
+      <View style={styles.container}>
         <View
           style={{
             flex: 1,
             justifyContent: 'center',
             alignItems: 'center',
-            backgroundColor: '#FFFFFF',
+            backgroundColor: colors.figmaTeal,
           }}
         >
           <ActivityIndicator size="large" color="#F25000" />
@@ -548,18 +549,19 @@ const HomeScreen: React.FC = () => {
               marginTop: 16,
               fontFamily: Fonts.gilroyMedium,
               fontSize: 14,
-              color: '#999',
+              color: '#999999',
             }}
           >
             Loading...
           </Text>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <View style={styles.container}>
+      {!topSectionBanner && <View style={{ height: insets.top }} />}
       {topSectionBanner && (
         <TouchableOpacity
           activeOpacity={0.9}
@@ -575,8 +577,11 @@ const HomeScreen: React.FC = () => {
             style={styles.topSectionImage}
             resizeMode="cover"
           >
-            <View style={styles.topBarRow}>
-              <HomeSearchBar placeholder="Search product" />
+            <View style={[styles.topBarRow, { paddingTop: insets.top + 10 }]}>
+              <HomeSearchBar
+                placeholder="Search product"
+                style={styles.headerSearchBar}
+              />
 
               <TouchableOpacity
                 onPress={() => navigation.navigate('KshopeBCoin')}
@@ -591,20 +596,17 @@ const HomeScreen: React.FC = () => {
                     {profile?.bTokens || profile?.totalBCoins || '0'} B
                   </Text>
                 </ImageBackground>
-
               </TouchableOpacity>
 
               <TouchableOpacity
                 onPress={() => navigation.navigate('KshopeProfile')}
                 style={styles.profileIconMainView}
               >
-
                 <Image
                   source={require('../../assets/images/profile/profilei.png')}
-                  style={{ height: hp('6%'), width: wp('6%') }}
+                  style={styles.profileIcon}
                   resizeMode="contain"
                 />
-
               </TouchableOpacity>
             </View>
           </ImageBackground>
@@ -616,12 +618,11 @@ const HomeScreen: React.FC = () => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor="#FF52000"
+            tintColor="#F25000"
           />
         }
         contentContainerStyle={{ paddingBottom: 0 }}
       >
-
         {firstProductBlockBanners.length > 0 && (
           <View style={styles.featuredBannerContainer}>
             <FlatList
@@ -657,12 +658,10 @@ const HomeScreen: React.FC = () => {
                 });
               }}
             />
-
           </View>
         )}
         {displayCategories.length > 0 && (
           <View style={{ paddingBottom: 10, marginTop: hp('2%') }}>
-
             <FlatList
               data={displayCategories.reduce(
                 (rows: any[][], item: any, index: number) => {
@@ -727,12 +726,7 @@ const HomeScreen: React.FC = () => {
         )}
 
         {topBrands && topBrands.length > 0 && (
-          <View
-            style={[
-              styles.section,
-              { backgroundColor: '#FFE8E8', marginTop: hp('2%') },
-            ]}
-          >
+          <View style={[styles.section, { marginTop: hp('2%') }]}>
             <Text style={[styles.sectionTitle, { marginTop: hp('2%') }]}>
               {getSectionTitle('top_brands', 'TOP BRANDS')}
             </Text>
@@ -751,12 +745,7 @@ const HomeScreen: React.FC = () => {
         )}
 
         {accessorizeCategories.length > 0 && (
-          <View
-            style={[
-              styles.section,
-              { backgroundColor: '#FFF', marginTop: hp('2%') },
-            ]}
-          >
+          <View style={[styles.section, { marginTop: hp('2%') }]}>
             <Text
               style={[
                 styles.sectionTitle,
@@ -791,7 +780,7 @@ const HomeScreen: React.FC = () => {
 
               return (
                 <LinearGradient
-                  colors={['#ff5200', '#fa9a6dff', '#FFFFfF']}
+                  colors={[colors.themeTeal, '#FFD9C6', colors.figmaTeal]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 0, y: 1 }}
                   style={styles.dummyAccessorizeContainer}
@@ -825,7 +814,6 @@ const HomeScreen: React.FC = () => {
                           style={styles.dummyAccessorizeImage}
                           resizeMode="contain"
                         />
-
                       </TouchableOpacity>
                     )}
                   />
@@ -970,7 +958,6 @@ const HomeScreen: React.FC = () => {
                 resizeMode="contain"
                 imageStyle={{ alignSelf: 'center', alignContent: 'center' }}
               >
-
                 {bestSellingIndex > 0 && (
                   <Image
                     source={getImageSource(
@@ -1217,7 +1204,7 @@ const HomeScreen: React.FC = () => {
 
         <View
           style={{
-            backgroundColor: '#F0F0F0',
+            backgroundColor: colors.figmaTeal,
             alignItems: 'center',
             justifyContent: 'center',
             width: '100%',
@@ -1233,26 +1220,31 @@ const HomeScreen: React.FC = () => {
         />
       </ScrollView>
       <FloatingCartButton bottom={20} />
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.figmaTeal,
   },
 
-  header: {
-  },
+  header: {},
   topSectionContainer: {
     width: width,
-    height: hp('8%'),
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
+    overflow: 'hidden',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 4,
+    zIndex: 10,
   },
   topSectionImage: {
     width: '100%',
-    height: '100%',
+    justifyContent: 'flex-end',
   },
   headerSectionContainer: {
     width: width,
@@ -1260,7 +1252,7 @@ const styles = StyleSheet.create({
     top: -20,
   },
   featuredBannerContainer: {
-    marginTop: -5,
+    marginTop: hp('1.5%'),
   },
   featuredBannerImage: {
     width: width,
@@ -1293,8 +1285,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingTop: 8,
+    paddingBottom: 12,
     width: width,
+  },
+  headerSearchBar: {
+    flex: 1,
+    width: undefined,
   },
   topBarIcon: {
     marginLeft: 8,
@@ -1302,17 +1298,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   bcoinContainer: {
-    flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 20,
-    paddingLeft: 2,
-    paddingRight: 10,
-    height: 32,
-    marginLeft: 8,
+    marginLeft: 10,
   },
   bcoinBackground: {
-    width: wp('12%'),
-    height: hp('6%'),
+    width: 54,
+    height: 32,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1341,15 +1333,17 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: Fonts.gilroyBold,
     color: '#000000',
-    marginLeft: 0,
-    top: 5,
   },
   profileIconMainView: {
-    marginLeft: -8,
+    marginLeft: 6,
     justifyContent: 'center',
     alignItems: 'center',
-    width: wp('10%'),
-    height: hp('6%'),
+    width: 36,
+    height: 36,
+  },
+  profileIcon: {
+    width: 30,
+    height: 30,
   },
   profileIconView: {
     width: 35,
@@ -1493,12 +1487,14 @@ const styles = StyleSheet.create({
     marginTop: hp('2%'),
   },
   sectionTitle: {
-    fontSize: wp('4.5%'),
-    color: '#222222',
-    textAlign: 'center',
+    fontSize: 16,
+    color: colors.black,
+    fontFamily: Fonts.gilroySemiBold,
+    textAlign: 'left',
+    textTransform: 'uppercase',
+    paddingHorizontal: wp('4%'),
     marginBottom: hp('1.5%'),
-    letterSpacing: 1,
-    fontWeight: '600',
+    letterSpacing: 0.8,
   },
   categoriesGrid: {
     paddingHorizontal: wp('4%'),
@@ -1512,38 +1508,38 @@ const styles = StyleSheet.create({
   categoryCircle: {
     width: wp('16%'),
     height: wp('16%'),
-    borderRadius: wp('5%'),
+    borderRadius: 20,
+    backgroundColor: colors.white,
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
-    borderWidth: 0.2,
-    borderColor: '#4c2c00',
+    borderWidth: 1,
+    borderColor: '#FFE0CE',
   },
   categoryImage: {
     width: wp('13.5%'),
     height: wp('13.5%'),
   },
   categoryLabel: {
-    fontSize: wp('3%'),
+    fontSize: 12,
     color: colors.black1,
-    fontFamily: Fonts.gilroyBold,
-    fontWeight: '600',
+    fontFamily: Fonts.gilroySemiBold,
     textAlign: 'center',
     marginTop: hp('0.5%'),
     width: wp('18%'),
   },
   accessorizeCard: {
-    backgroundColor: '#ffff',
+    backgroundColor: colors.white,
     width: wp('22%'),
     marginRight: wp('2%'),
     alignItems: 'center',
     paddingTop: hp('1%'),
-    borderTopLeftRadius: wp('5%'),
-    borderTopRightRadius: wp('5%'),
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
   },
   accessorizeCardActive: {
-    backgroundColor: '#FF5200',
-    borderColor: '#FF5200',
+    backgroundColor: colors.themeTeal,
+    borderColor: colors.themeTeal,
     borderBottomLeftRadius: 0,
     borderBottomRightRadius: 0,
     paddingHorizontal: hp('1%'),
@@ -1551,27 +1547,27 @@ const styles = StyleSheet.create({
   accessorizeImageContainer: {
     width: wp('16%'),
     height: wp('16%'),
-    borderWidth: 0.5,
-    borderColor: '#EEE',
-    borderRadius: wp('3%'),
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
     elevation: 2,
-    shadowColor: '#000',
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
   },
   accessorizeImage: {
     width: '100%',
     height: '100%',
   },
   accessorizeLabel: {
-    fontSize: wp('2.8%'),
-    color: 'grey',
-    fontFamily: Fonts.gilroyBold,
-    fontWeight: '600',
+    fontSize: 12,
+    color: '#999999',
+    fontFamily: Fonts.gilroySemiBold,
     textAlign: 'center',
     paddingBottom: hp('1%'),
   },
@@ -1582,7 +1578,7 @@ const styles = StyleSheet.create({
     width: wp('39%'),
     height: hp('27%'),
     marginRight: wp('4%'),
-    borderRadius: wp('8%'),
+    borderRadius: 20,
     overflow: 'hidden',
   },
   dummyAccessorizeImage: {
@@ -1605,7 +1601,7 @@ const styles = StyleSheet.create({
   midBannerCard: {
     width: wp('90%'),
     height: hp('20%'),
-    borderRadius: wp('2%'),
+    borderRadius: 16,
     overflow: 'hidden',
     marginRight: wp('3%'),
   },
@@ -1616,15 +1612,17 @@ const styles = StyleSheet.create({
   brandCard: {
     width: 86,
     height: 86,
-    borderRadius: wp('4%'),
-    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    backgroundColor: colors.white,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: wp('3%'),
+    borderWidth: 1,
+    borderColor: '#FFE8DC',
     shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 0 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,
-    shadowRadius: 20,
+    shadowRadius: 10,
     elevation: 3,
   },
   brandImage: {
@@ -1645,7 +1643,7 @@ const styles = StyleSheet.create({
   gShockCard: {
     width: (width - 32 - 16) / 2,
     height: 90,
-    borderRadius: 20,
+    borderRadius: 16,
     overflow: 'hidden',
     justifyContent: 'center',
     alignItems: 'center',
@@ -1724,10 +1722,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     alignSelf: 'center',
     elevation: 4,
-    shadowColor: '#000',
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
   },
   bestSellingTextOverlay: {
     position: 'absolute',
@@ -1740,28 +1738,26 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   bestSellingTitleText: {
-    fontSize: wp('5%'),
-    fontFamily: Fonts.gilroySemiBold,
-    color: '#1A1A1A',
-    fontWeight: '800',
+    fontSize: 18,
+    fontFamily: Fonts.gilroyBold,
+    color: colors.black,
     maxWidth: '48%',
     bottom: hp('1%'),
   },
   bestSellingPriceText: {
-    fontSize: wp('5.5%'),
-    fontFamily: Fonts.gilroySemiBold,
-    color: '#1A1A1A',
-    fontWeight: '800',
+    fontSize: 20,
+    fontFamily: Fonts.gilroyBold,
+    color: colors.black,
   },
   bestSellingMrpText: {
-    fontSize: wp('3.2%'),
-    color: '#7B8D9E',
+    fontSize: 12,
+    color: '#999999',
     textDecorationLine: 'line-through',
     fontFamily: Fonts.gilroyMedium,
     marginBottom: 2,
   },
   goatDealCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
     marginStart: 5,
     marginBottom: 5,
     marginRight: wp('2%'),
@@ -1771,10 +1767,12 @@ const styles = StyleSheet.create({
     padding: 4,
 
     width: (width - 32 - 32) / 3,
-    borderRadius: 26,
+    borderRadius: 20,
 
     height: hp('19%'),
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#FFE8DC',
   },
   goatDealBg: {
     width: '100%',
@@ -1785,7 +1783,7 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'flex-start',
     paddingVertical: 30,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.figmaTeal,
   },
   footerLogo: {
     width: wp('40%'),

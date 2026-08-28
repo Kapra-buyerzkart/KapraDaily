@@ -1,200 +1,266 @@
 import React from 'react';
-import { View, Text, StyleSheet, ImageBackground } from 'react-native';
-import { colors } from '../theme/colours';
-import { Fonts } from '../theme/fonts';
+import { View, StyleSheet } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import {
+  AppText,
+  Surface,
+  Divider,
+  IconDisc,
+  SectionHeading,
+} from './atoms';
+import {
+  UI_COLORS,
+  UI_RADIUS,
+  UI_SPACING,
+  hp,
+  wp,
+} from '../theme/tokens';
+import { AppTextTone } from './atoms/AppText';
 
 export interface BillCalculations {
-    mrpTotal?: number;
-    itemTotal?: number;
-    savings?: number;
-    deliveryCharge?: number;
-    totalTax?: number;
-    couponDiscount?: number;
-    giftCardAmount?: number;
-    bcoinsAppliedValue?: number;
-    totalSavings?: number;
-    toPay?: number;
+  mrpTotal?: number;
+  itemTotal?: number;
+  savings?: number;
+  deliveryCharge?: number;
+  totalTax?: number;
+  couponDiscount?: number;
+  giftCardAmount?: number;
+  bcoinsAppliedValue?: number;
+  totalBtokens?: number;
+  totalSavings?: number;
+  toPay?: number;
 }
+
+const money = (amount?: number) => `₹${Number(amount || 0).toFixed(2)}`;
 
 interface BillRowProps {
-    label: string;
-    value: string;
-    isGreen?: boolean;
-    strikethroughValue?: string;
+  label: string;
+  value: string;
+  tone?: AppTextTone;
+  strike?: string;
 }
 
-const BillRow: React.FC<BillRowProps> = ({ label, value, isGreen, strikethroughValue }) => (
-    <View style={styles.billContentContainer}>
-        <Text style={[styles.billContentText, isGreen && { color: colors.green }]}>{label}</Text>
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            {strikethroughValue && (
-                <Text style={styles.strikethroughText}>{strikethroughValue}</Text>
-            )}
-            <Text style={[styles.priceText, isGreen && { color: colors.green }]}>
-                {value}
-            </Text>
-        </View>
+const BillRow: React.FC<BillRowProps> = ({
+  label,
+  value,
+  tone = 'primary',
+  strike,
+}) => (
+  <View style={styles.row}>
+    <AppText variant="label" tone="muted" style={styles.rowLabel}>
+      {label}
+    </AppText>
+    <View style={styles.valueWrap}>
+      {strike ? (
+        <AppText variant="caption" tone="faint" style={styles.strike}>
+          {strike}
+        </AppText>
+      ) : null}
+      <AppText variant="labelStrong" tone={tone}>
+        {value}
+      </AppText>
     </View>
+  </View>
 );
 
 interface BillSectionProps {
-    billCalculations: BillCalculations;
+  billCalculations: BillCalculations;
 }
 
 const BillSection: React.FC<BillSectionProps> = ({ billCalculations }) => {
-    const {
-        mrpTotal = 0,
-        itemTotal = 0,
-        savings = 0,
-        deliveryCharge = 0,
-        totalTax = 0,
-        couponDiscount = 0,
-        giftCardAmount = 0,
-        bcoinsAppliedValue = 0,
-        totalSavings = 0,
-        toPay = 0,
-    } = billCalculations;
+  const {
+    mrpTotal = 0,
+    itemTotal = 0,
+    savings = 0,
+    deliveryCharge = 0,
+    totalTax = 0,
+    couponDiscount = 0,
+    giftCardAmount = 0,
+    bcoinsAppliedValue = 0,
+    totalBtokens = 0,
+    totalSavings = 0,
+    toPay = 0,
+  } = billCalculations;
 
-    const absSavings = Math.abs(savings);
-    const absCouponDiscount = Math.abs(couponDiscount);
-    const absGiftCardAmount = Math.abs(giftCardAmount);
-    const absBcoinsAppliedValue = Math.abs(bcoinsAppliedValue);
+  const discounts = [
+    { key: 'coupon', label: 'Coupon discount', amount: Math.abs(couponDiscount) },
+    { key: 'gift', label: 'Gift card applied', amount: Math.abs(giftCardAmount) },
+    { key: 'coins', label: 'B-Coins applied', amount: Math.abs(bcoinsAppliedValue) },
+  ].filter(entry => entry.amount > 0);
 
-    return (
-        <View style={styles.container}>
-            <View style={styles.billHeaderContainer}>
+  const strikeTotal = mrpTotal || itemTotal + Math.abs(savings);
+  const isDeliveryFree = deliveryCharge === 0;
+  const hasSavings = totalSavings > 0;
+  const hasTokens = totalBtokens > 0;
+
+  return (
+    <View style={styles.container}>
+      <Surface inset={false} style={styles.surface}>
+        <View style={styles.card}>
+          <SectionHeading
+            title="Bill summary"
+            icon={
+              <IconDisc size={wp('8%')} tone="brand">
                 <MaterialCommunityIcons
-                    name="receipt"
-                    size={20}
-                    color="#000"
+                  name="receipt"
+                  size={wp('4.4%')}
+                  color={UI_COLORS.primary}
                 />
-                <Text style={styles.billHeaderText}>View Your Bill</Text>
-            </View>
+              </IconDisc>
+            }
+            right={
+              <AppText variant="micro" tone="faint">
+                Incl. all taxes
+              </AppText>
+            }
+          />
 
-            <ImageBackground
-                style={styles.billImageBackground}
-                imageStyle={styles.billImageStyle}
-                source={require('../assets/images/bill_background.png')}>
-                <View>
-                    <BillRow
-                        label="Item total"
-                        value={`₹${itemTotal.toFixed(2)}`}
-                        strikethroughValue={`₹${(mrpTotal || (itemTotal + savings)).toFixed(2)}`}
-                    />
+          <View style={styles.group}>
+            <BillRow
+              label="Item total"
+              value={money(itemTotal)}
+              strike={strikeTotal > itemTotal ? money(strikeTotal) : undefined}
+            />
+            <BillRow
+              label="Delivery charge"
+              value={isDeliveryFree ? 'FREE' : money(deliveryCharge)}
+              tone={isDeliveryFree ? 'success' : 'primary'}
+            />
+            {totalTax > 0 && <BillRow label="Tax" value={money(totalTax)} />}
+          </View>
 
-                    <BillRow
-                        label="Delivery charge"
-                        value={deliveryCharge === 0 ? 'FREE' : `₹${deliveryCharge.toFixed(2)}`}
-                    />
+          {discounts.length > 0 && (
+            <>
+              <Divider style={styles.rule} />
+              <View style={styles.group}>
+                {discounts.map(entry => (
+                  <BillRow
+                    key={entry.key}
+                    label={entry.label}
+                    value={`− ${money(entry.amount)}`}
+                    tone="success"
+                  />
+                ))}
+              </View>
+            </>
+          )}
 
-                    {totalTax > 0 && (
-                        <BillRow label="Tax" value={`₹${totalTax.toFixed(2)}`} />
-                    )}
+          <Divider dashed style={styles.dashedRule} />
 
-                    {absCouponDiscount > 0 && (
-                        <BillRow label="Coupon Discount" value={`- ₹${absCouponDiscount.toFixed(2)}`} />
-                    )}
-
-                    {absGiftCardAmount > 0 && (
-                        <BillRow label="GiftCard Applied" value={`- ₹${absGiftCardAmount.toFixed(2)}`} />
-                    )}
-
-                    {absBcoinsAppliedValue > 0 && (
-                        <BillRow label="Bcoins Applied" value={`- ₹${absBcoinsAppliedValue.toFixed(2)}`} />
-                    )}
-
-                    {totalSavings > 0 && (
-                        <BillRow label="You have saved" value={`- ₹${totalSavings.toFixed(2)}`} isGreen />
-                    )}
-
-                    <View style={styles.billDivider} />
-                    <View style={styles.billSumView}>
-                        <Text style={styles.billSumText}>To pay</Text>
-                        <Text style={styles.billSumText}>₹{toPay.toFixed(2)}</Text>
-                    </View>
-                </View>
-            </ImageBackground>
+          <View style={styles.toPayRow}>
+            <AppText variant="bodyStrong" style={styles.toPayLabel}>
+              To pay
+            </AppText>
+            <AppText variant="priceLarge">{money(toPay)}</AppText>
+          </View>
         </View>
-    );
+
+        {(hasSavings || hasTokens) && (
+          <View style={styles.footerStrip}>
+            {hasSavings && (
+              <View style={styles.footerItem}>
+                <MaterialCommunityIcons
+                  name="check-decagram"
+                  size={wp('4%')}
+                  color={UI_COLORS.successDeep}
+                />
+                <AppText variant="captionStrong" tone="success">
+                  Saved ₹{totalSavings.toFixed(0)}
+                </AppText>
+              </View>
+            )}
+
+            {hasSavings && hasTokens ? (
+              <View style={styles.footerSplit} />
+            ) : null}
+
+            {hasTokens && (
+              <View style={styles.footerItem}>
+                <MaterialCommunityIcons
+                  name="star-four-points"
+                  size={wp('4%')}
+                  color={UI_COLORS.token}
+                />
+                <AppText variant="captionStrong" tone="token">
+                  Earn {totalBtokens} B-Tokens
+                </AppText>
+              </View>
+            )}
+          </View>
+        )}
+      </Surface>
+    </View>
+  );
 };
 
-const styles = StyleSheet.create({
-    container: {
-        marginHorizontal: 16,
-        marginTop: 2,
-    },
-    billImageBackground: {
-        width: '100%',
-        paddingVertical: 20,
-        paddingHorizontal: 20,
-        marginTop: 8,
-    },
-    billImageStyle: {
-        resizeMode: 'stretch',
-    },
-    billHeaderContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'flex-start',
-        marginBottom: 16,
-    },
-    billIcon: {
-        width: 20,
-        height: 20,
-        resizeMode: 'contain',
-    },
-    billHeaderText: {
-        fontFamily: Fonts.gilroySemiBold,
-        fontSize: 16,
-        color: '#000000',
-        marginLeft: 8,
-    },
-    billContentContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginTop: 10,
-    },
-    billContentText: {
-        fontFamily: Fonts.gilroyMedium,
-        fontSize: 12,
-        color: '#999999',
-    },
-    priceText: {
-        fontFamily: Fonts.gilroyMedium,
-        fontSize: 12,
-        color: '#000000',
-    },
-    strikethroughText: {
-        fontFamily: Fonts.gilroyMedium,
-        fontSize: 12,
-        color: '#999999',
-        textDecorationLine: 'line-through',
-        marginRight: 8,
-    },
-    billDivider: {
-        borderWidth: 1,
-        borderStyle: 'dashed',
-        borderColor: '#E8E8E8',
-        marginTop: 16,
-    },
-    billSumView: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginTop: 16,
-    },
-    billSumText: {
-        fontFamily: Fonts.gilroySemiBold,
-        fontSize: 16,
-        color: '#000000',
-    },
-    savingsText: {
-        fontFamily: Fonts.gilroyMedium,
-        fontSize: 14,
-        color: colors.green,
-        marginTop: 10,
-    },
-});
-
 export default React.memo(BillSection);
+
+const styles = StyleSheet.create({
+  container: {
+    marginTop: hp('1.6%'),
+  },
+  surface: {
+    overflow: 'hidden',
+  },
+  card: {
+    padding: UI_SPACING.lg,
+  },
+  group: {
+    marginTop: UI_SPACING.md,
+    gap: hp('1%'),
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: UI_SPACING.md,
+  },
+  rowLabel: {
+    flex: 1,
+  },
+  valueWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: UI_SPACING.xs,
+  },
+  strike: {
+    textDecorationLine: 'line-through',
+  },
+  rule: {
+    marginTop: UI_SPACING.md,
+  },
+  dashedRule: {
+    marginTop: UI_SPACING.md,
+    marginBottom: 0,
+  },
+  toPayRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: UI_SPACING.md,
+    marginTop: UI_SPACING.md,
+  },
+  toPayLabel: {
+    flex: 1,
+  },
+  footerStrip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: UI_COLORS.successTint,
+    paddingHorizontal: UI_SPACING.lg,
+    paddingVertical: hp('1.1%'),
+    gap: UI_SPACING.md,
+    borderBottomLeftRadius: UI_RADIUS.card,
+    borderBottomRightRadius: UI_RADIUS.card,
+  },
+  footerItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: UI_SPACING.xs + 2,
+  },
+  footerSplit: {
+    width: StyleSheet.hairlineWidth,
+    alignSelf: 'stretch',
+    backgroundColor: UI_COLORS.successEdge,
+  },
+});

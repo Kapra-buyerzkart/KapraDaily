@@ -42,6 +42,12 @@ import {
 import { useWishlist } from '../../context/WishlistContext';
 import FallbackImage from '../../components/FallbackImage';
 import { getKshopeAreaId } from '../../globals/storage';
+import Toast from 'react-native-simple-toast';
+import { isCartSuccess, cartErrorMessage } from '../../utils/cartFeedback';
+
+const ADD_FAILED = 'Could not add this item to your cart';
+const UPDATE_FAILED = 'Could not update the quantity';
+const REMOVE_FAILED = 'Could not remove this item';
 
 const ProductDetailsScreen = () => {
   const route = useRoute();
@@ -169,6 +175,12 @@ const ProductDetailsScreen = () => {
         response = await addToCartApi(productId, 1, pincodeAreaId);
       }
 
+      if (!isCartSuccess(response)) {
+        Toast.show(cartErrorMessage(response, ADD_FAILED), Toast.SHORT);
+        await loadCart();
+        return;
+      }
+
       await loadCart();
 
       setProductDetails((prev: any) => ({
@@ -179,7 +191,7 @@ const ProductDetailsScreen = () => {
         },
       }));
     } catch (error) {
-      console.error('Error modifying cart:', error);
+      Toast.show(cartErrorMessage(error, ADD_FAILED), Toast.SHORT);
     } finally {
       showLoader(false);
     }
@@ -205,6 +217,12 @@ const ProductDetailsScreen = () => {
         response = await addToCartApi(productId, 1, pincodeAreaId);
       }
 
+      if (!isCartSuccess(response)) {
+        Toast.show(cartErrorMessage(response, UPDATE_FAILED), Toast.SHORT);
+        await loadCart();
+        return;
+      }
+
       await loadCart();
 
       setProductDetails((prev: any) => ({
@@ -215,7 +233,7 @@ const ProductDetailsScreen = () => {
         },
       }));
     } catch (error) {
-      console.error('Error modifying cart:', error);
+      Toast.show(cartErrorMessage(error, UPDATE_FAILED), Toast.SHORT);
     } finally {
       showLoader(false);
     }
@@ -229,12 +247,18 @@ const ProductDetailsScreen = () => {
       );
 
       if (existingItem) {
-        await removeFromCartApi(
+        const response = await removeFromCartApi(
           existingItem.cartItemId,
           cartSummary?.cartVersion,
           productId,
           pincodeAreaId,
         );
+
+        if (!isCartSuccess(response)) {
+          Toast.show(cartErrorMessage(response, REMOVE_FAILED), Toast.SHORT);
+          await loadCart();
+          return;
+        }
       }
 
       await loadCart();
@@ -247,7 +271,7 @@ const ProductDetailsScreen = () => {
         },
       }));
     } catch (error) {
-      console.error('Error removing from cart:', error);
+      Toast.show(cartErrorMessage(error, REMOVE_FAILED), Toast.SHORT);
     } finally {
       showLoader(false);
     }

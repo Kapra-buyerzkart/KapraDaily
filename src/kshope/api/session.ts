@@ -3,7 +3,7 @@ import { getAccessToken as getHostAccessToken } from '../../api/tokenService';
 import { getUserIdFromToken } from '../../utils/jwt';
 import secureStore from '../../utils/secureStore';
 import logger from '../../utils/logger';
-import { clearKshopeLocalData } from '../globals/storage';
+import { clearKshopeLocalData, ensureKshopeAreaId } from '../globals/storage';
 
 export interface HostAuthData {
   custId?: number | null;
@@ -42,6 +42,7 @@ export const syncKshopeSession = async (
     }
 
     await kshopeTokenStore.setTokens(kshope.accessToken, kshope.refreshToken || '');
+    await ensureKshopeAreaId();
 
     const hostCustId =
       authData?.custId ?? getUserIdFromToken(await getHostAccessToken());
@@ -72,6 +73,7 @@ export const ensureKshopeSession = async (): Promise<boolean> => {
     return false;
   }
 
+  await ensureKshopeAreaId();
   return true;
 };
 

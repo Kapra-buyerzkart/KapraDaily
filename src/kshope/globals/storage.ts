@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import KSHOPE_CONFIG from './config';
 
 export const KSHOPE_KEYS = Object.freeze({
   AREA_ID: 'KSHOPE_PINCODE_AREA_ID',
@@ -20,6 +21,13 @@ export const setKshopeAreaId = async (id: number | null): Promise<void> => {
     return;
   }
   await AsyncStorage.setItem(KSHOPE_KEYS.AREA_ID, String(id));
+};
+
+export const ensureKshopeAreaId = async (): Promise<number> => {
+  const existing = await getKshopeAreaId();
+  if (existing !== null) return existing;
+  await setKshopeAreaId(KSHOPE_CONFIG.default_pincode_area_id);
+  return KSHOPE_CONFIG.default_pincode_area_id;
 };
 
 export const getCachedProfile = async (): Promise<any | null> => {

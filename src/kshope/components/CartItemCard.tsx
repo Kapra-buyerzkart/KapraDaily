@@ -1,10 +1,16 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { AppIcons } from '../assets/icons';
-import { colors } from '../theme/colours';
-import { Fonts } from '../theme/fonts';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { AppText, Surface, Badge, PriceBlock } from './atoms';
 import FallbackImage from './FallbackImage';
+import {
+  UI_COLORS,
+  UI_RADIUS,
+  UI_SPACING,
+  hitSlopTo,
+  wp,
+} from '../theme/tokens';
 
 export interface CartItem {
   id: string;
@@ -23,205 +29,184 @@ interface CartItemCardProps {
   onDecrement?: (id: string) => void;
 }
 
+const hasDiscount = (discount: string) =>
+  !!discount && parseFloat(discount) > 0;
+
 const CartItemCard: React.FC<CartItemCardProps> = ({
   item,
   onDelete,
   onIncrement,
   onDecrement,
 }) => {
+  const isLastUnit = item.quantity <= 1;
+
   return (
-    <View style={styles.itemCard}>
-      <View style={styles.itemTopRow}>
-        <View style={styles.imageContainer}>
+    <Surface inset={false} style={styles.card}>
+      <View style={styles.row}>
+        <View style={styles.imageWrap}>
           <FallbackImage
             source={
               item.image
                 ? { uri: item.image }
                 : require('../assets/images/logos/noimage.png')
             }
-            style={styles.itemImage}
+            style={styles.image}
             resizeMode="contain"
           />
-          <TouchableOpacity
-            style={styles.deleteButton}
-            onPress={() => onDelete?.(item.id)}
-          >
-            <AppIcons.Delete color={'red'} size={14} />
-          </TouchableOpacity>
         </View>
-        <View style={styles.itemDetails}>
-          <Text style={styles.itemTitle} numberOfLines={2}>
-            {item.title}
-          </Text>
-          <View style={styles.variantRowContainer} />
 
-          <Text style={styles.mrpText}>
-            MRP{' '}
-            <Text style={{ textDecorationLine: 'line-through' }}>
-              ₹{item.originalPrice.toFixed(2)}
-            </Text>
-          </Text>
+        <View style={styles.details}>
+          <View style={styles.titleRow}>
+            <AppText variant="label" numberOfLines={2} style={styles.title}>
+              {item.title}
+            </AppText>
+            <TouchableOpacity
+              onPress={() => onDelete?.(item.id)}
+              hitSlop={hitSlopTo(wp('5%'))}
+              accessibilityRole="button"
+              accessibilityLabel={`Remove ${item.title} from cart`}
+            >
+              <MaterialCommunityIcons
+                name="trash-can-outline"
+                size={wp('4.6%')}
+                color={UI_COLORS.textFaint}
+              />
+            </TouchableOpacity>
+          </View>
+
+          {hasDiscount(item.discount) && (
+            <Badge
+              tone="success"
+              label={`${item.discount} OFF`}
+              style={styles.badge}
+            />
+          )}
 
           <View style={styles.priceQtyRow}>
-            <Text style={styles.priceText}>
-              <Text style={styles.rupeeSign}>₹</Text>
-              {item.price.toFixed(2)}
-            </Text>
+            <PriceBlock
+              price={item.price.toFixed(2)}
+              mrp={item.originalPrice ? item.originalPrice.toFixed(2) : null}
+              align="flex-start"
+            />
 
-            <View style={styles.quantitySelector}>
+            <View style={styles.stepper}>
               <TouchableOpacity
                 activeOpacity={0.8}
                 onPress={() => onDecrement?.(item.id)}
+                accessibilityRole="button"
+                accessibilityLabel={
+                  isLastUnit
+                    ? `Remove ${item.title} from cart`
+                    : `Decrease ${item.title} quantity`
+                }
               >
                 <LinearGradient
-                  colors={['#F25000', '#FF6A00']}
+                  colors={[UI_COLORS.primary, UI_COLORS.primarySoft]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={styles.qtyBtn}
                 >
-                  <AppIcons.Back color={colors.white} size={14} />
+                  <MaterialCommunityIcons
+                    name={isLastUnit ? 'trash-can-outline' : 'minus'}
+                    size={wp('4%')}
+                    color={UI_COLORS.onPrimary}
+                  />
                 </LinearGradient>
               </TouchableOpacity>
-              <Text style={styles.qtyText}>
+
+              <AppText variant="labelStrong" style={styles.qtyText}>
                 {String(item.quantity).padStart(2, '0')}
-              </Text>
+              </AppText>
+
               <TouchableOpacity
                 activeOpacity={0.8}
                 onPress={() => onIncrement?.(item.id)}
+                accessibilityRole="button"
+                accessibilityLabel={`Increase ${item.title} quantity`}
               >
                 <LinearGradient
-                  colors={['#F25000', '#FF6A00']}
+                  colors={[UI_COLORS.primary, UI_COLORS.primarySoft]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={styles.qtyBtn}
                 >
-                  <AppIcons.Forward color={colors.white} size={14} />
+                  <MaterialCommunityIcons
+                    name="plus"
+                    size={wp('4%')}
+                    color={UI_COLORS.onPrimary}
+                  />
                 </LinearGradient>
               </TouchableOpacity>
             </View>
           </View>
         </View>
       </View>
-    </View>
+    </Surface>
   );
 };
 
-const styles = StyleSheet.create({
-    itemCard: {
-        backgroundColor: colors.white,
-        borderRadius: 16,
-        padding: 12,
-        marginBottom: 12,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 4,
-        elevation: 2,
-    },
-    itemTopRow: {
-        flexDirection: 'row',
-    },
-    imageContainer: {
-        position: 'relative',
-    },
-    itemImage: {
-        width: 100,
-        height: 100,
-        borderRadius: 16,
-        borderWidth: 1,
-        borderColor: '#F0F0F0',
-    },
-    deleteButton: {
-        position: 'absolute',
-        top: -6,
-        left: -6,
-        backgroundColor: colors.white,
-        borderRadius: 12,
-        width: 24,
-        height: 24,
-        justifyContent: 'center',
-        alignItems: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
-        elevation: 2,
-        borderWidth: 1,
-        borderColor: '#EEEEEE',
-    },
-    itemDetails: {
-        flex: 1,
-        marginLeft: 15,
-        justifyContent: 'space-between',
-    },
-    itemTitle: {
-        fontSize: 14,
-        color: colors.black,
-        fontFamily: Fonts.gilroyMedium,
-        lineHeight: 18,
-    },
-    variantRowContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginTop: 4,
-    },
-    variantRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    variantLabel: {
-        fontSize: 12,
-        color: '#999999',
-        fontFamily: Fonts.gilroyMedium,
-    },
-    variantValue: {
-        fontSize: 12,
-        color: colors.black,
-        fontFamily: Fonts.gilroyMedium,
-    },
-    colorCircle: {
-        width: 12,
-        height: 12,
-        borderRadius: 6,
-    },
-    mrpText: {
-        fontSize: 10,
-        color: '#999999',
-        fontFamily: Fonts.gilroyMedium,
-        marginTop: 6,
-    },
-    priceQtyRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginTop: 2,
-    },
-    priceText: {
-        fontSize: 16,
-        color: colors.black,
-        fontFamily: Fonts.gilroyBold,
-    },
-    rupeeSign: {
-        fontFamily: Fonts.gilroyBold,
-        fontSize: 16,
-    },
-    quantitySelector: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    qtyBtn: {
-        width: 28,
-        height: 28,
-        borderRadius: 14,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    qtyText: {
-        paddingHorizontal: 12,
-        fontSize: 14,
-        fontFamily: Fonts.gilroyBold,
-        color: colors.black,
-    },
-});
+export default React.memo(CartItemCard);
 
-export default CartItemCard;
+const styles = StyleSheet.create({
+  card: {
+    padding: UI_SPACING.md,
+    marginBottom: UI_SPACING.md,
+  },
+  row: {
+    flexDirection: 'row',
+    gap: UI_SPACING.md,
+  },
+  imageWrap: {
+    width: wp('22%'),
+    height: wp('22%'),
+    borderRadius: UI_RADIUS.productCard,
+    backgroundColor: UI_COLORS.well,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: UI_COLORS.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  image: {
+    width: '86%',
+    height: '86%',
+  },
+  details: {
+    flex: 1,
+    justifyContent: 'space-between',
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: UI_SPACING.sm,
+  },
+  title: {
+    flex: 1,
+  },
+  badge: {
+    marginTop: UI_SPACING.xs + 2,
+  },
+  priceQtyRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    gap: UI_SPACING.sm,
+    marginTop: UI_SPACING.sm,
+  },
+  stepper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  qtyBtn: {
+    width: wp('7.5%'),
+    height: wp('7.5%'),
+    borderRadius: UI_RADIUS.pill,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  qtyText: {
+    paddingHorizontal: UI_SPACING.md,
+    minWidth: wp('11%'),
+    textAlign: 'center',
+  },
+});

@@ -31,8 +31,11 @@ export const useAuthSuccess = () => {
     prefetchLandingPageImages(landingPageImages);
   }, [landingPageImages]);
 
-  const isKshopeEnabled =
-    generalSettings?.showkshope === '1' || generalSettings?.showkshope === 1;
+  // TEMP: backend gate disabled while the kshope module is being tested.
+  // Restore the commented expression to gate on general/settings again.
+  // const isKshopeEnabled =
+  //   generalSettings?.showkshope === '1' || generalSettings?.showkshope === 1;
+  const isKshopeEnabled = true;
 
   const actions = useMemo(
     () => ({

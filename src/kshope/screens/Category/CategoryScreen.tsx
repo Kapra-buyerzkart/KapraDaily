@@ -5,7 +5,6 @@ import {
   ScrollView,
   TouchableOpacity,
   FlatList,
-  ImageBackground,
   ActivityIndicator,
   TextInput,
 } from 'react-native';
@@ -55,6 +54,7 @@ const CategoryScreen = () => {
   const [pageSize, setPageSize] = useState(100);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const [bannerFailed, setBannerFailed] = useState(false);
   const { showLoader } = useContext(LoaderContext) || { showLoader: () => {} };
   const { toggleWishlist, isInWishlist, loadWishlist } = useWishlist();
   const productListRef = useRef<FlatList>(null);
@@ -67,7 +67,7 @@ const CategoryScreen = () => {
 
   const debouncedSearchText = useDebounce(searchText, 500);
 
-  const getImageUrl = (imagePath: string) => {
+  const getImageUrl = (imagePath?: string | null) => {
     if (!imagePath) return require('../../assets/images/logos/noimage.png');
     if (imagePath.startsWith('http')) return { uri: imagePath };
     return {
@@ -94,6 +94,7 @@ const CategoryScreen = () => {
   }, []);
 
   useEffect(() => {
+    setBannerFailed(false);
     if (selectedCategoryId) {
       fetchSubCategories(selectedCategoryId);
     }
@@ -342,9 +343,14 @@ const CategoryScreen = () => {
     </TouchableOpacity>
   );
 
-  const categoryName =
-    categoriesList.find(c => c.catId?.toString() === selectedCategoryId)
-      ?.catName || 'Categories';
+  const activeCategory = categoriesList.find(
+    c => c.catId?.toString() === selectedCategoryId,
+  );
+
+  const bannerUrl = activeCategory?.mobBannerImgUrl;
+  const showBannerFallback = !bannerUrl || bannerFailed;
+
+  const categoryName = activeCategory?.catName || 'Categories';
 
   const renderSubCategories = React.useCallback(() => {
     if (!subCategoriesList || subCategoriesList.length === 0) return null;
@@ -442,23 +448,14 @@ const CategoryScreen = () => {
         </View>
       )}
 
-      {categoriesList.map((cat: any, index: number) => {
-        const isActive = selectedCategoryId === cat.catId?.toString();
-        return (
-          isActive && (
-            <View
-              key={cat.catId?.toString() || index}
-              style={styles.bannerContainer}
-            >
-              <ImageBackground
-                source={getImageUrl(cat.mobBannerImgUrl)}
-                style={styles.bannerBg}
-                resizeMode="cover"
-              />
-            </View>
-          )
-        );
-      })}
+      <View style={styles.bannerContainer}>
+        <FallbackImage
+          source={getImageUrl(bannerUrl)}
+          onError={() => setBannerFailed(true)}
+          style={showBannerFallback ? styles.bannerFallback : styles.bannerBg}
+          resizeMode={showBannerFallback ? 'contain' : 'cover'}
+        />
+      </View>
 
       <View style={styles.mainContent}>
         <View style={styles.sidebarContainer}>
@@ -590,10 +587,7 @@ const CategoryScreen = () => {
           }, 400);
         }}
         categoryName={categoryName}
-        categoryImage={
-          categoriesList.find(c => c.catId?.toString() === selectedCategoryId)
-            ?.imageUrl
-        }
+        categoryImage={activeCategory?.imageUrl}
       />
       <FloatingCartButton />
     </View>

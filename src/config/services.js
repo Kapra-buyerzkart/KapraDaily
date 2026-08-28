@@ -37,7 +37,9 @@ export const SERVICES = [
     iconColor: '#00BCD4',
     logo: require('../assets/images/modal/48hrDealIcon.png'),
     titleImage: require('../assets/images/modal/48hrImage.png'),
-    enabledSettingKey: 'showkshope',
+    // TEMP: backend gate disabled while the kshope module is being tested.
+    // Restore this line to gate the tile on general/settings again.
+    // enabledSettingKey: 'showkshope',
   },
   {
     id: 'quickCommerce',
