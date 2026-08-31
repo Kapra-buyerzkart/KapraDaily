@@ -5,3 +5,4 @@ export { default as Divider } from './Divider';
 export { default as IconDisc } from './IconDisc';
 export { default as SectionHeading } from './SectionHeading';
 export { default as PriceBlock } from './PriceBlock';
+export { default as Shimmer } from './Shimmer';

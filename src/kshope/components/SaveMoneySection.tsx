@@ -17,6 +17,7 @@ export interface SaveMoneySectionProps {
   availableBCoins?: number;
   onApplyOffer: (offerId: string) => void;
   onRejectOffer: (offerId: string) => void;
+  bordered?: boolean;
 }
 
 const SaveMoneySection: React.FC<SaveMoneySectionProps> = ({
@@ -26,12 +27,13 @@ const SaveMoneySection: React.FC<SaveMoneySectionProps> = ({
   availableBCoins = 0,
   onApplyOffer,
   onRejectOffer,
+  bordered = false,
 }) => {
   const bcoinsApplied = bcoinsAppliedValue > 0;
 
   return (
     <View style={styles.section}>
-      <Surface inset={false} style={styles.surface}>
+      <Surface inset={false} bordered={bordered} style={styles.surface}>
         <View style={styles.header}>
           <IconDisc size={wp('8%')} tone="brand">
             <MaterialCommunityIcons

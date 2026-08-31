@@ -11,12 +11,14 @@ export interface SurfaceProps extends ViewProps {
   position?: 'single' | 'top' | 'middle' | 'bottom';
   elevated?: boolean;
   inset?: boolean;
+  bordered?: boolean;
 }
 
 const Surface: React.FC<SurfaceProps> = ({
   position = 'single',
   elevated = true,
   inset = true,
+  bordered = false,
   style,
   children,
   ...rest
@@ -27,6 +29,7 @@ const Surface: React.FC<SurfaceProps> = ({
       styles.shell,
       inset && styles.inset,
       styles[position],
+      bordered && styles.bordered,
       elevated && UI_ELEVATION.card,
       style,
     ]}
@@ -43,6 +46,10 @@ const styles = StyleSheet.create({
   },
   inset: {
     marginHorizontal: UI_GUTTER,
+  },
+  bordered: {
+    borderWidth: 1,
+    borderColor: UI_COLORS.borderStrong,
   },
   single: {
     borderRadius: UI_RADIUS.card,

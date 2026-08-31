@@ -65,9 +65,13 @@ const BillRow: React.FC<BillRowProps> = ({
 
 interface BillSectionProps {
   billCalculations: BillCalculations;
+  bordered?: boolean;
 }
 
-const BillSection: React.FC<BillSectionProps> = ({ billCalculations }) => {
+const BillSection: React.FC<BillSectionProps> = ({
+  billCalculations,
+  bordered = false,
+}) => {
   const {
     mrpTotal = 0,
     itemTotal = 0,
@@ -95,7 +99,7 @@ const BillSection: React.FC<BillSectionProps> = ({ billCalculations }) => {
 
   return (
     <View style={styles.container}>
-      <Surface inset={false} style={styles.surface}>
+      <Surface inset={false} bordered={bordered} style={styles.surface}>
         <View style={styles.card}>
           <SectionHeading
             title="Bill summary"

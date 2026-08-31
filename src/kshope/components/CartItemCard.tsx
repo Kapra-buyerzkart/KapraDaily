@@ -24,6 +24,7 @@ export interface CartItem {
 
 interface CartItemCardProps {
   item: CartItem;
+  embedded?: boolean;
   onDelete?: (id: string) => void;
   onIncrement?: (id: string) => void;
   onDecrement?: (id: string) => void;
@@ -34,113 +35,122 @@ const hasDiscount = (discount: string) =>
 
 const CartItemCard: React.FC<CartItemCardProps> = ({
   item,
+  embedded = false,
   onDelete,
   onIncrement,
   onDecrement,
 }) => {
   const isLastUnit = item.quantity <= 1;
 
-  return (
-    <Surface inset={false} style={styles.card}>
-      <View style={styles.row}>
-        <View style={styles.imageWrap}>
-          <FallbackImage
-            source={
-              item.image
-                ? { uri: item.image }
-                : require('../assets/images/logos/noimage.png')
-            }
-            style={styles.image}
-            resizeMode="contain"
-          />
+  const content = (
+    <View style={styles.row}>
+      <View style={styles.imageWrap}>
+        <FallbackImage
+          source={
+            item.image
+              ? { uri: item.image }
+              : require('../assets/images/logos/noimage.png')
+          }
+          style={styles.image}
+          resizeMode="contain"
+        />
+      </View>
+
+      <View style={styles.details}>
+        <View style={styles.titleRow}>
+          <AppText variant="label" numberOfLines={2} style={styles.title}>
+            {item.title}
+          </AppText>
+          <TouchableOpacity
+            onPress={() => onDelete?.(item.id)}
+            hitSlop={hitSlopTo(wp('5%'))}
+            accessibilityRole="button"
+            accessibilityLabel={`Remove ${item.title} from cart`}
+          >
+            <MaterialCommunityIcons
+              name="trash-can-outline"
+              size={wp('4.6%')}
+              color={UI_COLORS.textFaint}
+            />
+          </TouchableOpacity>
         </View>
 
-        <View style={styles.details}>
-          <View style={styles.titleRow}>
-            <AppText variant="label" numberOfLines={2} style={styles.title}>
-              {item.title}
-            </AppText>
+        {hasDiscount(item.discount) && (
+          <Badge
+            tone="success"
+            label={`${item.discount} OFF`}
+            style={styles.badge}
+          />
+        )}
+
+        <View style={styles.priceQtyRow}>
+          <PriceBlock
+            price={item.price.toFixed(2)}
+            mrp={item.originalPrice ? item.originalPrice.toFixed(2) : null}
+            align="flex-start"
+          />
+
+          <View style={styles.stepper}>
             <TouchableOpacity
-              onPress={() => onDelete?.(item.id)}
-              hitSlop={hitSlopTo(wp('5%'))}
+              activeOpacity={0.8}
+              onPress={() => onDecrement?.(item.id)}
               accessibilityRole="button"
-              accessibilityLabel={`Remove ${item.title} from cart`}
+              accessibilityLabel={
+                isLastUnit
+                  ? `Remove ${item.title} from cart`
+                  : `Decrease ${item.title} quantity`
+              }
             >
-              <MaterialCommunityIcons
-                name="trash-can-outline"
-                size={wp('4.6%')}
-                color={UI_COLORS.textFaint}
-              />
+              <LinearGradient
+                colors={[UI_COLORS.primary, UI_COLORS.primarySoft]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.qtyBtn}
+              >
+                <MaterialCommunityIcons
+                  name={isLastUnit ? 'trash-can-outline' : 'minus'}
+                  size={wp('4%')}
+                  color={UI_COLORS.onPrimary}
+                />
+              </LinearGradient>
             </TouchableOpacity>
-          </View>
 
-          {hasDiscount(item.discount) && (
-            <Badge
-              tone="success"
-              label={`${item.discount} OFF`}
-              style={styles.badge}
-            />
-          )}
+            <AppText variant="labelStrong" style={styles.qtyText}>
+              {String(item.quantity).padStart(2, '0')}
+            </AppText>
 
-          <View style={styles.priceQtyRow}>
-            <PriceBlock
-              price={item.price.toFixed(2)}
-              mrp={item.originalPrice ? item.originalPrice.toFixed(2) : null}
-              align="flex-start"
-            />
-
-            <View style={styles.stepper}>
-              <TouchableOpacity
-                activeOpacity={0.8}
-                onPress={() => onDecrement?.(item.id)}
-                accessibilityRole="button"
-                accessibilityLabel={
-                  isLastUnit
-                    ? `Remove ${item.title} from cart`
-                    : `Decrease ${item.title} quantity`
-                }
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => onIncrement?.(item.id)}
+              accessibilityRole="button"
+              accessibilityLabel={`Increase ${item.title} quantity`}
+            >
+              <LinearGradient
+                colors={[UI_COLORS.primary, UI_COLORS.primarySoft]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.qtyBtn}
               >
-                <LinearGradient
-                  colors={[UI_COLORS.primary, UI_COLORS.primarySoft]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.qtyBtn}
-                >
-                  <MaterialCommunityIcons
-                    name={isLastUnit ? 'trash-can-outline' : 'minus'}
-                    size={wp('4%')}
-                    color={UI_COLORS.onPrimary}
-                  />
-                </LinearGradient>
-              </TouchableOpacity>
-
-              <AppText variant="labelStrong" style={styles.qtyText}>
-                {String(item.quantity).padStart(2, '0')}
-              </AppText>
-
-              <TouchableOpacity
-                activeOpacity={0.8}
-                onPress={() => onIncrement?.(item.id)}
-                accessibilityRole="button"
-                accessibilityLabel={`Increase ${item.title} quantity`}
-              >
-                <LinearGradient
-                  colors={[UI_COLORS.primary, UI_COLORS.primarySoft]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.qtyBtn}
-                >
-                  <MaterialCommunityIcons
-                    name="plus"
-                    size={wp('4%')}
-                    color={UI_COLORS.onPrimary}
-                  />
-                </LinearGradient>
-              </TouchableOpacity>
-            </View>
+                <MaterialCommunityIcons
+                  name="plus"
+                  size={wp('4%')}
+                  color={UI_COLORS.onPrimary}
+                />
+              </LinearGradient>
+            </TouchableOpacity>
           </View>
         </View>
       </View>
+    </View>
+  );
+
+  if (embedded) {
+    return <View style={styles.embeddedRow}>{content}</View>;
+  }
+
+  return (
+    <Surface inset={false} style={styles.card}>
+      {content}
     </Surface>
   );
 };
@@ -151,6 +161,10 @@ const styles = StyleSheet.create({
   card: {
     padding: UI_SPACING.md,
     marginBottom: UI_SPACING.md,
+  },
+  embeddedRow: {
+    paddingHorizontal: UI_SPACING.lg,
+    paddingVertical: UI_SPACING.md,
   },
   row: {
     flexDirection: 'row',

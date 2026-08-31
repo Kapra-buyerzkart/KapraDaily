@@ -6,6 +6,7 @@ import {
   ScrollView,
   RefreshControl,
   Modal,
+  StatusBar,
 } from 'react-native';
 import React, { useContext, useState, useEffect, useRef } from 'react';
 import {
@@ -13,21 +14,14 @@ import {
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useIsFocused } from '@react-navigation/native';
 import CartItemCard from '../../components/CartItemCard';
 import SaveMoneySection from '../../components/SaveMoneySection';
-import { AppText, Badge } from '../../components/atoms';
+import { AppText, Badge, Divider } from '../../components/atoms';
 import CartStepper from './components/CartStepper';
 import AddressCard from './components/AddressCard';
 import CheckoutBar from './components/CheckoutBar';
-import {
-  UI_COLORS,
-  UI_ELEVATION,
-  UI_RADIUS,
-  UI_SPACING,
-  hp,
-  wp,
-} from '../../theme/tokens';
+import { UI_COLORS, UI_RADIUS, UI_SPACING, hp, wp } from '../../theme/tokens';
 import { colors } from '../../theme/colours';
 import { Fonts } from '../../theme/fonts';
 import { AppIcons } from '../../assets/icons';
@@ -48,6 +42,22 @@ import {
 import RazorpayCheckout from 'react-native-razorpay';
 import Toast from 'react-native-simple-toast';
 import { isCartSuccess, cartErrorMessage } from '../../utils/cartFeedback';
+
+const CartStatusBar = () => {
+  const isFocused = useIsFocused();
+
+  if (!isFocused) {
+    return null;
+  }
+
+  return (
+    <StatusBar
+      translucent
+      backgroundColor="transparent"
+      barStyle="dark-content"
+    />
+  );
+};
 
 const QTY_UPDATE_FAILED = 'Could not update the quantity';
 const ITEM_REMOVE_FAILED = 'Could not remove this item';
@@ -575,6 +585,7 @@ const CartScreen = () => {
   if (cartItems.length === 0 && !isFinalizingOrder) {
     return (
       <SafeAreaView style={styles.container}>
+        <CartStatusBar />
         <View style={styles.header}>
           <TouchableOpacity
             onPress={() => navigation.goBack()}
@@ -595,6 +606,7 @@ const CartScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+      <CartStatusBar />
       <View style={styles.topContainer}>
         <View style={styles.header}>
           <TouchableOpacity
@@ -623,7 +635,7 @@ const CartScreen = () => {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        <View>
+        <View style={styles.sectionCard}>
           <View style={styles.itemsHeading}>
             <AppText variant="heading">Your items</AppText>
             <Badge
@@ -634,41 +646,44 @@ const CartScreen = () => {
             />
           </View>
           {mappedItems.map(item => (
-            <CartItemCard
-              key={item.id}
-              item={item}
-              onDelete={id => {
-                const originalItem = cartItems.find(
-                  i => String(i.cartItemId) === id,
-                );
-                if (originalItem) setItemToRemove(originalItem);
-              }}
-              onIncrement={id => {
-                const originalItem = cartItems.find(
-                  i => String(i.cartItemId) === id,
-                );
-                if (originalItem)
-                  handleUpdateQty(
-                    originalItem,
-                    (originalItem.quantity || 0) + 1,
+            <React.Fragment key={item.id}>
+              <Divider inset={UI_SPACING.lg} />
+              <CartItemCard
+                item={item}
+                embedded
+                onDelete={id => {
+                  const originalItem = cartItems.find(
+                    i => String(i.cartItemId) === id,
                   );
-              }}
-              onDecrement={id => {
-                const originalItem = cartItems.find(
-                  i => String(i.cartItemId) === id,
-                );
-                if (originalItem) {
-                  if ((originalItem.quantity || 0) <= 1) {
-                    setItemToRemove(originalItem);
-                  } else {
+                  if (originalItem) setItemToRemove(originalItem);
+                }}
+                onIncrement={id => {
+                  const originalItem = cartItems.find(
+                    i => String(i.cartItemId) === id,
+                  );
+                  if (originalItem)
                     handleUpdateQty(
                       originalItem,
-                      (originalItem.quantity || 0) - 1,
+                      (originalItem.quantity || 0) + 1,
                     );
+                }}
+                onDecrement={id => {
+                  const originalItem = cartItems.find(
+                    i => String(i.cartItemId) === id,
+                  );
+                  if (originalItem) {
+                    if ((originalItem.quantity || 0) <= 1) {
+                      setItemToRemove(originalItem);
+                    } else {
+                      handleUpdateQty(
+                        originalItem,
+                        (originalItem.quantity || 0) - 1,
+                      );
+                    }
                   }
-                }
-              }}
-            />
+                }}
+              />
+            </React.Fragment>
           ))}
         </View>
 
@@ -684,8 +699,9 @@ const CartScreen = () => {
           }
           onApplyOffer={onApplyOffer}
           onRejectOffer={onRejectOffer}
+          bordered
         />
-        <BillSection billCalculations={billCalculations} />
+        <BillSection billCalculations={billCalculations} bordered />
       </ScrollView>
 
       <CheckoutBar
@@ -872,16 +888,14 @@ export default CartScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: UI_COLORS.canvas,
+    backgroundColor: UI_COLORS.card,
   },
   topContainer: {
     backgroundColor: UI_COLORS.card,
-    borderBottomLeftRadius: UI_RADIUS.card + 8,
-    borderBottomRightRadius: UI_RADIUS.card + 8,
     paddingBottom: UI_SPACING.lg,
-    marginBottom: UI_SPACING.xs,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: UI_COLORS.borderStrong,
     zIndex: 10,
-    ...UI_ELEVATION.raised,
   },
   header: {
     flexDirection: 'row',
@@ -900,14 +914,22 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: UI_SPACING.lg,
-    paddingTop: UI_SPACING.md,
+    paddingTop: UI_SPACING.lg,
     paddingBottom: hp('20%'),
+  },
+  sectionCard: {
+    backgroundColor: UI_COLORS.card,
+    borderRadius: UI_RADIUS.card,
+    borderWidth: 1,
+    borderColor: UI_COLORS.borderStrong,
+    overflow: 'hidden',
   },
   itemsHeading: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: UI_SPACING.sm,
-    marginBottom: UI_SPACING.md,
+    paddingHorizontal: UI_SPACING.lg,
+    paddingVertical: UI_SPACING.md,
   },
   modalOverlay: {
     flex: 1,

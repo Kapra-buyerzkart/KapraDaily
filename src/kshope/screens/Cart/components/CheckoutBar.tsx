@@ -113,6 +113,8 @@ const styles = StyleSheet.create({
     backgroundColor: UI_COLORS.card,
     borderTopLeftRadius: UI_RADIUS.card + 8,
     borderTopRightRadius: UI_RADIUS.card + 8,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: UI_COLORS.borderStrong,
     paddingBottom: hp('4%'),
     overflow: 'hidden',
     ...UI_ELEVATION.bar,
