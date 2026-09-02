@@ -2,9 +2,9 @@ import React from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { HOME_ART } from '../assets';
-import { RECENTLY_VIEWED } from '../content';
 import { SectionTitle, StrikePrice } from '../parts';
 import { HOME_COLORS, HOME_FONTS, fs, s } from '../theme';
+import type { RecentItem } from '../data/mappers';
 
 const ArrowSmall: React.FC = () => (
   <Svg width={s(12)} height={s(9)} viewBox="0 0 22 16" fill="none">
@@ -19,11 +19,16 @@ const ArrowSmall: React.FC = () => (
 );
 
 type Props = {
+  items: RecentItem[];
   onSeeAll?: () => void;
   onPressBanner?: () => void;
 };
 
-const RecentlyViewed: React.FC<Props> = ({ onSeeAll, onPressBanner }) => (
+const RecentlyViewed: React.FC<Props> = ({
+  items,
+  onSeeAll,
+  onPressBanner,
+}) => (
   <View style={styles.wrap}>
     <View style={styles.titleRow}>
       <SectionTitle text="Recently Viewed" />
@@ -43,7 +48,7 @@ const RecentlyViewed: React.FC<Props> = ({ onSeeAll, onPressBanner }) => (
     />
 
     <View style={styles.metaRow}>
-      {RECENTLY_VIEWED.map(item => (
+      {items.map(item => (
         <View key={item.id} style={styles.metaCell}>
           <View style={styles.priceLine}>
             <Text style={styles.price} numberOfLines={1}>

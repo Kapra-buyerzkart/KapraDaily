@@ -1,6 +1,8 @@
 import React from 'react';
 import renderer, { act } from 'react-test-renderer';
 
+jest.mock('react-native-reanimated');
+
 jest.mock('react-native-safe-area-context', () => ({
   useSafeAreaInsets: () => ({ top: 59, bottom: 34, left: 0, right: 0 }),
 }));
@@ -9,6 +11,28 @@ jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ navigate: jest.fn() }),
   useIsFocused: () => true,
 }));
+
+jest.mock('../src/kshope/api/services/homeService', () => ({
+  getHomepageData: jest.fn(() => Promise.reject(new Error('offline'))),
+}));
+
+jest.mock('../src/kshope/globals/storage', () => ({
+  getKshopeAreaId: jest.fn(() => Promise.resolve(null)),
+}));
+
+jest.mock('../src/kshope/context/UserContext', () => ({
+  useUser: () => ({ profile: null }),
+}));
+
+jest.mock('../src/kshope/context/WishlistContext', () => ({
+  useWishlist: () => ({ toggleWishlist: jest.fn(), isInWishlist: () => false }),
+}));
+
+jest.mock('../src/kshope/screens/Home/HomeSkeleton', () => {
+  const React2 = require('react');
+  const { View } = require('react-native');
+  return { __esModule: true, default: () => React2.createElement(View) };
+});
 
 jest.mock('react-native-svg', () => {
   const React2 = require('react');
@@ -27,22 +51,24 @@ const flatten = node => {
   return flatten(node.children);
 };
 
-const renderScreen = () => {
+// The homepage request is mocked to fail, so every section falls back to the
+// static design content — which is exactly the path these assertions cover.
+const renderScreen = async () => {
   let tree;
-  act(() => {
+  await act(async () => {
     tree = renderer.create(React.createElement(HomeRedesignScreen));
   });
   return tree;
 };
 
 describe('home redesign screen', () => {
-  it('renders without crashing', () => {
-    const tree = renderScreen();
+  it('renders without crashing', async () => {
+    const tree = await renderScreen();
     expect(tree.toJSON()).toBeTruthy();
   });
 
-  it('renders every section heading from the design', () => {
-    const text = flatten(renderScreen().toJSON()).join('\n');
+  it('renders every section heading from the design', async () => {
+    const text = flatten((await renderScreen()).toJSON()).join('\n');
 
     [
       'Home',
@@ -61,14 +87,17 @@ describe('home redesign screen', () => {
     ].forEach(heading => expect(text).toContain(heading));
   });
 
-  it('renders the header search placeholder and address', () => {
-    const text = flatten(renderScreen().toJSON()).join('\n');
-    expect(text).toContain("Search For 'Cookware'");
+  // The Figma header was replaced by the app's existing HomeHeader, which
+  // renders its own rotating search placeholder rather than a fixed string.
+  it('renders the reused header with its title, address and tabs', async () => {
+    const text = flatten((await renderScreen()).toJSON()).join('\n');
+    expect(text).toContain('Home');
     expect(text).toContain('Kapra Group, 2nd floor, nandhanam....');
+    expect(text).toContain('All');
   });
 
-  it('renders the featured products with prices and discounts', () => {
-    const text = flatten(renderScreen().toJSON()).join('\n');
+  it('renders the featured products with prices and discounts', async () => {
+    const text = flatten((await renderScreen()).toJSON()).join('\n');
     expect(text).toContain('Impex');
     expect(text).toContain('900 w Iron Box');
     expect(text).toContain('$1,500/-');
@@ -77,8 +106,8 @@ describe('home redesign screen', () => {
     expect(text).toContain('Samsung');
   });
 
-  it('renders all six recommended cards', () => {
-    const text = flatten(renderScreen().toJSON()).join('\n');
+  it('renders all six recommended cards', async () => {
+    const text = flatten((await renderScreen()).toJSON()).join('\n');
     [
       'boAt Rockerz 450',
       'Safari pentagon',
@@ -89,18 +118,19 @@ describe('home redesign screen', () => {
     ].forEach(name => expect(text).toContain(name));
   });
 
-  it('renders both explore rows', () => {
-    const text = flatten(renderScreen().toJSON()).join('\n');
+  it('renders both explore rows', async () => {
+    const text = flatten((await renderScreen()).toJSON()).join('\n');
     ['Smartphones', 'Lights & Lamps', 'Fridge', 'Washing Machine', 'Furniture']
       .forEach(label => expect(text).toContain(label));
     ['Air conditioning', 'Kitchen', 'Television', 'Camera', 'Smartwatch']
       .forEach(label => expect(text).toContain(label));
   });
 
-  it('uses Poppins throughout, since the design specifies it', () => {
+  it('uses Lexend throughout', () => {
     const { HOME_FONTS } = require('../src/kshope/screens/Home/redesign/theme');
-    expect(HOME_FONTS.regular).toBe('Poppins-Regular');
-    expect(HOME_FONTS.medium).toBe('Poppins-Medium');
-    expect(HOME_FONTS.semiBold).toBe('Poppins-SemiBold');
+    expect(HOME_FONTS.regular).toBe('Lexend-Regular');
+    expect(HOME_FONTS.medium).toBe('Lexend-Medium');
+    expect(HOME_FONTS.semiBold).toBe('Lexend-SemiBold');
+    expect(HOME_FONTS.bold).toBe('Lexend-Bold');
   });
 });

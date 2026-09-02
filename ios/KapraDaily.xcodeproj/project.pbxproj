@@ -32,6 +32,13 @@
 		2BBFCD8F112B4DC9A1A9695C /* Poppins-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = AF46F40F03D541258AEEE4A1 /* Poppins-SemiBold.ttf */; };
 		2680FC1AE9514F5ABF11A972 /* Poppins-Italic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = E31C3B7AB4904BEA9BF50337 /* Poppins-Italic.ttf */; };
 		B59A4407D2C84118AC3113E5 /* Poppins-MediumItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 90AD17FF9117419BB95958BF /* Poppins-MediumItalic.ttf */; };
+		FB595FEBC5FF401980C782F0 /* Madelyn-Trial-Regular.otf in Resources */ = {isa = PBXBuildFile; fileRef = 0452A22D70DB4D8B946978EF /* Madelyn-Trial-Regular.otf */; };
+		817115796E504C3CA7B1F2F2 /* MadelynFill-Trial-Regular.otf in Resources */ = {isa = PBXBuildFile; fileRef = EF99EB7E47264BFF961F4720 /* MadelynFill-Trial-Regular.otf */; };
+		62B18C2029574044BB5FB476 /* Lexend-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = F5F502F5EC904A1E9EF9AB8D /* Lexend-Regular.ttf */; };
+		93D950ADC45F496D9B02F2C0 /* MadelynFill-Trial-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A0F4DDA9A9BD49E3B80F4E81 /* MadelynFill-Trial-Regular.ttf */; };
+		F41C031165D648B79ADDFB2E /* Madelyn-Trial-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 0C3E4CB43F324166B7ED999E /* Madelyn-Trial-Regular.ttf */; };
+		68FDCF9F36FE489A925B5E1D /* Lexend-Light.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2DCB9AB9BBFD488094378EAB /* Lexend-Light.ttf */; };
+		E7932D9B4A8E4CBDB503A0AA /* Lexend-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = BFF668CDB8694517AD86B593 /* Lexend-Bold.ttf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -65,6 +72,13 @@
 		AF46F40F03D541258AEEE4A1 /* Poppins-SemiBold.ttf */ = {isa = PBXFileReference; name = "Poppins-SemiBold.ttf"; path = "../src/kshope/assets/fonts/Poppins-SemiBold.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
 		E31C3B7AB4904BEA9BF50337 /* Poppins-Italic.ttf */ = {isa = PBXFileReference; name = "Poppins-Italic.ttf"; path = "../src/kshope/assets/fonts/Poppins-Italic.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
 		90AD17FF9117419BB95958BF /* Poppins-MediumItalic.ttf */ = {isa = PBXFileReference; name = "Poppins-MediumItalic.ttf"; path = "../src/kshope/assets/fonts/Poppins-MediumItalic.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		0452A22D70DB4D8B946978EF /* Madelyn-Trial-Regular.otf */ = {isa = PBXFileReference; name = "Madelyn-Trial-Regular.otf"; path = "../src/assets/fonts/Madelyn-Trial-Regular.otf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		EF99EB7E47264BFF961F4720 /* MadelynFill-Trial-Regular.otf */ = {isa = PBXFileReference; name = "MadelynFill-Trial-Regular.otf"; path = "../src/assets/fonts/MadelynFill-Trial-Regular.otf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		F5F502F5EC904A1E9EF9AB8D /* Lexend-Regular.ttf */ = {isa = PBXFileReference; name = "Lexend-Regular.ttf"; path = "../src/assets/fonts/Lexend-Regular.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		A0F4DDA9A9BD49E3B80F4E81 /* MadelynFill-Trial-Regular.ttf */ = {isa = PBXFileReference; name = "MadelynFill-Trial-Regular.ttf"; path = "../src/assets/fonts/MadelynFill-Trial-Regular.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		0C3E4CB43F324166B7ED999E /* Madelyn-Trial-Regular.ttf */ = {isa = PBXFileReference; name = "Madelyn-Trial-Regular.ttf"; path = "../src/assets/fonts/Madelyn-Trial-Regular.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		2DCB9AB9BBFD488094378EAB /* Lexend-Light.ttf */ = {isa = PBXFileReference; name = "Lexend-Light.ttf"; path = "../src/assets/fonts/Lexend-Light.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		BFF668CDB8694517AD86B593 /* Lexend-Bold.ttf */ = {isa = PBXFileReference; name = "Lexend-Bold.ttf"; path = "../src/assets/fonts/Lexend-Bold.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -121,6 +135,13 @@
 				AF46F40F03D541258AEEE4A1 /* Poppins-SemiBold.ttf */,
 				E31C3B7AB4904BEA9BF50337 /* Poppins-Italic.ttf */,
 				90AD17FF9117419BB95958BF /* Poppins-MediumItalic.ttf */,
+				0452A22D70DB4D8B946978EF /* Madelyn-Trial-Regular.otf */,
+				EF99EB7E47264BFF961F4720 /* MadelynFill-Trial-Regular.otf */,
+				F5F502F5EC904A1E9EF9AB8D /* Lexend-Regular.ttf */,
+				A0F4DDA9A9BD49E3B80F4E81 /* MadelynFill-Trial-Regular.ttf */,
+				0C3E4CB43F324166B7ED999E /* Madelyn-Trial-Regular.ttf */,
+				2DCB9AB9BBFD488094378EAB /* Lexend-Light.ttf */,
+				BFF668CDB8694517AD86B593 /* Lexend-Bold.ttf */,
 			);
 			name = Resources;
 			path = "";
@@ -259,6 +280,13 @@
 				2BBFCD8F112B4DC9A1A9695C /* Poppins-SemiBold.ttf in Resources */,
 				2680FC1AE9514F5ABF11A972 /* Poppins-Italic.ttf in Resources */,
 				B59A4407D2C84118AC3113E5 /* Poppins-MediumItalic.ttf in Resources */,
+				FB595FEBC5FF401980C782F0 /* Madelyn-Trial-Regular.otf in Resources */,
+				817115796E504C3CA7B1F2F2 /* MadelynFill-Trial-Regular.otf in Resources */,
+				62B18C2029574044BB5FB476 /* Lexend-Regular.ttf in Resources */,
+				93D950ADC45F496D9B02F2C0 /* MadelynFill-Trial-Regular.ttf in Resources */,
+				F41C031165D648B79ADDFB2E /* Madelyn-Trial-Regular.ttf in Resources */,
+				68FDCF9F36FE489A925B5E1D /* Lexend-Light.ttf in Resources */,
+				E7932D9B4A8E4CBDB503A0AA /* Lexend-Bold.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

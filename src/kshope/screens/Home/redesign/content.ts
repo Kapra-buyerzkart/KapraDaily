@@ -4,6 +4,7 @@ export type Tile = {
   id: string;
   label: string;
   image: any;
+  raw?: any;
 };
 
 export type ProductTile = {
@@ -14,16 +15,19 @@ export type ProductTile = {
   mrp: string;
   discount: string;
   image: any;
+  raw?: any;
 };
 
 export type RecCard = {
   id: string;
+  variant?: 'product' | 'banner';
   name: string;
   subtitle: string;
   price: string;
   mrp: string;
   discount: string;
   image: any;
+  raw?: any;
 };
 
 export const HEADER_CONTENT = {
@@ -182,11 +186,11 @@ export const EXPLORE_ROW_ONE: Tile[] = [
 ];
 
 export const EXPLORE_ROW_TWO: Tile[] = [
-  { id: 'ex-ac', label: 'Air conditioning', image: HOME_ART.exploreWashingMachine },
-  { id: 'ex-kitchen', label: 'Kitchen', image: HOME_ART.exploreFridge },
-  { id: 'ex-tv', label: 'Television', image: HOME_ART.exploreSmartphones },
-  { id: 'ex-camera', label: 'Camera', image: HOME_ART.exploreLamps },
-  { id: 'ex-smartwatch', label: 'Smartwatch', image: HOME_ART.exploreFurniture },
+  { id: 'ex-ac', label: 'Air conditioning', image: HOME_ART.exploreAc },
+  { id: 'ex-kitchen', label: 'Kitchen', image: HOME_ART.exploreKitchen },
+  { id: 'ex-tv', label: 'Television', image: HOME_ART.exploreTelevision },
+  { id: 'ex-camera', label: 'Camera', image: HOME_ART.exploreCamera },
+  { id: 'ex-smartwatch', label: 'Smartwatch', image: HOME_ART.exploreSmartwatch },
 ];
 
 export const FOOTER_NOTE = 'Thank You For Exploring 48 Hrs Deal';

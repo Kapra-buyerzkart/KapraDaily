@@ -1,4 +1,7 @@
 export const HOME_ART = {
+  placeholder: require('../../../assets/images/logo.png'),
+  bannerFallback: require('../../../../assets/images/modal/48hrImage.png'),
+
   iconSearch: require('../../../assets/images/home/redesign/icon_search.png'),
   iconMic: require('../../../assets/images/home/redesign/icon_mic.png'),
   iconHeader1: require('../../../assets/images/home/redesign/icon_header_1.png'),
@@ -65,5 +68,10 @@ export const HOME_ART = {
   exploreFridge: require('../../../assets/images/home/redesign/explore_fridge.png'),
   exploreWashingMachine: require('../../../assets/images/home/redesign/explore_washingmachine.png'),
   exploreFurniture: require('../../../assets/images/home/redesign/explore_furniture.png'),
+  exploreAc: require('../../../assets/images/home/redesign/explore_ac.png'),
+  exploreKitchen: require('../../../assets/images/home/redesign/explore_kitchen.png'),
+  exploreTelevision: require('../../../assets/images/home/redesign/explore_television.png'),
+  exploreCamera: require('../../../assets/images/home/redesign/explore_camera.png'),
+  exploreSmartwatch: require('../../../assets/images/home/redesign/explore_smartwatch.png'),
   exploreFooterArt: require('../../../assets/images/home/redesign/explore_row2.png'),
 };

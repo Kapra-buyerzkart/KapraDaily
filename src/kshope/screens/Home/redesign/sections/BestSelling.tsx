@@ -1,29 +1,47 @@
 import React from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { BEST_SELLING, Tile } from '../content';
-import { SectionTitle } from '../parts';
-import { HOME_COLORS, HOME_FONTS, fs, s } from '../theme';
+import { Tile } from '../content';
+import { SectionTitle, imageSource } from '../parts';
+import {
+  GUTTER,
+  HOME_COLORS,
+  HOME_FONTS,
+  RADIUS,
+  SECTION_GAP,
+  SPACE,
+  TILE_TINTS,
+  TITLE_GAP,
+  colWidth,
+  fs,
+  s,
+} from '../theme';
 
 type Props = {
+  items: Tile[];
   onPressTile?: (item: Tile) => void;
 };
 
-const BestSelling: React.FC<Props> = ({ onPressTile }) => (
+const BestSelling: React.FC<Props> = ({ items, onPressTile }) => (
   <View style={styles.wrap}>
     <SectionTitle text="Best Selling" style={styles.title} />
 
     <View style={styles.grid}>
-      {BEST_SELLING.map(item => (
+      {items.map((item, index) => (
         <TouchableOpacity
           key={item.id}
           activeOpacity={0.9}
           onPress={() => onPressTile?.(item)}
           style={styles.cell}
         >
-          <View style={styles.tile}>
+          <View
+            style={[
+              styles.tile,
+              { backgroundColor: TILE_TINTS[index % TILE_TINTS.length] },
+            ]}
+          >
             <Image
-              source={item.image}
-              resizeMode="cover"
+              source={imageSource(item.image)}
+              resizeMode="contain"
               style={styles.tileImage}
             />
           </View>
@@ -38,31 +56,32 @@ const BestSelling: React.FC<Props> = ({ onPressTile }) => (
   </View>
 );
 
+const CELL_W = colWidth(3, SPACE.md);
+
 const styles = StyleSheet.create({
   wrap: {
     backgroundColor: HOME_COLORS.white,
   },
   title: {
-    paddingHorizontal: s(25),
-    marginTop: s(18),
+    paddingHorizontal: GUTTER,
+    marginTop: SECTION_GAP,
   },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    paddingHorizontal: s(25),
-    marginTop: s(14),
+    paddingHorizontal: GUTTER,
+    marginTop: TITLE_GAP,
+    columnGap: SPACE.md,
+    rowGap: SPACE.lg,
   },
   cell: {
-    width: s(113),
+    width: CELL_W,
     alignItems: 'center',
-    marginBottom: s(14),
   },
   tile: {
-    width: s(113),
-    height: s(107),
-    borderRadius: s(10),
-    backgroundColor: HOME_COLORS.searchField,
+    width: CELL_W,
+    height: CELL_W * 0.95,
+    borderRadius: RADIUS.md,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: HOME_COLORS.tileBorder,
     overflow: 'hidden',
@@ -73,15 +92,16 @@ const styles = StyleSheet.create({
   },
   label: {
     fontFamily: HOME_FONTS.medium,
-    fontSize: fs(14),
-    lineHeight: fs(14) * 1.3,
+    fontSize: fs(12),
+    lineHeight: fs(12) * 1.35,
     color: HOME_COLORS.black,
-    marginTop: s(7),
+    marginTop: SPACE.sm,
+    textAlign: 'center',
   },
   rule: {
     height: s(7),
     backgroundColor: HOME_COLORS.creamRule,
-    marginTop: s(6),
+    marginTop: SPACE.md,
   },
 });
 

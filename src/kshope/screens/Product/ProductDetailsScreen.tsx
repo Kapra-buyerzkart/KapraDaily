@@ -972,7 +972,9 @@ const ProductDetailsScreen = () => {
                           { color: '#F25000', fontFamily: 'Gilroy-Bold' },
                         ]}
                       >
-                        {showAllReviews ? 'Show less' : `View all (${productDetails.reviews.length})`}
+                        {showAllReviews
+                          ? 'Show less'
+                          : `View all (${productDetails.reviews.length})`}
                       </Text>
                     </TouchableOpacity>
                   )}

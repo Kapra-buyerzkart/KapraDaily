@@ -1,16 +1,39 @@
 import React from 'react';
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { CATEGORY_CARDS, CATEGORY_CHIPS, Tile } from '../content';
-import { SectionTitle } from '../parts';
-import { HOME_COLORS, HOME_FONTS, fs, s } from '../theme';
+import {
+  FlatList,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { Tile } from '../content';
+import { SectionTitle, imageSource } from '../parts';
+import {
+  CARD_GAP,
+  GUTTER,
+  HOME_COLORS,
+  HOME_FONTS,
+  RADIUS,
+  SECTION_GAP,
+  SPACE,
+  TITLE_GAP,
+  colWidth,
+  fs,
+  s,
+} from '../theme';
 
 type Props = {
+  chips: Tile[];
+  cards: Tile[];
   activeChip: string;
   onChipPress: (id: string) => void;
   onCardPress?: (item: Tile) => void;
 };
 
 const ShopByCategory: React.FC<Props> = ({
+  chips,
+  cards,
   activeChip,
   onChipPress,
   onCardPress,
@@ -21,18 +44,23 @@ const ShopByCategory: React.FC<Props> = ({
     <View style={styles.band}>
       <View style={styles.rule} />
 
-      <View style={styles.chipRow}>
-        {CATEGORY_CHIPS.map(chip => {
+      <FlatList
+        data={chips}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        keyExtractor={chip => chip.id}
+        contentContainerStyle={styles.chipRow}
+        renderItem={({ item: chip }) => {
           const isActive = chip.id === activeChip;
           return (
-            <View key={chip.id} style={styles.chipItem}>
+            <View style={styles.chipItem}>
               <TouchableOpacity
                 activeOpacity={0.85}
                 onPress={() => onChipPress(chip.id)}
                 style={[styles.chip, isActive && styles.chipActive]}
               >
                 <Image
-                  source={chip.image}
+                  source={imageSource(chip.image)}
                   resizeMode="contain"
                   style={styles.chipIcon}
                 />
@@ -45,22 +73,27 @@ const ShopByCategory: React.FC<Props> = ({
               </Text>
             </View>
           );
-        })}
-      </View>
+        }}
+      />
 
       <View style={styles.rule} />
 
-      <View style={styles.cardRow}>
-        {CATEGORY_CARDS.map(card => (
+      <FlatList
+        key={activeChip}
+        data={cards}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        keyExtractor={card => card.id}
+        contentContainerStyle={styles.cardRow}
+        renderItem={({ item: card }) => (
           <TouchableOpacity
-            key={card.id}
             activeOpacity={0.9}
             onPress={() => onCardPress?.(card)}
             style={styles.cardItem}
           >
             <View style={styles.card}>
               <Image
-                source={card.image}
+                source={imageSource(card.image)}
                 resizeMode="cover"
                 style={styles.cardImage}
               />
@@ -69,26 +102,29 @@ const ShopByCategory: React.FC<Props> = ({
               {card.label}
             </Text>
           </TouchableOpacity>
-        ))}
-      </View>
+        )}
+      />
     </View>
 
     <View style={styles.ruleThick} />
   </View>
 );
 
+const CHIP_W = colWidth(5.4, SPACE.md);
+const CARD_W = colWidth(2.6, CARD_GAP);
+
 const styles = StyleSheet.create({
   wrap: {
     backgroundColor: HOME_COLORS.white,
   },
   title: {
-    paddingHorizontal: s(25),
-    marginTop: s(15),
-    marginBottom: s(12),
+    paddingHorizontal: GUTTER,
+    marginTop: SECTION_GAP,
+    marginBottom: TITLE_GAP,
   },
   band: {
     backgroundColor: HOME_COLORS.cream,
-    paddingBottom: s(12),
+    paddingBottom: SPACE.xl,
   },
   rule: {
     height: s(4),
@@ -99,20 +135,19 @@ const styles = StyleSheet.create({
     backgroundColor: HOME_COLORS.creamRule,
   },
   chipRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: s(33),
-    paddingTop: s(5),
-    paddingBottom: s(6),
+    paddingHorizontal: GUTTER,
+    paddingTop: SPACE.lg,
+    paddingBottom: SPACE.lg,
+    gap: SPACE.md,
   },
   chipItem: {
     alignItems: 'center',
-    width: s(70),
+    width: CHIP_W,
   },
   chip: {
-    width: s(58),
-    height: s(50),
-    borderRadius: s(10),
+    width: CHIP_W,
+    height: CHIP_W * 0.86,
+    borderRadius: RADIUS.md,
     backgroundColor: HOME_COLORS.white,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: HOME_COLORS.orangeSoft,
@@ -123,34 +158,34 @@ const styles = StyleSheet.create({
     borderColor: HOME_COLORS.orange,
   },
   chipIcon: {
-    width: s(36),
-    height: s(36),
+    width: '62%',
+    height: '62%',
   },
   chipLabel: {
     fontFamily: HOME_FONTS.regular,
-    fontSize: fs(12),
-    lineHeight: fs(12) * 1.4,
+    fontSize: fs(11),
+    lineHeight: fs(11) * 1.45,
     color: HOME_COLORS.black,
-    marginTop: s(4),
+    marginTop: SPACE.xs,
+    textAlign: 'center',
   },
   chipLabelActive: {
     fontFamily: HOME_FONTS.medium,
-    fontSize: fs(13),
   },
   cardRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: s(11),
-    marginTop: s(11),
+    paddingHorizontal: GUTTER,
+    paddingTop: SPACE.lg,
+    paddingBottom: SPACE.sm,
+    gap: CARD_GAP,
   },
   cardItem: {
-    width: s(126),
+    width: CARD_W,
     alignItems: 'center',
   },
   card: {
-    width: s(126),
-    height: s(160),
-    borderRadius: s(10),
+    width: CARD_W,
+    height: CARD_W * 1.27,
+    borderRadius: RADIUS.md,
     backgroundColor: HOME_COLORS.white,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: HOME_COLORS.cardBorder,
@@ -164,10 +199,11 @@ const styles = StyleSheet.create({
   },
   cardLabel: {
     fontFamily: HOME_FONTS.medium,
-    fontSize: fs(14),
-    lineHeight: fs(14) * 1.3,
+    fontSize: fs(13),
+    lineHeight: fs(13) * 1.35,
     color: HOME_COLORS.black,
-    marginTop: s(8),
+    marginTop: SPACE.sm,
+    textAlign: 'center',
   },
 });
 

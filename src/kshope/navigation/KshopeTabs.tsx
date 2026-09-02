@@ -4,9 +4,9 @@ import { Image, View, Text, StyleSheet } from 'react-native';
 import { colors } from '../theme/colours';
 import { Fonts } from '../theme/fonts';
 import ServiceSwitcherModal from '../../components/ServiceSwitcherModal';
-import HomeScreen from '../screens/Home/HomeScreen';
+import HomeScreen from '../screens/Home/redesign/HomeRedesignScreen';
 import WishlistScreen from '../screens/Wishlist/WishlistScreen';
-import CategoryScreen from '../screens/Category/CategoryScreen';
+import CategoryScreen from '../screens/Category/redesign/CategoryRedesignScreen';
 
 const Tab = createBottomTabNavigator();
 

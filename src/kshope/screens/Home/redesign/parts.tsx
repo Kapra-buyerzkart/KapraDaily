@@ -6,11 +6,16 @@ import {
   StyleProp,
   StyleSheet,
   Text,
+  TextStyle,
   TouchableOpacity,
   View,
   ViewStyle,
 } from 'react-native';
+import { HOME_ART } from './assets';
 import { HOME_COLORS, HOME_FONTS, fs, s } from './theme';
+import { sectionTitle } from './data/blocks';
+
+export const imageSource = (image: any) => image || HOME_ART.placeholder;
 
 type SectionTitleProps = {
   text: string;
@@ -29,12 +34,13 @@ export const SectionTitle: React.FC<SectionTitleProps> = ({
   </Text>
 );
 
-export const DiscountBadge: React.FC<{ label: string; style?: ViewStyle }> = ({
-  label,
-  style,
-}) => (
+export const DiscountBadge: React.FC<{
+  label: string;
+  style?: ViewStyle;
+  textStyle?: StyleProp<TextStyle>;
+}> = ({ label, style, textStyle }) => (
   <View style={[styles.badge, style]}>
-    <Text style={styles.badgeText}>{label}</Text>
+    <Text style={[styles.badgeText, textStyle]}>{label}</Text>
   </View>
 );
 
@@ -100,16 +106,6 @@ export const IconTile: React.FC<{
 );
 
 const styles = StyleSheet.create({
-  sectionTitle: {
-    fontFamily: HOME_FONTS.semiBold,
-    fontSize: fs(16),
-    color: HOME_COLORS.heading,
-  },
-  sectionAccent: {
-    fontFamily: HOME_FONTS.script,
-    fontSize: fs(24),
-    color: HOME_COLORS.script,
-  },
   badge: {
     height: s(12),
     width: s(38),
@@ -148,5 +144,20 @@ const styles = StyleSheet.create({
     fontFamily: HOME_FONTS.semiBold,
     fontSize: fs(10),
     lineHeight: fs(10) * 1.4,
+  },
+  sectionTitle: {
+    fontFamily: HOME_FONTS.semiBold,
+    color: HOME_COLORS.heading,
+    fontSize: fs(17),
+    lineHeight: fs(17) * 1.3,
+    letterSpacing: 0.2,
+  },
+
+  sectionAccent: {
+    fontFamily: HOME_FONTS.semiBold,
+    fontSize: fs(17),
+    lineHeight: fs(17) * 1.3,
+    letterSpacing: 0.2,
+    color: HOME_COLORS.heading,
   },
 });

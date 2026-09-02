@@ -12,7 +12,8 @@ import { WishlistProvider } from '../context/WishlistContext';
 import { CartProvider } from '../context/CartContext';
 import KshopeTabs from './KshopeTabs';
 import SearchScreen from '../screens/Search/SearchScreen';
-import ProductDetailsScreen from '../screens/Product/ProductDetailsScreen';
+import CategoryScreen from '../screens/Category/redesign/CategoryRedesignScreen';
+import ProductDetailsScreen from '../screens/Product/redesign/ProductDetailsRedesignScreen';
 import ProductCategoryDetailScreen from '../screens/Product/ProductCategoryDetailScreen';
 import CartScreen from '../screens/Cart/CartScreen';
 import OrderSuccessScreen from '../screens/Order/OrderSuccessScreen';
@@ -94,6 +95,7 @@ const KshopeRoot: React.FC = () => {
               <Stack.Navigator screenOptions={{ headerShown: false }}>
                 <Stack.Screen name="KshopeHome" component={KshopeTabs} />
                 <Stack.Screen name="KshopeSearch" component={SearchScreen} />
+                <Stack.Screen name="KshopeCategory" component={CategoryScreen} />
                 <Stack.Screen name="KshopeProductDetails" component={ProductDetailsScreen} />
                 <Stack.Screen name="KshopeProductCategoryDetail" component={ProductCategoryDetailScreen} />
                 <Stack.Screen name="KshopeCart" component={CartScreen} />

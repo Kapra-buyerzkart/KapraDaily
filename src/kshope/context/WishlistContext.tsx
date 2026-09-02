@@ -14,6 +14,12 @@ interface WishlistContextType {
 
 export const WishlistContext = createContext<WishlistContextType | undefined>(undefined);
 
+// The API returns numeric product ids while screens often hold them as strings
+// (route params, keys). Compare them as strings so neither side has to guess.
+const idOf = (item: any) => String(item?.productId ?? item?.id ?? '');
+const sameId = (item: any, itemId: string | number) =>
+    idOf(item) === String(itemId ?? '');
+
 export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [wishlistItems, setWishlistItems] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -59,7 +65,7 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         const productId = item.productId || item.id;
 
         setWishlistItems(prevItems => {
-            if (!prevItems.find(i => (i.productId || i.id) === productId)) {
+            if (!prevItems.find(i => sameId(i, productId))) {
                 return [...prevItems, { ...item, productId }];
             }
             return prevItems;
@@ -69,7 +75,7 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             await addToWishlistApi(productId);
         } catch (error) {
             console.error('Error adding to wishlist API:', error);
-            setWishlistItems(prevItems => prevItems.filter(i => (i.productId || i.id) !== productId));
+            setWishlistItems(prevItems => prevItems.filter(i => !sameId(i, productId)));
             loadWishlist(true);
         }
     }, [loadWishlist]);
@@ -78,8 +84,8 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         let removedItem: any = null;
 
         setWishlistItems(prevItems => {
-            removedItem = prevItems.find(item => (item.productId || item.id) === itemId);
-            return prevItems.filter(item => (item.productId || item.id) !== itemId);
+            removedItem = prevItems.find(item => sameId(item, itemId));
+            return prevItems.filter(item => !sameId(item, itemId));
         });
 
         try {
@@ -94,7 +100,7 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }, [loadWishlist]);
 
     const isInWishlist = useCallback((itemId: string | number) => {
-        return wishlistItems.some(wishlistItem => (wishlistItem.productId || wishlistItem.id) === itemId);
+        return wishlistItems.some(wishlistItem => sameId(wishlistItem, itemId));
     }, [wishlistItems]);
 
     const toggleWishlist = useCallback((item: any) => {

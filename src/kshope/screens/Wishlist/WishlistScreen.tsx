@@ -1,189 +1,263 @@
-import React, { useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
-  Image,
   ActivityIndicator,
-  Platform,
+  Dimensions,
+  FlatList,
+  Image,
   StatusBar,
-  SafeAreaView,
   StyleSheet,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
-import { AppIcons } from '../../assets/icons';
-import ExploreItem from '../../components/ExploreItem';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { colors, fontColors } from '../../theme/colours';
-import { Fonts } from '../../theme/fonts';
+import { useIsFocused, useNavigation } from '@react-navigation/native';
+import { useFocusEffect } from '@react-navigation/native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { useWishlist } from '../../context/WishlistContext';
 import { useCart } from '../../context/CartContext';
-import {
-  addToCartApi,
-  removeFromCartApi,
-} from '../../api/services/cartService';
-import FloatingCartButton from '../../components/FloatingCartButton';
 import ConfirmationModal from '../../components/ConfirmationModal';
-import Toast from 'react-native-simple-toast';
-import { isCartSuccess, cartErrorMessage } from '../../utils/cartFeedback';
+import { AppText, Badge, Divider } from '../../components/atoms';
+import { AppIcons } from '../../assets/icons';
+import AddressCard from '../Cart/components/AddressCard';
+import { mapProductTile } from '../Home/redesign/data/mappers';
+import { imageSource } from '../Home/redesign/parts';
+import {
+  UI_COLORS,
+  UI_ELEVATION,
+  UI_RADIUS,
+  UI_SPACING,
+  hitSlopTo,
+  hp,
+  wp,
+} from '../../theme/tokens';
+import { WISHLIST_ART } from './assets';
 
-const CART_TOGGLE_FAILED = 'Could not update your cart';
+const SCREEN_W = Dimensions.get('window').width;
+const CARD_GAP = UI_SPACING.md;
+const CARD_W = Math.floor((SCREEN_W - UI_SPACING.lg * 2 - CARD_GAP) / 2);
+
+const tokensOf = (item: any) => {
+  const value = Number(
+    item?.bCoins ?? item?.bCoin ?? item?.coins ?? item?.tokens ?? 0,
+  );
+  return Number.isFinite(value) && value > 0 ? Math.round(value) : 0;
+};
 
 const WishlistScreen: React.FC = () => {
   const navigation = useNavigation<any>();
+  const isFocused = useIsFocused();
   const { wishlistItems, loadWishlist, isLoading, toggleWishlist } =
     useWishlist();
-  const { cartItems, cartSummary, loadCart } = useCart();
+  const { addresses } = useCart();
   const [itemToRemove, setItemToRemove] = useState<any>(null);
 
-  const handleCartToggle = async (item: any) => {
-    const productId = item.productId || item.id;
-    const existingCartItem = cartItems.find(c => c.productId === productId);
-
-    try {
-      const response = existingCartItem
-        ? await removeFromCartApi(
-            existingCartItem.cartItemId,
-            cartSummary?.cartVersion,
-            productId,
-          )
-        : await addToCartApi(productId, 1);
-
-      if (!isCartSuccess(response)) {
-        Toast.show(
-          cartErrorMessage(response, CART_TOGGLE_FAILED),
-          Toast.SHORT,
-        );
-      }
-
-      await loadCart();
-    } catch (error) {
-      Toast.show(cartErrorMessage(error, CART_TOGGLE_FAILED), Toast.SHORT);
-    }
-  };
-
   useFocusEffect(
-    React.useCallback(() => {
+    useCallback(() => {
       loadWishlist(true);
     }, [loadWishlist]),
   );
 
+  const cards = useMemo(
+    () => wishlistItems.map((item, index) => mapProductTile(item, index)),
+    [wishlistItems],
+  );
+
+  const selectedAddress =
+    addresses.find((address: any) => address.selected) || addresses[0];
+
+  const goBack = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+      return;
+    }
+    navigation.navigate('HomeScreen');
+  };
+
+  const openProduct = (card: any) => {
+    const product = card.raw;
+    navigation.navigate('KshopeProductDetails', {
+      productId: product?.productId ?? product?.id ?? card.id,
+      product,
+    });
+  };
+
   const renderHeader = () => (
     <View style={styles.header}>
-      <View style={styles.headerLeft}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <AppIcons.ArrowLeft size={24} color="black" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Wishlist</Text>
-      </View>
-      <View style={styles.headerRight}>
-        <TouchableOpacity
-          onPress={() => navigation.navigate('KshopeCart')}
-        >
-          <Image
-            source={require('../../assets/images/bottomtab/cart.png')}
-            style={{ width: wp(8.5), height: wp(8.5) }}
-            resizeMode="contain"
-          />
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
+      <TouchableOpacity onPress={goBack} style={styles.iconButton}>
+        <AppIcons.Back color={UI_COLORS.textPrimary} size={22} />
+      </TouchableOpacity>
 
-  const renderFooter = () => (
-    <View style={styles.footerContainer}>
-      {wishlistItems.length > 0 && (
-        <Image
-          source={require('../../assets/images/nomorewishlist.png')}
-          style={{ width: 140, height: 140 }}
-          resizeMode="contain"
+      <AppText variant="title">Wishlist</AppText>
+
+      {cards.length > 0 ? (
+        <Badge
+          tone="neutral"
+          label={`${cards.length} ${cards.length === 1 ? 'item' : 'items'}`}
         />
-      )}
+      ) : null}
+
+      <View style={styles.headerSpacer} />
+
+      <TouchableOpacity
+        onPress={() => navigation.navigate('KshopeCart')}
+        style={styles.iconButton}
+      >
+        <MaterialCommunityIcons
+          name="cart-outline"
+          size={wp('5.2%')}
+          color={UI_COLORS.textPrimary}
+        />
+      </TouchableOpacity>
     </View>
   );
 
-  if (isLoading && wishlistItems.length === 0) {
+  const renderCard = ({ item }: { item: any }) => {
+    const tokens = tokensOf(item.raw);
+
     return (
-      <SafeAreaView
-        style={[
-          styles.mainContainer,
-          {
-            paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
-          },
-        ]}
+      <TouchableOpacity
+        activeOpacity={0.9}
+        onPress={() => openProduct(item)}
+        style={styles.card}
       >
-        {renderHeader()}
-        <View style={[styles.emptyContainer, { justifyContent: 'center' }]}>
-          <ActivityIndicator size="large" color={colors.themeBg} />
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  return (
-    <SafeAreaView
-      style={[
-        styles.mainContainer,
-        { paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 },
-      ]}
-    >
-      {renderHeader()}
-
-      {wishlistItems.length === 0 ? (
-        <View style={styles.emptyContainer}>
+        <View style={styles.cardImageWrap}>
           <Image
-            source={require('../../assets/images/nowish.png')}
+            source={imageSource(item.image)}
+            resizeMode="contain"
+            style={styles.cardImage}
+          />
+
+          <TouchableOpacity
+            onPress={() => setItemToRemove(item.raw)}
+            hitSlop={hitSlopTo(28)}
+            style={styles.heartButton}
+          >
+            <MaterialCommunityIcons
+              name="heart"
+              size={wp('4.4%')}
+              color={UI_COLORS.primary}
+            />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.cardBody}>
+          {item.brand ? (
+            <AppText variant="labelStrong" numberOfLines={1}>
+              {item.brand}
+            </AppText>
+          ) : null}
+          <AppText variant="caption" tone="muted" numberOfLines={1}>
+            {item.name}
+          </AppText>
+
+          {tokens > 0 ? (
+            <Badge
+              tone="neutral"
+              label={`${tokens} UD Tokens`}
+              style={styles.tokenBadge}
+            />
+          ) : null}
+
+          <View style={styles.priceRow}>
+            <AppText variant="price">{item.price}</AppText>
+            {item.mrp ? (
+              <AppText variant="micro" tone="faint" style={styles.mrp}>
+                {item.mrp}
+              </AppText>
+            ) : null}
+            {item.discount ? (
+              <AppText variant="microStrong" tone="muted">
+                {item.discount}
+              </AppText>
+            ) : null}
+          </View>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
+  const renderBody = () => {
+    if (isLoading && cards.length === 0) {
+      return (
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color={UI_COLORS.primary} />
+        </View>
+      );
+    }
+
+    if (cards.length === 0) {
+      return (
+        <View style={styles.centered}>
+          <Image
+            source={WISHLIST_ART.emptyWishlist}
+            resizeMode="contain"
             style={styles.emptyImage}
           />
-          <Text style={styles.emptyText}> Oops! No wishlist</Text>
+          <AppText variant="heading" style={styles.emptyTitle}>
+            Your Wishlist Feeling a{'\n'}
+            <AppText variant="heading" tone="brand">
+              Little Lonely
+            </AppText>
+          </AppText>
+          <AppText variant="label" tone="muted" style={styles.emptySubtitle}>
+            Looks like you haven’t saved anything yet.{'\n'}
+            Explore and add items you love!
+          </AppText>
         </View>
-      ) : (
-        <View style={{ backgroundColor: colors.wishlistbg, flex: 1 }}>
-          <FlatList
-            data={wishlistItems}
-            renderItem={({ item }) => (
-              <ExploreItem
-                item={item}
-                onPress={() =>
-                  navigation.navigate('KshopeProductDetails', {
-                    productId: item.productId || item.id,
-                    product: item,
-                  })
-                }
-                toggleWishlist={() => setItemToRemove(item)}
-                isInWishlist={() => true}
-                style={{
-                  width: wp('29.3%'),
-                  marginHorizontal: wp('0.5%'),
-                  marginBottom: hp('1.5%'),
-                  contentContainer: { padding: 6 },
-                  image: { height: 80 },
-                  caption: { fontSize: 9, height: 28 },
-                  pricePill: {
-                    minWidth: 45,
-                    height: 20,
-                    borderRadius: 6,
-                    paddingHorizontal: 4,
-                  },
-                  pricePillText: { fontSize: 10 },
-                  originalPriceText: { fontSize: 7 },
-                }}
-              />
-            )}
-            keyExtractor={(item, index) =>
-              (item.productId || item.id || index).toString()
-            }
-            numColumns={3}
-            contentContainerStyle={styles.listContent}
-            columnWrapperStyle={{ justifyContent: 'flex-start' }}
-            ListFooterComponent={renderFooter}
-            showsVerticalScrollIndicator={false}
+      );
+    }
+
+    return (
+      <FlatList
+        data={cards}
+        renderItem={renderCard}
+        keyExtractor={card => String(card.id)}
+        numColumns={2}
+        columnWrapperStyle={styles.column}
+        contentContainerStyle={styles.list}
+        showsVerticalScrollIndicator={false}
+      />
+    );
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      {isFocused ? (
+        <StatusBar
+          translucent
+          backgroundColor="transparent"
+          barStyle="dark-content"
+        />
+      ) : null}
+
+      {/* <View style={styles.topContainer}> */}
+      {renderHeader()}
+
+      {/* <AddressCard
+          addressType={selectedAddress?.type}
+          addressLine={selectedAddress?.address}
+          onChange={() => navigation.navigate('KshopeSavedAddress')}
+          style={styles.addressCard}
+        /> */}
+      {/* </View> */}
+
+      {renderBody()}
+
+      <View style={styles.footer}>
+        <Divider />
+        <View style={styles.footerRow}>
+          <MaterialCommunityIcons
+            name="heart-outline"
+            size={wp('4%')}
+            color={UI_COLORS.textFaint}
           />
+          <AppText variant="micro" tone="faint">
+            Everything you love, saved here
+          </AppText>
         </View>
-      )}
-      <FloatingCartButton />
+      </View>
+
       <ConfirmationModal
         visible={!!itemToRemove}
         onClose={() => setItemToRemove(null)}
@@ -196,117 +270,135 @@ const WishlistScreen: React.FC = () => {
         title="Remove Item"
         message="Are you sure you want to remove this item from your wishlist?"
         confirmText="Remove"
-        themeColor={colors.themeTeal}
+        themeColor={UI_COLORS.primary}
       />
     </SafeAreaView>
   );
 };
 
-export default WishlistScreen;
-
 const styles = StyleSheet.create({
-  mainContainer: {
+  container: {
     flex: 1,
-    backgroundColor: colors.white,
+    backgroundColor: UI_COLORS.card,
+  },
+  topContainer: {
+    backgroundColor: UI_COLORS.card,
+    paddingBottom: UI_SPACING.lg,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: UI_COLORS.borderStrong,
+    zIndex: 10,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: wp('4%'),
-    paddingVertical: hp('1.5%'),
-    borderBottomWidth: 1,
-    borderBottomColor: '#F5F5F5',
+    gap: UI_SPACING.sm,
+    paddingHorizontal: UI_SPACING.lg,
+    paddingVertical: UI_SPACING.md,
   },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: wp('5%'),
-    fontFamily: Fonts.gilroyBold,
-    color: fontColors.titleBlack,
-    marginLeft: wp('4%'),
-  },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  headerIcon: {
-    marginLeft: wp('4%'),
-  },
-  cartIconContainer: {
-    width: wp('10%'),
-    height: wp('10%'),
-    borderRadius: wp('5%'),
-    backgroundColor: colors.themeTeal,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: wp('4%'),
-  },
-  listContent: {
-    padding: wp('2%'),
-    paddingBottom: hp('10%'),
-  },
-  footerContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: hp('4%'),
-    marginBottom: hp('10%'),
-    position: 'relative',
-  },
-  heartOutlineWrapper: {
-    position: 'absolute',
-    opacity: 0.3,
-  },
-  noMoreWishlistText: {
-    fontSize: wp('3.8%'),
-    fontFamily: Fonts.gilroyBold,
-    color: '#B2EBF2',
-    textAlign: 'center',
-    letterSpacing: 1,
-  },
-  heartOutlineLarge: {
-    width: wp('30%'),
-    height: wp('20%'),
-    tintColor: '#B2EBF2',
-    resizeMode: 'contain',
-  },
-  emptyContainer: {
+  headerSpacer: {
     flex: 1,
-    justifyContent: 'center',
+  },
+  iconButton: {
+    width: wp('9%'),
+    height: wp('9%'),
+    borderRadius: UI_RADIUS.pill,
+    backgroundColor: UI_COLORS.card,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: UI_COLORS.border,
     alignItems: 'center',
-    paddingTop: -hp('25%'),
+    justifyContent: 'center',
+  },
+  addressCard: {
+    backgroundColor: UI_COLORS.card,
+    borderColor: UI_COLORS.borderStrong,
+  },
+  list: {
+    paddingHorizontal: UI_SPACING.lg,
+    paddingTop: UI_SPACING.lg,
+    paddingBottom: hp('4%'),
+  },
+  column: {
+    justifyContent: 'flex-start',
+    columnGap: CARD_GAP,
+    marginBottom: CARD_GAP,
+  },
+  card: {
+    width: CARD_W,
+    borderRadius: UI_RADIUS.productCard,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: UI_COLORS.border,
+    backgroundColor: UI_COLORS.card,
+    overflow: 'hidden',
+    ...UI_ELEVATION.card,
+  },
+  cardImageWrap: {
+    width: '100%',
+    height: CARD_W,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: UI_COLORS.card,
+  },
+  cardImage: {
+    width: '78%',
+    height: '78%',
+  },
+  heartButton: {
+    position: 'absolute',
+    top: UI_SPACING.sm,
+    right: UI_SPACING.sm,
+    width: wp('7.5%'),
+    height: wp('7.5%'),
+    borderRadius: UI_RADIUS.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: UI_COLORS.card,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: UI_COLORS.border,
+  },
+  cardBody: {
+    gap: UI_SPACING.xs,
+    padding: UI_SPACING.md,
+  },
+  tokenBadge: {
+    marginTop: UI_SPACING.xs,
+  },
+  priceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: UI_SPACING.sm,
+    marginTop: UI_SPACING.xs,
+  },
+  mrp: {
+    textDecorationLine: 'line-through',
+  },
+  centered: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: UI_SPACING.xl,
   },
   emptyImage: {
-    width: wp('60%'),
-    height: hp('30%'),
-    resizeMode: 'contain',
+    width: wp('82%'),
+    height: wp('84%'),
   },
-  toggleButton: {
-    position: 'absolute',
-    top: hp('10%'),
-    right: wp('4%'),
-    backgroundColor: colors.themeTeal,
-    padding: wp('2%'),
-    borderRadius: wp('2%'),
-    zIndex: 1000,
+  emptyTitle: {
+    marginTop: UI_SPACING.lg,
+    textAlign: 'center',
   },
-  toggleButtonText: {
-    color: colors.white,
-    fontSize: wp('3%'),
-    fontFamily: Fonts.gilroyBold,
+  emptySubtitle: {
+    marginTop: UI_SPACING.sm,
+    textAlign: 'center',
   },
-  emptyText: {
-    fontSize: wp('4.5%'),
-    fontFamily: Fonts.gilroyBold,
-    color: fontColors.titleBlack,
-    fontWeight: 'bold',
+  footer: {
+    paddingBottom: UI_SPACING.sm,
   },
-  cartGradient: {
-    flex: 1,
-    justifyContent: 'center',
+  footerRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: wp('2%'),
+    justifyContent: 'center',
+    gap: UI_SPACING.sm,
+    paddingTop: UI_SPACING.md,
   },
 });
+
+export default WishlistScreen;

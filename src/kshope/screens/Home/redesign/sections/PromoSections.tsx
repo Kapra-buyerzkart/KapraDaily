@@ -1,11 +1,34 @@
 import React from 'react';
-import { Image, StyleSheet, TouchableOpacity, View } from 'react-native';
+import {
+  FlatList,
+  Image,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { HOME_ART } from '../assets';
-import { BRANDS } from '../content';
-import { PillButton, SectionTitle } from '../parts';
-import { HOME_COLORS, s } from '../theme';
+import { PillButton, SectionTitle, imageSource } from '../parts';
+
+import type { ProductTile } from '../content';
+import type { BrandTile } from '../data/mappers';
+import {
+  CARD_GAP,
+  GUTTER,
+  HOME_COLORS,
+  RADIUS,
+  SECTION_GAP,
+  SPACE,
+  TITLE_GAP,
+  colWidth,
+  s,
+} from '../theme';
 
 type PressHandlers = {
+  brands?: BrandTile[];
+  dealTitle?: string;
+  deals?: ProductTile[];
+  onPressDeal?: (item: ProductTile) => void;
+  onPressBrandItem?: (brand: BrandTile) => void;
   onShopNow?: () => void;
   onViewAll?: () => void;
   onPressBrand?: (id: string) => void;
@@ -41,59 +64,91 @@ export const BestForYou: React.FC<PressHandlers> = ({
   </View>
 );
 
-export const BrandsSpotlight: React.FC<PressHandlers> = ({ onPressBrand }) => (
+export const BrandsSpotlight: React.FC<PressHandlers> = ({
+  brands = [],
+  onPressBrandItem,
+}) => (
   <View style={styles.wrap}>
     <SectionTitle text="Brands In Spotlight" style={styles.title} />
-    <View style={styles.brandRow}>
-      {BRANDS.map(brand => (
+    <FlatList
+      data={brands}
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      keyExtractor={item => item.id}
+      contentContainerStyle={styles.brandList}
+      renderItem={({ item }) => (
         <TouchableOpacity
-          key={brand.id}
-          activeOpacity={0.9}
-          onPress={() => onPressBrand?.(brand.id)}
-          style={styles.brandTile}
+          style={styles.brandCard}
+          onPress={() => onPressBrandItem?.(item)}
         >
           <Image
-            source={brand.image}
+            source={imageSource(item.image)}
             resizeMode="contain"
             style={styles.brandImage}
           />
         </TouchableOpacity>
-      ))}
-    </View>
+      )}
+    />
   </View>
 );
 
-export const TopDeals: React.FC<PressHandlers> = ({ onShopNow }) => (
-  <View style={styles.wrap}>
-    <SectionTitle text="Top Deals For You" style={styles.title} />
+export const TopDeals: React.FC<PressHandlers> = ({
+  dealTitle,
+  deals = [],
+  onShopNow,
+  onPressDeal,
+}) => {
+  const tiles = deals.slice(0, 2);
+  const tileArt = [HOME_ART.dealTile1, HOME_ART.dealTile2];
 
-    <View style={styles.bannerWrap}>
-      <Image
-        source={HOME_ART.bannerTopDeals}
-        resizeMode="cover"
-        style={styles.banner}
+  return (
+    <View style={styles.wrap}>
+      <SectionTitle
+        text={dealTitle || 'Top Deals For You'}
+        style={styles.title}
       />
-      <PillButton
-        label="Shop Now"
-        onPress={onShopNow}
-        style={styles.bannerCta}
-      />
-    </View>
 
-    <View style={styles.tileRow}>
-      <Image
-        source={HOME_ART.dealTile1}
-        resizeMode="contain"
-        style={styles.dealTile}
-      />
-      <Image
-        source={HOME_ART.dealTile2}
-        resizeMode="contain"
-        style={styles.dealTile}
-      />
+      {/* <View style={styles.bannerWrap}>
+        <Image
+          source={HOME_ART.bannerTopDeals}
+          resizeMode="cover"
+          style={styles.banner}
+        />
+        <PillButton
+          label="Shop Now"
+          onPress={onShopNow}
+          style={styles.bannerCta}
+        />
+      </View> */}
+
+      <View style={styles.tileRow}>
+        {tiles.length > 0
+          ? tiles.map((item, index) => (
+              <TouchableOpacity
+                key={item.id}
+                activeOpacity={0.9}
+                style={styles.dealTile}
+                onPress={() => onPressDeal?.(item)}
+              >
+                <Image
+                  source={imageSource(item.image) ?? tileArt[index]}
+                  resizeMode="contain"
+                  style={styles.dealTileImage}
+                />
+              </TouchableOpacity>
+            ))
+          : tileArt.map((art, index) => (
+              <Image
+                key={`deal-art-${index}`}
+                source={art}
+                resizeMode="contain"
+                style={styles.dealTile}
+              />
+            ))}
+      </View>
     </View>
-  </View>
-);
+  );
+};
 
 export const MoreDeals: React.FC = () => (
   <View style={styles.wrap}>
@@ -106,66 +161,85 @@ export const MoreDeals: React.FC = () => (
   </View>
 );
 
+const BRAND_W = colWidth(4, SPACE.md);
+const DEAL_W = colWidth(2, CARD_GAP);
+
 const styles = StyleSheet.create({
   wrap: {
     backgroundColor: HOME_COLORS.white,
   },
   title: {
-    paddingHorizontal: s(17),
-    marginTop: s(22),
+    paddingHorizontal: GUTTER,
+    marginTop: SECTION_GAP,
   },
   bannerWrap: {
-    marginTop: s(14),
-    paddingHorizontal: s(17),
+    marginTop: TITLE_GAP,
+    paddingHorizontal: GUTTER,
   },
   banner: {
     width: '100%',
     height: s(184),
-    borderRadius: s(11),
+    borderRadius: RADIUS.lg,
   },
   bannerCta: {
     position: 'absolute',
-    left: s(32),
-    bottom: s(14),
+    left: GUTTER + SPACE.lg,
+    bottom: SPACE.lg,
   },
   viewAll: {
     alignSelf: 'center',
-    marginTop: s(23),
+    marginTop: SPACE.xl,
   },
   brandRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: s(8),
-    marginTop: s(14),
+    paddingHorizontal: GUTTER,
+    marginTop: TITLE_GAP,
   },
-  brandTile: {
-    width: s(91),
-    height: s(87),
-    borderRadius: s(10),
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: HOME_COLORS.tileBorder,
-    alignItems: 'center',
+  brandList: {
+    paddingHorizontal: GUTTER,
+    paddingTop: TITLE_GAP,
+    paddingBottom: SPACE.sm,
+    gap: SPACE.md,
+  },
+  brandCard: {
+    width: BRAND_W,
+    height: BRAND_W,
+    borderRadius: RADIUS.lg,
+    backgroundColor: HOME_COLORS.white,
     justifyContent: 'center',
-    overflow: 'hidden',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#FFE8DC',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 3,
   },
   brandImage: {
-    width: '86%',
-    height: '60%',
+    width: '72%',
+    height: '66%',
   },
   tileRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: s(12),
-    paddingHorizontal: s(8),
+    marginTop: TITLE_GAP,
+    paddingHorizontal: GUTTER,
+    gap: CARD_GAP,
   },
   dealTile: {
-    width: s(210),
-    height: s(104),
+    width: DEAL_W,
+    height: DEAL_W * 0.5,
+  },
+  dealTileImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: RADIUS.md,
   },
   wideBanner: {
     width: '100%',
     height: s(99),
-    marginTop: s(14),
+    marginTop: TITLE_GAP,
   },
 });
 

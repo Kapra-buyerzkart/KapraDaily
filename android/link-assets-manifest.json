@@ -34,12 +34,40 @@
       "sha1": "bd1976c1f019853ab6143ef1246e25aa66fd990e"
     },
     {
+      "path": "src/assets/fonts/Lexend-Bold.ttf",
+      "sha1": "59d8da5883b5c81de262e5a1bf0bc164daabafb6"
+    },
+    {
+      "path": "src/assets/fonts/Lexend-Light.ttf",
+      "sha1": "b2b574f4f2a15d300bb42e2a8ede67509cd5ae63"
+    },
+    {
       "path": "src/assets/fonts/Lexend-Medium.ttf",
       "sha1": "ecb541adfb5e827e3de237308772e103a553544d"
     },
     {
+      "path": "src/assets/fonts/Lexend-Regular.ttf",
+      "sha1": "15a0c501af33aef44bf18a104e46fba9f0e28f05"
+    },
+    {
       "path": "src/assets/fonts/Lexend-SemiBold.ttf",
       "sha1": "6a67f0e2d1549f7a69c8caa2bbc04abe61e15bc9"
+    },
+    {
+      "path": "src/assets/fonts/Madelyn-Trial-Regular.otf",
+      "sha1": "4ad41cf62d438615fb7c1f3328dd16f288515294"
+    },
+    {
+      "path": "src/assets/fonts/Madelyn-Trial-Regular.ttf",
+      "sha1": "537d385c5531c42b7da6acb9df79189fb3eed1de"
+    },
+    {
+      "path": "src/assets/fonts/MadelynFill-Trial-Regular.otf",
+      "sha1": "464038eea568c1f3129c1653534d3169ae49f1bb"
+    },
+    {
+      "path": "src/assets/fonts/MadelynFill-Trial-Regular.ttf",
+      "sha1": "99d6bebee65ef308dfc9f8edfedf5d9ffb7d940d"
     },
     {
       "path": "src/kshope/assets/fonts/Poppins-Bold.ttf",

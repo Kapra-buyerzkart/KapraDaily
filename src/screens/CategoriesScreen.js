@@ -399,6 +399,7 @@ export default function () {
         )}
       </View>
       <Animated.View
+        pointerEvents="box-none"
         style={[
           styles.floatingContainer,
           { bottom: floatingBottomOffset },

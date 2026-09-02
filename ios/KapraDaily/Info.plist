@@ -92,6 +92,13 @@
 		<string>Poppins-SemiBold.ttf</string>
 		<string>Poppins-Italic.ttf</string>
 		<string>Poppins-MediumItalic.ttf</string>
+		<string>Madelyn-Trial-Regular.otf</string>
+		<string>MadelynFill-Trial-Regular.otf</string>
+		<string>Lexend-Regular.ttf</string>
+		<string>MadelynFill-Trial-Regular.ttf</string>
+		<string>Madelyn-Trial-Regular.ttf</string>
+		<string>Lexend-Light.ttf</string>
+		<string>Lexend-Bold.ttf</string>
 	</array>
 	<key>UIBackgroundModes</key>
 	<array>

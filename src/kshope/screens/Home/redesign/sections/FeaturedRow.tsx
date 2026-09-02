@@ -1,10 +1,27 @@
 import React from 'react';
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  FlatList,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { HOME_ART } from '../assets';
-import { FEATURED_PRODUCTS, ProductTile } from '../content';
-import { DiscountBadge, StrikePrice } from '../parts';
-import { HOME_COLORS, HOME_FONTS, fs, s } from '../theme';
+import { ProductTile } from '../content';
+import { DiscountBadge, StrikePrice, imageSource } from '../parts';
+import {
+  CARD_GAP,
+  GUTTER,
+  HOME_COLORS,
+  HOME_FONTS,
+  RADIUS,
+  SPACE,
+  colWidth,
+  fs,
+  s,
+} from '../theme';
 
 const HeartOutline: React.FC<{ active?: boolean }> = ({ active }) => (
   <Svg width={s(14)} height={s(12)} viewBox="0 0 14 12" fill="none">
@@ -18,27 +35,27 @@ const HeartOutline: React.FC<{ active?: boolean }> = ({ active }) => (
 );
 
 type Props = {
+  items: ProductTile[];
   onPressProduct?: (item: ProductTile) => void;
   onToggleWishlist?: (item: ProductTile) => void;
   wishlisted?: string[];
 };
 
 const FeaturedRow: React.FC<Props> = ({
+  items,
   onPressProduct,
   onToggleWishlist,
   wishlisted = [],
 }) => (
   <View style={styles.wrap}>
-    <Image
-      source={HOME_ART.bannerSecondaryBg}
-      resizeMode="cover"
-      style={styles.secondaryBanner}
-    />
-
-    <View style={styles.row}>
-      {FEATURED_PRODUCTS.map(item => (
+    <FlatList
+      data={items}
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      keyExtractor={item => item.id}
+      contentContainerStyle={styles.row}
+      renderItem={({ item }) => (
         <TouchableOpacity
-          key={item.id}
           activeOpacity={0.9}
           onPress={() => onPressProduct?.(item)}
           style={styles.card}
@@ -54,7 +71,7 @@ const FeaturedRow: React.FC<Props> = ({
               <HeartOutline active={wishlisted.includes(item.id)} />
             </TouchableOpacity>
             <Image
-              source={item.image}
+              source={imageSource(item.image)}
               resizeMode="contain"
               style={styles.productImage}
             />
@@ -73,92 +90,90 @@ const FeaturedRow: React.FC<Props> = ({
             <StrikePrice value={item.mrp} size={8} />
           </View>
         </TouchableOpacity>
-      ))}
-    </View>
+      )}
+    />
 
-    <Image
+    {/* <Image
       source={HOME_ART.stripDivider}
       resizeMode="cover"
       style={styles.strip}
-    />
+    /> */}
   </View>
 );
+
+const CARD_W = colWidth(3, CARD_GAP);
 
 const styles = StyleSheet.create({
   wrap: {
     backgroundColor: HOME_COLORS.white,
   },
-  secondaryBanner: {
-    width: '100%',
-    height: s(104),
-    marginTop: s(2),
-  },
   row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: s(25),
-    marginTop: s(11),
+    paddingHorizontal: GUTTER,
+    paddingTop: SPACE.lg,
+    gap: CARD_GAP,
   },
   card: {
-    width: s(126),
-    height: s(207),
-    borderRadius: s(10),
+    width: CARD_W,
+    borderRadius: RADIUS.md,
     backgroundColor: HOME_COLORS.white,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: HOME_COLORS.cardBorder,
     overflow: 'hidden',
   },
   cardTop: {
-    height: s(139),
+    height: CARD_W * 0.94,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: HOME_COLORS.cardBorder,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingTop: SPACE.lg,
+    paddingHorizontal: SPACE.xs,
   },
   badge: {
     position: 'absolute',
-    top: s(6),
-    left: s(5),
+    top: SPACE.sm,
+    left: SPACE.sm,
     zIndex: 2,
   },
   heart: {
     position: 'absolute',
-    top: s(6),
-    right: s(7),
+    top: SPACE.sm,
+    right: SPACE.sm,
     zIndex: 2,
   },
   productImage: {
-    width: s(112),
-    height: s(112),
+    width: '100%',
+    height: '100%',
+    alignSelf: 'center',
   },
   cardBody: {
-    paddingHorizontal: s(4),
-    paddingTop: s(6),
+    paddingHorizontal: SPACE.md,
+    paddingBottom: SPACE.md,
   },
   brand: {
     fontFamily: HOME_FONTS.semiBold,
-    fontSize: fs(14),
-    lineHeight: fs(14) * 1.3,
+    fontSize: fs(12),
+    lineHeight: fs(12) * 1.35,
     color: HOME_COLORS.black,
   },
   name: {
     fontFamily: HOME_FONTS.regular,
-    fontSize: fs(10),
-    lineHeight: fs(10) * 1.4,
+    fontSize: fs(9),
+    lineHeight: fs(9) * 1.45,
     color: HOME_COLORS.muted,
-    marginTop: s(2),
+    marginTop: SPACE.xxs / 2,
   },
   price: {
     fontFamily: HOME_FONTS.semiBold,
-    fontSize: fs(12),
-    lineHeight: fs(12) * 1.3,
+    fontSize: fs(11),
+    lineHeight: fs(11) * 1.35,
     color: HOME_COLORS.black,
-    marginTop: s(4),
+    marginTop: SPACE.xs,
   },
   strip: {
     width: '100%',
     height: s(41),
-    marginTop: s(11),
+    marginTop: SPACE.lg,
   },
 });
 

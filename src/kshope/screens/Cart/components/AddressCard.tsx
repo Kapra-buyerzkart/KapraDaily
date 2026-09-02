@@ -1,5 +1,11 @@
 import React from 'react';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import {
+  View,
+  TouchableOpacity,
+  StyleSheet,
+  StyleProp,
+  ViewStyle,
+} from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { AppText, Badge, IconDisc } from '../../../components/atoms';
 import {
@@ -14,14 +20,16 @@ interface AddressCardProps {
   addressType?: string;
   addressLine?: string;
   onChange: () => void;
+  style?: StyleProp<ViewStyle>;
 }
 
 const AddressCard: React.FC<AddressCardProps> = ({
   addressType,
   addressLine,
   onChange,
+  style,
 }) => (
-  <View style={styles.card}>
+  <View style={[styles.card, style]}>
     <IconDisc size={wp('9.5%')} tone="brand">
       <MaterialCommunityIcons
         name="map-marker-outline"
