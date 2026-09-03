@@ -13,6 +13,7 @@ import PriceHeader from './sections/PriceHeader';
 import TrustStrip from './sections/TrustStrip';
 import DetailsAccordion from './sections/DetailsAccordion';
 import FeatureGrid from './sections/FeatureGrid';
+import ReviewTabs from './sections/ReviewTabs';
 import SimilarProducts from './sections/SimilarProducts';
 import BottomBar from './sections/BottomBar';
 import { useProductDetails } from './data/useProductDetails';
@@ -26,6 +27,10 @@ import {
   productSubtitle,
   productTitle,
   ratingSummary,
+  reviewList,
+  reviewSummary,
+  specificationList,
+  warrantyText,
 } from './data/selectors';
 import { PDP_COLORS } from './theme';
 
@@ -75,6 +80,8 @@ const ProductDetailsRedesignScreen: React.FC = () => {
   const prices = pricing(current);
   const rating = ratingSummary(details);
   const outOfStock = isOutOfStock(current);
+  const reviewStats = reviewSummary(details);
+  const reviews = reviewList(details);
 
   const openProduct = (item: any) =>
     navigation.push('KshopeProductDetails', {
@@ -124,6 +131,16 @@ const ProductDetailsRedesignScreen: React.FC = () => {
         <View style={styles.detailsSpacer} />
         <DetailsAccordion description={productDescription(current)} />
         <FeatureGrid features={featureList(details)} />
+
+        <ReviewTabs
+          average={reviewStats.average}
+          total={reviewStats.total}
+          bars={reviewStats.bars}
+          reviews={reviews}
+          hasRatings={reviewStats.hasData}
+          specs={specificationList(details)}
+          warranty={warrantyText(details, current)}
+        />
 
         <SimilarProducts
           items={related}

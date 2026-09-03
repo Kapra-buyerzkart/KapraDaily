@@ -52,7 +52,7 @@ const CartStepper: React.FC<CartStepperProps> = ({ current = 1 }) => (
         <AppText
           key={step}
           variant={index === current ? 'captionStrong' : 'caption'}
-          tone={index <= current ? 'brand' : 'faint'}
+          tone={index <= current ? 'primary' : 'faint'}
           style={[
             styles.label,
             index === 0 && styles.labelStart,
@@ -91,13 +91,13 @@ const styles = StyleSheet.create({
     backgroundColor: UI_COLORS.border,
   },
   lineActive: {
-    backgroundColor: UI_COLORS.primary,
+    backgroundColor: UI_COLORS.ink,
   },
   dotDone: {
     width: NODE,
     height: NODE,
     borderRadius: NODE / 2,
-    backgroundColor: UI_COLORS.primary,
+    backgroundColor: UI_COLORS.ink,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -105,9 +105,9 @@ const styles = StyleSheet.create({
     width: NODE,
     height: NODE,
     borderRadius: NODE / 2,
-    backgroundColor: UI_COLORS.primaryTint,
+    backgroundColor: UI_COLORS.inkTint,
     borderWidth: 2,
-    borderColor: UI_COLORS.primary,
+    borderColor: UI_COLORS.ink,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: UI_COLORS.primary,
+    backgroundColor: UI_COLORS.ink,
   },
   dotUpcoming: {
     width: 10,

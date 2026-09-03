@@ -325,13 +325,13 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
               </Text>
             )}
           </View>
-          <TouchableOpacity activeOpacity={0.85} onPress={onAvatarPress}>
+          {/* <TouchableOpacity activeOpacity={0.85} onPress={onAvatarPress}>
             {avatar ? (
               <Image source={avatar} style={styles.avatar} />
             ) : (
               <View style={styles.avatar} />
             )}
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
       </Animated.View>
 
@@ -488,8 +488,9 @@ const styles = StyleSheet.create({
     paddingRight: 12,
   },
   title: {
-    fontFamily: Fonts.gilroyBold,
-    fontSize: 26,
+    fontFamily: Fonts.madelyn,
+    fontSize: 38,
+    lineHeight: 46,
     color: BORDER,
   },
   address: {

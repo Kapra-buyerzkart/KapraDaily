@@ -90,12 +90,8 @@ const HomeRedesignScreen: React.FC = () => {
     [navigation],
   );
 
-  const openHostProfile = useCallback(
-    () =>
-      navigation.navigate('MainTabs', {
-        screen: 'Home',
-        params: { screen: 'ProfileScreen' },
-      }),
+  const openProfile = useCallback(
+    () => navigation.navigate('KshopeProfile'),
     [navigation],
   );
 
@@ -118,7 +114,7 @@ const HomeRedesignScreen: React.FC = () => {
       const cat = item.raw;
       const catId = cat ? resolveCatId(cat) : undefined;
       if (catId === undefined || catId === null || catId === '') {
-        openSearch();
+        openSearch({ query: item.label });
         return;
       }
       openSearch({ catId, catName: resolveCatName(cat, item.label) });
@@ -267,13 +263,13 @@ const HomeRedesignScreen: React.FC = () => {
           brands={sections.brands}
           onPressBrandItem={openBrand}
         />
-
+        {/* 
         <TopDeals
           dealTitle={sections.topDeals.title}
           deals={sections.topDeals.items}
           onShopNow={() => openSearch()}
           onPressDeal={openProduct}
-        />
+        /> */}
 
         {/* <MoreDeals /> */}
 
@@ -333,10 +329,10 @@ const HomeRedesignScreen: React.FC = () => {
             })
           }
           onSearchPress={() => openSearch()}
-          onAvatarPress={openHostProfile}
+          onAvatarPress={openProfile}
           onNotificationsPress={() => navigation.navigate('KshopeProfile')}
           onWishlistPress={() => navigation.navigate('WishlistScreen')}
-          onProfilePress={openHostProfile}
+          onProfilePress={openProfile}
           scrollY={scrollY}
           onHeightChange={setHeaderHeight}
         />

@@ -4,6 +4,7 @@ import { UI_COLORS, UI_RADIUS } from '../../theme/tokens';
 
 const TONES: Record<string, string> = {
   brand: UI_COLORS.primaryTint,
+  ink: UI_COLORS.inkTint,
   success: UI_COLORS.successTint,
   neutral: UI_COLORS.well,
   pink: UI_COLORS.pinkTint,

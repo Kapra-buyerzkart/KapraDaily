@@ -128,7 +128,18 @@ export const useHomeData = () => {
     }
     const tabs = Array.isArray(tabShowcase) ? tabShowcase : [];
 
-    const categoryTiles = categories.map(mapCategoryTile);
+    const categoryByLabel = new Map<string, any>();
+    categories.forEach((cat: any) => {
+      const name = resolveCatName(cat, '');
+      if (name) {
+        categoryByLabel.set(name.trim().toLowerCase(), cat);
+      }
+    });
+    const withCategoryLink = (tiles: Tile[]): Tile[] =>
+      tiles.map(tile => {
+        const cat = categoryByLabel.get(tile.label.trim().toLowerCase());
+        return cat ? { ...tile, raw: cat } : tile;
+      });
     const goatDeals = bannersFor(homeData, 'app_home_cat_top_sidebyside_four');
     const thirdProducts = getProducts(thirdBlock);
 
@@ -225,8 +236,8 @@ export const useHomeData = () => {
         secondProducts.slice(0, 5).map(mapRecentlyViewed),
         RECENTLY_VIEWED,
       ),
-      exploreRowOne: orFallback(categoryTiles.slice(0, 5), EXPLORE_ROW_ONE),
-      exploreRowTwo: orFallback(categoryTiles.slice(5, 10), EXPLORE_ROW_TWO),
+      exploreRowOne: withCategoryLink(EXPLORE_ROW_ONE),
+      exploreRowTwo: withCategoryLink(EXPLORE_ROW_TWO),
       banners: {
         top: bannersFor(homeData, 'app_home_top_banner'),
         mid: bannersFor(homeData, 'app_home_mid_banner'),

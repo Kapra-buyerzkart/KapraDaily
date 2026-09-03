@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { HOME_FONTS, SCREEN_WIDTH, fs, s } from '../../../Home/redesign/theme';
 import { BackIcon, HeartIcon, HeartSolidIcon, ShareIcon } from '../icons';
@@ -36,7 +37,7 @@ const Gallery: React.FC<Props> = ({
 }) => {
   const { top } = useSafeAreaInsets();
   const [index, setIndex] = useState(0);
-  const cardHeight = s(286) + top;
+  const cardHeight = s(360) + top;
   const slides = images.length > 0 ? images : [PDP_ART.placeholder];
 
   const onScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -57,20 +58,30 @@ const Gallery: React.FC<Props> = ({
         onScroll={onScroll}
       >
         {slides.map((source: any, idx: number) => (
-          <View
-            key={idx}
-            style={[
-              styles.slide,
-              { height: cardHeight, paddingTop: top + s(44) },
-            ]}
-          >
-            <Image source={source} resizeMode="contain" style={styles.image} />
+          <View key={idx} style={[styles.slide, { height: cardHeight }]}>
+            <Image source={source} resizeMode="cover" style={styles.image} />
           </View>
         ))}
       </ScrollView>
 
+      <LinearGradient
+        pointerEvents="none"
+        colors={[
+          'rgba(255, 255, 255, 0)',
+          'rgba(255, 255, 255, 0.55)',
+          PDP_COLORS.white,
+        ]}
+        locations={[0, 0.55, 1]}
+        style={styles.fade}
+      />
+
       <View style={[styles.headerRow, { top: top + s(12) }]}>
-        <TouchableOpacity activeOpacity={0.7} hitSlop={HIT} onPress={onBack}>
+        <TouchableOpacity
+          activeOpacity={0.7}
+          hitSlop={HIT}
+          onPress={onBack}
+          style={styles.iconCircle}
+        >
           <BackIcon width={18} height={16} />
         </TouchableOpacity>
 
@@ -79,6 +90,7 @@ const Gallery: React.FC<Props> = ({
             activeOpacity={0.7}
             hitSlop={HIT}
             onPress={onToggleWishlist}
+            style={styles.iconCircle}
           >
             {wishlisted ? (
               <HeartSolidIcon
@@ -90,7 +102,12 @@ const Gallery: React.FC<Props> = ({
               <HeartIcon width={22} height={20} color={PDP_COLORS.black} />
             )}
           </TouchableOpacity>
-          <TouchableOpacity activeOpacity={0.7} hitSlop={HIT} onPress={onShare}>
+          <TouchableOpacity
+            activeOpacity={0.7}
+            hitSlop={HIT}
+            onPress={onShare}
+            style={styles.iconCircle}
+          >
             <ShareIcon width={19} height={20} />
           </TouchableOpacity>
         </View>
@@ -117,20 +134,22 @@ const styles = StyleSheet.create({
     width: SCREEN_WIDTH,
     height: s(286),
     backgroundColor: PDP_COLORS.white,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: PDP_COLORS.cardBorder,
-    borderBottomLeftRadius: s(10),
-    borderBottomRightRadius: s(10),
     overflow: 'hidden',
+  },
+  fade: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: s(96),
   },
   slide: {
     width: SCREEN_WIDTH,
-    paddingHorizontal: s(20),
-    paddingBottom: s(56),
   },
   image: {
     flex: 1,
     width: '100%',
+    transform: [{ scale: 1.18 }],
   },
   headerRow: {
     position: 'absolute',
@@ -140,6 +159,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+  },
+  iconCircle: {
+    width: s(38),
+    height: s(38),
+    borderRadius: s(19),
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.55)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(0,0,0,0.08)',
   },
   headerActions: {
     flexDirection: 'row',

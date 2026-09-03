@@ -57,7 +57,7 @@ const truncateText = (text: string, limit = 7) => {
 const SearchScreen = () => {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
-  const { catId, catName, attrValueId } = route.params || {};
+  const { catId, catName, attrValueId, query } = route.params || {};
   const { top } = useSafeAreaInsets();
 
   const { profile } = useUser();
@@ -81,7 +81,7 @@ const SearchScreen = () => {
     hasMore,
     loadMore,
     resultCount,
-  } = useProductSearch(currentPincodeId, catId, filters, attrValueId);
+  } = useProductSearch(currentPincodeId, catId, filters, attrValueId, query || '');
 
   useEffect(() => {
     const fetchPincode = async () => {

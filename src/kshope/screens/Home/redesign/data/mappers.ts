@@ -109,11 +109,19 @@ export const toPricing = (item: any) => {
   };
 };
 
+export const tokensOf = (item: any) => {
+  const value = Number(
+    pick(item, 'btokens', 'bTokens', 'BTokens', 'Btokens') ?? 0,
+  );
+  return Number.isFinite(value) && value > 0 ? Math.round(value) : 0;
+};
+
 export const mapProductTile = (item: any, index: number): ProductTile => ({
   id: idOf(item, 'product', index),
   brand: pick(item, 'brandName', 'BrandName', 'brand', 'Brand') ?? '',
   name: nameOf(item),
   ...toPricing(item),
+  tokens: tokensOf(item),
   image: imageOf(item),
   raw: item,
 });

@@ -31,7 +31,7 @@ const RecentlyViewed: React.FC<Props> = ({
 }) => (
   <View style={styles.wrap}>
     <View style={styles.titleRow}>
-      <SectionTitle text="Recently Viewed" />
+      <SectionTitle text="Recently" accent="Viewed" />
       <TouchableOpacity
         activeOpacity={0.85}
         onPress={onSeeAll}

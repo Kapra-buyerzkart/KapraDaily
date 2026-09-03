@@ -14,6 +14,7 @@ import {
 
 const ICON_TONES: Record<string, { disc: string; color: string }> = {
   brand: { disc: 'brand', color: UI_COLORS.primary },
+  ink: { disc: 'ink', color: UI_COLORS.ink },
   pink: { disc: 'pink', color: UI_COLORS.pink },
   token: { disc: 'token', color: UI_COLORS.token },
   success: { disc: 'success', color: UI_COLORS.successDeep },

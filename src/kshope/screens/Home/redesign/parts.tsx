@@ -15,6 +15,8 @@ import { HOME_ART } from './assets';
 import { HOME_COLORS, HOME_FONTS, fs, s } from './theme';
 import { sectionTitle } from './data/blocks';
 
+const TOKEN_COIN = require('../../../assets/images/btokenn.png');
+
 export const imageSource = (image: any) => image || HOME_ART.placeholder;
 
 type SectionTitleProps = {
@@ -41,6 +43,29 @@ export const DiscountBadge: React.FC<{
 }> = ({ label, style, textStyle }) => (
   <View style={[styles.badge, style]}>
     <Text style={[styles.badgeText, textStyle]}>{label}</Text>
+  </View>
+);
+
+export const TokenBadge: React.FC<{
+  tokens: number;
+  size?: number;
+  style?: StyleProp<ViewStyle>;
+}> = ({ tokens, size = 9, style }) => (
+  <View style={[styles.tokenBadge, style]}>
+    <Image
+      source={TOKEN_COIN}
+      resizeMode="contain"
+      style={{ width: fs(size) * 1.35, height: fs(size) * 1.35 }}
+    />
+    <Text
+      style={[
+        styles.tokenBadgeText,
+        { fontSize: fs(size), lineHeight: fs(size) * 1.35 },
+      ]}
+      numberOfLines={1}
+    >
+      {`${tokens} UD Tokens`}
+    </Text>
   </View>
 );
 
@@ -114,6 +139,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  tokenBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: s(4),
+    paddingHorizontal: s(6),
+    paddingVertical: s(2),
+    borderRadius: s(999),
+    backgroundColor: HOME_COLORS.cream,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: HOME_COLORS.creamRule,
+  },
+  tokenBadgeText: {
+    fontFamily: HOME_FONTS.medium,
+    color: HOME_COLORS.cocoa,
+  },
   badgeText: {
     fontFamily: HOME_FONTS.regular,
     fontSize: fs(8),
@@ -149,15 +190,15 @@ const styles = StyleSheet.create({
     fontFamily: HOME_FONTS.semiBold,
     color: HOME_COLORS.heading,
     fontSize: fs(17),
-    lineHeight: fs(17) * 1.3,
+    lineHeight: fs(17) * 1.8,
     letterSpacing: 0.2,
   },
 
   sectionAccent: {
-    fontFamily: HOME_FONTS.semiBold,
-    fontSize: fs(17),
-    lineHeight: fs(17) * 1.3,
-    letterSpacing: 0.2,
-    color: HOME_COLORS.heading,
+    fontFamily: HOME_FONTS.script,
+    fontSize: fs(26),
+    lineHeight: fs(17) * 1.8,
+    letterSpacing: 0,
+    color: HOME_COLORS.script,
   },
 });

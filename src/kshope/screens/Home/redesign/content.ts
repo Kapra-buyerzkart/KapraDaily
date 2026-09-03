@@ -14,6 +14,7 @@ export type ProductTile = {
   price: string;
   mrp: string;
   discount: string;
+  tokens: number;
   image: any;
   raw?: any;
 };
@@ -61,6 +62,7 @@ export const FEATURED_PRODUCTS: ProductTile[] = [
     price: '$1,500/-',
     mrp: '$2,000',
     discount: '30% OFF',
+    tokens: 51,
     image: HOME_ART.prodIronbox,
   },
   {
@@ -70,6 +72,7 @@ export const FEATURED_PRODUCTS: ProductTile[] = [
     price: '$1,30,000/-',
     mrp: '$1,40,000',
     discount: '10% OFF',
+    tokens: 120,
     image: HOME_ART.prodIphone,
   },
   {
@@ -79,6 +82,7 @@ export const FEATURED_PRODUCTS: ProductTile[] = [
     price: '$7,500/-',
     mrp: '$9,000',
     discount: '20% OFF',
+    tokens: 73,
     image: HOME_ART.prodWashingMachine,
   },
 ];

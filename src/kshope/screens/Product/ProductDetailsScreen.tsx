@@ -115,6 +115,8 @@ const ProductDetailsScreen = () => {
         getRelatedProductsApi(product_id, pincodeAreaId),
       ]);
 
+      console.log('ProductDetails response:', response);
+
       if (response && response.success && response.data) {
         setProductDetails(response.data);
       } else {

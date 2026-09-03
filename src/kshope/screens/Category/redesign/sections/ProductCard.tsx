@@ -2,7 +2,11 @@ import React from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import type { ProductTile } from '../../../Home/redesign/content';
-import { StrikePrice, imageSource } from '../../../Home/redesign/parts';
+import {
+  StrikePrice,
+  TokenBadge,
+  imageSource,
+} from '../../../Home/redesign/parts';
 import {
   CARD_GAP,
   HOME_COLORS,
@@ -57,7 +61,7 @@ const ProductCard: React.FC<Props> = ({
       <View style={[styles.cardTop, { height: cardWidth * 1.13 }]}>
         <Image
           source={imageSource(item.image)}
-          resizeMode="contain"
+          resizeMode="cover"
           style={styles.image}
         />
         {outOfStock ? (
@@ -93,6 +97,14 @@ const ProductCard: React.FC<Props> = ({
             <Heart active={wishlisted} />
           </TouchableOpacity>
         </View>
+
+        {item.tokens > 0 ? (
+          <TokenBadge
+            tokens={item.tokens}
+            size={compact ? 8 : 9}
+            style={styles.tokenBadge}
+          />
+        ) : null}
 
         <View style={[styles.priceRow, compact && compactStyles.priceRow]}>
           <Text
@@ -161,10 +173,11 @@ const styles = StyleSheet.create({
     marginBottom: SPACE.lg,
   },
   cardTop: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: '100%',
+    overflow: 'hidden',
   },
   image: {
+    top: -10,
     width: '100%',
     height: '100%',
   },
@@ -209,6 +222,9 @@ const styles = StyleSheet.create({
     fontSize: fs(14),
     lineHeight: fs(14) * 1.3,
     color: HOME_COLORS.muted,
+  },
+  tokenBadge: {
+    marginTop: SPACE.xs,
   },
   priceRow: {
     flexDirection: 'row',

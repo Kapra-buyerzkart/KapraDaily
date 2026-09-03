@@ -17,11 +17,12 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import { useWishlist } from '../../context/WishlistContext';
 import { useCart } from '../../context/CartContext';
 import ConfirmationModal from '../../components/ConfirmationModal';
+import FloatingCartButton from '../../components/FloatingCartButton';
 import { AppText, Badge, Divider } from '../../components/atoms';
 import { AppIcons } from '../../assets/icons';
 import AddressCard from '../Cart/components/AddressCard';
-import { mapProductTile } from '../Home/redesign/data/mappers';
-import { imageSource } from '../Home/redesign/parts';
+import { mapProductTile, tokensOf } from '../Home/redesign/data/mappers';
+import { TokenBadge, imageSource } from '../Home/redesign/parts';
 import {
   UI_COLORS,
   UI_ELEVATION,
@@ -36,13 +37,6 @@ import { WISHLIST_ART } from './assets';
 const SCREEN_W = Dimensions.get('window').width;
 const CARD_GAP = UI_SPACING.md;
 const CARD_W = Math.floor((SCREEN_W - UI_SPACING.lg * 2 - CARD_GAP) / 2);
-
-const tokensOf = (item: any) => {
-  const value = Number(
-    item?.bCoins ?? item?.bCoin ?? item?.coins ?? item?.tokens ?? 0,
-  );
-  return Number.isFinite(value) && value > 0 ? Math.round(value) : 0;
-};
 
 const WishlistScreen: React.FC = () => {
   const navigation = useNavigation<any>();
@@ -87,15 +81,16 @@ const WishlistScreen: React.FC = () => {
       <TouchableOpacity onPress={goBack} style={styles.iconButton}>
         <AppIcons.Back color={UI_COLORS.textPrimary} size={22} />
       </TouchableOpacity>
+      <View style={{}}>
+        <AppText variant="title">Wishlist</AppText>
 
-      <AppText variant="title">Wishlist</AppText>
-
-      {cards.length > 0 ? (
-        <Badge
-          tone="neutral"
-          label={`${cards.length} ${cards.length === 1 ? 'item' : 'items'}`}
-        />
-      ) : null}
+        {cards.length > 0 ? (
+          <Badge
+            tone="neutral"
+            label={`${cards.length} ${cards.length === 1 ? 'item' : 'items'}`}
+          />
+        ) : null}
+      </View>
 
       <View style={styles.headerSpacer} />
 
@@ -113,7 +108,7 @@ const WishlistScreen: React.FC = () => {
   );
 
   const renderCard = ({ item }: { item: any }) => {
-    const tokens = tokensOf(item.raw);
+    const tokens = item.tokens || tokensOf(item.raw);
 
     return (
       <TouchableOpacity
@@ -124,7 +119,7 @@ const WishlistScreen: React.FC = () => {
         <View style={styles.cardImageWrap}>
           <Image
             source={imageSource(item.image)}
-            resizeMode="contain"
+            resizeMode="cover"
             style={styles.cardImage}
           />
 
@@ -152,11 +147,7 @@ const WishlistScreen: React.FC = () => {
           </AppText>
 
           {tokens > 0 ? (
-            <Badge
-              tone="neutral"
-              label={`${tokens} UD Tokens`}
-              style={styles.tokenBadge}
-            />
+            <TokenBadge tokens={tokens} size={9} style={styles.tokenBadge} />
           ) : null}
 
           <View style={styles.priceRow}>
@@ -272,6 +263,8 @@ const WishlistScreen: React.FC = () => {
         confirmText="Remove"
         themeColor={UI_COLORS.primary}
       />
+
+      <FloatingCartButton bottom={20} />
     </SafeAreaView>
   );
 };
@@ -339,8 +332,8 @@ const styles = StyleSheet.create({
     backgroundColor: UI_COLORS.card,
   },
   cardImage: {
-    width: '78%',
-    height: '78%',
+    width: '100%',
+    height: '100%',
   },
   heartButton: {
     position: 'absolute',

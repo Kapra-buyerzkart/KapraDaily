@@ -7,7 +7,6 @@ import {
   StyleSheet,
   FlatList,
   TextInput,
-  Image,
   Dimensions,
 } from 'react-native';
 import { colors } from '../theme/colours';
@@ -123,15 +122,13 @@ const CouponModal: React.FC<CouponModalProps> = ({
             contentContainerStyle={styles.listContent}
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
-                <Image
-                  source={
-                    isGiftCard
-                      ? require('../assets/images/noimages/nogiftcard.png')
-                      : require('../assets/images/noimages/nocoupon.png')
-                  }
-                  style={styles.emptyImage}
-                  resizeMode="contain"
-                />
+                <View style={styles.emptyIconCircle}>
+                  {isGiftCard ? (
+                    <AppIcons.GiftCard size={44} color={colors.themeDarkGray} />
+                  ) : (
+                    <AppIcons.CouponTicket size={44} color={colors.themeDarkGray} />
+                  )}
+                </View>
                 <Text style={styles.emptyText}>
                   {isGiftCard
                     ? 'No gift cards available right now'
@@ -291,9 +288,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 60,
   },
-  emptyImage: {
-    width: 160,
-    height: 160,
+  emptyIconCircle: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F2F3F5',
     marginBottom: 16,
   },
   emptyText: {

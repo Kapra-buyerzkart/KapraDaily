@@ -58,6 +58,8 @@ export const useProductDetails = (productId: string, fallback: any) => {
         getRelatedProductsApi(productId, areaId),
       ]);
 
+      console.log('ProductDetails response:', response);
+
       setDetails(response?.success && response?.data ? response.data : null);
       setRelated(
         relatedResponse?.success && relatedResponse?.data

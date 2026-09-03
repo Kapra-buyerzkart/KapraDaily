@@ -35,11 +35,11 @@ const SaveMoneySection: React.FC<SaveMoneySectionProps> = ({
     <View style={styles.section}>
       <Surface inset={false} bordered={bordered} style={styles.surface}>
         <View style={styles.header}>
-          <IconDisc size={wp('8%')} tone="brand">
+          <IconDisc size={wp('8%')} tone="ink">
             <MaterialCommunityIcons
               name="brightness-percent"
               size={wp('4.4%')}
-              color={UI_COLORS.primary}
+              color={UI_COLORS.ink}
             />
           </IconDisc>
           <View style={styles.headerCopy}>
@@ -54,7 +54,7 @@ const SaveMoneySection: React.FC<SaveMoneySectionProps> = ({
 
         <OfferRow
           iconName="hand-coin"
-          iconTone="brand"
+          iconTone="ink"
           title="B-Coins"
           subtitle={`${availableBCoins} B-Coins available`}
           isApplied={bcoinsApplied}
@@ -67,7 +67,7 @@ const SaveMoneySection: React.FC<SaveMoneySectionProps> = ({
 
         <OfferRow
           iconName="ticket-percent-outline"
-          iconTone="pink"
+          iconTone="ink"
           title="Coupon"
           subtitle="View all coupons"
           isApplied={!!appliedCouponCode}
@@ -80,7 +80,7 @@ const SaveMoneySection: React.FC<SaveMoneySectionProps> = ({
 
         <OfferRow
           iconName="gift-outline"
-          iconTone="token"
+          iconTone="ink"
           title="Smart Point"
           subtitle="View all gift cards"
           isApplied={!!appliedGiftCardCode}

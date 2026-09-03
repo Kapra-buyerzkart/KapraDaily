@@ -1,9 +1,7 @@
-import React, { createContext, useState } from 'react';
-import { Dimensions } from 'react-native';
-import { Modal, View, ActivityIndicator } from 'react-native';
+import React, { createContext } from 'react';
+import { Dimensions, StyleSheet, View } from 'react-native';
 import LottieView from 'lottie-react-native';
 
-const windowHeight = Dimensions.get('window').height;
 const windowWidth = Dimensions.get('window').width;
 
 export const LoaderContext = createContext<any>(null);
@@ -40,17 +38,10 @@ export const LoaderContextProvider = ({ children }: { children: React.ReactNode 
     }), [showLoader, loading]);
 
     return (
-        <>
+        <View style={styles.root}>
             <LoaderContext.Provider value={value}>{children}</LoaderContext.Provider>
             {loading && (
-                <Modal transparent visible={loading}>
-                    <View
-                        style={{
-                            flex: 1,
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            backgroundColor: 'rgba(255,255,255,.7)',
-                        }}>
+                <View style={styles.overlay} pointerEvents="auto">
                         <LottieView
                             source={require('../assets/Lottie/CartLoader1.json')}
                             style={{
@@ -69,9 +60,20 @@ export const LoaderContextProvider = ({ children }: { children: React.ReactNode 
                             autoPlay
                             loop
                         />
-                    </View>
-                </Modal>
+                </View>
             )}
-        </>
+        </View>
     );
 };
+
+const styles = StyleSheet.create({
+    root: {
+        flex: 1,
+    },
+    overlay: {
+        ...StyleSheet.absoluteFillObject,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(255,255,255,.7)',
+    },
+});

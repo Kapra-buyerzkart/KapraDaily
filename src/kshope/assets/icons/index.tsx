@@ -92,6 +92,14 @@ const Close = ({ size = defaultSize, color = colors.primary, style }: IconProps)
     <MaterialIcons name="close" size={size} color={color} style={style} />
 );
 
+const GiftCard = ({ size = defaultSize, color = colors.primary, style }: IconProps) => (
+    <MaterialCommunityIcons name="gift-outline" size={size} color={color} style={style} />
+);
+
+const CouponTicket = ({ size = defaultSize, color = colors.primary, style }: IconProps) => (
+    <MaterialCommunityIcons name="ticket-confirmation-outline" size={size} color={color} style={style} />
+);
+
 const ShoppingCart = ({ size = defaultSize, color = colors.primary, style }: IconProps) => (
     <MaterialIcons name="shopping-cart" size={size} color={color} style={style} />
 );
@@ -275,6 +283,8 @@ export const AppIcons = {
     Search,
     Close,
     ShoppingCart,
+    GiftCard,
+    CouponTicket,
     ViewModule,
     ViewList,
     Check,

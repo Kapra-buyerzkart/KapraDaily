@@ -23,7 +23,7 @@ type Props = {
 
 const BestSelling: React.FC<Props> = ({ items, onPressTile }) => (
   <View style={styles.wrap}>
-    <SectionTitle text="Best Selling" style={styles.title} />
+    <SectionTitle text="Best" accent="Selling" style={styles.title} />
 
     <View style={styles.grid}>
       {items.map((item, index) => (

@@ -30,11 +30,11 @@ const AddressCard: React.FC<AddressCardProps> = ({
   style,
 }) => (
   <View style={[styles.card, style]}>
-    <IconDisc size={wp('9.5%')} tone="brand">
+    <IconDisc size={wp('9.5%')} tone="ink">
       <MaterialCommunityIcons
         name="map-marker-outline"
         size={wp('5%')}
-        color={UI_COLORS.primary}
+        color={UI_COLORS.ink}
       />
     </IconDisc>
 
@@ -43,7 +43,7 @@ const AddressCard: React.FC<AddressCardProps> = ({
         <AppText variant="micro" tone="muted">
           DELIVERING TO
         </AppText>
-        <Badge tone="brand" label={(addressType || 'Home').toUpperCase()} />
+        <Badge tone="ink" label={(addressType || 'Home').toUpperCase()} />
       </View>
       <AppText variant="label" tone="secondary" numberOfLines={2}>
         {addressLine || 'No address selected'}
@@ -57,7 +57,7 @@ const AddressCard: React.FC<AddressCardProps> = ({
       accessibilityRole="button"
       accessibilityLabel="Change delivery address"
     >
-      <AppText variant="microStrong" tone="brand">
+      <AppText variant="microStrong" tone="primary">
         Change
       </AppText>
     </TouchableOpacity>
@@ -92,8 +92,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: UI_SPACING.md,
     paddingVertical: UI_SPACING.xs + 2,
     borderRadius: UI_RADIUS.pill,
-    backgroundColor: UI_COLORS.primaryTint,
+    backgroundColor: UI_COLORS.card,
     borderWidth: 1,
-    borderColor: UI_COLORS.primaryEdge,
+    borderColor: UI_COLORS.inkEdge,
   },
 });

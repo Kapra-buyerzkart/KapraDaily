@@ -95,8 +95,9 @@ export const useCategoryData = (initialCatId?: string | number) => {
 
   const fetchProducts = useCallback(
     async (categoryId: string, page = 1) => {
+      const showsLoader = page === 1;
       try {
-        if (page === 1) {
+        if (showsLoader) {
           showLoader(true);
         } else {
           setIsLoadingMore(true);
@@ -131,7 +132,9 @@ export const useCategoryData = (initialCatId?: string | number) => {
           setProducts([]);
         }
       } finally {
-        showLoader(false);
+        if (showsLoader) {
+          showLoader(false);
+        }
         setIsLoadingMore(false);
       }
     },

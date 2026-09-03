@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { AppText, Surface, Badge, PriceBlock } from './atoms';
 import FallbackImage from './FallbackImage';
@@ -92,8 +91,9 @@ const CartItemCard: React.FC<CartItemCardProps> = ({
 
           <View style={styles.stepper}>
             <TouchableOpacity
-              activeOpacity={0.8}
+              activeOpacity={0.6}
               onPress={() => onDecrement?.(item.id)}
+              style={styles.qtyBtn}
               accessibilityRole="button"
               accessibilityLabel={
                 isLastUnit
@@ -101,42 +101,29 @@ const CartItemCard: React.FC<CartItemCardProps> = ({
                   : `Decrease ${item.title} quantity`
               }
             >
-              <LinearGradient
-                colors={[UI_COLORS.primary, UI_COLORS.primarySoft]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.qtyBtn}
-              >
-                <MaterialCommunityIcons
-                  name={isLastUnit ? 'trash-can-outline' : 'minus'}
-                  size={wp('4%')}
-                  color={UI_COLORS.onPrimary}
-                />
-              </LinearGradient>
+              <MaterialCommunityIcons
+                name={isLastUnit ? 'trash-can-outline' : 'minus'}
+                size={wp('4%')}
+                color={isLastUnit ? UI_COLORS.textMuted : UI_COLORS.ink}
+              />
             </TouchableOpacity>
 
             <AppText variant="labelStrong" style={styles.qtyText}>
-              {String(item.quantity).padStart(2, '0')}
+              {item.quantity}
             </AppText>
 
             <TouchableOpacity
-              activeOpacity={0.8}
+              activeOpacity={0.6}
               onPress={() => onIncrement?.(item.id)}
+              style={styles.qtyBtn}
               accessibilityRole="button"
               accessibilityLabel={`Increase ${item.title} quantity`}
             >
-              <LinearGradient
-                colors={[UI_COLORS.primary, UI_COLORS.primarySoft]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.qtyBtn}
-              >
-                <MaterialCommunityIcons
-                  name="plus"
-                  size={wp('4%')}
-                  color={UI_COLORS.onPrimary}
-                />
-              </LinearGradient>
+              <MaterialCommunityIcons
+                name="plus"
+                size={wp('4%')}
+                color={UI_COLORS.ink}
+              />
             </TouchableOpacity>
           </View>
         </View>
@@ -210,17 +197,20 @@ const styles = StyleSheet.create({
   stepper: {
     flexDirection: 'row',
     alignItems: 'center',
+    borderRadius: UI_RADIUS.pill,
+    borderWidth: 1,
+    borderColor: UI_COLORS.inkEdge,
+    backgroundColor: UI_COLORS.card,
+    overflow: 'hidden',
   },
   qtyBtn: {
-    width: wp('7.5%'),
-    height: wp('7.5%'),
-    borderRadius: UI_RADIUS.pill,
+    width: wp('8.5%'),
+    height: wp('8%'),
     justifyContent: 'center',
     alignItems: 'center',
   },
   qtyText: {
-    paddingHorizontal: UI_SPACING.md,
-    minWidth: wp('11%'),
+    minWidth: wp('6%'),
     textAlign: 'center',
   },
 });

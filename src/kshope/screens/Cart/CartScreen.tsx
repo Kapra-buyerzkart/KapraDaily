@@ -769,7 +769,7 @@ const CartScreen = () => {
         title="Remove Item"
         message="Are you sure you want to remove this item from your cart?"
         confirmText="Remove"
-        themeColor={colors.themeTeal}
+        themeColor={UI_COLORS.textPrimary}
       />
 
       <AddressConfirmationModal
@@ -831,7 +831,7 @@ const CartScreen = () => {
                     <MaterialCommunityIcons
                       name={isCOD ? 'cash' : 'cellphone'}
                       size={22}
-                      color={isCOD ? '#0CA201' : '#1A73E8'}
+                      color={UI_COLORS.ink}
                       style={{ marginRight: 10 }}
                     />
                     <View style={{ flex: 1 }}>
@@ -857,7 +857,7 @@ const CartScreen = () => {
                       </Text>
                     </View>
                     {isSelected && (
-                      <AppIcons.Check color={colors.themeTeal} size={16} />
+                      <AppIcons.Check color={UI_COLORS.ink} size={16} />
                     )}
                   </TouchableOpacity>
                 );
@@ -977,8 +977,8 @@ const styles = StyleSheet.create({
     marginBottom: UI_SPACING.md,
   },
   paymentMethodOptionActive: {
-    borderColor: UI_COLORS.primary,
-    backgroundColor: UI_COLORS.primaryTint,
+    borderColor: UI_COLORS.ink,
+    backgroundColor: UI_COLORS.inkTint,
   },
   paymentMethodName: {
     fontSize: 15,
@@ -987,7 +987,7 @@ const styles = StyleSheet.create({
   },
   paymentMethodNameActive: {
     fontFamily: Fonts.gilroyBold,
-    color: UI_COLORS.primary,
+    color: UI_COLORS.textPrimary,
   },
   radioCircle: {
     width: 20,
@@ -1000,12 +1000,12 @@ const styles = StyleSheet.create({
     marginRight: UI_SPACING.md,
   },
   radioCircleActive: {
-    borderColor: UI_COLORS.primary,
+    borderColor: UI_COLORS.ink,
   },
   radioInner: {
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: UI_COLORS.primary,
+    backgroundColor: UI_COLORS.ink,
   },
 });

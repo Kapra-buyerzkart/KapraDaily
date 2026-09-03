@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { AppText, IconDisc } from '../../../components/atoms';
 import {
@@ -56,11 +55,11 @@ const CheckoutBar: React.FC<CheckoutBarProps> = ({
             PAY USING
           </AppText>
           <View style={styles.paymentMethod}>
-            <IconDisc size={wp('6.5%')} tone="brand" radius={UI_RADIUS.pill}>
+            <IconDisc size={wp('6.5%')} tone="ink" radius={UI_RADIUS.pill}>
               <MaterialCommunityIcons
                 name={isCod ? 'cash' : 'cellphone'}
                 size={wp('3.6%')}
-                color={UI_COLORS.primary}
+                color={UI_COLORS.ink}
               />
             </IconDisc>
             <AppText variant="labelStrong" numberOfLines={1}>
@@ -77,25 +76,18 @@ const CheckoutBar: React.FC<CheckoutBarProps> = ({
         <TouchableOpacity
           activeOpacity={0.85}
           onPress={onPay}
-          style={styles.payButtonShell}
+          style={styles.payButton}
           accessibilityRole="button"
           accessibilityLabel={`Pay ₹${toPay.toFixed(2)}`}
         >
-          <LinearGradient
-            colors={[UI_COLORS.primary, UI_COLORS.primarySoft]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.payButton}
-          >
-            <AppText variant="cta" tone="onDark">
-              Pay ₹{toPay.toFixed(2)}
-            </AppText>
-            <MaterialCommunityIcons
-              name="chevron-right"
-              size={wp('5%')}
-              color={UI_COLORS.onPrimary}
-            />
-          </LinearGradient>
+          <AppText variant="cta" tone="onDark">
+            Pay ₹{toPay.toFixed(2)}
+          </AppText>
+          <MaterialCommunityIcons
+            name="chevron-right"
+            size={wp('5%')}
+            color={UI_COLORS.onPrimary}
+          />
         </TouchableOpacity>
       </View>
     </View>
@@ -145,11 +137,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: UI_SPACING.sm,
   },
-  payButtonShell: {
-    borderRadius: UI_RADIUS.pill,
-    overflow: 'hidden',
-    ...UI_ELEVATION.raised,
-  },
   payButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -158,5 +145,7 @@ const styles = StyleSheet.create({
     height: hp('6%'),
     minWidth: wp('42%'),
     paddingHorizontal: UI_SPACING.lg,
+    borderRadius: UI_RADIUS.pill,
+    backgroundColor: UI_COLORS.primary,
   },
 });

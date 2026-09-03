@@ -3,9 +3,9 @@ import { getProductSuggestionsApi, searchProductsApi } from '../api/services/pro
 import { useDebounce } from './useDebounce';
 import { useKshopeAreaId } from './useKshopeAreaId';
 
-const useProductSearch = (initialPincodeId: any, initialCatId: any = null, filters: any = {}, initialAttrValueId: any = null) => {
+const useProductSearch = (initialPincodeId: any, initialCatId: any = null, filters: any = {}, initialAttrValueId: any = null, initialSearchTerm: string = '') => {
     const { areaId } = useKshopeAreaId();
-    const [searchTerm, setSearchTerm] = useState('');
+    const [searchTerm, setSearchTerm] = useState(initialSearchTerm);
     const [catId, setCatId] = useState(initialCatId);
     const [suggestions, setSuggestions] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
@@ -171,6 +171,17 @@ const useProductSearch = (initialPincodeId: any, initialCatId: any = null, filte
     useEffect(() => {
         fetchProducts(1);
     }, [fetchProducts]);
+
+    useEffect(() => {
+        console.log('search items', {
+            term: debouncedSearchTerm,
+            catId,
+            attrValueId: initialAttrValueId,
+            count: suggestions.length,
+            resultCount,
+            items: suggestions,
+        });
+    }, [suggestions, debouncedSearchTerm, catId, initialAttrValueId, resultCount]);
 
     const loadMore = useCallback(() => {
         if (!loading && !isLoadingMore && hasMore) {

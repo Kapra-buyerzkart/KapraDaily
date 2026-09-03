@@ -11,6 +11,7 @@ const TONE_STYLES: Record<string, { bg: string; fg: AppTextTone }> = {
   success: { bg: UI_COLORS.successTint, fg: 'success' },
   brand: { bg: UI_COLORS.primaryTint, fg: 'brand' },
   neutral: { bg: UI_COLORS.well, fg: 'muted' },
+  ink: { bg: UI_COLORS.inkTint, fg: 'primary' },
   danger: { bg: UI_COLORS.dangerTint, fg: 'danger' },
   token: { bg: UI_COLORS.tokenTint, fg: 'token' },
   solidSuccess: { bg: UI_COLORS.success, fg: 'onDark' },

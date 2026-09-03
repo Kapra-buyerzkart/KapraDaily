@@ -23,6 +23,17 @@ import {
   s,
 } from '../theme';
 
+const splitAccent = (value: string) => {
+  const words = value.trim().split(/\s+/);
+  if (words.length < 2) {
+    return { text: value, accent: undefined };
+  }
+  return {
+    text: words.slice(0, -1).join(' '),
+    accent: words[words.length - 1],
+  };
+};
+
 type PressHandlers = {
   brands?: BrandTile[];
   dealTitle?: string;
@@ -69,7 +80,7 @@ export const BrandsSpotlight: React.FC<PressHandlers> = ({
   onPressBrandItem,
 }) => (
   <View style={styles.wrap}>
-    <SectionTitle text="Brands In Spotlight" style={styles.title} />
+    <SectionTitle text="Brands In" accent="Spotlight" style={styles.title} />
     <FlatList
       data={brands}
       horizontal
@@ -92,67 +103,68 @@ export const BrandsSpotlight: React.FC<PressHandlers> = ({
   </View>
 );
 
-export const TopDeals: React.FC<PressHandlers> = ({
-  dealTitle,
-  deals = [],
-  onShopNow,
-  onPressDeal,
-}) => {
-  const tiles = deals.slice(0, 2);
-  const tileArt = [HOME_ART.dealTile1, HOME_ART.dealTile2];
+// export const TopDeals: React.FC<PressHandlers> = ({
+//   dealTitle,
+//   deals = [],
+//   onShopNow,
+//   onPressDeal,
+// }) => {
+//   const tiles = deals.slice(0, 2);
+//   const tileArt = [HOME_ART.dealTile1, HOME_ART.dealTile2];
 
-  return (
-    <View style={styles.wrap}>
-      <SectionTitle
-        text={dealTitle || 'Top Deals For You'}
-        style={styles.title}
-      />
+//   return (
+//     <View style={styles.wrap}>
+//       <SectionTitle
+//         text={splitAccent(dealTitle || 'Top Deals For You').text}
+//         accent={splitAccent(dealTitle || 'Top Deals For You').accent}
+//         style={styles.title}
+//       />
 
-      {/* <View style={styles.bannerWrap}>
-        <Image
-          source={HOME_ART.bannerTopDeals}
-          resizeMode="cover"
-          style={styles.banner}
-        />
-        <PillButton
-          label="Shop Now"
-          onPress={onShopNow}
-          style={styles.bannerCta}
-        />
-      </View> */}
+//       {/* <View style={styles.bannerWrap}>
+//         <Image
+//           source={HOME_ART.bannerTopDeals}
+//           resizeMode="cover"
+//           style={styles.banner}
+//         />
+//         <PillButton
+//           label="Shop Now"
+//           onPress={onShopNow}
+//           style={styles.bannerCta}
+//         />
+//       </View> */}
 
-      <View style={styles.tileRow}>
-        {tiles.length > 0
-          ? tiles.map((item, index) => (
-              <TouchableOpacity
-                key={item.id}
-                activeOpacity={0.9}
-                style={styles.dealTile}
-                onPress={() => onPressDeal?.(item)}
-              >
-                <Image
-                  source={imageSource(item.image) ?? tileArt[index]}
-                  resizeMode="contain"
-                  style={styles.dealTileImage}
-                />
-              </TouchableOpacity>
-            ))
-          : tileArt.map((art, index) => (
-              <Image
-                key={`deal-art-${index}`}
-                source={art}
-                resizeMode="contain"
-                style={styles.dealTile}
-              />
-            ))}
-      </View>
-    </View>
-  );
-};
+//       <View style={styles.tileRow}>
+//         {tiles.length > 0
+//           ? tiles.map((item, index) => (
+//               <TouchableOpacity
+//                 key={item.id}
+//                 activeOpacity={0.9}
+//                 style={styles.dealTile}
+//                 onPress={() => onPressDeal?.(item)}
+//               >
+//                 <Image
+//                   source={imageSource(item.image) ?? tileArt[index]}
+//                   resizeMode="contain"
+//                   style={styles.dealTileImage}
+//                 />
+//               </TouchableOpacity>
+//             ))
+//           : tileArt.map((art, index) => (
+//               <Image
+//                 key={`deal-art-${index}`}
+//                 source={art}
+//                 resizeMode="contain"
+//                 style={styles.dealTile}
+//               />
+//             ))}
+//       </View>
+//     </View>
+//   );
+// };
 
 export const MoreDeals: React.FC = () => (
   <View style={styles.wrap}>
-    <SectionTitle text="More Deals You’ll Love" style={styles.title} />
+    <SectionTitle text="More Deals" accent="You’ll Love" style={styles.title} />
     <Image
       source={HOME_ART.bannerMoreDeals}
       resizeMode="cover"

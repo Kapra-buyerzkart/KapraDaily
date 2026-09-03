@@ -94,3 +94,108 @@ export const featureList = (details: any): Feature[] =>
       subtitle: attr?.attrValue || '',
     }))
     .filter((feature: Feature) => Boolean(feature.title));
+
+export type ReviewBar = {
+  star: number;
+  percent: number;
+};
+
+export type ReviewEntry = {
+  id: string;
+  name: string;
+  date: string;
+  rating: number;
+  comment: string;
+};
+
+const reviewDate = (value: any) => {
+  if (!value) {
+    return '';
+  }
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return '';
+  }
+  return parsed
+    .toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    })
+    .replace(/ (\w+) /, ' $1, ');
+};
+
+export const reviewList = (details: any): ReviewEntry[] =>
+  (details?.reviews || []).map((entry: any, index: number) => ({
+    id: String(entry?.reviewId ?? entry?.id ?? index),
+    name:
+      entry?.customerName || entry?.userName || entry?.name || 'Anonymous',
+    date: reviewDate(entry?.createdDate || entry?.reviewDate || entry?.date),
+    rating: Number(entry?.rating ?? entry?.ratingValue ?? 0),
+    comment: String(entry?.comment || entry?.review || entry?.description || '')
+      .replace(/<\/?[^>]+(>|$)/g, '')
+      .trim(),
+  }));
+
+export const reviewSummary = (details: any) => {
+  const summary = details?.ratingSummary;
+  const reviews = reviewList(details);
+
+  const total = Number(
+    summary?.ratingCount ?? summary?.reviewCount ?? reviews.length ?? 0,
+  );
+
+  const counts = [5, 4, 3, 2, 1].map(star => {
+    const fromSummary =
+      summary?.[`star${star}`] ??
+      summary?.[`rating${star}`] ??
+      summary?.[`count${star}`];
+    if (fromSummary !== undefined && fromSummary !== null) {
+      return Number(fromSummary) || 0;
+    }
+    return reviews.filter(entry => Math.round(entry.rating) === star).length;
+  });
+
+  const totalCounts = counts.reduce((sum, value) => sum + value, 0);
+
+  const bars: ReviewBar[] = counts.map((count, index) => ({
+    star: 5 - index,
+    percent: totalCounts > 0 ? Math.round((count / totalCounts) * 100) : 0,
+  }));
+
+  const average = Number(
+    summary?.avgRating ??
+      summary?.averageRating ??
+      (reviews.length
+        ? reviews.reduce((sum, entry) => sum + entry.rating, 0) / reviews.length
+        : 0),
+  );
+
+  return {
+    average: average.toFixed(1),
+    total,
+    bars,
+    hasData: totalCounts > 0 || reviews.length > 0,
+  };
+};
+
+export const specificationList = (details: any) =>
+  (details?.attributes || []).map((attr: any, index: number) => ({
+    id: String(attr?.productAttrId ?? attr?.attrId ?? index),
+    label: attr?.attrName || '',
+    value: attr?.attrValue || '',
+  }));
+
+export const warrantyText = (details: any, product: any) => {
+  const attr = (details?.attributes || []).find((entry: any) =>
+    String(entry?.attrName || '')
+      .toLowerCase()
+      .includes('warranty'),
+  );
+  if (attr?.attrValue) {
+    return String(attr.attrValue);
+  }
+  return product?.warranty
+    ? String(product.warranty)
+    : 'Warranty details are not available for this product.';
+};

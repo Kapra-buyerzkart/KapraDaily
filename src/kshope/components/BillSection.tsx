@@ -104,11 +104,11 @@ const BillSection: React.FC<BillSectionProps> = ({
           <SectionHeading
             title="Bill summary"
             icon={
-              <IconDisc size={wp('8%')} tone="brand">
+              <IconDisc size={wp('8%')} tone="ink">
                 <MaterialCommunityIcons
                   name="receipt"
                   size={wp('4.4%')}
-                  color={UI_COLORS.primary}
+                  color={UI_COLORS.ink}
                 />
               </IconDisc>
             }
