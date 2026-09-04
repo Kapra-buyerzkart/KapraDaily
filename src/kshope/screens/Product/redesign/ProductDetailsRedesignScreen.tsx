@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { ScrollView, Share, StatusBar, StyleSheet, View } from 'react-native';
+import { Share, StatusBar, StyleSheet, View } from 'react-native';
+import Animated from 'react-native-reanimated';
 import {
   useIsFocused,
   useNavigation,
@@ -7,6 +8,7 @@ import {
 } from '@react-navigation/native';
 import { useWishlist } from '../../../context/WishlistContext';
 import FloatingCartButton from '../../../components/FloatingCartButton';
+import { useCartPillScrollProps } from '../../../components/cartPillScroll';
 import { s } from '../../Home/redesign/theme';
 import Gallery from './sections/Gallery';
 import PriceHeader from './sections/PriceHeader';
@@ -25,6 +27,7 @@ import {
   pricing,
   productDescription,
   productSubtitle,
+  tokenCount,
   productTitle,
   ratingSummary,
   reviewList,
@@ -62,6 +65,7 @@ const ProductDetailsRedesignScreen: React.FC = () => {
   const id = String(rawId ?? '');
 
   const { isInWishlist, toggleWishlist } = useWishlist();
+  const cartPillScroll = useCartPillScrollProps();
   const {
     details,
     product: current,
@@ -101,9 +105,10 @@ const ProductDetailsRedesignScreen: React.FC = () => {
     <View style={styles.safe}>
       <ProductStatusBar />
 
-      <ScrollView
+      <Animated.ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
+        {...cartPillScroll}
       >
         <Gallery
           images={galleryImages(details, current)}
@@ -123,6 +128,8 @@ const ProductDetailsRedesignScreen: React.FC = () => {
           average={rating.average}
           ratings={rating.ratings}
           reviews={rating.reviews}
+          hasRating={rating.hasRating}
+          tokens={tokenCount(current, details, product)}
         />
 
         <View style={styles.stripSpacer} />
@@ -148,7 +155,7 @@ const ProductDetailsRedesignScreen: React.FC = () => {
           onPress={openProduct}
           onToggleWishlist={toggleWishlist}
         />
-      </ScrollView>
+      </Animated.ScrollView>
 
       <FloatingCartButton bottom={s(90)} />
 

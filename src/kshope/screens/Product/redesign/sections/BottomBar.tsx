@@ -2,7 +2,6 @@ import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { HOME_FONTS, fs, s } from '../../../Home/redesign/theme';
-import { StrikePrice } from '../../../Home/redesign/parts';
 import { CartIcon } from '../icons';
 import { PDP_COLORS } from '../theme';
 
@@ -50,13 +49,11 @@ const BottomBar: React.FC<Props> = ({
       </View>
 
       <View style={styles.priceCol}>
-        <Text style={styles.price}>{price}</Text>
+        <Text style={styles.price} numberOfLines={1} adjustsFontSizeToFit>
+          {price}
+        </Text>
         {mrp ? (
-          <StrikePrice
-            value={`MRP ${mrp}`}
-            size={12}
-            color={PDP_COLORS.muted}
-          />
+          <Text style={styles.mrp} numberOfLines={1}>{`MRP ${mrp}`}</Text>
         ) : null}
       </View>
 
@@ -121,12 +118,25 @@ const styles = StyleSheet.create({
   priceCol: {
     flex: 1,
     alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: s(8),
   },
   price: {
     fontFamily: HOME_FONTS.medium,
     fontSize: fs(20),
-    lineHeight: fs(20) * 1.25,
+    lineHeight: fs(20) * 1.15,
     color: PDP_COLORS.black,
+    textAlign: 'center',
+  },
+  mrp: {
+    fontFamily: HOME_FONTS.regular,
+    fontSize: fs(12),
+    lineHeight: fs(12) * 1.15,
+    color: PDP_COLORS.muted,
+    textAlign: 'center',
+    textDecorationLine: 'line-through',
+    textDecorationColor: PDP_COLORS.muted,
+    marginTop: s(1),
   },
   action: {
     width: s(140),

@@ -134,7 +134,16 @@ const EditProfileScreen = () => {
             </Animated.View>
 
             <Animated.View entering={entrance(2)}>
-              <ContactDetailsCard email={email} phone={phone} />
+              <ContactDetailsCard
+                email={email}
+                phone={phone}
+                onChangeEmail={() =>
+                  navigation.navigate('UpdateContactScreen', { type: 'email' })
+                }
+                onChangePhone={() =>
+                  navigation.navigate('UpdateContactScreen', { type: 'phone' })
+                }
+              />
             </Animated.View>
           </View>
         </Animated.ScrollView>

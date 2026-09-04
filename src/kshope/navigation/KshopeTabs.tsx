@@ -47,7 +47,7 @@ const KshopeTabs: React.FC = () => {
                 screenOptions={({ route }) => ({
                     headerShown: false,
                     tabBarShowLabel: false,
-                    tabBarStyle: { backgroundColor: colors.background, borderTopColor: colors.border, height: 74, paddingHorizontal: 10, paddingRight: 20 },
+                    tabBarStyle: { backgroundColor: colors.background, borderTopColor: colors.border, height: 92, paddingHorizontal: 10, paddingTop: 10, paddingBottom: 8 },
                     tabBarItemStyle: {
                         justifyContent: 'center',
                         alignItems: 'center',
@@ -65,7 +65,7 @@ const KshopeTabs: React.FC = () => {
 
                         return (
                             <View style={styles.iconContainer}>
-                                <Image source={iconSource} style={focused ? styles.normalIcon : styles.unselectedIcon} resizeMode="contain" />
+                                <Image source={iconSource} style={styles.tabIcon} resizeMode="contain" />
                             </View>
                         );
                     },
@@ -97,30 +97,21 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         width: 70,
-        height: 60,
-        marginTop: 20,
+        height: 52,
     },
-    normalIcon: {
-        width: 35,
-        height: 35,
-        marginTop: 20,
-    },
-    unselectedIcon: {
-        width: 35,
-        height: 35,
-        marginTop: 20,
+    tabIcon: {
+        width: 36,
+        height: 36,
     },
     switchContainer: {
         alignItems: 'center',
         justifyContent: 'center',
         width: 70,
-        height: 60,
-        marginTop: 20,
+        height: 52,
     },
     switchIcon: {
-        width: 28,
-        height: 28,
-        marginTop: 18,
+        width: 36,
+        height: 36,
     },
     switchLabel: {
         fontFamily: Fonts.gilroyMedium,

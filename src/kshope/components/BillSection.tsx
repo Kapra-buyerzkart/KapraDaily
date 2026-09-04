@@ -1,20 +1,8 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import {
-  AppText,
-  Surface,
-  Divider,
-  IconDisc,
-  SectionHeading,
-} from './atoms';
-import {
-  UI_COLORS,
-  UI_RADIUS,
-  UI_SPACING,
-  hp,
-  wp,
-} from '../theme/tokens';
+import { AppText, Surface, Divider, IconDisc, SectionHeading } from './atoms';
+import { UI_COLORS, UI_RADIUS, UI_SPACING, hp, wp } from '../theme/tokens';
 import { AppTextTone } from './atoms/AppText';
 
 export interface BillCalculations {
@@ -87,9 +75,21 @@ const BillSection: React.FC<BillSectionProps> = ({
   } = billCalculations;
 
   const discounts = [
-    { key: 'coupon', label: 'Coupon discount', amount: Math.abs(couponDiscount) },
-    { key: 'gift', label: 'Gift card applied', amount: Math.abs(giftCardAmount) },
-    { key: 'coins', label: 'B-Coins applied', amount: Math.abs(bcoinsAppliedValue) },
+    {
+      key: 'coupon',
+      label: 'Coupon discount',
+      amount: Math.abs(couponDiscount),
+    },
+    {
+      key: 'gift',
+      label: 'Gift card applied',
+      amount: Math.abs(giftCardAmount),
+    },
+    {
+      key: 'coins',
+      label: 'UD-coinsapplied',
+      amount: Math.abs(bcoinsAppliedValue),
+    },
   ].filter(entry => entry.amount > 0);
 
   const strikeTotal = mrpTotal || itemTotal + Math.abs(savings);
@@ -186,7 +186,7 @@ const BillSection: React.FC<BillSectionProps> = ({
                   color={UI_COLORS.token}
                 />
                 <AppText variant="captionStrong" tone="token">
-                  Earn {totalBtokens} B-Tokens
+                  Earn {totalBtokens} UD-tokens
                 </AppText>
               </View>
             )}

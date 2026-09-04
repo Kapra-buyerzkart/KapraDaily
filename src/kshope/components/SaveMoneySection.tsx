@@ -3,12 +3,7 @@ import { View, StyleSheet } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { AppText, Surface, Divider, IconDisc } from './atoms';
 import OfferRow from './OfferRow';
-import {
-  UI_COLORS,
-  UI_SPACING,
-  hp,
-  wp,
-} from '../theme/tokens';
+import { UI_COLORS, UI_SPACING, hp, wp } from '../theme/tokens';
 
 export interface SaveMoneySectionProps {
   appliedCouponCode?: string | null;
@@ -45,7 +40,7 @@ const SaveMoneySection: React.FC<SaveMoneySectionProps> = ({
           <View style={styles.headerCopy}>
             <AppText variant="heading">Save more</AppText>
             <AppText variant="caption" tone="muted">
-              Coupons, B-Coins and gift cards
+              Coupons, UD-coinsand gift cards
             </AppText>
           </View>
         </View>
@@ -55,8 +50,8 @@ const SaveMoneySection: React.FC<SaveMoneySectionProps> = ({
         <OfferRow
           iconName="hand-coin"
           iconTone="ink"
-          title="B-Coins"
-          subtitle={`${availableBCoins} B-Coins available`}
+          title="UD-Coins"
+          subtitle={`${availableBCoins} UD-coinsavailable`}
           isApplied={bcoinsApplied}
           appliedSubtitle={`₹${bcoinsAppliedValue.toFixed(0)} applied`}
           onPress={() => onApplyOffer('3')}

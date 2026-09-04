@@ -12,10 +12,9 @@ import {
   ViewStyle,
 } from 'react-native';
 import { HOME_ART } from './assets';
-import { HOME_COLORS, HOME_FONTS, fs, s } from './theme';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { HOME_COLORS, HOME_FONTS, TOKEN_COLORS, fs, s } from './theme';
 import { sectionTitle } from './data/blocks';
-
-const TOKEN_COIN = require('../../../assets/images/btokenn.png');
 
 export const imageSource = (image: any) => image || HOME_ART.placeholder;
 
@@ -52,10 +51,10 @@ export const TokenBadge: React.FC<{
   style?: StyleProp<ViewStyle>;
 }> = ({ tokens, size = 9, style }) => (
   <View style={[styles.tokenBadge, style]}>
-    <Image
-      source={TOKEN_COIN}
-      resizeMode="contain"
-      style={{ width: fs(size) * 1.35, height: fs(size) * 1.35 }}
+    <MaterialCommunityIcons
+      name="ticket-confirmation-outline"
+      size={fs(size) * 1.4}
+      color={TOKEN_COLORS.ink}
     />
     <Text
       style={[
@@ -64,7 +63,8 @@ export const TokenBadge: React.FC<{
       ]}
       numberOfLines={1}
     >
-      {`${tokens} UD Tokens`}
+      {tokens}
+      <Text style={styles.tokenBadgeUnit}>{' UD Token'}</Text>
     </Text>
   </View>
 );
@@ -78,12 +78,16 @@ export const StrikePrice: React.FC<{
     <Text
       style={[
         styles.strikeText,
-        { fontSize: fs(size), color, lineHeight: fs(size) * 1.35 },
+        {
+          fontSize: fs(size),
+          color,
+          lineHeight: fs(size) * 1.35,
+          textDecorationColor: color,
+        },
       ]}
     >
       {value}
     </Text>
-    <View style={[styles.strikeRule, { backgroundColor: color }]} />
   </View>
 );
 
@@ -132,8 +136,10 @@ export const IconTile: React.FC<{
 
 const styles = StyleSheet.create({
   badge: {
-    height: s(12),
-    width: s(38),
+    minHeight: s(12),
+    minWidth: s(38),
+    paddingHorizontal: s(5),
+    paddingVertical: s(1),
     borderRadius: s(5),
     backgroundColor: HOME_COLORS.orange,
     alignItems: 'center',
@@ -147,13 +153,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: s(6),
     paddingVertical: s(2),
     borderRadius: s(999),
-    backgroundColor: HOME_COLORS.cream,
+    backgroundColor: TOKEN_COLORS.tint,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: HOME_COLORS.creamRule,
+    borderColor: TOKEN_COLORS.edge,
   },
   tokenBadgeText: {
-    fontFamily: HOME_FONTS.medium,
-    color: HOME_COLORS.cocoa,
+    fontFamily: HOME_FONTS.bold,
+    color: TOKEN_COLORS.ink,
+    letterSpacing: 0.2,
+  },
+  tokenBadgeUnit: {
+    fontFamily: HOME_FONTS.semiBold,
+    color: TOKEN_COLORS.inkSoft,
   },
   badgeText: {
     fontFamily: HOME_FONTS.regular,
@@ -166,13 +177,7 @@ const styles = StyleSheet.create({
   },
   strikeText: {
     fontFamily: HOME_FONTS.regular,
-  },
-  strikeRule: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: '52%',
-    height: StyleSheet.hairlineWidth,
+    textDecorationLine: 'line-through',
   },
   pill: {
     height: s(26),
@@ -189,15 +194,15 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontFamily: HOME_FONTS.semiBold,
     color: HOME_COLORS.heading,
-    fontSize: fs(17),
-    lineHeight: fs(17) * 1.8,
+    fontSize: fs(19),
+    lineHeight: fs(30) * 1.5,
     letterSpacing: 0.2,
   },
 
   sectionAccent: {
     fontFamily: HOME_FONTS.script,
-    fontSize: fs(26),
-    lineHeight: fs(17) * 1.8,
+    fontSize: fs(30),
+    lineHeight: fs(30) * 1.5,
     letterSpacing: 0,
     color: HOME_COLORS.script,
   },

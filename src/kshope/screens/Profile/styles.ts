@@ -2,11 +2,25 @@ import { StyleSheet, Platform } from 'react-native';
 import { colors, fontColors } from '../../theme/colours';
 import { Fonts } from '../../theme/fonts';
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen';
+import { UI_COLORS, UI_SPACING } from '../../theme/tokens';
+
+export const BAR_REST = UI_COLORS.background;
+export const BAR_SOLID = UI_COLORS.card;
 
 export const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
-    backgroundColor: colors.white,
+    backgroundColor: UI_COLORS.background,
+  },
+  scrollView: {
+    backgroundColor: UI_COLORS.background,
+  },
+  scrollContent: {
+    paddingBottom: hp('12%'),
+  },
+  heroBlock: {
+    paddingTop: UI_SPACING.xs,
+    gap: UI_SPACING.md,
   },
   headerGradient: {
     height: hp('20%'),

@@ -1,15 +1,16 @@
 import { get } from '../client';
 
 export const getHomepageData = async (pincodeAreaId: number | string | null, blocksize: number = 100): Promise<any> => {
-    console.log('pincodeAreaId---->', pincodeAreaId)
-    console.log('blocksize---->', blocksize)
     const config = {
         params: {
             pincodeAreaId,
             blocksize
         }
     };
-    return get('homepage', config);
+    const response = await get('homepage', config);
+    console.log('[HOMEPAGE API] params:', config.params);
+    console.log('[HOMEPAGE API] response:', response);
+    return response;
 };
 
 export const getCategoryProducts = async (catId: number | string, pincodeAreaId: number | string | null): Promise<any> => {

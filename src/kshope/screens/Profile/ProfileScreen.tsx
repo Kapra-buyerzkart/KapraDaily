@@ -1,27 +1,29 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  Image,
-  TouchableOpacity,
-  ScrollView,
-  StatusBar,
-  ImageBackground,
-  Clipboard,
-} from 'react-native';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { View, Image, StatusBar, Clipboard } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import Animated, {
+  Extrapolation,
+  interpolate,
+  interpolateColor,
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  useSharedValue,
+} from 'react-native-reanimated';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { colors } from '../../theme/colours';
-import { styles } from './styles';
-import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen';
+import { UI_COLORS, wp } from '../../theme/tokens';
+import { styles, BAR_REST, BAR_SOLID } from './styles';
 
 import { useUser } from '../../context/UserContext';
 import ConfirmationModal from '../../components/ConfirmationModal';
 import CouponModal from '../../components/CouponModal';
 import FloatingCartButton from '../../components/FloatingCartButton';
+import {
+  trackCartPillScroll,
+  useCartPillScrollTracker,
+} from '../../components/cartPillScroll';
 import { useCustomAlert } from '../../context/AlertContext';
 import { LoaderContext } from '../../context/loaderContext';
 import { clearKshopeSession } from '../../api/session';
@@ -34,6 +36,23 @@ import {
   getAvailableGiftCardsApi,
 } from '../../api/services/cartService';
 import Toast from 'react-native-simple-toast';
+
+import ProfileHeaderBar from './redesign/sections/ProfileHeaderBar';
+import ProfileHeroCard from './redesign/sections/ProfileHeroCard';
+import QuickActionsGrid from './redesign/sections/QuickActionsGrid';
+import MenuSection, { MenuItem } from './redesign/sections/MenuSection';
+import {
+  BAR_SOLID_AT,
+  BORDER_FADE_RANGE,
+  NAME_FADE_IN,
+  NAME_TRAVEL,
+  TITLE_FADE_OUT,
+  entrance,
+} from './redesign/motion';
+
+const INK = UI_COLORS.textSecondary;
+const RED = UI_COLORS.danger;
+const ICON_SIZE = wp('4%');
 
 const ProfileScreen: React.FC = () => {
   const navigation = useNavigation<any>();
@@ -51,7 +70,7 @@ const ProfileScreen: React.FC = () => {
 
   const [availableCoupons, setAvailableCoupons] = React.useState<any[]>([]);
   const [availableGiftCards, setAvailableGiftCards] = React.useState<any[]>([]);
-  const scrollViewRef = React.useRef<ScrollView>(null);
+  const scrollViewRef = React.useRef<any>(null);
 
   React.useEffect(() => {
     loadProfile();
@@ -132,338 +151,265 @@ const ProfileScreen: React.FC = () => {
     }
   };
 
-  const renderMenuItem = (
-    icon: any,
-    title: string,
-    showBadge?: boolean,
-    badgeValue?: string,
-    iconBgColor?: string,
-    onPress?: () => void,
-  ) => (
-    <TouchableOpacity style={styles.menuItem} onPress={onPress}>
-      <View
-        style={[
-          styles.menuIconContainer,
-          iconBgColor ? { backgroundColor: iconBgColor } : null,
-        ]}
-      >
-        {icon}
-      </View>
-      <Text style={styles.menuItemText}>{title}</Text>
-      {showBadge && (
-        <View style={styles.badgeContainer}>
-          <Text style={styles.badgeText}>{badgeValue}</Text>
-        </View>
-      )}
-      <MaterialIcons name="chevron-right" size={24} color="#C7C7CC" />
-    </TouchableOpacity>
+  const scrollY = useSharedValue(0);
+  const swapAnchor = useSharedValue(0);
+  useCartPillScrollTracker();
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: event => {
+      scrollY.value = event.contentOffset.y;
+      trackCartPillScroll(event.contentOffset.y);
+    },
+  });
+  const onHeroMeasure = React.useCallback(
+    (bottom: number) => {
+      swapAnchor.value = bottom;
+    },
+    [swapAnchor],
   );
+
+  const topBarBorderStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(
+      scrollY.value,
+      BORDER_FADE_RANGE,
+      [0, 1],
+      Extrapolation.CLAMP,
+    ),
+  }));
+
+  const barTitleStyle = useAnimatedStyle(() => {
+    const a = swapAnchor.value;
+    if (a <= 0) return { opacity: 1 };
+    return {
+      opacity: interpolate(
+        scrollY.value,
+        TITLE_FADE_OUT.map(f => f * a),
+        [1, 0],
+        Extrapolation.CLAMP,
+      ),
+    };
+  });
+
+  const barNameStyle = useAnimatedStyle(() => {
+    const a = swapAnchor.value;
+    if (a <= 0) return { opacity: 0 };
+    const progress = interpolate(
+      scrollY.value,
+      NAME_FADE_IN.map(f => f * a),
+      [0, 1],
+      Extrapolation.CLAMP,
+    );
+    return {
+      opacity: progress,
+      transform: [{ translateY: (1 - progress) * NAME_TRAVEL }],
+    };
+  });
+
+  const topBarBackgroundStyle = useAnimatedStyle(() => {
+    const a = swapAnchor.value;
+    if (a <= 0) return { backgroundColor: BAR_REST };
+    return {
+      backgroundColor: interpolateColor(
+        scrollY.value,
+        [0, a * BAR_SOLID_AT],
+        [BAR_REST, BAR_SOLID],
+      ),
+    };
+  });
+
+  const accountItems: MenuItem[] = [
+    {
+      key: 'edit-profile',
+      label: 'Edit profile',
+      icon: (
+        <MaterialCommunityIcons
+          name="account-outline"
+          color={INK}
+          size={ICON_SIZE}
+        />
+      ),
+      onPress: () => navigation.navigate('KshopeEditProfile'),
+    },
+    {
+      key: 'update-phone',
+      label: 'Update Phone Number',
+      icon: (
+        <MaterialCommunityIcons
+          name="phone-outline"
+          color={INK}
+          size={ICON_SIZE}
+        />
+      ),
+      onPress: () =>
+        navigation.navigate('KshopeUpdateContact', { type: 'phone' }),
+    },
+    {
+      key: 'update-email',
+      label: 'Update Email ID',
+      icon: (
+        <MaterialCommunityIcons
+          name="email-outline"
+          color={INK}
+          size={ICON_SIZE}
+        />
+      ),
+      onPress: () =>
+        navigation.navigate('KshopeUpdateContact', { type: 'email' }),
+    },
+  ];
+
+  const offersItems: MenuItem[] = [
+    {
+      key: 'smart-point',
+      label: 'Smart point',
+      icon: <Ionicons name="wallet-outline" color={INK} size={ICON_SIZE} />,
+      onPress: () => setActiveOfferModal('smart'),
+    },
+    {
+      key: 'coupon',
+      label: 'Coupon',
+      icon: <Ionicons name="pricetag-outline" color={INK} size={ICON_SIZE} />,
+      onPress: () => setActiveOfferModal('coupon'),
+    },
+    {
+      key: 'bcoin',
+      label: 'B coin',
+      icon: (
+        <MaterialCommunityIcons
+          name="hand-coin-outline"
+          color={INK}
+          size={ICON_SIZE}
+        />
+      ),
+      onPress: () => navigation.navigate('KshopeBCoin'),
+    },
+  ];
+
+  const informationItems: MenuItem[] = [
+    {
+      key: 'privacy',
+      label: 'Privacy Policy',
+      icon: (
+        <MaterialCommunityIcons
+          name="shield-lock-outline"
+          color={INK}
+          size={ICON_SIZE}
+        />
+      ),
+      onPress: () =>
+        navigation.navigate('KshopeLegalContent', {
+          settingKeys: ['privacy_policy', 'privacypolicy'],
+          title: 'Privacy Policy',
+        }),
+    },
+    {
+      key: 'terms',
+      label: 'Terms and conditions',
+      icon: (
+        <MaterialCommunityIcons
+          name="file-document-outline"
+          color={INK}
+          size={ICON_SIZE}
+        />
+      ),
+      onPress: () =>
+        navigation.navigate('KshopeLegalContent', {
+          settingKeys: ['terms_of_use', 'terms_and_conditions', 'terms'],
+          title: 'Terms and conditions',
+          fallback: 'terms',
+        }),
+    },
+    {
+      key: 'about',
+      label: 'About us',
+      icon: (
+        <Ionicons
+          name="information-circle-outline"
+          color={INK}
+          size={ICON_SIZE}
+        />
+      ),
+      onPress: () =>
+        navigation.navigate('KshopeLegalContent', {
+          settingKeys: ['about_us', 'aboutus', 'about'],
+          title: 'About us',
+        }),
+    },
+    {
+      key: 'delete-account',
+      label: 'Delete account',
+      textColor: RED,
+      tone: 'danger',
+      icon: (
+        <MaterialCommunityIcons
+          name="account-remove-outline"
+          color={RED}
+          size={ICON_SIZE}
+        />
+      ),
+      onPress: () => setIsDeleteAccountModalVisible(true),
+    },
+  ];
 
   return (
     <View style={styles.mainContainer}>
       <StatusBar
-        barStyle="light-content"
+        barStyle="dark-content"
         translucent
         backgroundColor="transparent"
       />
 
-      <ImageBackground
-        style={[
-          styles.backgroundImage,
-          { paddingTop: hp('2%'), paddingBottom: hp('2%') },
-        ]}
-        imageStyle={{
-          borderBottomLeftRadius: wp('10%'),
-          borderBottomRightRadius: wp('10%'),
-        }}
-        source={require('../../assets/images/profile.png')}
-      >
-        <View style={styles.headerContent}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Ionicons name="arrow-back" size={28} color={colors.black} />
-          </TouchableOpacity>
-
-          <View style={styles.userInfoContainer}>
-            <View style={styles.userProfileSection}>
-              <View style={styles.avatarContainer}>
-                <MaterialIcons
-                  name="person"
-                  size={40}
-                  color={colors.themeTeal}
-                />
-              </View>
-              <View style={styles.userDetails}>
-                <Text style={styles.welcomeText}>Hey</Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <Text style={styles.userName} numberOfLines={1}>
-                    {profile?.custName || 'User'}
-                  </Text>
-                </View>
-                <Text style={styles.userPhone}>{profile?.phoneNo || ''}</Text>
-              </View>
-            </View>
-
-            <View style={styles.headerRightActions}>
-              <TouchableOpacity onPress={() => navigation.navigate('KshopeBCoin')}>
-                <ImageBackground
-                  source={require('../../assets/images/bcoinprofile.png')}
-                  style={{
-                    width: 75,
-                    height: 22,
-                    top: -5,
-                    left: 10,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                  }}
-                  resizeMode="contain"
-                >
-                  <Text
-                    style={[
-                      styles.coinText,
-                      {
-                        color: '#FFBA33',
-                        fontWeight: 'bold',
-                        fontSize: wp('2.9%'),
-                        textAlign: 'center',
-                        marginLeft: hp('1.3%'),
-                        marginTop: hp('0.1%'),
-                      },
-                    ]}
-                  >
-                    {profile?.totalBCoins || '0.00'}
-                  </Text>
-                </ImageBackground>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.notificationBell}
-                onPress={() =>
-                  showAlert('Notifications', 'You have no new notifications.')
-                }
-              >
-                <Ionicons
-                  name="notifications"
-                  size={24}
-                  color={colors.black}
-                  style={{ top: -5 }}
-                />
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </ImageBackground>
-      <ScrollView
+      <Animated.ScrollView
         ref={scrollViewRef}
         showsVerticalScrollIndicator={false}
-        style={{ flex: 1 }}
-        contentContainerStyle={{
-          paddingTop: hp('2%'),
-          paddingBottom: hp('10%'),
-        }}
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}
+        stickyHeaderIndices={[0]}
       >
-        <View style={styles.quickActionsContainer}>
-          <TouchableOpacity
-            style={styles.actionCard}
-            onPress={() => navigation.navigate('KshopeCart')}
-          >
-            <Image
-              source={require('../../assets/images/profile/cart.png')}
-              style={{ width: 35, height: 35 }}
-              resizeMode="contain"
-            />
-            <Text style={styles.actionText}>Cart</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.actionCard}
-            onPress={() => navigation.navigate('KshopeMyOrders')}
-          >
-            <Image
-              source={require('../../assets/images/profile/order.png')}
-              style={{ width: 35, height: 35 }}
-            />
-            <Text style={styles.actionText}>My Orders</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.actionCard}
-            onPress={() => navigation.navigate('KshopeSavedAddress')}
-          >
-            <Image
-              source={require('../../assets/images/profile/location.png')}
-              style={{ width: 35, height: 35 }}
-              resizeMode="contain"
-            />
-            <Text style={styles.actionText}>Address</Text>
-          </TouchableOpacity>
-        </View>
+        <ProfileHeaderBar
+          name={profile?.custName}
+          onBack={() => navigation.goBack()}
+          backgroundStyle={topBarBackgroundStyle}
+          borderStyle={topBarBorderStyle}
+          titleStyle={barTitleStyle}
+          nameStyle={barNameStyle}
+        />
 
-        <TouchableOpacity onPress={() => navigation.navigate('KshopeReferral')}>
-          <Image
-            source={require('../../assets/images/refer.png')}
-            style={styles.referIllustration}
-            resizeMode="contain"
+        <View style={styles.heroBlock}>
+          <ProfileHeroCard
+            profile={profile}
+            walletData={walletData}
+            onEditProfile={() => navigation.navigate('KshopeEditProfile')}
+            onWallet={() => navigation.navigate('KshopeBCoin')}
+            onMeasure={onHeroMeasure}
+            entering={entrance(0)}
           />
-        </TouchableOpacity>
-        <View style={styles.sectionContainer}>
-          <Text style={styles.sectionTitle}>Account Security</Text>
-          <View style={styles.menuCard}>
-            {renderMenuItem(
-              <Image
-                source={require('../../assets/images/profile/profile.png')}
-                style={{ width: 16, height: 16 }}
-                resizeMode="contain"
-              />,
-              'Edit profile',
-              false,
-              '1',
-              undefined,
-              () => navigation.navigate('KshopeEditProfile'),
-            )}
-            {renderMenuItem(
-              <MaterialCommunityIcons
-                name="phone-outline"
-                size={20}
-                color={colors.themeTeal}
-              />,
-              'Update Phone Number',
-              false,
-              undefined,
-              undefined,
-              () =>
-                navigation.navigate('KshopeUpdateContact', { type: 'phone' }),
-            )}
-            {renderMenuItem(
-              <MaterialCommunityIcons
-                name="email-outline"
-                size={16}
-                color={colors.themeTeal}
-              />,
-              'Update Email ID',
-              false,
-              undefined,
-              undefined,
-              () =>
-                navigation.navigate('KshopeUpdateContact', { type: 'email' }),
-            )}
-          </View>
-        </View>
-        <View style={styles.sectionContainer}>
-          <Text style={styles.sectionTitle}>Offers</Text>
-          <View style={styles.menuCard}>
-            {renderMenuItem(
-              <Image
-                source={require('../../assets/icons/profile/gift.png')}
-                style={{ width: 16, height: 16, tintColor: colors.themeTeal }}
-                resizeMode="contain"
-              />,
-              'Smart point',
-              false,
-              undefined,
-              undefined,
-              () => setActiveOfferModal('smart'),
-            )}
-            {renderMenuItem(
-              <Image
-                source={require('../../assets/images/offer.png')}
-                style={{ width: 16, height: 16 }}
-                resizeMode="contain"
-              />,
-              'Coupon',
-              false,
-              undefined,
-              undefined,
-              () => setActiveOfferModal('coupon'),
-            )}
-            {renderMenuItem(
-              <Image
-                source={require('../../assets/images/cartbcoin.png')}
-                style={{ width: 16, height: 16 }}
-                resizeMode="contain"
-              />,
-              'B coin',
-              false,
-              undefined,
-              undefined,
-              () => navigation.navigate('KshopeBCoin'),
-            )}
-          </View>
+
+          <Animated.View entering={entrance(1)}>
+            <QuickActionsGrid
+              onCart={() => navigation.navigate('KshopeCart')}
+              onMyOrders={() => navigation.navigate('KshopeMyOrders')}
+              onSavedAddress={() => navigation.navigate('KshopeSavedAddress')}
+              onRefer={() => navigation.navigate('KshopeReferral')}
+            />
+          </Animated.View>
         </View>
 
-        <View style={styles.sectionContainer}>
-          <Text style={styles.sectionTitle}>Informations</Text>
-          <View style={styles.menuCard}>
-            {renderMenuItem(
-              <Image
-                source={require('../../assets/images/profile/Union.png')}
-                style={{ width: 16, height: 16 }}
-                resizeMode="contain"
-              />,
-              'Privacy Policy',
-              false,
-              undefined,
-              undefined,
-              () =>
-                showAlert(
-                  'Information',
-                  'Privacy Policy will be updated soon.',
-                ),
-            )}
-            {renderMenuItem(
-              <Image
-                source={require('../../assets/images/profile/terms.png')}
-                style={{ width: 16, height: 16 }}
-                resizeMode="contain"
-              />,
-              'Terms and conditions',
-              false,
-              undefined,
-              undefined,
-              () =>
-                showAlert(
-                  'Information',
-                  'Terms and Conditions will be updated soon.',
-                ),
-            )}
-            {renderMenuItem(
-              <Image
-                source={require('../../assets/images/profile/info.png')}
-                style={{ width: 16, height: 16 }}
-                resizeMode="contain"
-              />,
-              'About us',
-              false,
-              undefined,
-              undefined,
-              () =>
-                showAlert(
-                  'Information',
-                  'About Us information will be updated soon.',
-                ),
-            )}
-            {renderMenuItem(
-              <MaterialCommunityIcons
-                name="account-remove-outline"
-                size={16}
-                color={colors.themeTeal}
-              />,
-              'Delete account',
-              false,
-              undefined,
-              undefined,
-              () => setIsDeleteAccountModalVisible(true),
-            )}
-          </View>
-        </View>
+        <Animated.View entering={entrance(2)}>
+          <MenuSection title="Account Security" items={accountItems} />
+          <MenuSection title="Offers" items={offersItems} />
+          <MenuSection title="Informations" items={informationItems} />
+        </Animated.View>
 
-        <View style={styles.footerContainer}>
+        <Animated.View entering={entrance(3)} style={styles.footerContainer}>
           <Image
             source={require('../../assets/images/login/logo.png')}
             style={styles.footerLogo}
             resizeMode="contain"
           />
-        </View>
-      </ScrollView>
+        </Animated.View>
+      </Animated.ScrollView>
 
       <ConfirmationModal
         visible={isDeleteAccountModalVisible}

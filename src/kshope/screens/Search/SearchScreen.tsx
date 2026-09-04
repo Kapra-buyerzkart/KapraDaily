@@ -7,7 +7,6 @@ import {
   TextInput,
   FlatList,
   ActivityIndicator,
-  Image,
 } from 'react-native';
 import {
   SafeAreaView,
@@ -165,6 +164,35 @@ const SearchScreen = () => {
     );
   };
 
+  const EmptyState = () => {
+    const isBrowsing = Boolean(catId || attrValueId || query);
+    const hasQuery = searchTerm.trim().length > 0;
+    if (!hasQuery && !isBrowsing) return null;
+    return (
+      <View testID="search-empty-state" style={styles.emptyContainer}>
+        <View style={styles.emptyDisc}>
+          <AppIcons.Search color={SURFACE.inkMuted} size={s(30)} />
+        </View>
+        <Text style={styles.noResultsText}>No items found</Text>
+        <Text style={styles.noResultsText1}>
+          {hasQuery
+            ? `We couldn't find anything for "${searchTerm.trim()}". Try a different keyword or check the spelling.`
+            : 'There is nothing to show here right now. Try browsing another category.'}
+        </Text>
+        {hasQuery && (
+          <TouchableOpacity
+            testID="search-empty-clear"
+            activeOpacity={0.7}
+            onPress={() => setSearchTerm('')}
+            style={styles.emptyAction}
+          >
+            <Text style={styles.emptyActionText}>Clear search</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    );
+  };
+
   const ListFooter = () => {
     if (!isLoadingMore) return null;
     return (
@@ -238,26 +266,7 @@ const SearchScreen = () => {
         onEndReached={loadMore}
         onEndReachedThreshold={0.5}
         contentContainerStyle={styles.listContent}
-        ListEmptyComponent={
-          !loading &&
-          suggestions.length === 0 &&
-          (searchTerm.length > 0 || catId) ? (
-            <View style={styles.emptyContainer}>
-              <Image
-                source={require('../../assets/images/logos/no_res.png')}
-                style={styles.noResultsImage}
-                resizeMode="contain"
-              />
-              <Text style={styles.noResultsText}>No Products Found</Text>
-
-              <Text style={styles.noResultsText1}>
-                {searchTerm.length > 0
-                  ? `No products found for "${searchTerm}"`
-                  : `No products found in this category`}
-              </Text>
-            </View>
-          ) : null
-        }
+        ListEmptyComponent={loading ? null : <EmptyState />}
       />
     </SafeAreaView>
   );
@@ -377,15 +386,34 @@ const styles = StyleSheet.create({
     paddingVertical: SPACE.xl,
   },
   emptyContainer: {
-    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: s(80),
+    paddingTop: s(72),
+    paddingHorizontal: SPACE.xl,
   },
-  noResultsImage: {
-    width: s(160),
-    height: s(160),
+  emptyDisc: {
+    width: s(72),
+    height: s(72),
+    borderRadius: RADIUS.pill,
+    backgroundColor: SURFACE.wash,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: SPACE.xl,
+  },
+  emptyAction: {
+    marginTop: SPACE.xl,
+    height: s(38),
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    borderColor: SURFACE.hairline,
+    paddingHorizontal: SPACE.xl,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyActionText: {
+    fontSize: fs(12),
+    color: SURFACE.ink,
+    fontFamily: HOME_FONTS.semiBold,
   },
   noResultsText: {
     fontSize: fs(15),
@@ -395,6 +423,7 @@ const styles = StyleSheet.create({
   },
   noResultsText1: {
     fontSize: fs(12),
+    lineHeight: fs(18),
     color: SURFACE.inkMuted,
     textAlign: 'center',
     marginTop: SPACE.md,

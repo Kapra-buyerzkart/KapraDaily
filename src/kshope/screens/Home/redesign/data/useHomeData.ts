@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useUser } from '../../../../context/UserContext';
+import { useCart } from '../../../../context/CartContext';
 import { getHomepageData } from '../../../../api/services/homeService';
 import { getKshopeAreaId } from '../../../../globals/storage';
 import type { HeaderItem } from '../../../../components/HomeHeader';
@@ -9,8 +10,6 @@ import {
   CATEGORY_CARDS,
   CATEGORY_CHIPS,
   CATEGORY_TABS,
-  EXPLORE_ROW_ONE,
-  EXPLORE_ROW_TWO,
   FEATURED_PRODUCTS,
   HEADER_CIRCLES,
   HEADER_CONTENT,
@@ -29,6 +28,7 @@ import {
 import {
   mapBrandTile,
   mapCategoryTile,
+  mapExploreTile,
   mapProductTile,
   bannerProductId,
   mapGoatDealCard,
@@ -55,6 +55,7 @@ const FALLBACK_HEADER_ITEMS: HeaderItem[] = HEADER_CIRCLES.map(tile => ({
 
 export const useHomeData = () => {
   const { profile } = useUser();
+  const { addresses, fetchAddresses } = useCart();
 
   const [homeData, setHomeData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -82,6 +83,20 @@ export const useHomeData = () => {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  useEffect(() => {
+    fetchAddresses();
+  }, [fetchAddresses]);
+
+  const selectedAddress = useMemo(() => {
+    if (!Array.isArray(addresses) || addresses.length === 0) return null;
+    const chosen =
+      addresses.find(a => a.selected) ||
+      addresses.find(a => a.raw?.isDefaultShippingAddress);
+    if (!chosen) return null;
+    const label = [chosen.type, chosen.address].filter(Boolean).join(' · ');
+    return label || null;
+  }, [addresses]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -128,18 +143,50 @@ export const useHomeData = () => {
     }
     const tabs = Array.isArray(tabShowcase) ? tabShowcase : [];
 
-    const categoryByLabel = new Map<string, any>();
+    const categoryById = new Map<string, any>();
     categories.forEach((cat: any) => {
-      const name = resolveCatName(cat, '');
-      if (name) {
-        categoryByLabel.set(name.trim().toLowerCase(), cat);
+      const id = resolveCatId(cat);
+      if (id !== undefined && id !== null && id !== '') {
+        categoryById.set(String(id), cat);
       }
     });
-    const withCategoryLink = (tiles: Tile[]): Tile[] =>
-      tiles.map(tile => {
-        const cat = categoryByLabel.get(tile.label.trim().toLowerCase());
-        return cat ? { ...tile, raw: cat } : tile;
+    const svgCategories = (() => {
+      const svgOf = (item: any) =>
+        item?.svgurl || item?.svgUrl || item?.SvgUrl || item?.SvgURL;
+      const hasSvg = (list: any) =>
+        Array.isArray(list) && list.some((item: any) => svgOf(item));
+      const named =
+        homeData?.categorySvgs ||
+        homeData?.CategorySvgs ||
+        homeData?.categorySvg ||
+        homeData?.svgCategories ||
+        homeData?.categoryIcons;
+      if (hasSvg(named)) return named as any[];
+
+      const seen = new Set<any>();
+      const search = (node: any, depth: number): any[] | null => {
+        if (!node || typeof node !== 'object' || depth > 4 || seen.has(node)) {
+          return null;
+        }
+        seen.add(node);
+        if (hasSvg(node)) return node as any[];
+        for (const value of Object.values(node)) {
+          const found = search(value, depth + 1);
+          if (found) return found;
+        }
+        return null;
+      };
+      return search(homeData, 0) ?? [];
+    })();
+    const exploreTiles = svgCategories
+      .filter((cat: any) => cat?.svgurl || cat?.svgUrl || cat?.SvgUrl || cat?.SvgURL)
+      .slice(0, 10)
+      .map((cat: any, index: number) => {
+        const tile = mapExploreTile(cat, index);
+        const linked = categoryById.get(String(resolveCatId(cat) ?? ''));
+        return linked ? { ...tile, raw: { ...linked, ...cat } } : tile;
       });
+
     const goatDeals = bannersFor(homeData, 'app_home_cat_top_sidebyside_four');
     const thirdProducts = getProducts(thirdBlock);
 
@@ -170,10 +217,7 @@ export const useHomeData = () => {
     return {
       header: {
         title: sectionTitle(homeData, 'home', HEADER_CONTENT.title),
-        address:
-          profile?.address ||
-          profile?.custAddress ||
-          HEADER_CONTENT.address,
+        address: selectedAddress,
         searchPlaceholder: HEADER_CONTENT.searchPlaceholder,
       },
       headerTabs: [
@@ -236,8 +280,8 @@ export const useHomeData = () => {
         secondProducts.slice(0, 5).map(mapRecentlyViewed),
         RECENTLY_VIEWED,
       ),
-      exploreRowOne: withCategoryLink(EXPLORE_ROW_ONE),
-      exploreRowTwo: withCategoryLink(EXPLORE_ROW_TWO),
+      exploreRowOne: exploreTiles.slice(0, 5),
+      exploreRowTwo: exploreTiles.slice(5, 10),
       banners: {
         top: bannersFor(homeData, 'app_home_top_banner'),
         mid: bannersFor(homeData, 'app_home_mid_banner'),
@@ -251,7 +295,7 @@ export const useHomeData = () => {
       },
       recommendedTitleBlock: thirdBlock,
     };
-  }, [homeData, profile]);
+  }, [homeData, profile, selectedAddress]);
 
   return { homeData, loading, refreshing, onRefresh, sections };
 };

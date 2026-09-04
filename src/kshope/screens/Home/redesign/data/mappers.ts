@@ -203,6 +203,17 @@ export const mapCategoryTile = (cat: any, index: number): Tile => ({
   raw: cat,
 });
 
+export const mapExploreTile = (cat: any, index: number): Tile => ({
+  id: idOf(cat, 'explore', index),
+  label:
+    pick(cat, 'catName', 'CatName', 'displayTitle', 'DisplayTitle', 'name', 'Name') ??
+    '',
+  image:
+    resolveImageSource(pick(cat, 'svgurl', 'svgUrl', 'SvgUrl', 'SvgURL')) ??
+    imageOf(cat),
+  raw: cat,
+});
+
 export const mapTabChip = (tab: any, index: number): Tile => ({
   id: String(pick(tab, 'tabId', 'TabId') ?? idOf(tab, 'tab', index)),
   label:

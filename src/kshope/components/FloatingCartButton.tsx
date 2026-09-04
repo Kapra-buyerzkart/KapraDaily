@@ -23,6 +23,7 @@ import { useCart } from '../context/CartContext';
 import { Fonts } from '../theme/fonts';
 import FallbackImage from './FallbackImage';
 import { cartPillSlideIn, cartPillSlideOut } from '../animations/cartItemPop';
+import { cartPillHidden } from './cartPillScroll';
 
 const CAPSULE_BG = '#F25000';
 const MAX_VISIBLE_THUMBNAILS = 3;
@@ -80,6 +81,13 @@ const FloatingCartButton: React.FC<FloatingCartButtonProps> = ({ bottom }) => {
   const phaseRef = useRef(itemCount > 0 ? 'expanded' : 'idle');
   const [contentWidth, setContentWidth] = useState(COMPACT_WIDTH + 170);
   const maxExpandedWidth = wp('92%');
+
+  const bottomOffset =
+    bottom !== undefined
+      ? bottom
+      : insets.bottom > 0
+      ? insets.bottom
+      : hp('1%');
 
   const bounceScale = useSharedValue(1);
   const widthProgress = useSharedValue(itemCount > 0 ? 1 : 0);
@@ -230,6 +238,17 @@ const FloatingCartButton: React.FC<FloatingCartButtonProps> = ({ bottom }) => {
     opacity: countOpacity.value,
   }));
 
+  const scrollHideStyle = useAnimatedStyle(() => {
+    const p = cartPillHidden.value;
+    return {
+      opacity: interpolate(p, [0, 0.75], [1, 0], Extrapolation.CLAMP),
+      transform: [
+        { translateY: p * (CAPSULE_HEIGHT + bottomOffset + 24) },
+        { scale: interpolate(p, [0, 1], [1, 0.92], Extrapolation.CLAMP) },
+      ],
+    };
+  });
+
   const arrowAnimatedStyle = useAnimatedStyle(() => ({
     opacity: arrowProgress.value,
     transform: [
@@ -291,58 +310,57 @@ const FloatingCartButton: React.FC<FloatingCartButtonProps> = ({ bottom }) => {
     );
   };
 
-  const bottomOffset =
-    bottom !== undefined ? bottom : insets.bottom > 0 ? insets.bottom : hp('1%');
-
   return (
     <Animated.View
       entering={cartPillSlideIn}
       exiting={cartPillSlideOut}
       style={[styles.outerContainer, { bottom: bottomOffset }]}
     >
-      <TouchableOpacity activeOpacity={0.9} onPress={goToCart}>
-        <Animated.View style={[styles.capsule, containerAnimatedStyle]}>
-          <View style={styles.clip}>
-            <View style={styles.stackSlot}>
-              <Animated.View style={stackAnimatedStyle}>
-                {renderThumbnailStack()}
+      <Animated.View style={scrollHideStyle}>
+        <TouchableOpacity activeOpacity={0.9} onPress={goToCart}>
+          <Animated.View style={[styles.capsule, containerAnimatedStyle]}>
+            <View style={styles.clip}>
+              <View style={styles.stackSlot}>
+                <Animated.View style={stackAnimatedStyle}>
+                  {renderThumbnailStack()}
+                </Animated.View>
+                <Animated.View
+                  style={[styles.compactBadge, badgeAnimatedStyle]}
+                  pointerEvents="none"
+                >
+                  <Text style={styles.compactBadgeText}>{itemCount}</Text>
+                </Animated.View>
+              </View>
+
+              <Animated.View style={[styles.viewOne, textAnimatedStyle]}>
+                <Text style={styles.viewCartText} numberOfLines={1}>
+                  View cart
+                </Text>
+                <Animated.Text
+                  style={[styles.itemsText, countAnimatedStyle]}
+                  numberOfLines={1}
+                >
+                  {cartItems.length} items
+                </Animated.Text>
               </Animated.View>
-              <Animated.View
-                style={[styles.compactBadge, badgeAnimatedStyle]}
-                pointerEvents="none"
-              >
-                <Text style={styles.compactBadgeText}>{itemCount}</Text>
+
+              <Animated.View style={arrowAnimatedStyle}>
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  onPress={goToCart}
+                  style={styles.arrowButton}
+                >
+                  <MaterialIcons
+                    name="chevron-right"
+                    size={26}
+                    color={CAPSULE_BG}
+                  />
+                </TouchableOpacity>
               </Animated.View>
             </View>
-
-            <Animated.View style={[styles.viewOne, textAnimatedStyle]}>
-              <Text style={styles.viewCartText} numberOfLines={1}>
-                View cart
-              </Text>
-              <Animated.Text
-                style={[styles.itemsText, countAnimatedStyle]}
-                numberOfLines={1}
-              >
-                {cartItems.length} items
-              </Animated.Text>
-            </Animated.View>
-
-            <Animated.View style={arrowAnimatedStyle}>
-              <TouchableOpacity
-                activeOpacity={0.8}
-                onPress={goToCart}
-                style={styles.arrowButton}
-              >
-                <MaterialIcons
-                  name="chevron-right"
-                  size={26}
-                  color={CAPSULE_BG}
-                />
-              </TouchableOpacity>
-            </Animated.View>
-          </View>
-        </Animated.View>
-      </TouchableOpacity>
+          </Animated.View>
+        </TouchableOpacity>
+      </Animated.View>
 
       <View
         style={styles.measureRow}

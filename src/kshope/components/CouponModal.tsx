@@ -1,19 +1,26 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
-  Text,
+  Image,
   Modal,
-  TouchableOpacity,
-  StyleSheet,
-  FlatList,
   TextInput,
-  Dimensions,
+  TouchableOpacity,
+  FlatList,
+  StyleSheet,
 } from 'react-native';
-import { colors } from '../theme/colours';
-import { Fonts } from '../theme/fonts';
-import { AppIcons } from '../assets/icons';
-
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import {
+  UI_COLORS,
+  UI_ELEVATION,
+  UI_RADIUS,
+  UI_SPACING,
+  UI_TYPE,
+  MAX_FONT_SCALE,
+  hitSlopTo,
+  wp,
+  hp,
+} from '../theme/tokens';
+import { AppText, IconDisc } from './atoms';
 
 interface CouponModalProps {
   visible: boolean;
@@ -25,6 +32,98 @@ interface CouponModalProps {
   profile?: 'user' | 'cart';
 }
 
+const formatExpiry = (validTo?: string) =>
+  validTo
+    ? new Date(validTo).toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      })
+    : null;
+
+const describeOffer = (item: any) => {
+  if (item.description) return item.description;
+  if (item.discountType === 'PERCENT') {
+    return `Get ${item.discountValue}% OFF up to ₹${item.maxDiscountAmount}`;
+  }
+  if (item.discountType === 'FLAT') return `Flat ₹${item.discountValue} OFF`;
+  return item.title || item.couponName || 'Offer available on this order';
+};
+
+const MetaChip = ({ icon, label }: { icon: string; label: string }) => (
+  <View style={styles.metaChip}>
+    <MaterialCommunityIcons
+      name={icon}
+      size={wp('3.4%')}
+      color={UI_COLORS.textMuted}
+    />
+    <AppText variant="micro" tone="muted">
+      {label}
+    </AppText>
+  </View>
+);
+
+const OfferCard = ({
+  item,
+  actionLabel,
+  onPress,
+}: {
+  item: any;
+  actionLabel: string;
+  onPress: (item: any) => void;
+}) => {
+  const code = item.couponCode || item.giftCode || item.code;
+  const expiry = formatExpiry(item.validTo);
+
+  return (
+    <TouchableOpacity
+      activeOpacity={0.85}
+      onPress={() => onPress(item)}
+      style={styles.card}
+    >
+      <View style={styles.cardTopRow}>
+        <View style={styles.codeChip}>
+          <MaterialCommunityIcons
+            name="tag-outline"
+            size={wp('3.6%')}
+            color={UI_COLORS.primary}
+          />
+          <AppText variant="captionStrong" tone="brand">
+            {code}
+          </AppText>
+        </View>
+
+        <View style={styles.actionPill}>
+          <AppText variant="micro" tone="brand" style={styles.actionText}>
+            {actionLabel}
+          </AppText>
+        </View>
+      </View>
+
+      <AppText variant="bodyStrong" style={styles.cardTitle}>
+        {describeOffer(item)}
+      </AppText>
+
+      {item.minOrderAmount > 0 || expiry ? (
+        <>
+          <View style={styles.cardDivider} />
+          <View style={styles.metaRow}>
+            {item.minOrderAmount > 0 ? (
+              <MetaChip
+                icon="basket-outline"
+                label={`Min. order ₹${item.minOrderAmount}`}
+              />
+            ) : null}
+            {expiry ? (
+              <MetaChip icon="clock-outline" label={`Expires ${expiry}`} />
+            ) : null}
+          </View>
+        </>
+      ) : null}
+    </TouchableOpacity>
+  );
+};
+
 const CouponModal: React.FC<CouponModalProps> = ({
   visible,
   onClose,
@@ -35,33 +134,16 @@ const CouponModal: React.FC<CouponModalProps> = ({
   profile = 'cart',
 }) => {
   const [manualCode, setManualCode] = useState('');
-  const offers = isGiftCard ? availableGiftCards : availableCoupons;
-  const title = isGiftCard ? 'Available Gift Cards' : 'Available Coupons';
-  const placeholder = isGiftCard ? 'Enter gift card code' : 'Enter coupon code';
 
-  const renderOfferItem = ({ item }: { item: any }) => (
-    <TouchableOpacity
-      style={styles.offerItem}
-      onPress={() => onCouponClick(item)}
-      activeOpacity={0.7}
-    >
-      <View style={styles.offerIconContainer}>
-        <AppIcons.ShoppingCart color={colors.themeTeal} size={24} />
-      </View>
-      <View style={styles.offerInfo}>
-        <View style={styles.codeRow}>
-          <Text style={styles.offerCode}>{item.couponCode || item.code}</Text>
-          <Text style={styles.applyLabel}>
-            {profile == 'user' ? 'COPY' : 'APPLY'}
-          </Text>
-        </View>
-        <Text style={styles.offerTitle}>{item.title || item.couponName}</Text>
-        <Text style={styles.offerDescription} numberOfLines={2}>
-          {item.description || 'Get amazing discounts on your order'}
-        </Text>
-      </View>
-    </TouchableOpacity>
+  const data = useMemo(
+    () => (isGiftCard ? availableGiftCards : availableCoupons) || [],
+    [isGiftCard, availableGiftCards, availableCoupons],
   );
+
+  const isCopyOnly = profile === 'user';
+  const noun = isGiftCard ? 'gift card' : 'coupon';
+  const typedCode = manualCode.trim();
+  const canApply = typedCode.length > 0;
 
   return (
     <Modal
@@ -76,66 +158,127 @@ const CouponModal: React.FC<CouponModalProps> = ({
           onPress={onClose}
           activeOpacity={1}
         />
-        <View style={styles.content}>
-          <View style={styles.header}>
-            <View style={styles.headerIndicator} />
-            <View style={styles.headerTitleRow}>
-              <Text style={styles.title}>
-                {isGiftCard ? 'Gift Cards' : 'Coupons & Offers'}
-              </Text>
-              <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                <AppIcons.Close color={colors.black} size={24} />
-              </TouchableOpacity>
-            </View>
+
+        <View style={styles.sheet}>
+          <View style={styles.handleHitArea}>
+            <View style={styles.handle} />
           </View>
 
-          <View style={styles.manualEntryContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder={placeholder}
-              placeholderTextColor="#999"
-              value={manualCode}
-              onChangeText={setManualCode}
-              autoCapitalize="characters"
-            />
+          <View style={styles.headerRow}>
+            <IconDisc size={wp('10%')} tone="brand">
+              <MaterialCommunityIcons
+                name={isGiftCard ? 'gift-outline' : 'ticket-percent-outline'}
+                size={wp('5.2%')}
+                color={UI_COLORS.primary}
+              />
+            </IconDisc>
+
+            <View style={styles.headerCopy}>
+              <AppText variant="heading">
+                {isGiftCard ? 'Apply Gift Card' : 'Apply Coupon'}
+              </AppText>
+              <AppText variant="micro" tone="muted">
+                {data.length > 0
+                  ? `${data.length} ${noun}${
+                      data.length > 1 ? 's' : ''
+                    } available for you`
+                  : `No ${noun}s available right now`}
+              </AppText>
+            </View>
+
             <TouchableOpacity
-              onPress={() => onCouponClick({ code: manualCode })}
-              disabled={!manualCode}
+              onPress={onClose}
+              hitSlop={hitSlopTo(40)}
+              style={styles.closeBtn}
             >
-              <Text
-                style={[
-                  styles.applyAction,
-                  !manualCode && styles.applyActionDisabled,
-                ]}
-              >
-                {profile === 'user' ? 'COPY' : 'APPLY'}
-              </Text>
+              <MaterialCommunityIcons
+                name="close"
+                size={wp('4.6%')}
+                color={UI_COLORS.textSecondary}
+              />
             </TouchableOpacity>
           </View>
 
-          <Text style={styles.sectionTitle}>{title}</Text>
+          {!isCopyOnly ? (
+            <View style={styles.inputRow}>
+              <View style={styles.inputCard}>
+                <MaterialCommunityIcons
+                  name="tag-outline"
+                  size={wp('4.6%')}
+                  color={UI_COLORS.textFaint}
+                />
+                <TextInput
+                  value={manualCode}
+                  onChangeText={setManualCode}
+                  placeholder={`Enter ${noun} code`}
+                  placeholderTextColor={UI_COLORS.textFaint}
+                  autoCapitalize="characters"
+                  autoCorrect={false}
+                  maxFontSizeMultiplier={MAX_FONT_SCALE}
+                  style={styles.input}
+                  returnKeyType="done"
+                  onSubmitEditing={
+                    canApply
+                      ? () => onCouponClick({ code: typedCode })
+                      : undefined
+                  }
+                />
+              </View>
+
+              <TouchableOpacity
+                activeOpacity={0.85}
+                disabled={!canApply}
+                onPress={() => onCouponClick({ code: typedCode })}
+                style={[styles.applyBtn, !canApply && styles.applyBtnDisabled]}
+              >
+                <AppText
+                  variant="cta"
+                  tone={canApply ? 'onDark' : 'faint'}
+                  style={styles.applyBtnText}
+                >
+                  Apply
+                </AppText>
+              </TouchableOpacity>
+            </View>
+          ) : null}
+
+          <AppText variant="micro" tone="muted" style={styles.sectionLabel}>
+            {isGiftCard ? 'Available gift cards' : 'Available coupons'}
+          </AppText>
 
           <FlatList
-            data={offers}
-            renderItem={renderOfferItem}
-            keyExtractor={(item, index) => String(item.id || index)}
-            contentContainerStyle={styles.listContent}
+            style={styles.list}
+            data={data}
+            keyExtractor={(item, index) =>
+              String(item.couponId || item.giftCardId || item.id || index)
+            }
+            showsVerticalScrollIndicator={false}
+            renderItem={({ item }) => (
+              <OfferCard
+                item={item}
+                actionLabel={isCopyOnly ? 'COPY' : 'APPLY'}
+                onPress={onCouponClick}
+              />
+            )}
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
-                <View style={styles.emptyIconCircle}>
-                  {isGiftCard ? (
-                    <AppIcons.GiftCard size={44} color={colors.themeDarkGray} />
-                  ) : (
-                    <AppIcons.CouponTicket size={44} color={colors.themeDarkGray} />
-                  )}
-                </View>
-                <Text style={styles.emptyText}>
-                  {isGiftCard
-                    ? 'No gift cards available right now'
-                    : 'No coupons available right now'}
-                </Text>
+                <Image
+                  source={
+                    isGiftCard
+                      ? require('../assets/images/noimages/nogiftcard.png')
+                      : require('../assets/images/noimages/nocoupon.png')
+                  }
+                  style={styles.emptyImage}
+                />
+                <AppText variant="bodyStrong" tone="secondary">
+                  {isGiftCard ? 'No gift cards yet' : 'No coupons yet'}
+                </AppText>
+                <AppText variant="micro" tone="muted" style={styles.emptyNote}>
+                  New offers drop in often, check back soon
+                </AppText>
               </View>
             }
+            contentContainerStyle={styles.listContent}
           />
         </View>
       </View>
@@ -143,166 +286,170 @@ const CouponModal: React.FC<CouponModalProps> = ({
   );
 };
 
+export default React.memo(CouponModal);
+
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: UI_COLORS.overlay,
     justifyContent: 'flex-end',
   },
   dismissArea: {
     flex: 1,
   },
-  content: {
-    backgroundColor: colors.white,
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-    maxHeight: SCREEN_HEIGHT * 0.8,
-    minHeight: SCREEN_HEIGHT * 0.5,
+  sheet: {
+    backgroundColor: UI_COLORS.background,
+    borderTopLeftRadius: UI_RADIUS.card,
+    borderTopRightRadius: UI_RADIUS.card,
+    maxHeight: hp('82%'),
+    paddingHorizontal: UI_SPACING.lg,
+    paddingTop: UI_SPACING.xs,
+    paddingBottom: UI_SPACING.md,
   },
-  header: {
+  handleHitArea: {
+    width: '100%',
+    paddingVertical: 10,
     alignItems: 'center',
-    paddingTop: 12,
-    paddingBottom: 20,
   },
-  headerIndicator: {
+  handle: {
     width: 40,
     height: 4,
-    backgroundColor: '#E0E0E0',
     borderRadius: 2,
-    marginBottom: 16,
+    backgroundColor: '#DADADA',
   },
-  headerTitleRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    width: '100%',
-    paddingHorizontal: 24,
-  },
-  title: {
-    fontSize: 20,
-    fontFamily: Fonts.bold,
-    color: colors.black,
-  },
-  closeButton: {
-    padding: 4,
-  },
-  manualEntryContainer: {
+  headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F5F7F9',
-    marginHorizontal: 24,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    marginBottom: 24,
+    gap: UI_SPACING.md,
+  },
+  headerCopy: {
+    flex: 1,
+    gap: 2,
+  },
+  closeBtn: {
+    width: wp('8.5%'),
+    height: wp('8.5%'),
+    borderRadius: UI_RADIUS.pill,
+    backgroundColor: UI_COLORS.card,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: UI_SPACING.sm,
+    marginTop: UI_SPACING.lg,
+  },
+  inputCard: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: UI_SPACING.sm,
     borderWidth: 1,
-    borderColor: '#E8F0F5',
+    borderColor: UI_COLORS.border,
+    borderRadius: UI_RADIUS.input,
+    backgroundColor: UI_COLORS.card,
+    paddingHorizontal: UI_SPACING.md,
+    paddingVertical: hp('1.3%'),
   },
   input: {
     flex: 1,
-    fontSize: 16,
-    fontFamily: Fonts.semiBold,
-    color: colors.black,
+    ...UI_TYPE.body,
+    color: UI_COLORS.textPrimary,
     padding: 0,
   },
-  applyAction: {
-    color: colors.themeTeal,
-    fontFamily: Fonts.bold,
-    fontSize: 14,
-    marginLeft: 12,
+  applyBtn: {
+    paddingHorizontal: UI_SPACING.xl,
+    paddingVertical: hp('1.6%'),
+    borderRadius: UI_RADIUS.button,
+    backgroundColor: UI_COLORS.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  applyActionDisabled: {
-    color: '#CCC',
+  applyBtnDisabled: {
+    backgroundColor: UI_COLORS.well,
   },
-  sectionTitle: {
-    fontSize: 16,
-    fontFamily: Fonts.bold,
-    color: colors.black,
-    marginHorizontal: 24,
-    marginBottom: 16,
+  applyBtnText: {
+    letterSpacing: 0.2,
+  },
+  sectionLabel: {
+    marginTop: UI_SPACING.xl,
+    marginBottom: UI_SPACING.sm,
+    letterSpacing: 0.4,
+    textTransform: 'uppercase',
+  },
+  list: {
+    maxHeight: hp('55%'),
   },
   listContent: {
-    paddingHorizontal: 24,
-    paddingBottom: 40,
+    paddingBottom: hp('6%'),
+    gap: UI_SPACING.md,
   },
-  offerItem: {
+  card: {
+    backgroundColor: UI_COLORS.card,
+    borderRadius: UI_RADIUS.card,
+    padding: UI_SPACING.lg,
+    ...UI_ELEVATION.card,
+  },
+  cardTopRow: {
     flexDirection: 'row',
-    backgroundColor: colors.white,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#E8F8FA',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 2,
-  },
-  offerIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    backgroundColor: colors.figmaTeal,
-    justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
-  },
-  offerInfo: {
-    flex: 1,
-  },
-  codeRow: {
-    flexDirection: 'row',
     justifyContent: 'space-between',
+    gap: UI_SPACING.sm,
+  },
+  codeChip: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 4,
+    gap: UI_SPACING.xs,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: UI_COLORS.primaryEdge,
+    backgroundColor: UI_COLORS.primaryTint,
+    borderRadius: UI_RADIUS.xs,
+    paddingHorizontal: UI_SPACING.sm,
+    paddingVertical: hp('0.5%'),
   },
-  offerCode: {
-    fontSize: 14,
-    fontFamily: Fonts.bold,
-    color: colors.themeTeal,
-    backgroundColor: colors.figmaTeal,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 4,
-    overflow: 'hidden',
+  actionPill: {
+    borderRadius: UI_RADIUS.pill,
+    backgroundColor: UI_COLORS.primaryTint,
+    paddingHorizontal: UI_SPACING.md,
+    paddingVertical: hp('0.6%'),
   },
-  applyLabel: {
-    fontSize: 12,
-    fontFamily: Fonts.bold,
-    color: colors.themeTeal,
+  actionText: {
+    letterSpacing: 0.6,
   },
-  offerTitle: {
-    fontSize: 16,
-    fontFamily: Fonts.bold,
-    color: colors.black,
-    marginBottom: 2,
+  cardTitle: {
+    marginTop: UI_SPACING.md,
   },
-  offerDescription: {
-    fontSize: 12,
-    fontFamily: Fonts.gilroyMedium,
-    color: '#666',
-    lineHeight: 16,
+  cardDivider: {
+    height: 1,
+    backgroundColor: UI_COLORS.border,
+    marginVertical: UI_SPACING.md,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: UI_SPACING.md,
+  },
+  metaChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: UI_SPACING.xs,
   },
   emptyContainer: {
     alignItems: 'center',
-    paddingVertical: 60,
-  },
-  emptyIconCircle: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#F2F3F5',
-    marginBottom: 16,
+    paddingTop: hp('3%'),
+    gap: UI_SPACING.xs,
   },
-  emptyText: {
-    fontSize: 16,
-    fontFamily: Fonts.gilroyMedium,
-    color: '#999',
-    marginTop: 16,
+  emptyImage: {
+    width: wp('38%'),
+    height: wp('38%'),
+    resizeMode: 'contain',
+    marginBottom: UI_SPACING.sm,
+  },
+  emptyNote: {
+    textAlign: 'center',
   },
 });
-
-export default CouponModal;

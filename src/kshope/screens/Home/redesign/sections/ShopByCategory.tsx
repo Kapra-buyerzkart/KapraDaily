@@ -67,7 +67,7 @@ const ShopByCategory: React.FC<Props> = ({
               </TouchableOpacity>
               <Text
                 style={[styles.chipLabel, isActive && styles.chipLabelActive]}
-                numberOfLines={1}
+                numberOfLines={2}
               >
                 {chip.label}
               </Text>
@@ -98,7 +98,7 @@ const ShopByCategory: React.FC<Props> = ({
                 style={styles.cardImage}
               />
             </View>
-            <Text style={styles.cardLabel} numberOfLines={1}>
+            <Text style={styles.cardLabel} numberOfLines={2}>
               {card.label}
             </Text>
           </TouchableOpacity>
@@ -110,7 +110,8 @@ const ShopByCategory: React.FC<Props> = ({
   </View>
 );
 
-const CHIP_W = colWidth(5.4, SPACE.md);
+const CHIP_GAP = SPACE.lg;
+const CHIP_W = colWidth(4, CHIP_GAP);
 const CARD_W = colWidth(2.6, CARD_GAP);
 
 const styles = StyleSheet.create({
@@ -138,7 +139,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: GUTTER,
     paddingTop: SPACE.lg,
     paddingBottom: SPACE.lg,
-    gap: SPACE.md,
+    gap: CHIP_GAP,
   },
   chipItem: {
     alignItems: 'center',
@@ -146,7 +147,8 @@ const styles = StyleSheet.create({
   },
   chip: {
     width: CHIP_W,
-    height: CHIP_W * 0.86,
+    height: CHIP_W,
+    padding: s(4),
     borderRadius: RADIUS.md,
     backgroundColor: HOME_COLORS.white,
     borderWidth: StyleSheet.hairlineWidth,
@@ -158,16 +160,17 @@ const styles = StyleSheet.create({
     borderColor: HOME_COLORS.orange,
   },
   chipIcon: {
-    width: '62%',
-    height: '62%',
+    width: '100%',
+    height: '100%',
   },
   chipLabel: {
     fontFamily: HOME_FONTS.regular,
-    fontSize: fs(11),
-    lineHeight: fs(11) * 1.45,
+    fontSize: fs(12),
+    lineHeight: fs(12) * 1.4,
     color: HOME_COLORS.black,
     marginTop: SPACE.xs,
     textAlign: 'center',
+    minHeight: fs(12) * 1.4 * 2,
   },
   chipLabelActive: {
     fontFamily: HOME_FONTS.medium,
@@ -204,6 +207,7 @@ const styles = StyleSheet.create({
     color: HOME_COLORS.black,
     marginTop: SPACE.sm,
     textAlign: 'center',
+    minHeight: fs(13) * 1.35 * 2,
   },
 });
 

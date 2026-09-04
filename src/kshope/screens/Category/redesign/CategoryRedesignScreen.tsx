@@ -12,8 +12,10 @@ import {
   useNavigation,
   useRoute,
 } from '@react-navigation/native';
+import Animated from 'react-native-reanimated';
 import { useWishlist } from '../../../context/WishlistContext';
 import FloatingCartButton from '../../../components/FloatingCartButton';
+import { useCartPillScrollProps } from '../../../components/cartPillScroll';
 import type { ProductTile } from '../../Home/redesign/content';
 import {
   GUTTER,
@@ -57,6 +59,7 @@ const CategoryRedesignScreen: React.FC = () => {
   const [filterVisible, setFilterVisible] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const listRef = useRef<FlatList>(null);
+  const cartPillScroll = useCartPillScrollProps();
 
   const {
     loading,
@@ -147,12 +150,13 @@ const CategoryRedesignScreen: React.FC = () => {
 
       <PromoBanner source={banner} />
 
-      <FlatList
-        ref={listRef}
+      <Animated.FlatList
+        ref={listRef as any}
         data={productCards}
         keyExtractor={item => item.id}
         numColumns={2}
         showsVerticalScrollIndicator={false}
+        {...cartPillScroll}
         columnWrapperStyle={styles.column}
         contentContainerStyle={styles.listContent}
         renderItem={({ item }) => (

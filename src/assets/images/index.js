@@ -58,6 +58,7 @@ const images = {
   successTwo: require('./success-two.png'),
   success: require('./success.png'),
   threeDots: require('./three_dots.png'),
+  updateContactBg: require('./update_contact_bg.png'),
   tick: require('./tick.png'),
   trackingImageAccepted: require('./tracking_image_accepted.png'),
   trackingImageAssigned: require('./tracking_image_assigned.png'),

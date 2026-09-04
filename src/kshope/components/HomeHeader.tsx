@@ -38,6 +38,7 @@ import {
   freezeSize,
 } from './homeHeaderCollapse';
 import RotatingPlaceholder from './RotatingPlaceholder';
+import { wp } from '@/utils/responsive';
 
 export const HEADER_BG = '#2E7FB6';
 const BORDER = '#FFFFFF';
@@ -79,7 +80,7 @@ export interface HeaderItem {
 
 interface HomeHeaderProps {
   title?: string;
-  address?: string;
+  address?: string | null;
   avatar?: any;
   tabs: HeaderTab[];
   selectedTabId?: string | null;
@@ -91,6 +92,7 @@ interface HomeHeaderProps {
   onNotificationsPress?: () => void;
   onWishlistPress?: () => void;
   onProfilePress?: () => void;
+  onAddressPress?: () => void;
   scrollY?: SharedValue<number>;
   onHeightChange?: (height: number) => void;
 }
@@ -180,6 +182,7 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
   onNotificationsPress,
   onWishlistPress,
   onProfilePress,
+  onAddressPress,
   scrollY,
   onHeightChange,
 }) => {
@@ -319,11 +322,21 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
         >
           <View style={styles.titleBlock}>
             <Text style={styles.title}>{title}</Text>
-            {!!address && (
-              <Text style={styles.address} numberOfLines={1}>
-                {address}
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={onAddressPress}
+              disabled={!onAddressPress}
+              style={styles.addressRow}
+            >
+              <AppIcons.Location size={13} color="rgba(255,255,255,0.9)" />
+              <Text
+                style={[styles.address, !address && styles.addressPlaceholder]}
+                numberOfLines={1}
+              >
+                {address || 'Select delivery address'}
               </Text>
-            )}
+              <AppIcons.ArrowDownBold size={12} color="rgba(255,255,255,0.9)" />
+            </TouchableOpacity>
           </View>
           {/* <TouchableOpacity activeOpacity={0.85} onPress={onAvatarPress}>
             {avatar ? (
@@ -368,12 +381,12 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
                 sizes.actions > 0 && { width: sizes.actions },
               ]}
             >
-              <TouchableOpacity
+              {/* <TouchableOpacity
                 style={styles.headerIcon}
                 onPress={onNotificationsPress}
               >
                 <AppIcons.Bell size={23} color={BORDER} />
-              </TouchableOpacity>
+              </TouchableOpacity> */}
               <TouchableOpacity
                 style={styles.headerIcon}
                 onPress={onWishlistPress}
@@ -493,11 +506,22 @@ const styles = StyleSheet.create({
     lineHeight: 46,
     color: BORDER,
   },
+  addressRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 2,
+  },
   address: {
+    flexShrink: 1,
     fontFamily: Fonts.gilroyRegular,
     fontSize: 13,
+    width: wp('60%'),
     color: 'rgba(255,255,255,0.9)',
-    marginTop: 2,
+    marginHorizontal: 4,
+  },
+  addressPlaceholder: {
+    fontFamily: Fonts.gilroyBold,
+    color: BORDER,
   },
   avatar: {
     width: 44,

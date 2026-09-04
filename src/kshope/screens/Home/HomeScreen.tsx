@@ -32,6 +32,10 @@ import HomeHeader, { HeaderItem, HEADER_BG } from '../../components/HomeHeader';
 import HomeSkeleton from './HomeSkeleton';
 import { RECOMMENDED } from './redesign/content';
 import FloatingCartButton from '../../components/FloatingCartButton';
+import {
+  trackCartPillScroll,
+  useCartPillScrollTracker,
+} from '../../components/cartPillScroll';
 import { getKshopeAreaId } from '../../globals/storage';
 import { Fonts } from '../../theme/fonts';
 import { colors } from '../../theme/colours';
@@ -119,8 +123,10 @@ const HomeScreen: React.FC = () => {
   );
   const [headerHeight, setHeaderHeight] = useState(0);
   const scrollY = useSharedValue(0);
+  useCartPillScrollTracker();
   const onScroll = useAnimatedScrollHandler(e => {
     scrollY.value = e.contentOffset.y;
+    trackCartPillScroll(e.contentOffset.y);
   });
 
   const bannerRef = useRef<FlatList>(null);

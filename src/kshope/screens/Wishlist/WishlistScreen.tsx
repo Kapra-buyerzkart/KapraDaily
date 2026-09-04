@@ -2,7 +2,6 @@ import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Dimensions,
-  FlatList,
   Image,
   StatusBar,
   StyleSheet,
@@ -14,10 +13,13 @@ import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
+import Animated from 'react-native-reanimated';
+
 import { useWishlist } from '../../context/WishlistContext';
 import { useCart } from '../../context/CartContext';
 import ConfirmationModal from '../../components/ConfirmationModal';
 import FloatingCartButton from '../../components/FloatingCartButton';
+import { useCartPillScrollProps } from '../../components/cartPillScroll';
 import { AppText, Badge, Divider } from '../../components/atoms';
 import { AppIcons } from '../../assets/icons';
 import AddressCard from '../Cart/components/AddressCard';
@@ -45,6 +47,7 @@ const WishlistScreen: React.FC = () => {
     useWishlist();
   const { addresses } = useCart();
   const [itemToRemove, setItemToRemove] = useState<any>(null);
+  const cartPillScroll = useCartPillScrollProps();
 
   useFocusEffect(
     useCallback(() => {
@@ -200,7 +203,7 @@ const WishlistScreen: React.FC = () => {
     }
 
     return (
-      <FlatList
+      <Animated.FlatList
         data={cards}
         renderItem={renderCard}
         keyExtractor={card => String(card.id)}
@@ -208,6 +211,7 @@ const WishlistScreen: React.FC = () => {
         columnWrapperStyle={styles.column}
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
+        {...cartPillScroll}
       />
     );
   };

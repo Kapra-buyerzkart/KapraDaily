@@ -19,7 +19,7 @@ import CartScreen from '../screens/Cart/CartScreen';
 import OrderSuccessScreen from '../screens/Order/OrderSuccessScreen';
 import OrderFailedScreen from '../screens/Order/OrderFailedScreen';
 import OrderPendingScreen from '../screens/Order/OrderPendingScreen';
-import MyOrderScreen from '../screens/Order/MyOrderScreen';
+import MyOrderScreen from '../screens/Order/redesign/MyOrdersRedesignScreen';
 import MyOrderDetailsScreen from '../screens/Order/MyOrderDetailsScreen';
 import ProfileScreen from '../screens/Profile/ProfileScreen';
 import EditProfileScreen from '../screens/Profile/EditProfileScreen';
@@ -30,6 +30,7 @@ import AddLocationScreen from '../screens/AddLocation/AddLocationScreen';
 import ReferralScreen from '../screens/Referral/ReferralScreen';
 import BCoinScreen from '../screens/BCoin/BCoinScreen';
 import ShopWithUsScreen from '../screens/ShopWithUs/ShopWithUsScreen';
+import LegalContentScreen from '../screens/Legal/LegalContentScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -113,6 +114,7 @@ const KshopeRoot: React.FC = () => {
                 <Stack.Screen name="KshopeReferral" component={ReferralScreen} />
                 <Stack.Screen name="KshopeBCoin" component={BCoinScreen} />
                 <Stack.Screen name="KshopeShopWithUs" component={ShopWithUsScreen} />
+                <Stack.Screen name="KshopeLegalContent" component={LegalContentScreen} />
               </Stack.Navigator>
             </CartProvider>
           </WishlistProvider>

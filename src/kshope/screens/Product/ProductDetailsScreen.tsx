@@ -34,7 +34,9 @@ import {
   updateCartItemApi,
 } from '../../api/services/cartService';
 import { useCart } from '../../context/CartContext';
+import Animated from 'react-native-reanimated';
 import FloatingCartButton from '../../components/FloatingCartButton';
+import { useCartPillScrollProps } from '../../components/cartPillScroll';
 import {
   addToWishlistApi,
   removeFromWishlistApi,
@@ -74,6 +76,7 @@ const ProductDetailsScreen = () => {
   const [showAllReviews, setShowAllReviews] = useState(false);
 
   const scrollViewRef = useRef<ScrollView>(null);
+  const cartPillScroll = useCartPillScrollProps();
   const windowWidth = Dimensions.get('window').width;
   const imageWidth = windowWidth - 24;
 
@@ -487,9 +490,10 @@ const ProductDetailsScreen = () => {
 
         {renderHeader()}
 
-        <ScrollView
+        <Animated.ScrollView
           style={styles.contentScroll}
           showsVerticalScrollIndicator={false}
+          {...cartPillScroll}
         >
           {renderImageSection()}
 
@@ -1014,7 +1018,7 @@ const ProductDetailsScreen = () => {
             </View>
           )}
           <View style={{ height: 100 }} />
-        </ScrollView>
+        </Animated.ScrollView>
 
         <FloatingCartButton bottom={100} />
 

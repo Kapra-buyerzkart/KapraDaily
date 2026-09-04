@@ -1,7 +1,7 @@
 import React from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 import { HOME_FONTS, fs, s } from '../../../Home/redesign/theme';
-import { StrikePrice } from '../../../Home/redesign/parts';
+import { TokenBadge } from '../../../Home/redesign/parts';
 import { PDP_ART } from '../assets';
 import { PDP_COLORS } from '../theme';
 
@@ -14,6 +14,8 @@ type Props = {
   average: string;
   ratings: number;
   reviews: number;
+  hasRating: boolean;
+  tokens: number;
 };
 
 const PriceHeader: React.FC<Props> = ({
@@ -25,6 +27,8 @@ const PriceHeader: React.FC<Props> = ({
   average,
   ratings,
   reviews,
+  hasRating,
+  tokens,
 }) => (
   <View style={styles.wrap}>
     <View style={styles.main}>
@@ -32,31 +36,42 @@ const PriceHeader: React.FC<Props> = ({
       {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
 
       <View style={styles.priceRow}>
-        <Text style={styles.price}>{price}</Text>
+        <Text style={styles.price} numberOfLines={1}>
+          {price}
+        </Text>
         {mrp ? (
-          <StrikePrice
-            value={`MRP ${mrp}`}
-            size={14}
-            color={PDP_COLORS.muted}
-          />
+          <Text style={styles.mrp} numberOfLines={1}>{`MRP ${mrp}`}</Text>
+        ) : null}
+        {saveLabel ? (
+          <Text style={styles.save} numberOfLines={1}>
+            {saveLabel}
+          </Text>
         ) : null}
       </View>
 
-      {saveLabel ? <Text style={styles.save}>{saveLabel}</Text> : null}
+      {tokens > 0 ? (
+        <TokenBadge tokens={tokens} size={11} style={styles.tokenBadge} />
+      ) : null}
     </View>
 
-    <View style={styles.ratingCol}>
-      <View style={styles.ratingRow}>
-        <Image
-          source={PDP_ART.ratingStar}
-          resizeMode="contain"
-          style={styles.star}
-        />
-        <Text style={styles.average}>{average}</Text>
+    {hasRating ? (
+      <View style={styles.ratingCol}>
+        <View style={styles.ratingRow}>
+          <Image
+            source={PDP_ART.ratingStar}
+            resizeMode="contain"
+            style={styles.star}
+          />
+          <Text style={styles.average}>{average}</Text>
+        </View>
+        {ratings > 0 ? (
+          <Text style={styles.ratingMeta}>{`${ratings} Rating`}</Text>
+        ) : null}
+        {reviews > 0 ? (
+          <Text style={styles.ratingMeta}>{`${reviews} Reviews`}</Text>
+        ) : null}
       </View>
-      <Text style={styles.ratingMeta}>{`${ratings} Rating`}</Text>
-      <Text style={styles.ratingMeta}>{`${reviews} Reviews`}</Text>
-    </View>
+    ) : null}
   </View>
 );
 
@@ -86,21 +101,34 @@ const styles = StyleSheet.create({
   },
   priceRow: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: s(12),
-    marginTop: s(10),
+    alignItems: 'baseline',
+    flexWrap: 'wrap',
+    columnGap: s(10),
+    rowGap: s(4),
+    marginTop: s(12),
   },
   price: {
     fontFamily: HOME_FONTS.semiBold,
     fontSize: fs(32),
-    lineHeight: fs(32) * 1.2,
+    lineHeight: fs(32) * 1.1,
     color: PDP_COLORS.black,
   },
-  save: {
+  mrp: {
     fontFamily: HOME_FONTS.regular,
-    fontSize: fs(16),
-    lineHeight: fs(16) * 1.35,
+    fontSize: fs(14),
+    lineHeight: fs(32) * 1.1,
+    color: PDP_COLORS.muted,
+    textDecorationLine: 'line-through',
+    textDecorationColor: PDP_COLORS.muted,
+  },
+  save: {
+    fontFamily: HOME_FONTS.medium,
+    fontSize: fs(14),
+    lineHeight: fs(32) * 1.1,
     color: PDP_COLORS.save,
+  },
+  tokenBadge: {
+    alignSelf: 'flex-start',
     marginTop: s(10),
   },
   ratingCol: {

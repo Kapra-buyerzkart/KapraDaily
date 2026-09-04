@@ -1,643 +1,345 @@
-import {
-  View,
-  Text,
-  Image,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-  ActivityIndicator,
-  Alert,
-  ImageBackground,
-  Modal,
-} from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
-import React, { useState, useEffect, useRef } from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import { StatusBar, StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import StatusModal from '../../components/StatusModal';
 import {
+  getBCoinValueChangesApi,
   getWalletDataApi,
   redeemBCoinsApi,
-  getBCoinValueChangesApi,
 } from '../../api/services/userService';
 import { useUser } from '../../context/UserContext';
-import { colors } from '../../theme/colours';
-import { AppIcons } from '../../assets/icons';
-import { styles } from './styles';
-import { heightPercentageToDP as hp } from 'react-native-responsive-screen';
 
-interface BCoinHistoryItem {
-  historyId: string | number;
-  description: string;
-  transactionDate: string;
-  transactionType: string;
-  amount: number;
-}
+import { RateCard, TokenStrip, WalletSegments } from './molecules';
+import type { WalletSegmentId } from './molecules/WalletSegments';
+import {
+  BCoinHero,
+  FOOTER_HEIGHT,
+  HistoryList,
+  InfoSheet,
+  RateHistorySheet,
+  RedeemFooter,
+  RedeemSheet,
+} from './organisms';
+import type { RedeemMethod } from './organisms/RedeemSheet';
+import { PALETTE } from './theme';
+import {
+  RateItem,
+  groupHistoryByMonth,
+  toNumber,
+  withRateTrend,
+} from './utils';
 
-interface BCoinRateHistoryItem {
-  id?: string | number;
-  updatedOn: string;
-  bCoinValue?: number;
-  newValue?: number;
-  value?: number;
-  changeType?: 'up' | 'down';
-}
+// The status modal is handed off from a closing sheet, so it waits for the
+// sheet's exit animation before taking the screen.
+const SHEET_HANDOFF_DELAY = 500;
+
+const GENERAL_SETTINGS = {
+  show_temporary_message: '0',
+  min_coins_to_redeem_cash: '0',
+};
+
+type StatusType = 'success' | 'error';
 
 const BCoinScreen: React.FC = () => {
-  const [selected, setSelected] = useState<'bcoin' | 'btoken'>('bcoin');
-  const [showModal, setShowModal] = useState(false);
-  const [walletData, setWalletData] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [bCoinValueHistory, setBCoinValueHistory] = useState<
-    BCoinRateHistoryItem[]
-  >([]);
-  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
-
-  const [showRedeemModal, setShowRedeemModal] = useState(false);
-  const [requestedCoins, setRequestedCoins] = useState('');
-  const [preferredMethod, setPreferredMethod] = useState<'bank' | 'wallet'>(
-    'bank',
-  );
-  const [isRedeeming, setIsRedeeming] = useState(false);
-
   const navigation = useNavigation<any>();
+  const insets = useSafeAreaInsets();
   const { profile } = useUser();
 
-  const generalSettings = {
-    show_temporary_message: '0',
-  };
-  const showHistoryNote = generalSettings?.show_temporary_message === '1';
+  const [selected, setSelected] = useState<WalletSegmentId>('bcoin');
+  const [walletData, setWalletData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const [showRateSheet, setShowRateSheet] = useState(false);
+  const [showInfoSheet, setShowInfoSheet] = useState(false);
+  const [showRedeemSheet, setShowRedeemSheet] = useState(false);
+
+  const [rateHistory, setRateHistory] = useState<RateItem[]>([]);
+  const [isLoadingRates, setIsLoadingRates] = useState(false);
+
+  const [requestedCoins, setRequestedCoins] = useState('');
+  const [preferredMethod, setPreferredMethod] = useState<RedeemMethod>('bank');
+  const [isRedeeming, setIsRedeeming] = useState(false);
+
+  const [statusModalVisible, setStatusModalVisible] = useState(false);
+  const [statusType, setStatusType] = useState<StatusType>('success');
+  const [statusTitle, setStatusTitle] = useState('');
+  const [statusMessage, setStatusMessage] = useState('');
 
   const isMounted = useRef(true);
 
+  const balance = toNumber(walletData?.wallet?.bCoins);
+  const coinValue = toNumber(walletData?.wallet?.bCoinValue);
+  const tokens = walletData?.wallet?.bTokens ?? '0';
+  const minCoinsToRedeem = toNumber(GENERAL_SETTINGS.min_coins_to_redeem_cash);
+  const isLocked = balance < minCoinsToRedeem;
+  const showHistoryNote = GENERAL_SETTINGS.show_temporary_message === '1';
+
+  const isCoin = selected === 'bcoin';
+  const sections = useMemo(
+    () =>
+      groupHistoryByMonth(
+        isCoin ? walletData?.bcoinHistory : walletData?.btokenHistory,
+      ),
+    [isCoin, walletData],
+  );
+
   useEffect(() => {
+    isMounted.current = true;
     return () => {
       isMounted.current = false;
     };
   }, []);
 
-  useEffect(() => {
-    if (profile) {
-      fetchWalletData();
-    }
-  }, [profile]);
+  const showStatus = useCallback(
+    (type: StatusType, title: string, message: string) => {
+      setStatusType(type);
+      setStatusTitle(title);
+      setStatusMessage(message);
+      setStatusModalVisible(true);
+    },
+    [],
+  );
 
-  const fetchWalletData = async () => {
+  const fetchWalletData = useCallback(async () => {
     if (!isMounted.current) return;
-    setIsLoading(true);
     try {
       const response = await getWalletDataApi();
-      if (isMounted.current && response && response.success) {
+      if (isMounted.current && response?.success) {
         setWalletData(response.data);
       }
     } catch (error) {
       console.error('Error fetching wallet data:', error);
     } finally {
-      if (isMounted.current) setIsLoading(false);
+      if (isMounted.current) {
+        setIsLoading(false);
+        setIsRefreshing(false);
+      }
     }
-  };
+  }, []);
 
-  const fetchBCoinValueHistory = async () => {
-    if (!isMounted.current) return;
-    setIsLoadingHistory(true);
+  useEffect(() => {
+    if (profile) {
+      setIsLoading(true);
+      fetchWalletData();
+    } else {
+      setIsLoading(false);
+    }
+  }, [fetchWalletData, profile]);
+
+  const handleRefresh = useCallback(() => {
+    setIsRefreshing(true);
+    fetchWalletData();
+  }, [fetchWalletData]);
+
+  const openRateSheet = useCallback(async () => {
+    setShowRateSheet(true);
+    setIsLoadingRates(true);
     try {
       const response = await getBCoinValueChangesApi();
-      if (
-        isMounted.current &&
-        response &&
-        response.success &&
-        response.data &&
-        response.data.items
-      ) {
-        const items = [...response.data.items];
-
-        items.sort(
-          (a, b) =>
-            new Date(a.updatedOn).getTime() - new Date(b.updatedOn).getTime(),
-        );
-
-        const mappedItems: BCoinRateHistoryItem[] = items.map((item, index) => {
-          let changeType: 'up' | 'down' = 'up';
-          if (index > 0) {
-            const prevValue = items[index - 1].bCoinValue;
-            if (item.bCoinValue < prevValue) {
-              changeType = 'down';
-            }
-          }
-          return {
-            ...item,
-            changeType,
-          };
-        });
-
-        setBCoinValueHistory(mappedItems.reverse());
+      if (isMounted.current && response?.success && response.data?.items) {
+        setRateHistory(withRateTrend(response.data.items));
       }
     } catch (error) {
-      console.error('Error fetching B-Coin value history:', error);
+      console.error('Error fetching UD Coin value history:', error);
     } finally {
-      if (isMounted.current) setIsLoadingHistory(false);
+      if (isMounted.current) setIsLoadingRates(false);
     }
-  };
+  }, []);
 
-  const handleRedeem = async () => {
-    const redeemAmount = Number(requestedCoins);
+  const handleRedeemPress = useCallback(() => {
+    if (isLocked) {
+      showStatus(
+        'error',
+        'Insufficient UD Coins',
+        `You do not have enough UD Coins to redeem. A minimum of ${minCoinsToRedeem} UD Coins is required.`,
+      );
+      return;
+    }
+    setShowRedeemSheet(true);
+  }, [isLocked, minCoinsToRedeem, showStatus]);
 
-    if (isNaN(redeemAmount) || redeemAmount <= 0) {
-      Alert.alert(
+  const handleRedeem = useCallback(async () => {
+    const redeemAmount = toNumber(requestedCoins);
+
+    if (redeemAmount <= 0) {
+      showStatus(
+        'error',
         'Invalid Amount',
         'Please enter a valid amount of coins to redeem.',
       );
       return;
     }
 
-    if (redeemAmount > (walletData?.wallet?.bCoins || 0)) {
-      Alert.alert('Insufficient Balance', 'You do not have enough B-Coins.');
+    if (redeemAmount > balance) {
+      showStatus(
+        'error',
+        'Insufficient Balance',
+        'You do not have enough UD Coins.',
+      );
       return;
     }
 
     setIsRedeeming(true);
     try {
-      const payload = {
-        requestedCoins: Number(requestedCoins),
-        preferredMethod: preferredMethod,
-      };
-      const response = await redeemBCoinsApi(payload);
+      const response = await redeemBCoinsApi({
+        requestedCoins: redeemAmount,
+        preferredMethod,
+      });
 
       if (!isMounted.current) return;
-
-      setShowRedeemModal(false);
+      setShowRedeemSheet(false);
 
       setTimeout(() => {
         if (!isMounted.current) return;
 
-        if (response && response.success) {
+        if (response?.success) {
           setRequestedCoins('');
           fetchWalletData();
-          Alert.alert(
+          showStatus(
+            'success',
             'Success',
             response.message || 'Redemption request submitted successfully.',
           );
-        } else {
-          let title = 'Error';
-          let message =
-            response?.message || 'Failed to submit redemption request.';
-
-          if (response?.status === 'PENDING_REQUEST') {
-            title = 'Request Pending';
-          } else if (response?.status === 'INSUFFICIENT_BALANCE') {
-            title = 'Insufficient Balance';
-          }
-
-          Alert.alert(title, message);
+          return;
         }
-      }, 500);
+
+        if (response?.status === 'PENDING_REQUEST') {
+          showStatus(
+            'error',
+            'Request Pending',
+            response.message ||
+              'You already have a pending redemption request.',
+          );
+        } else if (response?.status === 'INSUFFICIENT_BALANCE') {
+          showStatus(
+            'error',
+            'Insufficient Balance',
+            response.message || 'You do not have enough UD Coins.',
+          );
+        } else {
+          showStatus(
+            'error',
+            'Error',
+            response?.message || 'Failed to submit redemption request.',
+          );
+        }
+      }, SHEET_HANDOFF_DELAY);
     } catch (error) {
       console.error('Redemption error:', error);
-      if (isMounted.current) {
-        setShowRedeemModal(false);
-        setTimeout(() => {
-          if (!isMounted.current) return;
-          Alert.alert(
-            'Error',
-            'An error occurred while processing your request.',
-          );
-        }, 500);
-      }
+      if (!isMounted.current) return;
+      setShowRedeemSheet(false);
+      setTimeout(() => {
+        if (!isMounted.current) return;
+        showStatus(
+          'error',
+          'Error',
+          'An error occurred while processing your request.',
+        );
+      }, SHEET_HANDOFF_DELAY);
+    } finally {
       if (isMounted.current) setIsRedeeming(false);
     }
-  };
+  }, [balance, fetchWalletData, preferredMethod, requestedCoins, showStatus]);
+
+  const listBottomPadding =
+    FOOTER_HEIGHT +
+    Math.max(insets.bottom, 14) +
+    (showHistoryNote ? 26 : 0) +
+    (isLocked ? 24 : 0);
 
   return (
-    <SafeAreaView style={styles.mainContainer}>
-      <ImageBackground
-        style={styles.backgroundImageStyle}
-        source={require('../../assets/images/bcoinscreen.png')}
-      >
-        <View style={styles.headerContainer}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <AppIcons.Back size={wp('6%')} color={colors.themeWhite} />
-          </TouchableOpacity>
-          <Text style={[styles.headerText, { color: colors.themeWhite }]}>
-            B-Coin and B-token
-          </Text>
-        </View>
+    <View style={styles.screen}>
+      <StatusBar
+        translucent
+        backgroundColor="transparent"
+        barStyle="dark-content"
+      />
 
-        <View style={{ flex: 1, marginTop: hp('25%') }}>
-          <View style={styles.unifiedCard}>
-            <View style={styles.cardRow}>
-              <Image
-                source={require('../../assets/images/bcoinnew.png')}
-                style={styles.coinIcon}
-              />
-              <Text style={styles.cardTitle}>B-Coin</Text>
-              <View style={styles.balanceContainer}>
-                <Text style={styles.balanceLabel}>Available balance : </Text>
-                <View style={styles.balancePill}>
-                  <Text style={styles.balanceValue}>
-                    {walletData?.wallet?.bCoins || '0'}
-                  </Text>
-                </View>
-              </View>
-            </View>
+      <BCoinHero
+        topInset={insets.top}
+        balance={balance}
+        coinValue={coinValue}
+        onBack={() => navigation.goBack()}
+        onInfo={() => setShowInfoSheet(true)}
+      />
 
-            <TouchableOpacity
-              onPress={() => {
-                fetchBCoinValueHistory();
-                setShowModal(true);
-              }}
-              style={styles.valueRow}
-            >
-              <Text style={styles.valueLabel}>Today’s B-coin value : </Text>
-              <Text style={styles.valueHighlight}>
-                ₹{walletData?.wallet?.bCoinValue || '0'}
-              </Text>
-              <AppIcons.Forward
-                size={18}
-                color={colors.themeTeal}
-                style={{ marginLeft: wp('2%') }}
-              />
-            </TouchableOpacity>
+      <View style={styles.body}>
+        <RateCard coinValue={coinValue} onPress={openRateSheet} />
+        <TokenStrip tokens={tokens} />
+        <WalletSegments selected={selected} onChange={setSelected} />
 
-            <View style={styles.cardDivider} />
-
-            <View style={styles.cardRow}>
-              <Image
-                source={require('../../assets/images/btokenn.png')}
-                style={styles.coinIcon}
-              />
-              <Text style={styles.cardTitle}>B-Token</Text>
-              <View style={styles.balanceContainer}>
-                <Text style={styles.balanceLabel}>Available balance : </Text>
-                <View style={styles.balancePill}>
-                  <Text style={styles.balanceValue}>
-                    {walletData?.wallet?.bTokens || '0'}
-                  </Text>
-                </View>
-              </View>
-            </View>
-          </View>
-        </View>
-      </ImageBackground>
-
-      <View style={styles.historyHeaderRow}>
-        <Text style={styles.historyHeaderText}>History</Text>
+        <HistoryList
+          sections={sections}
+          isCoin={isCoin}
+          isLoading={isLoading}
+          isRefreshing={isRefreshing}
+          onRefresh={handleRefresh}
+          bottomPadding={listBottomPadding}
+        />
       </View>
-      <View style={styles.bcoinTokenHeaderContainer}>
-        <TouchableOpacity
-          onPress={() => setSelected('bcoin')}
-          style={
-            selected === 'bcoin'
-              ? [
-                  styles.bcoinSingleContainer,
-                  {
-                    borderBottomWidth: 4,
-                    borderBottomColor: colors.themeTeal,
-                  },
-                ]
-              : styles.bcoinSingleContainer
-          }
-        >
-          <Text
-            style={
-              selected === 'bcoin'
-                ? [
-                    styles.bcoinSingleText,
-                    {
-                      color: colors.themeTeal,
-                    },
-                  ]
-                : styles.bcoinSingleText
-            }
-          >
-            B-Coin
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => setSelected('btoken')}
-          style={
-            selected === 'btoken'
-              ? [
-                  styles.bcoinSingleContainer,
-                  {
-                    borderBottomWidth: 4,
-                    borderBottomColor: colors.themeTeal,
-                  },
-                ]
-              : styles.bcoinSingleContainer
-          }
-        >
-          <Text
-            style={
-              selected === 'btoken'
-                ? [
-                    styles.bcoinSingleText,
-                    {
-                      color: colors.themeTeal,
-                    },
-                  ]
-                : styles.bcoinSingleText
-            }
-          >
-            B-Token
-          </Text>
-        </TouchableOpacity>
-      </View>
-      <ScrollView>
-        {(selected === 'bcoin'
-          ? walletData?.bcoinHistory
-          : walletData?.btokenHistory
-        )?.map(
-          (
-            item: BCoinHistoryItem,
-            index: number,
-            array: BCoinHistoryItem[],
-          ) => (
-            <View
-              key={item.historyId}
-              style={[
-                styles.bcoinContainer,
-                {
-                  borderBottomWidth: index === array.length - 1 ? 0 : 1,
-                },
-              ]}
-            >
-              {selected === 'bcoin' ? (
-                <Image
-                  source={require('../../assets/images/bcoinnew.png')}
-                  style={styles.coinIcon}
-                />
-              ) : (
-                <Image
-                  source={require('../../assets/images/btokenn.png')}
-                  style={styles.coinIcon}
-                />
-              )}
-              <View style={{ flex: 1, marginLeft: wp('3%') }}>
-                <Text style={styles.bcoinContent}>{item.description}</Text>
-                <View style={{ marginTop: 5 }}>
-                  <Text
-                    style={[
-                      styles.bcoinContent,
-                      {
-                        fontSize: wp('3.1%'),
-                        color: '#727783',
-                      },
-                    ]}
-                  >
-                    {item.transactionDate
-                      ? new Date(item.transactionDate).toLocaleDateString(
-                          'en-IN',
-                          {
-                            day: '2-digit',
-                            month: '2-digit',
-                            year: 'numeric',
-                          },
-                        )
-                      : ''}
-                  </Text>
-                </View>
-              </View>
-              <Text
-                style={[
-                  styles.bcoinPriceTextTwo,
-                  {
-                    color:
-                      item.transactionType === 'credit' ||
-                      item.transactionType === 'Credit'
-                        ? '#0CA201'
-                        : '#FF0000',
-                  },
-                ]}
-              >
-                {item.transactionType === 'credit' ||
-                item.transactionType === 'Credit'
-                  ? '+'
-                  : ''}
-                {item.amount.toFixed(2)}{' '}
-                {selected === 'bcoin' ? 'coins' : 'tokens'}
-              </Text>
-            </View>
-          ),
-        )}
-        {!isLoading &&
-          (!walletData ||
-            (selected === 'bcoin'
-              ? walletData?.bcoinHistory?.length === 0
-              : walletData?.btokenHistory?.length === 0)) && (
-            <View style={{ alignItems: 'center', marginTop: wp('10%') }}>
-              <Text style={styles.viewText}>No history available</Text>
-            </View>
-          )}
-      </ScrollView>
-      {showHistoryNote && (
-        <View
-          style={[
-            styles.historyNoteContainer,
-            { marginHorizontal: wp('5%'), marginBottom: 10 },
-          ]}
-        >
-          <Text style={styles.historyNoteText}>
-            This app displays only the most recent transaction history
-          </Text>
-        </View>
-      )}
-      <TouchableOpacity
-        onPress={() => setShowRedeemModal(true)}
-        style={styles.redeemButton}
-        activeOpacity={0.85}
-      >
-        <LinearGradient
-          colors={['#F25000', '#FF6A00']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.redeemGradient}
-        >
-          <Text style={styles.redeemText}>Redeem B-Coin</Text>
-        </LinearGradient>
-      </TouchableOpacity>
 
-      <Modal visible={showRedeemModal} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <View style={styles.modalHeaderContainer}>
-              <Text style={styles.modalHeaderText}>Redeem B-Coin</Text>
-              <TouchableOpacity onPress={() => setShowRedeemModal(false)}>
-                <AppIcons.Close size={wp('6%')} color={colors.themeBlack} />
-              </TouchableOpacity>
-            </View>
-            <View style={{ paddingHorizontal: wp('5%') }}>
-              <Text style={styles.availableBalanceHeaderText}>
-                Requested Coins
-              </Text>
-              <TextInput
-                style={styles.redeemInput}
-                placeholder="Enter requested B-Coin"
-                placeholderTextColor="#AAAAAA"
-                keyboardType="numeric"
-                value={requestedCoins}
-                onChangeText={setRequestedCoins}
-              />
+      <RedeemFooter
+        bottomInset={insets.bottom}
+        isLocked={isLocked}
+        minCoins={minCoinsToRedeem}
+        note={showHistoryNote}
+        onPress={handleRedeemPress}
+      />
 
-              <Text
-                style={[styles.availableBalanceHeaderText, { marginTop: 20 }]}
-              >
-                Preferred Method
-              </Text>
-              <View style={styles.methodContainer}>
-                <TouchableOpacity
-                  onPress={() => setPreferredMethod('bank')}
-                  style={[
-                    styles.methodButton,
-                    preferredMethod === 'bank' && styles.methodButtonActive,
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.methodText,
-                      preferredMethod === 'bank' && styles.methodTextActive,
-                    ]}
-                  >
-                    Bank Transfer
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => setPreferredMethod('wallet')}
-                  style={[
-                    styles.methodButton,
-                    preferredMethod === 'wallet' && styles.methodButtonActive,
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.methodText,
-                      preferredMethod === 'wallet' && styles.methodTextActive,
-                    ]}
-                  >
-                    Wallet
-                  </Text>
-                </TouchableOpacity>
-              </View>
+      <RedeemSheet
+        visible={showRedeemSheet}
+        onClose={() => setShowRedeemSheet(false)}
+        balance={balance}
+        coinValue={coinValue}
+        amount={requestedCoins}
+        onAmountChange={setRequestedCoins}
+        method={preferredMethod}
+        onMethodChange={setPreferredMethod}
+        isSubmitting={isRedeeming}
+        onSubmit={handleRedeem}
+      />
 
-              <TouchableOpacity
-                onPress={handleRedeem}
-                disabled={isRedeeming}
-                style={[
-                  styles.redeemButton,
-                  { marginTop: 30, width: '100%', marginBottom: 20 },
-                ]}
-                activeOpacity={0.85}
-              >
-                <LinearGradient
-                  colors={['#F25000', '#FF6A00']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.redeemGradient}
-                >
-                  {isRedeeming ? (
-                    <ActivityIndicator color="#FFF" />
-                  ) : (
-                    <Text style={styles.redeemText}>Submit Request</Text>
-                  )}
-                </LinearGradient>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+      <RateHistorySheet
+        visible={showRateSheet}
+        onClose={() => setShowRateSheet(false)}
+        items={rateHistory}
+        isLoading={isLoadingRates}
+      />
 
-      <Modal visible={showModal} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <View style={styles.modalHeaderContainer}>
-              <Text style={styles.modalHeaderText}>B-Coin rate history</Text>
-              <TouchableOpacity onPress={() => setShowModal(false)}>
-                <AppIcons.Close size={wp('6%')} color={colors.themeBlack} />
-              </TouchableOpacity>
-            </View>
-            <ScrollView>
-              {isLoadingHistory ? (
-                <ActivityIndicator
-                  size="large"
-                  color={colors.themeTeal}
-                  style={{ marginTop: 30 }}
-                />
-              ) : bCoinValueHistory && bCoinValueHistory.length > 0 ? (
-                bCoinValueHistory.map((item, index) => (
-                  <View
-                    key={item.id || index}
-                    style={styles.bcoinRateSingleContainer}
-                  >
-                    <View style={{ width: wp('30%') }}>
-                      <Text style={styles.dateText}>
-                        {item.updatedOn
-                          ? new Date(item.updatedOn).toLocaleDateString(
-                              'en-IN',
-                              {
-                                day: '2-digit',
-                                month: '2-digit',
-                                year: 'numeric',
-                              },
-                            )
-                          : ''}
-                      </Text>
-                    </View>
-                    <View style={{ width: wp('40%') }}>
-                      <Text style={styles.timeText}>
-                        {item.updatedOn
-                          ? new Date(item.updatedOn).toLocaleTimeString(
-                              'en-IN',
-                              {
-                                hour: '2-digit',
-                                minute: '2-digit',
-                                hour12: true,
-                              },
-                            )
-                          : ''}
-                      </Text>
-                    </View>
-                    <View style={styles.rateView}>
-                      <Text
-                        style={[
-                          styles.rateText,
-                          {
-                            color:
-                              item.changeType === 'down'
-                                ? colors.red
-                                : colors.green,
-                          },
-                        ]}
-                      >
-                        ₹
-                        {item.bCoinValue?.toFixed(2) ||
-                          item.newValue ||
-                          item.value ||
-                          0}
-                      </Text>
-                      {item.changeType === 'down' ? (
-                        <AppIcons.ArrowDown
-                          size={wp('4%')}
-                          color={colors.red}
-                        />
-                      ) : (
-                        <AppIcons.ArrowUp
-                          size={wp('4%')}
-                          color={colors.green}
-                        />
-                      )}
-                    </View>
-                  </View>
-                ))
-              ) : (
-                <View style={{ alignItems: 'center', marginTop: 30 }}>
-                  <Text style={styles.viewText}>No history available</Text>
-                </View>
-              )}
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
-    </SafeAreaView>
+      <InfoSheet
+        visible={showInfoSheet}
+        onClose={() => setShowInfoSheet(false)}
+      />
+
+      <StatusModal
+        visible={statusModalVisible}
+        onClose={() => setStatusModalVisible(false)}
+        type={statusType}
+        title={statusTitle}
+        message={statusMessage}
+      />
+    </View>
   );
 };
 
 export default BCoinScreen;
+
+const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: PALETTE.canvas,
+  },
+  body: {
+    flex: 1,
+    backgroundColor: PALETTE.canvas,
+  },
+});

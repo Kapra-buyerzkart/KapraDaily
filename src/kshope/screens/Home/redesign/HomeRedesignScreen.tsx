@@ -333,6 +333,7 @@ const HomeRedesignScreen: React.FC = () => {
           onNotificationsPress={() => navigation.navigate('KshopeProfile')}
           onWishlistPress={() => navigation.navigate('WishlistScreen')}
           onProfilePress={openProfile}
+          onAddressPress={() => navigation.navigate('KshopeSavedAddress')}
           scrollY={scrollY}
           onHeightChange={setHeaderHeight}
         />

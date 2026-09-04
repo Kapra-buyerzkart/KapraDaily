@@ -16,7 +16,7 @@ const DOB_REGEX = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
 const toDateOnly = (value?: string | null) => (value || '').slice(0, 10);
 
 export const useEditProfileScreen = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
   const { profile, loadProfile } = useContext(AppContext);
   const { showLoader } = useContext(LoaderContext);
 

@@ -1,4 +1,7 @@
-import { resolveImageSource } from '../../../Home/redesign/data/mappers';
+import {
+  resolveImageSource,
+  tokensOf,
+} from '../../../Home/redesign/data/mappers';
 import { PDP_ART } from '../assets';
 
 const FEATURE_ICONS = [
@@ -13,6 +16,16 @@ export type Feature = {
   icon: any;
   title: string;
   subtitle: string;
+};
+
+export const tokenCount = (...sources: any[]) => {
+  for (const source of sources) {
+    const value = tokensOf(source);
+    if (value > 0) {
+      return value;
+    }
+  }
+  return 0;
 };
 
 export const money = (value: any) => {
@@ -71,14 +84,22 @@ export const pricing = (product: any) => {
   };
 };
 
-export const ratingSummary = (details: any) => ({
-  average: Number(details?.ratingSummary?.avgRating || 0).toFixed(1),
-  ratings:
+export const ratingSummary = (details: any) => {
+  const average = Number(details?.ratingSummary?.avgRating || 0);
+  const ratings = Number(
     details?.ratingSummary?.ratingCount ??
-    details?.ratingSummary?.reviewCount ??
-    0,
-  reviews: details?.ratingSummary?.reviewCount ?? 0,
-});
+      details?.ratingSummary?.reviewCount ??
+      0,
+  );
+  const reviews = Number(details?.ratingSummary?.reviewCount ?? 0);
+
+  return {
+    average: average.toFixed(1),
+    ratings,
+    reviews,
+    hasRating: average > 0 || ratings > 0 || reviews > 0,
+  };
+};
 
 export const isOutOfStock = (product: any) =>
   Number(product?.stockQty) <= 0 ||

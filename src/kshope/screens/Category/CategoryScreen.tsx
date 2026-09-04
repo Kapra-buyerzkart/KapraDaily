@@ -26,7 +26,9 @@ import {
 } from '../../api/services/wishlistService';
 import { useWishlist } from '../../context/WishlistContext';
 import { SORT_OPTIONS } from './constants';
+import Animated from 'react-native-reanimated';
 import FloatingCartButton from '../../components/FloatingCartButton';
+import { useCartPillScrollProps } from '../../components/cartPillScroll';
 import FallbackImage from '../../components/FallbackImage';
 import { getKshopeAreaId } from '../../globals/storage';
 
@@ -58,6 +60,7 @@ const CategoryScreen = () => {
   const { showLoader } = useContext(LoaderContext) || { showLoader: () => {} };
   const { toggleWishlist, isInWishlist, loadWishlist } = useWishlist();
   const productListRef = useRef<FlatList>(null);
+  const cartPillScroll = useCartPillScrollProps();
 
   const [filters, setFilters] = useState({
     sortBy: 'relevance',
@@ -507,14 +510,15 @@ const CategoryScreen = () => {
         </View>
 
         <View style={styles.productsGrid}>
-          <FlatList
-            ref={productListRef}
+          <Animated.FlatList
+            ref={productListRef as any}
             data={productsList}
             keyExtractor={(item, index) =>
               (item.productId || item.id || index).toString()
             }
             numColumns={2}
             showsVerticalScrollIndicator={false}
+            {...cartPillScroll}
             renderItem={renderProduct}
             columnWrapperStyle={{ justifyContent: 'space-between' }}
             ListHeaderComponent={renderSubCategories}

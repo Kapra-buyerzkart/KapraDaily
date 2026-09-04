@@ -35,6 +35,13 @@ export const HOME_COLORS = {
   black: '#000000',
 };
 
+export const TOKEN_COLORS = {
+  tint: '#FFF3D4',
+  ink: '#8A5A00',
+  inkSoft: 'rgba(138,90,0,0.78)',
+  edge: 'rgba(138,90,0,0.20)',
+};
+
 export const TILE_TINTS = [
   '#FFEBD8',
   '#E7F2F8',

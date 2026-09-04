@@ -64,6 +64,21 @@ const ProductCard: React.FC<Props> = ({
           resizeMode="cover"
           style={styles.image}
         />
+        {item.discount ? (
+          <View
+            style={[
+              styles.discountBadge,
+              compact && compactStyles.discountBadge,
+            ]}
+          >
+            <Text
+              style={[styles.discount, compact && compactStyles.discount]}
+              numberOfLines={1}
+            >
+              {item.discount}
+            </Text>
+          </View>
+        ) : null}
         {outOfStock ? (
           <View style={styles.stockOverlay}>
             <Text style={styles.stockText}>OUT OF STOCK</Text>
@@ -120,14 +135,6 @@ const ProductCard: React.FC<Props> = ({
               color={HOME_COLORS.strike}
             />
           ) : null}
-          {item.discount ? (
-            <Text
-              style={[styles.discount, compact && compactStyles.discount]}
-              numberOfLines={1}
-            >
-              {item.discount}
-            </Text>
-          ) : null}
         </View>
       </View>
     </TouchableOpacity>
@@ -160,6 +167,12 @@ const compactStyles = StyleSheet.create({
     fontSize: fs(9),
     lineHeight: fs(9) * 1.35,
   },
+  discountBadge: {
+    top: SPACE.xs,
+    left: SPACE.xs,
+    paddingHorizontal: s(5),
+    paddingVertical: s(2),
+  },
 });
 
 const styles = StyleSheet.create({
@@ -177,7 +190,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   image: {
-    top: -10,
     width: '100%',
     height: '100%',
   },
@@ -238,11 +250,20 @@ const styles = StyleSheet.create({
     lineHeight: fs(16) * 1.3,
     color: HOME_COLORS.black,
   },
+  discountBadge: {
+    position: 'absolute',
+    top: SPACE.sm,
+    left: SPACE.sm,
+    paddingHorizontal: s(7),
+    paddingVertical: s(3),
+    borderRadius: s(999),
+    backgroundColor: HOME_COLORS.orange,
+  },
   discount: {
-    fontFamily: HOME_FONTS.regular,
-    fontSize: fs(12),
-    lineHeight: fs(12) * 1.35,
-    color: HOME_COLORS.orange,
+    fontFamily: HOME_FONTS.semiBold,
+    fontSize: fs(11),
+    lineHeight: fs(11) * 1.35,
+    color: HOME_COLORS.white,
   },
 });
 
