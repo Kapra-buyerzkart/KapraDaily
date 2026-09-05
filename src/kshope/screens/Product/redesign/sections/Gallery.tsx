@@ -12,7 +12,7 @@ import {
 import LinearGradient from 'react-native-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { HOME_FONTS, SCREEN_WIDTH, fs, s } from '../../../Home/redesign/theme';
-import { BackIcon, HeartIcon, HeartSolidIcon, ShareIcon } from '../icons';
+import { BackIcon, HeartIcon, HeartSolidIcon } from '../icons';
 import { PDP_ART } from '../assets';
 import { PDP_COLORS } from '../theme';
 
@@ -22,7 +22,6 @@ type Props = {
   wishlisted: boolean;
   onBack: () => void;
   onToggleWishlist: () => void;
-  onShare: () => void;
 };
 
 const HIT = { top: 12, bottom: 12, left: 12, right: 12 };
@@ -33,7 +32,6 @@ const Gallery: React.FC<Props> = ({
   wishlisted,
   onBack,
   onToggleWishlist,
-  onShare,
 }) => {
   const { top } = useSafeAreaInsets();
   const [index, setIndex] = useState(0);
@@ -101,14 +99,6 @@ const Gallery: React.FC<Props> = ({
             ) : (
               <HeartIcon width={22} height={20} color={PDP_COLORS.black} />
             )}
-          </TouchableOpacity>
-          <TouchableOpacity
-            activeOpacity={0.7}
-            hitSlop={HIT}
-            onPress={onShare}
-            style={styles.iconCircle}
-          >
-            <ShareIcon width={19} height={20} />
           </TouchableOpacity>
         </View>
       </View>

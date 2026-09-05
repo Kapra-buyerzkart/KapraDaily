@@ -11,7 +11,6 @@ import {
 import React, { useContext, useState, useEffect, useRef } from 'react';
 import {
   SafeAreaView,
-  useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
@@ -126,7 +125,6 @@ const CartScreen = () => {
   const [itemToRemove, setItemToRemove] = useState<any>(null);
 
   const scrollViewRef = useRef<ScrollView>(null);
-  const insets = useSafeAreaInsets();
 
   const selectedAddress = addresses.find(a => a.selected);
 
@@ -350,8 +348,6 @@ const CartScreen = () => {
 
     try {
       showLoader(true);
-      const verifiedCartVersion =
-        addressConfirmationData?.cartVersion || cartSummary?.cartVersion;
       setAddressConfirmationData(null);
 
       const refreshedCart = await loadCart();
@@ -480,7 +476,7 @@ const CartScreen = () => {
             const attemptVerification = async () => {
               try {
                 return await verifyRazorpayPaymentApi(verifyPayload);
-              } catch (e) {
+              } catch {
                 return null;
               }
             };

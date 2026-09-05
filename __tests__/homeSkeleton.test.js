@@ -3,7 +3,7 @@ const path = require('path');
 
 const read = p => fs.readFileSync(path.join(__dirname, '..', p), 'utf8');
 
-const HOME = 'src/kshope/screens/Home/HomeScreen.tsx';
+const HOME = 'src/kshope/screens/Home/redesign/HomeRedesignScreen.tsx';
 const SKELETON = 'src/kshope/screens/Home/HomeSkeleton.tsx';
 
 test('the home loading state is the skeleton, not a bare spinner', () => {

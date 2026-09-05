@@ -1,10 +1,15 @@
 import React from 'react';
-import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { HOME_FONTS, SPACE, fs, s } from '../../../Home/redesign/theme';
 import { mapProductTile } from '../../../Home/redesign/data/mappers';
 import type { ProductTile } from '../../../Home/redesign/content';
 import ProductCard from '../../../Category/redesign/sections/ProductCard';
-import { ChevronIcon } from '../icons';
 import { PDP_COLORS } from '../theme';
 
 type Props = {
@@ -51,7 +56,6 @@ const SimilarProducts: React.FC<Props> = ({
         style={styles.header}
       >
         <Text style={styles.heading}>Similar Products</Text>
-        <ChevronIcon width={8} height={14} />
       </TouchableOpacity>
 
       <FlatList

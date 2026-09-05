@@ -16,15 +16,12 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import Animated from 'react-native-reanimated';
 
 import { useWishlist } from '../../context/WishlistContext';
-import { useCart } from '../../context/CartContext';
 import ConfirmationModal from '../../components/ConfirmationModal';
-import FloatingCartButton from '../../components/FloatingCartButton';
 import { useCartPillScrollProps } from '../../components/cartPillScroll';
 import { AppText, Badge, Divider } from '../../components/atoms';
 import { AppIcons } from '../../assets/icons';
-import AddressCard from '../Cart/components/AddressCard';
 import { mapProductTile, tokensOf } from '../Home/redesign/data/mappers';
-import { TokenBadge, imageSource } from '../Home/redesign/parts';
+import { ProductImage, TokenBadge } from '../Home/redesign/parts';
 import {
   UI_COLORS,
   UI_ELEVATION,
@@ -45,7 +42,6 @@ const WishlistScreen: React.FC = () => {
   const isFocused = useIsFocused();
   const { wishlistItems, loadWishlist, isLoading, toggleWishlist } =
     useWishlist();
-  const { addresses } = useCart();
   const [itemToRemove, setItemToRemove] = useState<any>(null);
   const cartPillScroll = useCartPillScrollProps();
 
@@ -59,9 +55,6 @@ const WishlistScreen: React.FC = () => {
     () => wishlistItems.map((item, index) => mapProductTile(item, index)),
     [wishlistItems],
   );
-
-  const selectedAddress =
-    addresses.find((address: any) => address.selected) || addresses[0];
 
   const goBack = () => {
     if (navigation.canGoBack()) {
@@ -120,11 +113,7 @@ const WishlistScreen: React.FC = () => {
         style={styles.card}
       >
         <View style={styles.cardImageWrap}>
-          <Image
-            source={imageSource(item.image)}
-            resizeMode="cover"
-            style={styles.cardImage}
-          />
+          <ProductImage source={item.image} style={styles.cardImage} />
 
           <TouchableOpacity
             onPress={() => setItemToRemove(item.raw)}
@@ -268,7 +257,6 @@ const WishlistScreen: React.FC = () => {
         themeColor={UI_COLORS.primary}
       />
 
-      <FloatingCartButton bottom={20} />
     </SafeAreaView>
   );
 };

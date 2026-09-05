@@ -69,6 +69,7 @@ interface TabLayout {
 export interface HeaderTab {
   id: string;
   name: string;
+  image?: any;
 }
 
 export interface HeaderItem {
@@ -159,17 +160,28 @@ const HeaderTabButton: React.FC<{
       onLayout={handleLayout}
       style={styles.tab}
     >
-      <Animated.Text
-        style={[styles.tabLabel, active && styles.tabLabelActive, labelStyle]}
-      >
-        {tab.name}
-      </Animated.Text>
+      <Animated.View style={[styles.tabInner, labelStyle]}>
+        {!!tab.image && (
+          <View style={styles.tabIconClip}>
+            <Image
+              source={tab.image}
+              style={styles.tabIcon}
+              resizeMode="cover"
+            />
+          </View>
+        )}
+        <Animated.Text
+          style={[styles.tabLabel, active && styles.tabLabelActive]}
+        >
+          {tab.name}
+        </Animated.Text>
+      </Animated.View>
     </TouchableOpacity>
   );
 };
 
 const HomeHeader: React.FC<HomeHeaderProps> = ({
-  title = 'Home',
+  title,
   address,
   avatar,
   tabs,
@@ -188,6 +200,7 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
 }) => {
   const insets = useSafeAreaInsets();
   const tabsScrollRef = useRef<ScrollView>(null);
+  const itemsScrollRef = useRef<ScrollView>(null);
   const [tabLayouts, setTabLayouts] = useState<Record<string, TabLayout>>({});
   const [rowWidth, setRowWidth] = useState(0);
 
@@ -305,6 +318,10 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
     });
   }, [activeLayout, activeIndex, shapeX, shapeWidth, focus]);
 
+  useEffect(() => {
+    itemsScrollRef.current?.scrollTo({ x: 0, y: 0, animated: false });
+  }, [selectedTabId]);
+
   return (
     <View style={[styles.container, { paddingTop: insets.top + 8 }]}>
       <Animated.View
@@ -321,7 +338,7 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
           onLayout={measureSection('title')}
         >
           <View style={styles.titleBlock}>
-            <Text style={styles.title}>{title}</Text>
+            {!!title && <Text style={styles.title}>{title}</Text>}
             <TouchableOpacity
               activeOpacity={0.8}
               onPress={onAddressPress}
@@ -335,7 +352,7 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
               >
                 {address || 'Select delivery address'}
               </Text>
-              <AppIcons.ArrowDownBold size={12} color="rgba(255,255,255,0.9)" />
+              {/* <AppIcons.ArrowDownBold size={12} color="rgba(255,255,255,0.9)" /> */}
             </TouchableOpacity>
           </View>
           {/* <TouchableOpacity activeOpacity={0.85} onPress={onAvatarPress}>
@@ -446,6 +463,7 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
           onLayout={measureSection('panel')}
         >
           <ScrollView
+            ref={itemsScrollRef}
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.itemsContent}
@@ -467,7 +485,7 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
                       <Image
                         source={item.image}
                         style={styles.itemImage}
-                        resizeMode="contain"
+                        resizeMode="cover"
                       />
                     )}
                   </View>
@@ -603,6 +621,23 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 20,
   },
+  tabInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  tabIconClip: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    overflow: 'hidden',
+    backgroundColor: BORDER,
+  },
+  tabIcon: {
+    ...StyleSheet.absoluteFillObject,
+    width: undefined,
+    height: undefined,
+  },
   tabShape: {
     position: 'absolute',
     left: -REACH,
@@ -610,7 +645,7 @@ const styles = StyleSheet.create({
   },
   tabLabel: {
     fontFamily: Fonts.gilroyMedium,
-    fontSize: 15,
+    fontSize: 11,
     color: 'rgba(255,255,255,0.85)',
   },
   tabLabelActive: {
@@ -639,8 +674,8 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   itemImage: {
-    width: 46,
-    height: 46,
+    width: '100%',
+    height: '100%',
   },
   itemLabel: {
     marginTop: 8,

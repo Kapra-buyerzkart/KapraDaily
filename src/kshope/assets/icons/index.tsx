@@ -9,7 +9,6 @@ import MaterialDesignIcons from 'react-native-vector-icons/MaterialCommunityIcon
 import Feather from 'react-native-vector-icons/Feather';
 import Entypo from 'react-native-vector-icons/Entypo';
 import Fontisto from 'react-native-vector-icons/Fontisto';
-import SimpleLineIcons from 'react-native-vector-icons/SimpleLineIcons';
 import { ViewStyle, StyleProp } from 'react-native';
 import { colors } from '../theme/colours';
 

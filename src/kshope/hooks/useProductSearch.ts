@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { getProductSuggestionsApi, searchProductsApi } from '../api/services/productService';
+import { searchProductsApi } from '../api/services/productService';
 import { useDebounce } from './useDebounce';
 import { useKshopeAreaId } from './useKshopeAreaId';
 
@@ -171,17 +171,6 @@ const useProductSearch = (initialPincodeId: any, initialCatId: any = null, filte
     useEffect(() => {
         fetchProducts(1);
     }, [fetchProducts]);
-
-    useEffect(() => {
-        console.log('search items', {
-            term: debouncedSearchTerm,
-            catId,
-            attrValueId: initialAttrValueId,
-            count: suggestions.length,
-            resultCount,
-            items: suggestions,
-        });
-    }, [suggestions, debouncedSearchTerm, catId, initialAttrValueId, resultCount]);
 
     const loadMore = useCallback(() => {
         if (!loading && !isLoadingMore && hasMore) {

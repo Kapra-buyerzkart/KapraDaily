@@ -1,8 +1,8 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, Image, StyleSheet } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { AppText, Surface, Divider, IconDisc, SectionHeading } from './atoms';
-import { UI_COLORS, UI_RADIUS, UI_SPACING, hp, wp } from '../theme/tokens';
+import { AppText, Surface, Divider, SectionHeading } from './atoms';
+import { UI_COLORS, UI_RADIUS, UI_SPACING, hp, pt, wp } from '../theme/tokens';
 import { AppTextTone } from './atoms/AppText';
 
 export interface BillCalculations {
@@ -61,38 +61,25 @@ const BillSection: React.FC<BillSectionProps> = ({
   bordered = false,
 }) => {
   const {
-    mrpTotal = 0,
     itemTotal = 0,
     savings = 0,
     deliveryCharge = 0,
-    totalTax = 0,
     couponDiscount = 0,
     giftCardAmount = 0,
     bcoinsAppliedValue = 0,
+    totalTax = 0,
     totalBtokens = 0,
     totalSavings = 0,
     toPay = 0,
   } = billCalculations;
 
   const discounts = [
-    {
-      key: 'coupon',
-      label: 'Coupon discount',
-      amount: Math.abs(couponDiscount),
-    },
-    {
-      key: 'gift',
-      label: 'Gift card applied',
-      amount: Math.abs(giftCardAmount),
-    },
-    {
-      key: 'coins',
-      label: 'UD-coinsapplied',
-      amount: Math.abs(bcoinsAppliedValue),
-    },
+    { key: 'item', label: 'Item discount', amount: Math.abs(savings) },
+    { key: 'coupon', label: 'Coupon discount', amount: Math.abs(couponDiscount) },
+    { key: 'gift', label: 'Gift card applied', amount: Math.abs(giftCardAmount) },
+    { key: 'coins', label: 'UD Coins applied', amount: Math.abs(bcoinsAppliedValue) },
   ].filter(entry => entry.amount > 0);
 
-  const strikeTotal = mrpTotal || itemTotal + Math.abs(savings);
   const isDeliveryFree = deliveryCharge === 0;
   const hasSavings = totalSavings > 0;
   const hasTokens = totalBtokens > 0;
@@ -104,33 +91,20 @@ const BillSection: React.FC<BillSectionProps> = ({
           <SectionHeading
             title="Bill summary"
             icon={
-              <IconDisc size={wp('8%')} tone="ink">
-                <MaterialCommunityIcons
-                  name="receipt"
-                  size={wp('4.4%')}
-                  color={UI_COLORS.ink}
-                />
-              </IconDisc>
-            }
-            right={
-              <AppText variant="micro" tone="faint">
-                Incl. all taxes
-              </AppText>
+              <Image
+                source={require('../../assets/icons/billSummary.png')}
+                style={styles.headingIcon}
+              />
             }
           />
 
           <View style={styles.group}>
-            <BillRow
-              label="Item total"
-              value={money(itemTotal)}
-              strike={strikeTotal > itemTotal ? money(strikeTotal) : undefined}
-            />
+            <BillRow label="Item total" value={money(itemTotal)} />
             <BillRow
               label="Delivery charge"
               value={isDeliveryFree ? 'FREE' : money(deliveryCharge)}
               tone={isDeliveryFree ? 'success' : 'primary'}
             />
-            {totalTax > 0 && <BillRow label="Tax" value={money(totalTax)} />}
           </View>
 
           {discounts.length > 0 && (
@@ -152,10 +126,15 @@ const BillSection: React.FC<BillSectionProps> = ({
           <Divider dashed style={styles.dashedRule} />
 
           <View style={styles.toPayRow}>
-            <AppText variant="bodyStrong" style={styles.toPayLabel}>
-              To pay
-            </AppText>
-            <AppText variant="priceLarge">{money(toPay)}</AppText>
+            <View style={styles.toPayLabel}>
+              <AppText variant="bodyStrong">To pay</AppText>
+              <AppText variant="micro" tone="faint" style={styles.taxNote}>
+                {totalTax > 0
+                  ? `Inclusive of tax ${money(totalTax)}`
+                  : 'Inclusive of all taxes'}
+              </AppText>
+            </View>
+            <AppText variant="priceLarge">₹{toPay.toFixed()}</AppText>
           </View>
         </View>
 
@@ -186,7 +165,7 @@ const BillSection: React.FC<BillSectionProps> = ({
                   color={UI_COLORS.token}
                 />
                 <AppText variant="captionStrong" tone="token">
-                  Earn {totalBtokens} UD-tokens
+                  Earn {totalBtokens} UD Tokens
                 </AppText>
               </View>
             )}
@@ -201,13 +180,18 @@ export default React.memo(BillSection);
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: hp('1.6%'),
+    marginTop: hp('2.2%'),
   },
   surface: {
     overflow: 'hidden',
   },
   card: {
     padding: UI_SPACING.lg,
+  },
+  headingIcon: {
+    width: wp('4.6%'),
+    height: wp('4.6%'),
+    resizeMode: 'contain',
   },
   group: {
     marginTop: UI_SPACING.md,
@@ -244,8 +228,13 @@ const styles = StyleSheet.create({
     gap: UI_SPACING.md,
     marginTop: UI_SPACING.md,
   },
+  taxNote: {
+    fontSize: pt(9),
+    lineHeight: pt(12),
+  },
   toPayLabel: {
     flex: 1,
+    gap: 1,
   },
   footerStrip: {
     flexDirection: 'row',
@@ -265,6 +254,6 @@ const styles = StyleSheet.create({
   footerSplit: {
     width: StyleSheet.hairlineWidth,
     alignSelf: 'stretch',
-    backgroundColor: UI_COLORS.successEdge,
+    backgroundColor: 'rgba(11,122,61,0.28)',
   },
 });

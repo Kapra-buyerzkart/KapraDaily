@@ -6,7 +6,7 @@ import {
 import { Fonts } from './fonts';
 
 const TYPE_SCALE = Math.min(Math.max(wp('100%') / 390, 0.92), 1.1);
-const pt = (size: number) => Math.round(size * TYPE_SCALE * 10) / 10;
+export const pt = (size: number) => Math.round(size * TYPE_SCALE * 10) / 10;
 
 export const MAX_FONT_SCALE = 1.3;
 export const TOUCH_MIN = 44;

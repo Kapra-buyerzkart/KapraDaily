@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   FlatList,
   Image,
@@ -27,10 +27,10 @@ type Props = {
 const MID_CARD_W = SCREEN_WIDTH - GUTTER * 2;
 const SMALL_CARD_W = colWidth(2.15, CARD_GAP);
 
-const SNAP = {
-  mid: MID_CARD_W + CARD_GAP,
-  bottom: SMALL_CARD_W + CARD_GAP,
-  midBottom: SMALL_CARD_W + CARD_GAP,
+const CARD_W = {
+  mid: MID_CARD_W,
+  bottom: MID_CARD_W,
+  midBottom: SMALL_CARD_W,
 };
 
 const BannerCarousel: React.FC<Props> = ({
@@ -39,6 +39,12 @@ const BannerCarousel: React.FC<Props> = ({
   onPressBanner,
 }) => {
   const [index, setIndex] = useState(0);
+
+  const step = CARD_W[variant] + CARD_GAP;
+  const offsets = useMemo(
+    () => (items || []).map((_, i) => i * step),
+    [items, step],
+  );
 
   if (!items || items.length === 0) {
     return null;
@@ -52,17 +58,26 @@ const BannerCarousel: React.FC<Props> = ({
         data={items}
         horizontal
         showsHorizontalScrollIndicator={false}
-        snapToInterval={SNAP[variant]}
+        snapToOffsets={offsets}
+        snapToAlignment="start"
+        disableIntervalMomentum
         decelerationRate="fast"
+        scrollEventThrottle={16}
         contentContainerStyle={styles.listContent}
         keyExtractor={(item, i) =>
           item?.bannerId?.toString() || item?.id?.toString() || `${variant}_${i}`
         }
-        onMomentumScrollEnd={
+        onScroll={
           variant === 'mid'
             ? e =>
                 setIndex(
-                  Math.round(e.nativeEvent.contentOffset.x / SNAP.mid),
+                  Math.max(
+                    0,
+                    Math.min(
+                      items.length - 1,
+                      Math.round(e.nativeEvent.contentOffset.x / step),
+                    ),
+                  ),
                 )
             : undefined
         }

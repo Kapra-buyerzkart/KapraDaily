@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Image,
+  ImageResizeMode,
   ImageSourcePropType,
   ImageStyle,
   StyleProp,
@@ -14,9 +15,52 @@ import {
 import { HOME_ART } from './assets';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { HOME_COLORS, HOME_FONTS, TOKEN_COLORS, fs, s } from './theme';
-import { sectionTitle } from './data/blocks';
 
 export const imageSource = (image: any) => image || HOME_ART.placeholder;
+
+const hasRemoteSource = (image: any) =>
+  !!image && (typeof image === 'number' || !!image.uri);
+
+type ProductImageProps = {
+  source: any;
+  style?: StyleProp<ImageStyle>;
+  resizeMode?: ImageResizeMode;
+  placeholderResizeMode?: ImageResizeMode;
+};
+
+export const ProductImage: React.FC<ProductImageProps> = ({
+  source,
+  style,
+  resizeMode = 'cover',
+  placeholderResizeMode = 'contain',
+}) => {
+  const [loaded, setLoaded] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const usable = hasRemoteSource(source) && !failed;
+
+  return (
+    <View style={[styles.productImageWrap, style]}>
+      {usable ? (
+        <Image
+          source={source}
+          resizeMode={resizeMode}
+          style={StyleSheet.absoluteFill as StyleProp<ImageStyle>}
+          onLoad={() => setLoaded(true)}
+          onError={() => setFailed(true)}
+        />
+      ) : null}
+      {usable && loaded ? null : (
+        <View style={styles.productImagePlaceholder}>
+          <Image
+            source={HOME_ART.noImage}
+            resizeMode={placeholderResizeMode}
+            style={styles.productImagePlaceholderImg}
+          />
+        </View>
+      )}
+    </View>
+  );
+};
 
 type SectionTitleProps = {
   text: string;
@@ -64,7 +108,7 @@ export const TokenBadge: React.FC<{
       numberOfLines={1}
     >
       {tokens}
-      <Text style={styles.tokenBadgeUnit}>{' UD Token'}</Text>
+      <Text style={styles.tokenBadgeUnit}>{' UD tokens'}</Text>
     </Text>
   </View>
 );
@@ -135,6 +179,23 @@ export const IconTile: React.FC<{
 );
 
 const styles = StyleSheet.create({
+  productImagePlaceholder: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+    // padding: '18%',
+  },
+  productImagePlaceholderImg: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  productImageWrap: {
+    width: '100%',
+    height: '100%',
+    overflow: 'hidden',
+    backgroundColor: HOME_COLORS.white,
+  },
   badge: {
     minHeight: s(12),
     minWidth: s(38),

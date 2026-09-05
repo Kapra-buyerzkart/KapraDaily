@@ -15,6 +15,7 @@ import Animated, {
   useSharedValue,
 } from 'react-native-reanimated';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
+import { getTabBarClearance } from '../../../../animations/tabBarVisibility';
 import { useWishlist } from '../../../context/WishlistContext';
 import HomeHeader, {
   HeaderItem,
@@ -25,19 +26,15 @@ import { ProductTile, RecCard, Tile } from './content';
 import { useHomeData } from './data/useHomeData';
 import { resolveCatId, resolveCatName } from './data/blocks';
 import HomeSkeleton from '../HomeSkeleton';
+import { useCartPillScrollTracker } from '../../../components/cartPillScroll';
 import FeaturedRow from './sections/FeaturedRow';
 import ShopByCategory from './sections/ShopByCategory';
 import BestSelling from './sections/BestSelling';
-import {
-  BestForYou,
-  BrandsSpotlight,
-  MoreDeals,
-  TopDeals,
-} from './sections/PromoSections';
+import { BrandsSpotlight } from './sections/PromoSections';
 import Recommended from './sections/Recommended';
-import RecentlyViewed from './sections/RecentlyViewed';
 import MoreToExplore from './sections/MoreToExplore';
 import BannerCarousel from './sections/BannerCarousel';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -61,6 +58,7 @@ const HomeStatusBar: React.FC = () => {
 
 const HomeRedesignScreen: React.FC = () => {
   const navigation = useNavigation<any>();
+  const insets = useSafeAreaInsets();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const { loading, refreshing, onRefresh, sections } = useHomeData();
 
@@ -69,8 +67,12 @@ const HomeRedesignScreen: React.FC = () => {
   const [activeChip, setActiveChip] = useState<string | null>(null);
 
   const scrollY = useSharedValue(0);
-  const onScroll = useAnimatedScrollHandler(e => {
-    scrollY.value = e.contentOffset.y;
+  const trackCartPill = useCartPillScrollTracker();
+  const onScroll = useAnimatedScrollHandler({
+    onScroll: e => {
+      scrollY.value = e.contentOffset.y;
+      trackCartPill(e.contentOffset.y);
+    },
   });
 
   const selectedChip = activeChip ?? sections.categoryChips[0]?.id ?? '';
@@ -194,12 +196,12 @@ const HomeRedesignScreen: React.FC = () => {
         style={headerHeight ? styles.scrollReady : styles.scrollMeasuring}
         showsVerticalScrollIndicator={false}
         onScroll={onScroll}
-        scrollEventThrottle={16}
+        scrollEventThrottle={1}
         contentContainerStyle={[
           styles.content,
           {
             paddingTop: headerHeight,
-            paddingBottom: SPACE.xxl,
+            paddingBottom: SPACE.xxl + getTabBarClearance(insets.bottom),
           },
         ]}
         refreshControl={
@@ -263,13 +265,6 @@ const HomeRedesignScreen: React.FC = () => {
           brands={sections.brands}
           onPressBrandItem={openBrand}
         />
-        {/* 
-        <TopDeals
-          dealTitle={sections.topDeals.title}
-          deals={sections.topDeals.items}
-          onShopNow={() => openSearch()}
-          onPressDeal={openProduct}
-        /> */}
 
         {/* <MoreDeals /> */}
 
@@ -282,6 +277,7 @@ const HomeRedesignScreen: React.FC = () => {
         {sections.recommended.length > 0 ? (
           <Recommended
             items={sections.recommended}
+            footerImage={sections.recommendedFooterImage}
             onPressCard={openRecommendedCard}
             onSeeAll={openRecommendedAll}
           />
@@ -314,7 +310,6 @@ const HomeRedesignScreen: React.FC = () => {
 
       <View style={styles.headerOverlay}>
         <HomeHeader
-          title={sections.header.title}
           address={sections.header.address}
           tabs={sections.headerTabs}
           selectedTabId={headerTabId}

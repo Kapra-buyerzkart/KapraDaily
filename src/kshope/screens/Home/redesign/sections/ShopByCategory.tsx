@@ -59,11 +59,13 @@ const ShopByCategory: React.FC<Props> = ({
                 onPress={() => onChipPress(chip.id)}
                 style={[styles.chip, isActive && styles.chipActive]}
               >
-                <Image
-                  source={imageSource(chip.image)}
-                  resizeMode="contain"
-                  style={styles.chipIcon}
-                />
+                <View style={styles.chipClip}>
+                  <Image
+                    source={imageSource(chip.image)}
+                    resizeMode="cover"
+                    style={styles.chipIcon}
+                  />
+                </View>
               </TouchableOpacity>
               <Text
                 style={[styles.chipLabel, isActive && styles.chipLabelActive]}
@@ -84,6 +86,10 @@ const ShopByCategory: React.FC<Props> = ({
         horizontal
         showsHorizontalScrollIndicator={false}
         keyExtractor={card => card.id}
+        snapToInterval={CARD_W + CARD_GAP}
+        snapToAlignment="start"
+        disableIntervalMomentum
+        decelerationRate="fast"
         contentContainerStyle={styles.cardRow}
         renderItem={({ item: card }) => (
           <TouchableOpacity
@@ -148,16 +154,26 @@ const styles = StyleSheet.create({
   chip: {
     width: CHIP_W,
     height: CHIP_W,
-    padding: s(4),
     borderRadius: RADIUS.md,
     backgroundColor: HOME_COLORS.white,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: HOME_COLORS.orangeSoft,
+    borderWidth: s(2),
+    borderColor: 'transparent',
     alignItems: 'center',
     justifyContent: 'center',
   },
+  chipClip: {
+    flex: 1,
+    alignSelf: 'stretch',
+    borderRadius: RADIUS.md - s(2),
+    overflow: 'hidden',
+  },
   chipActive: {
     borderColor: HOME_COLORS.orange,
+    shadowColor: HOME_COLORS.orange,
+    shadowOpacity: 0.45,
+    shadowRadius: s(8),
+    shadowOffset: { width: 0, height: s(2) },
+    elevation: 6,
   },
   chipIcon: {
     width: '100%',
@@ -174,6 +190,7 @@ const styles = StyleSheet.create({
   },
   chipLabelActive: {
     fontFamily: HOME_FONTS.medium,
+    color: HOME_COLORS.orange,
   },
   cardRow: {
     paddingHorizontal: GUTTER,

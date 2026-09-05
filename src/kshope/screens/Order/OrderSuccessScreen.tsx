@@ -1,28 +1,31 @@
-import React, { useEffect, useRef, useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  SafeAreaView,
-  Dimensions,
-  Animated,
-  Platform,
-  BackHandler,
-  ScrollView,
-} from 'react-native';
-import {
-  useNavigation,
-  useRoute,
-  CommonActions,
-} from '@react-navigation/native';
-import LinearGradient from 'react-native-linear-gradient';
-import { colors } from '../../theme/colours';
-import { Fonts } from '../../theme/fonts';
-import { AppIcons } from '../../assets/icons';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ScrollView, StatusBar, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import AppText from '../../components/atoms/AppText';
+import Surface from '../../components/atoms/Surface';
+import Divider from '../../components/atoms/Divider';
+import SectionHeading from '../../components/atoms/SectionHeading';
+import { UI_COLORS } from '../../theme/tokens';
 import { getOrderDetailsApi } from '../../api/services/orderService';
-
-const { width } = Dimensions.get('window');
+import {
+  BulletCard,
+  CopyChip,
+  FooterStrip,
+  MetaRow,
+  StatusActionBar,
+  StatusDisc,
+  StatusTopBar,
+  SupportCard,
+} from './status/components';
+import { SUCCESS_COPY, SUCCESS_STEPS } from './status/constants';
+import { getPaymentLabel } from './status/paymentMeta';
+import {
+  useBackToHome,
+  useCopyOrderNumber,
+  useLockedBack,
+} from './status/useOrderStatus';
+import { styles } from './status/styles';
 
 const OrderSuccessScreen: React.FC = () => {
   const navigation = useNavigation<any>();
@@ -38,359 +41,178 @@ const OrderSuccessScreen: React.FC = () => {
   } = route.params || {};
 
   const [orderDetails, setOrderDetails] = useState<any>(null);
-  const scaleAnim = useRef(new Animated.Value(0)).current;
-  const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  useLockedBack();
 
   useEffect(() => {
-    Animated.parallel([
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        tension: 50,
-        friction: 7,
-        useNativeDriver: true,
-      }),
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-    ]).start();
-
-    if (orderId) {
-      fetchOrderDetails();
+    if (!orderId) {
+      return;
     }
 
-    // Prevent Android hardware back button
-    const backAction = () => true;
-    const backHandler = BackHandler.addEventListener(
-      'hardwareBackPress',
-      backAction,
-    );
+    let active = true;
 
-    // Prevent navigation remove (iOS swipe, back button)
-    const unsubscribe = navigation.addListener('beforeRemove', (e: any) => {
-      const action = e.data.action;
-      if (action.type === 'RESET' || action.type === 'REPLACE') {
-        return;
+    const fetchOrderDetails = async () => {
+      try {
+        const response = await getOrderDetailsApi(orderId);
+        if (active && response?.success && response?.data) {
+          setOrderDetails(response.data);
+        }
+      } catch (error) {
+        console.error('Error fetching order details:', error);
       }
-      e.preventDefault();
-    });
+    };
+
+    fetchOrderDetails();
 
     return () => {
-      backHandler.remove();
-      unsubscribe();
+      active = false;
     };
-  }, [orderId, navigation]);
-
-  const fetchOrderDetails = async () => {
-    try {
-      const response = await getOrderDetailsApi(orderId);
-      if (response?.success && response?.data) {
-        setOrderDetails(response.data);
-      }
-    } catch (error) {
-      console.error('Error fetching order details:', error);
-    }
-  };
+  }, [orderId]);
 
   const displayOrderNumber =
     orderDetails?.orderNumber || orderNumber || orderId || '--';
-  const displayPayment = orderDetails?.paymentMethod || paymentMethod || 'COD';
+  const paymentLabel = useMemo(
+    () => getPaymentLabel(orderDetails?.paymentMethod || paymentMethod || 'cod'),
+    [orderDetails, paymentMethod],
+  );
   const displayItems =
     orderDetails?.totalItems || orderDetails?.items?.length || totalItems || 0;
+  const itemsLabel = displayItems
+    ? `${displayItems} item${Number(displayItems) !== 1 ? 's' : ''}`
+    : null;
   const displayTotal =
     orderDetails?.grandTotal || orderDetails?.totalAmount || totalAmount || 0;
-  const displayDeliveryMode =
-    orderDetails?.deliveryMode || deliveryMode || 'express';
+  const amountLabel = `₹${Number(displayTotal).toFixed(2)}`;
+  const deliveryLabel = deliveryMode
+    ? String(deliveryMode).toLowerCase() === 'express'
+      ? 'Express'
+      : 'Slotted'
+    : null;
   const displayAddress = address || '';
 
-  const getPaymentLabel = (method: string) => {
-    if (!method) return 'Cash On Delivery';
-    const m = method.toUpperCase();
-    if (m === 'COD') return 'Cash On Delivery';
-    if (m === 'ONLINE' || m === 'UPI') return 'Online Payment';
-    return method;
-  };
+  const handleCopyOrderNumber = useCopyOrderNumber(String(displayOrderNumber));
+  const handleBackToHome = useBackToHome();
 
-  const handleViewOrders = () => {
-    navigation.navigate('KshopeMyOrders');
-  };
-
-  const handleBackToHome = () => {
-    navigation.dispatch(
-      CommonActions.reset({
-        index: 0,
-        routes: [{ name: 'KshopeHome' }],
-      }),
-    );
+  const handleTrackOrder = () => {
+    navigation.navigate('KshopeMyOrderDetails', {
+      orderId: orderId || orderDetails?._id,
+    });
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.screen}>
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor={UI_COLORS.card}
+        translucent={false}
+      />
+
+      <SafeAreaView edges={['top']} style={styles.safeTop}>
+        <StatusTopBar
+          title={SUCCESS_COPY.topBarTitle}
+          subtitle={SUCCESS_COPY.topBarSubtitle}
+          statusLabel={SUCCESS_COPY.statusLabel}
+          tone="success"
+        />
+      </SafeAreaView>
+
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        <View style={styles.content}>
-          <Animated.View
-            style={[
-              styles.successIconContainer,
-              { transform: [{ scale: scaleAnim }] },
-            ]}
-          >
-            <LinearGradient
-              colors={[colors.themeTeal, colors.themeDarkTeal]}
-              style={styles.iconGradient}
-            >
-              <AppIcons.Check color={colors.white} size={60} />
-            </LinearGradient>
-          </Animated.View>
-
-          <Animated.View
-            style={{ opacity: fadeAnim, alignItems: 'center', width: '100%' }}
-          >
-            <Text style={styles.title}>Order Placed Successfully!</Text>
-            <Text style={styles.subtitle}>
-              Thank you for choosing Kapra. Your order has been placed and is
-              being processed.
-            </Text>
-
-            <View style={styles.orderCard}>
-              <View style={styles.orderRow}>
-                <Text style={styles.label}>Order Number</Text>
-                <Text style={styles.value}>#{displayOrderNumber}</Text>
-              </View>
-              <View style={styles.separator} />
-              <View style={styles.orderRow}>
-                <Text style={styles.label}>Payment</Text>
-                <View style={styles.paymentBadge}>
-                  <Text style={styles.paymentBadgeText}>
-                    {getPaymentLabel(displayPayment)}
-                  </Text>
-                </View>
-              </View>
-              <View style={styles.separator} />
-              <View style={styles.orderRow}>
-                <Text style={styles.label}>Total Items</Text>
-                <Text style={styles.value}>
-                  {displayItems} item{displayItems !== 1 ? 's' : ''}
-                </Text>
-              </View>
-              <View style={styles.separator} />
-              {/* <View style={styles.orderRow}>
-                                <Text style={styles.label}>Delivery</Text>
-                                <View style={styles.deliveryBadge}>
-                                    <Text style={styles.deliveryBadgeText}>
-                                        {displayDeliveryMode === 'express' ? 'Express (20-30 min)' : 'Slotted'}
-                                    </Text>
-                                </View>
-                            </View> */}
-              {displayAddress ? (
-                <>
-                  <View style={styles.separator} />
-                  <View style={styles.orderRow}>
-                    <Text style={styles.label}>Delivering to</Text>
-                    <Text style={styles.valueSmall} numberOfLines={2}>
-                      {displayAddress}
-                    </Text>
-                  </View>
-                </>
-              ) : null}
-              <View style={styles.totalRow}>
-                <Text style={styles.totalLabel}>Total Amount</Text>
-                <Text style={styles.totalAmount}>
-                  ₹{Number(displayTotal).toFixed(2)}
-                </Text>
+        <Surface style={styles.section}>
+          <View style={styles.card}>
+            <View style={styles.statusRow}>
+              <StatusDisc tone="success" icon="check" />
+              <View style={styles.statusCopy}>
+                <AppText variant="heading">{SUCCESS_COPY.statusTitle}</AppText>
+                <AppText variant="caption" tone="muted">
+                  {SUCCESS_COPY.statusSubtitle}
+                </AppText>
               </View>
             </View>
-          </Animated.View>
-        </View>
+          </View>
+
+          <FooterStrip icon="truck" note={SUCCESS_COPY.assuranceNote} />
+        </Surface>
+
+        <Surface style={styles.section}>
+          <View style={styles.card}>
+            <SectionHeading title={SUCCESS_COPY.summaryTitle} />
+
+            <Divider style={styles.rule} />
+
+            <View style={styles.metaGroup}>
+              <MetaRow label="Order number">
+                <AppText variant="labelStrong">#{displayOrderNumber}</AppText>
+                <CopyChip onPress={handleCopyOrderNumber} />
+              </MetaRow>
+
+              <MetaRow label="Payment">
+                <AppText variant="labelStrong" tone="secondary">
+                  {paymentLabel}
+                </AppText>
+              </MetaRow>
+
+              {itemsLabel ? (
+                <MetaRow label="Items">
+                  <AppText variant="labelStrong" tone="secondary">
+                    {itemsLabel}
+                  </AppText>
+                </MetaRow>
+              ) : null}
+
+              {deliveryLabel ? (
+                <MetaRow label="Delivery">
+                  <AppText variant="labelStrong" tone="secondary">
+                    {deliveryLabel}
+                  </AppText>
+                </MetaRow>
+              ) : null}
+
+              {displayAddress ? (
+                <MetaRow label="Delivering to">
+                  <AppText
+                    variant="labelStrong"
+                    tone="secondary"
+                    numberOfLines={2}
+                    style={styles.metaValueText}
+                  >
+                    {displayAddress}
+                  </AppText>
+                </MetaRow>
+              ) : null}
+            </View>
+
+            <View style={styles.totalRow}>
+              <AppText variant="labelStrong">Order total</AppText>
+              <AppText variant="price">{amountLabel}</AppText>
+            </View>
+          </View>
+        </Surface>
+
+        <BulletCard title={SUCCESS_COPY.stepsTitle} bullets={SUCCESS_STEPS} />
+
+        <SupportCard
+          title={SUCCESS_COPY.supportTitle}
+          subtitle={SUCCESS_COPY.supportSubtitle}
+        />
+
+        <AppText variant="micro" tone="faint" style={styles.footerNote}>
+          {SUCCESS_COPY.footerNote}
+        </AppText>
       </ScrollView>
 
-      <View style={styles.footer}>
-        <TouchableOpacity style={styles.trackButton} onPress={handleViewOrders}>
-          <LinearGradient
-            colors={[colors.themeTeal, colors.themeDarkTeal]}
-            start={{ x: 0, y: 0.5 }}
-            end={{ x: 1, y: 0.5 }}
-            style={styles.buttonGradient}
-          >
-            <Text style={styles.trackButtonText}>View My Orders</Text>
-          </LinearGradient>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.homeButton} onPress={handleBackToHome}>
-          <Text style={styles.homeButtonText}>Back to Home</Text>
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+      <StatusActionBar
+        primaryLabel={SUCCESS_COPY.trackCta}
+        primaryIcon="arrow-right"
+        primaryIconTrailing
+        ghostLabel={SUCCESS_COPY.homeCta}
+        onPrimary={handleTrackOrder}
+        onGhost={handleBackToHome}
+      />
+    </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.white,
-  },
-  scrollContent: {
-    flexGrow: 1,
-  },
-  content: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 30,
-    paddingTop: 40,
-    paddingBottom: 20,
-  },
-  successIconContainer: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    marginBottom: 30,
-    ...Platform.select({
-      ios: {
-        shadowColor: colors.themeTeal,
-        shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.3,
-        shadowRadius: 15,
-      },
-      android: {
-        elevation: 10,
-      },
-    }),
-  },
-  iconGradient: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 60,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 26,
-    fontFamily: Fonts.gilroyBold,
-    color: colors.black,
-    textAlign: 'center',
-    marginBottom: 12,
-  },
-  subtitle: {
-    fontSize: 14,
-    fontFamily: Fonts.gilroyMedium,
-    color: '#666',
-    textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: 30,
-  },
-  orderCard: {
-    backgroundColor: '#F9F9F9',
-    borderRadius: 20,
-    padding: 20,
-    width: width - 60,
-    borderWidth: 1,
-    borderColor: '#EEE',
-    marginBottom: 20,
-  },
-  orderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-  },
-  label: {
-    fontSize: 14,
-    fontFamily: Fonts.gilroyMedium,
-    color: '#999',
-  },
-  value: {
-    fontSize: 14,
-    fontFamily: Fonts.gilroyBold,
-    color: colors.black,
-  },
-  valueSmall: {
-    fontSize: 13,
-    fontFamily: Fonts.gilroyMedium,
-    color: '#333',
-    maxWidth: width * 0.5,
-    textAlign: 'right',
-  },
-  separator: {
-    height: 1,
-    backgroundColor: '#EEE',
-  },
-  paymentBadge: {
-    backgroundColor: '#E8F8FA',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 20,
-  },
-  paymentBadgeText: {
-    fontSize: 12,
-    fontFamily: Fonts.gilroyBold,
-    color: colors.themeTeal,
-  },
-  deliveryBadge: {
-    backgroundColor: '#FFF5F0',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 20,
-  },
-  deliveryBadgeText: {
-    fontSize: 12,
-    fontFamily: Fonts.gilroyBold,
-    color: '#F25000',
-  },
-  totalRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1.5,
-    borderTopColor: '#E0E0E0',
-  },
-  totalLabel: {
-    fontSize: 16,
-    fontFamily: Fonts.gilroyBold,
-    color: colors.black,
-  },
-  totalAmount: {
-    fontSize: 22,
-    fontFamily: Fonts.gilroyBold,
-    color: colors.themeTeal,
-  },
-  footer: {
-    padding: 24,
-    paddingBottom: 34,
-    gap: 12,
-  },
-  trackButton: {
-    height: 56,
-    borderRadius: 16,
-    overflow: 'hidden',
-  },
-  buttonGradient: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  trackButtonText: {
-    color: colors.white,
-    fontSize: 18,
-    fontFamily: Fonts.gilroyBold,
-  },
-  homeButton: {
-    height: 56,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F0F0F0',
-  },
-  homeButtonText: {
-    color: '#666',
-    fontSize: 16,
-    fontFamily: Fonts.gilroyBold,
-  },
-});
 
 export default OrderSuccessScreen;

@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import Animated, {
   Easing,
   Extrapolation,
+  clamp,
   interpolate,
   runOnJS,
   useAnimatedStyle,
@@ -23,7 +24,10 @@ import { useCart } from '../context/CartContext';
 import { Fonts } from '../theme/fonts';
 import FallbackImage from './FallbackImage';
 import { cartPillSlideIn, cartPillSlideOut } from '../animations/cartItemPop';
-import { cartPillHidden } from './cartPillScroll';
+import {
+  tabBarVisibility,
+  getTabBarClearance,
+} from '../../animations/tabBarVisibility';
 
 const CAPSULE_BG = '#F25000';
 const MAX_VISIBLE_THUMBNAILS = 3;
@@ -85,9 +89,10 @@ const FloatingCartButton: React.FC<FloatingCartButtonProps> = ({ bottom }) => {
   const bottomOffset =
     bottom !== undefined
       ? bottom
-      : insets.bottom > 0
-      ? insets.bottom
-      : hp('1%');
+      : getTabBarClearance(insets.bottom) + hp('0.2%');
+
+  const tabBarShift =
+    bottom !== undefined ? 0 : getTabBarClearance(insets.bottom);
 
   const bounceScale = useSharedValue(1);
   const widthProgress = useSharedValue(itemCount > 0 ? 1 : 0);
@@ -239,12 +244,17 @@ const FloatingCartButton: React.FC<FloatingCartButtonProps> = ({ bottom }) => {
   }));
 
   const scrollHideStyle = useAnimatedStyle(() => {
-    const p = cartPillHidden.value;
+    const progress = clamp(tabBarVisibility.value, 0, 1);
     return {
-      opacity: interpolate(p, [0, 0.75], [1, 0], Extrapolation.CLAMP),
       transform: [
-        { translateY: p * (CAPSULE_HEIGHT + bottomOffset + 24) },
-        { scale: interpolate(p, [0, 1], [1, 0.92], Extrapolation.CLAMP) },
+        {
+          translateY: interpolate(
+            progress,
+            [0, 1],
+            [tabBarShift, 0],
+            Extrapolation.CLAMP,
+          ),
+        },
       ],
     };
   });
@@ -390,7 +400,9 @@ const FloatingCartButton: React.FC<FloatingCartButtonProps> = ({ bottom }) => {
 const styles = StyleSheet.create({
   outerContainer: {
     position: 'absolute',
-    alignSelf: 'center',
+    left: 0,
+    right: 0,
+    alignItems: 'center',
     zIndex: 9999,
   },
   capsule: {
@@ -499,6 +511,7 @@ const styles = StyleSheet.create({
   },
   measureRow: {
     position: 'absolute',
+    left: 0,
     opacity: 0,
     flexDirection: 'row',
     alignItems: 'center',

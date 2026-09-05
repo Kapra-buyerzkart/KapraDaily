@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { View, ActivityIndicator, StatusBar, StyleSheet } from 'react-native';
+import { StatusBar } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useIsFocused } from '@react-navigation/native';
 import { ensureKshopeSession } from '../api/session';
 import KshopeUnavailable from '../screens/KshopeUnavailable';
+import HomeSkeleton from '../screens/Home/HomeSkeleton';
 import logger from '../../utils/logger';
 import { LoaderContextProvider } from '../context/loaderContext';
 import { AlertProvider } from '../context/AlertContext';
@@ -11,6 +12,7 @@ import { UserProvider } from '../context/UserContext';
 import { WishlistProvider } from '../context/WishlistContext';
 import { CartProvider } from '../context/CartContext';
 import KshopeTabs from './KshopeTabs';
+import GlobalCartPill from '../components/GlobalCartPill';
 import SearchScreen from '../screens/Search/SearchScreen';
 import CategoryScreen from '../screens/Category/redesign/CategoryRedesignScreen';
 import ProductDetailsScreen from '../screens/Product/redesign/ProductDetailsRedesignScreen';
@@ -50,6 +52,19 @@ const KshopeStatusBar = () => {
   );
 };
 
+const screenLayout = ({
+  route,
+  children,
+}: {
+  route: { name: string };
+  children: React.ReactNode;
+}) => (
+  <>
+    {children}
+    <GlobalCartPill routeName={route.name} />
+  </>
+);
+
 const KshopeRoot: React.FC = () => {
   const [sessionState, setSessionState] = useState<'checking' | 'ready' | 'unavailable'>('checking');
 
@@ -70,10 +85,10 @@ const KshopeRoot: React.FC = () => {
 
   if (sessionState === 'checking') {
     return (
-      <View style={styles.centered}>
+      <>
         <KshopeStatusBar />
-        <ActivityIndicator size="large" />
-      </View>
+        <HomeSkeleton />
+      </>
     );
   }
 
@@ -93,7 +108,10 @@ const KshopeRoot: React.FC = () => {
         <UserProvider>
           <WishlistProvider>
             <CartProvider>
-              <Stack.Navigator screenOptions={{ headerShown: false }}>
+              <Stack.Navigator
+                screenOptions={{ headerShown: false }}
+                screenLayout={screenLayout}
+              >
                 <Stack.Screen name="KshopeHome" component={KshopeTabs} />
                 <Stack.Screen name="KshopeSearch" component={SearchScreen} />
                 <Stack.Screen name="KshopeCategory" component={CategoryScreen} />
@@ -123,9 +141,5 @@ const KshopeRoot: React.FC = () => {
     </LoaderContextProvider>
   );
 };
-
-const styles = StyleSheet.create({
-  centered: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' },
-});
 
 export default KshopeRoot;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import FallbackImage from '../../../../components/FallbackImage';
 import { HOME_FONTS } from '../../../Home/redesign/theme';
 import type { OrderListItem } from '../../../../types/order';
@@ -59,15 +59,6 @@ const OrderCard: React.FC<Props> = ({ order, onPress }) => {
           </Text>
         </View>
       </View>
-
-      <TouchableOpacity
-        testID="order-card-view-more"
-        activeOpacity={0.8}
-        onPress={onPress}
-        style={styles.viewMore}
-      >
-        <Text style={styles.viewMoreText}>View More</Text>
-      </TouchableOpacity>
     </View>
   );
 };
@@ -130,20 +121,6 @@ const styles = StyleSheet.create({
     fontSize: fs(15),
     color: ORDER_COLORS.ink,
     marginTop: s(4),
-  },
-  viewMore: {
-    alignSelf: 'center',
-    marginTop: s(16),
-    paddingHorizontal: s(24),
-    paddingVertical: s(9),
-    borderRadius: s(6),
-    borderWidth: StyleSheet.hairlineWidth * 2,
-    borderColor: ORDER_COLORS.accent,
-  },
-  viewMoreText: {
-    fontFamily: HOME_FONTS.semiBold,
-    fontSize: fs(12),
-    color: ORDER_COLORS.accent,
   },
 });
 

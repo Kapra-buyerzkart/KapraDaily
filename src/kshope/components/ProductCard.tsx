@@ -50,7 +50,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const displayMrp = item?.unitPrice || item?.mrp || mrp;
   const displayDiscount =
     item?.discountPercent?.toFixed(1) || item?.discount?.toFixed(1) || discount;
-  const displayRating = item?.rating || rating || 0;
   const productId = item?.productId || item?.id;
   const isWishlisted =
     isWishlistedProp !== undefined ? isWishlistedProp : isInWishlist(productId);
@@ -85,26 +84,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
         },
       );
     }
-  };
-
-  const renderStars = () => {
-    const stars = [];
-    for (let i = 1; i <= 5; i++) {
-      if (i <= displayRating) {
-        stars.push(
-          <AppIcons.Star key={i} size={12} style={{ marginLeft: wp('1%') }} />,
-        );
-      } else {
-        stars.push(
-          <AppIcons.StarOutline
-            key={i}
-            size={12}
-            style={{ marginLeft: wp('1%') }}
-          />,
-        );
-      }
-    }
-    return stars;
   };
 
   const [imageError, setImageError] = useState(false);

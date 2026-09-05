@@ -19,11 +19,9 @@ import { styles, BAR_REST, BAR_SOLID } from './styles';
 import { useUser } from '../../context/UserContext';
 import ConfirmationModal from '../../components/ConfirmationModal';
 import CouponModal from '../../components/CouponModal';
-import FloatingCartButton from '../../components/FloatingCartButton';
-import {
-  trackCartPillScroll,
-  useCartPillScrollTracker,
-} from '../../components/cartPillScroll';
+import HelpSupportModal, {
+  HelpSupportModalRef,
+} from '../../components/HelpSupportModal';
 import { useCustomAlert } from '../../context/AlertContext';
 import { LoaderContext } from '../../context/loaderContext';
 import { clearKshopeSession } from '../../api/session';
@@ -71,6 +69,7 @@ const ProfileScreen: React.FC = () => {
   const [availableCoupons, setAvailableCoupons] = React.useState<any[]>([]);
   const [availableGiftCards, setAvailableGiftCards] = React.useState<any[]>([]);
   const scrollViewRef = React.useRef<any>(null);
+  const helpSheetRef = React.useRef<HelpSupportModalRef>(null);
 
   React.useEffect(() => {
     loadProfile();
@@ -153,11 +152,9 @@ const ProfileScreen: React.FC = () => {
 
   const scrollY = useSharedValue(0);
   const swapAnchor = useSharedValue(0);
-  useCartPillScrollTracker();
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: event => {
       scrollY.value = event.contentOffset.y;
-      trackCartPillScroll(event.contentOffset.y);
     },
   });
   const onHeroMeasure = React.useCallback(
@@ -272,7 +269,7 @@ const ProfileScreen: React.FC = () => {
     },
     {
       key: 'bcoin',
-      label: 'B coin',
+      label: 'UD-Coin',
       icon: (
         <MaterialCommunityIcons
           name="hand-coin-outline"
@@ -285,6 +282,12 @@ const ProfileScreen: React.FC = () => {
   ];
 
   const informationItems: MenuItem[] = [
+    {
+      key: 'customer-support',
+      label: 'Customer Support',
+      icon: <Ionicons name="headset-outline" color={INK} size={ICON_SIZE} />,
+      onPress: () => helpSheetRef.current?.open(),
+    },
     {
       key: 'privacy',
       label: 'Privacy Policy',
@@ -318,22 +321,22 @@ const ProfileScreen: React.FC = () => {
           fallback: 'terms',
         }),
     },
-    {
-      key: 'about',
-      label: 'About us',
-      icon: (
-        <Ionicons
-          name="information-circle-outline"
-          color={INK}
-          size={ICON_SIZE}
-        />
-      ),
-      onPress: () =>
-        navigation.navigate('KshopeLegalContent', {
-          settingKeys: ['about_us', 'aboutus', 'about'],
-          title: 'About us',
-        }),
-    },
+    // {
+    //   // key: 'about',
+    //   label: 'About us',
+    //   icon: (
+    //     <Ionicons
+    //       name="information-circle-outline"
+    //       color={INK}
+    //       size={ICON_SIZE}
+    //     />
+    //   ),
+    //   onPress: () =>
+    //     navigation.navigate('KshopeLegalContent', {
+    //       settingKeys: ['about_us', 'aboutus', 'about'],
+    //       title: 'About us',
+    //     }),
+    // },
     {
       key: 'delete-account',
       label: 'Delete account',
@@ -432,7 +435,8 @@ const ProfileScreen: React.FC = () => {
         availableGiftCards={availableGiftCards}
         onCouponClick={handleCouponClickOnProfile}
       />
-      <FloatingCartButton bottom={20} />
+
+      <HelpSupportModal ref={helpSheetRef} />
     </View>
   );
 };

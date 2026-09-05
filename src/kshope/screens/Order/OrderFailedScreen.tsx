@@ -1,354 +1,191 @@
-import React, { useEffect } from 'react';
+import React, { useMemo } from 'react';
+import { ScrollView, StatusBar, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import {
-    View,
-    Text,
-    StyleSheet,
-    TouchableOpacity,
-    SafeAreaView,
-    Dimensions,
-    Platform,
-    BackHandler,
-    ScrollView,
-} from 'react-native';
-import { useNavigation, useRoute, CommonActions } from '@react-navigation/native';
-import LinearGradient from 'react-native-linear-gradient';
-import { colors } from '../../theme/colours';
-import { Fonts } from '../../theme/fonts';
-import { AppIcons } from '../../assets/icons';
-
-const { width } = Dimensions.get('window');
+  useNavigation,
+  useRoute,
+  CommonActions,
+} from '@react-navigation/native';
+import Feather from 'react-native-vector-icons/Feather';
+import AppText from '../../components/atoms/AppText';
+import Surface from '../../components/atoms/Surface';
+import Divider from '../../components/atoms/Divider';
+import SectionHeading from '../../components/atoms/SectionHeading';
+import { UI_COLORS } from '../../theme/tokens';
+import {
+  BulletCard,
+  CopyChip,
+  FooterStrip,
+  MetaRow,
+  StatusActionBar,
+  StatusDisc,
+  StatusTopBar,
+  SupportCard,
+} from './status/components';
+import { FAILED_COPY, FAILED_REASONS } from './status/constants';
+import { getPaymentLabel } from './status/paymentMeta';
+import { resolveFailureMessage } from './status/failureMessage';
+import {
+  useBackToHome,
+  useCopyOrderNumber,
+  useLockedBack,
+} from './status/useOrderStatus';
+import { ICON, styles } from './status/styles';
 
 const OrderFailedScreen: React.FC = () => {
-    const navigation = useNavigation<any>();
-    const route = useRoute<any>();
-    const {
-        errorMessage,
-        orderId,
-        orderNumber,
-        paymentMethod,
-        totalItems,
-        totalAmount
-    } = route.params || {};
+  const navigation = useNavigation<any>();
+  const route = useRoute<any>();
+  const {
+    orderId,
+    orderNumber,
+    paymentMethod,
+    totalItems,
+    totalAmount,
+    errorMessage,
+  } = route.params || {};
 
-    useEffect(() => {
-        // Prevent Android hardware back button
-        const backAction = () => true;
-        const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
+  useLockedBack();
 
-        // Prevent navigation remove (iOS swipe, back button)
-        const unsubscribe = navigation.addListener('beforeRemove', (e: any) => {
-            const action = e.data.action;
-            if (action.type === 'RESET' || action.type === 'REPLACE') {
-                return;
-            }
-            e.preventDefault();
-        });
+  const displayOrderNumber = orderNumber || orderId || '--';
+  const paymentLabel = useMemo(
+    () => getPaymentLabel(paymentMethod || 'online'),
+    [paymentMethod],
+  );
+  const itemsLabel = totalItems
+    ? `${totalItems} item${Number(totalItems) !== 1 ? 's' : ''}`
+    : null;
+  const amountLabel = `₹${Number(totalAmount || 0).toFixed(2)}`;
+  const failureReason = useMemo(
+    () => resolveFailureMessage(errorMessage),
+    [errorMessage],
+  );
 
-        return () => {
-            backHandler.remove();
-            unsubscribe();
-        };
-    }, [navigation]);
+  const handleCopyOrderNumber = useCopyOrderNumber(String(displayOrderNumber));
+  const handleBackToHome = useBackToHome();
 
-    const handleRetryPayment = () => {
-        // Navigate to MyOrder where user can retry the payment
-        navigation.dispatch(
-            CommonActions.reset({
-                index: 0,
-                routes: [{
-                    name: 'KshopeMyOrderDetails',
-                    params: { orderId }
-                }],
-            })
-        );
-    };
-
-    const handleBackToHome = () => {
-        navigation.dispatch(
-            CommonActions.reset({
-                index: 0,
-                routes: [{ name: 'KshopeHome' }],
-            })
-        );
-    };
-
-    const displayOrderNumber = orderNumber || orderId || '--';
-    const displayTotal = totalAmount || 0;
-
-    const getPaymentLabel = (method: string) => {
-        if (!method) return 'Online Payment';
-        const m = method.toUpperCase();
-        if (m === 'COD') return 'Cash On Delivery';
-        if (m === 'ONLINE' || m === 'UPI') return 'Online Payment';
-        return method;
-    };
-
-    return (
-        <SafeAreaView style={styles.container}>
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-                {/* Failure Icon */}
-                <View style={styles.failureSection}>
-                    <View style={styles.failedIconContainer}>
-                        <LinearGradient
-                            colors={['#FF5252', '#D32F2F']}
-                            style={styles.iconGradient}
-                        >
-                            <AppIcons.Delete color={colors.white} size={60} />
-                        </LinearGradient>
-                    </View>
-                    <Text style={styles.title}>{'Oops!\nPayment Failed'}</Text>
-                    <Text style={styles.subtitle}>
-                        {"We're unable to process your payment at this time."}
-                    </Text>
-                    <Text style={styles.refundNote}>
-                        {"If any amount has been debited, it will be automatically refunded to your account within the standard processing time."}
-                    </Text>
-                </View>
-
-                {/* Order Summary Card */}
-                <View style={styles.orderCard}>
-                    <View style={styles.orderCardHeader}>
-                        <AppIcons.Check color={colors.themeTeal} size={20} />
-                        <Text style={styles.orderCardTitle}>Order Details</Text>
-                    </View>
-
-                    <View style={styles.detailRow}>
-                        <Text style={styles.detailLabel}>Order ID</Text>
-                        <Text style={styles.detailValue}>#{displayOrderNumber}</Text>
-                    </View>
-                    <View style={styles.divider} />
-
-                    <View style={styles.detailRow}>
-                        <Text style={styles.detailLabel}>Payment Method</Text>
-                        <View style={styles.detailBadge}>
-                            <Text style={styles.detailBadgeText}>
-                                {getPaymentLabel(paymentMethod)}
-                            </Text>
-                        </View>
-                    </View>
-                    <View style={styles.divider} />
-
-                    {totalItems ? (
-                        <>
-                            <View style={styles.detailRow}>
-                                <Text style={styles.detailLabel}>Total Items</Text>
-                                <Text style={styles.detailValue}>{totalItems} item{totalItems !== 1 ? 's' : ''}</Text>
-                            </View>
-                            <View style={styles.divider} />
-                        </>
-                    ) : null}
-
-                    <View style={styles.totalRow}>
-                        <Text style={styles.totalLabel}>Grand Total</Text>
-                        <Text style={styles.totalAmount}>₹{Number(displayTotal).toFixed(2)}</Text>
-                    </View>
-                </View>
-
-                {/* Buttons */}
-                <View style={styles.buttonsContainer}>
-                    {orderId && (
-                        <TouchableOpacity
-                            style={styles.retryButton}
-                            onPress={handleRetryPayment}
-                            activeOpacity={0.7}
-                        >
-                            <LinearGradient
-                                colors={[colors.themeTeal, colors.themeDarkTeal]}
-                                start={{ x: 0, y: 0.5 }}
-                                end={{ x: 1, y: 0.5 }}
-                                style={styles.buttonGradient}
-                            >
-                                <Text style={styles.retryButtonText}>View Order Details</Text>
-                            </LinearGradient>
-                        </TouchableOpacity>
-                    )}
-
-                    <TouchableOpacity
-                        style={styles.homeButton}
-                        onPress={handleBackToHome}
-                        activeOpacity={0.7}
-                    >
-                        <Text style={styles.homeButtonText}>Go to Home</Text>
-                    </TouchableOpacity>
-                </View>
-
-                <Text style={styles.footerNote}>
-                    Don't worry, your money is safe. If debited, it will be refunded automatically within 5-7 working days.
-                </Text>
-            </ScrollView>
-        </SafeAreaView>
+  const handleRetryPayment = () => {
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [
+          {
+            name: 'KshopeMyOrderDetails',
+            params: { orderId, autoScrollToRetry: true },
+          },
+        ],
+      }),
     );
-};
+  };
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: colors.white,
-    },
-    scrollContent: {
-        paddingHorizontal: 24,
-        paddingBottom: 40,
-    },
-    failureSection: {
-        alignItems: 'center',
-        marginTop: 50,
-    },
-    failedIconContainer: {
-        width: 120,
-        height: 120,
-        borderRadius: 60,
-        marginBottom: 24,
-        ...Platform.select({
-            ios: {
-                shadowColor: '#FF5252',
-                shadowOffset: { width: 0, height: 10 },
-                shadowOpacity: 0.3,
-                shadowRadius: 15,
-            },
-            android: {
-                elevation: 10,
-            },
-        }),
-    },
-    iconGradient: {
-        width: '100%',
-        height: '100%',
-        borderRadius: 60,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    title: {
-        fontSize: 26,
-        fontFamily: Fonts.gilroyBold,
-        color: '#FF0000',
-        textAlign: 'center',
-        marginBottom: 12,
-    },
-    subtitle: {
-        fontSize: 14,
-        fontFamily: Fonts.gilroyMedium,
-        color: '#666',
-        textAlign: 'center',
-        lineHeight: 22,
-        marginBottom: 8,
-    },
-    refundNote: {
-        fontSize: 12,
-        fontFamily: Fonts.gilroyMedium,
-        color: '#999',
-        textAlign: 'center',
-        lineHeight: 18,
-        paddingHorizontal: 20,
-    },
-    orderCard: {
-        backgroundColor: '#F9F9F9',
-        borderRadius: 16,
-        padding: 20,
-        marginTop: 30,
-        borderWidth: 1,
-        borderColor: '#EEE',
-    },
-    orderCardHeader: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 12,
-    },
-    orderCardTitle: {
-        fontFamily: Fonts.gilroyBold,
-        fontSize: 16,
-        color: colors.black,
-        marginLeft: 8,
-    },
-    detailRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingVertical: 12,
-    },
-    detailLabel: {
-        fontFamily: Fonts.gilroyMedium,
-        fontSize: 14,
-        color: '#999',
-    },
-    detailValue: {
-        fontFamily: Fonts.gilroyBold,
-        fontSize: 14,
-        color: '#333',
-    },
-    detailBadge: {
-        backgroundColor: '#F0F7FF',
-        paddingHorizontal: 12,
-        paddingVertical: 4,
-        borderRadius: 20,
-    },
-    detailBadgeText: {
-        fontFamily: Fonts.gilroyBold,
-        fontSize: 12,
-        color: '#333',
-    },
-    divider: {
-        height: 1,
-        backgroundColor: '#F0F0F0',
-    },
-    totalRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginTop: 12,
-        paddingTop: 12,
-        borderTopWidth: 1.5,
-        borderTopColor: '#E0E0E0',
-    },
-    totalLabel: {
-        fontFamily: Fonts.gilroyBold,
-        fontSize: 16,
-        color: colors.black,
-    },
-    totalAmount: {
-        fontFamily: Fonts.gilroyBold,
-        fontSize: 22,
-        color: '#FF0000',
-    },
-    buttonsContainer: {
-        marginTop: 30,
-        gap: 12,
-    },
-    retryButton: {
-        height: 56,
-        borderRadius: 16,
-        overflow: 'hidden',
-    },
-    buttonGradient: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    retryButtonText: {
-        color: colors.white,
-        fontSize: 18,
-        fontFamily: Fonts.gilroyBold,
-    },
-    homeButton: {
-        height: 56,
-        borderRadius: 16,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#F0F0F0',
-    },
-    homeButtonText: {
-        color: '#666',
-        fontSize: 16,
-        fontFamily: Fonts.gilroyBold,
-    },
-    footerNote: {
-        fontFamily: Fonts.gilroyMedium,
-        fontSize: 12,
-        color: '#9E9E9E',
-        textAlign: 'center',
-        marginTop: 24,
-        lineHeight: 18,
-        paddingHorizontal: 20,
-    },
-});
+  return (
+    <View style={styles.screen}>
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor={UI_COLORS.card}
+        translucent={false}
+      />
+
+      <SafeAreaView edges={['top']} style={styles.safeTop}>
+        <StatusTopBar
+          title={FAILED_COPY.topBarTitle}
+          subtitle={FAILED_COPY.topBarSubtitle}
+          statusLabel={FAILED_COPY.statusLabel}
+          tone="danger"
+        />
+      </SafeAreaView>
+
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        <Surface style={styles.section}>
+          <View style={styles.card}>
+            <View style={styles.statusRow}>
+              <StatusDisc tone="danger" icon="close" />
+              <View style={styles.statusCopy}>
+                <AppText variant="heading">{FAILED_COPY.statusTitle}</AppText>
+                <AppText variant="caption" tone="muted">
+                  {FAILED_COPY.statusSubtitle}
+                </AppText>
+              </View>
+            </View>
+
+            {failureReason ? (
+              <View style={styles.errorStrip}>
+                <Feather
+                  name="alert-triangle"
+                  size={ICON.meta}
+                  color={UI_COLORS.danger}
+                />
+                <AppText
+                  variant="caption"
+                  tone="danger"
+                  style={styles.errorStripCopy}
+                >
+                  {failureReason}
+                </AppText>
+              </View>
+            ) : null}
+          </View>
+
+          <FooterStrip note={FAILED_COPY.refundNote} />
+        </Surface>
+
+        <Surface style={styles.section}>
+          <View style={styles.card}>
+            <SectionHeading title={FAILED_COPY.summaryTitle} />
+
+            <Divider style={styles.rule} />
+
+            <View style={styles.metaGroup}>
+              <MetaRow label="Order number">
+                <AppText variant="labelStrong">#{displayOrderNumber}</AppText>
+                <CopyChip onPress={handleCopyOrderNumber} />
+              </MetaRow>
+
+              <MetaRow label="Payment">
+                <AppText variant="labelStrong" tone="secondary">
+                  {paymentLabel}
+                </AppText>
+              </MetaRow>
+
+              {itemsLabel ? (
+                <MetaRow label="Items">
+                  <AppText variant="labelStrong" tone="secondary">
+                    {itemsLabel}
+                  </AppText>
+                </MetaRow>
+              ) : null}
+            </View>
+
+            <View style={styles.totalRow}>
+              <AppText variant="labelStrong">Order total</AppText>
+              <AppText variant="price">{amountLabel}</AppText>
+            </View>
+          </View>
+        </Surface>
+
+        <BulletCard title={FAILED_COPY.reasonsTitle} bullets={FAILED_REASONS} />
+
+        <SupportCard
+          title={FAILED_COPY.supportTitle}
+          subtitle={FAILED_COPY.supportSubtitle}
+        />
+
+        <AppText variant="micro" tone="faint" style={styles.footerNote}>
+          {FAILED_COPY.footerNote}
+        </AppText>
+      </ScrollView>
+
+      <StatusActionBar
+        primaryLabel={FAILED_COPY.retryCta}
+        primaryIcon="refresh-cw"
+        ghostLabel={FAILED_COPY.homeCta}
+        onPrimary={handleRetryPayment}
+        onGhost={handleBackToHome}
+      />
+    </View>
+  );
+};
 
 export default OrderFailedScreen;

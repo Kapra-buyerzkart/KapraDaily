@@ -18,7 +18,7 @@ react {
     // cliFile = file("../../node_modules/react-native/cli.js")
 
     /* Variants */
-    debuggableVariants = []
+    debuggableVariants = ["debug"]
     //   The list of variants to that are debuggable. For those we're going to
     //   skip the bundling of the JS bundle and the assets. By default is just 'debug'.
     //   If you add flavors like lite, prod, etc. you'll have to list your debuggableVariants.
@@ -122,6 +122,9 @@ android {
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
+            ndk {
+                abiFilters "arm64-v8a"
+            }
         }
         release {
             // Caution! In production, you need to generate your own keystore file.
@@ -182,3 +185,12 @@ tasks.whenTaskAdded { task ->
     }
 }
 apply plugin: 'com.google.gms.google-services'
+tasks.matching { it.name.startsWith('externalNativeBuildClean') }.configureEach {
+    enabled = false
+}
+
+tasks.named('clean').configure {
+    doLast {
+        delete file('.cxx')
+    }
+}

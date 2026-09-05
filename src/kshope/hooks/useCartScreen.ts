@@ -9,7 +9,7 @@ import { LoaderContext } from '../context/loaderContext';
 
 export const useCartScreen = () => {
     const navigation = useNavigation<any>();
-    const { cartItems, loadCart, cartTotal, cartCount, cartSummary, getCartSummary, clearCart, error: cartError, fetchAddresses } = useCart();
+    const { cartItems, loadCart, cartSummary, getCartSummary, clearCart, error: cartError, fetchAddresses } = useCart();
 
     const { profile } = useUser();
     const { showLoader } = useContext(LoaderContext);
@@ -29,7 +29,6 @@ export const useCartScreen = () => {
         });
         const savings = mrpTotal - itemTotal;
         const deliveryCharge = (itemTotal > 0 && itemTotal < 500) ? 0 : 0;
-        const totalSavings = savings + (deliveryCharge === 0 && itemTotal >= 500 ? 5 : 0);
         const toPay = itemTotal + deliveryCharge;
         return {
             mrpTotal,

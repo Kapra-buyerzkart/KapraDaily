@@ -6,13 +6,11 @@ import {
     TouchableOpacity,
     StyleSheet,
     Animated,
-    Dimensions,
-} from 'react-native';
+  } from 'react-native';
 import { colors } from '../theme/colours';
 import { Fonts } from '../theme/fonts';
 import { AppIcons } from '../assets/icons';
 
-const { width } = Dimensions.get('window');
 
 interface StatusModalProps {
     visible: boolean;

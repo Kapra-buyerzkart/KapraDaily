@@ -227,7 +227,7 @@ const MyOrderDetailsScreen = () => {
           message: res?.message || 'Failed to process return',
         });
       }
-    } catch (error) {
+    } catch {
       showLoader(false);
       setStatusModal({
         visible: true,
@@ -319,7 +319,7 @@ const MyOrderDetailsScreen = () => {
           message: res?.message || 'Failed to reorder',
         });
       }
-    } catch (error) {
+    } catch {
       showLoader(false);
       setStatusModal({
         visible: true,
@@ -393,7 +393,7 @@ const MyOrderDetailsScreen = () => {
             'Payment verification is pending. Please check back later.',
         });
       }
-    } catch (sdkError: any) {
+    } catch {
       showLoader(false);
       setStatusModal({
         visible: true,

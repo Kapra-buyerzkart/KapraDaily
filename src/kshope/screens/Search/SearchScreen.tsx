@@ -16,7 +16,6 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import useProductSearch from '../../hooks/useProductSearch';
 import { useUser } from '../../context/UserContext';
-import { useCart } from '../../context/CartContext';
 import ProductCard from '../Category/redesign/sections/ProductCard';
 import { mapProductTile } from '../Home/redesign/data/mappers';
 import { AppIcons } from '../../assets/icons';
@@ -60,12 +59,11 @@ const SearchScreen = () => {
   const { top } = useSafeAreaInsets();
 
   const { profile } = useUser();
-  const { addresses, fetchAddresses } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
 
   const [currentPincodeId, setCurrentPincodeId] = useState<number | null>(null);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
-  const [filters, setFilters] = useState({
+  const [filters] = useState({
     sortBy: 'relevance',
     priceMin: 0,
     priceMax: 5000,
@@ -77,7 +75,6 @@ const SearchScreen = () => {
     suggestions,
     loading,
     isLoadingMore,
-    hasMore,
     loadMore,
     resultCount,
   } = useProductSearch(currentPincodeId, catId, filters, attrValueId, query || '');
@@ -96,7 +93,7 @@ const SearchScreen = () => {
     try {
       const stored = await AsyncStorage.getItem(KSHOPE_KEYS.RECENT_SEARCHES);
       if (stored) setRecentSearches(JSON.parse(stored));
-    } catch (error) {}
+    } catch {}
   };
 
   const saveSearch = async (keyword: string) => {
@@ -112,7 +109,7 @@ const SearchScreen = () => {
         KSHOPE_KEYS.RECENT_SEARCHES,
         JSON.stringify(updated),
       );
-    } catch (error) {}
+    } catch {}
   };
 
   useEffect(() => {

@@ -1,12 +1,8 @@
 export const HOME_ART = {
   placeholder: require('../../../assets/images/logo.png'),
+  noImage: require('../../../assets/images/noimages/noimage.png'),
   bannerFallback: require('../../../../assets/images/modal/48hrImage.png'),
 
-  iconSearch: require('../../../assets/images/home/redesign/icon_search.png'),
-  iconMic: require('../../../assets/images/home/redesign/icon_mic.png'),
-  iconHeader1: require('../../../assets/images/home/redesign/icon_header_1.png'),
-  iconHeader2: require('../../../assets/images/home/redesign/icon_header_2.png'),
-  iconHeader3: require('../../../assets/images/home/redesign/icon_header_3.png'),
   iconHeartFilled: require('../../../assets/images/home/redesign/icon_heart_filled.png'),
 
   catCircle1: require('../../../assets/images/home/redesign/cat_circle_1.png'),
@@ -14,9 +10,6 @@ export const HOME_ART = {
   catCircle3: require('../../../assets/images/home/redesign/cat_circle_3.png'),
   catCircle4: require('../../../assets/images/home/redesign/cat_circle_4.png'),
 
-  bannerOnam: require('../../../assets/images/home/redesign/banner_onam.png'),
-  bannerSecondaryBg: require('../../../assets/images/home/redesign/banner_secondary_bg.png'),
-  bannerUnnikkuttan: require('../../../assets/images/home/redesign/banner_unnikkuttan.png'),
   stripDivider: require('../../../assets/images/home/redesign/strip_divider.png'),
 
   prodIronbox: require('../../../assets/images/home/redesign/prod_ironbox.png'),
@@ -46,9 +39,6 @@ export const HOME_ART = {
   brand3: require('../../../assets/images/home/redesign/brand_3.png'),
   brand4: require('../../../assets/images/home/redesign/brand_4.png'),
 
-  bannerTopDeals: require('../../../assets/images/home/redesign/banner_topdeals.png'),
-  dealTile1: require('../../../assets/images/home/redesign/deal_tile_1.png'),
-  dealTile2: require('../../../assets/images/home/redesign/deal_tile_2.png'),
   bannerMoreDeals: require('../../../assets/images/home/redesign/banner_moredeals.png'),
 
   recBoatHeadphones: require('../../../assets/images/home/redesign/rec_boat_headphones.png'),

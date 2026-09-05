@@ -461,7 +461,7 @@ const styles = StyleSheet.create({
   },
   card: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     backgroundColor: '#FFFFFF',
     borderRadius: wp('5.5%'),
     paddingVertical: hp('1.8%'),

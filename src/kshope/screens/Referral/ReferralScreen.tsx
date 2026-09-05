@@ -6,8 +6,6 @@ import {
   TouchableOpacity,
   FlatList,
   Share,
-  Alert,
-  Clipboard,
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -122,11 +120,6 @@ const ReferralScreen: React.FC = () => {
     } catch (error: any) {
       console.error('Error sharing:', error.message);
     }
-  };
-
-  const copyToClipboard = () => {
-    Clipboard.setString(profile?.referralCode || 'WELCOME');
-    Alert.alert('Copied', 'Referral code copied to clipboard!');
   };
 
   return (

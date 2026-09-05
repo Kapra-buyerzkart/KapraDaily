@@ -22,6 +22,8 @@ const ADD_FAILED = 'Could not add this item to your cart';
 const UPDATE_FAILED = 'Could not update the quantity';
 const REMOVE_FAILED = 'Could not remove this item';
 
+const STOCK_ERROR = /(insufficient|out of stock|not enough|stock unavailable|no stock)/i;
+
 export const useProductDetails = (productId: string, fallback: any) => {
   const { cartItems, cartSummary, loadCart } = useCart();
   const { showLoader } = useContext(LoaderContext) || { showLoader: () => {} };
@@ -30,6 +32,11 @@ export const useProductDetails = (productId: string, fallback: any) => {
   const [related, setRelated] = useState<any[]>([]);
   const [areaId, setAreaId] = useState<number | null>(null);
   const [areaReady, setAreaReady] = useState(false);
+  const [stockBlocked, setStockBlocked] = useState(false);
+
+  useEffect(() => {
+    setStockBlocked(false);
+  }, [productId]);
 
   useEffect(() => {
     let active = true;
@@ -57,8 +64,6 @@ export const useProductDetails = (productId: string, fallback: any) => {
         getProductDetails(productId, areaId),
         getRelatedProductsApi(productId, areaId),
       ]);
-
-      console.log('ProductDetails response:', response);
 
       setDetails(response?.success && response?.data ? response.data : null);
       setRelated(
@@ -110,14 +115,22 @@ export const useProductDetails = (productId: string, fallback: any) => {
       showLoader(true);
       const response = await action();
       if (!isCartSuccess(response)) {
-        Toast.show(cartErrorMessage(response, failure), Toast.SHORT);
+        const message = cartErrorMessage(response, failure);
+        if (STOCK_ERROR.test(message)) {
+          setStockBlocked(true);
+        }
+        Toast.show(message, Toast.SHORT);
         await loadCart();
         return;
       }
       await loadCart();
       setLocalQty(nextQty);
     } catch (error) {
-      Toast.show(cartErrorMessage(error, failure), Toast.SHORT);
+      const message = cartErrorMessage(error, failure);
+      if (STOCK_ERROR.test(message)) {
+        setStockBlocked(true);
+      }
+      Toast.show(message, Toast.SHORT);
     } finally {
       showLoader(false);
     }
@@ -179,6 +192,7 @@ export const useProductDetails = (productId: string, fallback: any) => {
     product,
     related,
     cartQty,
+    stockBlocked,
     addToCart,
     setQuantity,
     removeFromCart,

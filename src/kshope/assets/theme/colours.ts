@@ -41,35 +41,6 @@ const lightColors = {
   black1: '#2F2F2F',
 };
 
-const darkColors = {
-  primary: '#1A72DD',
-  secondary: '#1A72DD',
-  black: '#000000',
-  white: '#ffffff',
-  background: '#221d2eff',
-  backgroundLight: '#ececeeff',
-  text: '#fcfcfcff',
-  card: '#145891ff',
-  border: '#333333',
-  grey: '#aaaaaa',
-  lightGrey: '#2c2c2c',
-  red: '#ff6b6b',
-  green: '#32d296',
-  blue: '#7abaff',
-  halfTransparent: 'rgba(0, 0, 0, 0.5)',
-  // Custom Colors
-  themeWhite: '#FFFFFF',
-  themeLightGray: '#DADADA',
-  themeDarkGray: '#727783',
-  themeTeal: '#F25000',
-  themeBlack: '#000000',
-  themeDarkTeal: '#F25000',
-  figmaTeal: '#F25000',
-  starYellow: '#FFD700',
-  darkCardBackground: '#1F1F1F',
-  homeScreenBackground: '#F2FBFB',
-  darkFontOne: '#656565',
-};
 
 export const fontColors = {
   buttonWhite: '#FFFFFF',

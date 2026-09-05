@@ -142,6 +142,10 @@ export const useHomeData = () => {
       );
     }
     const tabs = Array.isArray(tabShowcase) ? tabShowcase : [];
+    if (__DEV__ && tabs.length > 0) {
+      console.log('[kshope] TAB OBJECT:', JSON.stringify(tabs[0], null, 2).slice(0, 1500));
+      console.log('[kshope] TAB KEYS:', Object.keys(tabs[0] || {}));
+    }
 
     const categoryById = new Map<string, any>();
     categories.forEach((cat: any) => {
@@ -228,6 +232,12 @@ export const useHomeData = () => {
           ),
           name:
             tab.tabName || tab.TabName || resolveCatName(tab, '') || 'Tab',
+          image: resolveImageSource(
+            tab.toptabimgurl ??
+              tab.topTabImgUrl ??
+              tab.TopTabImgUrl ??
+              tab.TopTabImgURL,
+          ),
         })),
       ],
       headerItemsFor: (tabId: string): HeaderItem[] => {
@@ -294,6 +304,9 @@ export const useHomeData = () => {
         block: firstBlock,
       },
       recommendedTitleBlock: thirdBlock,
+      recommendedFooterImage: resolveImageSource(
+        bannersFor(homeData, 'app_flahs_sale')[0]?.imageUrl,
+      ),
     };
   }, [homeData, profile, selectedAddress]);
 

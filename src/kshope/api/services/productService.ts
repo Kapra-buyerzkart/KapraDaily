@@ -27,12 +27,11 @@ export const getProductSuggestionsApi = async (term: string, pincodeAreaId: numb
         }
 
         if (response && response.status === 'SERVER_ERROR') {
-            console.log('Search API returned SERVER_ERROR, treating as no results.');
             return { success: true, data: [] };
         }
 
         return { success: true, data: [] };
-    } catch (error) {
+    } catch {
         return { success: true, data: [] };
     }
 };

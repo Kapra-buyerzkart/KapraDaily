@@ -30,24 +30,6 @@ const BottomBar: React.FC<Props> = ({
 
   return (
     <View style={[styles.bar, { paddingBottom: s(12) + bottom }]}>
-      <View style={styles.stepper}>
-        <TouchableOpacity
-          activeOpacity={0.7}
-          onPress={onDecrement}
-          style={styles.stepperButton}
-        >
-          <Text style={styles.stepperSymbol}>−</Text>
-        </TouchableOpacity>
-        <Text style={styles.quantity}>{quantity}</Text>
-        <TouchableOpacity
-          activeOpacity={0.7}
-          onPress={onIncrement}
-          style={styles.stepperButton}
-        >
-          <Text style={styles.stepperSymbol}>+</Text>
-        </TouchableOpacity>
-      </View>
-
       <View style={styles.priceCol}>
         <Text style={styles.price} numberOfLines={1} adjustsFontSizeToFit>
           {price}
@@ -55,6 +37,32 @@ const BottomBar: React.FC<Props> = ({
         {mrp ? (
           <Text style={styles.mrp} numberOfLines={1}>{`MRP ${mrp}`}</Text>
         ) : null}
+      </View>
+
+      <View style={[styles.stepper, outOfStock && styles.stepperDisabled]}>
+        <TouchableOpacity
+          activeOpacity={0.7}
+          disabled={outOfStock}
+          onPress={onDecrement}
+          style={styles.stepperButton}
+        >
+          <Text style={[styles.stepperSymbol, outOfStock && styles.mutedText]}>
+            −
+          </Text>
+        </TouchableOpacity>
+        <Text style={[styles.quantity, outOfStock && styles.mutedText]}>
+          {quantity}
+        </Text>
+        <TouchableOpacity
+          activeOpacity={0.7}
+          disabled={outOfStock}
+          onPress={onIncrement}
+          style={styles.stepperButton}
+        >
+          <Text style={[styles.stepperSymbol, outOfStock && styles.mutedText]}>
+            +
+          </Text>
+        </TouchableOpacity>
       </View>
 
       <TouchableOpacity
@@ -99,6 +107,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: s(14),
+    marginRight: s(8),
+  },
+  stepperDisabled: {
+    opacity: 0.5,
+  },
+  mutedText: {
+    color: PDP_COLORS.muted,
   },
   stepperButton: {
     paddingHorizontal: s(4),
@@ -117,23 +132,24 @@ const styles = StyleSheet.create({
   },
   priceCol: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'center',
-    paddingHorizontal: s(8),
+    paddingLeft: s(8),
+    paddingRight: s(8),
   },
   price: {
     fontFamily: HOME_FONTS.medium,
     fontSize: fs(20),
     lineHeight: fs(20) * 1.15,
     color: PDP_COLORS.black,
-    textAlign: 'center',
+    textAlign: 'left',
   },
   mrp: {
     fontFamily: HOME_FONTS.regular,
     fontSize: fs(12),
     lineHeight: fs(12) * 1.15,
     color: PDP_COLORS.muted,
-    textAlign: 'center',
+    textAlign: 'left',
     textDecorationLine: 'line-through',
     textDecorationColor: PDP_COLORS.muted,
     marginTop: s(1),

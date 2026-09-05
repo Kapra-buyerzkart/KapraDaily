@@ -41,7 +41,7 @@ const BestSelling: React.FC<Props> = ({ items, onPressTile }) => (
           >
             <Image
               source={imageSource(item.image)}
-              resizeMode="contain"
+              resizeMode="cover"
               style={styles.tileImage}
             />
           </View>

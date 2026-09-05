@@ -51,7 +51,7 @@ const CartItemCard: React.FC<CartItemCardProps> = ({
               : require('../assets/images/logos/noimage.png')
           }
           style={styles.image}
-          resizeMode="contain"
+          resizeMode={item.image ? 'cover' : 'contain'}
         />
       </View>
 
@@ -169,8 +169,9 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   image: {
-    width: '86%',
-    height: '86%',
+    width: '100%',
+    height: '100%',
+    borderRadius: UI_RADIUS.productCard,
   },
   details: {
     flex: 1,

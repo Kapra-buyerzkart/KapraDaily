@@ -1,235 +1,430 @@
 import { StyleSheet } from 'react-native';
 import {
-  widthPercentageToDP as wp,
-  heightPercentageToDP as hp,
-} from 'react-native-responsive-screen';
-import { Fonts as FONTS } from '../../theme/fonts';
-import { colors } from '../../theme/colours';
+  UI_COLORS,
+  UI_GUTTER,
+  UI_RADIUS,
+  UI_SPACING,
+  UI_TYPE,
+  hp,
+  wp,
+} from '../../theme/tokens';
+
+export const MAP_HEIGHT = hp('48%');
+export const SHEET_TOP = hp('38%');
+export const PIN_HEIGHT = wp('11%');
+export const FIELD_HEIGHT = hp('6.2%');
+
+const HAIRLINE = StyleSheet.hairlineWidth;
 
 export default StyleSheet.create({
-  mainContainer: {
+  screen: {
     flex: 1,
-    backgroundColor: colors.white,
+    backgroundColor: UI_COLORS.canvas,
   },
+  flex: {
+    flex: 1,
+  },
+
   mapContainer: {
-    width: wp('100%'),
-    height: hp('40%'),
     position: 'absolute',
     top: 0,
+    width: wp('100%'),
+    height: MAP_HEIGHT,
   },
   map: {
     flex: 1,
   },
-  reCenterButton: {
+
+  pinWrap: {
     position: 'absolute',
-    bottom: hp('2%'),
-    right: wp('4%'),
-    backgroundColor: colors.white,
-    width: wp('11%'),
-    height: wp('11%'),
-    borderRadius: wp('5.5%'),
-    justifyContent: 'center',
+    left: 0,
+    right: 0,
     alignItems: 'center',
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    top: MAP_HEIGHT / 2 - (PIN_HEIGHT + 2),
+    zIndex: 10,
   },
-  searchAbsoluteContainer: {
+  pinCallout: {
     position: 'absolute',
-    top: hp('2%'),
-    width: wp('90.7%'),
-    alignSelf: 'center',
-    zIndex: 9999,
-    elevation: 20,
+    bottom: PIN_HEIGHT + UI_SPACING.md,
+    alignItems: 'center',
+    paddingVertical: UI_SPACING.sm,
+    paddingHorizontal: UI_SPACING.lg,
+    borderRadius: UI_RADIUS.button,
+    borderWidth: HAIRLINE,
+    borderColor: UI_COLORS.border,
+    backgroundColor: UI_COLORS.card,
   },
-  geocodingBanner: {
-    width: wp('90.7%'),
-    alignSelf: 'center',
-    marginTop: hp('1%'),
-    backgroundColor: colors.themeWhite,
-    borderRadius: wp('2%'),
-    paddingVertical: hp('1%'),
-    paddingHorizontal: wp('3%'),
+  pinCalloutHidden: {
+    opacity: 0,
+  },
+  pinCalloutTail: {
+    position: 'absolute',
+    bottom: -4,
+    width: 10,
+    height: 10,
+    borderRadius: 2,
+    backgroundColor: UI_COLORS.card,
+    transform: [{ rotate: '45deg' }],
+  },
+  pinIcon: {
+    height: PIN_HEIGHT,
+  },
+  pinIconLifted: {
+    transform: [{ translateY: -8 }],
+  },
+
+  recenterButton: {
+    position: 'absolute',
+    bottom: MAP_HEIGHT - SHEET_TOP + UI_SPACING.lg,
+    right: UI_GUTTER,
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.themeLightGray,
-    elevation: 4,
+    gap: UI_SPACING.xs,
+    paddingVertical: UI_SPACING.sm,
+    paddingHorizontal: UI_SPACING.md,
+    borderRadius: UI_RADIUS.button,
+    borderWidth: HAIRLINE,
+    borderColor: UI_COLORS.border,
+    backgroundColor: UI_COLORS.card,
   },
-  geocodingText: {
-    marginLeft: wp('2%'),
-    color: colors.black,
-    fontFamily: FONTS.poppins.regular,
-    fontSize: wp('3.2%'),
+
+  overlay: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    paddingHorizontal: UI_GUTTER,
+    zIndex: 999,
   },
-  detailedAddressContainer: {
-    backgroundColor: colors.white,
-    flex: 1,
-    borderTopLeftRadius: hp('4%'),
-    borderTopRightRadius: hp('4%'),
-    marginTop: hp('35%'),
-    paddingTop: hp('2%'),
-    paddingHorizontal: wp('5%'),
-  },
-  upperDivider: {
-    width: wp('20%'),
-    height: hp('0.8%'),
-    backgroundColor: colors.themeLightGray,
-    borderRadius: 10,
-    alignSelf: 'center',
-    marginBottom: hp('1%'),
-  },
-  dragInfoContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: hp('1%'),
-    alignSelf: 'center',
-  },
-  dragInfoText: {
-    fontSize: wp('3.1%'),
-    color: colors.themeDarkGray,
-    fontStyle: 'italic',
-    fontFamily: FONTS.poppins.regular,
-    marginLeft: wp('1.5%'),
-    flex: 1,
-  },
-  topView: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: hp('2.5%'),
-  },
-  backButtonContainer: {
-    padding: wp('1%'),
-  },
-  addLocationText: {
-    fontFamily: FONTS.poppins.semiBold,
-    fontSize: wp('4.6%'),
-    color: colors.black,
-    marginLeft: wp('4%'),
-  },
-  innerView: {
+  overlayRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    marginBottom: hp('2.5%'),
   },
-  locationIcon: {
-    width: wp('6%'),
-    height: wp('7.5%'),
-    tintColor: colors.themeTeal,
-    resizeMode: 'contain',
+  floatingButton: {
+    width: wp('11%'),
+    height: wp('11%'),
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: UI_RADIUS.button,
+    borderWidth: HAIRLINE,
+    borderColor: UI_COLORS.border,
+    backgroundColor: UI_COLORS.card,
   },
-  fetchingLocation: {
-    color: colors.black,
-    fontFamily: FONTS.poppins.medium,
-    fontSize: wp('4%'),
-    marginLeft: wp('3%'),
+  searchLayer: {
+    flex: 1,
+    marginLeft: UI_SPACING.md,
+    zIndex: 999,
   },
-  addressLineText: {
-    color: colors.themeDarkGray,
-    fontSize: wp('3.4%'),
-    fontFamily: FONTS.poppins.regular,
-    marginLeft: wp('3%'),
-    marginTop: hp('0.5%'),
+  searchIcon: {
+    marginRight: UI_SPACING.sm,
   },
-  delboyContainer: {
+  geocodingBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFF5F0',
-    padding: wp('3%'),
-    borderRadius: 12,
-    marginBottom: hp('2.5%'),
+    alignSelf: 'center',
+    gap: UI_SPACING.sm,
+    marginTop: UI_SPACING.sm,
+    paddingVertical: UI_SPACING.xs,
+    paddingHorizontal: UI_SPACING.md,
+    borderRadius: UI_RADIUS.sm,
+    borderWidth: HAIRLINE,
+    borderColor: UI_COLORS.border,
+    backgroundColor: UI_COLORS.card,
   },
-  delBoyImage: {
-    width: wp('12%'),
-    height: wp('12%'),
-    resizeMode: 'contain',
+
+  sheet: {
+    flex: 1,
+    marginTop: SHEET_TOP,
+    borderTopWidth: HAIRLINE,
+    borderTopColor: UI_COLORS.border,
+    paddingTop: UI_SPACING.md,
+    backgroundColor: UI_COLORS.card,
+    borderTopLeftRadius: UI_RADIUS.productCard,
+    borderTopRightRadius: UI_RADIUS.productCard,
   },
-  detailedLocationContainer: {
-    marginLeft: wp('3%'),
+  grabHandle: {
+    width: wp('10%'),
+    height: 5,
+    borderRadius: UI_RADIUS.pill,
+    backgroundColor: UI_COLORS.borderStrong,
+    alignSelf: 'center',
   },
-  detailedLocationText: {
-    fontSize: wp('3.2%'),
-    color: colors.black,
-    fontFamily: FONTS.poppins.regular,
+  sheetHeader: {
+    paddingHorizontal: UI_GUTTER,
+    paddingTop: UI_SPACING.md,
+    paddingBottom: UI_SPACING.md,
+    borderBottomWidth: HAIRLINE,
+    borderBottomColor: UI_COLORS.border,
   },
-  saveAsText: {
-    fontFamily: FONTS.poppins.semiBold,
-    fontSize: wp('4%'),
-    color: colors.black,
-    marginBottom: hp('1.5%'),
+  sheetSubtitle: {
+    marginTop: 2,
   },
-  addressTypesContainer: {
+  scroll: {
+    flex: 1,
+    paddingHorizontal: UI_GUTTER,
+    backgroundColor: UI_COLORS.canvas,
+  },
+  scrollContent: {
+    paddingBottom: UI_SPACING.xl,
+  },
+
+  resolvedCard: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: hp('3%'),
+    alignItems: 'center',
+    gap: UI_SPACING.md,
+    padding: UI_SPACING.md,
+    marginTop: UI_SPACING.lg,
+    borderRadius: UI_RADIUS.productCard,
+    borderWidth: HAIRLINE,
+    borderColor: UI_COLORS.border,
+    backgroundColor: UI_COLORS.card,
   },
-  addressTypeContainer: {
+  resolvedCopy: {
+    flex: 1,
+  },
+  resolvedEyebrow: {
+    letterSpacing: 0.6,
+    marginBottom: 2,
+  },
+  resolvedLine2: {
+    marginTop: 2,
+  },
+
+  sectionCard: {
+    marginTop: UI_SPACING.md,
+    paddingTop: UI_SPACING.lg,
+    paddingBottom: UI_SPACING.sm,
+    paddingHorizontal: UI_SPACING.lg,
+    borderRadius: UI_RADIUS.productCard,
+    borderWidth: HAIRLINE,
+    borderColor: UI_COLORS.border,
+    backgroundColor: UI_COLORS.card,
+  },
+  sectionTitleWrap: {
+    marginBottom: UI_SPACING.lg,
+  },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  sectionTitleBar: {
+    width: 3,
+    height: 14,
+    borderRadius: UI_RADIUS.xs,
+    backgroundColor: UI_COLORS.textPrimary,
+    marginRight: UI_SPACING.sm,
+  },
+  sectionTitleHint: {
+    marginTop: 2,
+    marginLeft: UI_SPACING.md,
+  },
+
+  typeRow: {
+    flexDirection: 'row',
+    gap: UI_SPACING.sm,
+    marginBottom: UI_SPACING.md,
+  },
+  typeChip: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.themeLightGray,
-    borderRadius: 25,
-    width: wp('28%'),
-    paddingVertical: hp('1.2%'),
+    gap: UI_SPACING.xs,
+    minHeight: hp('5.4%'),
+    paddingHorizontal: UI_SPACING.sm,
+    paddingVertical: UI_SPACING.sm,
+    borderRadius: UI_RADIUS.xs,
+    borderWidth: HAIRLINE,
+    borderColor: UI_COLORS.border,
+    backgroundColor: UI_COLORS.well,
   },
-  selectedAddressType: {
-    backgroundColor: colors.themeTeal,
-    borderColor: colors.themeTeal,
+  typeChipActive: {
+    borderWidth: 1.2,
+    borderColor: UI_COLORS.borderStrong,
+    backgroundColor: 'rgba(17,19,26,0.06)',
   },
-  addressTypeIcon: {
-    width: wp('4%'),
-    height: wp('4%'),
-    resizeMode: 'contain',
-    marginRight: wp('2%'),
+
+  fieldWrapper: {
+    marginBottom: UI_SPACING.lg,
+    position: 'relative',
   },
-  addressTypeText: {
-    fontSize: wp('3.4%'),
-    fontFamily: FONTS.poppins.medium,
-    color: colors.themeDarkGray,
+  fieldLabel: {
+    position: 'absolute',
+    top: -hp('0.95%'),
+    left: UI_SPACING.md,
+    zIndex: 1,
+    paddingHorizontal: UI_SPACING.xs,
+    backgroundColor: UI_COLORS.card,
+    ...UI_TYPE.micro,
+    color: UI_COLORS.textMuted,
   },
-  selectedTypeText: {
-    color: colors.white,
+  fieldLabelActive: {
+    color: UI_COLORS.textPrimary,
   },
-  inputWrapper: {
-    marginBottom: hp('2%'),
+  fieldLabelError: {
+    color: UI_COLORS.danger,
   },
-  label: {
-    fontFamily: FONTS.poppins.regular,
-    color: colors.themeDarkGray,
-    fontSize: wp('3.2%'),
-    marginBottom: hp('0.5%'),
+  fieldRequired: {
+    color: UI_COLORS.danger,
   },
   input: {
-    borderWidth: 1,
-    borderColor: colors.themeLightGray,
-    borderRadius: 8,
-    paddingHorizontal: wp('4%'),
-    height: hp('6%'),
-    color: colors.black,
-    fontFamily: FONTS.poppins.regular,
-    fontSize: wp('3.7%'),
+    minHeight: FIELD_HEIGHT,
+    borderWidth: HAIRLINE,
+    borderColor: UI_COLORS.border,
+    borderRadius: UI_RADIUS.input,
+    backgroundColor: UI_COLORS.well,
+    paddingHorizontal: UI_SPACING.lg,
+    paddingVertical: UI_SPACING.sm,
+    ...UI_TYPE.label,
+    color: UI_COLORS.textPrimary,
   },
-  pincodeContainer: {
+  inputFocused: {
+    borderWidth: 1.2,
+    borderColor: UI_COLORS.borderStrong,
+    backgroundColor: UI_COLORS.card,
+  },
+  landmarkInput: {
+    minHeight: hp('8%'),
+    textAlignVertical: 'top',
+  },
+
+  pincodeRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
-    marginBottom: hp('2%'),
+    gap: UI_SPACING.md,
+    zIndex: 10,
   },
-  buttonGradientStyle: {
-    borderRadius: 30,
-    height: hp('7%'),
-    justifyContent: 'center',
+  pincodeField: {
+    flex: 1,
+  },
+  areaWrap: {
+    flex: 1,
+    marginBottom: UI_SPACING.lg,
+    position: 'relative',
+  },
+  areaLabel: {
+    zIndex: 7000,
+  },
+  dropdown: {
+    minHeight: FIELD_HEIGHT,
+    borderWidth: HAIRLINE,
+    borderColor: UI_COLORS.border,
+    borderRadius: UI_RADIUS.input,
+    paddingHorizontal: UI_SPACING.lg,
+    backgroundColor: UI_COLORS.well,
+  },
+  dropdownOpen: {
+    borderWidth: 1.2,
+    borderColor: UI_COLORS.borderStrong,
+    backgroundColor: UI_COLORS.card,
+  },
+  dropdownContainer: {
+    borderWidth: HAIRLINE,
+    borderColor: UI_COLORS.border,
+    borderRadius: UI_RADIUS.input,
+    backgroundColor: UI_COLORS.card,
+  },
+  dropdownText: {
+    ...UI_TYPE.label,
+    color: UI_COLORS.textPrimary,
+  },
+  dropdownSelectedText: {
+    ...UI_TYPE.labelStrong,
+    color: UI_COLORS.textPrimary,
+  },
+  dropdownPlaceholder: {
+    ...UI_TYPE.label,
+    color: UI_COLORS.textFaint,
+  },
+
+  deliveryNote: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginTop: hp('2%'),
-    marginBottom: hp('4%'),
+    gap: UI_SPACING.md,
+    paddingVertical: UI_SPACING.sm,
+    paddingHorizontal: UI_SPACING.md,
+    marginTop: UI_SPACING.md,
+    marginBottom: UI_SPACING.md,
+    borderRadius: UI_RADIUS.productCard,
+    borderWidth: HAIRLINE,
+    borderColor: UI_COLORS.border,
+    backgroundColor: UI_COLORS.well,
   },
-  buttonText: {
-    color: colors.white,
-    fontFamily: FONTS.poppins.bold,
-    fontSize: wp('4%'),
-    textTransform: 'uppercase',
+  deliveryCopy: {
+    flex: 1,
+  },
+
+  footer: {
+    paddingHorizontal: UI_GUTTER,
+    paddingTop: UI_SPACING.md,
+    borderTopWidth: HAIRLINE,
+    borderTopColor: UI_COLORS.border,
+    backgroundColor: UI_COLORS.card,
+  },
+  saveButton: {
+    height: hp('6.4%'),
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: UI_SPACING.sm,
+    borderRadius: UI_RADIUS.button,
+    backgroundColor: UI_COLORS.primary,
+  },
+  saveButtonBusy: {
+    opacity: 0.7,
   },
 });
+
+export const placesStyles = {
+  container: { flex: 0 },
+  textInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: FIELD_HEIGHT,
+    paddingHorizontal: UI_SPACING.lg,
+    borderRadius: UI_RADIUS.button,
+    borderWidth: HAIRLINE,
+    borderColor: UI_COLORS.border,
+    backgroundColor: UI_COLORS.card,
+  },
+  textInput: {
+    ...UI_TYPE.label,
+    color: UI_COLORS.textPrimary,
+    height: FIELD_HEIGHT,
+    flex: 1,
+    paddingVertical: 0,
+    paddingHorizontal: 0,
+    backgroundColor: 'transparent',
+  },
+  description: {
+    ...UI_TYPE.label,
+    color: UI_COLORS.textSecondary,
+  },
+  listView: {
+    position: 'absolute',
+    top: FIELD_HEIGHT,
+    width: '100%',
+    zIndex: 100,
+    marginTop: UI_SPACING.sm,
+    borderRadius: UI_RADIUS.productCard,
+    borderWidth: HAIRLINE,
+    borderColor: UI_COLORS.border,
+    backgroundColor: UI_COLORS.card,
+    overflow: 'hidden',
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    minHeight: hp('6%'),
+    paddingHorizontal: UI_SPACING.lg,
+    paddingVertical: UI_SPACING.md,
+    backgroundColor: UI_COLORS.card,
+  },
+  separator: {
+    height: HAIRLINE,
+    backgroundColor: UI_COLORS.border,
+  },
+  loader: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    height: 20,
+  },
+};

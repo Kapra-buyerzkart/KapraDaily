@@ -1,9 +1,8 @@
-import { StyleSheet, Dimensions } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { colors } from '../../theme/colours';
 import { Fonts } from '../../theme/fonts';
 import { heightPercentageToDP } from 'react-native-responsive-screen';
 
-const { width } = Dimensions.get('window');
 
 export const styles = StyleSheet.create({
   container: {

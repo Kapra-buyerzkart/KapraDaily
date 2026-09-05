@@ -4,7 +4,6 @@ import {
   FlatList,
   Image,
   RefreshControl,
-  SafeAreaView,
   StatusBar,
   StyleSheet,
   Text,
@@ -12,6 +11,7 @@ import {
   View,
 } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { LoaderContext } from '../../../context/loaderContext';
 import { getMyOrdersApi } from '../../../api/services/orderService';
@@ -192,7 +192,7 @@ const MyOrdersRedesignScreen: React.FC = () => {
   }, [loading, navigation]);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <StatusBar barStyle="dark-content" backgroundColor={ORDER_COLORS.page} />
 
       <View style={styles.header}>

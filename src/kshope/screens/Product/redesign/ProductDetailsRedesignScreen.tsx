@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Share, StatusBar, StyleSheet, View } from 'react-native';
+import { StatusBar, StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import {
   useIsFocused,
@@ -7,8 +7,6 @@ import {
   useRoute,
 } from '@react-navigation/native';
 import { useWishlist } from '../../../context/WishlistContext';
-import FloatingCartButton from '../../../components/FloatingCartButton';
-import { useCartPillScrollProps } from '../../../components/cartPillScroll';
 import { s } from '../../Home/redesign/theme';
 import Gallery from './sections/Gallery';
 import PriceHeader from './sections/PriceHeader';
@@ -65,12 +63,12 @@ const ProductDetailsRedesignScreen: React.FC = () => {
   const id = String(rawId ?? '');
 
   const { isInWishlist, toggleWishlist } = useWishlist();
-  const cartPillScroll = useCartPillScrollProps();
   const {
     details,
     product: current,
     related,
     cartQty,
+    stockBlocked,
     setQuantity,
   } = useProductDetails(id, product);
 
@@ -83,7 +81,7 @@ const ProductDetailsRedesignScreen: React.FC = () => {
   const wishlistId = current?.productId ?? rawId;
   const prices = pricing(current);
   const rating = ratingSummary(details);
-  const outOfStock = isOutOfStock(current);
+  const outOfStock = isOutOfStock(current) || stockBlocked;
   const reviewStats = reviewSummary(details);
   const reviews = reviewList(details);
 
@@ -93,14 +91,6 @@ const ProductDetailsRedesignScreen: React.FC = () => {
       product: item,
     });
 
-  const share = () => {
-    const title = productTitle(current);
-    if (!title) {
-      return;
-    }
-    Share.share({ message: `${title} — ${prices.price}` }).catch(() => {});
-  };
-
   return (
     <View style={styles.safe}>
       <ProductStatusBar />
@@ -108,7 +98,6 @@ const ProductDetailsRedesignScreen: React.FC = () => {
       <Animated.ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
-        {...cartPillScroll}
       >
         <Gallery
           images={galleryImages(details, current)}
@@ -116,7 +105,6 @@ const ProductDetailsRedesignScreen: React.FC = () => {
           wishlisted={isInWishlist(wishlistId)}
           onBack={() => navigation.goBack()}
           onToggleWishlist={() => toggleWishlist(current)}
-          onShare={share}
         />
 
         <PriceHeader
@@ -157,7 +145,6 @@ const ProductDetailsRedesignScreen: React.FC = () => {
         />
       </Animated.ScrollView>
 
-      <FloatingCartButton bottom={s(90)} />
 
       <BottomBar
         quantity={quantity}

@@ -12,7 +12,6 @@ import { colors } from '../../theme/colours';
 import { searchProductsApi } from '../../api/services/productService';
 import { getCategoryProducts } from '../../api/services/homeService';
 import { LoaderContext } from '../../context/loaderContext';
-import CONFIG from '../../globals/config';
 import { styles } from './ProductCategoryDetailStyles';
 import { AppIcons } from '../../assets/icons';
 import { useWishlist } from '../../context/WishlistContext';
@@ -35,7 +34,7 @@ const ProductCategoryDetailScreen = () => {
   const [productsList, setProductsList] = useState<any[]>(
     initialProducts || [],
   );
-  const [pincodeAreaId, setPincodeAreaId] = useState<number | null>(null);
+  const [, setPincodeAreaId] = useState<number | null>(null);
   const { showLoader } = useContext(LoaderContext) || { showLoader: () => {} };
   const { toggleWishlist, isInWishlist } = useWishlist();
 

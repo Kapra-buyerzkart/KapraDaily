@@ -7,10 +7,9 @@ export const getHomepageData = async (pincodeAreaId: number | string | null, blo
             blocksize
         }
     };
-    const response = await get('homepage', config);
-    console.log('[HOMEPAGE API] params:', config.params);
-    console.log('[HOMEPAGE API] response:', response);
-    return response;
+    const res = await get('homepage', config);
+    console.log('[kshope] homepage API response:', res);
+    return res;
 };
 
 export const getCategoryProducts = async (catId: number | string, pincodeAreaId: number | string | null): Promise<any> => {

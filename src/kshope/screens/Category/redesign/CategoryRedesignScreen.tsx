@@ -14,7 +14,6 @@ import {
 } from '@react-navigation/native';
 import Animated from 'react-native-reanimated';
 import { useWishlist } from '../../../context/WishlistContext';
-import FloatingCartButton from '../../../components/FloatingCartButton';
 import { useCartPillScrollProps } from '../../../components/cartPillScroll';
 import type { ProductTile } from '../../Home/redesign/content';
 import {
@@ -219,7 +218,6 @@ const CategoryRedesignScreen: React.FC = () => {
         onClose={() => setFilterVisible(false)}
         onApply={applyFilters}
       />
-      <FloatingCartButton />
     </View>
   );
 };

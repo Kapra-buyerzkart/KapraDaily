@@ -1,157 +1,230 @@
 import { StyleSheet } from 'react-native';
-import {
-  widthPercentageToDP as wp,
-  heightPercentageToDP as hp,
-} from 'react-native-responsive-screen';
-import { Fonts as FONTS } from '../../theme/fonts';
-import { colors } from '../../theme/colours';
+import { Fonts } from '../../theme/fonts';
+import { UI_TYPE, hp, wp } from '../../theme/tokens';
+
+const HAIRLINE = StyleSheet.hairlineWidth;
+
+export const SURFACE_BASE = '#FFFFFF';
+export const SURFACE_SUNKEN = '#F5F6F8';
+export const SURFACE_TINT = '#FFF6F2';
+export const RULE = 'rgba(17,19,26,0.05)';
+export const EDGE = 'rgba(17,19,26,0.12)';
+
+export const INK_STRONG = '#12131A';
+export const INK_BASE = '#2B2D36';
+export const INK_MUTED = '#6B7280';
+
+export const PRIMARY = '#F25000';
+export const PRIMARY_SOFT = '#FFE9E0';
+export const SUCCESS = '#0E9F4F';
+export const SUCCESS_SOFT = '#E7F7EE';
+export const SUCCESS_TEXT = '#0B7A3D';
+export const DISCOUNT = '#C2410C';
+
+export const GUTTER = wp('4.6%');
+
+export const SPACE = { xs: 4, sm: 8, md: 12, base: 16 };
+export const RADIUS = { md: 16, lg: 20, pill: 999 };
+
+export const ICON = {
+  type: wp('4.4%'),
+  meta: wp('3.6%'),
+  action: wp('4.4%'),
+  plus: wp('4.6%'),
+  chevron: wp('4%'),
+  empty: wp('8%'),
+  check: wp('3.2%'),
+};
 
 export default StyleSheet.create({
   mainContainer: {
     flex: 1,
-    backgroundColor: colors.white,
+    backgroundColor: SURFACE_BASE,
   },
   headerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: hp('1%'),
-    paddingHorizontal: wp('4%'),
+    paddingHorizontal: GUTTER,
+    paddingTop: hp('1.5%'),
+    paddingBottom: hp('1.5%'),
+    borderBottomWidth: HAIRLINE,
+    borderBottomColor: RULE,
   },
-  leftArrowIcon: {
-    width: wp('5%'),
-    height: wp('5%'),
-    resizeMode: 'contain',
-    tintColor: colors.black,
-  },
-  addressText: {
-    color: colors.black,
-    fontFamily: FONTS.poppins.semiBold,
+  headerText: {
+    fontFamily: Fonts.gilroySemiBold,
     fontSize: wp('4.65%'),
-    marginLeft: wp('4%'),
+    color: INK_STRONG,
+    marginLeft: wp('3%'),
+    letterSpacing: -0.3,
   },
-  addressContainer: {
-    borderColor: colors.themeTeal,
-    borderWidth: 1,
-    borderRadius: wp('2.3%'),
-    paddingVertical: hp('1.1%'),
-    marginBottom: hp('2.5%'),
-    minHeight: hp('16.1%'),
+  listContent: {
+    paddingHorizontal: GUTTER,
+    paddingTop: SPACE.base,
+    paddingBottom: hp('6%'),
   },
-  addressContainerTopView: {
+
+  addRow: {
     flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: SURFACE_TINT,
+    borderRadius: RADIUS.md,
+    paddingHorizontal: SPACE.md,
+    paddingVertical: SPACE.md,
+    marginBottom: SPACE.base,
+  },
+  addIconWell: {
+    width: wp('8%'),
+    height: wp('8%'),
+    borderRadius: RADIUS.pill,
+    backgroundColor: PRIMARY_SOFT,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  addRowText: {
+    flex: 1,
+    marginLeft: SPACE.md,
+    ...UI_TYPE.bodyStrong,
+    color: PRIMARY,
+  },
+
+  card: {
+    borderRadius: RADIUS.lg,
+    borderWidth: HAIRLINE,
+    borderColor: EDGE,
+    backgroundColor: SURFACE_BASE,
+    marginBottom: SPACE.md,
+    overflow: 'hidden',
+  },
+  cardSelected: {
+    borderWidth: 1.5,
+    borderColor: SUCCESS,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: hp('1.7%'),
-    paddingHorizontal: wp('4%'),
+    paddingHorizontal: SPACE.md,
+    paddingVertical: SPACE.sm,
+    minHeight: hp('5.6%'),
   },
-  addressContainerInnerView: {
+  typeCluster: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexShrink: 1,
+    marginRight: SPACE.sm,
+  },
+  typeWell: {
+    width: wp('8%'),
+    height: wp('8%'),
+    borderRadius: RADIUS.pill,
+    backgroundColor: SURFACE_SUNKEN,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  typeWellActive: {
+    backgroundColor: SUCCESS_SOFT,
+  },
+  typeText: {
+    marginLeft: SPACE.sm,
+    ...UI_TYPE.bodyStrong,
+    color: INK_STRONG,
+    flexShrink: 1,
+  },
+  headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  homeIcon: {
-    width: wp('4.5%'),
-    height: wp('4.5%'),
-    resizeMode: 'contain',
-    tintColor: colors.themeTeal,
-  },
-  addressTypeText: {
-    color: colors.black,
-    fontFamily: FONTS.poppins.medium,
-    fontSize: wp('3.72%'),
-    marginLeft: wp('2%'),
-  },
-  selectedView: {
+  selectedPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.green,
-    borderRadius: wp('4.65%'),
-    paddingHorizontal: wp('2%'),
-    paddingVertical: wp('0.5%'),
-    backgroundColor: '#E8F5E9',
+    backgroundColor: SUCCESS_SOFT,
+    borderRadius: RADIUS.pill,
+    paddingHorizontal: SPACE.sm,
+    paddingVertical: 3,
   },
-  tickImage: {
-    width: wp('3%'),
-    height: wp('3%'),
-    tintColor: colors.green,
+  selectedPillText: {
+    marginLeft: 3,
+    ...UI_TYPE.microStrong,
+    color: SUCCESS_TEXT,
   },
-  selectedText: {
-    fontFamily: FONTS.poppins.medium,
-    color: colors.green,
-    fontSize: wp('2.5%'),
-    marginLeft: wp('1%'),
+  menuButton: {
+    paddingLeft: SPACE.sm,
+    paddingVertical: SPACE.xs,
   },
-  threeDotsIcon: {
-    width: wp('1%'),
-    height: hp('2.14%'),
-    marginLeft: wp('4%'),
-    tintColor: colors.themeDarkGray,
-  },
-  threeDotActionContainer: {
+
+  actionsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderColor: colors.themeLightGray,
-    borderWidth: 1,
-    borderRadius: wp('2.32%'),
-    width: wp('25%'),
-    height: hp('4%'),
-    justifyContent: 'space-between',
-    paddingHorizontal: wp('2%'),
-    backgroundColor: colors.figmaTeal,
+    backgroundColor: SURFACE_SUNKEN,
+    borderRadius: RADIUS.pill,
+    paddingHorizontal: SPACE.xs,
   },
-  addressContainerBottomView: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: hp('2%'),
-    paddingHorizontal: wp('4%'),
+  actionButton: {
+    paddingHorizontal: SPACE.sm,
+    paddingVertical: SPACE.xs,
   },
-  phoneIcon: {
-    width: wp('3.5%'),
-    height: wp('3.5%'),
-    marginRight: wp('2%'),
-    tintColor: colors.themeTeal,
+  actionSeparator: {
+    width: HAIRLINE,
+    alignSelf: 'stretch',
+    marginVertical: SPACE.xs,
+    backgroundColor: EDGE,
   },
-  unSelectedAddressInnerContainer: {
-    borderTopWidth: 1,
-    borderTopColor: colors.themeLightGray,
-    paddingTop: hp('1%'),
+
+  cardDivider: {
+    height: HAIRLINE,
+    backgroundColor: RULE,
+  },
+  cardBody: {
+    paddingHorizontal: SPACE.md,
+    paddingTop: SPACE.sm,
+    paddingBottom: SPACE.md,
   },
   addressLine: {
-    color: colors.darkFontOne,
-    fontFamily: FONTS.poppins.regular,
-    fontSize: wp('3.5%'),
+    ...UI_TYPE.label,
+    fontFamily: Fonts.gilroyRegular,
+    color: INK_BASE,
   },
-  addressBottomInnerView: {
+  metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: SPACE.md,
   },
-  chooseLocationContainer: {
+  metaCluster: {
     flexDirection: 'row',
-    paddingHorizontal: wp('4%'),
-    paddingVertical: wp('3%'),
-    borderWidth: 1,
-    borderColor: colors.themeLightGray,
-    borderRadius: wp('2.3%'),
     alignItems: 'center',
-    marginBottom: hp('2%'),
-    backgroundColor: colors.figmaTeal,
+    flexShrink: 1,
   },
-  locationIcon: {
-    width: wp('5%'),
-    height: wp('5%'),
-    tintColor: colors.themeTeal,
+  metaText: {
+    marginLeft: SPACE.xs,
+    ...UI_TYPE.caption,
+    fontFamily: Fonts.gilroyMedium,
+    color: INK_MUTED,
   },
-  locationText: {
-    color: colors.black,
-    fontFamily: FONTS.poppins.medium,
-    fontSize: wp('4%'),
-    marginLeft: wp('3%'),
+
+  emptyState: {
+    alignItems: 'center',
+    paddingTop: hp('6%'),
+    paddingHorizontal: wp('8%'),
   },
-  addAddressText: {
-    color: colors.black,
-    fontFamily: FONTS.poppins.semiBold,
-    fontSize: wp('4.2%'),
-    alignSelf: 'center',
-    marginVertical: hp('2%'),
+  emptyIconWell: {
+    width: wp('16%'),
+    height: wp('16%'),
+    borderRadius: RADIUS.pill,
+    backgroundColor: SURFACE_SUNKEN,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyTitle: {
+    marginTop: SPACE.base,
+    ...UI_TYPE.heading,
+    color: INK_STRONG,
+  },
+  emptyBody: {
+    marginTop: SPACE.xs,
+    ...UI_TYPE.label,
+    fontFamily: Fonts.gilroyRegular,
+    color: INK_MUTED,
+    textAlign: 'center',
   },
 });
