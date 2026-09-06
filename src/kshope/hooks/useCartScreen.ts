@@ -78,7 +78,7 @@ export const useCartScreen = () => {
     }, [cartSummary, frontendBillCalculations]);
 
     const isInitialMount = useRef(true);
-    const selectedAddress = useMemo(() => addressHook.addresses.find(a => a.selected), [addressHook.addresses]);
+    const selectedAddress = addressHook.selectedAddress;
 
     useFocusEffect(
         useCallback(() => {

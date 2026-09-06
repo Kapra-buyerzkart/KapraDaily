@@ -1,7 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react';
 import {
   View,
-  Text,
   ScrollView,
   TouchableOpacity,
   StatusBar,
@@ -14,12 +13,12 @@ import {
   useFocusEffect,
 } from '@react-navigation/native';
 import { BackHandler } from 'react-native';
-import Svg, { Line } from 'react-native-svg';
-import { colors } from '../../theme/colours';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { styles } from './styles';
+import { detailsStyles as d } from './detailsStyles';
 import { AppIcons } from '../../assets/icons';
-import { useCommonStyles } from '../../assets/styles';
-import LinearGradient from 'react-native-linear-gradient';
+import { AppText, Badge, Divider, IconDisc } from '../../components/atoms';
+import { UI_COLORS, UI_SPACING, wp } from '../../theme/tokens';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LoaderContext } from '../../context/loaderContext';
 import {
@@ -38,22 +37,6 @@ import FallbackImage from '../../components/FallbackImage';
 import BillSection from '../../components/BillSection';
 import { OrderDetails, OrderLineItem } from '../../types/order';
 
-const DashedLine = () => (
-  <View style={styles.trackingDashedSeparator}>
-    <Svg height="1" width="100%">
-      <Line
-        x1="0"
-        y1="0.5"
-        x2="100%"
-        y2="0.5"
-        stroke={colors.lightGrey}
-        strokeWidth="1"
-        strokeDasharray="8, 8"
-      />
-    </Svg>
-  </View>
-);
-
 const getImageUrl = (imagePath?: string) => {
   if (!imagePath) return require('../../assets/images/logos/noimage.png');
   if (typeof imagePath !== 'string') return imagePath;
@@ -67,7 +50,6 @@ const MyOrderDetailsScreen = () => {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const [isTrackOpen, setIsTrackOpen] = useState(false);
-  const homeStyles = useCommonStyles();
   const { profile } = useUser();
 
   const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
@@ -160,7 +142,7 @@ const MyOrderDetailsScreen = () => {
 
         let icon = null;
         if (isCurrent) {
-          icon = <AppIcons.Bag size={14} color={colors.themeTeal} />;
+          icon = <AppIcons.Bag size={14} color={UI_COLORS.primary} />;
         }
         return {
           id: index.toString(),
@@ -411,371 +393,398 @@ const MyOrderDetailsScreen = () => {
     route.params?.order?.orderId;
   if (!activeOrderId) return <View style={styles.container} />;
 
+  const orderNumber =
+    orderDetails?.header?.orderNumber || selectedItem?.orderNumber;
+  const shipping = orderDetails?.shippingAddress;
+  const otherItems = (orderDetails?.items || []).filter(i => {
+    if (selectedItem?.productId && i.productId)
+      return i.productId !== selectedItem.productId;
+    return i.productName !== selectedItem?.productName;
+  });
+  const lineTotal =
+    selectedItem?.lineTotal ||
+    (selectedItem?.quantity || 1) *
+      (selectedItem?.unitPrice || selectedItem?.price || 0);
+
   return (
-    <SafeAreaView style={styles.detailsContainer}>
-      <StatusBar barStyle="dark-content" backgroundColor={colors.white} />
-      <View style={styles.detailsHeader}>
-        <TouchableOpacity
-          onPress={() => {
-            if (navigation.canGoBack()) {
-              navigation.goBack();
-            } else {
-              navigation.dispatch(
-                CommonActions.reset({
-                  index: 0,
-                  routes: [{ name: 'KshopeHome' }],
-                }),
-              );
-            }
-          }}
-          style={styles.backButton}
-        >
-          <AppIcons.ArrowBack size={24} color={colors.black} />
-        </TouchableOpacity>
-        <Text style={styles.detailsHeaderTitle}>Details</Text>
+    <SafeAreaView style={d.screen}>
+      <StatusBar barStyle="dark-content" backgroundColor={UI_COLORS.card} />
+
+      <View style={d.topContainer}>
+        <View style={d.header}>
+          <TouchableOpacity
+            onPress={() => {
+              if (navigation.canGoBack()) {
+                navigation.goBack();
+              } else {
+                navigation.dispatch(
+                  CommonActions.reset({
+                    index: 0,
+                    routes: [{ name: 'KshopeHome' }],
+                  }),
+                );
+              }
+            }}
+            style={d.backButton}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+          >
+            <AppIcons.Back color={UI_COLORS.textPrimary} size={22} />
+          </TouchableOpacity>
+          <View style={d.headerTitleWrap}>
+            <AppText variant="title">Order details</AppText>
+            {!!orderNumber && (
+              <AppText variant="caption" tone="muted">
+                {orderNumber}
+              </AppText>
+            )}
+          </View>
+        </View>
       </View>
 
       <ScrollView
-        contentContainerStyle={styles.detailsScrollView}
+        contentContainerStyle={d.scrollContent}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        <View style={[styles.detailCard, { marginHorizontal: 16 }]}>
-          <View style={styles.productTopRow}>
-            <View style={styles.productImageContainer}>
+        <View style={d.card}>
+          <View style={d.productRow}>
+            <View style={d.productImageTile}>
               <FallbackImage
                 source={getImageUrl(selectedItem?.featuredImage)}
-                style={styles.productImage}
+                style={d.productImage}
                 resizeMode="cover"
               />
             </View>
-            <View style={styles.productRightInfo}>
-              <Text style={styles.productNameDetail}>
+            <View style={d.productInfo}>
+              <AppText variant="bodyStrong" numberOfLines={2}>
                 {selectedItem?.productName}
-              </Text>
-              <View style={styles.productInfoRow}>
-                <Text style={styles.productQtyText}>
-                  Qty: {selectedItem?.quantity || 1}
-                </Text>
-                <Text style={styles.productPriceText}>
-                  ₹
-                  {(
-                    selectedItem?.lineTotal ||
-                    (selectedItem?.quantity || 1) *
-                      (selectedItem?.unitPrice || selectedItem?.price || 0)
-                  ).toFixed(2)}
-                </Text>
+              </AppText>
+              <View style={d.productMetaRow}>
+                <Badge
+                  tone="neutral"
+                  label={`Qty ${selectedItem?.quantity || 1}`}
+                />
+                <AppText variant="priceLarge">
+                  ₹{lineTotal.toFixed(2)}
+                </AppText>
               </View>
             </View>
           </View>
+
+          <Divider inset={UI_SPACING.lg} />
+
           <TouchableOpacity
-            style={styles.buyAgainBtn}
+            style={d.buyAgainBtn}
+            activeOpacity={0.85}
             onPress={() => setConfirmModal({ visible: true, type: 'reorder' })}
+            accessibilityRole="button"
+            accessibilityLabel="Buy this item again"
           >
-            <Text style={styles.buyAgainText}>Buy again</Text>
+            <MaterialCommunityIcons
+              name="refresh"
+              size={wp('4.6%')}
+              color={UI_COLORS.primary}
+            />
+            <AppText variant="labelStrong" tone="brand">
+              Buy again
+            </AppText>
           </TouchableOpacity>
         </View>
 
-        <View style={[styles.detailCard, { marginHorizontal: 16 }]}>
-          <View style={styles.trackingTopRow}>
-            <View style={styles.trackingLeftInfo}>
-              <View>
-                <Text style={styles.trackingStatusDetail}>
-                  {orderDetails?.header?.orderStatusText ||
-                    selectedItem?.orderStatusText}
-                </Text>
-                <Text style={styles.trackingDateDetail}>
-                  {orderDetails?.header?.orderDate
-                    ? new Date(
-                        orderDetails.header.orderDate,
-                      ).toLocaleDateString()
-                    : ''}
-                </Text>
-              </View>
-            </View>
-            <TouchableOpacity
-              style={styles.trackOrderBtn}
-              onPress={() => setIsTrackOpen(!isTrackOpen)}
-            >
-              <Text style={styles.trackOrderText}>Track Order</Text>
-              {isTrackOpen ? (
-                <AppIcons.ArrowUp size={16} color={colors.themeTeal} />
-              ) : (
-                <AppIcons.ArrowDown size={16} color={colors.themeTeal} />
+        <View style={d.card}>
+          <View style={d.statusRow}>
+            <View style={d.statusInfo}>
+              <AppText variant="micro" tone="faint">
+                ORDER STATUS
+              </AppText>
+              <AppText variant="bodyStrong" numberOfLines={1}>
+                {orderDetails?.header?.orderStatusText ||
+                  selectedItem?.orderStatusText ||
+                  'Order placed'}
+              </AppText>
+              {!!orderDetails?.header?.orderDate && (
+                <AppText variant="caption" tone="muted">
+                  {new Date(
+                    orderDetails.header.orderDate,
+                  ).toLocaleDateString()}
+                </AppText>
               )}
-            </TouchableOpacity>
+            </View>
+
+            {trackingSteps.length > 0 && (
+              <TouchableOpacity
+                style={d.trackBtn}
+                activeOpacity={0.85}
+                onPress={() => setIsTrackOpen(!isTrackOpen)}
+                accessibilityRole="button"
+                accessibilityLabel={
+                  isTrackOpen ? 'Hide order tracking' : 'Track order'
+                }
+              >
+                <AppText variant="labelStrong" tone="brand">
+                  Track
+                </AppText>
+                {isTrackOpen ? (
+                  <AppIcons.ArrowUp size={16} color={UI_COLORS.primary} />
+                ) : (
+                  <AppIcons.ArrowDown size={16} color={UI_COLORS.primary} />
+                )}
+              </TouchableOpacity>
+            )}
           </View>
 
-          {isTrackOpen && (
-            <View style={styles.trackingExpandedContainer}>
-              {trackingSteps.map((step, index) => {
-                const isLast = index === trackingSteps.length - 1;
-                return (
-                  <View key={step.id} style={styles.trackingStepRow}>
-                    <View style={styles.trackingStepLeft}>
-                      {step.isCurrent ? (
-                        <View style={styles.trackingDotCurrentContainer}>
-                          {step.icon}
-                        </View>
-                      ) : step.isCompleted ? (
-                        <View style={styles.trackingDotCompleted} />
-                      ) : (
-                        <View style={styles.trackingDotPending} />
-                      )}
-                      {!isLast && (
-                        <View
-                          style={
-                            step.isCompleted
-                              ? styles.trackingLineCompleted
-                              : styles.trackingLinePending
-                          }
-                        />
-                      )}
+          {isTrackOpen && trackingSteps.length > 0 && (
+            <>
+              <Divider inset={UI_SPACING.lg} dashed />
+              <View style={d.timeline}>
+                {trackingSteps.map((step, index) => {
+                  const isLast = index === trackingSteps.length - 1;
+                  return (
+                    <View key={step.id} style={d.timelineRow}>
+                      <View style={d.timelineRail}>
+                        {step.isCurrent ? (
+                          <View style={d.dotCurrent}>{step.icon}</View>
+                        ) : step.isCompleted ? (
+                          <View style={d.dotDone} />
+                        ) : (
+                          <View style={d.dotPending} />
+                        )}
+                        {!isLast && (
+                          <View
+                            style={
+                              step.isCompleted
+                                ? d.railLineDone
+                                : d.railLinePending
+                            }
+                          />
+                        )}
+                      </View>
+                      <View style={d.timelineBody}>
+                        <AppText
+                          variant="labelStrong"
+                          tone={step.isCurrent ? 'brand' : 'primary'}
+                        >
+                          {step.title}
+                        </AppText>
+                        {!!step.subtitle && (
+                          <AppText variant="caption" tone="muted">
+                            {step.subtitle}
+                          </AppText>
+                        )}
+                        {!!step.time && (
+                          <AppText variant="caption" tone="faint">
+                            {step.time}
+                          </AppText>
+                        )}
+                      </View>
                     </View>
-                    <View style={styles.trackingStepRight}>
-                      <Text
-                        style={
-                          step.isCurrent
-                            ? styles.trackingStepTitleCurrent
-                            : styles.trackingStepTitlePending
-                        }
-                      >
-                        {step.title}
-                      </Text>
-                      <Text style={styles.trackingStepSubtitle}>
-                        {step.subtitle}
-                      </Text>
-                      <Text style={styles.trackingStepTime}>{step.time}</Text>
-                    </View>
-                  </View>
-                );
-              })}
-            </View>
+                  );
+                })}
+              </View>
+            </>
           )}
-
-          <DashedLine />
         </View>
 
-        {orderDetails?.items && orderDetails.items.length > 1 && (
-          <View style={[styles.detailCard, { marginHorizontal: 16 }]}>
-            <Text style={styles.otherProductsTitle}>
-              Other Products in this order
-            </Text>
+        {otherItems.length > 0 && (
+          <View style={d.card}>
+            <View style={d.sectionHeading}>
+              <AppText variant="heading">Also in this order</AppText>
+              <Badge
+                tone="neutral"
+                label={`${otherItems.length} ${
+                  otherItems.length === 1 ? 'item' : 'items'
+                }`}
+              />
+            </View>
+            <Divider inset={UI_SPACING.lg} />
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.otherProductsRow}
+              contentContainerStyle={d.thumbRow}
             >
-              {orderDetails.items
-                .filter(i => {
-                  if (selectedItem?.productId && i.productId)
-                    return i.productId !== selectedItem.productId;
-                  return i.productName !== selectedItem?.productName;
-                })
-                .map(otherItem => (
-                  <TouchableOpacity
-                    key={otherItem.orderItemId}
-                    onPress={() => setSelectedItem(otherItem)}
-                  >
-                    <FallbackImage
-                      source={getImageUrl(otherItem.featuredImage)}
-                      style={styles.otherProductItemImage}
-                      resizeMode="contain"
-                    />
-                  </TouchableOpacity>
-                ))}
+              {otherItems.map(otherItem => (
+                <TouchableOpacity
+                  key={otherItem.orderItemId}
+                  style={d.thumb}
+                  activeOpacity={0.85}
+                  onPress={() => setSelectedItem(otherItem)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`View ${otherItem.productName}`}
+                >
+                  <FallbackImage
+                    source={getImageUrl(otherItem.featuredImage)}
+                    style={d.thumbImage}
+                    resizeMode="cover"
+                  />
+                </TouchableOpacity>
+              ))}
             </ScrollView>
-            <View style={styles.orderIdContainer}>
-              <Text style={styles.orderIdLabelDetail}>
-                Order ID :{' '}
-                {orderDetails?.header?.orderNumber || selectedItem?.orderNumber}
-              </Text>
+          </View>
+        )}
+
+        {!!orderNumber && (
+          <View style={d.card}>
+            <View style={d.metaRow}>
+              <AppText variant="micro" tone="faint">
+                ORDER ID
+              </AppText>
+              <AppText variant="labelStrong">{orderNumber}</AppText>
             </View>
           </View>
         )}
 
-        <View style={[styles.detailCard, { marginHorizontal: 16 }]}>
-          <View style={styles.deliveryRow}>
-            <View style={styles.deliveryPinContainer}>
-              <AppIcons.Location size={14} color={colors.themeTeal} />
+        {!!shipping && (
+          <View style={d.card}>
+            <View style={d.addressRow}>
+              <IconDisc size={wp('9.5%')} tone="ink">
+                <AppIcons.Location
+                  size={wp('4.6%')}
+                  color={UI_COLORS.ink}
+                />
+              </IconDisc>
+              <View style={d.addressBody}>
+                <View style={d.addressHeadingRow}>
+                  <AppText variant="micro" tone="muted">
+                    DELIVERED TO
+                  </AppText>
+                  <Badge
+                    tone="ink"
+                    label={(shipping.addressType || 'Home').toUpperCase()}
+                  />
+                </View>
+                <AppText variant="label" tone="secondary">
+                  {`${shipping.custName}, ${shipping.addLine1}, ${
+                    shipping.pincodeAreaName || ''
+                  }, ${shipping.pincode}`}
+                </AppText>
+              </View>
             </View>
-            <Text style={styles.deliveryToText}>Delivered to :</Text>
-            <Text style={styles.deliveryTypeText}>
-              {orderDetails?.shippingAddress?.addressType || 'Home'}
-            </Text>
           </View>
-          <Text style={styles.addressText}>
-            {orderDetails?.shippingAddress
-              ? `${orderDetails.shippingAddress.custName}, ${
-                  orderDetails.shippingAddress.addLine1
-                }, ${orderDetails.shippingAddress.pincodeAreaName || ''}, ${
-                  orderDetails.shippingAddress.pincode
-                }`
-              : ''}
-          </Text>
-        </View>
+        )}
 
         {orderDetails?.header && (
-          <View style={{ marginHorizontal: 16, marginBottom: 16 }}>
-            <BillSection
-              billCalculations={{
-                itemTotal:
-                  orderDetails.header.subTotal ??
-                  orderDetails.header.subtotal ??
-                  orderDetails.header.itemTotal ??
-                  orderDetails.header.item_total ??
-                  0,
-                savings:
-                  orderDetails.header.discountTotal ??
-                  orderDetails.header.productDiscount ??
-                  orderDetails.header.product_discount ??
-                  orderDetails.header.discountAmount ??
-                  orderDetails.header.savings ??
-                  orderDetails.header.totalDiscount ??
-                  orderDetails.header.total_discount ??
-                  0,
-                deliveryCharge:
-                  orderDetails.header.deliveryCharge ??
-                  orderDetails.header.deliveryAmount ??
-                  orderDetails.header.delivery_amount ??
-                  orderDetails.header.shippingFee ??
-                  0,
-                totalTax:
-                  orderDetails.header.taxTotal ??
-                  orderDetails.header.totalTax ??
-                  orderDetails.header.taxAmount ??
-                  orderDetails.header.tax_total ??
-                  0,
-                couponDiscount:
-                  orderDetails.header.couponDiscount ??
-                  orderDetails.header.couponAmount ??
-                  orderDetails.header.appliedCouponAmount ??
-                  0,
-                giftCardAmount:
-                  orderDetails.header.giftCardAmount ??
-                  orderDetails.header.giftcardValue ??
-                  orderDetails.header.appliedGiftCardAmount ??
-                  0,
-                bcoinsAppliedValue:
-                  orderDetails.header.bCoinAppliedValue ??
-                  orderDetails.header.bcoinsAppliedValue ??
-                  orderDetails.header.appliedBcoins ??
-                  orderDetails.header.bcoinValue ??
-                  0,
-                totalSavings:
-                  orderDetails.header.discountTotal ??
-                  orderDetails.header.totalDiscount ??
-                  orderDetails.header.total_discount ??
-                  orderDetails.header.totalSavings ??
-                  orderDetails.header.productDiscount ??
-                  orderDetails.header.discountAmount ??
-                  0,
-                toPay:
-                  orderDetails.header.grandTotal ??
-                  orderDetails.header.grand_total ??
-                  orderDetails.header.totalAmount ??
-                  orderDetails.header.total_amount ??
-                  orderDetails.header.toPay ??
-                  0,
-              }}
-            />
-          </View>
+          <BillSection
+            bordered
+            billCalculations={{
+              itemTotal:
+                orderDetails.header.subTotal ??
+                orderDetails.header.subtotal ??
+                orderDetails.header.itemTotal ??
+                orderDetails.header.item_total ??
+                0,
+              savings:
+                orderDetails.header.discountTotal ??
+                orderDetails.header.productDiscount ??
+                orderDetails.header.product_discount ??
+                orderDetails.header.discountAmount ??
+                orderDetails.header.savings ??
+                orderDetails.header.totalDiscount ??
+                orderDetails.header.total_discount ??
+                0,
+              deliveryCharge:
+                orderDetails.header.deliveryCharge ??
+                orderDetails.header.deliveryAmount ??
+                orderDetails.header.delivery_amount ??
+                orderDetails.header.shippingFee ??
+                0,
+              totalTax:
+                orderDetails.header.taxTotal ??
+                orderDetails.header.totalTax ??
+                orderDetails.header.taxAmount ??
+                orderDetails.header.tax_total ??
+                0,
+              couponDiscount:
+                orderDetails.header.couponDiscount ??
+                orderDetails.header.couponAmount ??
+                orderDetails.header.appliedCouponAmount ??
+                0,
+              giftCardAmount:
+                orderDetails.header.giftCardAmount ??
+                orderDetails.header.giftcardValue ??
+                orderDetails.header.appliedGiftCardAmount ??
+                0,
+              bcoinsAppliedValue:
+                orderDetails.header.bCoinAppliedValue ??
+                orderDetails.header.bcoinsAppliedValue ??
+                orderDetails.header.appliedBcoins ??
+                orderDetails.header.bcoinValue ??
+                0,
+              totalSavings:
+                orderDetails.header.discountTotal ??
+                orderDetails.header.totalDiscount ??
+                orderDetails.header.total_discount ??
+                orderDetails.header.totalSavings ??
+                orderDetails.header.productDiscount ??
+                orderDetails.header.discountAmount ??
+                0,
+              toPay:
+                orderDetails.header.grandTotal ??
+                orderDetails.header.grand_total ??
+                orderDetails.header.totalAmount ??
+                orderDetails.header.total_amount ??
+                orderDetails.header.toPay ??
+                0,
+            }}
+          />
         )}
 
         {canRetryPayment && (
           <TouchableOpacity
             onPress={handleRetryPayment}
-            style={{ marginHorizontal: 16, marginBottom: 16 }}
+            style={d.retryBtn}
+            activeOpacity={0.85}
+            accessibilityRole="button"
+            accessibilityLabel="Retry payment"
           >
-            <LinearGradient
-              colors={['#FF5200', '#FF7A3D', '#FF9B5E']}
-              start={{ x: 0, y: 0.5 }}
-              end={{ x: 0.5, y: 1 }}
-              style={{
-                borderRadius: 30,
-                flexDirection: 'row',
-                justifyContent: 'center',
-                alignItems: 'center',
-                height: 48,
-              }}
-            >
-              <AppIcons.ArrowUpBold color={colors.white} size={20} />
-              <Text
-                style={[
-                  homeStyles.reviewFilterText,
-                  homeStyles.reviewFilterTextActive,
-                  { marginLeft: 4 },
-                ]}
-              >
-                Retry Payment
-              </Text>
-            </LinearGradient>
+            <AppIcons.ArrowUpBold color={UI_COLORS.onPrimary} size={18} />
+            <AppText variant="cta" tone="onDark">
+              Retry payment
+            </AppText>
           </TouchableOpacity>
         )}
       </ScrollView>
 
-      <View style={styles.fixedBottomBar}>
-        {isCancelled ? (
-          <View
-            style={[
-              styles.returnBtn,
-              { borderColor: '#FF4444', backgroundColor: '#FFF0F0' },
-            ]}
-          >
-            <AppIcons.Close size={20} color="#FF4444" />
-            <Text style={[styles.returnBtnText, { color: '#FF4444' }]}>
-              Cancelled
-            </Text>
-          </View>
-        ) : canCancel ? (
-          <TouchableOpacity
-            style={styles.returnBtn}
-            onPress={() => setConfirmModal({ visible: true, type: 'cancel' })}
-          >
-            <AppIcons.Close size={20} color={colors.themeTeal} />
-            <Text style={[styles.returnBtnText, { color: colors.themeTeal }]}>
-              Cancel
-            </Text>
-          </TouchableOpacity>
-        ) : null}
-
-        {canReturn && (
-          <LinearGradient
-            colors={[colors.themeTeal, colors.themeDarkTeal]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={[
-              homeStyles.reviewFilterPillActiveGradient,
-              {
-                borderRadius: 39,
-                flexDirection: 'row',
-                flex: 1,
-                justifyContent: 'center',
-                alignItems: 'center',
-                height: 48,
-                marginLeft: canCancel || isCancelled ? 10 : 0,
-              },
-            ]}
-          >
-            <AppIcons.ArrowDownBold color={colors.white} size={20} />
+      {(isCancelled || canCancel || canReturn) && (
+        <View style={d.bottomBar}>
+          {isCancelled ? (
+            <View style={[d.barGhostBtn, d.barGhostDanger]}>
+              <AppIcons.Close size={18} color={UI_COLORS.danger} />
+              <AppText variant="cta" tone="danger">
+                Cancelled
+              </AppText>
+            </View>
+          ) : canCancel ? (
             <TouchableOpacity
-              onPress={() => setConfirmModal({ visible: true, type: 'return' })}
-              style={{ marginLeft: 4 }}
+              style={d.barGhostBtn}
+              activeOpacity={0.85}
+              onPress={() => setConfirmModal({ visible: true, type: 'cancel' })}
+              accessibilityRole="button"
+              accessibilityLabel="Cancel this order"
             >
-              <Text
-                style={[
-                  homeStyles.reviewFilterText,
-                  homeStyles.reviewFilterTextActive,
-                ]}
-              >
-                Return Item
-              </Text>
+              <AppIcons.Close size={18} color={UI_COLORS.textPrimary} />
+              <AppText variant="cta">Cancel</AppText>
             </TouchableOpacity>
-          </LinearGradient>
-        )}
-      </View>
+          ) : null}
+
+          {canReturn && (
+            <TouchableOpacity
+              style={d.barSolidBtn}
+              activeOpacity={0.85}
+              onPress={() => setConfirmModal({ visible: true, type: 'return' })}
+              accessibilityRole="button"
+              accessibilityLabel="Return this item"
+            >
+              <AppIcons.ArrowDownBold color={UI_COLORS.onPrimary} size={18} />
+              <AppText variant="cta" tone="onDark">
+                Return item
+              </AppText>
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
 
       <ConfirmationModal
         visible={confirmModal.visible}
@@ -807,7 +816,7 @@ const MyOrderDetailsScreen = () => {
             ? 'Add to Cart'
             : 'Return'
         }
-        themeColor={colors.themeTeal}
+        themeColor={UI_COLORS.primary}
       />
 
       <StatusModal

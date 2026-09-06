@@ -100,6 +100,7 @@ const CartScreen = () => {
     datesList,
     slotsByDate,
     addresses,
+    selectedAddress,
     onSelectAddress,
     addressConfirmationData,
     setAddressConfirmationData,
@@ -126,7 +127,7 @@ const CartScreen = () => {
 
   const scrollViewRef = useRef<ScrollView>(null);
 
-  const selectedAddress = addresses.find(a => a.selected);
+
 
   const handleUpdateQty = async (item: any, newQty: number) => {
     if (newQty < 1) {

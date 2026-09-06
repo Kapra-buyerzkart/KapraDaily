@@ -62,6 +62,41 @@ export default StyleSheet.create({
     paddingTop: SPACE.base,
     paddingBottom: hp('6%'),
   },
+  listContentWithBar: {
+    paddingBottom: hp('16%'),
+  },
+
+  confirmBar: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingHorizontal: GUTTER,
+    paddingTop: SPACE.md,
+    paddingBottom: SPACE.md,
+    backgroundColor: SURFACE_BASE,
+    borderTopWidth: HAIRLINE,
+    borderTopColor: RULE,
+  },
+  confirmButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: PRIMARY,
+    borderRadius: RADIUS.md,
+    paddingVertical: hp('1.8%'),
+  },
+  confirmButtonText: {
+    marginLeft: SPACE.sm,
+    ...UI_TYPE.heading,
+    color: SURFACE_BASE,
+  },
+  confirmHint: {
+    marginBottom: SPACE.sm,
+    ...UI_TYPE.caption,
+    fontFamily: Fonts.gilroyMedium,
+    color: INK_MUTED,
+  },
 
   addRow: {
     flexDirection: 'row',

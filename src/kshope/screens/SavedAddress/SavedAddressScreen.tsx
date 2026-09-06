@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { View, Text, TouchableOpacity, FlatList, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -199,6 +199,11 @@ const SavedAddressScreen: React.FC = () => {
     setAddressConfirmationData,
   } = useAddresses();
 
+  const selectedItem = useMemo(
+    () => addresses.find((a: any) => a.selected),
+    [addresses],
+  );
+
   useFocusEffect(
     useCallback(() => {
       refreshAddresses();
@@ -218,9 +223,7 @@ const SavedAddressScreen: React.FC = () => {
     ({ item }: { item: any }) => (
       <AddressCard
         item={item}
-        onPress={() =>
-          item.selected ? goToEditor(item.raw) : onSelectAddress(item.id, false)
-        }
+        onPress={() => onSelectAddress(item.id, false)}
         onEdit={() => goToEditor(item.raw)}
         onMenu={() => onThreeDotsClicked(item.id)}
         onDelete={() => onDeleteClicked(item.id)}
@@ -282,6 +285,12 @@ const SavedAddressScreen: React.FC = () => {
     [isLoading],
   );
 
+  const onConfirmSelection = useCallback(() => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    }
+  }, [navigation]);
+
   return (
     <SafeAreaView style={styles.mainContainer}>
       <View style={styles.headerContainer}>
@@ -311,10 +320,40 @@ const SavedAddressScreen: React.FC = () => {
             colors={[PRIMARY]}
           />
         }
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[
+          styles.listContent,
+          !!selectedItem && styles.listContentWithBar,
+        ]}
         ListHeaderComponent={listHeader}
         ListEmptyComponent={listEmpty}
       />
+
+      {!!selectedItem && (
+        <View style={styles.confirmBar}>
+          <Text
+            style={styles.confirmHint}
+            maxFontSizeMultiplier={MAX_FONT_SCALE}
+            numberOfLines={1}
+          >
+            Delivering to {selectedItem.type} · {selectedItem.pin}
+          </Text>
+          <TouchableOpacity
+            activeOpacity={0.9}
+            accessibilityRole="button"
+            accessibilityLabel="Confirm selected address"
+            onPress={onConfirmSelection}
+            style={styles.confirmButton}
+          >
+            <Ionicons name="checkmark-circle" size={ICON.type} color="#FFFFFF" />
+            <Text
+              style={styles.confirmButtonText}
+              maxFontSizeMultiplier={MAX_FONT_SCALE}
+            >
+              Deliver to this address
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       <AddressConfirmationModal
         visible={!!addressConfirmationData}

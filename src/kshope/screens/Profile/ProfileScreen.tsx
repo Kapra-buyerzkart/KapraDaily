@@ -257,7 +257,7 @@ const ProfileScreen: React.FC = () => {
   const offersItems: MenuItem[] = [
     {
       key: 'smart-point',
-      label: 'Smart point',
+      label: 'Gift Cards',
       icon: <Ionicons name="wallet-outline" color={INK} size={ICON_SIZE} />,
       onPress: () => setActiveOfferModal('smart'),
     },

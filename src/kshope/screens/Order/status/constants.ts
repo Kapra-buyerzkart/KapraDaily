@@ -7,7 +7,6 @@ export const SUCCESS_COPY = {
   statusTitle: 'Order placed',
   statusSubtitle:
     'Thank you for shopping 48hrs Deals. Your order is confirmed and being packed.',
-  assuranceNote: 'Delivery is on the way within the 48 hour promise.',
   summaryTitle: 'Order summary',
   stepsTitle: 'What happens next',
   supportTitle: 'Need help with this order?',
@@ -33,7 +32,7 @@ export const SUCCESS_STEPS: StatusBullet[] = [
   {
     id: 'delivered',
     icon: 'check-circle',
-    title: 'Delivered in 48 hours',
+    title: 'Delivery to your door step',
     description: 'Track every step from the My Orders section.',
   },
 ];

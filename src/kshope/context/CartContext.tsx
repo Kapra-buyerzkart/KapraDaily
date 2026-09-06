@@ -1,10 +1,11 @@
 import React, { createContext, useContext, useState, useMemo, ReactNode, useCallback, useEffect } from 'react';
 import { getCartApi, getCartSummaryApi, clearCartApi } from '../api/services/cartService';
-import { getAddressListApi, deleteAddressApi } from '../api/services/addressService';
+import { getAddressListApi, deleteAddressApi, updateAddressApi } from '../api/services/addressService';
 import { Alert } from 'react-native';
 import Toast from 'react-native-simple-toast';
 import CONFIG from '../globals/config';
 import { useUser } from './UserContext';
+import { getSelectedAddressId, setSelectedAddressId, setKshopeAreaId } from '../globals/storage';
 
 export interface CartItem {
     cartItemId: number;
@@ -35,6 +36,9 @@ interface CartContextType {
     onThreeDotsClicked: (id: string | number) => void;
     onCloseThreeDots: () => void;
     onDeleteClicked: (id: string | number) => void;
+    selectedAddress: any | null;
+    selectedAddressId: string | null;
+    clearSelectedAddress: () => Promise<void>;
     addressConfirmationData: any;
     setAddressConfirmationData: (data: any) => void;
     [key: string]: any;
@@ -50,7 +54,19 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [addresses, setAddresses] = useState<any[]>([]);
     const [isLoadingAddresses, setIsLoadingAddresses] = useState(false);
     const [addressConfirmationData, setAddressConfirmationData] = useState<any>(null);
+    const [selectedAddressId, setSelectedAddressIdState] = useState<string | null>(null);
+    const selectedAddressIdRef = React.useRef<string | null>(null);
     const cartSummaryRef = React.useRef<any>(null);
+
+    const persistSelection = useCallback(async (id: string | number | null, pincodeAreaId?: number | null) => {
+        const normalized = id === null || id === undefined ? null : String(id);
+        selectedAddressIdRef.current = normalized;
+        setSelectedAddressIdState(normalized);
+        if (pincodeAreaId !== undefined && pincodeAreaId !== null) {
+            await setKshopeAreaId(Number(pincodeAreaId)).catch(() => { });
+        }
+        await setSelectedAddressId(normalized).catch(() => { });
+    }, []);
 
     const loadCart = useCallback(async () => {
         try {
@@ -123,6 +139,9 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         try {
             setIsLoadingAddresses(true);
             const response = await getAddressListApi();
+            if (__DEV__) {
+                console.log('[kshope][addr] raw response', JSON.stringify(response)?.slice(0, 400));
+            }
             if (response && response.success && Array.isArray(response.data)) {
                 const formatted = response.data.map((addr: any, index: number) => {
                     const actualId = addr.custAddressId ?? addr.addressId ?? addr.id ?? index;
@@ -134,20 +153,32 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                         address: [addr.addLine1, addr.addLine2, addr.landmark, addr.pincodeAreaName || addr.areaName].filter(Boolean).join(', '),
                         phone: addr.phone || '',
                         pin: addr.pincode || '',
-                        selected: addr.isDefaultShippingAddress || false,
+                        selected: false,
                         threeDotsClicked: false,
                         pincodeAreaId: addr.pincodeAreaId,
                         raw: addr,
                     };
                 });
-                setAddresses(formatted);
+
+                const storedId = selectedAddressIdRef.current ?? await getSelectedAddressId();
+                const chosen =
+                    formatted.find((a: any) => String(a.id) === String(storedId)) ||
+                    formatted.find((a: any) => a.raw?.isDefaultShippingAddress) ||
+                    formatted[0] ||
+                    null;
+
+                if (__DEV__) {
+                    console.log('[kshope][addr] fetched', formatted.length, 'storedId=', storedId, 'chosen=', chosen?.id, chosen?.address);
+                }
+                setAddresses(formatted.map((a: any) => ({ ...a, selected: !!chosen && a.id === chosen.id })));
+                await persistSelection(chosen ? chosen.id : null, chosen?.pincodeAreaId);
             }
         } catch (error) {
             console.error('Error refreshing addresses:', error);
         } finally {
             setIsLoadingAddresses(false);
         }
-    }, []);
+    }, [persistSelection]);
 
     const onSelectAddress = useCallback((id: string | number, showConfirmation: boolean) => {
         setAddresses(prev =>
@@ -158,6 +189,24 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             }))
         );
         const selectedAddr = addresses.find(a => a.id === id);
+        void persistSelection(id, selectedAddr?.pincodeAreaId);
+
+        if (selectedAddr?.raw && !selectedAddr.raw.isDefaultShippingAddress) {
+            updateAddressApi(id, {
+                ...selectedAddr.raw,
+                isDefaultShippingAddress: true,
+                isDefaultBillingAddress: true,
+            })
+                .then(() => {
+                    setAddresses(prev =>
+                        prev.map(addr => ({
+                            ...addr,
+                            raw: { ...addr.raw, isDefaultShippingAddress: addr.id === id },
+                        }))
+                    );
+                })
+                .catch(err => console.error('Failed to persist default address', err));
+        }
         if (selectedAddr && showConfirmation) {
             setAddressConfirmationData({
                 pincode: selectedAddr.pin,
@@ -166,7 +215,11 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 isPlacingOrder: false,
             });
         }
-    }, [addresses]);
+    }, [addresses, persistSelection]);
+
+    const clearSelectedAddress = useCallback(async () => {
+        await persistSelection(null);
+    }, [persistSelection]);
 
     const onThreeDotsClicked = useCallback((id: string | number) => {
         setAddresses(prev =>
@@ -200,6 +253,9 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                             const response = await deleteAddressApi(id);
                             if (response && response.success !== false) {
                                 Toast.show('Address deleted', Toast.SHORT);
+                                if (String(selectedAddressIdRef.current) === String(id)) {
+                                    await persistSelection(null);
+                                }
                                 await fetchAddresses();
                             } else {
                                 Toast.show(response?.message || 'Failed to delete', Toast.SHORT);
@@ -212,16 +268,31 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 },
             ]
         );
-    }, [fetchAddresses]);
+    }, [fetchAddresses, persistSelection]);
+
+    useEffect(() => {
+        getSelectedAddressId().then(id => {
+            if (id && !selectedAddressIdRef.current) {
+                selectedAddressIdRef.current = id;
+                setSelectedAddressIdState(id);
+            }
+        }).catch(() => { });
+    }, []);
 
     useEffect(() => {
         if (profile) {
+            fetchAddresses();
             loadCart();
         } else {
             setCartItems([]);
             setCartSummary(null);
         }
-    }, [profile, loadCart]);
+    }, [profile, loadCart, fetchAddresses]);
+
+    const selectedAddress = useMemo(
+        () => addresses.find(a => a.selected) || null,
+        [addresses]
+    );
 
     const cartCount = useMemo(() => cartItems.reduce((acc, item) => acc + item.quantity, 0), [cartItems]);
     const cartTotal = useMemo(() => cartSummary?.grandTotal || 0, [cartSummary]);
@@ -243,6 +314,9 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             onThreeDotsClicked,
             onCloseThreeDots,
             onDeleteClicked,
+            selectedAddress,
+            selectedAddressId,
+            clearSelectedAddress,
             addressConfirmationData,
             setAddressConfirmationData,
             refreshCart: loadCart,

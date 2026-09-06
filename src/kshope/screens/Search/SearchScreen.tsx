@@ -225,7 +225,7 @@ const SearchScreen = () => {
           style={styles.searchInput}
           value={searchTerm}
           onChangeText={setSearchTerm}
-          autoFocus={!(catId || attrValueId)}
+          autoFocus={!(catId || attrValueId || query)}
         />
         {searchTerm.length > 0 && (
           <TouchableOpacity

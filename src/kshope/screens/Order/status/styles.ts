@@ -44,6 +44,14 @@ export const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: UI_COLORS.border,
   },
+  topBarBack: {
+    width: wp('9%'),
+    height: wp('9%'),
+    borderRadius: wp('4.5%'),
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: UI_COLORS.well,
+  },
   topBarCopy: {
     flex: 1,
   },

@@ -1,19 +1,25 @@
-import React from 'react';
+import React, { useContext, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { AppContext } from '../../context/appContext';
 
 const KshopeUnavailable: React.FC = () => {
-  const navigation = useNavigation();
+  const { logout } = useContext(AppContext) || {};
+  const forcedRef = useRef(false);
+
+  useEffect(() => {
+    if (forcedRef.current) return;
+    forcedRef.current = true;
+    logout?.(true);
+  }, [logout]);
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>48hrs Deals is unavailable</Text>
+      <Text style={styles.title}>Your session has expired</Text>
       <Text style={styles.body}>
-        We could not open your 48hrs Deals account right now. Please sign out and
-        sign in again, or try later.
+        Please log in again to continue to 48hrs Deals.
       </Text>
-      <TouchableOpacity style={styles.button} onPress={() => navigation.goBack()}>
-        <Text style={styles.buttonLabel}>Go back</Text>
+      <TouchableOpacity style={styles.button} onPress={() => logout?.(true)}>
+        <Text style={styles.buttonLabel}>Log in again</Text>
       </TouchableOpacity>
     </View>
   );

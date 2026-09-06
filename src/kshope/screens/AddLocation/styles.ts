@@ -255,6 +255,10 @@ export default StyleSheet.create({
     paddingHorizontal: UI_SPACING.xs,
     backgroundColor: UI_COLORS.card,
     ...UI_TYPE.micro,
+    lineHeight: 16,
+    includeFontPadding: false,
+    textAlignVertical: 'center',
+    paddingVertical: 1,
     color: UI_COLORS.textMuted,
   },
   fieldLabelActive: {
@@ -302,6 +306,7 @@ export default StyleSheet.create({
   },
   areaLabel: {
     zIndex: 7000,
+    // elevation: 7,
   },
   dropdown: {
     minHeight: FIELD_HEIGHT,
@@ -335,22 +340,6 @@ export default StyleSheet.create({
     color: UI_COLORS.textFaint,
   },
 
-  deliveryNote: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: UI_SPACING.md,
-    paddingVertical: UI_SPACING.sm,
-    paddingHorizontal: UI_SPACING.md,
-    marginTop: UI_SPACING.md,
-    marginBottom: UI_SPACING.md,
-    borderRadius: UI_RADIUS.productCard,
-    borderWidth: HAIRLINE,
-    borderColor: UI_COLORS.border,
-    backgroundColor: UI_COLORS.well,
-  },
-  deliveryCopy: {
-    flex: 1,
-  },
 
   footer: {
     paddingHorizontal: UI_GUTTER,

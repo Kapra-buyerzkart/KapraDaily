@@ -119,6 +119,10 @@ const ArrowLeft = ({ size = defaultSize, color = colors.primary, style }: IconPr
     <MaterialIcons name="arrow-back" size={size} color={color} style={style} />
 );
 
+const ChevronDown = ({ size = defaultSize, color = colors.primary, style }: IconProps) => (
+    <Feather name="chevron-down" size={size} color={color} style={style} />
+);
+
 const ChevronRight = ({ size = defaultSize, color = colors.primary, style }: IconProps) => (
     <Entypo name="chevron-right" size={size} color={color} style={style} />
 );
@@ -288,6 +292,7 @@ export const AppIcons = {
     ViewList,
     Check,
     ArrowLeft,
+    ChevronDown,
     ChevronRight,
     History,
     NavIcon,

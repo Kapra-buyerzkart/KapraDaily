@@ -21,7 +21,7 @@ interface Props {
   value: Date;
   onChange: (next: Date) => void;
   onCancel: () => void;
-  onConfirm: () => void;
+  onConfirm: (next: Date) => void;
 }
 
 const DobSheet: React.FC<Props> = ({
@@ -30,49 +30,70 @@ const DobSheet: React.FC<Props> = ({
   onChange,
   onCancel,
   onConfirm,
-}) => (
-  <Modal
-    visible={visible}
-    transparent
-    animationType="slide"
-    onRequestClose={onCancel}
-  >
-    <View style={styles.container}>
-      <TouchableWithoutFeedback onPress={onCancel}>
-        <View style={styles.backdrop} />
-      </TouchableWithoutFeedback>
+}) => {
+  if (Platform.OS === 'android') {
+    if (!visible) return null;
+    return (
+      <DateTimePicker
+        value={value}
+        mode="date"
+        display="spinner"
+        maximumDate={new Date()}
+        onChange={(event, selected) => {
+          if (event.type === 'set' && selected) onConfirm(selected);
+          else onCancel();
+        }}
+      />
+    );
+  }
 
-      <View style={styles.sheet}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={onCancel} style={styles.action}>
-            <AppText variant="label" tone="muted">
-              Cancel
-            </AppText>
-          </TouchableOpacity>
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      onRequestClose={onCancel}
+    >
+      <View style={styles.container}>
+        <TouchableWithoutFeedback onPress={onCancel}>
+          <View style={styles.backdrop} />
+        </TouchableWithoutFeedback>
 
-          <AppText variant="heading">Select Date of Birth</AppText>
+        <View style={styles.sheet}>
+          <View style={styles.header}>
+            <TouchableOpacity onPress={onCancel} style={styles.action}>
+              <AppText variant="label" tone="muted">
+                Cancel
+              </AppText>
+            </TouchableOpacity>
 
-          <TouchableOpacity onPress={onConfirm} style={styles.action}>
-            <AppText variant="labelStrong" tone="brand">
-              Done
-            </AppText>
-          </TouchableOpacity>
-        </View>
+            <AppText variant="heading">Select Date of Birth</AppText>
 
-        <View style={styles.picker}>
-          <DateTimePicker
-            value={value}
-            mode="date"
-            display="spinner"
-            maximumDate={new Date()}
-            onChange={(_event, selected) => selected && onChange(selected)}
-            textColor={UI_COLORS.textPrimary}
-          />
+            <TouchableOpacity
+              onPress={() => onConfirm(value)}
+              style={styles.action}
+            >
+              <AppText variant="labelStrong" tone="brand">
+                Done
+              </AppText>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.picker}>
+            <DateTimePicker
+              value={value}
+              mode="date"
+              display="spinner"
+              maximumDate={new Date()}
+              onChange={(_event, selected) => selected && onChange(selected)}
+              textColor={UI_COLORS.textPrimary}
+            />
+          </View>
         </View>
       </View>
-    </View>
-  </Modal>
-);
+    </Modal>
+  );
+};
 
 export default React.memo(DobSheet);
 

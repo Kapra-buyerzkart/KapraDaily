@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { useUser } from '../../../../context/UserContext';
 import { useCart } from '../../../../context/CartContext';
 import { getHomepageData } from '../../../../api/services/homeService';
@@ -55,7 +56,7 @@ const FALLBACK_HEADER_ITEMS: HeaderItem[] = HEADER_CIRCLES.map(tile => ({
 
 export const useHomeData = () => {
   const { profile } = useUser();
-  const { addresses, fetchAddresses } = useCart();
+  const { fetchAddresses, selectedAddress: activeAddress } = useCart();
 
   const [homeData, setHomeData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -84,19 +85,20 @@ export const useHomeData = () => {
     fetchData();
   }, [fetchData]);
 
-  useEffect(() => {
-    fetchAddresses();
-  }, [fetchAddresses]);
+  useFocusEffect(
+    useCallback(() => {
+      fetchAddresses();
+    }, [fetchAddresses]),
+  );
 
   const selectedAddress = useMemo(() => {
-    if (!Array.isArray(addresses) || addresses.length === 0) return null;
-    const chosen =
-      addresses.find(a => a.selected) ||
-      addresses.find(a => a.raw?.isDefaultShippingAddress);
-    if (!chosen) return null;
-    const label = [chosen.type, chosen.address].filter(Boolean).join(' · ');
+    if (__DEV__) {
+      console.log('[kshope][home] activeAddress =', activeAddress?.id, activeAddress?.address);
+    }
+    if (!activeAddress) return null;
+    const label = [activeAddress.type, activeAddress.address].filter(Boolean).join(' · ');
     return label || null;
-  }, [addresses]);
+  }, [activeAddress]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);

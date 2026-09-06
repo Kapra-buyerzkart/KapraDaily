@@ -90,6 +90,7 @@ const OrderFailedScreen: React.FC = () => {
           title={FAILED_COPY.topBarTitle}
           subtitle={FAILED_COPY.topBarSubtitle}
           statusLabel={FAILED_COPY.statusLabel}
+          onBack={handleBackToHome}
           tone="danger"
         />
       </SafeAreaView>

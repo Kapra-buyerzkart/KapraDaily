@@ -17,7 +17,7 @@ export const useOffers = (deliveryHook: any, addressHook: any, cartSummary: any,
     const [appliedCouponCode, setAppliedCouponCode] = useState<string | null>(null);
     const [appliedGiftCardCode, setAppliedGiftCardCode] = useState<string | null>(null);
 
-    const selectedAddress = addressHook.addresses.find((a: any) => a.selected);
+    const selectedAddress = addressHook.selectedAddress;
 
     const fetchOfferData = useCallback(async () => {
         try {

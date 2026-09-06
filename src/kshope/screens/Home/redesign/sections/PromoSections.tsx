@@ -78,6 +78,7 @@ export const BrandsSpotlight: React.FC<PressHandlers> = ({
       contentContainerStyle={styles.brandList}
       renderItem={({ item }) => (
         <TouchableOpacity
+          testID={`brand-tile-${item.id}`}
           style={styles.brandCard}
           onPress={() => onPressBrandItem?.(item)}
         >

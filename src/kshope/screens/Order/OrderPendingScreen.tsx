@@ -52,6 +52,7 @@ const OrderPendingScreen: React.FC = () => {
           title={PENDING_COPY.topBarTitle}
           subtitle={PENDING_COPY.topBarSubtitle}
           statusLabel={PENDING_COPY.statusLabel}
+          onBack={handleBackToHome}
           tone="brand"
           pulse
         />

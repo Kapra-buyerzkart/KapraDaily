@@ -245,8 +245,9 @@ const EditProfileScreen: React.FC = () => {
         value={tempDate}
         onChange={setTempDate}
         onCancel={() => setShowDatePicker(false)}
-        onConfirm={() => {
-          setDob(tempDate);
+        onConfirm={next => {
+          setDob(next);
+          setTempDate(next);
           setShowDatePicker(false);
         }}
       />

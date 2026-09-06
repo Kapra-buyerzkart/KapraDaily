@@ -76,7 +76,7 @@ const SaveMoneySection: React.FC<SaveMoneySectionProps> = ({
         <OfferRow
           iconName="gift-outline"
           iconTone="ink"
-          title="Smart Point"
+          title="Gift Cards"
           subtitle="View all gift cards"
           isApplied={!!appliedGiftCardCode}
           appliedLabel={appliedGiftCardCode}

@@ -144,17 +144,43 @@ const HomeRedesignScreen: React.FC = () => {
   const openBrand = useCallback(
     (brand: any) => {
       const raw = brand?.raw;
-      const attrValueId = raw?.attrValueId ?? raw?.AttrValueId;
-      if (attrValueId !== undefined && attrValueId !== null) {
-        openSearch({
-          attrValueId,
-          catName: raw?.brandName || raw?.BrandName || 'Brand',
-        });
+      const brandName = String(
+        raw?.brandName ||
+          raw?.BrandName ||
+          raw?.bannerName ||
+          raw?.BannerName ||
+          raw?.name ||
+          raw?.Name ||
+          raw?.title ||
+          raw?.Title ||
+          '',
+      ).trim();
+
+      if (brandName) {
+        openSearch({ query: brandName, catName: brandName });
         return;
       }
-      openBanner(raw);
+
+      const linkType = (raw?.linkType || raw?.LinkType || '').toLowerCase();
+      const linkValue = raw?.linkValue ?? raw?.LinkValue;
+      if (linkType === 'product' && linkValue) {
+        navigation.navigate('KshopeProductDetails', { productId: linkValue });
+        return;
+      }
+      if (linkType === 'category' && linkValue) {
+        openSearch({ catId: linkValue, catName: 'Category' });
+        return;
+      }
+
+      const attrValueId = raw?.attrValueId ?? raw?.AttrValueId;
+      if (attrValueId !== undefined && attrValueId !== null && attrValueId !== '') {
+        openSearch({ attrValueId, catName: 'Brand' });
+        return;
+      }
+
+      openSearch({});
     },
-    [openSearch, openBanner],
+    [navigation, openSearch],
   );
 
   const openRecommendedCard = useCallback(

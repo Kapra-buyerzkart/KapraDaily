@@ -11,7 +11,6 @@ import { getOrderDetailsApi } from '../../api/services/orderService';
 import {
   BulletCard,
   CopyChip,
-  FooterStrip,
   MetaRow,
   StatusActionBar,
   StatusDisc,
@@ -85,7 +84,7 @@ const OrderSuccessScreen: React.FC = () => {
   const amountLabel = `₹${Number(displayTotal).toFixed(2)}`;
   const deliveryLabel = deliveryMode
     ? String(deliveryMode).toLowerCase() === 'express'
-      ? 'Express'
+      ? 'Standard'
       : 'Slotted'
     : null;
   const displayAddress = address || '';
@@ -133,7 +132,6 @@ const OrderSuccessScreen: React.FC = () => {
             </View>
           </View>
 
-          <FooterStrip icon="truck" note={SUCCESS_COPY.assuranceNote} />
         </Surface>
 
         <Surface style={styles.section}>

@@ -38,7 +38,6 @@ import {
   freezeSize,
 } from './homeHeaderCollapse';
 import RotatingPlaceholder from './RotatingPlaceholder';
-import { wp } from '@/utils/responsive';
 
 export const HEADER_BG = '#2E7FB6';
 const BORDER = '#FFFFFF';
@@ -46,12 +45,7 @@ const STROKE = TAB_GEOMETRY.stroke;
 const TAB_HEIGHT = TAB_GEOMETRY.height;
 const REACH = TAB_GEOMETRY.flare * 2;
 
-const SEARCH_EXAMPLES = [
-  'Cookware',
-  // 'Kitchen Appliances',
-  'Garment Care',
-  'Gas Stoves',
-];
+const SEARCH_EXAMPLES = ['Cookware', 'Iron box', 'Lights', 'Trimmer'];
 
 const SLIDE = {
   duration: 240,
@@ -352,7 +346,11 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
               >
                 {address || 'Select delivery address'}
               </Text>
-              {/* <AppIcons.ArrowDownBold size={12} color="rgba(255,255,255,0.9)" /> */}
+              <AppIcons.ChevronDown
+                size={14}
+                color="rgba(255,255,255,0.9)"
+                style={styles.addressCaret}
+              />
             </TouchableOpacity>
           </View>
           {/* <TouchableOpacity activeOpacity={0.85} onPress={onAvatarPress}>
@@ -381,8 +379,6 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
               style={styles.searchPlaceholder}
               containerStyle={styles.searchPlaceholderBox}
             />
-            <View style={styles.searchDivider} />
-            <AppIcons.Microphone size={20} color="#000000ff" />
           </TouchableOpacity>
 
           <Animated.View
@@ -521,21 +517,29 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: Fonts.madelyn,
     fontSize: 38,
-    lineHeight: 46,
+    lineHeight: 50,
+    includeFontPadding: false,
     color: BORDER,
   },
   addressRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 2,
+    alignSelf: 'flex-start',
+    maxWidth: '80%',
   },
   address: {
     flexShrink: 1,
     fontFamily: Fonts.gilroyRegular,
     fontSize: 13,
-    width: wp('60%'),
+    lineHeight: 18,
+    includeFontPadding: false,
+    textAlignVertical: 'center',
     color: 'rgba(255,255,255,0.9)',
     marginHorizontal: 4,
+  },
+  addressCaret: {
+    marginLeft: 2,
   },
   addressPlaceholder: {
     fontFamily: Fonts.gilroyBold,

@@ -30,6 +30,18 @@ export const ensureKshopeAreaId = async (): Promise<number> => {
   return KSHOPE_CONFIG.default_pincode_area_id;
 };
 
+export const getSelectedAddressId = async (): Promise<string | null> => {
+  return await AsyncStorage.getItem(KSHOPE_KEYS.SELECTED_ADDRESS_ID);
+};
+
+export const setSelectedAddressId = async (id: string | number | null): Promise<void> => {
+  if (id === null || id === undefined || String(id).length === 0) {
+    await AsyncStorage.removeItem(KSHOPE_KEYS.SELECTED_ADDRESS_ID);
+    return;
+  }
+  await AsyncStorage.setItem(KSHOPE_KEYS.SELECTED_ADDRESS_ID, String(id));
+};
+
 export const getCachedProfile = async (): Promise<any | null> => {
   const raw = await AsyncStorage.getItem(KSHOPE_KEYS.PROFILE);
   if (!raw) return null;

@@ -114,8 +114,26 @@ export const StatusTopBar: React.FC<{
   statusLabel: string;
   tone: StatusTone;
   pulse?: boolean;
-}> = ({ title, subtitle, statusLabel, tone, pulse }) => (
+  onBack?: () => void;
+}> = ({ title, subtitle, statusLabel, tone, pulse, onBack }) => (
   <View style={styles.topBar}>
+    {onBack ? (
+      <TouchableOpacity
+        style={styles.topBarBack}
+        onPress={onBack}
+        activeOpacity={0.75}
+        hitSlop={hitSlopTo(40)}
+        accessibilityRole="button"
+        accessibilityLabel="Go back"
+      >
+        <Feather
+          name="arrow-left"
+          size={ICON.meta}
+          color={UI_COLORS.textPrimary}
+        />
+      </TouchableOpacity>
+    ) : null}
+
     <View style={styles.topBarCopy}>
       <AppText variant="title" accessibilityRole="header">
         {title}

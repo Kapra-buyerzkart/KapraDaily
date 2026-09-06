@@ -10,7 +10,10 @@ export const useAddresses = () => {
         onDeleteClicked,
         onCloseThreeDots,
         addressConfirmationData,
-        setAddressConfirmationData
+        setAddressConfirmationData,
+        selectedAddress,
+        selectedAddressId,
+        clearSelectedAddress
     } = useCart();
 
     return {
@@ -22,6 +25,9 @@ export const useAddresses = () => {
         onDeleteClicked,
         onCloseThreeDots,
         addressConfirmationData,
-        setAddressConfirmationData
+        setAddressConfirmationData,
+        selectedAddress,
+        selectedAddressId,
+        clearSelectedAddress
     };
 };
