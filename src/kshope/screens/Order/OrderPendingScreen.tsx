@@ -1,7 +1,7 @@
 import React from 'react';
 import { ScrollView, StatusBar, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useRoute } from '@react-navigation/native';
 import AppText from '../../components/atoms/AppText';
 import Surface from '../../components/atoms/Surface';
 import Divider from '../../components/atoms/Divider';
@@ -19,13 +19,13 @@ import {
 import { PENDING_COPY, PENDING_STEPS } from './status/constants';
 import {
   useBackToHome,
+  useTrackOrder,
   useCopyOrderNumber,
   useLockedBack,
 } from './status/useOrderStatus';
 import { styles } from './status/styles';
 
 const OrderPendingScreen: React.FC = () => {
-  const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const { orderId, orderNumber } = route.params || {};
 
@@ -35,8 +35,9 @@ const OrderPendingScreen: React.FC = () => {
   const handleCopyOrderNumber = useCopyOrderNumber(String(displayOrderNumber));
   const handleBackToHome = useBackToHome();
 
+  const trackOrder = useTrackOrder();
   const handleCheckStatus = () => {
-    navigation.navigate('KshopeMyOrderDetails', { orderId });
+    trackOrder(orderId);
   };
 
   return (

@@ -49,3 +49,23 @@ export const useBackToHome = () => {
     );
   }, [navigation]);
 };
+
+export const useTrackOrder = () => {
+  const navigation = useNavigation<any>();
+
+  return useCallback(
+    (orderId?: string | number) => {
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 2,
+          routes: [
+            { name: 'KshopeHome' },
+            { name: 'KshopeMyOrders' },
+            { name: 'KshopeMyOrderDetails', params: { orderId } },
+          ],
+        }),
+      );
+    },
+    [navigation],
+  );
+};

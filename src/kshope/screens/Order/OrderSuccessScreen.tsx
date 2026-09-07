@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ScrollView, StatusBar, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useRoute } from '@react-navigation/native';
 import AppText from '../../components/atoms/AppText';
 import Surface from '../../components/atoms/Surface';
 import Divider from '../../components/atoms/Divider';
@@ -21,13 +21,13 @@ import { SUCCESS_COPY, SUCCESS_STEPS } from './status/constants';
 import { getPaymentLabel } from './status/paymentMeta';
 import {
   useBackToHome,
+  useTrackOrder,
   useCopyOrderNumber,
   useLockedBack,
 } from './status/useOrderStatus';
 import { styles } from './status/styles';
 
 const OrderSuccessScreen: React.FC = () => {
-  const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const {
     orderId,
@@ -92,10 +92,9 @@ const OrderSuccessScreen: React.FC = () => {
   const handleCopyOrderNumber = useCopyOrderNumber(String(displayOrderNumber));
   const handleBackToHome = useBackToHome();
 
+  const trackOrder = useTrackOrder();
   const handleTrackOrder = () => {
-    navigation.navigate('KshopeMyOrderDetails', {
-      orderId: orderId || orderDetails?._id,
-    });
+    trackOrder(orderId || orderDetails?._id);
   };
 
   return (

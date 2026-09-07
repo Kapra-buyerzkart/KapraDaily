@@ -44,6 +44,7 @@ import {
   wp,
 } from '../../theme/tokens';
 import { AppText, IconDisc } from '../../components/atoms';
+import useKeyboardVisible from '../../hooks/useKeyboardVisible';
 import styles, { placesStyles } from './styles';
 
 const GOOGLE_MAPS_API_KEY = 'AIzaSyDhItv0zoWdQbDh-5jjKLAEjwRDDrFNc1Y';
@@ -671,6 +672,7 @@ const AddLocationScreen: React.FC = () => {
   const isResolving = isGeocoding || isInitialLoading;
   const saveLabel = isEditMode ? 'Update address' : 'Save address';
   const topInset = Math.max(insets.top, UI_SPACING.sm) + UI_SPACING.sm;
+  const isKeyboardVisible = useKeyboardVisible();
 
   const modalContentStyle = useMemo(
     () => [styles.dropdownContainer, { paddingTop: insets.top + 12 }],
@@ -709,7 +711,12 @@ const AddLocationScreen: React.FC = () => {
         enabled={!IS_ANDROID}
         behavior={IS_ANDROID ? undefined : 'padding'}
       >
-        <View style={styles.sheet}>
+        <View
+          style={[
+            styles.sheet,
+            isKeyboardVisible && { marginTop: topInset + UI_SPACING.md },
+          ]}
+        >
           <View style={styles.grabHandle} />
 
           <View style={styles.sheetHeader}>
@@ -732,6 +739,7 @@ const AddLocationScreen: React.FC = () => {
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="none"
+            automaticallyAdjustKeyboardInsets={!IS_ANDROID}
             removeClippedSubviews={false}
             nestedScrollEnabled
           >
