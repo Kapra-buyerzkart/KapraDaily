@@ -90,13 +90,15 @@ interface HomeHeaderProps {
   onAddressPress?: () => void;
   scrollY?: SharedValue<number>;
   onHeightChange?: (height: number) => void;
+  backgroundColor?: string;
 }
 
 const SlidingTabShape: React.FC<{
   x: SharedValue<number>;
   width: SharedValue<number>;
   rowWidth: number;
-}> = ({ x, width, rowWidth }) => {
+  fill: string;
+}> = ({ x, width, rowWidth, fill }) => {
   const fillProps = useAnimatedProps(() => ({
     d: buildTabPath(width.value, x.value + REACH).fill,
   }));
@@ -111,7 +113,7 @@ const SlidingTabShape: React.FC<{
       height={TAB_HEIGHT}
       style={styles.tabShape}
     >
-      <AnimatedPath animatedProps={fillProps} fill={HEADER_BG} />
+      <AnimatedPath animatedProps={fillProps} fill={fill} />
       <AnimatedPath
         animatedProps={outlineProps}
         fill="none"
@@ -191,6 +193,7 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
   onAddressPress,
   scrollY,
   onHeightChange,
+  backgroundColor = HEADER_BG,
 }) => {
   const insets = useSafeAreaInsets();
   const tabsScrollRef = useRef<ScrollView>(null);
@@ -317,7 +320,12 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
   }, [selectedTabId]);
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top + 8 }]}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top + 8, backgroundColor },
+      ]}
+    >
       <Animated.View
         style={[
           styles.collapsible,
@@ -430,6 +438,7 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
                   x={shapeX}
                   width={shapeWidth}
                   rowWidth={rowWidth}
+                  fill={backgroundColor}
                 />
               )}
               {tabs.map((tab, index) => (
@@ -455,7 +464,11 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
         ]}
       >
         <View
-          style={[styles.panel, sizes.panel > 0 && { minHeight: sizes.panel }]}
+          style={[
+            styles.panel,
+            { backgroundColor },
+            sizes.panel > 0 && { minHeight: sizes.panel },
+          ]}
           onLayout={measureSection('panel')}
         >
           <ScrollView

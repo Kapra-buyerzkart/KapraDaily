@@ -24,12 +24,12 @@ export type ShimmerTone = 'light' | 'dark';
 
 const TONES: Record<ShimmerTone, { base: string; sweep: string[] }> = {
   light: {
-    base: '#E4E7EC',
-    sweep: ['rgba(255,255,255,0)', 'rgba(255,255,255,0.75)', 'rgba(255,255,255,0)'],
+    base: UI_COLORS.skeleton,
+    sweep: ['rgba(245,245,245,0)', 'rgba(245,245,245,0.9)', 'rgba(245,245,245,0)'],
   },
   dark: {
-    base: 'rgba(255,255,255,0.22)',
-    sweep: ['rgba(255,255,255,0)', 'rgba(255,255,255,0.32)', 'rgba(255,255,255,0)'],
+    base: UI_COLORS.skeletonOnDark,
+    sweep: ['rgba(235,235,235,0)', 'rgba(235,235,235,0.8)', 'rgba(235,235,235,0)'],
   },
 };
 
@@ -101,7 +101,7 @@ const Shimmer: React.FC<ShimmerProps> = ({
 const styles = StyleSheet.create({
   box: {
     overflow: 'hidden',
-    backgroundColor: UI_COLORS.well,
+    backgroundColor: UI_COLORS.skeleton,
   },
 });
 

@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
   },
   row: {
     paddingHorizontal: GUTTER,
-    paddingTop: SPACE.lg,
+    paddingTop: SPACE.xs,
     gap: CARD_GAP,
   },
   card: {

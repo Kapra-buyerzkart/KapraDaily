@@ -1,4 +1,10 @@
-import React, { useCallback, useContext, useMemo, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useContext,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   BackHandler,
   FlatList,
@@ -10,8 +16,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { LoaderContext } from '../../../context/loaderContext';
 import { getMyOrdersApi } from '../../../api/services/orderService';
@@ -151,7 +157,10 @@ const MyOrdersRedesignScreen: React.FC = () => {
       }
       if (item.type === 'card') {
         return (
-          <OrderCard order={item.order} onPress={() => openDetails(item.order)} />
+          <OrderCard
+            order={item.order}
+            onPress={() => openDetails(item.order)}
+          />
         );
       }
       return (
@@ -192,7 +201,7 @@ const MyOrdersRedesignScreen: React.FC = () => {
   }, [loading, navigation]);
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <StatusBar barStyle="dark-content" backgroundColor={ORDER_COLORS.page} />
 
       <View style={styles.header}>

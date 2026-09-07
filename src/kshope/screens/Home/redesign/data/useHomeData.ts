@@ -71,7 +71,13 @@ export const useHomeData = () => {
         const storedAreaId = await getKshopeAreaId();
         const areaId = storedAreaId ?? profile?.pincode ?? null;
         const data = await getHomepageData(areaId, 100);
-        setHomeData(data?.data || data);
+        const payload = data?.data || data;
+        if (__DEV__) {
+          console.log('[kshope][home] areaId =', areaId);
+          console.log('[kshope][home] keys =', Object.keys(payload || {}));
+          console.log('[kshope][home] data =', payload);
+        }
+        setHomeData(payload);
       } catch (e) {
         console.error('Error fetching home data for K-shope', e);
       } finally {
@@ -220,6 +226,30 @@ export const useHomeData = () => {
       RECOMMENDED,
     );
 
+    const bestSellingRaw = (homeData?.showcaseSlider || []).slice(0, 6);
+    const bestSellingTiles = orFallback(
+      bestSellingRaw.map(mapCategoryTile),
+      BEST_SELLING,
+    );
+
+    console.log(
+      '[Home] bestSelling raw',
+      JSON.stringify(bestSellingRaw, null, 2),
+    );
+    console.log(
+      '[Home] bestSelling tiles',
+      JSON.stringify(
+        bestSellingTiles.map((t: any) => ({
+          id: t.id,
+          label: t.label,
+          catId: resolveCatId(t.raw),
+          catName: resolveCatName(t.raw, t.label),
+        })),
+        null,
+        2,
+      ),
+    );
+
     return {
       header: {
         title: sectionTitle(homeData, 'home', HEADER_CONTENT.title),
@@ -282,10 +312,7 @@ export const useHomeData = () => {
         const items = tab?.items || tab?.Items || [];
         return orFallback(items.map(mapCategoryTile), CATEGORY_CARDS);
       },
-      bestSelling: orFallback(
-        (homeData?.showcaseSlider || []).slice(0, 6).map(mapCategoryTile),
-        BEST_SELLING,
-      ),
+      bestSelling: bestSellingTiles,
       brands: orFallback(rawBrands.map(mapBrandTile), BRANDS),
       recommended: recommendedCards,
       recentlyViewed: orFallback(

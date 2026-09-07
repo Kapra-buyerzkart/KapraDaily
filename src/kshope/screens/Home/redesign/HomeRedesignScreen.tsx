@@ -6,6 +6,7 @@ import {
   RefreshControl,
   StatusBar,
   StyleSheet,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import { heightPercentageToDP as hp } from 'react-native-responsive-screen';
@@ -23,7 +24,7 @@ import HomeHeader, {
 } from '../../../components/HomeHeader';
 import { HOME_COLORS, RADIUS, SPACE } from './theme';
 import { ProductTile, RecCard, Tile } from './content';
-import { useHomeData } from './data/useHomeData';
+import { bannerImage, useHomeData } from './data/useHomeData';
 import { resolveCatId, resolveCatName } from './data/blocks';
 import HomeSkeleton from '../HomeSkeleton';
 import { useCartPillScrollTracker } from '../../../components/cartPillScroll';
@@ -37,6 +38,14 @@ import BannerCarousel from './sections/BannerCarousel';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+const bannerColor = (banner: any) => {
+  const value = String(banner?.linkValue ?? banner?.LinkValue ?? '').trim();
+  const hex = value.startsWith('#') ? value : `#${value}`;
+  return /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(hex)
+    ? hex
+    : undefined;
+};
 
 type Linkable = { raw?: any };
 
@@ -124,6 +133,19 @@ const HomeRedesignScreen: React.FC = () => {
     [openSearch],
   );
 
+  const openBestSelling = useCallback(
+    (item: Tile & Linkable) => {
+      const raw: any = item.raw;
+      const productId = raw?.productId ?? raw?.ProductId;
+      if (productId !== undefined && productId !== null && productId !== '') {
+        navigation.navigate('KshopeProductDetails', { productId });
+        return;
+      }
+      openCategory(item);
+    },
+    [navigation, openCategory],
+  );
+
   const openBanner = useCallback(
     (banner: any) => {
       const linkType = (
@@ -173,7 +195,11 @@ const HomeRedesignScreen: React.FC = () => {
       }
 
       const attrValueId = raw?.attrValueId ?? raw?.AttrValueId;
-      if (attrValueId !== undefined && attrValueId !== null && attrValueId !== '') {
+      if (
+        attrValueId !== undefined &&
+        attrValueId !== null &&
+        attrValueId !== ''
+      ) {
         openSearch({ attrValueId, catName: 'Brand' });
         return;
       }
@@ -193,6 +219,10 @@ const HomeRedesignScreen: React.FC = () => {
     },
     [openBanner, openProduct],
   );
+
+  const topBanner = sections.banners.top?.[0];
+  const headerBg = bannerColor(topBanner) ?? HEADER_BG;
+  const featuredBlend = headerBg;
 
   const openRecommendedAll = useCallback(() => {
     const block = sections.recommendedTitleBlock;
@@ -227,7 +257,7 @@ const HomeRedesignScreen: React.FC = () => {
           styles.content,
           {
             paddingTop: headerHeight,
-            paddingBottom: SPACE.xxl + getTabBarClearance(insets.bottom),
+            paddingBottom: getTabBarClearance(insets.bottom),
           },
         ]}
         refreshControl={
@@ -240,20 +270,29 @@ const HomeRedesignScreen: React.FC = () => {
           />
         }
       >
-        <View style={styles.featuredBannerContainer}>
+        <TouchableOpacity
+          activeOpacity={topBanner ? 0.9 : 1}
+          disabled={!topBanner}
+          onPress={() => topBanner && openBanner(topBanner)}
+          style={styles.featuredBannerContainer}
+        >
           <Image
-            source={require('../../../assets/images/gifs/onam.gif')}
+            source={
+              topBanner
+                ? bannerImage(topBanner)
+                : require('../../../assets/images/gifs/onam.gif')
+            }
             style={styles.featuredBannerImage}
-            resizeMode="cover"
+            resizeMode="contain"
           />
           <LinearGradient
             pointerEvents="none"
-            colors={[HEADER_BG, `${HEADER_BG}00`]}
+            colors={[featuredBlend, `${featuredBlend}00`]}
             style={styles.featuredBannerBlend}
           />
-        </View>
+        </TouchableOpacity>
 
-        <ImageBackground
+        {/* <ImageBackground
           source={require('../../../assets/images/gifs/offer_flowers.gif')}
           style={styles.offerBannerImage}
           imageStyle={styles.offerBannerBackdrop}
@@ -264,7 +303,7 @@ const HomeRedesignScreen: React.FC = () => {
             style={styles.offerBannerForeground}
             resizeMode="contain"
           />
-        </ImageBackground>
+        </ImageBackground> */}
 
         <FeaturedRow
           items={sections.featured}
@@ -281,7 +320,10 @@ const HomeRedesignScreen: React.FC = () => {
           onCardPress={openCategory}
         />
 
-        <BestSelling items={sections.bestSelling} onPressTile={openCategory} />
+        <BestSelling
+          items={sections.bestSelling}
+          onPressTile={openBestSelling}
+        />
         {/* <BestForYou
           onShopNow={() => openSearch()}
           onViewAll={() => openSearch()}
@@ -357,6 +399,7 @@ const HomeRedesignScreen: React.FC = () => {
           onAddressPress={() => navigation.navigate('KshopeSavedAddress')}
           scrollY={scrollY}
           onHeightChange={setHeaderHeight}
+          backgroundColor={headerBg}
         />
       </View>
     </View>
@@ -391,7 +434,8 @@ const styles = StyleSheet.create({
   },
   featuredBannerImage: {
     width: SCREEN_WIDTH,
-    height: hp('21%'),
+    height: hp('17.5%'),
+    top: -8,
   },
   featuredBannerBlend: {
     position: 'absolute',

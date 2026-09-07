@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { HOME_FONTS, SCREEN_WIDTH, fs, s } from '../../../Home/redesign/theme';
 import { BackIcon, HeartIcon, HeartSolidIcon } from '../icons';
 import { PDP_ART } from '../assets';
+import { HOME_ART } from '../../../Home/redesign/assets';
 import { PDP_COLORS } from '../theme';
 
 type Props = {
@@ -25,6 +26,41 @@ type Props = {
 };
 
 const HIT = { top: 12, bottom: 12, left: 12, right: 12 };
+
+const hasSource = (source: any) =>
+  !!source && (typeof source === 'number' || !!source.uri);
+
+const GallerySlide: React.FC<{ source: any; height: number }> = ({
+  source,
+  height,
+}) => {
+  const [loaded, setLoaded] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const usable = hasSource(source) && !failed;
+
+  return (
+    <View style={[styles.slide, { height }]}>
+      {usable ? (
+        <Image
+          source={source}
+          resizeMode="cover"
+          style={styles.image}
+          onLoad={() => setLoaded(true)}
+          onError={() => setFailed(true)}
+        />
+      ) : null}
+      {usable && loaded ? null : (
+        <View style={styles.placeholder}>
+          <Image
+            source={HOME_ART.noImage}
+            resizeMode="contain"
+            style={styles.placeholderImage}
+          />
+        </View>
+      )}
+    </View>
+  );
+};
 
 const Gallery: React.FC<Props> = ({
   images,
@@ -56,9 +92,7 @@ const Gallery: React.FC<Props> = ({
         onScroll={onScroll}
       >
         {slides.map((source: any, idx: number) => (
-          <View key={idx} style={[styles.slide, { height: cardHeight }]}>
-            <Image source={source} resizeMode="cover" style={styles.image} />
-          </View>
+          <GallerySlide key={idx} source={source} height={cardHeight} />
         ))}
       </ScrollView>
 
@@ -135,6 +169,16 @@ const styles = StyleSheet.create({
   },
   slide: {
     width: SCREEN_WIDTH,
+  },
+  placeholder: {
+    ...StyleSheet.absoluteFill,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: PDP_COLORS.white,
+  },
+  placeholderImage: {
+    width: '55%',
+    height: '55%',
   },
   image: {
     flex: 1,

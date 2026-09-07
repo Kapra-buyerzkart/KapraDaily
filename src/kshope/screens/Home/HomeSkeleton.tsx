@@ -3,7 +3,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Shimmer } from '../../components/atoms';
 import { HEADER_BG } from '../../components/HomeHeader';
-import { UI_RADIUS, UI_SPACING } from '../../theme/tokens';
+import { UI_COLORS, UI_RADIUS, UI_SPACING } from '../../theme/tokens';
 import { colors } from '../../theme/colours';
 
 const HEADER_ITEMS = [0, 1, 2, 3, 4];
@@ -132,7 +132,7 @@ const HomeSkeleton: React.FC = () => (
 );
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.figmaTeal },
+  container: { flex: 1, backgroundColor: UI_COLORS.canvas },
   header: { backgroundColor: HEADER_BG },
   titleRow: {
     flexDirection: 'row',
@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     height: 1.5,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
   },
   tabsRow: {
     flexDirection: 'row',

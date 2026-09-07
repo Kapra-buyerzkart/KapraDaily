@@ -145,7 +145,6 @@ const ProductDetailsRedesignScreen: React.FC = () => {
         />
       </Animated.ScrollView>
 
-
       <BottomBar
         quantity={quantity}
         price={money(
