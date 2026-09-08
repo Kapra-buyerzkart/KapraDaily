@@ -1,10 +1,13 @@
 import React, { useContext, useEffect, useState } from 'react';
 import {
   View,
+  Text,
   ScrollView,
   TouchableOpacity,
   StatusBar,
   RefreshControl,
+  Linking,
+  TextInput,
 } from 'react-native';
 import {
   useNavigation,
@@ -13,12 +16,8 @@ import {
   useFocusEffect,
 } from '@react-navigation/native';
 import { BackHandler } from 'react-native';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { styles } from './styles';
-import { detailsStyles as d } from './detailsStyles';
 import { AppIcons } from '../../assets/icons';
-import { AppText, Badge, Divider, IconDisc } from '../../components/atoms';
-import { UI_COLORS, UI_SPACING, wp } from '../../theme/tokens';
+import { detailsStyles as d, DESIGN_COLORS, dp } from './detailsStyles';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LoaderContext } from '../../context/loaderContext';
 import {
@@ -26,6 +25,8 @@ import {
   reorderApi,
   returnOrderItemApi,
   cancelOrderApi,
+  rateOrderApi,
+  rateDeliveryAgentApi,
 } from '../../api/services/orderService';
 import { verifyRazorpayPaymentApi } from '../../api/services/paymentService';
 import RazorpayCheckout from 'react-native-razorpay';
@@ -34,17 +35,119 @@ import KSHOPE_CONFIG from '../../globals/config';
 import ConfirmationModal from '../../components/ConfirmationModal';
 import StatusModal from '../../components/StatusModal';
 import FallbackImage from '../../components/FallbackImage';
-import BillSection from '../../components/BillSection';
 import { OrderDetails, OrderLineItem } from '../../types/order';
+
+const STEPPER_STAGES = [
+  { label: 'Confirmed', keys: ['pending', 'placed', 'accepted'] },
+  { label: 'Shipped', keys: ['packed', 'shipped'] },
+  { label: 'Out for delivery', keys: ['outfordelivery'] },
+  { label: 'Delivered', keys: ['delivered'] },
+];
+
+const money = (amount?: number) =>
+  `\u20B9 ${Number(amount || 0).toLocaleString('en-IN', {
+    maximumFractionDigits: 2,
+  })}/-`;
+
+const longDate = (value?: string) => {
+  if (!value) return '';
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return '';
+  return parsed.toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+};
 
 const getImageUrl = (imagePath?: string) => {
   if (!imagePath) return require('../../assets/images/logos/noimage.png');
   if (typeof imagePath !== 'string') return imagePath;
   if (imagePath.startsWith('http')) return { uri: imagePath };
   return {
-    uri: `${KSHOPE_CONFIG.image_base_url}/${imagePath}`.replace(/([^:]\/)\/+/g, '$1'),
+    uri: `${KSHOPE_CONFIG.image_base_url}/${imagePath}`.replace(
+      /([^:]\/)\/+/g,
+      '$1',
+    ),
   };
 };
+
+type RatingBlockProps = {
+  title: string;
+  caption: string;
+  rating: number;
+  onRate: (value: number) => void;
+  reviewText: string;
+  onChangeReview: (value: string) => void;
+  placeholder: string;
+  submitted: boolean;
+  submittedText: string;
+  onSubmit: () => void;
+};
+
+const RatingBlock = ({
+  title,
+  caption,
+  rating,
+  onRate,
+  reviewText,
+  onChangeReview,
+  placeholder,
+  submitted,
+  submittedText,
+  onSubmit,
+}: RatingBlockProps) => (
+  <View style={d.rateBlock}>
+    <Text style={d.rateTitle}>{title}</Text>
+    <Text style={d.rateCaption}>{caption}</Text>
+    <View style={d.starRow}>
+      {[1, 2, 3, 4, 5].map(value => (
+        <TouchableOpacity
+          key={value}
+          style={d.star}
+          activeOpacity={0.85}
+          disabled={submitted}
+          onPress={() => onRate(value)}
+          accessibilityRole="button"
+          accessibilityLabel={`Rate ${value} out of 5`}
+        >
+          <AppIcons.Star
+            size={dp(34)}
+            color={value <= rating ? DESIGN_COLORS.orange : DESIGN_COLORS.star}
+          />
+        </TouchableOpacity>
+      ))}
+    </View>
+
+    {submitted ? (
+      <Text style={d.rateThanks}>{submittedText}</Text>
+    ) : (
+      rating > 0 && (
+        <>
+          <TextInput
+            style={d.rateInput}
+            value={reviewText}
+            onChangeText={onChangeReview}
+            placeholder={placeholder}
+            placeholderTextColor={DESIGN_COLORS.muted}
+            multiline
+            maxLength={500}
+            textAlignVertical="top"
+          />
+          <TouchableOpacity
+            style={d.rateSubmit}
+            activeOpacity={0.85}
+            onPress={onSubmit}
+            accessibilityRole="button"
+            accessibilityLabel="Submit rating"
+          >
+            <Text style={d.rateSubmitText}>Submit rating</Text>
+          </TouchableOpacity>
+        </>
+      )
+    )}
+  </View>
+);
 
 const MyOrderDetailsScreen = () => {
   const navigation = useNavigation<any>();
@@ -93,10 +196,46 @@ const MyOrderDetailsScreen = () => {
   );
 
   useEffect(() => {
-    if (orderDetails?.items && orderDetails.items.length > 0 && !selectedItem?.productName) {
+    if (
+      orderDetails?.items &&
+      orderDetails.items.length > 0 &&
+      !selectedItem?.productName
+    ) {
       setSelectedItem(orderDetails.items[0]);
     }
   }, [orderDetails]);
+
+  useEffect(() => {
+    const head = orderDetails?.header;
+    const existingRating = Number(
+      head?.overallRating ?? head?.reviewRating ?? 0,
+    );
+    if (existingRating > 0) {
+      setRating(existingRating);
+      setReviewText((head?.reviewText ?? head?.reviewtext ?? '') as string);
+      setRatingSubmitted(true);
+    }
+
+    const existingAgentRating = Number(
+      head?.deliveryAgentRating ?? head?.deliveryRating ?? 0,
+    );
+    if (existingAgentRating > 0) {
+      setAgentRating(existingAgentRating);
+      setAgentReviewText(
+        (head?.deliveryAgentReviewText ??
+          head?.deliveryReviewText ??
+          '') as string,
+      );
+      setAgentRatingSubmitted(true);
+    }
+  }, [orderDetails]);
+
+  const [rating, setRating] = useState(0);
+  const [reviewText, setReviewText] = useState('');
+  const [ratingSubmitted, setRatingSubmitted] = useState(false);
+  const [agentRating, setAgentRating] = useState(0);
+  const [agentReviewText, setAgentReviewText] = useState('');
+  const [agentRatingSubmitted, setAgentRatingSubmitted] = useState(false);
 
   const [confirmModal, setConfirmModal] = useState<{
     visible: boolean;
@@ -112,14 +251,6 @@ const MyOrderDetailsScreen = () => {
     refreshOnClose?: boolean;
   }>({ visible: false, type: 'success', title: '', message: '' });
 
-  const loadedItem =
-    orderDetails?.items?.find(i => {
-      if (selectedItem?.productId && i.productId)
-        return i.productId === selectedItem.productId;
-      return i.productName === selectedItem?.productName;
-    }) || selectedItem;
-
-  const canReturn = loadedItem?.canReturn === true;
   const isCancelled = (
     orderDetails?.header?.orderStatus ||
     orderDetails?.header?.status ||
@@ -135,27 +266,6 @@ const MyOrderDetailsScreen = () => {
     (orderDetails?.header?.canCancel === true || order?.canCancel === true);
   const canRetryPayment = orderDetails?.header?.canRetryPayment === true;
 
-  const trackingSteps = orderDetails?.timeline
-    ? orderDetails.timeline.map((step, index, arr) => {
-        const isCurrent = index === arr.length - 1;
-        const isCompleted = true;
-
-        let icon = null;
-        if (isCurrent) {
-          icon = <AppIcons.Bag size={14} color={UI_COLORS.primary} />;
-        }
-        return {
-          id: index.toString(),
-          title: step.statusText,
-          subtitle: step.notes,
-          time: step.changedAt ? new Date(step.changedAt).toLocaleString() : '',
-          isCompleted,
-          isCurrent,
-          icon,
-        };
-      })
-    : [];
-
   useEffect(() => {
     fetchMyOrderDetailsFunction();
   }, []);
@@ -169,6 +279,11 @@ const MyOrderDetailsScreen = () => {
         return;
       }
       const response = await getOrderDetailsApi(orderId);
+      console.log(
+        'KSHOPE ORDER DETAILS',
+        orderId,
+        JSON.stringify(response, null, 2),
+      );
       if (response && response.success && response.data) {
         setOrderDetails(response.data);
       } else {
@@ -181,6 +296,12 @@ const MyOrderDetailsScreen = () => {
       showLoader(false);
     }
   };
+
+  const resolveOrderId = () =>
+    order?.orderId ||
+    orderDetails?.header?.orderId ||
+    route.params?.orderId ||
+    route.params?.order?.orderId;
 
   const handleReturn = async () => {
     try {
@@ -223,11 +344,7 @@ const MyOrderDetailsScreen = () => {
   const handleCancel = async () => {
     try {
       showLoader(true);
-      const resolvedOrderId =
-        order?.orderId ||
-        orderDetails?.header?.orderId ||
-        route.params?.orderId ||
-        route.params?.order?.orderId;
+      const resolvedOrderId = resolveOrderId();
 
       if (!resolvedOrderId) {
         setStatusModal({
@@ -278,11 +395,7 @@ const MyOrderDetailsScreen = () => {
   const handleReorder = async () => {
     try {
       showLoader(true);
-      const resolvedOrderId =
-        order?.orderId ||
-        orderDetails?.header?.orderId ||
-        route.params?.orderId ||
-        route.params?.order?.orderId;
+      const resolvedOrderId = resolveOrderId();
 
       const res = await reorderApi({ orderId: resolvedOrderId });
       showLoader(false);
@@ -312,11 +425,78 @@ const MyOrderDetailsScreen = () => {
     }
   };
 
+  const submitRating = async (
+    submitApi: (payload: any) => Promise<any>,
+    value: number,
+    text: string,
+    onSuccess: () => void,
+  ) => {
+    if (!value) return;
+    const resolvedOrderId = resolveOrderId();
+
+    if (!resolvedOrderId) {
+      setStatusModal({
+        visible: true,
+        type: 'error',
+        title: 'Error',
+        message: 'Could not find order ID. Please go back and try again.',
+      });
+      return;
+    }
+
+    try {
+      showLoader(true);
+      const payload = {
+        orderid: Number(resolvedOrderId),
+        rating: Number(value),
+        reviewtext: text.trim(),
+      };
+      const res = await submitApi(payload);
+      showLoader(false);
+      if (res?.success) {
+        onSuccess();
+        setStatusModal({
+          visible: true,
+          type: 'success',
+          title: 'Thank you',
+          message: 'Your rating has been submitted.',
+          refreshOnClose: true,
+        });
+      } else {
+        setStatusModal({
+          visible: true,
+          type: 'error',
+          title: 'Error',
+          message: res?.message || 'Failed to submit rating',
+        });
+      }
+    } catch (error: any) {
+      console.error('Rate order error:', error);
+      showLoader(false);
+      setStatusModal({
+        visible: true,
+        type: 'error',
+        title: 'Error',
+        message: error?.message || 'An error occurred while submitting rating',
+      });
+    }
+  };
+
+  const handleSubmitRating = () =>
+    submitRating(rateOrderApi, rating, reviewText, () =>
+      setRatingSubmitted(true),
+    );
+
+  const handleSubmitAgentRating = () =>
+    submitRating(rateDeliveryAgentApi, agentRating, agentReviewText, () =>
+      setAgentRatingSubmitted(true),
+    );
+
   const handleRetryPayment = async () => {
-    const header = orderDetails?.header;
-    const razorpayOrderId = header?.razorPayOrderId;
-    const razorpayKeyId = header?.razorPayKeyId;
-    const razorpayAmount = header?.razorPayAmount;
+    const payHeader = orderDetails?.header;
+    const razorpayOrderId = payHeader?.razorPayOrderId;
+    const razorpayKeyId = payHeader?.razorPayKeyId;
+    const razorpayAmount = payHeader?.razorPayAmount;
 
     if (!razorpayOrderId || !razorpayKeyId || !razorpayAmount) {
       setStatusModal({
@@ -334,7 +514,7 @@ const MyOrderDetailsScreen = () => {
         amount: razorpayAmount,
         currency: 'INR',
         name: 'Kapra Daily',
-        description: `Order #${header?.orderNumber || order?.orderId}`,
+        description: `Order #${payHeader?.orderNumber || order?.orderId}`,
         order_id: razorpayOrderId,
         prefill: {
           email: profile?.email || '',
@@ -391,55 +571,88 @@ const MyOrderDetailsScreen = () => {
     order?.id ||
     route.params?.orderId ||
     route.params?.order?.orderId;
-  if (!activeOrderId) return <View style={styles.container} />;
+  if (!activeOrderId) return <View style={d.screen} />;
 
-  const orderNumber =
-    orderDetails?.header?.orderNumber || selectedItem?.orderNumber;
+  const header = orderDetails?.header;
+  const orderNumber = header?.orderNumber || selectedItem?.orderNumber;
   const shipping = orderDetails?.shippingAddress;
-  const otherItems = (orderDetails?.items || []).filter(i => {
-    if (selectedItem?.productId && i.productId)
-      return i.productId !== selectedItem.productId;
-    return i.productName !== selectedItem?.productName;
-  });
-  const lineTotal =
-    selectedItem?.lineTotal ||
-    (selectedItem?.quantity || 1) *
-      (selectedItem?.unitPrice || selectedItem?.price || 0);
+  const items = orderDetails?.items || [];
+  const payment = orderDetails?.payments?.[0];
+  const groupOrders: any[] = orderDetails?.groupOrders || [];
+
+  const statusKeys = (orderDetails?.timeline || []).map(step =>
+    (step.statusKey || '').toString().toLowerCase(),
+  );
+  const reachedStage = STEPPER_STAGES.reduce(
+    (acc, stage, index) =>
+      stage.keys.some(key => statusKeys.includes(key)) ? index : acc,
+    -1,
+  );
+
+  const itemTotal = header?.subtotal ?? header?.subTotal ?? 0;
+  const discountTotal = header?.discountTotal ?? 0;
+  const deliveryCharge = header?.deliveryCharge ?? 0;
+  const taxTotal = header?.taxTotal ?? 0;
+  const grandTotal = header?.grandTotal ?? 0;
+
+  const invoiceUrl = header?.invoiceFileUrl
+    ? `${KSHOPE_CONFIG.image_base_url}/${header.invoiceFileUrl}`.replace(
+        /([^:]\/)\/+/g,
+        '$1',
+      )
+    : '';
+
+  const openInvoice = () => {
+    if (!invoiceUrl) return;
+    Linking.openURL(invoiceUrl).catch(() =>
+      setStatusModal({
+        visible: true,
+        type: 'error',
+        title: 'Error',
+        message: 'Could not open the invoice.',
+      }),
+    );
+  };
 
   return (
-    <SafeAreaView style={d.screen}>
-      <StatusBar barStyle="dark-content" backgroundColor={UI_COLORS.card} />
+    <SafeAreaView style={d.screen} edges={['top']}>
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor={DESIGN_COLORS.screen}
+      />
 
-      <View style={d.topContainer}>
-        <View style={d.header}>
-          <TouchableOpacity
-            onPress={() => {
-              if (navigation.canGoBack()) {
-                navigation.goBack();
-              } else {
-                navigation.dispatch(
-                  CommonActions.reset({
-                    index: 0,
-                    routes: [{ name: 'KshopeHome' }],
-                  }),
-                );
-              }
-            }}
-            style={d.backButton}
-            accessibilityRole="button"
-            accessibilityLabel="Go back"
-          >
-            <AppIcons.Back color={UI_COLORS.textPrimary} size={22} />
-          </TouchableOpacity>
-          <View style={d.headerTitleWrap}>
-            <AppText variant="title">Order details</AppText>
-            {!!orderNumber && (
-              <AppText variant="caption" tone="muted">
-                {orderNumber}
-              </AppText>
-            )}
-          </View>
-        </View>
+      <View style={d.header}>
+        <TouchableOpacity
+          onPress={() => {
+            if (navigation.canGoBack()) {
+              navigation.goBack();
+            } else {
+              navigation.dispatch(
+                CommonActions.reset({
+                  index: 0,
+                  routes: [{ name: 'KshopeHome' }],
+                }),
+              );
+            }
+          }}
+          style={d.backButton}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+        >
+          <AppIcons.ArrowBack color={DESIGN_COLORS.ink} size={dp(24)} />
+        </TouchableOpacity>
+
+        <Text style={d.headerTitle}>Order Details</Text>
+
+        <TouchableOpacity
+          style={d.headerCartBtn}
+          activeOpacity={0.85}
+          onPress={() => navigation.navigate('KshopeCart')}
+          accessibilityRole="button"
+          accessibilityLabel="Go to cart"
+        >
+          <AppIcons.Cart size={dp(26)} color={DESIGN_COLORS.orange} />
+        </TouchableOpacity>
       </View>
 
       <ScrollView
@@ -449,286 +662,441 @@ const MyOrderDetailsScreen = () => {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        <View style={d.card}>
-          <View style={d.productRow}>
-            <View style={d.productImageTile}>
-              <FallbackImage
-                source={getImageUrl(selectedItem?.featuredImage)}
-                style={d.productImage}
-                resizeMode="cover"
-              />
-            </View>
-            <View style={d.productInfo}>
-              <AppText variant="bodyStrong" numberOfLines={2}>
-                {selectedItem?.productName}
-              </AppText>
-              <View style={d.productMetaRow}>
-                <Badge
-                  tone="neutral"
-                  label={`Qty ${selectedItem?.quantity || 1}`}
+        <View style={d.whiteBlock}>
+          {!!header?.orderStatusText && (
+            <Text style={d.statusHeading}>
+              {`Order ${header.orderStatusText}${
+                longDate(header.orderDate)
+                  ? ` on ${longDate(header.orderDate)}`
+                  : ''
+              }`}
+            </Text>
+          )}
+
+          {items.map(item => (
+            <View key={item.orderItemId} style={d.itemBlock}>
+              <View style={d.itemRow}>
+                <FallbackImage
+                  source={getImageUrl(item.featuredImage)}
+                  style={d.itemImage}
+                  resizeMode="cover"
                 />
-                <AppText variant="priceLarge">
-                  ₹{lineTotal.toFixed(2)}
-                </AppText>
+
+                <View style={d.itemInfo}>
+                  {!!orderNumber && (
+                    <Text style={d.itemOrderNo}>{`Order #${orderNumber}`}</Text>
+                  )}
+                  <Text style={d.itemName} numberOfLines={2}>
+                    {item.productName}
+                  </Text>
+                  <View style={d.itemQtyRow}>
+                    <Text style={d.itemQty}>
+                      {`Qty :  ${String(item.quantity || 1).padStart(2, '0')}`}
+                    </Text>
+                    <Text style={d.itemPrice}>
+                      {money(
+                        item.lineTotal ||
+                          (item.quantity || 1) *
+                            (item.soldPrice || item.unitPrice || 0),
+                      )}
+                    </Text>
+                  </View>
+                </View>
               </View>
-            </View>
-          </View>
 
-          <Divider inset={UI_SPACING.lg} />
+              {item.canReturn && (
+                <View style={d.returnRow}>
+                  <TouchableOpacity
+                    style={d.returnBtn}
+                    activeOpacity={0.85}
+                    onPress={() => {
+                      setSelectedItem(item);
+                      setConfirmModal({ visible: true, type: 'return' });
+                    }}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Return ${item.productName}`}
+                  >
+                    <Text style={d.returnBtnText}>Return</Text>
+                  </TouchableOpacity>
 
-          <TouchableOpacity
-            style={d.buyAgainBtn}
-            activeOpacity={0.85}
-            onPress={() => setConfirmModal({ visible: true, type: 'reorder' })}
-            accessibilityRole="button"
-            accessibilityLabel="Buy this item again"
-          >
-            <MaterialCommunityIcons
-              name="refresh"
-              size={wp('4.6%')}
-              color={UI_COLORS.primary}
-            />
-            <AppText variant="labelStrong" tone="brand">
-              Buy again
-            </AppText>
-          </TouchableOpacity>
-        </View>
-
-        <View style={d.card}>
-          <View style={d.statusRow}>
-            <View style={d.statusInfo}>
-              <AppText variant="micro" tone="faint">
-                ORDER STATUS
-              </AppText>
-              <AppText variant="bodyStrong" numberOfLines={1}>
-                {orderDetails?.header?.orderStatusText ||
-                  selectedItem?.orderStatusText ||
-                  'Order placed'}
-              </AppText>
-              {!!orderDetails?.header?.orderDate && (
-                <AppText variant="caption" tone="muted">
-                  {new Date(
-                    orderDetails.header.orderDate,
-                  ).toLocaleDateString()}
-                </AppText>
+                  <View style={d.returnNote}>
+                    <AppIcons.Reload
+                      size={dp(16)}
+                      color={DESIGN_COLORS.orange}
+                    />
+                    <Text style={d.returnNoteText}>
+                      Return window close after{' '}
+                      <Text style={d.returnNoteAccent}>7 days</Text>
+                    </Text>
+                  </View>
+                </View>
               )}
             </View>
+          ))}
 
-            {trackingSteps.length > 0 && (
-              <TouchableOpacity
-                style={d.trackBtn}
-                activeOpacity={0.85}
-                onPress={() => setIsTrackOpen(!isTrackOpen)}
-                accessibilityRole="button"
-                accessibilityLabel={
-                  isTrackOpen ? 'Hide order tracking' : 'Track order'
-                }
-              >
-                <AppText variant="labelStrong" tone="brand">
-                  Track
-                </AppText>
-                {isTrackOpen ? (
-                  <AppIcons.ArrowUp size={16} color={UI_COLORS.primary} />
-                ) : (
-                  <AppIcons.ArrowDown size={16} color={UI_COLORS.primary} />
-                )}
-              </TouchableOpacity>
-            )}
-          </View>
-
-          {isTrackOpen && trackingSteps.length > 0 && (
-            <>
-              <Divider inset={UI_SPACING.lg} dashed />
-              <View style={d.timeline}>
-                {trackingSteps.map((step, index) => {
-                  const isLast = index === trackingSteps.length - 1;
-                  return (
-                    <View key={step.id} style={d.timelineRow}>
-                      <View style={d.timelineRail}>
-                        {step.isCurrent ? (
-                          <View style={d.dotCurrent}>{step.icon}</View>
-                        ) : step.isCompleted ? (
-                          <View style={d.dotDone} />
-                        ) : (
-                          <View style={d.dotPending} />
-                        )}
-                        {!isLast && (
-                          <View
-                            style={
-                              step.isCompleted
-                                ? d.railLineDone
-                                : d.railLinePending
-                            }
-                          />
-                        )}
-                      </View>
-                      <View style={d.timelineBody}>
-                        <AppText
-                          variant="labelStrong"
-                          tone={step.isCurrent ? 'brand' : 'primary'}
-                        >
-                          {step.title}
-                        </AppText>
-                        {!!step.subtitle && (
-                          <AppText variant="caption" tone="muted">
-                            {step.subtitle}
-                          </AppText>
-                        )}
-                        {!!step.time && (
-                          <AppText variant="caption" tone="faint">
-                            {step.time}
-                          </AppText>
-                        )}
-                      </View>
-                    </View>
-                  );
-                })}
-              </View>
-            </>
+          {(header?.canMarkOverallReview || ratingSubmitted) && (
+            <RatingBlock
+              title="How was your experience?"
+              caption="Tap a star to rate this order"
+              rating={rating}
+              onRate={setRating}
+              reviewText={reviewText}
+              onChangeReview={setReviewText}
+              placeholder="Write a review (optional)"
+              submitted={ratingSubmitted}
+              submittedText="Thanks for rating this order."
+              onSubmit={handleSubmitRating}
+            />
           )}
         </View>
 
-        {otherItems.length > 0 && (
+        {!!header && (
           <View style={d.card}>
-            <View style={d.sectionHeading}>
-              <AppText variant="heading">Also in this order</AppText>
-              <Badge
-                tone="neutral"
-                label={`${otherItems.length} ${
-                  otherItems.length === 1 ? 'item' : 'items'
-                }`}
-              />
-            </View>
-            <Divider inset={UI_SPACING.lg} />
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={d.thumbRow}
-            >
-              {otherItems.map(otherItem => (
-                <TouchableOpacity
-                  key={otherItem.orderItemId}
-                  style={d.thumb}
-                  activeOpacity={0.85}
-                  onPress={() => setSelectedItem(otherItem)}
-                  accessibilityRole="button"
-                  accessibilityLabel={`View ${otherItem.productName}`}
+            <View style={d.cardPad}>
+              <View style={d.billRow}>
+                <Text style={d.billLabel}>Item Total</Text>
+                <Text style={d.billValue}>{money(itemTotal)}</Text>
+              </View>
+
+              <View style={d.billRow}>
+                <Text style={d.billLabel}>Delivery charge</Text>
+                <Text
+                  style={deliveryCharge === 0 ? d.billValueGreen : d.billValue}
                 >
-                  <FallbackImage
-                    source={getImageUrl(otherItem.featuredImage)}
-                    style={d.thumbImage}
-                    resizeMode="cover"
-                  />
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
+                  {deliveryCharge === 0 ? 'FREE' : money(deliveryCharge)}
+                </Text>
+              </View>
+
+              {discountTotal > 0 && (
+                <View style={d.billRow}>
+                  <Text style={d.billLabel}>Item discount</Text>
+                  <Text style={d.billValueGreen}>
+                    {`- ${money(discountTotal)}`}
+                  </Text>
+                </View>
+              )}
+
+              <View style={d.billRule} />
+
+              <View style={d.toPayRow}>
+                <View>
+                  <Text style={d.toPayLabel}>To pay</Text>
+                  <Text style={d.toPayNote}>
+                    {`Inclusive of GST ${money(taxTotal)}`}
+                  </Text>
+                </View>
+                <Text style={d.toPayValue}>{money(grandTotal)}</Text>
+              </View>
+            </View>
+
+            {discountTotal > 0 && (
+              <View style={d.savedStrip}>
+                <AppIcons.CheckCircle
+                  size={dp(15)}
+                  color={DESIGN_COLORS.greenDeep}
+                />
+                <Text style={d.savedText}>
+                  {`You saved ${money(discountTotal)} on this order`}
+                </Text>
+              </View>
+            )}
           </View>
         )}
 
-        {!!orderNumber && (
-          <View style={d.card}>
-            <View style={d.metaRow}>
-              <AppText variant="micro" tone="faint">
-                ORDER ID
-              </AppText>
-              <AppText variant="labelStrong">{orderNumber}</AppText>
+        {!!payment && (
+          <View style={[d.card, d.cardPad]}>
+            <Text style={d.sectionTitle}>Payment details</Text>
+
+            <View style={d.payRow}>
+              <View style={d.iconTile}>
+                <AppIcons.PaymentCard
+                  size={dp(19)}
+                  color={DESIGN_COLORS.body}
+                />
+              </View>
+
+              <View style={d.payBody}>
+                <Text style={d.payMethod}>
+                  {payment.paymentMethod === 'COD'
+                    ? 'Cash on delivery'
+                    : 'Online payment'}
+                </Text>
+                <Text style={d.payCaption}>Total Amount</Text>
+              </View>
+
+              <View style={d.payValueCol}>
+                <Text style={d.payAmount}>{money(payment.paymentAmount)}</Text>
+                {payment.paymentStatus === 'success' && (
+                  <View style={d.paidPill}>
+                    <AppIcons.CheckCircle
+                      size={dp(11)}
+                      color={DESIGN_COLORS.greenDeep}
+                    />
+                    <Text style={d.paidPillText}>Paid successfully</Text>
+                  </View>
+                )}
+              </View>
+            </View>
+          </View>
+        )}
+
+        {!!invoiceUrl && (
+          <TouchableOpacity
+            style={[d.card, d.cardPad]}
+            activeOpacity={0.85}
+            onPress={openInvoice}
+            accessibilityRole="button"
+            accessibilityLabel="View invoice"
+          >
+            <View style={d.invoiceRow}>
+              <View style={d.iconTile}>
+                <AppIcons.Invoice size={dp(19)} color={DESIGN_COLORS.body} />
+              </View>
+
+              <View style={d.invoiceBody}>
+                <Text style={d.invoiceTitle}>View invoice</Text>
+                {!!header?.invoiceNumber && (
+                  <Text style={d.invoiceNo}>
+                    {`Invoice ${header.invoiceNumber}`}
+                  </Text>
+                )}
+              </View>
+
+              <AppIcons.ChevronRight
+                size={dp(22)}
+                color={DESIGN_COLORS.muted}
+              />
+            </View>
+          </TouchableOpacity>
+        )}
+
+        {reachedStage >= 0 && (
+          <View style={d.trackBlock}>
+            <View style={d.trackHeaderRow}>
+              <FallbackImage
+                source={getImageUrl(items[0]?.featuredImage)}
+                style={d.trackThumb}
+                resizeMode="contain"
+              />
+
+              <View style={d.trackInfo}>
+                <Text style={d.trackEta}>{header?.orderStatusText}</Text>
+                <Text style={d.trackName} numberOfLines={1}>
+                  {items[0]?.productName}
+                </Text>
+                {!!orderNumber && (
+                  <Text style={d.trackOrderNo}>{`Order #${orderNumber}`}</Text>
+                )}
+              </View>
+
+              {/* <TouchableOpacity
+                style={d.trackCta}
+                activeOpacity={0.85}
+                onPress={() => setIsTrackOpen(!isTrackOpen)}
+                accessibilityRole="button"
+                accessibilityLabel="Track order"
+              >
+                <Text style={d.trackCtaText}>Track</Text>
+                <AppIcons.ArrowRightCircle
+                  size={dp(15)}
+                  color={DESIGN_COLORS.white}
+                />
+              </TouchableOpacity> */}
+            </View>
+
+            <View style={d.stepper}>
+              <View style={d.stepperTrack}>
+                {STEPPER_STAGES.map((stage, index) => {
+                  const done = index <= reachedStage;
+                  return (
+                    <React.Fragment key={stage.label}>
+                      {index > 0 && (
+                        <View
+                          style={[
+                            d.stepConnector,
+                            done ? d.stepConnectorDone : d.stepConnectorPending,
+                          ]}
+                        />
+                      )}
+                      <View
+                        style={[
+                          d.stepNode,
+                          done ? d.stepNodeDone : d.stepNodePending,
+                        ]}
+                      >
+                        {done && (
+                          <AppIcons.CheckMark
+                            size={dp(12)}
+                            color={DESIGN_COLORS.white}
+                          />
+                        )}
+                      </View>
+                    </React.Fragment>
+                  );
+                })}
+              </View>
+
+              <View style={d.stepLabelRow}>
+                {STEPPER_STAGES.map((stage, index) => (
+                  <Text
+                    key={stage.label}
+                    numberOfLines={1}
+                    style={[
+                      d.stepLabel,
+                      index === 0
+                        ? d.stepLabelStart
+                        : index === STEPPER_STAGES.length - 1
+                        ? d.stepLabelEnd
+                        : d.stepLabelMid,
+                    ]}
+                  >
+                    {stage.label}
+                  </Text>
+                ))}
+              </View>
             </View>
           </View>
         )}
 
         {!!shipping && (
-          <View style={d.card}>
-            <View style={d.addressRow}>
-              <IconDisc size={wp('9.5%')} tone="ink">
-                <AppIcons.Location
-                  size={wp('4.6%')}
-                  color={UI_COLORS.ink}
+          <View style={d.deliveryCard}>
+            <View style={d.deliveryRow}>
+              <View style={d.deliveryAvatar}>
+                <AppIcons.Person
+                  size={dp(26)}
+                  color={DESIGN_COLORS.deliveryCard}
                 />
-              </IconDisc>
-              <View style={d.addressBody}>
-                <View style={d.addressHeadingRow}>
-                  <AppText variant="micro" tone="muted">
-                    DELIVERED TO
-                  </AppText>
-                  <Badge
-                    tone="ink"
-                    label={(shipping.addressType || 'Home').toUpperCase()}
-                  />
-                </View>
-                <AppText variant="label" tone="secondary">
-                  {`${shipping.custName}, ${shipping.addLine1}, ${
-                    shipping.pincodeAreaName || ''
-                  }, ${shipping.pincode}`}
-                </AppText>
               </View>
+              <View style={d.deliveryBody}>
+                <Text style={d.deliveryTitle}>Delivery To</Text>
+                <Text style={d.deliveryValue}>{shipping.custName}</Text>
+              </View>
+            </View>
+
+            <View style={d.deliveryRule} />
+
+            <View style={d.deliveryRowTop}>
+              <View style={d.deliveryIconCol}>
+                <AppIcons.Phone size={dp(20)} color={DESIGN_COLORS.ink} />
+              </View>
+              <View style={d.deliveryBody}>
+                <Text style={d.deliveryTitle}>Contact Details</Text>
+                <Text style={d.deliveryValue}>{`+91 ${shipping.phone}`}</Text>
+              </View>
+            </View>
+
+            <View style={d.deliveryGap} />
+
+            <View style={d.deliveryRowTop}>
+              <View style={d.deliveryIconCol}>
+                <AppIcons.Location size={dp(20)} color={DESIGN_COLORS.ink} />
+              </View>
+              <View style={d.deliveryBody}>
+                <Text style={d.deliveryTitle}>Address</Text>
+                <Text style={d.deliveryAddress}>
+                  {[
+                    shipping.addLine1,
+                    shipping.addLine2,
+                    shipping.landmark,
+                    shipping.pincodeAreaName,
+                    shipping.district,
+                    shipping.state,
+                    shipping.pincode,
+                  ]
+                    .filter(Boolean)
+                    .join(', ')}
+                </Text>
+              </View>
+            </View>
+
+            <View style={d.deliveryRule} />
+
+            <View style={d.itemPriceRow}>
+              <Text style={d.itemPriceLabel}>Item price</Text>
+              <Text style={d.itemPriceValue}>{money(grandTotal)}</Text>
             </View>
           </View>
         )}
 
-        {orderDetails?.header && (
-          <BillSection
-            bordered
-            billCalculations={{
-              itemTotal:
-                orderDetails.header.subTotal ??
-                orderDetails.header.subtotal ??
-                orderDetails.header.itemTotal ??
-                orderDetails.header.item_total ??
-                0,
-              savings:
-                orderDetails.header.discountTotal ??
-                orderDetails.header.productDiscount ??
-                orderDetails.header.product_discount ??
-                orderDetails.header.discountAmount ??
-                orderDetails.header.savings ??
-                orderDetails.header.totalDiscount ??
-                orderDetails.header.total_discount ??
-                0,
-              deliveryCharge:
-                orderDetails.header.deliveryCharge ??
-                orderDetails.header.deliveryAmount ??
-                orderDetails.header.delivery_amount ??
-                orderDetails.header.shippingFee ??
-                0,
-              totalTax:
-                orderDetails.header.taxTotal ??
-                orderDetails.header.totalTax ??
-                orderDetails.header.taxAmount ??
-                orderDetails.header.tax_total ??
-                0,
-              couponDiscount:
-                orderDetails.header.couponDiscount ??
-                orderDetails.header.couponAmount ??
-                orderDetails.header.appliedCouponAmount ??
-                0,
-              giftCardAmount:
-                orderDetails.header.giftCardAmount ??
-                orderDetails.header.giftcardValue ??
-                orderDetails.header.appliedGiftCardAmount ??
-                0,
-              bcoinsAppliedValue:
-                orderDetails.header.bCoinAppliedValue ??
-                orderDetails.header.bcoinsAppliedValue ??
-                orderDetails.header.appliedBcoins ??
-                orderDetails.header.bcoinValue ??
-                0,
-              totalSavings:
-                orderDetails.header.discountTotal ??
-                orderDetails.header.totalDiscount ??
-                orderDetails.header.total_discount ??
-                orderDetails.header.totalSavings ??
-                orderDetails.header.productDiscount ??
-                orderDetails.header.discountAmount ??
-                0,
-              toPay:
-                orderDetails.header.grandTotal ??
-                orderDetails.header.grand_total ??
-                orderDetails.header.totalAmount ??
-                orderDetails.header.total_amount ??
-                orderDetails.header.toPay ??
-                0,
-            }}
-          />
+        {groupOrders.length > 0 && (
+          <View style={[d.card, d.cardPad]}>
+            <Text style={d.sectionTitle}>
+              {`Group Order Placed on, ${longDate(groupOrders[0]?.orderDate)}`}
+            </Text>
+
+            {groupOrders.map((groupOrder, index) => (
+              <View key={groupOrder.orderId || index}>
+                <View style={d.groupRow}>
+                  <FallbackImage
+                    source={getImageUrl(groupOrder.featuredImage)}
+                    style={d.groupThumb}
+                    resizeMode="cover"
+                  />
+
+                  <View style={d.groupInfo}>
+                    <Text style={d.groupStatusText}>
+                      {groupOrder.orderStatusText}
+                    </Text>
+                    <Text style={d.groupName} numberOfLines={1}>
+                      {groupOrder.productName}
+                    </Text>
+                  </View>
+
+                  <TouchableOpacity
+                    style={d.groupCta}
+                    activeOpacity={0.85}
+                    onPress={() =>
+                      navigation.push('KshopeOrderDetails', {
+                        orderId: groupOrder.orderId,
+                      })
+                    }
+                    accessibilityRole="button"
+                    accessibilityLabel={`View status of order ${groupOrder.orderNumber}`}
+                  >
+                    <Text style={d.groupCtaText}>Status</Text>
+                    <AppIcons.ArrowRightCircle
+                      size={dp(14)}
+                      color={DESIGN_COLORS.white}
+                    />
+                  </TouchableOpacity>
+                </View>
+
+                <View style={d.groupMetaRow}>
+                  <View>
+                    <Text style={d.groupMetaLabel}>Order ID :</Text>
+                    <Text
+                      style={d.groupMetaValue}
+                    >{`#${groupOrder.orderNumber}`}</Text>
+                  </View>
+                  <View style={d.groupMetaRight}>
+                    <Text style={d.groupMetaLabel}>Total Amount :</Text>
+                    <Text style={d.groupTotal}>
+                      {money(groupOrder.grandTotal)}
+                    </Text>
+                  </View>
+                </View>
+
+                {index < groupOrders.length - 1 && <View style={d.groupRule} />}
+              </View>
+            ))}
+          </View>
+        )}
+
+        {(header?.canMarkDeliveryReview || agentRatingSubmitted) && (
+          <View style={[d.card, d.rateCard]}>
+            <RatingBlock
+              title="Rate your delivery partner"
+              caption={header?.deliveryAgentName || 'Delivery partner'}
+              rating={agentRating}
+              onRate={setAgentRating}
+              reviewText={agentReviewText}
+              onChangeReview={setAgentReviewText}
+              placeholder="How was the delivery? (optional)"
+              submitted={agentRatingSubmitted}
+              submittedText="Thanks for rating your delivery partner."
+              onSubmit={handleSubmitAgentRating}
+            />
+          </View>
         )}
 
         {canRetryPayment && (
@@ -739,24 +1107,20 @@ const MyOrderDetailsScreen = () => {
             accessibilityRole="button"
             accessibilityLabel="Retry payment"
           >
-            <AppIcons.ArrowUpBold color={UI_COLORS.onPrimary} size={18} />
-            <AppText variant="cta" tone="onDark">
-              Retry payment
-            </AppText>
+            <AppIcons.ArrowUpBold color={DESIGN_COLORS.white} size={dp(18)} />
+            <Text style={d.retryBtnText}>Retry payment</Text>
           </TouchableOpacity>
         )}
       </ScrollView>
 
-      {(isCancelled || canCancel || canReturn) && (
+      {(isCancelled || canCancel) && (
         <View style={d.bottomBar}>
           {isCancelled ? (
             <View style={[d.barGhostBtn, d.barGhostDanger]}>
-              <AppIcons.Close size={18} color={UI_COLORS.danger} />
-              <AppText variant="cta" tone="danger">
-                Cancelled
-              </AppText>
+              <AppIcons.Close size={dp(18)} color={DESIGN_COLORS.danger} />
+              <Text style={d.barBtnTextDanger}>Cancelled</Text>
             </View>
-          ) : canCancel ? (
+          ) : (
             <TouchableOpacity
               style={d.barGhostBtn}
               activeOpacity={0.85}
@@ -764,23 +1128,8 @@ const MyOrderDetailsScreen = () => {
               accessibilityRole="button"
               accessibilityLabel="Cancel this order"
             >
-              <AppIcons.Close size={18} color={UI_COLORS.textPrimary} />
-              <AppText variant="cta">Cancel</AppText>
-            </TouchableOpacity>
-          ) : null}
-
-          {canReturn && (
-            <TouchableOpacity
-              style={d.barSolidBtn}
-              activeOpacity={0.85}
-              onPress={() => setConfirmModal({ visible: true, type: 'return' })}
-              accessibilityRole="button"
-              accessibilityLabel="Return this item"
-            >
-              <AppIcons.ArrowDownBold color={UI_COLORS.onPrimary} size={18} />
-              <AppText variant="cta" tone="onDark">
-                Return item
-              </AppText>
+              <AppIcons.Close size={dp(18)} color={DESIGN_COLORS.ink} />
+              <Text style={d.barBtnText}>Cancel</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -816,7 +1165,7 @@ const MyOrderDetailsScreen = () => {
             ? 'Add to Cart'
             : 'Return'
         }
-        themeColor={UI_COLORS.primary}
+        themeColor={DESIGN_COLORS.orange}
       />
 
       <StatusModal

@@ -242,6 +242,26 @@ const Lock = ({ size = defaultSize, color = colors.primary, style }: IconProps) 
     <MaterialCommunityIcons name="lock" size={size} color={color} style={style} />
 );
 
+const Invoice = ({ size = defaultSize, color = colors.primary, style }: IconProps) => (
+    <MaterialCommunityIcons name="receipt-text-outline" size={size} color={color} style={style} />
+);
+
+const PaymentCard = ({ size = defaultSize, color = colors.primary, style }: IconProps) => (
+    <MaterialCommunityIcons name="credit-card-outline" size={size} color={color} style={style} />
+);
+
+const CheckCircle = ({ size = defaultSize, color = colors.primary, style }: IconProps) => (
+    <MaterialCommunityIcons name="check-decagram" size={size} color={color} style={style} />
+);
+
+const ReturnArrow = ({ size = defaultSize, color = colors.primary, style }: IconProps) => (
+    <MaterialCommunityIcons name="backup-restore" size={size} color={color} style={style} />
+);
+
+const ArrowRightCircle = ({ size = defaultSize, color = colors.primary, style }: IconProps) => (
+    <MaterialIcons name="arrow-forward" size={size} color={color} style={style} />
+);
+
 const Cash = ({ size = defaultSize, color = colors.primary, style }: IconProps) => (
     <MaterialCommunityIcons name="cash-multiple" size={size} color={color} style={style} />
 );
@@ -328,5 +348,10 @@ export const AppIcons = {
     Location,
     ArrowUpBold,
     ArrowDownBold,
-    ArrowBack
+    ArrowBack,
+    Invoice,
+    PaymentCard,
+    CheckCircle,
+    ReturnArrow,
+    ArrowRightCircle
 };

@@ -1,6 +1,4 @@
 export const PDP_ART = {
-  placeholder: require('../../../assets/images/logos/noimage.png'),
-
   trustQuality: require('../../../assets/images/product/redesign/trust_quality.png'),
   trustReturns: require('../../../assets/images/product/redesign/trust_returns.png'),
   trustSecure: require('../../../assets/images/product/redesign/trust_secure.png'),

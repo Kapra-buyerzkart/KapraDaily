@@ -75,6 +75,10 @@ export const useOrderDetails = (orderId, initialOrderData = null) => {
       if (!silent) setLoading(true);
       const response = await getOrderDetailsApi(id);
       if (response && response.success && response.data) {
+        console.log(
+          'Order Details Data:',
+          JSON.stringify(response.data, null, 2),
+        );
         setOrderData(response.data);
 
         const responseHeader = response.data.header || {};

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { StatusBar, StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import {
@@ -15,13 +15,12 @@ import DetailsAccordion from './sections/DetailsAccordion';
 import FeatureGrid from './sections/FeatureGrid';
 import ReviewTabs from './sections/ReviewTabs';
 import SimilarProducts from './sections/SimilarProducts';
-import BottomBar from './sections/BottomBar';
+import CartAction from './sections/CartAction';
 import { useProductDetails } from './data/useProductDetails';
 import {
   featureList,
   galleryImages,
   isOutOfStock,
-  money,
   pricing,
   productDescription,
   productSubtitle,
@@ -69,14 +68,9 @@ const ProductDetailsRedesignScreen: React.FC = () => {
     related,
     cartQty,
     stockBlocked,
+    addToCart,
     setQuantity,
   } = useProductDetails(id, product);
-
-  const [quantity, setLocalQuantity] = useState(1);
-
-  useEffect(() => {
-    setLocalQuantity(cartQty > 0 ? cartQty : 1);
-  }, [cartQty]);
 
   const wishlistId = current?.productId ?? rawId;
   const prices = pricing(current);
@@ -118,6 +112,15 @@ const ProductDetailsRedesignScreen: React.FC = () => {
           reviews={rating.reviews}
           hasRating={rating.hasRating}
           tokens={tokenCount(current, details, product)}
+          action={
+            <CartAction
+              quantity={cartQty}
+              outOfStock={outOfStock}
+              onAdd={addToCart}
+              onIncrement={() => setQuantity(cartQty + 1)}
+              onDecrement={() => setQuantity(cartQty - 1)}
+            />
+          }
         />
 
         <View style={styles.stripSpacer} />
@@ -144,20 +147,6 @@ const ProductDetailsRedesignScreen: React.FC = () => {
           onToggleWishlist={toggleWishlist}
         />
       </Animated.ScrollView>
-
-      <BottomBar
-        quantity={quantity}
-        price={money(
-          (Number(current?.specialPrice) || Number(current?.unitPrice) || 0) *
-            quantity,
-        )}
-        mrp={prices.mrp ? money(Number(current?.unitPrice) * quantity) : ''}
-        inCart={cartQty > 0}
-        outOfStock={outOfStock}
-        onDecrement={() => setLocalQuantity(value => Math.max(1, value - 1))}
-        onIncrement={() => setLocalQuantity(value => value + 1)}
-        onSubmit={() => setQuantity(quantity)}
-      />
     </View>
   );
 };
@@ -168,7 +157,7 @@ const styles = StyleSheet.create({
     backgroundColor: PDP_COLORS.white,
   },
   content: {
-    paddingBottom: s(24),
+    paddingBottom: s(110),
   },
   stripSpacer: {
     height: s(24),

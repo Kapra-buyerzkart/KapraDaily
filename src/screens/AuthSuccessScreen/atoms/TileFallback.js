@@ -2,8 +2,9 @@ import React from 'react';
 import { Image, StyleSheet, View } from 'react-native';
 
 import LandingText from './LandingText';
-import { FALLBACK_LOGO } from '../constants';
 import { FALLBACK_LOGO_RATIO, PALETTE, SPACING, wp } from '../theme';
+
+const FALLBACK_LOGO = require('../../../assets/images/udendeal.png');
 
 const LOGO_WIDTH = wp('26%');
 

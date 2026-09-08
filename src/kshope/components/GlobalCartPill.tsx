@@ -5,6 +5,7 @@ import FloatingCartButton from './FloatingCartButton';
 
 const TABS_ROUTE = 'KshopeHome';
 const CATEGORY_ROUTE = 'KshopeCategory';
+const PRODUCT_ROUTE = 'KshopeProductDetails';
 
 interface GlobalCartPillProps {
   routeName?: string;
@@ -17,7 +18,7 @@ const GlobalCartPill: React.FC<GlobalCartPillProps> = ({ routeName }) => {
     return <FloatingCartButton />;
   }
 
-  if (routeName === CATEGORY_ROUTE) {
+  if (routeName === CATEGORY_ROUTE || routeName === PRODUCT_ROUTE) {
     return <FloatingCartButton bottom={insets.bottom + hp('1.5%')} />;
   }
 

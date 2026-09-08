@@ -89,11 +89,32 @@ export const GUTTER = CART_GUTTER;
 export const TYPE = CART_TYPE;
 
 export const TILE_RATIO = {
-  wide: 890 / 450,
-  half: 1,
+  wide: 1194 / 672,
+  half: 1.23,
 };
 
-export const LOGO_RATIO = 900 / 465;
+const artwork = (width, height, padLeft, padTop, padRight = 0, padBottom = 0) => {
+  const spanX = 1 - (padLeft + padRight) / width;
+  const spanY = 1 - (padTop + padBottom) / height;
+  const pct = value => `${Number(value.toFixed(3))}%`;
+
+  return {
+    ratio: (width / height) * (spanX / spanY),
+    frame: {
+      width: pct(100 / spanX),
+      height: pct(100 / spanY),
+      left: pct((-100 * (padLeft / width)) / spanX),
+      top: pct((-100 * (padTop / height)) / spanY),
+    },
+  };
+};
+
+export const TILE_ART = {
+  tickets: artwork(654, 552, 78, 29),
+  d2c: artwork(700, 548, 123, 25),
+};
+
+export const LOGO_RATIO = 481 / 260;
 
 export const FALLBACK_LOGO_RATIO = 2229 / 1124;
 

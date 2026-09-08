@@ -13,7 +13,6 @@ import LinearGradient from 'react-native-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { HOME_FONTS, SCREEN_WIDTH, fs, s } from '../../../Home/redesign/theme';
 import { BackIcon, HeartIcon, HeartSolidIcon } from '../icons';
-import { PDP_ART } from '../assets';
 import { HOME_ART } from '../../../Home/redesign/assets';
 import { PDP_COLORS } from '../theme';
 
@@ -72,7 +71,7 @@ const Gallery: React.FC<Props> = ({
   const { top } = useSafeAreaInsets();
   const [index, setIndex] = useState(0);
   const cardHeight = s(360) + top;
-  const slides = images.length > 0 ? images : [PDP_ART.placeholder];
+  const slides = images.length > 0 ? images : [null];
 
   const onScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const width = event.nativeEvent.layoutMeasurement.width || SCREEN_WIDTH;

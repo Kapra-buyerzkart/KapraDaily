@@ -2,9 +2,7 @@ import React from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Shimmer } from '../../components/atoms';
-import { HEADER_BG } from '../../components/HomeHeader';
 import { UI_COLORS, UI_RADIUS, UI_SPACING } from '../../theme/tokens';
-import { colors } from '../../theme/colours';
 
 const HEADER_ITEMS = [0, 1, 2, 3, 4];
 const TABS = [64, 88, 72, 96];
@@ -18,16 +16,15 @@ const HeaderSkeleton: React.FC = () => {
     <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
       <View style={styles.titleRow}>
         <View style={styles.titleBlock}>
-          <Shimmer tone="dark" width={132} height={26} radius={UI_RADIUS.xs} />
+          <Shimmer width={132} height={26} radius={UI_RADIUS.xs} />
           <Shimmer
-            tone="dark"
             width={186}
             height={13}
             radius={UI_RADIUS.xs}
             style={styles.address}
           />
         </View>
-        <Shimmer tone="dark" width={44} height={44} radius={22} />
+        <Shimmer width={44} height={44} radius={22} />
       </View>
 
       <View style={styles.searchRow}>
@@ -35,7 +32,6 @@ const HeaderSkeleton: React.FC = () => {
         {[0, 1, 2].map(i => (
           <Shimmer
             key={i}
-            tone="dark"
             width={23}
             height={23}
             radius={6}
@@ -50,7 +46,6 @@ const HeaderSkeleton: React.FC = () => {
           {TABS.map((width, i) => (
             <Shimmer
               key={i}
-              tone="dark"
               width={width}
               height={15}
               radius={UI_RADIUS.xs}
@@ -60,20 +55,18 @@ const HeaderSkeleton: React.FC = () => {
         </View>
       </View>
 
-      <View style={styles.panel}>
-        <View style={styles.itemsRow}>
-          {HEADER_ITEMS.map(i => (
-            <View key={i} style={styles.item}>
-              <Shimmer width={62} height={62} radius={31} />
-              <Shimmer
-                width={58}
-                height={12}
-                radius={UI_RADIUS.xs}
-                style={styles.itemLabel}
-              />
-            </View>
-          ))}
-        </View>
+      <View style={styles.itemsRow}>
+        {HEADER_ITEMS.map(i => (
+          <View key={i} style={styles.item}>
+            <Shimmer width={62} height={62} radius={31} />
+            <Shimmer
+              width={58}
+              height={12}
+              radius={UI_RADIUS.xs}
+              style={styles.itemLabel}
+            />
+          </View>
+        ))}
       </View>
     </View>
   );
@@ -133,7 +126,7 @@ const HomeSkeleton: React.FC = () => (
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: UI_COLORS.canvas },
-  header: { backgroundColor: HEADER_BG },
+  header: { backgroundColor: UI_COLORS.canvas },
   titleRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -156,7 +149,7 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     height: 1.5,
-    backgroundColor: colors.white,
+    backgroundColor: UI_COLORS.skeletonSurface,
   },
   tabsRow: {
     flexDirection: 'row',
@@ -165,7 +158,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 30,
   },
   tabLabel: { marginHorizontal: 20 },
-  panel: { backgroundColor: HEADER_BG },
   itemsRow: {
     flexDirection: 'row',
     paddingHorizontal: 12,

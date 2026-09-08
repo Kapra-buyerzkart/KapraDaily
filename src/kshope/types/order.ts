@@ -7,7 +7,12 @@ export interface OrderLineItem {
   unitPrice?: number;
   price?: number;
   lineTotal?: number;
+  soldPrice?: number;
+  taxAmount?: number;
+  bTokenValue?: number;
+  sku?: string;
   canReturn?: boolean;
+  returnRefundStatus?: string | null;
   orderId?: string | number;
   orderNumber?: string | number;
   [key: string]: any;
@@ -35,9 +40,24 @@ export interface OrderTimelineStep {
 export interface OrderShippingAddress {
   addressType?: string;
   custName?: string;
+  phone?: string;
   addLine1?: string;
+  addLine2?: string;
+  landmark?: string;
+  district?: string;
+  state?: string;
   pincodeAreaName?: string;
   pincode?: string | number;
+  [key: string]: any;
+}
+
+export interface OrderPayment {
+  paymentMethod?: string;
+  paymentStatus?: string;
+  paymentAmount?: number;
+  transactionId?: string | null;
+  initiatedAt?: string;
+  completedAt?: string;
   [key: string]: any;
 }
 
@@ -88,6 +108,19 @@ export interface OrderHeader {
   totalAmount?: number;
   total_amount?: number;
   toPay?: number;
+  invoiceFileUrl?: string;
+  invoiceNumber?: string;
+  deliveryMode?: string;
+  canReorder?: boolean;
+  canMarkOverallReview?: boolean;
+  overallRating?: number;
+  reviewRating?: number;
+  reviewText?: string;
+  canMarkDeliveryReview?: boolean;
+  deliveryAgentName?: string;
+  deliveryAgentRating?: number;
+  deliveryAgentReviewText?: string;
+  hasOnlinePaid?: boolean;
   [key: string]: any;
 }
 
@@ -95,6 +128,8 @@ export interface OrderDetails {
   header?: OrderHeader;
   items?: OrderLineItem[];
   timeline?: OrderTimelineStep[];
+  payments?: OrderPayment[];
   shippingAddress?: OrderShippingAddress;
+  billingAddress?: OrderShippingAddress;
   [key: string]: any;
 }

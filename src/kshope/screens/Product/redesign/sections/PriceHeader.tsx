@@ -16,6 +16,7 @@ type Props = {
   reviews: number;
   hasRating: boolean;
   tokens: number;
+  action?: React.ReactNode;
 };
 
 const PriceHeader: React.FC<Props> = ({
@@ -29,6 +30,7 @@ const PriceHeader: React.FC<Props> = ({
   reviews,
   hasRating,
   tokens,
+  action,
 }) => (
   <View style={styles.wrap}>
     <View style={styles.main}>
@@ -42,16 +44,21 @@ const PriceHeader: React.FC<Props> = ({
         {mrp ? (
           <Text style={styles.mrp} numberOfLines={1}>{`MRP ${mrp}`}</Text>
         ) : null}
-        {saveLabel ? (
-          <Text style={styles.save} numberOfLines={1}>
-            {saveLabel}
-          </Text>
-        ) : null}
       </View>
 
-      {tokens > 0 ? (
-        <TokenBadge tokens={tokens} size={11} style={styles.tokenBadge} />
-      ) : null}
+      <View style={styles.actionRow}>
+        <View style={styles.actionMeta}>
+          {saveLabel ? (
+            <Text style={styles.save} numberOfLines={1}>
+              {saveLabel}
+            </Text>
+          ) : null}
+          {tokens > 0 ? (
+            <TokenBadge tokens={tokens} size={11} style={styles.tokenBadge} />
+          ) : null}
+        </View>
+        {action}
+      </View>
     </View>
 
     {hasRating ? (
@@ -124,12 +131,23 @@ const styles = StyleSheet.create({
   save: {
     fontFamily: HOME_FONTS.medium,
     fontSize: fs(14),
-    lineHeight: fs(32) * 1.1,
+    lineHeight: fs(14) * 1.35,
     color: PDP_COLORS.save,
+  },
+  actionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: s(12),
+    marginTop: s(12),
+  },
+  actionMeta: {
+    flex: 1,
+    gap: s(8),
+    alignItems: 'flex-start',
   },
   tokenBadge: {
     alignSelf: 'flex-start',
-    marginTop: s(10),
   },
   ratingCol: {
     alignItems: 'flex-start',

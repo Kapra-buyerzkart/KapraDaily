@@ -18,10 +18,11 @@ export default React.memo(LocatingView);
 const styles = StyleSheet.create({
   wrap: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   status: {
-    marginTop: SPACING.xxxl,
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: SPACING.xxxl,
   },
 });

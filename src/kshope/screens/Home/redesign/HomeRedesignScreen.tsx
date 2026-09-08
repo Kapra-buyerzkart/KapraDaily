@@ -212,12 +212,21 @@ const HomeRedesignScreen: React.FC = () => {
   const openRecommendedCard = useCallback(
     (item: RecCard & Linkable) => {
       if (item.variant === 'banner') {
-        openBanner(item.raw);
+        const raw: any = item.raw;
+        const linkType = String(
+          raw?.linkType || raw?.LinkType || '',
+        ).toLowerCase();
+        const linkValue = raw?.linkValue ?? raw?.LinkValue;
+        if (linkType === 'product' && linkValue) {
+          openSearch({ id: linkValue });
+          return;
+        }
+        openBanner(raw);
         return;
       }
       openProduct(item);
     },
-    [openBanner, openProduct],
+    [openBanner, openProduct, openSearch],
   );
 
   const topBanner = sections.banners.top?.[0];
@@ -436,6 +445,8 @@ const styles = StyleSheet.create({
     width: SCREEN_WIDTH,
     height: hp('17.5%'),
     top: -8,
+    // borderBottomLeftRadius: RADIUS.lg,
+    // borderBottomRightRadius: RADIUS.lg,
   },
   featuredBannerBlend: {
     position: 'absolute',

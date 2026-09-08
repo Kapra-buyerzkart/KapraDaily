@@ -4,7 +4,7 @@ import { Image, StyleSheet } from 'react-native';
 import TileFallback from './TileFallback';
 import TileSkeleton from './TileSkeleton';
 
-const TileArtwork = ({ source, label, caption, onNaturalSize }) => {
+const TileArtwork = ({ source, label, caption, frame, onNaturalSize }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasFailed, setHasFailed] = useState(false);
 
@@ -26,8 +26,8 @@ const TileArtwork = ({ source, label, caption, onNaturalSize }) => {
       {showArtwork ? (
         <Image
           source={source}
-          style={styles.artwork}
-          resizeMode="cover"
+          style={frame ? [styles.framed, frame] : styles.artwork}
+          resizeMode="contain"
           fadeDuration={0}
           progressiveRenderingEnabled
           onLoad={handleLoad}
@@ -36,7 +36,9 @@ const TileArtwork = ({ source, label, caption, onNaturalSize }) => {
       ) : null}
 
       {showArtwork ? (
-        isLoaded ? null : <TileSkeleton label={label} caption={caption} />
+        isLoaded ? null : (
+          <TileSkeleton label={label} caption={caption} />
+        )
       ) : (
         <TileFallback label={label} caption={caption} />
       )}
@@ -51,5 +53,8 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     width: '100%',
     height: '100%',
+  },
+  framed: {
+    position: 'absolute',
   },
 });

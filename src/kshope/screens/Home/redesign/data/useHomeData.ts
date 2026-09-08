@@ -226,6 +226,26 @@ export const useHomeData = () => {
       RECOMMENDED,
     );
 
+    console.log(
+      '[Home] recommended block',
+      JSON.stringify(
+        {
+          goatDealsCount: goatDeals.length,
+          thirdProductsCount: thirdProducts.length,
+          usingFallback: recommendedCards === RECOMMENDED,
+          titleBlock: thirdBlock,
+          goatDeals,
+          thirdProducts,
+        },
+        null,
+        2,
+      ),
+    );
+    console.log(
+      '[Home] recommended cards',
+      JSON.stringify(recommendedCards, null, 2),
+    );
+
     const bestSellingRaw = (homeData?.showcaseSlider || []).slice(0, 6);
     const bestSellingTiles = orFallback(
       bestSellingRaw.map(mapCategoryTile),

@@ -3,7 +3,7 @@ import { searchProductsApi } from '../api/services/productService';
 import { useDebounce } from './useDebounce';
 import { useKshopeAreaId } from './useKshopeAreaId';
 
-const useProductSearch = (initialPincodeId: any, initialCatId: any = null, filters: any = {}, initialAttrValueId: any = null, initialSearchTerm: string = '') => {
+const useProductSearch = (initialPincodeId: any, initialCatId: any = null, filters: any = {}, initialAttrValueId: any = null, initialSearchTerm: string = '', initialProductId: any = null) => {
     const { areaId } = useKshopeAreaId();
     const [searchTerm, setSearchTerm] = useState(initialSearchTerm);
     const [catId, setCatId] = useState(initialCatId);
@@ -35,7 +35,7 @@ const useProductSearch = (initialPincodeId: any, initialCatId: any = null, filte
     const fetchProducts = useCallback(async (page = 1) => {
         const trimmedTerm = debouncedSearchTerm.trim();
 
-        if (trimmedTerm.length === 0 && !catId && !initialAttrValueId) {
+        if (trimmedTerm.length === 0 && !catId && !initialAttrValueId && !initialProductId) {
             setSuggestions([]);
             setResultCount(0);
             setLoading(false);
@@ -120,6 +120,40 @@ const useProductSearch = (initialPincodeId: any, initialCatId: any = null, filte
                     }
                     setHasMore(false);
                 }
+            } else if (initialProductId) {
+                const payload = {
+                    pincodeAreaId: activePincodeId,
+                    prName: null,
+                    catId: null,
+                    productId: initialProductId,
+                    priceMin: priceMin,
+                    priceMax: priceMax,
+                    filterValues: initialAttrValueId ? initialAttrValueId.toString() : null,
+                    attrValueId: initialAttrValueId,
+                    sortBy: sortBy,
+                    pageNumber: page,
+                    pageSize: pageSize
+                };
+                response = await searchProductsApi(payload);
+
+                if (response && response.success && response.data && Array.isArray(response.data.items)) {
+                    const newItems = response.data.items;
+                    if (page === 1) {
+                        setSuggestions(newItems);
+                        setResultCount(response.data.totalCount || newItems.length);
+                    } else {
+                        setSuggestions(prev => [...prev, ...newItems]);
+                    }
+                    setHasMore(newItems.length === pageSize);
+                    setPageNumber(page);
+                    setIsGlobalFallback(false);
+                } else {
+                    if (page === 1) {
+                        setSuggestions([]);
+                        setResultCount(0);
+                    }
+                    setHasMore(false);
+                }
             } else if (initialAttrValueId) {
                 const payload = {
                     pincodeAreaId: activePincodeId,
@@ -166,7 +200,7 @@ const useProductSearch = (initialPincodeId: any, initialCatId: any = null, filte
             setIsLoadingMore(false);
             showLoader(false);
         }
-    }, [debouncedSearchTerm, catId, initialAttrValueId, activePincodeId, sortBy, priceMin, priceMax, pageSize]);
+    }, [debouncedSearchTerm, catId, initialAttrValueId, initialProductId, activePincodeId, sortBy, priceMin, priceMax, pageSize]);
 
     useEffect(() => {
         fetchProducts(1);

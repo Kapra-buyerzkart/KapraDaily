@@ -3,8 +3,9 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { TileArtwork, TileSurface } from '../atoms';
 import { TILE_RATIO } from '../theme';
 
-const ServiceTile = ({ id, span, label, caption, source, onSelect, style }) => {
-  const slotRatio = TILE_RATIO[span] || TILE_RATIO.wide;
+const ServiceTile = ({ span = 'wide', label, caption, source, art, onPress }) => {
+  const isSplit = span === 'half';
+  const slotRatio = art?.ratio || TILE_RATIO[span] || TILE_RATIO.wide;
   const [ratio, setRatio] = useState(slotRatio);
   const uri = source?.uri;
 
@@ -12,17 +13,19 @@ const ServiceTile = ({ id, span, label, caption, source, onSelect, style }) => {
     setRatio(slotRatio);
   }, [slotRatio, uri]);
 
-  const handlePress = useCallback(() => onSelect?.(id), [id, onSelect]);
-
-  const handleNaturalSize = useCallback((width, height) => {
-    if (width > 0 && height > 0) setRatio(width / height);
-  }, []);
+  const handleNaturalSize = useCallback(
+    (naturalWidth, naturalHeight) => {
+      if (isSplit || art) return;
+      if (naturalWidth > 0 && naturalHeight > 0)
+        setRatio(naturalWidth / naturalHeight);
+    },
+    [art, isSplit],
+  );
 
   return (
     <TileSurface
       ratio={ratio}
-      style={style}
-      onPress={handlePress}
+      onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={caption ? `${label}. ${caption}` : label}
     >
@@ -30,6 +33,7 @@ const ServiceTile = ({ id, span, label, caption, source, onSelect, style }) => {
         source={source}
         label={label}
         caption={caption}
+        frame={art?.frame}
         onNaturalSize={handleNaturalSize}
       />
     </TileSurface>
