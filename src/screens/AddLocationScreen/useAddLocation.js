@@ -12,6 +12,7 @@ import { AppContext } from '@/context/appContext';
 import { useAddresses } from '@/hooks/useAddresses';
 import { GOOGLE_MAPS_API_KEY } from '@/globals/secrets';
 import secureStore from '@/utils/secureStore';
+import { getAddressLine1 } from '@/utils/addressFormat';
 
 import { DEFAULT_COORDS, REGION_DELTA } from './constants';
 import {
@@ -100,21 +101,12 @@ const useAddLocation = () => {
           const pick = type =>
             components.find(c => c.types.includes(type))?.long_name || '';
 
-          const streetNumber = pick('street_number');
-          const routeName = pick('route');
-          const sublocality2 = pick('sublocality_level_2');
           const sublocality1 = pick('sublocality_level_1');
           const neighborhood = pick('neighborhood');
           const locality = pick('locality');
           const postalCode = pick('postal_code');
 
-          applyValue(
-            'addLine1',
-            `${streetNumber} ${routeName}`.trim() ||
-              sublocality2 ||
-              sublocality1 ||
-              '',
-          );
+          applyValue('addLine1', getAddressLine1(response.data.results[0]));
           applyValue(
             'addLine2',
             (sublocality1 || neighborhood || locality).trim(),

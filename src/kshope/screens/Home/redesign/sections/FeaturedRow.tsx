@@ -1,20 +1,30 @@
-import React from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import {
   FlatList,
+  LayoutChangeEvent,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Path } from 'react-native-svg';
 import { ProductTile } from '../content';
-import { DiscountBadge, ProductImage, StrikePrice } from '../parts';
+import {
+  DiscountBadge,
+  ProductImage,
+  SectionTitle,
+  StrikePrice,
+} from '../parts';
 import {
   CARD_GAP,
   GUTTER,
   HOME_COLORS,
   HOME_FONTS,
   RADIUS,
+  SECTION_GAP,
   SPACE,
   colWidth,
   fs,
@@ -32,8 +42,22 @@ const HeartOutline: React.FC<{ active?: boolean }> = ({ active }) => (
   </Svg>
 );
 
+const ChevronRight: React.FC = () => (
+  <Svg width={s(8)} height={s(13)} viewBox="0 0 8 14" fill="none">
+    <Path
+      d="M1.25 1L6.75 7L1.25 13"
+      stroke={HOME_COLORS.cocoa}
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </Svg>
+);
+
 type Props = {
   items: ProductTile[];
+  title?: string;
+  accent?: string;
   onPressProduct?: (item: ProductTile) => void;
   onToggleWishlist?: (item: ProductTile) => void;
   wishlisted?: string[];
@@ -41,69 +65,153 @@ type Props = {
 
 const FeaturedRow: React.FC<Props> = ({
   items,
+  title,
+  accent,
   onPressProduct,
   onToggleWishlist,
   wishlisted = [],
-}) => (
-  <View style={styles.wrap}>
-    <FlatList
-      data={items}
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      keyExtractor={item => item.id}
-      contentContainerStyle={styles.row}
-      renderItem={({ item }) => (
-        <TouchableOpacity
-          activeOpacity={0.9}
-          onPress={() => onPressProduct?.(item)}
-          style={styles.card}
-        >
-          <View style={styles.cardTop}>
-            <DiscountBadge label={item.discount} style={styles.badge} />
+}) => {
+  const listRef = useRef<FlatList<ProductTile>>(null);
+  const offset = useRef(0);
+  const viewportWidth = useRef(0);
+  const contentWidth = useRef(0);
+  const [hasMore, setHasMore] = useState(false);
+
+  const sync = () => {
+    setHasMore(
+      contentWidth.current - viewportWidth.current - offset.current > 8,
+    );
+  };
+
+  const onScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
+    offset.current = contentOffset.x;
+    contentWidth.current = contentSize.width;
+    viewportWidth.current = layoutMeasurement.width;
+    sync();
+  }, []);
+
+  const onContentSizeChange = useCallback((width: number) => {
+    contentWidth.current = width;
+    sync();
+  }, []);
+
+  const onLayout = useCallback((e: LayoutChangeEvent) => {
+    viewportWidth.current = e.nativeEvent.layout.width;
+    sync();
+  }, []);
+
+  const scrollForward = useCallback(() => {
+    listRef.current?.scrollToOffset({
+      offset: offset.current + (CARD_W + CARD_GAP) * 2,
+      animated: true,
+    });
+  }, []);
+
+  return (
+    <View style={styles.wrap}>
+      {title ? (
+        <View style={styles.titleRow}>
+          <SectionTitle text={title} accent={accent} />
+          {hasMore ? (
             <TouchableOpacity
-              activeOpacity={0.7}
+              activeOpacity={0.85}
+              onPress={scrollForward}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              onPress={() => onToggleWishlist?.(item)}
-              style={styles.heart}
+              style={styles.arrowButton}
             >
-              <HeartOutline active={wishlisted.includes(item.id)} />
+              <ChevronRight />
             </TouchableOpacity>
-            <ProductImage
-              source={item.image}
-              resizeMode="contain"
-              style={styles.productImage}
-            />
-          </View>
+          ) : null}
+        </View>
+      ) : null}
 
-          <View style={styles.cardBody}>
-            <Text style={styles.brand} numberOfLines={1}>
-              {item.brand}
-            </Text>
-            <Text style={styles.name} numberOfLines={1}>
-              {item.name}
-            </Text>
-            <Text style={styles.price} numberOfLines={1}>
-              {item.price}
-            </Text>
-            <StrikePrice value={item.mrp} size={8} />
-          </View>
-        </TouchableOpacity>
-      )}
-    />
+      <View onLayout={onLayout}>
+        <FlatList
+          ref={listRef}
+          data={items}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          keyExtractor={item => item.id}
+          contentContainerStyle={styles.row}
+          onScroll={onScroll}
+          scrollEventThrottle={16}
+          onContentSizeChange={onContentSizeChange}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => onPressProduct?.(item)}
+              style={styles.card}
+            >
+              <View style={styles.cardTop}>
+                <DiscountBadge label={item.discount} style={styles.badge} />
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  onPress={() => onToggleWishlist?.(item)}
+                  style={styles.heart}
+                >
+                  <HeartOutline active={wishlisted.includes(item.id)} />
+                </TouchableOpacity>
+                <ProductImage
+                  source={item.image}
+                  resizeMode="cover"
+                  style={styles.productImage}
+                />
+              </View>
 
-    {/* <Image
+              <View style={styles.cardBody}>
+                <Text style={styles.brand} numberOfLines={1}>
+                  {item.brand}
+                </Text>
+                <Text style={styles.name} numberOfLines={1}>
+                  {item.name}
+                </Text>
+                <Text style={styles.price} numberOfLines={1}>
+                  {item.price}
+                </Text>
+                <StrikePrice value={item.mrp} size={8} />
+              </View>
+            </TouchableOpacity>
+          )}
+        />
+
+        {hasMore ? (
+          <LinearGradient
+            pointerEvents="none"
+            colors={[`${HOME_COLORS.white}00`, HOME_COLORS.white]}
+            start={{ x: 0, y: 0.5 }}
+            end={{ x: 1, y: 0.5 }}
+            style={styles.fade}
+          />
+        ) : null}
+      </View>
+
+      {/* <Image
       source={HOME_ART.stripDivider}
       resizeMode="cover"
       style={styles.strip}
     /> */}
-  </View>
-);
+    </View>
+  );
+};
 
 const CARD_W = colWidth(3, CARD_GAP);
 
 const styles = StyleSheet.create({
   wrap: {
     backgroundColor: HOME_COLORS.white,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: GUTTER,
+    marginTop: SECTION_GAP,
+  },
+  arrowButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   row: {
     paddingHorizontal: GUTTER,
@@ -124,8 +232,7 @@ const styles = StyleSheet.create({
     borderBottomColor: HOME_COLORS.cardBorder,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: SPACE.lg,
-    paddingHorizontal: SPACE.xs,
+    overflow: 'hidden',
   },
   badge: {
     position: 'absolute',
@@ -167,6 +274,13 @@ const styles = StyleSheet.create({
     lineHeight: fs(11) * 1.35,
     color: HOME_COLORS.black,
     marginTop: SPACE.xs,
+  },
+  fade: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    width: GUTTER * 2,
   },
   strip: {
     width: '100%',

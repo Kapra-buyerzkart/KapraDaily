@@ -100,3 +100,35 @@ export const resolveCatName = (cat: any, fallback = 'Category') =>
   cat?.name ||
   cat?.Name ||
   fallback;
+
+export const blockTitle = (block: any, fallback: string): string => {
+  const raw =
+    block?.title ||
+    block?.Title ||
+    block?.blockTitle ||
+    block?.BlockTitle ||
+    block?.displayTitle ||
+    block?.DisplayTitle ||
+    block?.sectionTitle ||
+    block?.SectionTitle ||
+    block?.catName ||
+    block?.CatName ||
+    block?.name ||
+    block?.Name;
+  const text = String(raw ?? '').trim();
+  return text || fallback;
+};
+
+export const splitTitle = (title: string) => {
+  const words = String(title ?? '')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+  if (words.length < 2) {
+    return { text: words[0] ?? '', accent: undefined as string | undefined };
+  }
+  return {
+    text: words.slice(0, -1).join(' '),
+    accent: words[words.length - 1],
+  };
+};

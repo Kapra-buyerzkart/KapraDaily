@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   StatusBar,
   RefreshControl,
-  Linking,
+  ActivityIndicator,
   TextInput,
 } from 'react-native';
 import {
@@ -32,6 +32,12 @@ import { verifyRazorpayPaymentApi } from '../../api/services/paymentService';
 import RazorpayCheckout from 'react-native-razorpay';
 import { useUser } from '../../context/UserContext';
 import KSHOPE_CONFIG from '../../globals/config';
+import {
+  INVOICE_NOT_GENERATED_MESSAGE,
+  isInvoiceGenerated,
+  resolveInvoiceUrl,
+} from '../../utils/invoiceUrl';
+import { useInvoiceDownload } from '../../hooks/useInvoiceDownload';
 import ConfirmationModal from '../../components/ConfirmationModal';
 import StatusModal from '../../components/StatusModal';
 import FallbackImage from '../../components/FallbackImage';
@@ -571,6 +577,12 @@ const MyOrderDetailsScreen = () => {
     order?.id ||
     route.params?.orderId ||
     route.params?.order?.orderId;
+
+  const { downloading, canDownload, downloadInvoice } = useInvoiceDownload({
+    invoiceUrl: resolveInvoiceUrl(orderDetails?.header?.invoiceFileUrl),
+    invoiceNumber: orderDetails?.header?.invoiceNumber,
+  });
+
   if (!activeOrderId) return <View style={d.screen} />;
 
   const header = orderDetails?.header;
@@ -595,23 +607,23 @@ const MyOrderDetailsScreen = () => {
   const taxTotal = header?.taxTotal ?? 0;
   const grandTotal = header?.grandTotal ?? 0;
 
-  const invoiceUrl = header?.invoiceFileUrl
-    ? `${KSHOPE_CONFIG.image_base_url}/${header.invoiceFileUrl}`.replace(
-        /([^:]\/)\/+/g,
-        '$1',
-      )
-    : '';
+  const invoiceUrl = resolveInvoiceUrl(header?.invoiceFileUrl);
 
   const openInvoice = () => {
-    if (!invoiceUrl) return;
-    Linking.openURL(invoiceUrl).catch(() =>
+    if (!isInvoiceGenerated(invoiceUrl)) {
       setStatusModal({
         visible: true,
         type: 'error',
-        title: 'Error',
-        message: 'Could not open the invoice.',
-      }),
-    );
+        title: 'Invoice not generated',
+        message: INVOICE_NOT_GENERATED_MESSAGE,
+      });
+      return;
+    }
+    navigation.navigate('KshopeInvoiceViewer', {
+      invoiceUrl,
+      invoiceNumber: header?.invoiceNumber,
+      title: 'Invoice',
+    });
   };
 
   return (
@@ -826,48 +838,80 @@ const MyOrderDetailsScreen = () => {
 
               <View style={d.payValueCol}>
                 <Text style={d.payAmount}>{money(payment.paymentAmount)}</Text>
-                {payment.paymentStatus === 'success' && (
-                  <View style={d.paidPill}>
-                    <AppIcons.CheckCircle
-                      size={dp(11)}
-                      color={DESIGN_COLORS.greenDeep}
-                    />
-                    <Text style={d.paidPillText}>Paid successfully</Text>
-                  </View>
-                )}
+                {payment.paymentMethod !== 'COD' &&
+                  payment.paymentStatus === 'success' && (
+                    <View style={d.paidPill}>
+                      <AppIcons.CheckCircle
+                        size={dp(11)}
+                        color={DESIGN_COLORS.greenDeep}
+                      />
+                      <Text style={d.paidPillText}>Paid successfully</Text>
+                    </View>
+                  )}
               </View>
             </View>
           </View>
         )}
 
         {!!invoiceUrl && (
-          <TouchableOpacity
-            style={[d.card, d.cardPad]}
-            activeOpacity={0.85}
-            onPress={openInvoice}
-            accessibilityRole="button"
-            accessibilityLabel="View invoice"
-          >
-            <View style={d.invoiceRow}>
-              <View style={d.iconTile}>
-                <AppIcons.Invoice size={dp(19)} color={DESIGN_COLORS.body} />
-              </View>
+          <View style={[d.card, d.cardPad]}>
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={openInvoice}
+              accessibilityRole="button"
+              accessibilityLabel="View invoice"
+            >
+              <View style={d.invoiceRow}>
+                <View style={d.iconTile}>
+                  <AppIcons.Invoice size={dp(19)} color={DESIGN_COLORS.body} />
+                </View>
 
-              <View style={d.invoiceBody}>
-                <Text style={d.invoiceTitle}>View invoice</Text>
-                {!!header?.invoiceNumber && (
-                  <Text style={d.invoiceNo}>
-                    {`Invoice ${header.invoiceNumber}`}
-                  </Text>
-                )}
-              </View>
+                <View style={d.invoiceBody}>
+                  <Text style={d.invoiceTitle}>View invoice</Text>
+                  {!!header?.invoiceNumber && (
+                    <Text style={d.invoiceNo}>
+                      {`Invoice ${header.invoiceNumber}`}
+                    </Text>
+                  )}
+                </View>
 
-              <AppIcons.ChevronRight
-                size={dp(22)}
-                color={DESIGN_COLORS.muted}
-              />
-            </View>
-          </TouchableOpacity>
+                <AppIcons.ChevronRight
+                  size={dp(22)}
+                  color={DESIGN_COLORS.muted}
+                />
+              </View>
+            </TouchableOpacity>
+
+            <View style={d.invoiceRule} />
+
+            <TouchableOpacity
+              style={d.invoiceDownloadRow}
+              activeOpacity={0.85}
+              onPress={downloadInvoice}
+              disabled={downloading || !canDownload}
+              accessibilityRole="button"
+              accessibilityLabel="Download invoice"
+            >
+              {downloading ? (
+                <ActivityIndicator size="small" color={DESIGN_COLORS.orange} />
+              ) : (
+                <AppIcons.Download
+                  size={dp(18)}
+                  color={
+                    canDownload ? DESIGN_COLORS.orange : DESIGN_COLORS.muted
+                  }
+                />
+              )}
+              <Text
+                style={[
+                  d.invoiceDownloadText,
+                  !canDownload && d.invoiceDownloadTextDisabled,
+                ]}
+              >
+                {downloading ? 'Downloading…' : 'Download invoice'}
+              </Text>
+            </TouchableOpacity>
+          </View>
         )}
 
         {reachedStage >= 0 && (

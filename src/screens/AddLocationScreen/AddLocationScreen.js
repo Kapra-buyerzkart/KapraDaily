@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import { StatusBar, StyleSheet, View } from 'react-native';
 import CustomLoader from '@/components/CustomLoader';
+import useKeyboardVisible from '@/hooks/useKeyboardVisible';
 
 import { AddressSheet, LocationMap, MapOverlay } from './components/organisms';
 import useAddLocation from './useAddLocation';
@@ -25,6 +26,12 @@ const AddLocationScreen = () => {
     handleSave,
   } = useAddLocation();
 
+  const isKeyboardVisible = useKeyboardVisible();
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const onSearchFocus = useCallback(() => setIsSearchFocused(true), []);
+  const onSearchBlur = useCallback(() => setIsSearchFocused(false), []);
+  const isFormFocused = isKeyboardVisible && !isSearchFocused;
+
   return (
     <>
       <CustomLoader
@@ -42,6 +49,7 @@ const AddLocationScreen = () => {
           onRegionChange={onRegionChange}
           onRegionChangeComplete={onRegionChangeComplete}
           onRecenter={() => getCurrentLocation(true)}
+          isHidden={isFormFocused}
         />
 
         <MapOverlay
@@ -50,6 +58,9 @@ const AddLocationScreen = () => {
           onPlaceSelected={onPlaceSelected}
           isBusy={status.isGeocoding && !status.isInitialLoading}
           onBack={onBack}
+          isHidden={isFormFocused}
+          onSearchFocus={onSearchFocus}
+          onSearchBlur={onSearchBlur}
         />
 
         <AddressSheet
@@ -58,6 +69,7 @@ const AddLocationScreen = () => {
           area={area}
           status={status}
           onSave={handleSave}
+          isExpanded={isFormFocused}
         />
       </View>
     </>

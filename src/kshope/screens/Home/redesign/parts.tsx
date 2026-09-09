@@ -108,7 +108,7 @@ export const TokenBadge: React.FC<{
       numberOfLines={1}
     >
       {tokens}
-      <Text style={styles.tokenBadgeUnit}>{' UD tokens'}</Text>
+      <Text style={styles.tokenBadgeUnit}>{' UD Tokens'}</Text>
     </Text>
   </View>
 );

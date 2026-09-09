@@ -23,6 +23,7 @@ import OrderFailedScreen from '../screens/Order/OrderFailedScreen';
 import OrderPendingScreen from '../screens/Order/OrderPendingScreen';
 import MyOrderScreen from '../screens/Order/redesign/MyOrdersRedesignScreen';
 import MyOrderDetailsScreen from '../screens/Order/MyOrderDetailsScreen';
+import InvoiceViewerScreen from '../screens/Order/InvoiceViewerScreen';
 import ProfileScreen from '../screens/Profile/ProfileScreen';
 import EditProfileScreen from '../screens/Profile/EditProfileScreen';
 import UpdateContactScreen from '../screens/Profile/UpdateContactScreen';
@@ -123,6 +124,7 @@ const KshopeRoot: React.FC = () => {
                 <Stack.Screen name="KshopeOrderPending" component={OrderPendingScreen} />
                 <Stack.Screen name="KshopeMyOrders" component={MyOrderScreen} />
                 <Stack.Screen name="KshopeMyOrderDetails" component={MyOrderDetailsScreen} />
+                <Stack.Screen name="KshopeInvoiceViewer" component={InvoiceViewerScreen} />
                 <Stack.Screen name="KshopeProfile" component={ProfileScreen} />
                 <Stack.Screen name="KshopeEditProfile" component={EditProfileScreen} />
                 <Stack.Screen name="KshopeUpdateContact" component={UpdateContactScreen} />

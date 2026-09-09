@@ -10,8 +10,8 @@ import {
 } from '../../constants';
 import { COLORS, RADIUS, SHADOW, SPACING, wp } from '../../theme';
 
-const MapPin = ({ isLifted }) => (
-  <View style={styles.wrap} pointerEvents="none">
+const MapPin = ({ isLifted, isHidden }) => (
+  <View style={[styles.wrap, isHidden && styles.hidden]} pointerEvents="none">
     <View style={[styles.callout, isLifted && styles.calloutHidden]}>
       <AddrText variant="captionStrong" numberOfLines={1}>
         Order will be delivered here
@@ -53,6 +53,9 @@ const styles = StyleSheet.create({
   },
   calloutHidden: {
     opacity: 0,
+  },
+  hidden: {
+    display: 'none',
   },
   calloutTail: {
     position: 'absolute',

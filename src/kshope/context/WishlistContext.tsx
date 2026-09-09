@@ -1,6 +1,7 @@
 import React, { createContext, useState, useContext, useCallback, useMemo, useRef, useEffect } from 'react';
 import { addToWishlistApi, removeFromWishlistApi, getWishlistApi } from '../api/services/wishlistService';
 import { getKshopeAreaId } from '../globals/storage';
+import { logApi } from '../utils/apiLog';
 
 interface WishlistContextType {
     wishlistItems: any[];
@@ -41,6 +42,7 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             try {
                 const areaId = await getKshopeAreaId();
                 const response = await getWishlistApi(areaId);
+                logApi('home/wishlist · response', response);
                 if (response && response.success && response.data && response.data.items) {
                     const items = Array.isArray(response.data.items) ? response.data.items : [];
                     setWishlistItems(items);

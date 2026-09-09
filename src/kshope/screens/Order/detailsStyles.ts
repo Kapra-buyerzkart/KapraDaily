@@ -85,7 +85,7 @@ export const detailsStyles = StyleSheet.create({
   },
 
   itemBlock: {
-    marginTop: dp(20),
+    marginVertical: dp(20),
   },
   itemRow: {
     flexDirection: 'row',
@@ -382,6 +382,29 @@ export const detailsStyles = StyleSheet.create({
     fontSize: dp(11),
     color: DESIGN_COLORS.muted,
     marginTop: dp(3),
+  },
+
+  invoiceRule: {
+    height: 1,
+    backgroundColor: DESIGN_COLORS.rule,
+    marginTop: dp(14),
+    marginBottom: dp(4),
+  },
+  invoiceDownloadRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: dp(12),
+    paddingBottom: dp(2),
+  },
+  invoiceDownloadText: {
+    fontFamily: Fonts.gilroySemiBold,
+    fontSize: dp(14),
+    color: DESIGN_COLORS.orange,
+    marginLeft: dp(8),
+  },
+  invoiceDownloadTextDisabled: {
+    color: DESIGN_COLORS.muted,
   },
 
   trackBlock: {

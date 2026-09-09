@@ -17,6 +17,7 @@ export const WINDOW_HEIGHT = Dimensions.get('window').height;
 export const COLORS = {
   canvas: '#FFFFFF',
   surface: CART_COLORS.card,
+  well: CART_COLORS.well,
   line: CART_COLORS.border,
   lineStrong: '#D5D8DE',
   textPrimary: '#151515',

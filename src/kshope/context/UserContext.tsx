@@ -1,6 +1,7 @@
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import { getProfile } from '../api/services/userService';
 import { getCachedProfile, setCachedProfile } from '../globals/storage';
+import { logApi } from '../utils/apiLog';
 
 interface UserContextType {
     profile: any | null;
@@ -16,6 +17,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const loadProfile = async () => {
         try {
             const response = await getProfile();
+            logApi('home/profile · response', response);
             if (response && response.success) {
                 setProfile(response.data);
                 await setCachedProfile(response.data);

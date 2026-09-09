@@ -40,7 +40,7 @@ const SaveMoneySection: React.FC<SaveMoneySectionProps> = ({
           <View style={styles.headerCopy}>
             <AppText variant="heading">Save more</AppText>
             <AppText variant="caption" tone="muted">
-              Coupons, UD-coin and gift cards
+              Coupons, UD Coin and gift cards
             </AppText>
           </View>
         </View>
@@ -50,8 +50,8 @@ const SaveMoneySection: React.FC<SaveMoneySectionProps> = ({
         <OfferRow
           iconName="hand-coin"
           iconTone="ink"
-          title="UD-Coins"
-          subtitle={`${availableBCoins} UD-coins available`}
+          title="UD Coins"
+          subtitle={`${availableBCoins} UD Coins available`}
           isApplied={bcoinsApplied}
           appliedSubtitle={`₹${bcoinsAppliedValue.toFixed(0)} applied`}
           onPress={() => onApplyOffer('3')}

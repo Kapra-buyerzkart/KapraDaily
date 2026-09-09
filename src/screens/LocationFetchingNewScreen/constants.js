@@ -11,7 +11,6 @@ export const LOCATING_ANIMATION = require('../../assets/gif/location_fetch_from_
 export const BEACON_ICON_NAME = 'location-sharp';
 export const ADDRESS_PIN_SIZE = Math.round(WINDOW_WIDTH * 0.16);
 
-
 export const LOCATING_TITLE = 'Finding your location';
 export const LOCATING_SUBTITLE = 'Hang tight, we are pinpointing your area';
 
@@ -20,5 +19,4 @@ export const ICON_GLYPH_SIZE = WINDOW_WIDTH * 0.05;
 
 export const AREA_SHEET_TITLE = 'Choose Your Area';
 export const AREA_SHEET_EYEBROW = 'Delivering near you';
-export const AREA_SHEET_SUBTITLE =
-  'Select your area to see available stores and offers in your location.';
+export const AREA_SHEET_SUBTITLE = 'Select your pincode area.';

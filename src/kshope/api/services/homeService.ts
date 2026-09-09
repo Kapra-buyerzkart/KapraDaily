@@ -1,4 +1,5 @@
 import { get } from '../client';
+import { logApi } from '../../utils/apiLog';
 
 export const getHomepageData = async (pincodeAreaId: number | string | null, blocksize: number = 100): Promise<any> => {
     const config = {
@@ -8,7 +9,8 @@ export const getHomepageData = async (pincodeAreaId: number | string | null, blo
         }
     };
     const res = await get('homepage', config);
-    console.log('[kshope] homepage API response:', res);
+    logApi('home/homepage · request', config.params);
+    logApi('home/homepage · response', res);
     return res;
 };
 
@@ -19,5 +21,8 @@ export const getCategoryProducts = async (catId: number | string, pincodeAreaId:
             pincodeAreaId
         }
     };
-    return get('homepage/categoryproducts', config);
+    const res = await get('homepage/categoryproducts', config);
+    logApi('home/categoryproducts · request', config.params);
+    logApi('home/categoryproducts · response', res);
+    return res;
 };

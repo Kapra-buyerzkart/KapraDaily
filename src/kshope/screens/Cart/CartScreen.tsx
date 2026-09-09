@@ -766,7 +766,7 @@ const CartScreen = () => {
         title="Remove Item"
         message="Are you sure you want to remove this item from your cart?"
         confirmText="Remove"
-        themeColor={UI_COLORS.textPrimary}
+        themeColor={UI_COLORS.primary}
       />
 
       <AddressConfirmationModal

@@ -64,6 +64,7 @@ export default AuthSuccessScreen;
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
+    paddingTop: 20,
     backgroundColor: PALETTE.canvas,
   },
   content: {

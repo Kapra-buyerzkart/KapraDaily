@@ -4,6 +4,7 @@ import { useUser } from '../../../../context/UserContext';
 import { useCart } from '../../../../context/CartContext';
 import { getHomepageData } from '../../../../api/services/homeService';
 import { getKshopeAreaId } from '../../../../globals/storage';
+import { logApi, logApiBlocks } from '../../../../utils/apiLog';
 import type { HeaderItem } from '../../../../components/HomeHeader';
 import {
   BEST_SELLING,
@@ -14,16 +15,17 @@ import {
   FEATURED_PRODUCTS,
   HEADER_CIRCLES,
   HEADER_CONTENT,
-  RECENTLY_VIEWED,
   RECOMMENDED,
 } from '../content';
 import type { Tile } from '../content';
 import {
   bannersFor,
+  blockTitle,
   getProducts,
   resolveCatId,
   resolveCatName,
   sectionTitle,
+  splitTitle,
   unwrapBlock,
 } from './blocks';
 import {
@@ -34,7 +36,6 @@ import {
   bannerProductId,
   mapGoatDealCard,
   mapRecCard,
-  mapRecentlyViewed,
   mapTabChip,
   orFallback,
   resolveImageSource,
@@ -72,11 +73,10 @@ export const useHomeData = () => {
         const areaId = storedAreaId ?? profile?.pincode ?? null;
         const data = await getHomepageData(areaId, 100);
         const payload = data?.data || data;
-        if (__DEV__) {
-          console.log('[kshope][home] areaId =', areaId);
-          console.log('[kshope][home] keys =', Object.keys(payload || {}));
-          console.log('[kshope][home] data =', payload);
-        }
+        logApi('home/homepage · areaId', areaId);
+        logApi('home/homepage · keys', Object.keys(payload || {}));
+        logApi('home/homepage · payload', payload);
+        logApiBlocks('home/homepage', payload);
         setHomeData(payload);
       } catch (e) {
         console.error('Error fetching home data for K-shope', e);
@@ -98,9 +98,7 @@ export const useHomeData = () => {
   );
 
   const selectedAddress = useMemo(() => {
-    if (__DEV__) {
-      console.log('[kshope][home] activeAddress =', activeAddress?.id, activeAddress?.address);
-    }
+    logApi('home/selectedAddress', activeAddress);
     if (!activeAddress) return null;
     const label = [activeAddress.type, activeAddress.address].filter(Boolean).join(' · ');
     return label || null;
@@ -120,9 +118,10 @@ export const useHomeData = () => {
       homeData?.firstProductBlock || homeData?.firstproductblock,
     );
     const firstProducts = getProducts(firstBlock);
-    const secondProducts = getProducts(
-      unwrapBlock(homeData?.secondProductBlock || homeData?.secondproductblock),
+    const secondBlock = unwrapBlock(
+      homeData?.secondProductBlock || homeData?.secondproductblock,
     );
+    const secondProducts = getProducts(secondBlock);
     const thirdBlock = unwrapBlock(
       homeData?.thirdProductBlock || homeData?.thirdproductblock,
     );
@@ -150,10 +149,7 @@ export const useHomeData = () => {
       );
     }
     const tabs = Array.isArray(tabShowcase) ? tabShowcase : [];
-    if (__DEV__ && tabs.length > 0) {
-      console.log('[kshope] TAB OBJECT:', JSON.stringify(tabs[0], null, 2).slice(0, 1500));
-      console.log('[kshope] TAB KEYS:', Object.keys(tabs[0] || {}));
-    }
+    logApi('home/categoryTabShowcase', tabs);
 
     const categoryById = new Map<string, any>();
     categories.forEach((cat: any) => {
@@ -226,25 +222,15 @@ export const useHomeData = () => {
       RECOMMENDED,
     );
 
-    console.log(
-      '[Home] recommended block',
-      JSON.stringify(
-        {
-          goatDealsCount: goatDeals.length,
-          thirdProductsCount: thirdProducts.length,
-          usingFallback: recommendedCards === RECOMMENDED,
-          titleBlock: thirdBlock,
-          goatDeals,
-          thirdProducts,
-        },
-        null,
-        2,
-      ),
-    );
-    console.log(
-      '[Home] recommended cards',
-      JSON.stringify(recommendedCards, null, 2),
-    );
+    logApi('home/recommended · source', {
+      goatDealsCount: goatDeals.length,
+      thirdProductsCount: thirdProducts.length,
+      usingFallback: recommendedCards === RECOMMENDED,
+      titleBlock: thirdBlock,
+      goatDeals,
+      thirdProducts,
+    });
+    logApi('home/recommended · cards', recommendedCards);
 
     const bestSellingRaw = (homeData?.showcaseSlider || []).slice(0, 6);
     const bestSellingTiles = orFallback(
@@ -252,22 +238,15 @@ export const useHomeData = () => {
       BEST_SELLING,
     );
 
-    console.log(
-      '[Home] bestSelling raw',
-      JSON.stringify(bestSellingRaw, null, 2),
-    );
-    console.log(
-      '[Home] bestSelling tiles',
-      JSON.stringify(
-        bestSellingTiles.map((t: any) => ({
-          id: t.id,
-          label: t.label,
-          catId: resolveCatId(t.raw),
-          catName: resolveCatName(t.raw, t.label),
-        })),
-        null,
-        2,
-      ),
+    logApi('home/bestSelling · raw', bestSellingRaw);
+    logApi(
+      'home/bestSelling · tiles',
+      bestSellingTiles.map((t: any) => ({
+        id: t.id,
+        label: t.label,
+        catId: resolveCatId(t.raw),
+        catName: resolveCatName(t.raw, t.label),
+      })),
     );
 
     return {
@@ -319,10 +298,9 @@ export const useHomeData = () => {
         tabs.map((t: any) => resolveCatName(t, '')).filter(Boolean),
         CATEGORY_TABS,
       ),
-      featured: orFallback(
-        firstProducts.slice(0, 3).map(mapProductTile),
-        FEATURED_PRODUCTS,
-      ),
+      featured: orFallback(firstProducts.map(mapProductTile), FEATURED_PRODUCTS),
+      featuredTitle: splitTitle('Top Deals'),
+      featuredBlock: firstBlock,
       categoryChips: orFallback(tabs.map(mapTabChip), CATEGORY_CHIPS),
       categoryCardsFor: (chipId: string): Tile[] => {
         const tab = tabs.find(
@@ -335,10 +313,12 @@ export const useHomeData = () => {
       bestSelling: bestSellingTiles,
       brands: orFallback(rawBrands.map(mapBrandTile), BRANDS),
       recommended: recommendedCards,
-      recentlyViewed: orFallback(
-        secondProducts.slice(0, 5).map(mapRecentlyViewed),
-        RECENTLY_VIEWED,
-      ),
+      secondStrip: secondProducts.map(mapProductTile),
+      secondTitle: splitTitle(blockTitle(secondBlock, 'Recently Viewed')),
+      secondBlock,
+      thirdStrip: thirdProducts.map(mapProductTile),
+      thirdTitle: splitTitle(blockTitle(thirdBlock, 'Just For You')),
+      thirdBlock,
       exploreRowOne: exploreTiles.slice(0, 5),
       exploreRowTwo: exploreTiles.slice(5, 10),
       banners: {
@@ -346,11 +326,7 @@ export const useHomeData = () => {
         mid: bannersFor(homeData, 'app_home_mid_banner'),
         midBottom: bannersFor(homeData, 'app_home_mid_banner_bottom'),
         bottom: bannersFor(homeData, 'app_home_bottom'),
-      },
-      topDeals: {
-        title: 'Top deals',
-        items: firstProducts.slice(3, 5).map(mapProductTile),
-        block: firstBlock,
+        topSection: bannersFor(homeData, 'app_home_top_banner_top_section'),
       },
       recommendedTitleBlock: thirdBlock,
       recommendedFooterImage: resolveImageSource(
@@ -364,3 +340,14 @@ export const useHomeData = () => {
 
 export const bannerImage = (banner: any) =>
   resolveImageSource(banner?.imageUrl || banner?.ImageUrl || banner?.image);
+
+const VIDEO_EXTENSIONS = /\.(mp4|mov|m4v|webm)(\?.*)?$/i;
+
+export const bannerMedia = (banner: any) => {
+  const source = bannerImage(banner);
+  const uri = typeof source?.uri === 'string' ? source.uri : '';
+  if (!uri) {
+    return null;
+  }
+  return { source, uri, isVideo: VIDEO_EXTENSIONS.test(uri) };
+};

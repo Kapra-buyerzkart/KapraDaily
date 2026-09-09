@@ -6,6 +6,7 @@ import {
   RefreshControl,
   StatusBar,
   StyleSheet,
+  Text,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -35,6 +36,7 @@ import { BrandsSpotlight } from './sections/PromoSections';
 import Recommended from './sections/Recommended';
 import MoreToExplore from './sections/MoreToExplore';
 import BannerCarousel from './sections/BannerCarousel';
+import VideoBanner from './sections/VideoBanner';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -80,7 +82,7 @@ const HomeRedesignScreen: React.FC = () => {
   const onScroll = useAnimatedScrollHandler({
     onScroll: e => {
       scrollY.value = e.contentOffset.y;
-      trackCartPill(e.contentOffset.y);
+      trackCartPill(e);
     },
   });
 
@@ -90,10 +92,15 @@ const HomeRedesignScreen: React.FC = () => {
 
   const wishlisted = useMemo(
     () =>
-      sections.featured
+      [...sections.featured, ...sections.secondStrip, ...sections.thirdStrip]
         .filter(item => isInWishlist((item as any).raw?.productId ?? item.id))
         .map(item => item.id),
-    [sections.featured, isInWishlist],
+    [
+      sections.featured,
+      sections.secondStrip,
+      sections.thirdStrip,
+      isInWishlist,
+    ],
   );
 
   const openSearch = useCallback(
@@ -230,6 +237,7 @@ const HomeRedesignScreen: React.FC = () => {
   );
 
   const topBanner = sections.banners.top?.[0];
+  const topSectionBanner = sections.banners.topSection?.[0];
   const headerBg = bannerColor(topBanner) ?? HEADER_BG;
   const featuredBlend = headerBg;
 
@@ -253,6 +261,8 @@ const HomeRedesignScreen: React.FC = () => {
   if (loading) {
     return <HomeSkeleton />;
   }
+  console.log(sections.thirdStrip.length, 'sections.thirdStrip.length====>');
+  console.log(sections.secondStrip.length, 'sections.secondStrip.length====>');
 
   return (
     <View style={styles.root}>
@@ -279,6 +289,8 @@ const HomeRedesignScreen: React.FC = () => {
           />
         }
       >
+        {/* Hero banner — banners.top[0], placement `app_home_top_banner`.
+            Its linkValue hex also tints the header; falls back to onam.gif. */}
         <TouchableOpacity
           activeOpacity={topBanner ? 0.9 : 1}
           disabled={!topBanner}
@@ -314,13 +326,21 @@ const HomeRedesignScreen: React.FC = () => {
           />
         </ImageBackground> */}
 
+        <VideoBanner banner={topSectionBanner} onPressBanner={openBanner} />
+
+        {/* Products strip 1 — homeData.firstProductBlock.
+            Title is pinned to "Top Deals"; the block's own title is ignored. */}
         <FeaturedRow
           items={sections.featured}
+          title={sections.featuredTitle.text}
+          accent={sections.featuredTitle.accent}
           wishlisted={wishlisted}
           onToggleWishlist={onToggleWishlist}
           onPressProduct={openProduct}
         />
 
+        {/* Shop by category — homeData.categoryTabShowcase.
+            Each tab is a chip; the selected tab's items are the cards. */}
         <ShopByCategory
           chips={sections.categoryChips}
           cards={categoryCards}
@@ -329,6 +349,7 @@ const HomeRedesignScreen: React.FC = () => {
           onCardPress={openCategory}
         />
 
+        {/* Best selling — homeData.showcaseSlider, first 6 as category tiles. */}
         <BestSelling
           items={sections.bestSelling}
           onPressTile={openBestSelling}
@@ -338,6 +359,7 @@ const HomeRedesignScreen: React.FC = () => {
           onViewAll={() => openSearch()}
         /> */}
 
+        {/* Brands — homeData.brands, else topBrands, else `app_top_brands` banners. */}
         <BrandsSpotlight
           brands={sections.brands}
           onPressBrandItem={openBrand}
@@ -345,12 +367,28 @@ const HomeRedesignScreen: React.FC = () => {
 
         {/* <MoreDeals /> */}
 
+        {/* Mid banners — placement `app_home_mid_banner`. */}
         <BannerCarousel
           items={sections.banners.mid}
           variant="mid"
           onPressBanner={openBanner}
         />
 
+        {/* Products strip 2 — homeData.thirdProductBlock, title from the block
+            (fallback "Just For You"). Hidden when the block ships no products. */}
+        {sections.thirdStrip.length > 0 ? (
+          <FeaturedRow
+            items={sections.thirdStrip}
+            title={sections.thirdTitle.text}
+            accent={sections.thirdTitle.accent}
+            wishlisted={wishlisted}
+            onToggleWishlist={onToggleWishlist}
+            onPressProduct={openProduct}
+          />
+        ) : null}
+
+        {/* Recommended — `app_home_cat_top_sidebyside_four` banners (first 6),
+            falling back to thirdProductBlock products when that placement is empty. */}
         {sections.recommended.length > 0 ? (
           <Recommended
             items={sections.recommended}
@@ -360,24 +398,36 @@ const HomeRedesignScreen: React.FC = () => {
           />
         ) : null}
 
-        {/* <RecentlyViewed
-          items={sections.recentlyViewed}
-          onSeeAll={() => openSearch()}
-          onPressBanner={() => openSearch()}
-        /> */}
+        {/* Products strip 3 — homeData.secondProductBlock, title from the block
+            (fallback "Recently Viewed"). */}
 
+        {sections.secondStrip.length > 0 ? (
+          <FeaturedRow
+            items={sections.secondStrip}
+            title={sections.secondTitle.text}
+            accent={sections.secondTitle.accent}
+            wishlisted={wishlisted}
+            onToggleWishlist={onToggleWishlist}
+            onPressProduct={openProduct}
+          />
+        ) : null}
+
+        {/* Bottom banners — placement `app_home_bottom`. */}
         <BannerCarousel
           items={sections.banners.bottom}
           variant="bottom"
           onPressBanner={openBanner}
         />
 
+        {/* Mid-bottom banners — placement `app_home_mid_banner_bottom`. */}
         <BannerCarousel
           items={sections.banners.midBottom}
           variant="midBottom"
           onPressBanner={openBanner}
         />
 
+        {/* More to explore — the first 10 categories carrying an svgurl,
+            split into two rows of 5. */}
         <MoreToExplore
           rowOne={sections.exploreRowOne}
           rowTwo={sections.exploreRowTwo}
@@ -385,6 +435,8 @@ const HomeRedesignScreen: React.FC = () => {
         />
       </Animated.ScrollView>
 
+      {/* Floating header — collapses on scroll. Tabs come from
+          categoryTabShowcase; the "All" tab shows featuredCategories. */}
       <View style={styles.headerOverlay}>
         <HomeHeader
           address={sections.header.address}
@@ -445,8 +497,8 @@ const styles = StyleSheet.create({
     width: SCREEN_WIDTH,
     height: hp('17.5%'),
     top: -8,
-    // borderBottomLeftRadius: RADIUS.lg,
-    // borderBottomRightRadius: RADIUS.lg,
+    borderBottomLeftRadius: RADIUS.lg,
+    borderBottomRightRadius: RADIUS.lg,
   },
   featuredBannerBlend: {
     position: 'absolute',

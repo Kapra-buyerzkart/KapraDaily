@@ -6,6 +6,7 @@ import Toast from 'react-native-simple-toast';
 import CONFIG from '../globals/config';
 import { useUser } from './UserContext';
 import { getSelectedAddressId, setSelectedAddressId, setKshopeAreaId } from '../globals/storage';
+import { logApi } from '../utils/apiLog';
 
 export interface CartItem {
     cartItemId: number;
@@ -71,6 +72,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const loadCart = useCallback(async () => {
         try {
             const response = await getCartApi();
+            logApi('home/cart · response', response);
 
             if (response && response.success && response.data) {
                 const items = response.data.items || [];
@@ -110,6 +112,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         const cartIdToUse = cartSummaryRef.current?.cartId;
         try {
             const response = await getCartSummaryApi(deliveryMode, deliverySlotId, versionToUse, cartIdToUse, pincodeAreaId);
+            logApi('home/cartSummary · response', response);
             if (response && response.success) {
                 setCartSummary(response.data);
                 cartSummaryRef.current = response.data;
@@ -139,9 +142,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         try {
             setIsLoadingAddresses(true);
             const response = await getAddressListApi();
-            if (__DEV__) {
-                console.log('[kshope][addr] raw response', JSON.stringify(response)?.slice(0, 400));
-            }
+            logApi('home/addressList · response', response);
             if (response && response.success && Array.isArray(response.data)) {
                 const formatted = response.data.map((addr: any, index: number) => {
                     const actualId = addr.custAddressId ?? addr.addressId ?? addr.id ?? index;

@@ -14,6 +14,7 @@ const LocationMap = ({
   onRegionChange,
   onRegionChangeComplete,
   onRecenter,
+  isHidden,
 }) => (
   <View style={styles.container}>
     <MapView
@@ -26,8 +27,8 @@ const LocationMap = ({
       showsMyLocationButton={false}
     />
 
-    <MapPin isLifted={isDragging} />
-    <RecenterButton onPress={onRecenter} />
+    <MapPin isLifted={isDragging} isHidden={isHidden} />
+    <RecenterButton onPress={onRecenter} isHidden={isHidden} />
   </View>
 );
 

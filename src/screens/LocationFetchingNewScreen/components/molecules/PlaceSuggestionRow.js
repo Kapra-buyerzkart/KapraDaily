@@ -9,12 +9,19 @@ const PlaceSuggestionRow = ({ title, address }) => (
   <View style={styles.row}>
     <IconDisc source={ADDRESS_ICON} />
     <View style={styles.copy}>
-      <LocText variant="body" tone="secondary" style={styles.title}>
+      <LocText variant="bodyStrong" tone="primary" numberOfLines={1}>
         {title}
       </LocText>
-      <LocText variant="caption" tone="primary">
-        {address}
-      </LocText>
+      {!!address && (
+        <LocText
+          variant="caption"
+          tone="muted"
+          numberOfLines={1}
+          style={styles.address}
+        >
+          {address}
+        </LocText>
+      )}
     </View>
   </View>
 );
@@ -24,12 +31,13 @@ export default React.memo(PlaceSuggestionRow);
 const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
+    alignItems: 'center',
   },
   copy: {
-    marginLeft: SPACING.sm,
+    marginLeft: SPACING.md,
     flexShrink: 1,
   },
-  title: {
-    paddingBottom: 2,
+  address: {
+    marginTop: 2,
   },
 });

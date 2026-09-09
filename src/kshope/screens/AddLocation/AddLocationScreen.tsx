@@ -14,15 +14,14 @@ import {
   Platform,
   StatusBar,
   ScrollView,
-  KeyboardAvoidingView,
   ActivityIndicator,
   PermissionsAndroid,
 } from 'react-native';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import MapView from 'react-native-maps';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import DropDownPicker from 'react-native-dropdown-picker';
 import Toast from 'react-native-simple-toast';
 import axios from 'axios';
 import Geolocation from '@react-native-community/geolocation';
@@ -36,6 +35,8 @@ import {
 } from '../../api/services/addressService';
 import { useAddresses } from '../../hooks/useAddresses';
 import { validatePhoneNumbers } from '../../utils/validation';
+import { logApi } from '../../utils/apiLog';
+import { getAddressLine1 } from '../../../utils/addressFormat';
 import {
   UI_COLORS,
   UI_SPACING,
@@ -46,6 +47,7 @@ import {
 import { AppText, IconDisc } from '../../components/atoms';
 import useKeyboardVisible from '../../hooks/useKeyboardVisible';
 import styles, { placesStyles } from './styles';
+import AreaPickerSheet from './AreaPickerSheet';
 
 const GOOGLE_MAPS_API_KEY = 'AIzaSyDhItv0zoWdQbDh-5jjKLAEjwRDDrFNc1Y';
 const DEFAULT_COORDS = { latitude: 10.0205, longitude: 76.3052 };
@@ -137,7 +139,10 @@ type MapPanelProps = {
   isGeocoding: boolean;
   isInitialLoading: boolean;
   topInset: number;
+  isHidden: boolean;
   onMapReady: () => void;
+  onSearchFocus: () => void;
+  onSearchBlur: () => void;
   onRegionChange: () => void;
   onRegionChangeComplete: (region: any) => void;
   onPlaceSelected: (lat: number, lng: number) => void;
@@ -154,7 +159,10 @@ const MapPanel = memo<MapPanelProps>(
     isGeocoding,
     isInitialLoading,
     topInset,
+    isHidden,
     onMapReady,
+    onSearchFocus,
+    onSearchBlur,
     onRegionChange,
     onRegionChangeComplete,
     onPlaceSelected,
@@ -176,8 +184,10 @@ const MapPanel = memo<MapPanelProps>(
         returnKeyType: 'search' as const,
         maxFontSizeMultiplier: MAX_FONT_SCALE,
         underlineColorAndroid: 'transparent' as const,
+        onFocus: onSearchFocus,
+        onBlur: onSearchBlur,
       }),
-      [],
+      [onSearchFocus, onSearchBlur],
     );
 
     const handlePlacePress = useCallback(
@@ -216,7 +226,10 @@ const MapPanel = memo<MapPanelProps>(
             toolbarEnabled={false}
           />
 
-          <View style={styles.pinWrap} pointerEvents="none">
+          <View
+            style={[styles.pinWrap, isHidden && styles.hidden]}
+            pointerEvents="none"
+          >
             <View
               style={[styles.pinCallout, isDragging && styles.pinCalloutHidden]}
             >
@@ -242,7 +255,7 @@ const MapPanel = memo<MapPanelProps>(
             accessibilityRole="button"
             accessibilityLabel="Use my current location"
             hitSlop={hitSlopTo(44)}
-            style={styles.recenterButton}
+            style={[styles.recenterButton, isHidden && styles.hidden]}
             onPress={onRecenter}
           >
             <Ionicons
@@ -256,7 +269,7 @@ const MapPanel = memo<MapPanelProps>(
 
         <View
           pointerEvents="box-none"
-          style={[styles.overlay, { top: topInset }]}
+          style={[styles.overlay, { top: topInset }, isHidden && styles.hidden]}
         >
           <View pointerEvents="box-none" style={styles.overlayRow}>
             <TouchableOpacity
@@ -322,6 +335,11 @@ const AddLocationScreen: React.FC = () => {
     editAddress?.pincodeAreaId || null,
   );
 
+  const selectedAreaName = useMemo(
+    () => items.find(item => item.value === pincodeAreaId)?.label || '',
+    [items, pincodeAreaId],
+  );
+
   const [custName, setCustName] = useState(editAddress?.custName || '');
   const [addLine1, setAddLine1] = useState(editAddress?.addLine1 || '');
   const [addLine2, setAddLine2] = useState(editAddress?.addLine2 || '');
@@ -359,9 +377,7 @@ const AddLocationScreen: React.FC = () => {
     null,
   );
   const editedFieldsRef = useRef<Record<string, boolean>>({});
-  const fetchedPincodeRef = useRef<string | null>(
-    editAddress?.pincode || null,
-  );
+  const fetchedPincodeRef = useRef<string | null>(editAddress?.pincode || null);
 
   useEffect(() => {
     return () => {
@@ -409,15 +425,14 @@ const AddLocationScreen: React.FC = () => {
       });
       if (!isMountedRef.current || controller.signal.aborted) return;
 
+      logApi('geocode/reverse', response.data);
+
       const result = response.data?.results?.[0];
       if (result) {
         const components = result.address_components || [];
         const pick = (type: string) =>
           components.find((c: any) => c.types.includes(type))?.long_name || '';
 
-        const streetNumber = pick('street_number');
-        const routeName = pick('route');
-        const sublocality2 = pick('sublocality_level_2');
         const sublocality1 = pick('sublocality_level_1');
         const neighborhood = pick('neighborhood');
         const locality = pick('locality');
@@ -425,12 +440,7 @@ const AddLocationScreen: React.FC = () => {
 
         const edited = editedFieldsRef.current;
         if (!edited.addLine1) {
-          setAddLine1(
-            `${streetNumber} ${routeName}`.trim() ||
-              sublocality2 ||
-              sublocality1 ||
-              '',
-          );
+          setAddLine1(getAddressLine1(result));
         }
         if (!edited.addLine2) {
           setAddLine2(`${sublocality1 || neighborhood || locality}`.trim());
@@ -631,7 +641,7 @@ const AddLocationScreen: React.FC = () => {
       district: 'Ernakulam',
       pincode,
       pincodeAreaId,
-      pincodeAreaName: items.find(i => i.value === pincodeAreaId)?.label || '',
+      pincodeAreaName: selectedAreaName,
       latitude: markerRef.current.latitude,
       longitude: markerRef.current.longitude,
       addressType,
@@ -670,13 +680,20 @@ const AddLocationScreen: React.FC = () => {
   const recenter = useStableCallback(() => getCurrentLocation(true));
 
   const isResolving = isGeocoding || isInitialLoading;
+  const isDuplicateLine2 =
+    addLine2.trim().toLowerCase() === addLine1.trim().toLowerCase();
   const saveLabel = isEditMode ? 'Update address' : 'Save address';
   const topInset = Math.max(insets.top, UI_SPACING.sm) + UI_SPACING.sm;
   const isKeyboardVisible = useKeyboardVisible();
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const onSearchFocus = useStableCallback(() => setIsSearchFocused(true));
+  const onSearchBlur = useStableCallback(() => setIsSearchFocused(false));
+  const isFormFocused = isKeyboardVisible && !isSearchFocused;
 
-  const modalContentStyle = useMemo(
-    () => [styles.dropdownContainer, { paddingTop: insets.top + 12 }],
-    [insets.top],
+  const openAreaPicker = useStableCallback(() => setOpen(true));
+  const closeAreaPicker = useStableCallback(() => setOpen(false));
+  const handleSelectArea = useStableCallback((value: number) =>
+    setPincodeAreaId(value),
   );
   const footerStyle = useMemo(
     () => [
@@ -698,7 +715,10 @@ const AddLocationScreen: React.FC = () => {
         isGeocoding={isGeocoding}
         isInitialLoading={isInitialLoading}
         topInset={topInset}
+        isHidden={isFormFocused}
         onMapReady={handleMapReady}
+        onSearchFocus={onSearchFocus}
+        onSearchBlur={onSearchBlur}
         onRegionChange={handleRegionChange}
         onRegionChangeComplete={handleRegionChangeComplete}
         onPlaceSelected={moveTo}
@@ -708,15 +728,9 @@ const AddLocationScreen: React.FC = () => {
 
       <KeyboardAvoidingView
         style={styles.flex}
-        enabled={!IS_ANDROID}
-        behavior={IS_ANDROID ? undefined : 'padding'}
+        behavior={IS_ANDROID ? 'height' : 'padding'}
       >
-        <View
-          style={[
-            styles.sheet,
-            isKeyboardVisible && { marginTop: topInset + UI_SPACING.md },
-          ]}
-        >
+        <View style={[styles.sheet, isFormFocused && { marginTop: topInset }]}>
           <View style={styles.grabHandle} />
 
           <View style={styles.sheetHeader}>
@@ -739,7 +753,6 @@ const AddLocationScreen: React.FC = () => {
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="none"
-            automaticallyAdjustKeyboardInsets={!IS_ANDROID}
             removeClippedSubviews={false}
             nestedScrollEnabled
           >
@@ -764,7 +777,7 @@ const AddLocationScreen: React.FC = () => {
                   {addLine1 ||
                     (isResolving ? 'Fetching location…' : 'Address not found')}
                 </AppText>
-                {addLine2 ? (
+                {addLine2 && !isDuplicateLine2 ? (
                   <AppText
                     variant="caption"
                     tone="muted"
@@ -853,24 +866,37 @@ const AddLocationScreen: React.FC = () => {
                     isActive={open}
                     style={styles.areaLabel}
                   />
-                  <DropDownPicker
-                    open={open}
-                    value={pincodeAreaId}
-                    items={items}
-                    setOpen={setOpen}
-                    setValue={setPincodeAreaId}
-                    setItems={setItems}
-                    placeholder="PIN Code Area"
-                    loading={isAreasLoading}
-                    listMode="MODAL"
-                    modalTitle="Select Area"
-                    style={[styles.dropdown, open && styles.dropdownOpen]}
-                    textStyle={styles.dropdownText}
-                    placeholderStyle={styles.dropdownPlaceholder}
-                    listItemLabelStyle={styles.dropdownText}
-                    selectedItemLabelStyle={styles.dropdownSelectedText}
-                    modalContentContainerStyle={modalContentStyle}
-                  />
+                  <TouchableOpacity
+                    activeOpacity={0.85}
+                    onPress={openAreaPicker}
+                    accessibilityRole="button"
+                    accessibilityLabel="Area"
+                    accessibilityValue={{
+                      text: selectedAreaName || 'Not selected',
+                    }}
+                    style={[styles.areaTrigger, open && styles.areaTriggerOpen]}
+                  >
+                    <AppText
+                      variant="label"
+                      tone={selectedAreaName ? 'primary' : 'faint'}
+                      numberOfLines={1}
+                      style={styles.areaTriggerLabel}
+                    >
+                      {selectedAreaName || 'Choose area'}
+                    </AppText>
+                    {isAreasLoading ? (
+                      <ActivityIndicator
+                        size="small"
+                        color={UI_COLORS.textMuted}
+                      />
+                    ) : (
+                      <Ionicons
+                        name="chevron-down"
+                        size={wp('4.2%')}
+                        color={UI_COLORS.textMuted}
+                      />
+                    )}
+                  </TouchableOpacity>
                 </View>
               </View>
 
@@ -934,6 +960,16 @@ const AddLocationScreen: React.FC = () => {
           </View>
         </View>
       </KeyboardAvoidingView>
+
+      <AreaPickerSheet
+        visible={open}
+        onClose={closeAreaPicker}
+        items={items}
+        value={pincodeAreaId}
+        onSelect={handleSelectArea}
+        pincode={pincode}
+        loading={isAreasLoading}
+      />
     </View>
   );
 };

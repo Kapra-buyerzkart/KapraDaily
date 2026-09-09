@@ -16,11 +16,11 @@ export function getTabBarClearance(insetsBottom) {
   return getTabBarHeight(insetsBottom);
 }
 
-export function updateTabBarVisibilityWorklet(y, scrollAnchor) {
+export function updateTabBarVisibilityWorklet(y, scrollAnchor, atEnd) {
   'worklet';
 
-  if (y <= 0) {
-    scrollAnchor.value = 0;
+  if (y <= 0 || atEnd) {
+    scrollAnchor.value = y <= 0 ? 0 : y;
     if (tabBarVisibility.value !== 1) {
       tabBarVisibility.value = withTiming(1, {
         duration: TAB_BAR_ANIM_DURATION,

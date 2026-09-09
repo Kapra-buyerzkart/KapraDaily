@@ -69,7 +69,6 @@ const BillSection: React.FC<BillSectionProps> = ({
     bcoinsAppliedValue = 0,
     totalTax = 0,
     totalBtokens = 0,
-    totalSavings = 0,
     toPay = 0,
   } = billCalculations;
 
@@ -81,7 +80,6 @@ const BillSection: React.FC<BillSectionProps> = ({
   ].filter(entry => entry.amount > 0);
 
   const isDeliveryFree = deliveryCharge === 0;
-  const hasSavings = totalSavings > 0;
   const hasTokens = totalBtokens > 0;
 
   return (
@@ -138,37 +136,18 @@ const BillSection: React.FC<BillSectionProps> = ({
           </View>
         </View>
 
-        {(hasSavings || hasTokens) && (
+        {hasTokens && (
           <View style={styles.footerStrip}>
-            {hasSavings && (
-              <View style={styles.footerItem}>
-                <MaterialCommunityIcons
-                  name="check-decagram"
-                  size={wp('4%')}
-                  color={UI_COLORS.successDeep}
-                />
-                <AppText variant="captionStrong" tone="success">
-                  Saved ₹{totalSavings.toFixed(0)}
-                </AppText>
-              </View>
-            )}
-
-            {hasSavings && hasTokens ? (
-              <View style={styles.footerSplit} />
-            ) : null}
-
-            {hasTokens && (
-              <View style={styles.footerItem}>
-                <MaterialCommunityIcons
-                  name="star-four-points"
-                  size={wp('4%')}
-                  color={UI_COLORS.token}
-                />
-                <AppText variant="captionStrong" tone="token">
-                  Earn {totalBtokens} UD Tokens
-                </AppText>
-              </View>
-            )}
+            <View style={styles.footerItem}>
+              <MaterialCommunityIcons
+                name="star-four-points"
+                size={wp('4%')}
+                color={UI_COLORS.token}
+              />
+              <AppText variant="captionStrong" tone="token">
+                Earn {totalBtokens} UD Tokens
+              </AppText>
+            </View>
           </View>
         )}
       </Surface>
@@ -250,10 +229,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: UI_SPACING.xs + 2,
-  },
-  footerSplit: {
-    width: StyleSheet.hairlineWidth,
-    alignSelf: 'stretch',
-    backgroundColor: 'rgba(11,122,61,0.28)',
   },
 });

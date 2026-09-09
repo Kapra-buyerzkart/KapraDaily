@@ -1,11 +1,15 @@
 import React from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
 
-import AuthButton from '@/components/AuthButton';
-
-import { SEARCH_ICON } from '../../constants';
-import { COLORS, WINDOW_HEIGHT, WINDOW_WIDTH } from '../../theme';
-import { IconButton } from '../atoms';
+import { ICON_BUTTON_SIZE, SEARCH_ICON } from '../../constants';
+import {
+  COLORS,
+  RADIUS,
+  SPACING,
+  WINDOW_HEIGHT,
+  WINDOW_WIDTH,
+} from '../../theme';
+import { IconButton, LocText } from '../atoms';
 
 const LocationTopBar = ({ onSkip, onSearchPress }) => (
   <View
@@ -17,16 +21,22 @@ const LocationTopBar = ({ onSkip, onSearchPress }) => (
       },
     ]}
   >
-    <AuthButton
-      FirstColor={COLORS.danger}
-      SecondColor={COLORS.brandSoft}
-      OnPress={onSkip}
-      FSize={14}
-      ButtonText={'Skip'}
-      ButtonWidth={20}
-      ButtonHeight={3}
+    <TouchableOpacity
+      style={styles.skipButton}
+      onPress={onSkip}
+      activeOpacity={0.85}
+    >
+      <LocText variant="cta" tone="brand">
+        Skip
+      </LocText>
+    </TouchableOpacity>
+
+    <IconButton
+      source={SEARCH_ICON}
+      onPress={onSearchPress}
+      tintColor={COLORS.brand}
+      style={styles.searchButton}
     />
-    <IconButton source={SEARCH_ICON} onPress={onSearchPress} />
   </View>
 );
 
@@ -42,5 +52,19 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     paddingHorizontal: WINDOW_WIDTH * 0.05,
     top: Platform.OS === 'ios' ? WINDOW_HEIGHT * 0.65 : WINDOW_HEIGHT * 0.69,
+  },
+  skipButton: {
+    height: ICON_BUTTON_SIZE,
+    minWidth: WINDOW_WIDTH * 0.22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: SPACING.xl,
+    borderRadius: RADIUS.button,
+    backgroundColor: COLORS.brandWash,
+  },
+  searchButton: {
+    marginLeft: SPACING.md,
+    borderRadius: RADIUS.button,
+    backgroundColor: COLORS.brandWash,
   },
 });

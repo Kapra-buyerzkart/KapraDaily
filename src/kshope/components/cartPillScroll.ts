@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { NativeScrollEvent } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import {
   makeMutable,
@@ -13,9 +14,19 @@ import {
 
 const scrollAnchor = makeMutable(0);
 
-export const trackCartPillScroll = (offsetY: number) => {
+const SCROLL_END_SLOP = 2;
+
+const isAtScrollEnd = (e: NativeScrollEvent) => {
   'worklet';
-  updateTabBarVisibilityWorklet(offsetY, scrollAnchor);
+  return (
+    e.contentOffset.y + e.layoutMeasurement.height >=
+    e.contentSize.height - SCROLL_END_SLOP
+  );
+};
+
+export const trackCartPillScroll = (offsetY: number, atEnd?: boolean) => {
+  'worklet';
+  updateTabBarVisibilityWorklet(offsetY, scrollAnchor, atEnd);
 };
 
 export const resetCartPillScroll = () => {
@@ -36,7 +47,7 @@ export const useCartPillScrollHandler = () => {
 
   return useAnimatedScrollHandler({
     onScroll: e => {
-      trackCartPillScroll(e.contentOffset.y);
+      trackCartPillScroll(e.contentOffset.y, isAtScrollEnd(e));
     },
   });
 };
@@ -49,8 +60,8 @@ export const useCartPillScrollProps = () => {
 export const useCartPillScrollTracker = () => {
   useCartPillScrollReset();
 
-  return useCallback((offsetY: number) => {
+  return useCallback((e: NativeScrollEvent) => {
     'worklet';
-    trackCartPillScroll(offsetY);
+    trackCartPillScroll(e.contentOffset.y, isAtScrollEnd(e));
   }, []);
 };

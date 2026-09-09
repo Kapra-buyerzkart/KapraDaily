@@ -6,7 +6,16 @@ import { FloatingIconButton } from '../molecules';
 import PlacesSearchBar from './PlacesSearchBar';
 import { GUTTER, SPACING } from '../../theme';
 
-const MapOverlay = ({ searchRef, apiKey, onPlaceSelected, isBusy, onBack }) => {
+const MapOverlay = ({
+  searchRef,
+  apiKey,
+  onPlaceSelected,
+  isBusy,
+  onBack,
+  isHidden,
+  onSearchFocus,
+  onSearchBlur,
+}) => {
   const insets = useSafeAreaInsets();
 
   return (
@@ -15,6 +24,7 @@ const MapOverlay = ({ searchRef, apiKey, onPlaceSelected, isBusy, onBack }) => {
       style={[
         styles.overlay,
         { top: Math.max(insets.top, SPACING.sm) + SPACING.sm },
+        isHidden && styles.hidden,
       ]}
     >
       <View pointerEvents="box-none" style={styles.row}>
@@ -28,6 +38,8 @@ const MapOverlay = ({ searchRef, apiKey, onPlaceSelected, isBusy, onBack }) => {
           apiKey={apiKey}
           onPlaceSelected={onPlaceSelected}
           isBusy={isBusy}
+          onFocus={onSearchFocus}
+          onBlur={onSearchBlur}
           style={styles.search}
         />
       </View>
@@ -52,5 +64,8 @@ const styles = StyleSheet.create({
   },
   search: {
     marginLeft: SPACING.md,
+  },
+  hidden: {
+    display: 'none',
   },
 });

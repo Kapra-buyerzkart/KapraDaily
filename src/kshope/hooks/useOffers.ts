@@ -105,7 +105,7 @@ export const useOffers = (deliveryHook: any, addressHook: any, cartSummary: any,
                 const bcoinsToApply = profile?.totalBCoins || profile?.bCoins || profile?.walletBalance || 0;
 
                 if (bcoinsToApply <= 0) {
-                    Toast.show('No UD-coinsavailable to apply', Toast.SHORT);
+                    Toast.show('No UD Coins available to apply', Toast.SHORT);
                     return;
                 }
 
@@ -123,9 +123,9 @@ export const useOffers = (deliveryHook: any, addressHook: any, cartSummary: any,
                 if (res?.success) {
                     const newVersion = res?.data?.cartVersion || res?.data?.version || res?.cartVersion || res?.data?.cart?.cartVersion || res?.data?.cart?.version || null;
                     await getCartSummary(deliveryMode, slotId, newVersion, null, pincodeAreaId);
-                    Toast.show('UD-coinsapplied successfully', Toast.SHORT);
+                    Toast.show('UD Coins applied successfully', Toast.SHORT);
                 } else {
-                    Toast.show(res?.message || 'Failed to apply UD-Coins', Toast.SHORT);
+                    Toast.show(res?.message || 'Failed to apply UD Coins', Toast.SHORT);
                 }
             } catch (error) {
                 console.error('Error applying BCoin:', error);
@@ -156,7 +156,7 @@ export const useOffers = (deliveryHook: any, addressHook: any, cartSummary: any,
             } else if (offerType === '3') {
                 res = await removeBCoinApi(version, cartId);
                 if (res?.success) {
-                    Toast.show('UD-coinsremoved', Toast.SHORT);
+                    Toast.show('UD Coins removed', Toast.SHORT);
                 }
             } else if (offerType === '4') {
                 res = await removeGiftCardApi(version, cartId);

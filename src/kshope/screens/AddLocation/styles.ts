@@ -24,6 +24,9 @@ export default StyleSheet.create({
   flex: {
     flex: 1,
   },
+  hidden: {
+    display: 'none',
+  },
 
   mapContainer: {
     position: 'absolute',
@@ -308,38 +311,130 @@ export default StyleSheet.create({
     zIndex: 7000,
     // elevation: 7,
   },
-  dropdown: {
+  areaTrigger: {
     minHeight: FIELD_HEIGHT,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: UI_SPACING.sm,
     borderWidth: HAIRLINE,
     borderColor: UI_COLORS.border,
     borderRadius: UI_RADIUS.input,
     paddingHorizontal: UI_SPACING.lg,
     backgroundColor: UI_COLORS.well,
   },
-  dropdownOpen: {
+  areaTriggerOpen: {
     borderWidth: 1.2,
     borderColor: UI_COLORS.borderStrong,
     backgroundColor: UI_COLORS.card,
   },
-  dropdownContainer: {
-    borderWidth: HAIRLINE,
-    borderColor: UI_COLORS.border,
-    borderRadius: UI_RADIUS.input,
-    backgroundColor: UI_COLORS.card,
-  },
-  dropdownText: {
-    ...UI_TYPE.label,
-    color: UI_COLORS.textPrimary,
-  },
-  dropdownSelectedText: {
-    ...UI_TYPE.labelStrong,
-    color: UI_COLORS.textPrimary,
-  },
-  dropdownPlaceholder: {
-    ...UI_TYPE.label,
-    color: UI_COLORS.textFaint,
+  areaTriggerLabel: {
+    flex: 1,
   },
 
+  areaSheetOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: UI_COLORS.overlay,
+  },
+  areaSheetDismiss: {
+    flex: 1,
+  },
+  areaSheet: {
+    maxHeight: hp('70%'),
+    paddingTop: UI_SPACING.sm,
+    backgroundColor: UI_COLORS.card,
+    borderTopLeftRadius: UI_RADIUS.card,
+    borderTopRightRadius: UI_RADIUS.card,
+  },
+  areaSheetGrab: {
+    width: wp('10%'),
+    height: 5,
+    alignSelf: 'center',
+    borderRadius: UI_RADIUS.pill,
+    backgroundColor: UI_COLORS.borderStrong,
+  },
+  areaSheetHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingTop: UI_SPACING.lg,
+    paddingBottom: UI_SPACING.md,
+    paddingHorizontal: UI_GUTTER,
+    borderBottomWidth: HAIRLINE,
+    borderBottomColor: UI_COLORS.border,
+  },
+  areaSheetHeadline: {
+    flex: 1,
+  },
+  areaSheetContext: {
+    marginTop: 2,
+  },
+  areaSheetClose: {
+    width: wp('9%'),
+    height: wp('9%'),
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: UI_RADIUS.icon,
+    backgroundColor: UI_COLORS.inkTint,
+  },
+
+  areaSearch: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: UI_SPACING.sm,
+    marginTop: UI_SPACING.lg,
+    marginHorizontal: UI_GUTTER,
+    paddingHorizontal: UI_SPACING.md,
+    minHeight: hp('5.4%'),
+    borderRadius: UI_RADIUS.input,
+    borderWidth: HAIRLINE,
+    borderColor: UI_COLORS.border,
+    backgroundColor: UI_COLORS.well,
+  },
+  areaSearchInput: {
+    flex: 1,
+    paddingVertical: UI_SPACING.sm,
+    ...UI_TYPE.label,
+    color: UI_COLORS.textPrimary,
+  },
+
+  areaList: {
+    flexGrow: 0,
+  },
+  areaListContent: {
+    paddingTop: UI_SPACING.lg,
+    paddingBottom: UI_SPACING.sm,
+    paddingHorizontal: UI_GUTTER,
+  },
+  areaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: UI_SPACING.md,
+    minHeight: hp('6.4%'),
+    marginBottom: UI_SPACING.sm,
+    paddingVertical: UI_SPACING.md,
+    paddingHorizontal: UI_SPACING.lg,
+    borderRadius: UI_RADIUS.input,
+    borderWidth: HAIRLINE,
+    borderColor: UI_COLORS.border,
+    backgroundColor: UI_COLORS.well,
+  },
+  areaRowSelected: {
+    borderWidth: 1.2,
+    borderColor: UI_COLORS.borderStrong,
+    backgroundColor: UI_COLORS.card,
+  },
+  areaRowLabel: {
+    flex: 1,
+  },
+  areaSheetState: {
+    alignItems: 'center',
+    gap: UI_SPACING.sm,
+    paddingVertical: UI_SPACING.xxxl,
+    paddingHorizontal: UI_GUTTER,
+  },
+  areaSheetStateText: {
+    textAlign: 'center',
+  },
 
   footer: {
     paddingHorizontal: UI_GUTTER,

@@ -410,10 +410,11 @@ const OrderTrackingScreen = () => {
     normalizedPaymentStatus === 'initiated' &&
     rawOrderStatus?.toLowerCase() === 'pending';
   const showPaidBadge =
-    effectiveOrderStatus === 'delivered' ||
-    hasOnlinePaid ||
-    (isOnlineMethod(paymentMethod) &&
-      (normalizedPaymentStatus === 'pending' || paymentInitiated));
+    isOnlineMethod(paymentMethod) &&
+    (effectiveOrderStatus === 'delivered' ||
+      hasOnlinePaid ||
+      normalizedPaymentStatus === 'pending' ||
+      paymentInitiated);
 
   const timestampLabel = useMemo(() => {
     if (effectiveOrderStatus === 'delivered' && formattedDeliveredAt)

@@ -269,7 +269,7 @@ const ProfileScreen: React.FC = () => {
     },
     {
       key: 'bcoin',
-      label: 'UD-Coin',
+      label: 'UD Coin',
       icon: (
         <MaterialCommunityIcons
           name="hand-coin-outline"
@@ -337,20 +337,20 @@ const ProfileScreen: React.FC = () => {
     //       title: 'About us',
     //     }),
     // },
-    {
-      key: 'delete-account',
-      label: 'Delete account',
-      textColor: RED,
-      tone: 'danger',
-      icon: (
-        <MaterialCommunityIcons
-          name="account-remove-outline"
-          color={RED}
-          size={ICON_SIZE}
-        />
-      ),
-      onPress: () => setIsDeleteAccountModalVisible(true),
-    },
+    // {
+    //   key: 'delete-account',
+    //   label: 'Delete account',
+    //   textColor: RED,
+    //   tone: 'danger',
+    //   icon: (
+    //     <MaterialCommunityIcons
+    //       name="account-remove-outline"
+    //       color={RED}
+    //       size={ICON_SIZE}
+    //     />
+    //   ),
+    //   onPress: () => setIsDeleteAccountModalVisible(true),
+    // },
   ];
 
   return (

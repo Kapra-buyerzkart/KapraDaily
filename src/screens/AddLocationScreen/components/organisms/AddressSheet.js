@@ -1,13 +1,7 @@
 import React from 'react';
-import {
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import useKeyboardVisible from '@/hooks/useKeyboardVisible';
 
 import { GrabHandle } from '../atoms';
 import { SaveButton, SheetHeader } from '../molecules';
@@ -15,21 +9,23 @@ import AddressForm from './AddressForm';
 import { SHEET_TOP } from '../../constants';
 import { COLORS, GUTTER, HAIRLINE, RADIUS, SHADOW, SPACING } from '../../theme';
 
-const AddressSheet = ({ isEditMode, form, area, status, onSave }) => {
+const AddressSheet = ({
+  isEditMode,
+  form,
+  area,
+  status,
+  onSave,
+  isExpanded,
+}) => {
   const insets = useSafeAreaInsets();
-  const isKeyboardVisible = useKeyboardVisible();
+  const sheetTop = Math.max(insets.top, SPACING.sm) + SPACING.sm;
 
   return (
     <KeyboardAvoidingView
       style={styles.flex}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <View
-        style={[
-          styles.sheet,
-          isKeyboardVisible && { marginTop: insets.top + SPACING.md },
-        ]}
-      >
+      <View style={[styles.sheet, isExpanded && { marginTop: sheetTop }]}>
         <GrabHandle />
         <SheetHeader
           title={isEditMode ? 'Edit location' : 'Confirm location'}
@@ -40,7 +36,6 @@ const AddressSheet = ({ isEditMode, form, area, status, onSave }) => {
           style={styles.scroll}
           contentContainerStyle={styles.content}
           keyboardShouldPersistTaps="handled"
-          automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
           showsVerticalScrollIndicator={false}
         >
           <AddressForm form={form} area={area} status={status} />

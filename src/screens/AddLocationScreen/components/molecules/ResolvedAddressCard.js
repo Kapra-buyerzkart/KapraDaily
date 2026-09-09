@@ -5,32 +5,37 @@ import { AddrText, IconDisc } from '../atoms';
 import { PIN_ICON } from '../../constants';
 import { COLORS, HAIRLINE, RADIUS, SPACING, wp } from '../../theme';
 
-const ResolvedAddressCard = ({ line1, line2, isResolving }) => (
-  <View style={styles.card}>
-    <IconDisc tone="neutral" size={wp('10%')}>
-      <Image source={PIN_ICON} style={styles.icon} />
-    </IconDisc>
+const ResolvedAddressCard = ({ line1, line2, isResolving }) => {
+  const isDuplicateLine2 =
+    (line2 || '').trim().toLowerCase() === (line1 || '').trim().toLowerCase();
 
-    <View style={styles.copy}>
-      <AddrText variant="micro" tone="muted" style={styles.eyebrow}>
-        {isResolving ? 'LOCATING…' : 'SELECTED LOCATION'}
-      </AddrText>
-      <AddrText variant="bodyStrong" numberOfLines={2}>
-        {line1 || (isResolving ? 'Fetching location…' : 'Address not found')}
-      </AddrText>
-      {line2 ? (
-        <AddrText
-          variant="caption"
-          tone="muted"
-          numberOfLines={1}
-          style={styles.line2}
-        >
-          {line2}
+  return (
+    <View style={styles.card}>
+      <IconDisc tone="neutral" size={wp('10%')}>
+        <Image source={PIN_ICON} style={styles.icon} />
+      </IconDisc>
+
+      <View style={styles.copy}>
+        <AddrText variant="micro" tone="muted" style={styles.eyebrow}>
+          {isResolving ? 'LOCATING…' : 'SELECTED LOCATION'}
         </AddrText>
-      ) : null}
+        <AddrText variant="bodyStrong" numberOfLines={2}>
+          {line1 || (isResolving ? 'Fetching location…' : 'Address not found')}
+        </AddrText>
+        {line2 && !isDuplicateLine2 ? (
+          <AddrText
+            variant="caption"
+            tone="muted"
+            numberOfLines={1}
+            style={styles.line2}
+          >
+            {line2}
+          </AddrText>
+        ) : null}
+      </View>
     </View>
-  </View>
-);
+  );
+};
 
 export default React.memo(ResolvedAddressCard);
 

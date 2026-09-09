@@ -204,7 +204,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     marginTop: SPACING.sm,
-    maxWidth: '82%',
+    maxWidth: '65%',
   },
   illustration: {
     position: 'absolute',

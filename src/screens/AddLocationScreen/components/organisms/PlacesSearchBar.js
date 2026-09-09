@@ -22,6 +22,8 @@ const PlacesSearchBar = ({
   apiKey,
   onPlaceSelected,
   isBusy,
+  onFocus,
+  onBlur,
   style,
 }) => (
   <View style={[styles.layer, style]}>
@@ -33,6 +35,8 @@ const PlacesSearchBar = ({
         placeholderTextColor: COLORS.textFaint,
         returnKeyType: 'search',
         maxFontSizeMultiplier: MAX_FONT_SCALE,
+        onFocus,
+        onBlur,
       }}
       renderLeftButton={() => (
         <Ionicons

@@ -243,7 +243,7 @@ const Lock = ({ size = defaultSize, color = colors.primary, style }: IconProps) 
 );
 
 const Invoice = ({ size = defaultSize, color = colors.primary, style }: IconProps) => (
-    <MaterialCommunityIcons name="receipt-text-outline" size={size} color={color} style={style} />
+    <MaterialCommunityIcons name="file-document-outline" size={size} color={color} style={style} />
 );
 
 const PaymentCard = ({ size = defaultSize, color = colors.primary, style }: IconProps) => (
@@ -280,6 +280,10 @@ const ArrowDownBold = ({ size = defaultSize, color = colors.primary, style }: Ic
 
 const ArrowBack = ({ size = defaultSize, color = colors.primary, style }: IconProps) => (
     <Ionicons name="arrow-back" size={size} color={color} style={style} />
+);
+
+const Download = ({ size = defaultSize, color = colors.primary, style }: IconProps) => (
+    <Feather name="download" size={size} color={color} style={style} />
 );
 
 
@@ -349,6 +353,7 @@ export const AppIcons = {
     ArrowUpBold,
     ArrowDownBold,
     ArrowBack,
+    Download,
     Invoice,
     PaymentCard,
     CheckCircle,

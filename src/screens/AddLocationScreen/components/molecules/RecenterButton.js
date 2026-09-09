@@ -15,13 +15,13 @@ import {
   wp,
 } from '../../theme';
 
-const RecenterButton = ({ onPress }) => (
+const RecenterButton = ({ onPress, isHidden }) => (
   <TouchableOpacity
     activeOpacity={0.85}
     accessibilityRole="button"
     accessibilityLabel="Use my current location"
     hitSlop={hitSlopTo(44)}
-    style={styles.button}
+    style={[styles.button, isHidden && styles.hidden]}
     onPress={onPress}
   >
     <Ionicons name="locate" size={wp('4.2%')} color={COLORS.textPrimary} />
@@ -50,5 +50,8 @@ const styles = StyleSheet.create({
   },
   label: {
     marginLeft: SPACING.xs,
+  },
+  hidden: {
+    display: 'none',
   },
 });
