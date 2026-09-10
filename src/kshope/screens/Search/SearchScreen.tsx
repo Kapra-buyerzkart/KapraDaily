@@ -306,7 +306,7 @@ const styles = StyleSheet.create({
   searchContainer: {
     backgroundColor: SURFACE.page,
     height: s(48),
-    borderRadius: RADIUS.pill,
+    borderRadius: RADIUS.sm,
     borderWidth: 1,
     borderColor: SURFACE.hairline,
     marginHorizontal: GUTTER,

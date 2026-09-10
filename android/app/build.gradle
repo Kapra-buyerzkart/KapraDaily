@@ -87,8 +87,8 @@ android {
         applicationId "com.buyerskart.customer"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 25061
-        versionName "5.3.1"
+        versionCode 25062
+        versionName "5.3.2"
 
               manifestPlaceholders = [
             GOOGLE_MAPS_API_KEY: (project.findProperty('GOOGLE_MAPS_API_KEY') ?: "")

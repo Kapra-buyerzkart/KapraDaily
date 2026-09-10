@@ -113,7 +113,7 @@ const FeaturedRow: React.FC<Props> = ({
       {title ? (
         <View style={styles.titleRow}>
           <SectionTitle text={title} accent={accent} />
-          {hasMore ? (
+          {/* {hasMore ? (
             <TouchableOpacity
               activeOpacity={0.85}
               onPress={scrollForward}
@@ -122,7 +122,7 @@ const FeaturedRow: React.FC<Props> = ({
             >
               <ChevronRight />
             </TouchableOpacity>
-          ) : null}
+          ) : null} */}
         </View>
       ) : null}
 

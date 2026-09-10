@@ -42,6 +42,7 @@ import ConfirmationModal from '../../components/ConfirmationModal';
 import StatusModal from '../../components/StatusModal';
 import FallbackImage from '../../components/FallbackImage';
 import { OrderDetails, OrderLineItem } from '../../types/order';
+import { isCashOnDelivery } from './status/paymentMeta';
 
 const STEPPER_STAGES = [
   { label: 'Confirmed', keys: ['pending', 'placed', 'accepted'] },
@@ -607,6 +608,20 @@ const MyOrderDetailsScreen = () => {
   const taxTotal = header?.taxTotal ?? 0;
   const grandTotal = header?.grandTotal ?? 0;
 
+  const isCod = isCashOnDelivery(payment?.paymentMethod || '');
+  const isDelivered =
+    reachedStage === STEPPER_STAGES.length - 1 ||
+    (header?.orderStatus || header?.status || order?.orderStatus || '')
+      .toString()
+      .toLowerCase()
+      .includes('delivered');
+  const isPaid =
+    isDelivered ||
+    (!!payment &&
+      !isCod &&
+      String(payment.paymentStatus || '').toLowerCase() === 'success');
+  const totalLabel = isCancelled ? 'Order total' : isPaid ? 'Paid' : 'To pay';
+
   const invoiceUrl = resolveInvoiceUrl(header?.invoiceFileUrl);
 
   const openInvoice = () => {
@@ -792,7 +807,7 @@ const MyOrderDetailsScreen = () => {
 
               <View style={d.toPayRow}>
                 <View>
-                  <Text style={d.toPayLabel}>To pay</Text>
+                  <Text style={d.toPayLabel}>{totalLabel}</Text>
                   <Text style={d.toPayNote}>
                     {`Inclusive of GST ${money(taxTotal)}`}
                   </Text>
@@ -801,7 +816,7 @@ const MyOrderDetailsScreen = () => {
               </View>
             </View>
 
-            {discountTotal > 0 && (
+            {discountTotal > 0 && !isCancelled && (
               <View style={d.savedStrip}>
                 <AppIcons.CheckCircle
                   size={dp(15)}

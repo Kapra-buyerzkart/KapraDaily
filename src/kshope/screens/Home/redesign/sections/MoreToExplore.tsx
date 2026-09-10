@@ -199,7 +199,8 @@ const styles = StyleSheet.create({
   },
   footerArt: {
     width: SCREEN_WIDTH,
-    height: s(120),
+    height: s(140),
+    marginBottom: 20,
   },
   footerRule: {
     height: s(7),
