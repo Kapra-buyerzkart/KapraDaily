@@ -32,11 +32,7 @@ import { verifyRazorpayPaymentApi } from '../../api/services/paymentService';
 import RazorpayCheckout from 'react-native-razorpay';
 import { useUser } from '../../context/UserContext';
 import KSHOPE_CONFIG from '../../globals/config';
-import {
-  INVOICE_NOT_GENERATED_MESSAGE,
-  isInvoiceGenerated,
-  resolveInvoiceUrl,
-} from '../../utils/invoiceUrl';
+import { resolveInvoiceUrl } from '../../utils/invoiceUrl';
 import { useInvoiceDownload } from '../../hooks/useInvoiceDownload';
 import ConfirmationModal from '../../components/ConfirmationModal';
 import StatusModal from '../../components/StatusModal';
@@ -87,8 +83,6 @@ type RatingBlockProps = {
   reviewText: string;
   onChangeReview: (value: string) => void;
   placeholder: string;
-  submitted: boolean;
-  submittedText: string;
   onSubmit: () => void;
 };
 
@@ -100,8 +94,6 @@ const RatingBlock = ({
   reviewText,
   onChangeReview,
   placeholder,
-  submitted,
-  submittedText,
   onSubmit,
 }: RatingBlockProps) => (
   <View style={d.rateBlock}>
@@ -113,7 +105,6 @@ const RatingBlock = ({
           key={value}
           style={d.star}
           activeOpacity={0.85}
-          disabled={submitted}
           onPress={() => onRate(value)}
           accessibilityRole="button"
           accessibilityLabel={`Rate ${value} out of 5`}
@@ -126,32 +117,28 @@ const RatingBlock = ({
       ))}
     </View>
 
-    {submitted ? (
-      <Text style={d.rateThanks}>{submittedText}</Text>
-    ) : (
-      rating > 0 && (
-        <>
-          <TextInput
-            style={d.rateInput}
-            value={reviewText}
-            onChangeText={onChangeReview}
-            placeholder={placeholder}
-            placeholderTextColor={DESIGN_COLORS.muted}
-            multiline
-            maxLength={500}
-            textAlignVertical="top"
-          />
-          <TouchableOpacity
-            style={d.rateSubmit}
-            activeOpacity={0.85}
-            onPress={onSubmit}
-            accessibilityRole="button"
-            accessibilityLabel="Submit rating"
-          >
-            <Text style={d.rateSubmitText}>Submit rating</Text>
-          </TouchableOpacity>
-        </>
-      )
+    {rating > 0 && (
+      <>
+        <TextInput
+          style={d.rateInput}
+          value={reviewText}
+          onChangeText={onChangeReview}
+          placeholder={placeholder}
+          placeholderTextColor={DESIGN_COLORS.muted}
+          multiline
+          maxLength={500}
+          textAlignVertical="top"
+        />
+        <TouchableOpacity
+          style={d.rateSubmit}
+          activeOpacity={0.85}
+          onPress={onSubmit}
+          accessibilityRole="button"
+          accessibilityLabel="Submit rating"
+        >
+          <Text style={d.rateSubmitText}>Submit rating</Text>
+        </TouchableOpacity>
+      </>
     )}
   </View>
 );
@@ -624,22 +611,9 @@ const MyOrderDetailsScreen = () => {
 
   const invoiceUrl = resolveInvoiceUrl(header?.invoiceFileUrl);
 
-  const openInvoice = () => {
-    if (!isInvoiceGenerated(invoiceUrl)) {
-      setStatusModal({
-        visible: true,
-        type: 'error',
-        title: 'Invoice not generated',
-        message: INVOICE_NOT_GENERATED_MESSAGE,
-      });
-      return;
-    }
-    navigation.navigate('KshopeInvoiceViewer', {
-      invoiceUrl,
-      invoiceNumber: header?.invoiceNumber,
-      title: 'Invoice',
-    });
-  };
+  const hasOverallRating =
+    Number(header?.overallRating ?? header?.reviewRating ?? 0) > 0;
+  const hasAgentRating = Number(header?.deliveryAgentRating ?? 0) > 0;
 
   return (
     <SafeAreaView style={d.screen} edges={['top']}>
@@ -692,7 +666,7 @@ const MyOrderDetailsScreen = () => {
         <View style={d.whiteBlock}>
           {!!header?.orderStatusText && (
             <Text style={d.statusHeading}>
-              {`Order ${header.orderStatusText}${
+              {`${header.orderStatusText}${
                 longDate(header.orderDate)
                   ? ` on ${longDate(header.orderDate)}`
                   : ''
@@ -761,20 +735,20 @@ const MyOrderDetailsScreen = () => {
             </View>
           ))}
 
-          {(header?.canMarkOverallReview || ratingSubmitted) && (
-            <RatingBlock
-              title="How was your experience?"
-              caption="Tap a star to rate this order"
-              rating={rating}
-              onRate={setRating}
-              reviewText={reviewText}
-              onChangeReview={setReviewText}
-              placeholder="Write a review (optional)"
-              submitted={ratingSubmitted}
-              submittedText="Thanks for rating this order."
-              onSubmit={handleSubmitRating}
-            />
-          )}
+          {!!header?.canMarkOverallReview &&
+            !ratingSubmitted &&
+            !hasOverallRating && (
+              <RatingBlock
+                title="How was your experience?"
+                caption="Tap a star to rate this order placement experience"
+                rating={rating}
+                onRate={setRating}
+                reviewText={reviewText}
+                onChangeReview={setReviewText}
+                placeholder="Write a review (optional)"
+                onSubmit={handleSubmitRating}
+              />
+            )}
         </View>
 
         {!!header && (
@@ -870,32 +844,20 @@ const MyOrderDetailsScreen = () => {
 
         {!!invoiceUrl && (
           <View style={[d.card, d.cardPad]}>
-            <TouchableOpacity
-              activeOpacity={0.85}
-              onPress={openInvoice}
-              accessibilityRole="button"
-              accessibilityLabel="View invoice"
-            >
-              <View style={d.invoiceRow}>
-                <View style={d.iconTile}>
-                  <AppIcons.Invoice size={dp(19)} color={DESIGN_COLORS.body} />
-                </View>
-
-                <View style={d.invoiceBody}>
-                  <Text style={d.invoiceTitle}>View invoice</Text>
-                  {!!header?.invoiceNumber && (
-                    <Text style={d.invoiceNo}>
-                      {`Invoice ${header.invoiceNumber}`}
-                    </Text>
-                  )}
-                </View>
-
-                <AppIcons.ChevronRight
-                  size={dp(22)}
-                  color={DESIGN_COLORS.muted}
-                />
+            <View style={d.invoiceRow}>
+              <View style={d.iconTile}>
+                <AppIcons.Invoice size={dp(19)} color={DESIGN_COLORS.body} />
               </View>
-            </TouchableOpacity>
+
+              <View style={d.invoiceBody}>
+                <Text style={d.invoiceTitle}>Order invoice</Text>
+                {!!header?.invoiceNumber && (
+                  <Text style={d.invoiceNo}>
+                    {`Invoice ${header.invoiceNumber}`}
+                  </Text>
+                )}
+              </View>
+            </View>
 
             <View style={d.invoiceRule} />
 
@@ -1070,10 +1032,10 @@ const MyOrderDetailsScreen = () => {
 
             <View style={d.deliveryRule} />
 
-            <View style={d.itemPriceRow}>
+            {/* <View style={d.itemPriceRow}>
               <Text style={d.itemPriceLabel}>Item price</Text>
               <Text style={d.itemPriceValue}>{money(grandTotal)}</Text>
-            </View>
+            </View> */}
           </View>
         )}
 
@@ -1141,22 +1103,22 @@ const MyOrderDetailsScreen = () => {
           </View>
         )}
 
-        {(header?.canMarkDeliveryReview || agentRatingSubmitted) && (
-          <View style={[d.card, d.rateCard]}>
-            <RatingBlock
-              title="Rate your delivery partner"
-              caption={header?.deliveryAgentName || 'Delivery partner'}
-              rating={agentRating}
-              onRate={setAgentRating}
-              reviewText={agentReviewText}
-              onChangeReview={setAgentReviewText}
-              placeholder="How was the delivery? (optional)"
-              submitted={agentRatingSubmitted}
-              submittedText="Thanks for rating your delivery partner."
-              onSubmit={handleSubmitAgentRating}
-            />
-          </View>
-        )}
+        {!!header?.canMarkDeliveryReview &&
+          !agentRatingSubmitted &&
+          !hasAgentRating && (
+            <View style={[d.card, d.rateCard]}>
+              <RatingBlock
+                title="Rate your delivery partner"
+                caption={header?.deliveryAgentName || 'Delivery partner'}
+                rating={agentRating}
+                onRate={setAgentRating}
+                reviewText={agentReviewText}
+                onChangeReview={setAgentReviewText}
+                placeholder="How was the delivery? (optional)"
+                onSubmit={handleSubmitAgentRating}
+              />
+            </View>
+          )}
 
         {canRetryPayment && (
           <TouchableOpacity

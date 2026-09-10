@@ -438,7 +438,7 @@ const OrderTrackingScreen = () => {
 
   const documentRows = [
     !!resolvedInvoiceUrl && {
-      label: 'View invoice',
+      label: 'Order invoice',
       caption: invoiceNumber ? `Invoice ${invoiceNumber}` : 'Tax invoice',
       icon: 'receipt-outline',
       tone: 'neutral',

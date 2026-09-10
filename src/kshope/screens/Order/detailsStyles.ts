@@ -221,13 +221,6 @@ export const detailsStyles = StyleSheet.create({
     fontSize: dp(15),
     color: DESIGN_COLORS.white,
   },
-  rateThanks: {
-    fontFamily: Fonts.gilroyMedium,
-    fontSize: dp(13),
-    color: DESIGN_COLORS.muted,
-    marginTop: dp(12),
-  },
-
   card: {
     backgroundColor: DESIGN_COLORS.card,
     borderRadius: dp(12),
