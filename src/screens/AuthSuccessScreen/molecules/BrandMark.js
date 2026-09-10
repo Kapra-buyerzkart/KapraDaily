@@ -2,9 +2,8 @@ import React from 'react';
 import { Image, StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
+import { BRAND_LOGO } from '../constants';
 import { LOGO_RATIO, SPACING, wp } from '../theme';
-
-const BRAND_LOGO = require('../../../assets/images/splash/udendealWordmark.png');
 
 const BrandMark = ({ style }) => (
   <Animated.View
@@ -25,7 +24,7 @@ const styles = StyleSheet.create({
     paddingBottom: SPACING.xl,
   },
   logoWrap: {
-    width: wp('34%'),
+    width: wp('62%'),
     aspectRatio: LOGO_RATIO,
   },
   logo: {

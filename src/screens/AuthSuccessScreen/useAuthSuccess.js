@@ -8,32 +8,31 @@ import useLandingPages, {
 } from '@/hooks/useLandingPages';
 import { getImageUrl } from '@/utils/imageUrl';
 
+import { LANDING_IMAGE_DIR, SERVICE_TILES } from './constants';
+
 export const useAuthSuccess = () => {
   const navigation = useNavigation();
   const { generalSettings } = useContext(AppContext);
   const { data: landingPages } = useLandingPages();
   const [isComingSoonVisible, setIsComingSoonVisible] = useState(false);
 
-  const images = landingPages?.landingPageImages;
+  const landingPageImages = landingPages?.landingPageImages;
 
-  const sources = useMemo(() => {
-    const resolve = name => {
-      const path = findLandingImage(images, name);
-      return path ? getImageUrl(path) : null;
-    };
-
-    return {
-      backdrop: resolve('landbg.png'),
-      kapra: resolve(['assetsimagesapp20min3x.png', '20min.png']),
-      kshope: resolve(['assetsimagesapp48hrs3x.png', '48hrs.png']),
-      tickets: resolve(['assetsimagesappudentickets3x.png', 'udentickets.png']),
-      d2c: resolve(['assetsimagesappd2c3x.png', 'd2cimg1.png', 'd2c.png']),
-    };
-  }, [images]);
+  const tiles = useMemo(
+    () =>
+      SERVICE_TILES.map(tile => {
+        const names = Array.isArray(tile.image) ? tile.image : [tile.image];
+        const path =
+          findLandingImage(landingPageImages, tile.image) ||
+          `${LANDING_IMAGE_DIR}${names[0]}`;
+        return { ...tile, source: getImageUrl(path) };
+      }),
+    [landingPageImages],
+  );
 
   useEffect(() => {
-    prefetchLandingPageImages(images);
-  }, [images]);
+    prefetchLandingPageImages(landingPageImages);
+  }, [landingPageImages]);
 
   // TEMP: backend gate disabled while the kshope module is being tested.
   // Restore the commented expression to gate on general/settings again.
@@ -41,37 +40,25 @@ export const useAuthSuccess = () => {
   //   generalSettings?.showkshope === '1' || generalSettings?.showkshope === 1;
   const isKshopeEnabled = true;
 
-  const openKapra = useCallback(
-    () => navigation.reset({ index: 0, routes: [{ name: 'MainTabs' }] }),
-    [navigation],
+  const actions = useMemo(
+    () => ({
+      kapra: () =>
+        navigation.reset({ index: 0, routes: [{ name: 'MainTabs' }] }),
+      tickets: () => navigation.navigate('TicketSplashScreen'),
+      d2c: () => navigation.navigate('D2cScreen'),
+      kshope: () =>
+        isKshopeEnabled
+          ? navigation.navigate('KshopeScreen')
+          : setIsComingSoonVisible(true),
+    }),
+    [isKshopeEnabled, navigation],
   );
 
-  const openKshope = useCallback(() => {
-    if (isKshopeEnabled) navigation.navigate('KshopeScreen');
-    else setIsComingSoonVisible(true);
-  }, [isKshopeEnabled, navigation]);
-
-  const openTickets = useCallback(
-    () => navigation.navigate('TicketSplashScreen'),
-    [navigation],
-  );
-
-  const openD2c = useCallback(
-    () => navigation.navigate('D2cScreen'),
-    [navigation],
-  );
+  const handleSelect = useCallback(id => actions[id]?.(), [actions]);
 
   const closeComingSoon = useCallback(() => setIsComingSoonVisible(false), []);
 
-  return {
-    sources,
-    openKapra,
-    openKshope,
-    openTickets,
-    openD2c,
-    isComingSoonVisible,
-    closeComingSoon,
-  };
+  return { tiles, handleSelect, isComingSoonVisible, closeComingSoon };
 };
 
 export default useAuthSuccess;

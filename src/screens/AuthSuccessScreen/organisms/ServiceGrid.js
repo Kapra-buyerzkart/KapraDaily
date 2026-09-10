@@ -1,81 +1,58 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { ServiceTile } from '../molecules';
-import { SPACING, TILE_ART } from '../theme';
+import { GUTTER, SPACING } from '../theme';
+import { groupTilesIntoRows } from '../utils';
 
-const ServiceGrid = ({
-  sources,
-  openKapra,
-  openKshope,
-  openTickets,
-  openD2c,
-}) => (
-  <View style={styles.grid}>
-    <Animated.View entering={FadeInDown.duration(360)}>
-      <ServiceTile
-        span="wide"
-        source={sources.kapra}
-        label="Uden Deal"
-        caption="Groceries in 20 minutes"
-        onPress={openKapra}
-      />
-    </Animated.View>
+const ENTER_STEP = 70;
 
-    <Animated.View entering={FadeInDown.delay(70).duration(360)}>
-      <ServiceTile
-        span="wide"
-        source={sources.kshope}
-        label="48 hrs deal"
-        caption="Electronics and more"
-        onPress={openKshope}
-      />
-    </Animated.View>
+const ServiceGrid = ({ tiles, onSelect }) => {
+  const rows = useMemo(() => groupTilesIntoRows(tiles), [tiles]);
 
-    <Animated.View
-      entering={FadeInDown.delay(140).duration(360)}
-      style={styles.splitRow}
-    >
-      <View style={styles.splitCell}>
-        <ServiceTile
-          span="half"
-          art={TILE_ART.tickets}
-          source={sources.tickets}
-          label="Uden Tickets"
-          caption="Movies and events"
-          onPress={openTickets}
-        />
-      </View>
-
-      <View style={styles.splitCell}>
-        <ServiceTile
-          span="half"
-          art={TILE_ART.d2c}
-          source={sources.d2c}
-          label="D2C"
-          caption="Premium brands"
-          onPress={openD2c}
-        />
-      </View>
-    </Animated.View>
-  </View>
-);
+  return (
+    <View style={styles.grid}>
+      {rows.map((row, index) => (
+        <Animated.View
+          key={row.key}
+          entering={FadeInDown.delay(index * ENTER_STEP).duration(360)}
+          style={[styles.row, row.span === 'half' && styles.splitRow]}
+        >
+          {row.items.map(tile => (
+            <View
+              key={tile.id}
+              style={row.span === 'half' ? styles.splitCell : styles.fullCell}
+            >
+              <ServiceTile {...tile} onSelect={onSelect} />
+            </View>
+          ))}
+        </Animated.View>
+      ))}
+    </View>
+  );
+};
 
 export default React.memo(ServiceGrid);
 
 const styles = StyleSheet.create({
   grid: {
     width: '100%',
-    paddingHorizontal: SPACING.xl,
-    gap: SPACING.xl,
+    paddingHorizontal: GUTTER,
+    gap: SPACING.md,
+  },
+  row: {
+    width: '100%',
   },
   splitRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: SPACING.lg,
+    alignItems: 'stretch',
+    gap: SPACING.md,
   },
   splitCell: {
     flex: 1,
+  },
+  fullCell: {
+    width: '100%',
   },
 });

@@ -11,15 +11,8 @@ import useAuthSuccess from './useAuthSuccess';
 
 const AuthSuccessScreen = () => {
   const insets = useSafeAreaInsets();
-  const {
-    sources,
-    openKapra,
-    openKshope,
-    openTickets,
-    openD2c,
-    isComingSoonVisible,
-    closeComingSoon,
-  } = useAuthSuccess();
+  const { tiles, handleSelect, isComingSoonVisible, closeComingSoon } =
+    useAuthSuccess();
 
   return (
     <View style={styles.screen}>
@@ -42,13 +35,7 @@ const AuthSuccessScreen = () => {
         showsVerticalScrollIndicator={false}
       >
         <BrandMark />
-        <ServiceGrid
-          sources={sources}
-          openKapra={openKapra}
-          openKshope={openKshope}
-          openTickets={openTickets}
-          openD2c={openD2c}
-        />
+        <ServiceGrid tiles={tiles} onSelect={handleSelect} />
       </ScrollView>
 
       <ComingSoonModal
@@ -64,7 +51,6 @@ export default AuthSuccessScreen;
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    paddingTop: 20,
     backgroundColor: PALETTE.canvas,
   },
   content: {
