@@ -11,7 +11,6 @@ import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { LoaderContextProvider } from './src/context/loaderContext';
 import { AppContextProvider } from './src/context/appContext';
 import { CartProvider } from './src/context/CartContext';
-import { WishlistProvider } from './src/context/WishlistContext';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import RootNavigator from './src/navigation/RootNavigator';
 import { navigationRef } from './src/api/NavigationService';
@@ -72,7 +71,6 @@ function App() {
               <QueryClientProvider client={queryClient}>
                 <AppContextProvider>
                   <CartProvider>
-                    <WishlistProvider>
                       <LoaderContextProvider>
                         <NavigationContainer
                           ref={navigationRef}
@@ -81,7 +79,6 @@ function App() {
                           <RootNavigator />
                         </NavigationContainer>
                       </LoaderContextProvider>
-                    </WishlistProvider>
                   </CartProvider>
                 </AppContextProvider>
               </QueryClientProvider>

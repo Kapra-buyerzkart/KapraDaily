@@ -10,7 +10,6 @@ const BottomTabBar = ({
   bookingsCount = 0,
   onHomePress,
   onMyBookingsPress,
-  onStorePress,
 }) => {
   const insets = useSafeAreaInsets();
 
@@ -30,13 +29,6 @@ const BottomTabBar = ({
           label="My bookings"
           badgeCount={bookingsCount}
           onPress={onMyBookingsPress}
-        />
-
-        <TabBarItem
-          icon={icons.storeticketStore}
-          label="Store"
-          iconStyle={styles.storeImage}
-          onPress={onStorePress}
         />
       </View>
     </View>

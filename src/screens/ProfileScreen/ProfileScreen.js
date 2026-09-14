@@ -135,7 +135,7 @@ export default function ProfileScreen() {
   });
 
   const offersItems = buildOffersItems({
-    onBCoin: () => navigation.navigate('BCoinScreen'),
+    onBCoin: () => navigation.navigate('KshopeBCoin'),
     onSmartPoint: () => openOffersModal('Gift Cards'),
     onCoupons: () => openOffersModal('Coupons'),
   });
@@ -180,20 +180,18 @@ export default function ProfileScreen() {
             profile={profile}
             isPrivileged={profile?.isPrivileged}
             walletData={walletData}
-            onEditProfile={() => navigation.navigate('EditProfileScreen')}
-            onWallet={() => navigation.navigate('BCoinScreen')}
+            onEditProfile={() => navigation.navigate('KshopeEditProfile')}
+            onWallet={() => navigation.navigate('KshopeBCoin')}
             onMeasure={onHeroMeasure}
             entering={entrance(0)}
           />
 
           <Animated.View entering={entrance(1)}>
             <QuickActionsGrid
-              onMyOrders={() => navigation.navigate('MyOrdersScreen')}
-              onSavedAddress={() => navigation.navigate('SavedAddressScreen')}
-              onCoPartnerDashboard={() =>
-                navigation.navigate('CoPartnerDashboardScreen')
-              }
-              onRefer={() => navigation.navigate('ReferralScreen')}
+              onMyOrders={() => navigation.navigate('KshopeMyOrders')}
+              onSavedAddress={() => navigation.navigate('KshopeSavedAddress')}
+              onCoPartnerDashboard={() => {}}
+              onRefer={() => navigation.navigate('KshopeReferral')}
             />
           </Animated.View>
         </View>

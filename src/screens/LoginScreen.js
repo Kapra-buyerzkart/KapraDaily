@@ -173,13 +173,7 @@ const LoginScreen = () => {
     try {
       setLoading(true);
       showLoader(true);
-      let response;
-      if (type === 'login') {
-        response = await sendForgotPwdOtp(phone);
-      }
-      if (type === 'reset') {
-        response = await sendForgotPwdOtp(phone);
-      }
+      const response = await sendForgotPwdOtp(phone);
 
       if (response?.success && response?.data) {
         navigation.navigate('OtpScreen', {
@@ -267,9 +261,9 @@ const LoginScreen = () => {
             </View>
             <TouchableOpacity
               onPress={
-                type === 'login' || type === 'register'
-                  ? handleContinueLogin
-                  : handleContinueRest
+                type === 'reset'
+                  ? handleContinueRest
+                  : handleContinueLogin
               }
               style={styles.continueButton}
               disabled={loading}

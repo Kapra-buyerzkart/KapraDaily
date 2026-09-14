@@ -23,24 +23,24 @@ export const COLORS = {
 export const TYPE = {
   tabLabel: {
     fontSize: 12,
-    fontFamily: 'Gilroy-Medium',
+    fontFamily: 'CormorantGaramond-Medium',
   },
   badge: {
     fontSize: 9,
-    fontFamily: 'Gilroy-Bold',
+    fontFamily: 'CormorantGaramond-Bold',
     lineHeight: 11,
   },
   chip: {
     fontSize: 12,
-    fontFamily: 'Gilroy-Bold',
+    fontFamily: 'CormorantGaramond-Bold',
   },
   cardTitle: {
     fontSize: 16,
-    fontFamily: 'Gilroy-Bold',
+    fontFamily: 'CormorantGaramond-Bold',
   },
   body: {
     fontSize: 14,
-    fontFamily: 'Gilroy-Regular',
+    fontFamily: 'CormorantGaramond-Regular',
   },
 };
 

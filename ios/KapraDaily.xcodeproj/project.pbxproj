@@ -10,6 +10,10 @@
 		1078BEE6CB014739BB4BCF97 /* Gilroy-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1149EB5D8CE54E43B471CCC6 /* Gilroy-SemiBold.ttf */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		14334B413E2B4C59AFD928BC /* Gilroy-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 63CAC06FB886468EB2F1D6E9 /* Gilroy-Regular.ttf */; };
+		1B16B03FBD1549E1961162C9 /* CormorantGaramond-Italic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 70391CBA2B02480A9FB815B3 /* CormorantGaramond-Italic.ttf */; };
+		1D18D0C526D249ED815CBB85 /* CormorantGaramond-MediumItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 45C81699462B4A86AD72015E /* CormorantGaramond-MediumItalic.ttf */; };
+		1E4EB6D1B63B4358A98DFC6A /* CormorantGaramond-SemiBoldItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = C5C87849E0F54EFABCEE9A12 /* CormorantGaramond-SemiBoldItalic.ttf */; };
+		24E01E88E9CB4D09B41B0C87 /* CormorantGaramond-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = D3B2D3C3736C492B9958BCDD /* CormorantGaramond-Medium.ttf */; };
 		2680FC1AE9514F5ABF11A972 /* Poppins-Italic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = E31C3B7AB4904BEA9BF50337 /* Poppins-Italic.ttf */; };
 		26CF7B3EA7006334AE66808C /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
 		2A37DC7DA857489696546E9E /* Poppins-Light.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1AD3D7C0CE124E519924038C /* Poppins-Light.ttf */; };
@@ -23,21 +27,27 @@
 		817115796E504C3CA7B1F2F2 /* MadelynFill-Trial-Regular.otf in Resources */ = {isa = PBXBuildFile; fileRef = EF99EB7E47264BFF961F4720 /* MadelynFill-Trial-Regular.otf */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		852E2FF53F0740E44762C207 /* Lexend-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 0B2EC2C2CDF0D6F6CDA433DF /* Lexend-Medium.ttf */; };
+		8FFF9D0DA52E431188544B7A /* CormorantGaramond-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = C08E01B935694147BBABB22A /* CormorantGaramond-Regular.ttf */; };
 		93D950ADC45F496D9B02F2C0 /* MadelynFill-Trial-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A0F4DDA9A9BD49E3B80F4E81 /* MadelynFill-Trial-Regular.ttf */; };
 		9D7C1E78B49220F6DD2A9477 /* Pods_KapraDaily.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 728C4BD6C67F75CFF3B958A4 /* Pods_KapraDaily.framework */; };
 		A7E520F5633F4AF88E0AE7BD /* Gilroy-Heavy.ttf in Resources */ = {isa = PBXBuildFile; fileRef = BA83BE26BCFF4639ADF0AAD8 /* Gilroy-Heavy.ttf */; };
 		AE0557EEF5F6B6891B127D47 /* Lexend-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2340152ACEA4132460CC4AAC /* Lexend-SemiBold.ttf */; };
 		B50DC67281664E35A9286C34 /* Gilroy-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = AF461670181F4D1696D8E7FD /* Gilroy-Bold.ttf */; };
 		B59A4407D2C84118AC3113E5 /* Poppins-MediumItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 90AD17FF9117419BB95958BF /* Poppins-MediumItalic.ttf */; };
+		BE8895F2194043D58A5B7CEF /* CormorantGaramond-Light.ttf in Resources */ = {isa = PBXBuildFile; fileRef = FBFB06A999464AB5955B2E06 /* CormorantGaramond-Light.ttf */; };
 		C302CDA9877D48F584BF58ED /* Poppins-ExtraBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 6392A651A90C42A98FBA1750 /* Poppins-ExtraBold.ttf */; };
 		C375A994139443DC839F6D00 /* Gilroy-ExtraBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = C69DFCD89C1A440489DA8C48 /* Gilroy-ExtraBold.ttf */; };
+		C549639104B04463BD1EE51E /* CormorantGaramond-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = E1367063331648829462A103 /* CormorantGaramond-Bold.ttf */; };
 		C8A79CDDBC594031BA85DB93 /* Gilroy-Light.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 36B24D680B9B4588A3A18172 /* Gilroy-Light.ttf */; };
+		D098546B26BE41779FCEF362 /* CormorantGaramond-LightItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 0F3252305DC7495C9809A9C3 /* CormorantGaramond-LightItalic.ttf */; };
 		D1BAEB3755EA426B95EE3BB1 /* Gilroy-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 9EE15EF6737F4FFCBD1BF239 /* Gilroy-Medium.ttf */; };
 		DB647EC74A5B426EA7DCF3FD /* Poppins-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 5799CEEF733C4F5C8A763D09 /* Poppins-Medium.ttf */; };
 		E243B5E229FA4FE0A0599242 /* Poppins-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 9B9AD1D224584DD78DB02E80 /* Poppins-Bold.ttf */; };
 		E7932D9B4A8E4CBDB503A0AA /* Lexend-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = BFF668CDB8694517AD86B593 /* Lexend-Bold.ttf */; };
 		EA4F669C4C834E969D39F9F5 /* Poppins-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 6E451935E21149F396AFF4E6 /* Poppins-Regular.ttf */; };
+		ECF441B0289448F986205193 /* CormorantGaramond-BoldItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 4FCCAF89083046E499BEAC25 /* CormorantGaramond-BoldItalic.ttf */; };
 		F41C031165D648B79ADDFB2E /* Madelyn-Trial-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 0C3E4CB43F324166B7ED999E /* Madelyn-Trial-Regular.ttf */; };
+		F45D1FA5BD624E6E96920F2E /* CormorantGaramond-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 86ADF8334C5C46C492EFD139 /* CormorantGaramond-SemiBold.ttf */; };
 		FB595FEBC5FF401980C782F0 /* Madelyn-Trial-Regular.otf in Resources */ = {isa = PBXBuildFile; fileRef = 0452A22D70DB4D8B946978EF /* Madelyn-Trial-Regular.otf */; };
 /* End PBXBuildFile section */
 
@@ -46,6 +56,7 @@
 		0452A22D70DB4D8B946978EF /* Madelyn-Trial-Regular.otf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Madelyn-Trial-Regular.otf"; path = "../src/assets/fonts/Madelyn-Trial-Regular.otf"; sourceTree = "<group>"; };
 		0B2EC2C2CDF0D6F6CDA433DF /* Lexend-Medium.ttf */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = file; path = "Lexend-Medium.ttf"; sourceTree = "<group>"; };
 		0C3E4CB43F324166B7ED999E /* Madelyn-Trial-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Madelyn-Trial-Regular.ttf"; path = "../src/assets/fonts/Madelyn-Trial-Regular.ttf"; sourceTree = "<group>"; };
+		0F3252305DC7495C9809A9C3 /* CormorantGaramond-LightItalic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "CormorantGaramond-LightItalic.ttf"; path = "../src/assets/fonts/CormorantGaramond-LightItalic.ttf"; sourceTree = "<group>"; };
 		1149EB5D8CE54E43B471CCC6 /* Gilroy-SemiBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Gilroy-SemiBold.ttf"; path = "../src/assets/fonts/Gilroy-SemiBold.ttf"; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* KapraDaily.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KapraDaily.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = KapraDaily/Images.xcassets; sourceTree = "<group>"; };
@@ -56,14 +67,18 @@
 		2DCB9AB9BBFD488094378EAB /* Lexend-Light.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Lexend-Light.ttf"; path = "../src/assets/fonts/Lexend-Light.ttf"; sourceTree = "<group>"; };
 		34BB4C6739422E6A9F06564B /* Pods-KapraDaily.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-KapraDaily.release.xcconfig"; path = "Target Support Files/Pods-KapraDaily/Pods-KapraDaily.release.xcconfig"; sourceTree = "<group>"; };
 		36B24D680B9B4588A3A18172 /* Gilroy-Light.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Gilroy-Light.ttf"; path = "../src/assets/fonts/Gilroy-Light.ttf"; sourceTree = "<group>"; };
+		45C81699462B4A86AD72015E /* CormorantGaramond-MediumItalic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "CormorantGaramond-MediumItalic.ttf"; path = "../src/assets/fonts/CormorantGaramond-MediumItalic.ttf"; sourceTree = "<group>"; };
+		4FCCAF89083046E499BEAC25 /* CormorantGaramond-BoldItalic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "CormorantGaramond-BoldItalic.ttf"; path = "../src/assets/fonts/CormorantGaramond-BoldItalic.ttf"; sourceTree = "<group>"; };
 		5799CEEF733C4F5C8A763D09 /* Poppins-Medium.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-Medium.ttf"; path = "../src/kshope/assets/fonts/Poppins-Medium.ttf"; sourceTree = "<group>"; };
 		6392A651A90C42A98FBA1750 /* Poppins-ExtraBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-ExtraBold.ttf"; path = "../src/kshope/assets/fonts/Poppins-ExtraBold.ttf"; sourceTree = "<group>"; };
 		63CAC06FB886468EB2F1D6E9 /* Gilroy-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Gilroy-Regular.ttf"; path = "../src/assets/fonts/Gilroy-Regular.ttf"; sourceTree = "<group>"; };
 		6E451935E21149F396AFF4E6 /* Poppins-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-Regular.ttf"; path = "../src/kshope/assets/fonts/Poppins-Regular.ttf"; sourceTree = "<group>"; };
+		70391CBA2B02480A9FB815B3 /* CormorantGaramond-Italic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "CormorantGaramond-Italic.ttf"; path = "../src/assets/fonts/CormorantGaramond-Italic.ttf"; sourceTree = "<group>"; };
 		728C4BD6C67F75CFF3B958A4 /* Pods_KapraDaily.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_KapraDaily.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = KapraDaily/AppDelegate.swift; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = KapraDaily/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		84C9A003C33C42608FB77BB2 /* Poppins-ExtraBoldItalic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-ExtraBoldItalic.ttf"; path = "../src/kshope/assets/fonts/Poppins-ExtraBoldItalic.ttf"; sourceTree = "<group>"; };
+		86ADF8334C5C46C492EFD139 /* CormorantGaramond-SemiBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "CormorantGaramond-SemiBold.ttf"; path = "../src/assets/fonts/CormorantGaramond-SemiBold.ttf"; sourceTree = "<group>"; };
 		90AD17FF9117419BB95958BF /* Poppins-MediumItalic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-MediumItalic.ttf"; path = "../src/kshope/assets/fonts/Poppins-MediumItalic.ttf"; sourceTree = "<group>"; };
 		9B9AD1D224584DD78DB02E80 /* Poppins-Bold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-Bold.ttf"; path = "../src/kshope/assets/fonts/Poppins-Bold.ttf"; sourceTree = "<group>"; };
 		9EE15EF6737F4FFCBD1BF239 /* Gilroy-Medium.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Gilroy-Medium.ttf"; path = "../src/assets/fonts/Gilroy-Medium.ttf"; sourceTree = "<group>"; };
@@ -72,12 +87,17 @@
 		AF46F40F03D541258AEEE4A1 /* Poppins-SemiBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-SemiBold.ttf"; path = "../src/kshope/assets/fonts/Poppins-SemiBold.ttf"; sourceTree = "<group>"; };
 		BA83BE26BCFF4639ADF0AAD8 /* Gilroy-Heavy.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Gilroy-Heavy.ttf"; path = "../src/assets/fonts/Gilroy-Heavy.ttf"; sourceTree = "<group>"; };
 		BFF668CDB8694517AD86B593 /* Lexend-Bold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Lexend-Bold.ttf"; path = "../src/assets/fonts/Lexend-Bold.ttf"; sourceTree = "<group>"; };
+		C08E01B935694147BBABB22A /* CormorantGaramond-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "CormorantGaramond-Regular.ttf"; path = "../src/assets/fonts/CormorantGaramond-Regular.ttf"; sourceTree = "<group>"; };
+		C5C87849E0F54EFABCEE9A12 /* CormorantGaramond-SemiBoldItalic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "CormorantGaramond-SemiBoldItalic.ttf"; path = "../src/assets/fonts/CormorantGaramond-SemiBoldItalic.ttf"; sourceTree = "<group>"; };
 		C69DFCD89C1A440489DA8C48 /* Gilroy-ExtraBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Gilroy-ExtraBold.ttf"; path = "../src/assets/fonts/Gilroy-ExtraBold.ttf"; sourceTree = "<group>"; };
+		D3B2D3C3736C492B9958BCDD /* CormorantGaramond-Medium.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "CormorantGaramond-Medium.ttf"; path = "../src/assets/fonts/CormorantGaramond-Medium.ttf"; sourceTree = "<group>"; };
+		E1367063331648829462A103 /* CormorantGaramond-Bold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "CormorantGaramond-Bold.ttf"; path = "../src/assets/fonts/CormorantGaramond-Bold.ttf"; sourceTree = "<group>"; };
 		E2C6A6755816DC93C626B519 /* Pods-KapraDaily.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-KapraDaily.debug.xcconfig"; path = "Target Support Files/Pods-KapraDaily/Pods-KapraDaily.debug.xcconfig"; sourceTree = "<group>"; };
 		E31C3B7AB4904BEA9BF50337 /* Poppins-Italic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-Italic.ttf"; path = "../src/kshope/assets/fonts/Poppins-Italic.ttf"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		EF99EB7E47264BFF961F4720 /* MadelynFill-Trial-Regular.otf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "MadelynFill-Trial-Regular.otf"; path = "../src/assets/fonts/MadelynFill-Trial-Regular.otf"; sourceTree = "<group>"; };
 		F5F502F5EC904A1E9EF9AB8D /* Lexend-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Lexend-Regular.ttf"; path = "../src/assets/fonts/Lexend-Regular.ttf"; sourceTree = "<group>"; };
+		FBFB06A999464AB5955B2E06 /* CormorantGaramond-Light.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "CormorantGaramond-Light.ttf"; path = "../src/assets/fonts/CormorantGaramond-Light.ttf"; sourceTree = "<group>"; };
 		FE1C4802475046C3C5A0DB7F /* Inter_18pt-Regular.ttf */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = file; path = "Inter_18pt-Regular.ttf"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -142,6 +162,16 @@
 				0C3E4CB43F324166B7ED999E /* Madelyn-Trial-Regular.ttf */,
 				2DCB9AB9BBFD488094378EAB /* Lexend-Light.ttf */,
 				BFF668CDB8694517AD86B593 /* Lexend-Bold.ttf */,
+				70391CBA2B02480A9FB815B3 /* CormorantGaramond-Italic.ttf */,
+				4FCCAF89083046E499BEAC25 /* CormorantGaramond-BoldItalic.ttf */,
+				0F3252305DC7495C9809A9C3 /* CormorantGaramond-LightItalic.ttf */,
+				FBFB06A999464AB5955B2E06 /* CormorantGaramond-Light.ttf */,
+				86ADF8334C5C46C492EFD139 /* CormorantGaramond-SemiBold.ttf */,
+				45C81699462B4A86AD72015E /* CormorantGaramond-MediumItalic.ttf */,
+				C08E01B935694147BBABB22A /* CormorantGaramond-Regular.ttf */,
+				E1367063331648829462A103 /* CormorantGaramond-Bold.ttf */,
+				C5C87849E0F54EFABCEE9A12 /* CormorantGaramond-SemiBoldItalic.ttf */,
+				D3B2D3C3736C492B9958BCDD /* CormorantGaramond-Medium.ttf */,
 			);
 			name = Resources;
 			path = "";
@@ -287,6 +317,16 @@
 				F41C031165D648B79ADDFB2E /* Madelyn-Trial-Regular.ttf in Resources */,
 				68FDCF9F36FE489A925B5E1D /* Lexend-Light.ttf in Resources */,
 				E7932D9B4A8E4CBDB503A0AA /* Lexend-Bold.ttf in Resources */,
+				1B16B03FBD1549E1961162C9 /* CormorantGaramond-Italic.ttf in Resources */,
+				ECF441B0289448F986205193 /* CormorantGaramond-BoldItalic.ttf in Resources */,
+				D098546B26BE41779FCEF362 /* CormorantGaramond-LightItalic.ttf in Resources */,
+				BE8895F2194043D58A5B7CEF /* CormorantGaramond-Light.ttf in Resources */,
+				F45D1FA5BD624E6E96920F2E /* CormorantGaramond-SemiBold.ttf in Resources */,
+				1D18D0C526D249ED815CBB85 /* CormorantGaramond-MediumItalic.ttf in Resources */,
+				8FFF9D0DA52E431188544B7A /* CormorantGaramond-Regular.ttf in Resources */,
+				C549639104B04463BD1EE51E /* CormorantGaramond-Bold.ttf in Resources */,
+				1E4EB6D1B63B4358A98DFC6A /* CormorantGaramond-SemiBoldItalic.ttf in Resources */,
+				24E01E88E9CB4D09B41B0C87 /* CormorantGaramond-Medium.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -406,7 +446,7 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.buyerskart.customer;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kgoldanddiamonds.customer;
 				PRODUCT_NAME = KapraDaily;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -442,7 +482,7 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.buyerskart.customer;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kgoldanddiamonds.customer;
 				PRODUCT_NAME = KapraDaily;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 5.0;

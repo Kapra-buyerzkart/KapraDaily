@@ -24,7 +24,7 @@ import OrderPendingScreen from '../screens/Order/OrderPendingScreen';
 import MyOrderScreen from '../screens/Order/redesign/MyOrdersRedesignScreen';
 import MyOrderDetailsScreen from '../screens/Order/MyOrderDetailsScreen';
 import InvoiceViewerScreen from '../screens/Order/InvoiceViewerScreen';
-import ProfileScreen from '../screens/Profile/ProfileScreen';
+import ProfileScreen from '../../screens/ProfileScreen/ProfileScreen';
 import EditProfileScreen from '../screens/Profile/EditProfileScreen';
 import UpdateContactScreen from '../screens/Profile/UpdateContactScreen';
 import UpdateContactOtpScreen from '../screens/Profile/UpdateContactOtpScreen';

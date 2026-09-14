@@ -1,7 +1,7 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { getTabBarHeight } from './tabBarHeight';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { Image, StyleSheet, Text } from 'react-native';
 import {
     widthPercentageToDP as wp,
     heightPercentageToDP as hp,
@@ -10,17 +10,15 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import icons from '../../assets/icons';
 import { FONTS } from '../../styles/typography';
 import AnimatedTabBar from '../../components/AnimatedTabBar';
-import ServiceSwitcherModal from '../../components/ServiceSwitcherModal';
-import { colors } from '../theme/colours';
+
+
 import HomeScreen from '../screens/Home/redesign/HomeRedesignScreen';
 import WishlistScreen from '../screens/Wishlist/WishlistScreen';
 import CategoryScreen from '../screens/Category/redesign/CategoryRedesignScreen';
 
 const Tab = createBottomTabNavigator();
 
-const STORE_ICON = require('../../assets/icons/OBJECTS.png');
 
-const KshopePlaceholderScreen: React.FC = () => <View style={styles.placeholder} />;
 
 const renderHomeIcon = ({ focused }: { focused: boolean }) => (
     <Image
@@ -43,17 +41,9 @@ const renderWishlistIcon = ({ focused }: { focused: boolean }) => (
         ]}
     />
 );
-const renderStoreIcon = ({ focused }: { focused: boolean }) => (
-    <Image
-        source={STORE_ICON}
-        style={[styles.iconStoreImage, focused ? styles.storeIconActive : null]}
-    />
-);
-
 const renderHomeLabel = () => <Text style={styles.iconLabel}>Home</Text>;
 const renderCategoriesLabel = () => <Text style={styles.iconLabel}>Category</Text>;
 const renderWishlistLabel = () => <Text style={styles.iconLabel}>Wishlist</Text>;
-const renderStoreLabel = () => <Text style={styles.iconLabel}>Switch Store</Text>;
 
 const HOME_OPTIONS = {
     headerShown: false,
@@ -70,17 +60,11 @@ const WISHLIST_OPTIONS = {
     tabBarIcon: renderWishlistIcon,
     tabBarLabel: renderWishlistLabel,
 };
-const SWITCH_STORE_OPTIONS = {
-    headerShown: false,
-    tabBarAccessibilityLabel: 'Switch store',
-    tabBarIcon: renderStoreIcon,
-    tabBarLabel: renderStoreLabel,
-};
+
 
 const renderTabBar = (props: any) => <AnimatedTabBar {...props} />;
 
 const KshopeTabs: React.FC = () => {
-    const [isServiceSwitcherVisible, setIsServiceSwitcherVisible] = useState(false);
     const insets = useSafeAreaInsets();
 
     const screenOptions = useMemo(
@@ -104,43 +88,18 @@ const KshopeTabs: React.FC = () => {
         [insets.bottom],
     );
 
-    const switchStoreListeners = useMemo(
-        () => ({
-            tabPress: (e: { preventDefault: () => void }) => {
-                e.preventDefault();
-                setIsServiceSwitcherVisible(true);
-            },
-        }),
-        [],
-    );
 
-    const closeServiceSwitcher = useCallback(() => setIsServiceSwitcherVisible(false), []);
 
     return (
-        <>
-            <Tab.Navigator tabBar={renderTabBar} screenOptions={screenOptions}>
-                <Tab.Screen name="HomeScreen" component={HomeScreen} options={HOME_OPTIONS} />
-                <Tab.Screen name="CategoryScreen" component={CategoryScreen} options={CATEGORIES_OPTIONS} />
-                <Tab.Screen name="WishlistScreen" component={WishlistScreen} options={WISHLIST_OPTIONS} />
-                <Tab.Screen
-                    name="SwitchStore"
-                    component={KshopePlaceholderScreen}
-                    listeners={switchStoreListeners}
-                    options={SWITCH_STORE_OPTIONS}
-                />
-            </Tab.Navigator>
-
-            <ServiceSwitcherModal
-                visible={isServiceSwitcherVisible}
-                onClose={closeServiceSwitcher}
-                excludeServiceId="partner"
-            />
-        </>
+        <Tab.Navigator tabBar={renderTabBar} screenOptions={screenOptions}>
+            <Tab.Screen name="HomeScreen" component={HomeScreen} options={HOME_OPTIONS} />
+            <Tab.Screen name="CategoryScreen" component={CategoryScreen} options={CATEGORIES_OPTIONS} />
+            <Tab.Screen name="WishlistScreen" component={WishlistScreen} options={WISHLIST_OPTIONS} />
+        </Tab.Navigator>
     );
 };
 
 const styles = StyleSheet.create({
-    placeholder: { flex: 1, backgroundColor: colors.background },
     iconImage: {
         height: wp('5.12%'),
         width: wp('5.12%'),
@@ -156,14 +115,6 @@ const styles = StyleSheet.create({
     },
     iconMuted: {
         tintColor: '#8E8E8E',
-    },
-    storeIconActive: {
-        tintColor: '#F25000',
-    },
-    iconStoreImage: {
-        height: wp('8%'),
-        width: wp('8%'),
-        resizeMode: 'contain',
     },
     iconLabel: {
         fontSize: wp('2.4%'),

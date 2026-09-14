@@ -23,13 +23,13 @@ import {
   TicketLandingList,
   UdenTicketModal,
 } from './components/organisms';
-import ServiceSwitcherModal from '../../components/ServiceSwitcherModal';
+
 import useVoucherData from './hooks/useVoucherData';
 import useEventsData from './hooks/useEventsData';
 import useTabNavigation from './hooks/useTabNavigation';
 import useStatusBarFocus from './hooks/useStatusBarFocus';
 import useHeroFade from './hooks/useHeroFade';
-import useStoreSwitcher from './hooks/useStoreSwitcher';
+
 import prefetchMyBookings from '../../queries/prefetchMyBookings';
 import { BACKDROP_SOURCE, getArcApexOffset } from './backdropArc';
 
@@ -89,7 +89,7 @@ const TicketLandingScreen = ({ navigation }) => {
   );
 
   const tabNav = useTabNavigation(fetchTabData);
-  const storeSwitcher = useStoreSwitcher(applyStatusBar);
+
 
   const scrollY = useSharedValue(0);
   const scrollHandler = useAnimatedScrollHandler({
@@ -261,14 +261,10 @@ const TicketLandingScreen = ({ navigation }) => {
         bookingsCount={voucherData.myVouchers.length}
         onHomePress={tabNav.handleGoHome}
         onMyBookingsPress={handleMyBookingsPress}
-        onStorePress={storeSwitcher.open}
+
       />
 
-      <ServiceSwitcherModal
-        visible={storeSwitcher.visible}
-        onClose={storeSwitcher.close}
-        excludeServiceId="movie"
-      />
+
     </View>
   );
 };

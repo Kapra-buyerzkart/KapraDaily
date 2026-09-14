@@ -40,7 +40,7 @@ export const buildMyAccountItems = ({
       />
     ),
     onPress: () =>
-      navigation.navigate('UpdateContactScreen', { type: 'phone' }),
+      navigation.navigate('KshopeUpdateContact', { type: 'phone' }),
   },
   {
     key: 'update-email',
@@ -53,60 +53,8 @@ export const buildMyAccountItems = ({
       />
     ),
     onPress: () =>
-      navigation.navigate('UpdateContactScreen', { type: 'email' }),
+      navigation.navigate('KshopeUpdateContact', { type: 'email' }),
   },
-  {
-    key: 'update-password',
-    label: 'Update Password',
-    icon: (
-      <MaterialCommunityIcons
-        name="lock-outline"
-        color={INK}
-        size={ICON_SIZE}
-      />
-    ),
-    onPress: () => navigation.navigate('ChangePasswordScreen'),
-  },
-  {
-    key: 'my-affiliates',
-    label: 'My Affiliates',
-    icon: (
-      <MaterialCommunityIcons
-        name="account-group-outline"
-        color={INK}
-        size={ICON_SIZE}
-      />
-    ),
-    onPress: () => navigation.navigate('MyAffilateScreen'),
-  },
-  {
-    key: 'wishlist',
-    label: 'My Wishlist',
-    icon: <Ionicons name="heart-outline" color={INK} size={ICON_SIZE} />,
-    onPress: () => navigation.navigate('MainTabs', { screen: 'Wishlist' }),
-  },
-  {
-    key: 'my-cart',
-    label: 'My Cart',
-    icon: <Ionicons name="cart-outline" color={INK} size={ICON_SIZE} />,
-    onPress: () => navigation.navigate('CartScreen'),
-  },
-  ...(Number(isTicketValidationVisible) === 1
-    ? [
-        {
-          key: 'scan-qr',
-          label: 'Scan QR Code',
-          icon: (
-            <MaterialCommunityIcons
-              name="qrcode-scan"
-              color={INK}
-              size={ICON_SIZE}
-            />
-          ),
-          onPress: () => navigation.navigate('QRScannerScreen'),
-        },
-      ]
-    : []),
 ];
 
 export const buildInformationItems = ({
@@ -144,8 +92,8 @@ export const buildInformationItems = ({
       />
     ),
     onPress: () =>
-      navigation.navigate('LegalContentScreen', {
-        settingKey: 'privacy_policy',
+      navigation.navigate('KshopeLegalContent', {
+        settingKeys: ['privacy_policy', 'privacypolicy'],
         title: 'Privacy Policy',
       }),
   },
@@ -160,16 +108,11 @@ export const buildInformationItems = ({
       />
     ),
     onPress: () =>
-      navigation.navigate('LegalContentScreen', {
-        settingKey: 'terms_of_use',
+      navigation.navigate('KshopeLegalContent', {
+        settingKeys: ['terms_of_use', 'terms_and_conditions', 'terms'],
         title: 'Terms Of Use',
+        fallback: 'terms',
       }),
-  },
-  {
-    key: 'support-tickets',
-    label: 'Support Tickets',
-    icon: <Ionicons name="help-circle-outline" color={INK} size={ICON_SIZE} />,
-    onPress: () => navigation.navigate('SupportTicketsListScreen'),
   },
   {
     key: 'kpc-login',

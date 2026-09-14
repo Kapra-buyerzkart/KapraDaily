@@ -63,7 +63,7 @@ export const useLocationFetching = ({ navigation }) => {
     if (hasNavigatedRef.current || !isMountedRef.current) return;
     hasNavigatedRef.current = true;
     if (profile?.custId) {
-      navigation.reset({ index: 0, routes: [{ name: 'AuthSuccessScreen' }] });
+      navigation.reset({ index: 0, routes: [{ name: 'KshopeScreen' }] });
     } else {
       navigation.reset({
         index: 0,

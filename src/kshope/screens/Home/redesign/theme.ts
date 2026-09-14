@@ -52,11 +52,11 @@ export const TILE_TINTS = [
 ];
 
 export const HOME_FONTS = {
-  regular: Fonts.lexend.regular,
-  medium: Fonts.lexend.medium,
-  semiBold: Fonts.lexend.semiBold,
-  bold: Fonts.lexend.bold,
-  light: Fonts.lexend.light,
+  regular: Fonts.cormorantGaramond.regular,
+  medium: Fonts.cormorantGaramond.medium,
+  semiBold: Fonts.cormorantGaramond.semiBold,
+  bold: Fonts.cormorantGaramond.bold,
+  light: Fonts.cormorantGaramond.light,
   script: Fonts.madelyn,
 };
 

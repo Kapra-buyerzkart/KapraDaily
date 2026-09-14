@@ -156,7 +156,7 @@ const RegistrationScreen = () => {
           onClose: () => {
             navigation.reset({
               index: 0,
-              routes: [{ name: 'AuthSuccessScreen' }],
+              routes: [{ name: 'KshopeScreen' }],
             });
           },
         });

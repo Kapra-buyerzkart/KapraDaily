@@ -1,4 +1,4 @@
-package com.buyerskart.customer
+package com.kgoldanddiamonds.customer
 
 import android.os.Bundle
 import android.view.ViewGroup

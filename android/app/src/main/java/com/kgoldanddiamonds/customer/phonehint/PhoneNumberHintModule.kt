@@ -1,4 +1,4 @@
-package com.buyerskart.customer.phonehint
+package com.kgoldanddiamonds.customer.phonehint
 
 import android.app.Activity
 import android.content.Intent

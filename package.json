@@ -104,7 +104,7 @@
     "type": "modules",
     "jsSrcsDir": "src/specs",
     "android": {
-      "javaPackageName": "com.buyerskart.customer.phonehint"
+      "javaPackageName": "com.kgoldanddiamonds.customer.phonehint"
     }
   }
 }
