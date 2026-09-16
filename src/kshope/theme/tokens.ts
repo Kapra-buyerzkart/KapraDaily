@@ -99,8 +99,8 @@ export const UI_TYPE = {
   captionStrong: { ...TYPE.caption, fontFamily: Fonts.gilroySemiBold },
   micro: { ...TYPE.micro, fontFamily: Fonts.gilroyMedium },
   microStrong: { ...TYPE.micro, fontFamily: Fonts.gilroySemiBold },
-  price: { ...TYPE.body, fontFamily: Fonts.gilroyBold },
-  priceLarge: { ...TYPE.heading, fontFamily: Fonts.gilroyBold },
+  price: { ...TYPE.body, fontFamily: Fonts.lexend.semiBold },
+  priceLarge: { ...TYPE.heading, fontFamily: Fonts.lexend.semiBold },
   cta: { ...TYPE.body, fontFamily: Fonts.gilroyExtraBold },
 } satisfies Record<string, TextStyle>;
 

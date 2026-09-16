@@ -78,13 +78,13 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace "com.kgoldanddiamonds.customer"
+    namespace "com.kapragoldnDiamond.app"
     
     androidResources {
         noCompress 'tflite'
     }
     defaultConfig {
-        applicationId "com.kgoldanddiamonds.customer"
+        applicationId "com.kapragoldnDiamond.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 25062

@@ -1,4 +1,4 @@
-package com.kgoldanddiamonds.customer.phonehint
+package com.kapragoldnDiamond.app.phonehint
 
 import com.facebook.react.BaseReactPackage
 import com.facebook.react.bridge.NativeModule

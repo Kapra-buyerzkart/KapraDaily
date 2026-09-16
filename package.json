@@ -104,7 +104,7 @@
     "type": "modules",
     "jsSrcsDir": "src/specs",
     "android": {
-      "javaPackageName": "com.kgoldanddiamonds.customer.phonehint"
+      "javaPackageName": "com.kapragoldnDiamond.app.phonehint"
     }
   }
 }

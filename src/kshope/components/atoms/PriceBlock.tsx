@@ -2,6 +2,7 @@ import React from 'react';
 import { View, StyleSheet, FlexAlignType } from 'react-native';
 import AppText from './AppText';
 import { UITypeVariant, UI_SPACING } from '../../theme/tokens';
+import { Fonts } from '../../theme/fonts';
 
 export interface PriceBlockProps {
   price: number | string;
@@ -37,6 +38,7 @@ const styles = StyleSheet.create({
     gap: 1,
   },
   strike: {
+    fontFamily: Fonts.lexend.regular,
     textDecorationLine: 'line-through',
     marginTop: UI_SPACING.xs / 2,
   },

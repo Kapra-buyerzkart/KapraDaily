@@ -1,4 +1,4 @@
-package com.kgoldanddiamonds.customer
+package com.kapragoldnDiamond.app
 
 import android.os.Bundle
 import android.view.ViewGroup

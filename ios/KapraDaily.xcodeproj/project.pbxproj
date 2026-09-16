@@ -446,7 +446,7 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.kgoldanddiamonds.customer;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kapragoldnDiamond.app;
 				PRODUCT_NAME = KapraDaily;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -482,7 +482,7 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.kgoldanddiamonds.customer;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kapragoldnDiamond.app;
 				PRODUCT_NAME = KapraDaily;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 5.0;

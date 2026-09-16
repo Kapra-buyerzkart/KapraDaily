@@ -10,6 +10,7 @@ import {
   hitSlopTo,
   wp,
 } from '../theme/tokens';
+import { Fonts } from '../theme/fonts';
 
 export interface CartItem {
   id: string;
@@ -213,5 +214,6 @@ const styles = StyleSheet.create({
   qtyText: {
     minWidth: wp('6%'),
     textAlign: 'center',
+    fontFamily: Fonts.lexend.semiBold,
   },
 });

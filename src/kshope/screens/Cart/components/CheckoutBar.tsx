@@ -2,6 +2,7 @@ import React from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { AppText, IconDisc } from '../../../components/atoms';
+import { Fonts } from '../../../theme/fonts';
 import {
   UI_COLORS,
   UI_ELEVATION,
@@ -37,7 +38,7 @@ const CheckoutBar: React.FC<CheckoutBarProps> = ({
             size={wp('4%')}
             color={UI_COLORS.successDeep}
           />
-          <AppText variant="captionStrong" tone="success">
+          <AppText variant="captionStrong" tone="success" style={styles.savingsText}>
             Yay! You are saving ₹{totalSavings.toFixed(2)} on this order
           </AppText>
         </View>
@@ -80,7 +81,7 @@ const CheckoutBar: React.FC<CheckoutBarProps> = ({
           accessibilityRole="button"
           accessibilityLabel={`Pay ₹${toPay.toFixed(2)}`}
         >
-          <AppText variant="cta" tone="onDark">
+          <AppText variant="cta" tone="onDark" style={styles.payButtonText}>
             Pay ₹{toPay.toFixed(2)}
           </AppText>
           <MaterialCommunityIcons
@@ -119,6 +120,12 @@ const styles = StyleSheet.create({
     backgroundColor: UI_COLORS.successTint,
     paddingVertical: hp('1.1%'),
     paddingHorizontal: UI_SPACING.lg,
+  },
+  savingsText: {
+    fontFamily: Fonts.lexend.semiBold,
+  },
+  payButtonText: {
+    fontFamily: Fonts.lexend.semiBold,
   },
   actionRow: {
     flexDirection: 'row',

@@ -3,6 +3,7 @@ import { View, Image, StyleSheet } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { AppText, Surface, Divider, SectionHeading } from './atoms';
 import { UI_COLORS, UI_RADIUS, UI_SPACING, hp, pt, wp } from '../theme/tokens';
+import { Fonts } from '../theme/fonts';
 import { AppTextTone } from './atoms/AppText';
 
 export interface BillCalculations {
@@ -40,11 +41,11 @@ const BillRow: React.FC<BillRowProps> = ({
     </AppText>
     <View style={styles.valueWrap}>
       {strike ? (
-        <AppText variant="caption" tone="faint" style={styles.strike}>
+        <AppText variant="caption" tone="faint" style={[styles.strike, styles.strikeText]}>
           {strike}
         </AppText>
       ) : null}
-      <AppText variant="labelStrong" tone={tone}>
+      <AppText variant="labelStrong" tone={tone} style={styles.valueText}>
         {value}
       </AppText>
     </View>
@@ -132,7 +133,7 @@ const BillSection: React.FC<BillSectionProps> = ({
                   : 'Inclusive of all taxes'}
               </AppText>
             </View>
-            <AppText variant="priceLarge">₹{toPay.toFixed()}</AppText>
+            <AppText variant="priceLarge" style={styles.toPayPrice}>₹{toPay.toFixed()}</AppText>
           </View>
         </View>
 
@@ -206,6 +207,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: UI_SPACING.md,
     marginTop: UI_SPACING.md,
+  },
+  valueText: {
+    fontFamily: Fonts.lexend.semiBold,
+  },
+  strikeText: {
+    fontFamily: Fonts.lexend.regular,
+  },
+  toPayPrice: {
+    fontFamily: Fonts.lexend.semiBold,
   },
   taxNote: {
     fontSize: pt(9),
