@@ -148,6 +148,26 @@ const Download = ({ size = defaultSize, color = colors.primary, style }: IconPro
     <Feather name="download" size={size} color={color} style={style} />
 );
 
+const BagOutline = ({ size = defaultSize, color = colors.primary, style }: IconProps) => (
+    <Ionicons name="bag-outline" size={size} color={color} style={style} />
+);
+
+const ChevronRight = ({ size = defaultSize, color = colors.primary, style }: IconProps) => (
+    <Feather name="chevron-right" size={size} color={color} style={style} />
+);
+
+const PhoneOutline = ({ size = defaultSize, color = colors.primary, style }: IconProps) => (
+    <Ionicons name="call-outline" size={size} color={color} style={style} />
+);
+
+const LocationOutline = ({ size = defaultSize, color = colors.primary, style }: IconProps) => (
+    <Ionicons name="location-outline" size={size} color={color} style={style} />
+);
+
+const ReceiptOutline = ({ size = defaultSize, color = colors.primary, style }: IconProps) => (
+    <Ionicons name="receipt-outline" size={size} color={color} style={style} />
+);
+
 // Exporting all as object for named JSX usage
 export const AppIcons = {
     Home,
@@ -163,22 +183,27 @@ export const AppIcons = {
     Check,
     ChevronDown,
     Phone,
+    PhoneOutline,
     Filter,
     UserCircle,
     Calendar,
     Bookmark,
     Star,
     Cart,
+    BagOutline,
     HeartOutline,
     Bell,
     BookmarkFilled,
     BookmarkOutline,
     Reload,
     Location,
+    LocationOutline,
     ArrowUpBold,
     ArrowBack,
+    ChevronRight,
     Download,
     Invoice,
+    ReceiptOutline,
     PaymentCard,
     CheckCircle,
     ArrowRightCircle,

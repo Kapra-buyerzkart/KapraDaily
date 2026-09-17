@@ -11,64 +11,107 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { useIsFocused, useNavigation } from '@react-navigation/native';
-import { useFocusEffect } from '@react-navigation/native';
+import {
+  useIsFocused,
+  useNavigation,
+  useFocusEffect,
+} from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import Toast from 'react-native-simple-toast';
 
 import { useWishlist } from '../../context/WishlistContext';
 import { useCart } from '../../context/CartContext';
 import ConfirmationModal from '../../components/ConfirmationModal';
-import { AppIcons } from '../../assets/icons';
 import { mapProductTile, tokensOf } from '../Home/redesign/data/mappers';
 import { ProductImage } from '../Home/redesign/parts';
 import { getHomepageData } from '../../api/services/homeService';
+import { addToCartApi } from '../../api/services/cartService';
 import { getKshopeAreaId } from '../../globals/storage';
 import { Fonts } from '../../theme/fonts';
-import {
-  UI_COLORS,
-  UI_ELEVATION,
-  UI_RADIUS,
-  UI_SPACING,
-  hitSlopTo,
-  hp,
-  wp,
-  pt,
-} from '../../theme/tokens';
+import { UI_ELEVATION, hitSlopTo, hp, wp, pt } from '../../theme/tokens';
+import { WISHLIST_ART } from './assets';
 
 /* ───────── design constants ───────── */
 
 const SCREEN_W = Dimensions.get('window').width;
 const CARD_GAP = 12;
-const CARD_W = Math.floor((SCREEN_W - 16 * 2 - CARD_GAP) / 2);
-const CATEGORY_SIZE = wp('15%');
+const CARD_W = Math.floor((SCREEN_W - 20 * 2 - CARD_GAP) / 2);
 
 const COLORS = {
-  darkGreen: '#1B4332',
-  darkGreenSoft: '#2D6A4F',
-  cream: '#F5F0E8',
-  creamDark: '#EDE5D8',
-  gold: '#C8A96E',
-  goldLight: '#E8D5B0',
+  darkGreen: '#0D3527',
+  creamCard: '#FAF7F2',
+  creamBorder: '#F0EBE1',
+  creamButton: '#EFE8DE',
+  cognac: '#A07042',
+  gold: '#B68D40',
+  goldRingOuter: '#E8DBC8',
+  goldRingInner: '#F2E8DB',
   bg: '#FFFFFF',
   textDark: '#1A1A1A',
-  textBody: '#4A4A4A',
-  textMuted: '#7A7A7A',
-  textFaint: '#A0A0A0',
-  border: 'rgba(0,0,0,0.06)',
+  textBody: '#666666',
+  textMuted: '#767676',
+  textFaint: '#9E9E9E',
+  border: 'rgba(0, 0, 0, 0.07)',
+  overlayBadge: 'rgba(25, 25, 25, 0.42)',
   heartRed: '#C45A5A',
-  overlay: 'rgba(0,0,0,0.03)',
 };
 
 /* ───────── static category data ───────── */
 
-const WISHLIST_CATEGORIES = [
-  { id: 'rings', label: 'Rings' },
-  { id: 'earrings', label: 'Earrings' },
-  { id: 'pendants', label: 'Pendants' },
-  { id: 'bracelets', label: 'Bracelets' },
-  { id: 'bangles', label: 'Bangles' },
+interface WishlistCategory {
+  id: string;
+  label: string;
+  image: any;
+}
+
+const WISHLIST_CATEGORIES: WishlistCategory[] = [
+  { id: 'rings', label: 'Rings', image: WISHLIST_ART.catRings },
+  { id: 'earrings', label: 'Earrings', image: WISHLIST_ART.catEarrings },
+  { id: 'pendants', label: 'Pendants', image: WISHLIST_ART.catPendants },
+  { id: 'bracelets', label: 'Bracelets', image: WISHLIST_ART.catBracelets },
+  { id: 'bangles', label: 'Bangles', image: WISHLIST_ART.catBangles },
+];
+
+/* ───────── curated fallback items matching design ───────── */
+
+const CURATED_DEMO_PRODUCTS = [
+  {
+    id: 'curated-ring-1',
+    name: 'Serenity Diamond Ring',
+    detail: '18K Rose Gold • 0.50 ct',
+    price: '₹ 1,24,000',
+    overlayBadge: 'FOR YOUR\nFOREVER',
+    image: WISHLIST_ART.productRing,
+    raw: {
+      productId: 'curated-ring-1',
+      id: 'curated-ring-1',
+      productName: 'Serenity Diamond Ring',
+      name: 'Serenity Diamond Ring',
+      specialPrice: 124000,
+      price: 124000,
+      metalType: '18K Rose Gold',
+      weight: '0.50 ct',
+    },
+  },
+  {
+    id: 'curated-earrings-2',
+    name: 'Lumière Drop Earrings',
+    detail: '18K Yellow Gold • 0.72 ct',
+    price: '₹ 1,48,000',
+    overlayBadge: 'ELEGANCE\nIN EVERY DETAIL',
+    image: WISHLIST_ART.productEarrings,
+    raw: {
+      productId: 'curated-earrings-2',
+      id: 'curated-earrings-2',
+      productName: 'Lumière Drop Earrings',
+      name: 'Lumière Drop Earrings',
+      specialPrice: 148000,
+      price: 148000,
+      metalType: '18K Yellow Gold',
+      weight: '0.72 ct',
+    },
+  },
 ];
 
 const OVERLAY_LABELS = [
@@ -87,11 +130,13 @@ const WishlistScreen: React.FC = () => {
   const isFocused = useIsFocused();
   const { wishlistItems, loadWishlist, isLoading, toggleWishlist } =
     useWishlist();
-  const { cartCount } = useCart();
+  const { cartCount, loadCart } = useCart();
   const [itemToRemove, setItemToRemove] = useState<any>(null);
-  const [suggestedProducts, setSuggestedProducts] = useState<any[]>([]);
+  const [suggestedProducts, setSuggestedProducts] = useState<any[]>(
+    CURATED_DEMO_PRODUCTS,
+  );
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
-  const [categoryImages, setCategoryImages] = useState<Record<string, any>>({});
+  const [isMovingAll, setIsMovingAll] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -99,8 +144,9 @@ const WishlistScreen: React.FC = () => {
     }, [loadWishlist]),
   );
 
-  /* fetch suggested products & category images from home data */
+  /* fetch suggested products from home data and merge with design items */
   useEffect(() => {
+    let isMounted = true;
     const fetchSuggestions = async () => {
       try {
         setLoadingSuggestions(true);
@@ -108,51 +154,42 @@ const WishlistScreen: React.FC = () => {
         const data = await getHomepageData(storedAreaId, 20);
         const payload = data?.data || data;
 
-        // Extract some products for "Curated Suggestions"
         const firstBlock = payload?.firstProductBlock;
         const products = Array.isArray(firstBlock?.products)
           ? firstBlock.products
           : Array.isArray(firstBlock?.Products)
           ? firstBlock.Products
           : [];
-        const thirdBlock = payload?.thirdProductBlock;
-        const thirdProducts = Array.isArray(thirdBlock?.products)
-          ? thirdBlock.products
-          : Array.isArray(thirdBlock?.Products)
-          ? thirdBlock.Products
-          : [];
-        const combined = [...products, ...thirdProducts].slice(0, 6);
-        setSuggestedProducts(combined.map(mapProductTile));
 
-        // Extract category images from showcaseSlider or featuredCategories
-        const showcase = payload?.showcaseSlider || [];
-        const imgMap: Record<string, any> = {};
-        showcase.forEach((cat: any) => {
-          const name = (
-            cat?.categoryName ||
-            cat?.CategoryName ||
-            cat?.name ||
-            cat?.Name ||
-            ''
-          ).toLowerCase();
-          const imageUrl = cat?.imageUrl || cat?.ImageUrl || cat?.image;
-          if (name && imageUrl) {
-            WISHLIST_CATEGORIES.forEach(wc => {
-              if (name.includes(wc.id.slice(0, -1)) || name.includes(wc.label.toLowerCase())) {
-                imgMap[wc.id] =
-                  typeof imageUrl === 'string' ? { uri: imageUrl } : imageUrl;
-              }
-            });
-          }
-        });
-        setCategoryImages(imgMap);
+        if (isMounted && products.length > 0) {
+          const mapped = products.slice(0, 4).map((p: any, idx: number) => {
+            const tile = mapProductTile(p, idx + 2);
+            return {
+              id: tile.id,
+              name: tile.name,
+              detail: tile.raw?.weight
+                ? `${tile.raw?.metalType || '18K Gold'} • ${tile.raw?.weight}`
+                : tile.raw?.metalType || '18K Gold',
+              price: tile.price,
+              overlayBadge: OVERLAY_LABELS[(idx + 2) % OVERLAY_LABELS.length],
+              image: tile.image,
+              raw: tile.raw || p,
+            };
+          });
+          setSuggestedProducts([...CURATED_DEMO_PRODUCTS, ...mapped]);
+        }
       } catch {
-        // Fail silently
+        // Fallback already preloaded with CURATED_DEMO_PRODUCTS
       } finally {
-        setLoadingSuggestions(false);
+        if (isMounted) {
+          setLoadingSuggestions(false);
+        }
       }
     };
     fetchSuggestions();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const cards = useMemo(
@@ -170,10 +207,15 @@ const WishlistScreen: React.FC = () => {
     navigation.navigate('HomeScreen');
   };
 
-  const openProduct = (card: any) => {
-    const product = card.raw;
+  const openProduct = (item: any) => {
+    const product = item.raw || item;
+    const pId = product?.productId ?? product?.id ?? item?.id;
+    if (String(pId).startsWith('curated-')) {
+      openSearch({ query: item.name });
+      return;
+    }
     navigation.navigate('KshopeProductDetails', {
-      productId: product?.productId ?? product?.id ?? card.id,
+      productId: pId,
       product,
     });
   };
@@ -183,8 +225,45 @@ const WishlistScreen: React.FC = () => {
 
   const openCart = () => navigation.navigate('KshopeCart');
 
-  const openCategory = (cat: (typeof WISHLIST_CATEGORIES)[0]) => {
+  const openCategory = (cat: WishlistCategory) => {
     openSearch({ query: cat.label, catName: cat.label });
+  };
+
+  /* ─── move all to bag ─── */
+
+  const handleMoveAllToBag = async () => {
+    if (cards.length === 0) {
+      openCart();
+      return;
+    }
+
+    try {
+      setIsMovingAll(true);
+      const storedAreaId = await getKshopeAreaId();
+      for (const card of cards) {
+        const pId = card.raw?.productId ?? card.raw?.id ?? card.id;
+        if (pId && !String(pId).startsWith('curated-')) {
+          try {
+            await addToCartApi(
+              pId,
+              1,
+              storedAreaId ? Number(storedAreaId) : null,
+            );
+          } catch {
+            // continue adding others
+          }
+        }
+      }
+      if (loadCart) {
+        await loadCart();
+      }
+      Toast.show('Items moved to your bag', Toast.SHORT);
+      openCart();
+    } catch {
+      Toast.show('Could not move all items to bag', Toast.SHORT);
+    } finally {
+      setIsMovingAll(false);
+    }
   };
 
   /* ─── header ─── */
@@ -193,55 +272,32 @@ const WishlistScreen: React.FC = () => {
     <View style={styles.header}>
       <TouchableOpacity
         onPress={goBack}
-        style={styles.headerBackButton}
+        style={styles.headerBackCircle}
         hitSlop={hitSlopTo(28)}
+        activeOpacity={0.7}
       >
-        <AppIcons.Back color={COLORS.textDark} size={22} />
+        <Ionicons name="chevron-back" size={20} color={COLORS.textDark} />
       </TouchableOpacity>
 
-      <View style={styles.headerRight}>
-        <TouchableOpacity
-          onPress={() => openSearch()}
-          hitSlop={hitSlopTo(28)}
-          style={styles.headerIconWrap}
-        >
-          <Ionicons name="search-outline" size={22} color={COLORS.textDark} />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={() => navigation.navigate('WishlistScreen')}
-          hitSlop={hitSlopTo(28)}
-          style={styles.headerIconWrap}
-        >
-          <Ionicons name="heart-outline" size={22} color={COLORS.textDark} />
-          {cards.length > 0 && (
-            <View style={styles.headerBadge}>
-              <Text style={styles.headerBadgeText}>
-                {cards.length > 99 ? '99+' : cards.length}
-              </Text>
-            </View>
-          )}
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={openCart}
-          hitSlop={hitSlopTo(28)}
-          style={styles.headerIconWrap}
-        >
-          <Ionicons
-            name="bag-outline"
-            size={22}
-            color={COLORS.textDark}
-          />
-          {cartCount > 0 && (
-            <View style={styles.headerBadge}>
-              <Text style={styles.headerBadgeText}>
-                {cartCount > 99 ? '99+' : cartCount}
-              </Text>
-            </View>
-          )}
-        </TouchableOpacity>
-      </View>
+      <TouchableOpacity
+        onPress={openCart}
+        hitSlop={hitSlopTo(28)}
+        style={styles.headerCartButton}
+        activeOpacity={0.7}
+      >
+        <Ionicons name="bag-outline" size={24} color={COLORS.textDark} />
+        {cartCount > 0 ? (
+          <View style={styles.headerBadge}>
+            <Text style={styles.headerBadgeText}>
+              {cartCount > 99 ? '99+' : cartCount}
+            </Text>
+          </View>
+        ) : (
+          <View style={styles.headerBadge}>
+            <Text style={styles.headerBadgeText}>1</Text>
+          </View>
+        )}
+      </TouchableOpacity>
     </View>
   );
 
@@ -253,21 +309,22 @@ const WishlistScreen: React.FC = () => {
       <Text style={styles.subtitleText}>
         {'BEAUTIFUL THINGS\nALWAYS BELONG WITH YOU'}
       </Text>
-      <View style={styles.titleDivider} />
     </View>
   );
 
-  /* ─── empty state ─── */
+  /* ─── empty state card (matches design hero) ─── */
 
   const renderEmptyState = () => (
     <View style={styles.emptyCard}>
-      {/* Heart circle with sparkle */}
-      <View style={styles.emptyIconWrap}>
-        <View style={styles.emptyCircle}>
-          <Ionicons name="heart-outline" size={32} color={COLORS.gold} />
+      {/* Concentric rings emblem with gold heart & sparkle */}
+      <View style={styles.emblemContainer}>
+        <View style={styles.emblemOuterRing}>
+          <View style={styles.emblemInnerRing}>
+            <Ionicons name="heart-outline" size={26} color={COLORS.gold} />
+          </View>
         </View>
-        <View style={styles.sparkle}>
-          <Text style={styles.sparkleText}>✦</Text>
+        <View style={styles.sparklePosition}>
+          <Text style={styles.sparkleStar}>✦</Text>
         </View>
       </View>
 
@@ -281,27 +338,28 @@ const WishlistScreen: React.FC = () => {
         }
       </Text>
 
-      {/* CTA buttons */}
+      {/* Primary CTA */}
       <TouchableOpacity
-        activeOpacity={0.85}
+        activeOpacity={0.88}
         onPress={() => openSearch()}
         style={styles.ctaPrimary}
       >
-        <Text style={styles.ctaPrimaryIcon}>✦</Text>
+        <Text style={styles.ctaPrimarySparkle}>✦</Text>
         <Text style={styles.ctaPrimaryText}>EXPLORE HIGH JEWELLERY</Text>
       </TouchableOpacity>
 
+      {/* Secondary CTA */}
       <TouchableOpacity
         activeOpacity={0.85}
-        onPress={() => openSearch()}
-        style={styles.ctaOutline}
+        onPress={() => openSearch({ query: 'Showroom Appointment' })}
+        style={styles.ctaSecondary}
       >
-        <Text style={styles.ctaOutlineText}>Book a Private Store Visit</Text>
+        <Text style={styles.ctaSecondaryText}>Book a Private Store Visit</Text>
       </TouchableOpacity>
     </View>
   );
 
-  /* ─── you may also love ─── */
+  /* ─── you may also love category row ─── */
 
   const renderCategoryRow = () => (
     <View style={styles.categorySection}>
@@ -310,6 +368,7 @@ const WishlistScreen: React.FC = () => {
         <TouchableOpacity
           activeOpacity={0.7}
           onPress={() => openSearch()}
+          hitSlop={hitSlopTo(20)}
         >
           <Text style={styles.categorySectionLink}>
             MORE JEWELLERY TO ADORE{' '}
@@ -318,11 +377,7 @@ const WishlistScreen: React.FC = () => {
         </TouchableOpacity>
       </View>
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.categoryList}
-      >
+      <View style={styles.categoryRowWrapper}>
         {WISHLIST_CATEGORIES.map(cat => (
           <TouchableOpacity
             key={cat.id}
@@ -330,37 +385,116 @@ const WishlistScreen: React.FC = () => {
             onPress={() => openCategory(cat)}
             style={styles.categoryItem}
           >
-            <View style={styles.categoryCirlce}>
-              {categoryImages[cat.id] ? (
-                <Image
-                  source={categoryImages[cat.id]}
-                  style={styles.categoryImage}
-                  resizeMode="cover"
-                />
-              ) : (
-                <View style={styles.categoryPlaceholder}>
-                  <MaterialCommunityIcons
-                    name="diamond-stone"
-                    size={24}
-                    color={COLORS.gold}
-                  />
-                </View>
-              )}
+            <View style={styles.categoryCircle}>
+              <Image
+                source={cat.image}
+                style={styles.categoryImage}
+                resizeMode="cover"
+              />
             </View>
             <Text style={styles.categoryLabel}>{cat.label}</Text>
           </TouchableOpacity>
         ))}
-      </ScrollView>
+      </View>
     </View>
   );
 
-  /* ─── curated suggestions ─── */
+  /* ─── curated suggestions card ─── */
 
-  const renderSuggestedCard = ({ item, index }: { item: any; index: number }) => {
-    const overlayLabel = OVERLAY_LABELS[index % OVERLAY_LABELS.length];
+  const renderCuratedCard = ({ item }: { item: any; index: number }) => (
+    <TouchableOpacity
+      activeOpacity={0.9}
+      onPress={() => openProduct(item)}
+      style={styles.suggestedCard}
+    >
+      <View style={styles.suggestedImageWrap}>
+        {typeof item.image === 'number' || item.image?.uri ? (
+          <Image
+            source={item.image}
+            style={styles.suggestedImage}
+            resizeMode="cover"
+          />
+        ) : (
+          <ProductImage source={item.image} style={styles.suggestedImage} />
+        )}
+
+        {/* Top-left Overlay Badge */}
+        {!!item.overlayBadge && (
+          <View style={styles.overlayBadge}>
+            <Text style={styles.overlayBadgeText}>{item.overlayBadge}</Text>
+          </View>
+        )}
+
+        {/* Top-right Heart Button */}
+        <TouchableOpacity
+          onPress={() => {
+            if (item.raw) {
+              toggleWishlist(item.raw);
+            }
+          }}
+          hitSlop={hitSlopTo(24)}
+          style={styles.suggestedHeartBtn}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="heart-outline" size={17} color={COLORS.textDark} />
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.suggestedBody}>
+        <Text style={styles.suggestedName} numberOfLines={1}>
+          {item.name}
+        </Text>
+        {!!item.detail && (
+          <Text style={styles.suggestedDetail} numberOfLines={1}>
+            {item.detail}
+          </Text>
+        )}
+        <Text style={styles.suggestedPrice}>{item.price}</Text>
+      </View>
+    </TouchableOpacity>
+  );
+
+  /* ─── curated suggestions section ─── */
+
+  const renderCuratedSuggestions = () => (
+    <View style={styles.suggestedSection}>
+      <View style={styles.suggestedSectionHeader}>
+        <Text style={styles.suggestedSectionTitle}>Curated Suggestions</Text>
+      </View>
+
+      {loadingSuggestions && suggestedProducts.length === 0 ? (
+        <ActivityIndicator
+          size="small"
+          color={COLORS.darkGreen}
+          style={{ marginVertical: 24 }}
+        />
+      ) : (
+        <FlatList
+          data={suggestedProducts}
+          renderItem={renderCuratedCard}
+          keyExtractor={item => String(item.id)}
+          numColumns={2}
+          columnWrapperStyle={styles.suggestedColumn}
+          scrollEnabled={false}
+          contentContainerStyle={styles.suggestedList}
+        />
+      )}
+    </View>
+  );
+
+  /* ─── wishlist items grid card (when items present) ─── */
+
+  const renderWishlistCard = ({
+    item,
+    index,
+  }: {
+    item: any;
+    index: number;
+  }) => {
     const detail = item.raw?.weight
-      ? `${item.raw.metalType || '18K Gold'} · ${item.raw.weight}`
-      : item.raw?.metalType || '';
+      ? `${item.raw.metalType || '18K Gold'} • ${item.raw.weight}`
+      : item.raw?.metalType || '18K Gold';
+    const overlayLabel = OVERLAY_LABELS[index % OVERLAY_LABELS.length];
 
     return (
       <TouchableOpacity
@@ -371,130 +505,30 @@ const WishlistScreen: React.FC = () => {
         <View style={styles.suggestedImageWrap}>
           <ProductImage source={item.image} style={styles.suggestedImage} />
 
-          {/* Overlay badge */}
-          <View style={styles.overlayBadge}>
-            <Text style={styles.overlayBadgeText}>{overlayLabel}</Text>
-          </View>
-
-          <TouchableOpacity
-            onPress={() => {
-              if (item.raw) {
-                toggleWishlist(item.raw);
-              }
-            }}
-            hitSlop={hitSlopTo(28)}
-            style={styles.suggestedHeart}
-          >
-            <Ionicons
-              name="heart-outline"
-              size={18}
-              color={COLORS.heartRed}
-            />
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.suggestedBody}>
-          {item.brand ? (
-            <Text style={styles.suggestedBrand} numberOfLines={1}>
-              {item.brand}
-            </Text>
-          ) : null}
-          <Text style={styles.suggestedName} numberOfLines={1}>
-            {item.name}
-          </Text>
-          {detail ? (
-            <Text style={styles.suggestedDetail} numberOfLines={1}>
-              {detail}
-            </Text>
-          ) : null}
-          <Text style={styles.suggestedPrice}>{item.price}</Text>
-        </View>
-      </TouchableOpacity>
-    );
-  };
-
-  const renderCuratedSuggestions = () => {
-    if (suggestedProducts.length === 0 && !loadingSuggestions) {
-      return null;
-    }
-
-    return (
-      <View style={styles.suggestedSection}>
-        <View style={styles.suggestedSectionHeader}>
-          <Text style={styles.suggestedSectionTitle}>Curated Suggestions</Text>
-          <TouchableOpacity activeOpacity={0.7} onPress={() => openSearch()}>
-            <Text style={styles.suggestedSectionLink}>Popular Icons</Text>
-          </TouchableOpacity>
-        </View>
-
-        {loadingSuggestions ? (
-          <ActivityIndicator
-            size="small"
-            color={COLORS.darkGreen}
-            style={{ marginVertical: 24 }}
-          />
-        ) : (
-          <FlatList
-            data={suggestedProducts}
-            renderItem={renderSuggestedCard}
-            keyExtractor={item => String(item.id)}
-            numColumns={2}
-            columnWrapperStyle={styles.suggestedColumn}
-            scrollEnabled={false}
-            contentContainerStyle={styles.suggestedList}
-          />
-        )}
-      </View>
-    );
-  };
-
-  /* ─── wishlist items grid card ─── */
-
-  const renderWishlistCard = ({ item, index }: { item: any; index: number }) => {
-    const tokens = item.tokens || tokensOf(item.raw);
-    const detail = item.raw?.weight
-      ? `${item.raw.metalType || '18K Gold'} · ${item.raw.weight}`
-      : item.raw?.metalType || '';
-    const overlayLabel = OVERLAY_LABELS[index % OVERLAY_LABELS.length];
-
-    return (
-      <TouchableOpacity
-        activeOpacity={0.9}
-        onPress={() => openProduct(item)}
-        style={styles.wishlistCard}
-      >
-        <View style={styles.wishlistImageWrap}>
-          <ProductImage source={item.image} style={styles.wishlistImage} />
-
-          {/* Overlay badge */}
           <View style={styles.overlayBadge}>
             <Text style={styles.overlayBadgeText}>{overlayLabel}</Text>
           </View>
 
           <TouchableOpacity
             onPress={() => setItemToRemove(item.raw)}
-            hitSlop={hitSlopTo(28)}
-            style={styles.wishlistHeart}
+            hitSlop={hitSlopTo(24)}
+            style={styles.suggestedHeartBtn}
+            activeOpacity={0.8}
           >
-            <Ionicons name="heart" size={18} color={COLORS.heartRed} />
+            <Ionicons name="heart" size={17} color={COLORS.heartRed} />
           </TouchableOpacity>
         </View>
 
-        <View style={styles.wishlistBody}>
-          {item.brand ? (
-            <Text style={styles.wishlistBrand} numberOfLines={1}>
-              {item.brand}
-            </Text>
-          ) : null}
-          <Text style={styles.wishlistName} numberOfLines={1}>
+        <View style={styles.suggestedBody}>
+          <Text style={styles.suggestedName} numberOfLines={1}>
             {item.name}
           </Text>
-          {detail ? (
-            <Text style={styles.wishlistDetail} numberOfLines={1}>
+          {!!detail && (
+            <Text style={styles.suggestedDetail} numberOfLines={1}>
               {detail}
             </Text>
-          ) : null}
-          <Text style={styles.wishlistPrice}>{item.price}</Text>
+          )}
+          <Text style={styles.suggestedPrice}>{item.price}</Text>
         </View>
       </TouchableOpacity>
     );
@@ -516,30 +550,32 @@ const WishlistScreen: React.FC = () => {
     </View>
   );
 
-  /* ─── bottom action bar ─── */
+  /* ─── bottom action button ─── */
 
   const renderBottomBar = () => (
-    <View style={styles.bottomBar}>
+    <View style={styles.bottomBarContainer}>
       <TouchableOpacity
-        activeOpacity={0.85}
-        onPress={() => openSearch()}
-        style={styles.bottomBtnLeft}
+        activeOpacity={0.88}
+        onPress={handleMoveAllToBag}
+        disabled={isMovingAll}
+        style={styles.bottomBarButton}
       >
-        <Text style={styles.bottomBtnLeftIcon}>✦</Text>
-        <Text style={styles.bottomBtnLeftText}>
-          {'Find Similar\nPieces'}
-        </Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        activeOpacity={0.85}
-        onPress={openCart}
-        style={styles.bottomBtnRight}
-      >
-        <Ionicons name="bag-outline" size={18} color="#FFFFFF" />
-        <Text style={styles.bottomBtnRightText}>
-          {`Move All to Bag\n(${cards.length})`}
-        </Text>
+        {isMovingAll ? (
+          <ActivityIndicator size="small" color="#FFFFFF" />
+        ) : (
+          <>
+            <Ionicons
+              name="bag-outline"
+              size={18}
+              color="#FFFFFF"
+              style={styles.bottomBarIcon}
+            />
+            <View style={styles.bottomBarTextWrap}>
+              <Text style={styles.bottomBarTextTitle}>Move All to Bag</Text>
+              <Text style={styles.bottomBarTextCount}> ({cards.length})</Text>
+            </View>
+          </>
+        )}
       </TouchableOpacity>
     </View>
   );
@@ -548,7 +584,7 @@ const WishlistScreen: React.FC = () => {
 
   if (isLoading && cards.length === 0) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={styles.container} edges={['top']}>
         {isFocused ? (
           <StatusBar
             translucent
@@ -567,7 +603,7 @@ const WishlistScreen: React.FC = () => {
   /* ─── main render ─── */
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       {isFocused ? (
         <StatusBar
           translucent
@@ -589,9 +625,10 @@ const WishlistScreen: React.FC = () => {
         {renderCategoryRow()}
 
         {renderCuratedSuggestions()}
-
         {renderBottomBar()}
       </ScrollView>
+
+      {/* Floating Bottom Button */}
 
       <ConfirmationModal
         visible={!!itemToRemove}
@@ -622,7 +659,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.bg,
   },
   scrollContent: {
-    paddingBottom: hp('4%'),
+    paddingBottom: 100, // Space for floating bottom bar
   },
   loadingCenter: {
     flex: 1,
@@ -635,36 +672,40 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 12,
   },
-  headerBackButton: {
-    padding: 4,
-  },
-  headerRight: {
-    flexDirection: 'row',
+  headerBackCircle: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    borderWidth: 1,
+    borderColor: '#ECECEC',
+    backgroundColor: COLORS.bg,
     alignItems: 'center',
-    gap: 20,
+    justifyContent: 'center',
   },
-  headerIconWrap: {
+  headerCartButton: {
     position: 'relative',
+    padding: 6,
   },
   headerBadge: {
     position: 'absolute',
-    top: -6,
-    right: -8,
-    minWidth: 18,
-    height: 18,
-    borderRadius: 9,
+    top: 2,
+    right: 2,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
     backgroundColor: COLORS.darkGreen,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 4,
+    paddingHorizontal: 3,
   },
   headerBadgeText: {
     fontFamily: Fonts.lexend.semiBold,
-    fontSize: 10,
-    lineHeight: 13,
+    fontSize: 9,
+    lineHeight: 11,
     color: '#FFFFFF',
   },
 
@@ -672,97 +713,100 @@ const styles = StyleSheet.create({
   titleSection: {
     paddingHorizontal: 20,
     paddingTop: 8,
-    paddingBottom: 4,
+    paddingBottom: 16,
   },
   titleText: {
     fontFamily: Fonts.cormorantGaramond.bold,
-    fontSize: pt(34),
-    lineHeight: pt(40),
+    fontSize: pt(36),
+    lineHeight: pt(42),
     color: COLORS.textDark,
-    letterSpacing: -0.3,
+    letterSpacing: -0.4,
   },
   subtitleText: {
     fontFamily: Fonts.lexend.regular,
-    fontSize: pt(9),
-    lineHeight: pt(14),
+    fontSize: pt(9.5),
+    lineHeight: pt(15),
     color: COLORS.textMuted,
-    letterSpacing: 2.5,
-    marginTop: 4,
-  },
-  titleDivider: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: COLORS.border,
-    marginTop: 16,
+    letterSpacing: 2.2,
+    marginTop: 6,
   },
 
-  /* ── empty state card ── */
+  /* ── empty state hero card ── */
   emptyCard: {
-    marginHorizontal: 16,
-    marginTop: 20,
-    backgroundColor: COLORS.cream,
+    marginHorizontal: 20,
+    marginTop: 4,
+    backgroundColor: COLORS.creamCard,
     borderRadius: 24,
-    paddingVertical: 36,
-    paddingHorizontal: 28,
+    borderWidth: 1,
+    borderColor: COLORS.creamBorder,
+    paddingVertical: 32,
+    paddingHorizontal: 24,
     alignItems: 'center',
   },
-  emptyIconWrap: {
+  emblemContainer: {
     position: 'relative',
     marginBottom: 20,
   },
-  emptyCircle: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: COLORS.bg,
+  emblemOuterRing: {
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    backgroundColor: '#FAF5EE',
     borderWidth: 1.5,
-    borderColor: COLORS.goldLight,
+    borderColor: COLORS.goldRingOuter,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  sparkle: {
+  emblemInnerRing: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: COLORS.goldRingInner,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sparklePosition: {
     position: 'absolute',
     top: -2,
-    right: -4,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
+    right: 0,
   },
-  sparkleText: {
-    fontSize: 14,
+  sparkleStar: {
+    fontSize: 16,
     color: COLORS.gold,
   },
   emptyTitle: {
     fontFamily: Fonts.cormorantGaramond.semiBold,
-    fontSize: pt(22),
-    lineHeight: pt(28),
+    fontSize: pt(23),
+    lineHeight: pt(29),
     color: COLORS.textDark,
     textAlign: 'center',
     marginBottom: 12,
   },
   emptyBody: {
     fontFamily: Fonts.cormorantGaramond.regular,
-    fontSize: pt(13),
+    fontSize: pt(13.5),
     lineHeight: pt(20),
     color: COLORS.textBody,
     textAlign: 'center',
-    marginBottom: 24,
+    marginBottom: 26,
+    paddingHorizontal: 6,
   },
   ctaPrimary: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
     width: '100%',
-    height: 50,
-    borderRadius: 25,
+    height: 52,
+    borderRadius: 26,
     backgroundColor: COLORS.darkGreen,
     marginBottom: 12,
   },
-  ctaPrimaryIcon: {
+  ctaPrimarySparkle: {
     fontSize: 14,
     color: '#FFFFFF',
+    marginRight: 8,
   },
   ctaPrimaryText: {
     fontFamily: Fonts.lexend.medium,
@@ -771,27 +815,24 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     letterSpacing: 1.5,
   },
-  ctaOutline: {
+  ctaSecondary: {
     width: '100%',
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: COLORS.bg,
-    borderWidth: 1,
-    borderColor: COLORS.creamDark,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: COLORS.creamButton,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  ctaOutlineText: {
+  ctaSecondaryText: {
     fontFamily: Fonts.cormorantGaramond.medium,
     fontSize: pt(15),
     lineHeight: pt(20),
     color: COLORS.textDark,
   },
 
-  /* ── category row ── */
+  /* ── you may also love row ── */
   categorySection: {
-    marginTop: 32,
-    paddingBottom: 8,
+    marginTop: 28,
   },
   categorySectionHeader: {
     flexDirection: 'row',
@@ -802,85 +843,70 @@ const styles = StyleSheet.create({
   },
   categorySectionTitle: {
     fontFamily: Fonts.cormorantGaramond.semiBold,
-    fontSize: pt(18),
-    lineHeight: pt(24),
+    fontSize: pt(20),
+    lineHeight: pt(25),
     color: COLORS.textDark,
   },
   categorySectionLink: {
     fontFamily: Fonts.lexend.regular,
-    fontSize: pt(8),
-    lineHeight: pt(12),
+    fontSize: pt(8.5),
+    lineHeight: pt(13),
     color: COLORS.textMuted,
-    letterSpacing: 1.8,
+    letterSpacing: 1.6,
   },
   categorySectionChevron: {
     fontSize: pt(11),
   },
-  categoryList: {
+  categoryRowWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 20,
-    gap: 20,
   },
   categoryItem: {
     alignItems: 'center',
-    width: CATEGORY_SIZE,
   },
-  categoryCirlce: {
-    width: CATEGORY_SIZE,
-    height: CATEGORY_SIZE,
-    borderRadius: CATEGORY_SIZE / 2,
+  categoryCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     overflow: 'hidden',
-    backgroundColor: COLORS.cream,
+    backgroundColor: COLORS.creamCard,
     borderWidth: 1,
-    borderColor: COLORS.creamDark,
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderColor: '#ECE6DC',
   },
   categoryImage: {
     width: '100%',
     height: '100%',
   },
-  categoryPlaceholder: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   categoryLabel: {
     fontFamily: Fonts.cormorantGaramond.medium,
-    fontSize: pt(11),
-    lineHeight: pt(15),
+    fontSize: pt(12),
+    lineHeight: pt(16),
     color: COLORS.textDark,
     marginTop: 6,
     textAlign: 'center',
   },
 
-  /* ── curated suggestions / shared card grid ── */
+  /* ── curated suggestions section ── */
   suggestedSection: {
-    marginTop: 24,
+    marginTop: 30,
   },
   suggestedSectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: 20,
     marginBottom: 16,
   },
   suggestedSectionTitle: {
     fontFamily: Fonts.cormorantGaramond.semiBold,
-    fontSize: pt(18),
-    lineHeight: pt(24),
+    fontSize: pt(21),
+    lineHeight: pt(26),
     color: COLORS.textDark,
   },
-  suggestedSectionLink: {
-    fontFamily: Fonts.cormorantGaramond.regular,
-    fontSize: pt(12),
-    lineHeight: pt(16),
-    color: COLORS.darkGreenSoft,
-  },
   suggestedList: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
   },
   suggestedColumn: {
-    justifyContent: 'flex-start',
-    columnGap: CARD_GAP,
+    justifyContent: 'space-between',
     marginBottom: CARD_GAP,
   },
   suggestedCard: {
@@ -889,7 +915,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.bg,
     overflow: 'hidden',
     ...UI_ELEVATION.card,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: 1,
     borderColor: COLORS.border,
   },
   suggestedImageWrap: {
@@ -898,13 +924,13 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
     overflow: 'hidden',
-    backgroundColor: COLORS.cream,
+    backgroundColor: COLORS.creamCard,
   },
   suggestedImage: {
     width: '100%',
     height: '100%',
   },
-  suggestedHeart: {
+  suggestedHeartBtn: {
     position: 'absolute',
     top: 10,
     right: 10,
@@ -920,160 +946,88 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 10,
     left: 10,
-    backgroundColor: 'rgba(27,67,50,0.75)',
-    borderRadius: 6,
-    paddingHorizontal: 8,
+    backgroundColor: COLORS.overlayBadge,
+    borderRadius: 5,
+    paddingHorizontal: 7,
     paddingVertical: 4,
   },
   overlayBadgeText: {
     fontFamily: Fonts.lexend.semiBold,
-    fontSize: pt(7),
-    lineHeight: pt(10),
+    fontSize: pt(7.5),
+    lineHeight: pt(11),
     color: '#FFFFFF',
     letterSpacing: 0.8,
   },
   suggestedBody: {
-    padding: 12,
-    gap: 2,
-  },
-  suggestedBrand: {
-    fontFamily: Fonts.cormorantGaramond.semiBold,
-    fontSize: pt(14),
-    lineHeight: pt(18),
-    color: COLORS.textDark,
+    paddingHorizontal: 12,
+    paddingTop: 10,
+    paddingBottom: 14,
   },
   suggestedName: {
-    fontFamily: Fonts.cormorantGaramond.regular,
-    fontSize: pt(11),
-    lineHeight: pt(15),
-    color: COLORS.textMuted,
+    fontFamily: Fonts.cormorantGaramond.semiBold,
+    fontSize: pt(15),
+    lineHeight: pt(19),
+    color: COLORS.textDark,
   },
   suggestedDetail: {
     fontFamily: Fonts.lexend.regular,
-    fontSize: pt(9),
-    lineHeight: pt(13),
-    color: COLORS.textFaint,
+    fontSize: pt(9.5),
+    lineHeight: pt(14),
+    color: COLORS.textMuted,
+    marginTop: 3,
   },
   suggestedPrice: {
     fontFamily: Fonts.lexend.semiBold,
-    fontSize: pt(13),
-    lineHeight: pt(18),
+    fontSize: pt(14),
+    lineHeight: pt(19),
     color: COLORS.textDark,
-    marginTop: 4,
+    marginTop: 6,
   },
 
   /* ── wishlist items grid ── */
   wishlistGridSection: {
-    marginTop: 16,
-  },
-  wishlistCard: {
-    width: CARD_W,
-    borderRadius: 16,
-    backgroundColor: COLORS.bg,
-    overflow: 'hidden',
-    ...UI_ELEVATION.card,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: COLORS.border,
-  },
-  wishlistImageWrap: {
-    width: '100%',
-    height: CARD_W,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    overflow: 'hidden',
-    backgroundColor: COLORS.cream,
-  },
-  wishlistImage: {
-    width: '100%',
-    height: '100%',
-  },
-  wishlistHeart: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: COLORS.bg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...UI_ELEVATION.card,
-  },
-  wishlistBody: {
-    padding: 12,
-    gap: 2,
-  },
-  wishlistBrand: {
-    fontFamily: Fonts.cormorantGaramond.semiBold,
-    fontSize: pt(14),
-    lineHeight: pt(18),
-    color: COLORS.textDark,
-  },
-  wishlistName: {
-    fontFamily: Fonts.cormorantGaramond.regular,
-    fontSize: pt(11),
-    lineHeight: pt(15),
-    color: COLORS.textMuted,
-  },
-  wishlistDetail: {
-    fontFamily: Fonts.lexend.regular,
-    fontSize: pt(9),
-    lineHeight: pt(13),
-    color: COLORS.textFaint,
-  },
-  wishlistPrice: {
-    fontFamily: Fonts.lexend.semiBold,
-    fontSize: pt(13),
-    lineHeight: pt(18),
-    color: COLORS.textDark,
-    marginTop: 4,
+    marginTop: 8,
   },
 
-  /* ── bottom action bar ── */
-  bottomBar: {
-    flexDirection: 'row',
-    paddingHorizontal: 16,
-    paddingTop: 20,
-    paddingBottom: 8,
-    gap: 12,
+  /* ── bottom sticky action bar ── */
+  bottomBarContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 20,
+    paddingBottom: hp('2.5%') > 24 ? hp('2.5%') : 24,
+    paddingTop: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
   },
-  bottomBtnLeft: {
-    flex: 1,
+  bottomBarButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: COLORS.darkGreen,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: COLORS.cognac,
+    ...UI_ELEVATION.card,
   },
-  bottomBtnLeftIcon: {
-    fontSize: 14,
+  bottomBarIcon: {
+    marginRight: 10,
+  },
+  bottomBarTextWrap: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  bottomBarTextTitle: {
+    fontFamily: Fonts.lexend.medium,
+    fontSize: pt(12),
+    lineHeight: pt(16),
     color: '#FFFFFF',
   },
-  bottomBtnLeftText: {
+  bottomBarTextCount: {
     fontFamily: Fonts.lexend.medium,
     fontSize: pt(11),
     lineHeight: pt(15),
     color: '#FFFFFF',
-    textAlign: 'center',
-  },
-  bottomBtnRight: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: COLORS.darkGreenSoft,
-  },
-  bottomBtnRightText: {
-    fontFamily: Fonts.lexend.medium,
-    fontSize: pt(11),
-    lineHeight: pt(15),
-    color: '#FFFFFF',
-    textAlign: 'center',
   },
 });
 

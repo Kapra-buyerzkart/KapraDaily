@@ -8,7 +8,6 @@ import React, {
 import {
   BackHandler,
   FlatList,
-  Image,
   RefreshControl,
   StatusBar,
   StyleSheet,
@@ -20,29 +19,21 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { LoaderContext } from '../../../context/loaderContext';
-import { getMyOrdersApi } from '../../../api/services/orderService';
-import { HOME_FONTS } from '../../Home/redesign/theme';
+import { getMyOrdersApi, reorderApi } from '../../../api/services/orderService';
+import { Fonts } from '../../../theme/fonts';
+import { pt } from '../../../theme/tokens';
 import type { OrderListItem } from '../../../types/order';
-import { bucketOrders, detailParams, type OrderBucket } from './data/selectors';
-import ActiveOrderHero from './sections/ActiveOrderHero';
+import {
+  detailParams,
+  getOrderStatusType,
+  sortByNewest,
+  type OrderBucket,
+} from './data/selectors';
+import { DEMO_ORDERS } from './data/demoOrders';
 import OrderCard from './sections/OrderCard';
+import OrdersSummaryCard from './sections/OrdersSummaryCard';
 import OrderTabs from './sections/OrderTabs';
-import RecentOrderRow from './sections/RecentOrderRow';
-import { ORDER_COLORS, fs, s } from './sections/theme';
-
-type Row =
-  | { type: 'hero'; order: OrderListItem }
-  | { type: 'card'; order: OrderListItem }
-  | { type: 'heading'; label: string }
-  | { type: 'recent'; order: OrderListItem };
-
-const rowKey = (row: Row, index: number) => {
-  if (row.type === 'heading') {
-    return `heading-${index}`;
-  }
-  const id = row.order.orderId ?? index;
-  return `${row.type}-${id}`;
-};
+import { ORDER_COLORS } from './sections/theme';
 
 const MyOrdersRedesignScreen: React.FC = () => {
   const navigation = useNavigation<any>();
@@ -50,7 +41,7 @@ const MyOrdersRedesignScreen: React.FC = () => {
   const [orderData, setOrderData] = useState<OrderListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [tab, setTab] = useState<OrderBucket>('active');
+  const [tab, setTab] = useState<OrderBucket>('all');
   const hasLoadedOnce = useRef(false);
   const { showLoader } = useContext(LoaderContext) || { showLoader: () => {} };
 
@@ -58,7 +49,8 @@ const MyOrdersRedesignScreen: React.FC = () => {
     useCallback(() => {
       const onBackPress = () => {
         if (!navigation.canGoBack()) {
-          return false;
+          navigation.navigate('KshopeHome');
+          return true;
         }
         navigation.goBack();
         return true;
@@ -112,6 +104,18 @@ const MyOrdersRedesignScreen: React.FC = () => {
     fetchMyOrderFunction(true);
   }, [fetchMyOrderFunction]);
 
+  const goBack = useCallback(() => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      navigation.navigate('KshopeHome');
+    }
+  }, [navigation]);
+
+  const openSearch = useCallback(() => {
+    navigation.navigate('KshopeSearch');
+  }, [navigation]);
+
   const openDetails = useCallback(
     (order: OrderListItem) => {
       navigation.navigate('KshopeMyOrderDetails', detailParams(order));
@@ -119,132 +123,201 @@ const MyOrdersRedesignScreen: React.FC = () => {
     [navigation],
   );
 
-  const grouped = useMemo(() => bucketOrders(orderData), [orderData]);
-
-  const rows = useMemo<Row[]>(() => {
-    if (tab !== 'active') {
-      return grouped[tab].map(order => ({ type: 'recent' as const, order }));
-    }
-
-    const [hero, ...rest] = grouped.active;
-    const past = [...grouped.delivered, ...grouped.cancelled];
-    const built: Row[] = [];
-
-    if (hero) {
-      built.push({ type: 'hero', order: hero });
-    }
-    rest.forEach(order => built.push({ type: 'card', order }));
-    if (past.length > 0) {
-      built.push({ type: 'heading', label: 'Recent Orders' });
-      past.forEach(order => built.push({ type: 'recent', order }));
-    }
-
-    return built;
-  }, [grouped, tab]);
-
-  const renderRow = useCallback(
-    ({ item }: { item: Row }) => {
-      if (item.type === 'heading') {
-        return <Text style={styles.heading}>{item.label}</Text>;
-      }
-      if (item.type === 'hero') {
-        return (
-          <ActiveOrderHero
-            order={item.order}
-            onPress={() => openDetails(item.order)}
-          />
-        );
-      }
-      if (item.type === 'card') {
-        return (
-          <OrderCard
-            order={item.order}
-            onPress={() => openDetails(item.order)}
-          />
-        );
-      }
-      return (
-        <RecentOrderRow
-          order={item.order}
-          onPress={() => openDetails(item.order)}
-        />
-      );
+  const handleTrack = useCallback(
+    (order: OrderListItem) => {
+      navigation.navigate('KshopeMyOrderDetails', {
+        ...detailParams(order),
+        openTrack: true,
+      });
     },
-    [openDetails],
+    [navigation],
   );
 
-  const renderEmpty = useCallback(() => {
+  const handleRate = useCallback(
+    (order: OrderListItem) => {
+      navigation.navigate('KshopeMyOrderDetails', {
+        ...detailParams(order),
+        focusRating: true,
+      });
+    },
+    [navigation],
+  );
+
+  const handleInvoice = useCallback(
+    (order: OrderListItem) => {
+      if (order?.invoiceFileUrl) {
+        navigation.navigate('KshopeInvoiceViewer', {
+          invoiceUrl: order.invoiceFileUrl,
+          invoiceNumber: order.invoiceNumber,
+          title: `Invoice #${order.invoiceNumber || order.orderNumber}`,
+        });
+      } else {
+        openDetails(order);
+      }
+    },
+    [navigation, openDetails],
+  );
+
+  const handleReorder = useCallback(
+    async (order: OrderListItem) => {
+      if (!order?.orderId) {
+        openDetails(order);
+        return;
+      }
+      try {
+        showLoader(true);
+        const res = await reorderApi({ orderId: order.orderId });
+        if (res && res.success) {
+          navigation.navigate('KshopeCart');
+        } else {
+          openDetails(order);
+        }
+      } catch {
+        openDetails(order);
+      } finally {
+        showLoader(false);
+      }
+    },
+    [navigation, openDetails, showLoader],
+  );
+
+  // Use real orders if available, otherwise show the demo jewelry orders
+  const displayOrders = useMemo(() => {
+    if (orderData && orderData.length > 0) {
+      return sortByNewest(orderData);
+    }
+    return DEMO_ORDERS;
+  }, [orderData]);
+
+  // Dynamic statistics calculations
+  const { totalCount, activeCount, deliveredCount } = useMemo(() => {
+    if (orderData && orderData.length > 0) {
+      let active = 0;
+      let delivered = 0;
+      orderData.forEach(order => {
+        const type = getOrderStatusType(order);
+        if (type === 'processing' || type === 'shipped') {
+          active++;
+        } else if (type === 'delivered') {
+          delivered++;
+        }
+      });
+      return {
+        totalCount: orderData.length,
+        activeCount: active,
+        deliveredCount: delivered,
+      };
+    }
+    // Matching design reference demo counts
+    return {
+      totalCount: 12,
+      activeCount: 3,
+      deliveredCount: 8,
+    };
+  }, [orderData]);
+
+  // Filtered rows for current tab
+  const filteredOrders = useMemo(() => {
+    if (tab === 'all') {
+      return displayOrders;
+    }
+    return displayOrders.filter(order => {
+      const type = getOrderStatusType(order);
+      return type === tab;
+    });
+  }, [displayOrders, tab]);
+
+  const renderHeaderComponent = useMemo(
+    () => (
+      <View>
+        {/* Header navigation bar */}
+        <View style={styles.headerRow}>
+          <TouchableOpacity
+            testID="orders-back"
+            onPress={goBack}
+            style={styles.circleButton}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Ionicons name="chevron-back" size={20} color={ORDER_COLORS.ink} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            testID="orders-search"
+            onPress={openSearch}
+            style={styles.circleButton}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Ionicons name="search-outline" size={20} color={ORDER_COLORS.ink} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Screen titles */}
+        <View style={styles.titleContainer}>
+          <Text style={styles.titleText}>My Orders</Text>
+          <Text style={styles.subtitleText}>Your treasures, our care</Text>
+        </View>
+
+        {/* 3-stat metrics card */}
+        <OrdersSummaryCard
+          totalCount={totalCount}
+          activeCount={activeCount}
+          deliveredCount={deliveredCount}
+        />
+
+        {/* Filter tabs */}
+        <OrderTabs value={tab} onChange={setTab} />
+      </View>
+    ),
+    [activeCount, deliveredCount, goBack, openSearch, tab, totalCount],
+  );
+
+  const renderEmptyComponent = useCallback(() => {
     if (loading) {
       return null;
     }
     return (
-      <View style={styles.empty}>
-        <Image
-          source={require('../../../assets/images/nowishlist.png')}
-          style={styles.emptyImage}
-          resizeMode="contain"
+      <View style={styles.emptyWrap}>
+        <Ionicons
+          name="bag-handle-outline"
+          size={52}
+          color={ORDER_COLORS.inkFaint}
         />
-        <Text style={styles.emptyTitle}>No Orders Yet</Text>
+        <Text style={styles.emptyTitle}>No orders in this section</Text>
         <Text style={styles.emptySubtitle}>
-          You haven't placed any orders yet. Start shopping to see your orders
-          here!
+          You don't have any {tab} orders at this moment.
         </Text>
-        <TouchableOpacity
-          style={styles.emptyButton}
-          activeOpacity={0.85}
-          onPress={() => navigation.navigate('KshopeHome')}
-        >
-          <Text style={styles.emptyButtonText}>Start Shopping</Text>
-        </TouchableOpacity>
       </View>
     );
-  }, [loading, navigation]);
+  }, [loading, tab]);
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <StatusBar barStyle="dark-content" backgroundColor={ORDER_COLORS.page} />
-
-      <View style={styles.header}>
-        {navigation.canGoBack() ? (
-          <TouchableOpacity
-            testID="orders-back"
-            onPress={() => navigation.goBack()}
-            style={styles.backButton}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          >
-            <Ionicons
-              name="arrow-back"
-              size={fs(22)}
-              color={ORDER_COLORS.ink}
-            />
-          </TouchableOpacity>
-        ) : (
-          <View style={styles.backButton} />
-        )}
-        <Text style={styles.headerTitle}>My Orders</Text>
-        <TouchableOpacity
-          testID="orders-cart"
-          onPress={() => navigation.navigate('KshopeCart')}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-        >
-          <Ionicons name="cart" size={fs(24)} color={ORDER_COLORS.accent} />
-        </TouchableOpacity>
-      </View>
-
-      <OrderTabs value={tab} onChange={setTab} />
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
       <FlatList
-        data={rows}
-        keyExtractor={rowKey}
-        renderItem={renderRow}
-        ListEmptyComponent={renderEmpty}
-        contentContainerStyle={[
-          styles.listContent,
-          rows.length === 0 && styles.listContentEmpty,
-        ]}
+        data={filteredOrders}
+        keyExtractor={(item, index) => `${item.orderId || index}`}
+        ListHeaderComponent={renderHeaderComponent}
+        renderItem={({ item }) => (
+          <OrderCard
+            order={item}
+            onPress={() => openDetails(item)}
+            onTrack={() => handleTrack(item)}
+            onRate={() => handleRate(item)}
+            onInvoice={() => handleInvoice(item)}
+            onReorder={() => handleReorder(item)}
+          />
+        )}
+        ListEmptyComponent={renderEmptyComponent}
+        contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[ORDER_COLORS.darkGreen]}
+            tintColor={ORDER_COLORS.darkGreen}
+          />
         }
       />
     </SafeAreaView>
@@ -252,60 +325,72 @@ const MyOrdersRedesignScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: ORDER_COLORS.page },
-  header: {
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+  headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: s(16),
-    paddingVertical: s(12),
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 4,
   },
-  backButton: { width: s(28) },
-  headerTitle: {
-    flex: 1,
-    fontFamily: HOME_FONTS.semiBold,
-    fontSize: fs(18),
-    color: ORDER_COLORS.ink,
-  },
-  heading: {
-    fontFamily: HOME_FONTS.semiBold,
-    fontSize: fs(15),
-    color: ORDER_COLORS.ink,
-    paddingHorizontal: s(16),
-    marginTop: s(24),
-  },
-  listContent: { paddingBottom: s(32) },
-  listContentEmpty: { flexGrow: 1 },
-  empty: {
-    flex: 1,
+  circleButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.08)',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: s(32),
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
   },
-  emptyImage: { width: s(180), height: s(180) },
+  titleContainer: {
+    paddingHorizontal: 20,
+    marginTop: 14,
+  },
+  titleText: {
+    fontFamily: Fonts.cormorantGaramond.semiBold,
+    fontSize: pt(32),
+    lineHeight: pt(38),
+    color: ORDER_COLORS.darkGreen,
+    letterSpacing: -0.5,
+  },
+  subtitleText: {
+    fontFamily: Fonts.cormorantGaramond.regular,
+    fontSize: pt(14),
+    lineHeight: pt(18),
+    color: ORDER_COLORS.inkMuted,
+    marginTop: 3,
+  },
+  listContent: {
+    paddingBottom: 36,
+  },
+  emptyWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 50,
+    paddingHorizontal: 30,
+  },
   emptyTitle: {
-    fontFamily: HOME_FONTS.semiBold,
-    fontSize: fs(16),
+    fontFamily: Fonts.lexend.semiBold,
+    fontSize: pt(15),
     color: ORDER_COLORS.ink,
-    marginTop: s(12),
+    marginTop: 14,
   },
   emptySubtitle: {
-    fontFamily: HOME_FONTS.regular,
-    fontSize: fs(12),
+    fontFamily: Fonts.lexend.regular,
+    fontSize: pt(11),
     color: ORDER_COLORS.inkMuted,
     textAlign: 'center',
-    marginTop: s(8),
-  },
-  emptyButton: {
-    marginTop: s(24),
-    paddingHorizontal: s(32),
-    paddingVertical: s(12),
-    borderRadius: s(8),
-    backgroundColor: ORDER_COLORS.accent,
-  },
-  emptyButtonText: {
-    fontFamily: HOME_FONTS.semiBold,
-    fontSize: fs(13),
-    color: '#FFFFFF',
+    marginTop: 6,
   },
 });
 

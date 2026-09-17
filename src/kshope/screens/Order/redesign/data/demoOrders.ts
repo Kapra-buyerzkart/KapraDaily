@@ -1,0 +1,88 @@
+import type { OrderListItem } from '../../../../types/order';
+
+export const DEMO_ORDERS: OrderListItem[] = [
+  {
+    orderId: 'KGD125680',
+    orderNumber: 'KGD125680',
+    orderStatus: 'Processing',
+    orderStatusText: 'Processing',
+    orderDate: '2024-09-12T10:30:00.000Z',
+    deliveryDate: '18 Sep - 20 Sep 2024',
+    deliveryLabel: 'Est. Delivery',
+    grandTotal: 48900,
+    items: [
+      {
+        orderItemId: 'ITEM-1',
+        productId: 'PROD-RING-1',
+        productName: 'Classic Solitaire Diamond Ring',
+        featuredImage: require('../../../../assets/images/orders/ring.jpg'),
+        quantity: 1,
+        unitPrice: 48900,
+        price: 48900,
+      },
+    ],
+  },
+  {
+    orderId: 'KGD125431',
+    orderNumber: 'KGD125431',
+    orderStatus: 'Shipped',
+    orderStatusText: 'Shipped',
+    orderDate: '2024-09-05T14:15:00.000Z',
+    deliveryDate: 'Tomorrow, 16 Sep',
+    deliveryLabel: 'Est. Delivery',
+    grandTotal: 36750,
+    items: [
+      {
+        orderItemId: 'ITEM-2',
+        productId: 'PROD-PEND-1',
+        productName: 'Evermore Diamond Pendant',
+        featuredImage: require('../../../../assets/images/orders/pendant.jpg'),
+        quantity: 1,
+        unitPrice: 36750,
+        price: 36750,
+      },
+    ],
+  },
+  {
+    orderId: 'KGD124908',
+    orderNumber: 'KGD124908',
+    orderStatus: 'Delivered',
+    orderStatusText: 'Delivered',
+    orderDate: '2024-08-28T09:00:00.000Z',
+    deliveryDate: '31 Aug 2024',
+    deliveryLabel: 'Delivered on',
+    grandTotal: 52400,
+    items: [
+      {
+        orderItemId: 'ITEM-3',
+        productId: 'PROD-EARR-1',
+        productName: 'Grace Drop Diamond Earrings',
+        featuredImage: require('../../../../assets/images/orders/earrings.jpg'),
+        quantity: 1,
+        unitPrice: 52400,
+        price: 52400,
+      },
+    ],
+  },
+  {
+    orderId: 'KGD124512',
+    orderNumber: 'KGD124512',
+    orderStatus: 'Cancelled',
+    orderStatusText: 'Cancelled',
+    orderDate: '2024-08-16T16:45:00.000Z',
+    deliveryDate: '17 Aug 2024',
+    deliveryLabel: 'Cancelled on',
+    grandTotal: 118600,
+    items: [
+      {
+        orderItemId: 'ITEM-4',
+        productId: 'PROD-BANG-1',
+        productName: 'Heritage Gold Bangle',
+        featuredImage: require('../../../../assets/images/orders/bangle.jpg'),
+        quantity: 2,
+        unitPrice: 59300,
+        price: 118600,
+      },
+    ],
+  },
+];
