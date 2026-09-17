@@ -271,6 +271,7 @@ export const getDeliveryInfo = (
 export const detailParams = (order: OrderListItem) => {
   const item = primaryItem(order);
   return {
+    orderId: order?.orderId,
     order,
     selectedItem: item
       ? { ...item, orderId: order?.orderId, orderNumber: order?.orderNumber }

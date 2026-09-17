@@ -1,0 +1,9 @@
+node_modules/
+vendor/
+android/
+ios/
+coverage/
+build/
+.bundle/
+Pods/
+*.bundle.js

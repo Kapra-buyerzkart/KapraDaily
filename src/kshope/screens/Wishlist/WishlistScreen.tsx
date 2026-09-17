@@ -23,13 +23,13 @@ import Toast from 'react-native-simple-toast';
 import { useWishlist } from '../../context/WishlistContext';
 import { useCart } from '../../context/CartContext';
 import ConfirmationModal from '../../components/ConfirmationModal';
-import { mapProductTile, tokensOf } from '../Home/redesign/data/mappers';
+import { mapProductTile } from '../Home/redesign/data/mappers';
 import { ProductImage } from '../Home/redesign/parts';
 import { getHomepageData } from '../../api/services/homeService';
 import { addToCartApi } from '../../api/services/cartService';
 import { getKshopeAreaId } from '../../globals/storage';
 import { Fonts } from '../../theme/fonts';
-import { UI_ELEVATION, hitSlopTo, hp, wp, pt } from '../../theme/tokens';
+import { UI_ELEVATION, hitSlopTo, hp, pt } from '../../theme/tokens';
 import { WISHLIST_ART } from './assets';
 
 /* ───────── design constants ───────── */
@@ -128,7 +128,7 @@ const OVERLAY_LABELS = [
 const WishlistScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const isFocused = useIsFocused();
-  const { wishlistItems, loadWishlist, isLoading, toggleWishlist } =
+  const { wishlistItems, loadWishlist, isLoading, toggleWishlist, isInWishlist } =
     useWishlist();
   const { cartCount, loadCart } = useCart();
   const [itemToRemove, setItemToRemove] = useState<any>(null);
@@ -286,15 +286,11 @@ const WishlistScreen: React.FC = () => {
         activeOpacity={0.7}
       >
         <Ionicons name="bag-outline" size={24} color={COLORS.textDark} />
-        {cartCount > 0 ? (
+        {cartCount > 0 && (
           <View style={styles.headerBadge}>
             <Text style={styles.headerBadgeText}>
               {cartCount > 99 ? '99+' : cartCount}
             </Text>
-          </View>
-        ) : (
-          <View style={styles.headerBadge}>
-            <Text style={styles.headerBadgeText}>1</Text>
           </View>
         )}
       </TouchableOpacity>
@@ -426,18 +422,29 @@ const WishlistScreen: React.FC = () => {
         )}
 
         {/* Top-right Heart Button */}
-        <TouchableOpacity
-          onPress={() => {
-            if (item.raw) {
-              toggleWishlist(item.raw);
-            }
-          }}
-          hitSlop={hitSlopTo(24)}
-          style={styles.suggestedHeartBtn}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="heart-outline" size={17} color={COLORS.textDark} />
-        </TouchableOpacity>
+        {(() => {
+          const inWishlist = isInWishlist(
+            item.raw?.productId ?? item.raw?.id ?? item.id,
+          );
+          return (
+            <TouchableOpacity
+              onPress={() => {
+                if (item.raw) {
+                  toggleWishlist(item.raw);
+                }
+              }}
+              hitSlop={hitSlopTo(24)}
+              style={styles.suggestedHeartBtn}
+              activeOpacity={0.8}
+            >
+              <Ionicons
+                name={inWishlist ? 'heart' : 'heart-outline'}
+                size={17}
+                color={inWishlist ? COLORS.heartRed : COLORS.textDark}
+              />
+            </TouchableOpacity>
+          );
+        })()}
       </View>
 
       <View style={styles.suggestedBody}>
@@ -466,7 +473,7 @@ const WishlistScreen: React.FC = () => {
         <ActivityIndicator
           size="small"
           color={COLORS.darkGreen}
-          style={{ marginVertical: 24 }}
+          style={styles.loadingIndicator}
         />
       ) : (
         <FlatList
@@ -616,7 +623,10 @@ const WishlistScreen: React.FC = () => {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          cards.length > 0 && styles.scrollContentWithBar,
+        ]}
       >
         {renderTitleSection()}
 
@@ -625,10 +635,10 @@ const WishlistScreen: React.FC = () => {
         {renderCategoryRow()}
 
         {renderCuratedSuggestions()}
-        {renderBottomBar()}
       </ScrollView>
 
       {/* Floating Bottom Button */}
+      {cards.length > 0 && renderBottomBar()}
 
       <ConfirmationModal
         visible={!!itemToRemove}
@@ -659,7 +669,13 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.bg,
   },
   scrollContent: {
+    paddingBottom: 32,
+  },
+  scrollContentWithBar: {
     paddingBottom: 100, // Space for floating bottom bar
+  },
+  loadingIndicator: {
+    marginVertical: 24,
   },
   loadingCenter: {
     flex: 1,

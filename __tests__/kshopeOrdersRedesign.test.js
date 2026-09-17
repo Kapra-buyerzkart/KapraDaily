@@ -37,11 +37,12 @@ const ORDERS = [
 ];
 
 const mockNavigate = jest.fn();
+const mockGoBack = jest.fn();
 
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({
     navigate: mockNavigate,
-    goBack: jest.fn(),
+    goBack: mockGoBack,
     canGoBack: () => true,
   }),
   useFocusEffect: cb => {
@@ -56,13 +57,11 @@ const mockGetMyOrdersApi = jest.fn(() =>
 
 jest.mock('../src/kshope/api/services/orderService', () => ({
   getMyOrdersApi: (...args) => mockGetMyOrdersApi(...args),
+  reorderApi: jest.fn(() => Promise.resolve({ success: true })),
 }));
 
 const MyOrdersRedesignScreen =
   require('../src/kshope/screens/Order/redesign/MyOrdersRedesignScreen').default;
-const {
-  TRACKER_STEPS,
-} = require('../src/kshope/screens/Order/redesign/data/selectors');
 
 const renderScreen = async () => {
   let tree;
@@ -72,13 +71,6 @@ const renderScreen = async () => {
   await act(async () => {});
   return tree;
 };
-
-const hostsWithTestID = (root, testID) =>
-  root
-    .findAllByProps({ testID })
-    .filter(node => typeof node.type === 'string');
-
-const countOf = (root, testID) => hostsWithTestID(root, testID).length;
 
 const textsOf = tree =>
   tree.root
@@ -95,58 +87,60 @@ const pressTab = async (tree, key) => {
 describe('MyOrdersRedesignScreen', () => {
   beforeEach(() => {
     mockNavigate.mockClear();
+    mockGoBack.mockClear();
     mockGetMyOrdersApi.mockClear();
   });
 
-  it('shows the newest active order as the hero with a tracker', async () => {
-    const tree = await renderScreen();
-
-    const hero = hostsWithTestID(tree.root, 'order-hero')[0];
-    const heroTexts = textsOf({ root: hero });
-    expect(heroTexts).toContain('Out for Delivery');
-    expect(heroTexts).toContain('JBL Bluetooth Headphones');
-    expect(countOf(tree.root, 'order-tracker')).toBe(1);
-
-    const trackerTexts = textsOf({
-      root: hostsWithTestID(tree.root, 'order-tracker')[0],
-    });
-    TRACKER_STEPS.forEach(step => expect(trackerTexts).toContain(step));
-  });
-
-  it('renders the remaining active orders as cards and the rest under Recent Orders', async () => {
+  it('renders screen title, subtitle, and summary metrics', async () => {
     const tree = await renderScreen();
     const texts = textsOf(tree);
 
-    expect(countOf(tree.root, 'order-card')).toBe(1);
-    expect(texts).toContain('Order Placed on, 01 jun 2026');
-    expect(texts).toContain('Recent Orders');
-    expect(countOf(tree.root, 'recent-order-row')).toBe(2);
+    expect(texts).toContain('My Orders');
+    expect(texts).toContain('Your treasures, our care');
+    expect(texts).toContain('Total Orders');
+    expect(texts).toContain('Active Orders');
+    expect(texts).toContain('Delivered');
   });
 
-  it('partitions orders across the three tabs', async () => {
+  it('renders all orders in the list under the default tab', async () => {
+    const tree = await renderScreen();
+    const texts = textsOf(tree);
+
+    expect(texts).toContain('JBL Bluetooth Headphones');
+    expect(texts).toContain('Gas Stove');
+    expect(texts).toContain('JBL Speakers');
+
+    expect(tree.root.findByProps({ testID: 'order-card-1' })).toBeTruthy();
+    expect(tree.root.findByProps({ testID: 'order-card-2' })).toBeTruthy();
+    expect(tree.root.findByProps({ testID: 'order-card-3' })).toBeTruthy();
+    expect(tree.root.findByProps({ testID: 'order-card-4' })).toBeTruthy();
+  });
+
+  it('filters orders when switching tabs', async () => {
     const tree = await renderScreen();
 
     await pressTab(tree, 'delivered');
-    expect(countOf(tree.root, 'recent-order-row')).toBe(1);
-    expect(textsOf(tree)).toContain('Delivered');
-    expect(countOf(tree.root, 'order-hero')).toBe(0);
+    let texts = textsOf(tree);
+    expect(texts.some(t => t.includes('ORD-978-100'))).toBe(true);
+    expect(texts.some(t => t.includes('ORD-978-098'))).toBe(false);
+    expect(texts.some(t => t.includes('ORD-978-101'))).toBe(false);
 
     await pressTab(tree, 'cancelled');
-    expect(countOf(tree.root, 'recent-order-row')).toBe(1);
-    expect(textsOf(tree)).toContain('Cancelled');
-
-    await pressTab(tree, 'active');
-    expect(countOf(tree.root, 'order-hero')).toBe(1);
+    texts = textsOf(tree);
+    expect(texts.some(t => t.includes('ORD-978-101'))).toBe(true);
+    expect(texts.some(t => t.includes('ORD-978-098'))).toBe(false);
+    expect(texts.some(t => t.includes('ORD-978-100'))).toBe(false);
   });
 
-  it('navigates to the details screen with the order and its first line item', async () => {
+  it('navigates to details screen with order and selected item when an order card is pressed', async () => {
     const tree = await renderScreen();
 
     await act(async () => {
-      tree.root.findByProps({ testID: 'order-hero-details' }).props.onPress();
+      tree.root.findByProps({ testID: 'order-card-1' }).props.onPress();
     });
 
     expect(mockNavigate).toHaveBeenCalledWith('KshopeMyOrderDetails', {
+      orderId: 1,
       order: ORDERS[0],
       selectedItem: {
         productName: 'JBL Bluetooth Headphones',
@@ -155,5 +149,19 @@ describe('MyOrdersRedesignScreen', () => {
         orderNumber: 'ORD-978-098',
       },
     });
+  });
+
+  it('navigates back and to search from header buttons', async () => {
+    const tree = await renderScreen();
+
+    await act(async () => {
+      tree.root.findByProps({ testID: 'orders-back' }).props.onPress();
+    });
+    expect(mockGoBack).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      tree.root.findByProps({ testID: 'orders-search' }).props.onPress();
+    });
+    expect(mockNavigate).toHaveBeenCalledWith('KshopeSearch');
   });
 });

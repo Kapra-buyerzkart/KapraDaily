@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState, useCallback } from 'react';
+import React, { useContext, useEffect, useState, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,6 @@ import {
   RefreshControl,
   ActivityIndicator,
   TextInput,
-  Image,
   BackHandler,
 } from 'react-native';
 import {
@@ -155,27 +154,59 @@ const RatingBlock = ({
 const MyOrderDetailsScreen = () => {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
-  const [isTrackOpen, setIsTrackOpen] = useState(false);
+  const [isTrackOpen, setIsTrackOpen] = useState(
+    Boolean(route.params?.openTrack),
+  );
   const { profile } = useUser();
+  const scrollViewRef = useRef<ScrollView>(null);
 
-  let cartCount = 1;
+  let cartCount = 0;
   try {
     const cartContext = useCart();
     if (cartContext && typeof cartContext.cartCount === 'number') {
-      cartCount = cartContext.cartCount || 1;
+      cartCount = cartContext.cartCount;
     }
   } catch {
-    cartCount = 1;
+    cartCount = 0;
   }
 
   const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const { showLoader } = useContext(LoaderContext) || { showLoader: () => {} };
 
+  const fetchMyOrderDetailsFunction = useCallback(async () => {
+    try {
+      showLoader(true);
+      const orderId =
+        route.params?.orderId ||
+        route.params?.order?.orderId ||
+        route.params?.selectedItem?.orderId;
+      if (!orderId) {
+        setOrderDetails(null);
+        return;
+      }
+      const response = await getOrderDetailsApi(orderId);
+      if (response && response.success && response.data) {
+        setOrderDetails(response.data);
+      } else {
+        setOrderDetails(null);
+      }
+    } catch (error) {
+      console.error('Error fetching order details:', error);
+      setOrderDetails(null);
+    } finally {
+      showLoader(false);
+    }
+  }, [route.params, showLoader]);
+
+  useEffect(() => {
+    fetchMyOrderDetailsFunction();
+  }, [fetchMyOrderDetailsFunction]);
+
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     fetchMyOrderDetailsFunction().finally(() => setRefreshing(false));
-  }, []);
+  }, [fetchMyOrderDetailsFunction]);
 
   useFocusEffect(
     useCallback(() => {
@@ -202,9 +233,12 @@ const MyOrderDetailsScreen = () => {
     }, [navigation]),
   );
 
+  const orderParam = route.params?.order;
   const order: any =
-    route.params?.order ||
-    orderDetails?.header || { orderId: route.params?.orderId };
+    orderParam ||
+    orderDetails?.header || {
+      orderId: route.params?.orderId || route.params?.selectedItem?.orderId,
+    };
 
   const [selectedItem, setSelectedItem] = useState<OrderLineItem>(
     route.params?.selectedItem || {},
@@ -218,7 +252,7 @@ const MyOrderDetailsScreen = () => {
     ) {
       setSelectedItem(orderDetails.items[0]);
     }
-  }, [orderDetails]);
+  }, [orderDetails, selectedItem?.productName]);
 
   useEffect(() => {
     const head = orderDetails?.header;
@@ -266,47 +300,37 @@ const MyOrderDetailsScreen = () => {
     refreshOnClose?: boolean;
   }>({ visible: false, type: 'success', title: '', message: '' });
 
-  const isCancelled = (
+  const orderStatusStr = (
     orderDetails?.header?.orderStatus ||
     orderDetails?.header?.status ||
     order?.orderStatus ||
     order?.status ||
+    orderParam?.orderStatus ||
     ''
   )
     .toString()
-    .toLowerCase()
-    .includes('cancel');
+    .toLowerCase();
+
+  const isCancelled = orderStatusStr.includes('cancel');
+  const isDeliveredOrder =
+    orderStatusStr.includes('deliver') && !orderStatusStr.includes('out for');
+
+  useEffect(() => {
+    if (route.params?.focusRating) {
+      const timer = setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [route.params?.focusRating]);
 
   const canCancel =
     !isCancelled &&
-    (orderDetails?.header?.canCancel === true || order?.canCancel === true || true);
+    !isDeliveredOrder &&
+    (orderDetails?.header?.canCancel === true ||
+      order?.canCancel === true ||
+      orderParam?.canCancel === true);
   const canRetryPayment = orderDetails?.header?.canRetryPayment === true;
-
-  useEffect(() => {
-    fetchMyOrderDetailsFunction();
-  }, []);
-
-  const fetchMyOrderDetailsFunction = async () => {
-    try {
-      showLoader(true);
-      const orderId = route.params?.orderId || route.params?.order?.orderId;
-      if (!orderId) {
-        setOrderDetails(null);
-        return;
-      }
-      const response = await getOrderDetailsApi(orderId);
-      if (response && response.success && response.data) {
-        setOrderDetails(response.data);
-      } else {
-        setOrderDetails(null);
-      }
-    } catch (error) {
-      console.error('Error fetching order details:', error);
-      setOrderDetails(null);
-    } finally {
-      showLoader(false);
-    }
-  };
 
   const resolveOrderId = () =>
     order?.orderId ||
@@ -577,63 +601,46 @@ const MyOrderDetailsScreen = () => {
     }
   };
 
-  const activeOrderId =
-    order?.orderId ||
-    order?.id ||
-    route.params?.orderId ||
-    route.params?.order?.orderId;
-
   const { downloading, canDownload, downloadInvoice } = useInvoiceDownload({
-    invoiceUrl: resolveInvoiceUrl(orderDetails?.header?.invoiceFileUrl),
-    invoiceNumber: orderDetails?.header?.invoiceNumber,
+    invoiceUrl: resolveInvoiceUrl(
+      orderDetails?.header?.invoiceFileUrl ||
+        order?.invoiceFileUrl ||
+        orderParam?.invoiceFileUrl,
+    ),
+    invoiceNumber:
+      orderDetails?.header?.invoiceNumber ||
+      order?.invoiceNumber ||
+      orderParam?.invoiceNumber,
   });
 
   const header = orderDetails?.header;
-  const orderNumber = header?.orderNumber || selectedItem?.orderNumber || '978 096';
+  const orderNumber =
+    header?.orderNumber ||
+    order?.orderNumber ||
+    orderParam?.orderNumber ||
+    selectedItem?.orderNumber ||
+    '';
   const shipping = orderDetails?.shippingAddress;
   const rawItems = orderDetails?.items || [];
 
-  // Provide fallback primary item matching the screenshot design if empty
-  const primaryItem = rawItems[0] || {
-    orderItemId: 'item-primary-1',
-    productName: 'Classy Knot Diamond Ring',
-    featuredImage: CLASSY_KNOT_RING_IMG,
-    quantity: 1,
-    unitPrice: 162899,
-    lineTotal: 162899,
-    mrp: 163778,
-    subtitle: '14 KT Yellow Gold \u2022 0.65 ct \u2022 Size 12',
-    savings: 914,
-    savingsPercent: 6,
-  };
+  const primaryItem =
+    rawItems[0] ||
+    (selectedItem?.productName ? selectedItem : null) ||
+    (orderParam?.items && Array.isArray(orderParam.items) && orderParam.items[0]) || {
+      orderItemId: 'item-primary-1',
+      productName: 'Classy Knot Diamond Ring',
+      featuredImage: CLASSY_KNOT_RING_IMG,
+      quantity: 1,
+      unitPrice: 162899,
+      lineTotal: 162899,
+      mrp: 163778,
+      subtitle: '14 KT Yellow Gold \u2022 0.65 ct \u2022 Size 12',
+      savings: 914,
+      savingsPercent: 6,
+    };
 
   const payment = orderDetails?.payments?.[0];
   const groupOrders: any[] = orderDetails?.groupOrders || [];
-
-  // Fallback demo group orders matching screenshot if none returned
-  const displayGroupOrders =
-    groupOrders.length > 0
-      ? groupOrders
-      : [
-          {
-            orderId: 'ORD43446456547',
-            orderNumber: 'ORD43446456547',
-            orderStatusText: 'Your Order is Being Shipped',
-            productName: 'Vintage Inspired Ring',
-            orderDate: '2026-06-01T10:00:00.000Z',
-            grandTotal: 30249,
-            featuredImage: VINTAGE_GOLD_RING_IMG,
-          },
-          {
-            orderId: 'ORD43446456548',
-            orderNumber: 'ORD43446456547',
-            orderStatusText: 'Your Order is Being Packed',
-            productName: 'Vintage Inspired Ring',
-            orderDate: '2026-06-01T10:00:00.000Z',
-            grandTotal: 30249,
-            featuredImage: VINTAGE_GOLD_RING_IMG,
-          },
-        ];
 
   const statusKeys = (orderDetails?.timeline || []).map(step =>
     (step.statusKey || '').toString().toLowerCase(),
@@ -644,14 +651,47 @@ const MyOrderDetailsScreen = () => {
     -1,
   );
 
-  // In the design image, 3 stages are complete (Confirmed, Shipped, Out for delivery) -> index 2
-  const reachedStage = computedReachedStage >= 0 ? computedReachedStage : 2;
+  const getFallbackStage = () => {
+    const status = (
+      header?.orderStatusText ||
+      header?.orderStatus ||
+      header?.status ||
+      orderParam?.orderStatusText ||
+      orderParam?.orderStatus ||
+      order?.orderStatusText ||
+      order?.orderStatus ||
+      ''
+    )
+      .toString()
+      .toLowerCase();
+    if (status.includes('deliver') && !status.includes('out for')) return 3;
+    if (status.includes('out for') || status.includes('agent')) return 2;
+    if (
+      status.includes('ship') ||
+      status.includes('dispatch') ||
+      status.includes('pack')
+    ) {
+      return 1;
+    }
+    return 0;
+  };
 
-  const itemTotal = header?.subtotal ?? header?.subTotal ?? 162899;
-  const discountTotal = header?.discountTotal ?? 800;
+  const reachedStage =
+    computedReachedStage >= 0 ? computedReachedStage : getFallbackStage();
+
+  const fallbackTotal = Number(
+    orderParam?.grandTotal ??
+      order?.grandTotal ??
+      selectedItem?.price ??
+      selectedItem?.lineTotal ??
+      0,
+  );
+
+  const itemTotal = header?.subtotal ?? header?.subTotal ?? (fallbackTotal || 0);
+  const discountTotal = header?.discountTotal ?? 0;
   const deliveryCharge = header?.deliveryCharge ?? 0;
-  const taxTotal = header?.taxTotal ?? 5;
-  const grandTotal = header?.grandTotal ?? 162899;
+  const taxTotal = header?.taxTotal ?? 0;
+  const grandTotal = header?.grandTotal ?? (fallbackTotal || 0);
 
   const isCod = isCashOnDelivery(payment?.paymentMethod || '');
   const isDelivered =
@@ -667,7 +707,10 @@ const MyOrderDetailsScreen = () => {
       String(payment.paymentStatus || '').toLowerCase() === 'success');
 
   const invoiceNumber =
-    header?.invoiceNumber || 'INV/ 2026-27 / 004678';
+    header?.invoiceNumber ||
+    orderParam?.invoiceNumber ||
+    order?.invoiceNumber ||
+    (orderNumber ? `INV-${orderNumber}` : '');
 
   const hasOverallRating =
     Number(header?.overallRating ?? header?.reviewRating ?? 0) > 0;
@@ -696,8 +739,10 @@ const MyOrderDetailsScreen = () => {
     (primaryItem as any).specifications ||
     '14 KT Yellow Gold \u2022 0.65 ct \u2022 Size 12';
 
-  const customerName = shipping?.custName || 'Justin Philip';
-  const customerPhone = shipping?.phone || '9745879080';
+  const customerName =
+    shipping?.custName || profile?.name || 'Customer';
+  const customerPhone =
+    shipping?.phone || profile?.mobile || profile?.phoneNumber || '';
   const customerAddress =
     [
       shipping?.addLine1,
@@ -709,8 +754,7 @@ const MyOrderDetailsScreen = () => {
       shipping?.pincode,
     ]
       .filter(Boolean)
-      .join(', ') ||
-    'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.';
+      .join(', ');
 
   return (
     <SafeAreaView style={d.screen} edges={['top']}>
@@ -762,14 +806,19 @@ const MyOrderDetailsScreen = () => {
             accessibilityLabel="View cart"
           >
             <AppIcons.BagOutline size={dp(22)} color={DESIGN_COLORS.ink} />
-            <View style={d.cartBadge}>
-              <Text style={d.cartBadgeText}>{cartCount}</Text>
-            </View>
+            {cartCount > 0 && (
+              <View style={d.cartBadge}>
+                <Text style={d.cartBadgeText}>
+                  {cartCount > 99 ? '99+' : cartCount}
+                </Text>
+              </View>
+            )}
           </TouchableOpacity>
         </View>
       </View>
 
       <ScrollView
+        ref={scrollViewRef}
         contentContainerStyle={d.scrollContent}
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -920,7 +969,7 @@ const MyOrderDetailsScreen = () => {
           style={d.invoiceCard}
           activeOpacity={0.85}
           onPress={downloadInvoice}
-          disabled={downloading}
+          disabled={downloading || !canDownload}
           accessibilityRole="button"
           accessibilityLabel="View invoice"
         >
@@ -1061,15 +1110,17 @@ const MyOrderDetailsScreen = () => {
 
           <View style={d.deliveryGap} />
 
-          <View style={d.deliveryRowTop}>
-            <View style={d.deliveryIconCol}>
-              <AppIcons.LocationOutline size={dp(20)} color={DESIGN_COLORS.ink} />
+          {!!customerAddress && (
+            <View style={d.deliveryRowTop}>
+              <View style={d.deliveryIconCol}>
+                <AppIcons.LocationOutline size={dp(20)} color={DESIGN_COLORS.ink} />
+              </View>
+              <View style={d.deliveryBody}>
+                <Text style={d.deliverySectionTitle}>Address</Text>
+                <Text style={d.deliveryAddress}>{customerAddress}</Text>
+              </View>
             </View>
-            <View style={d.deliveryBody}>
-              <Text style={d.deliverySectionTitle}>Address</Text>
-              <Text style={d.deliveryAddress}>{customerAddress}</Text>
-            </View>
-          </View>
+          )}
 
           <View style={d.deliveryRule} />
 
@@ -1080,14 +1131,14 @@ const MyOrderDetailsScreen = () => {
         </View>
 
         {/* Group Order Placed Section */}
-        {displayGroupOrders.length > 0 && (
+        {groupOrders.length > 0 && (
           <View>
             <Text style={d.groupHeading}>
-              {`Group Order Placed on, ${longDate(displayGroupOrders[0]?.orderDate) || '01 jun 2026'}`}
+              {`Group Order Placed on, ${longDate(groupOrders[0]?.orderDate)}`}
             </Text>
 
             <View style={d.groupCard}>
-              {displayGroupOrders.map((groupOrder, index) => (
+              {groupOrders.map((groupOrder, index) => (
                 <View key={groupOrder.orderId || index}>
                   <View style={d.groupRow}>
                     <View style={d.groupThumbBox}>
@@ -1100,10 +1151,10 @@ const MyOrderDetailsScreen = () => {
 
                     <View style={d.groupInfo}>
                       <Text style={d.groupStatusText}>
-                        {groupOrder.orderStatusText || 'Your Order is Being Shipped'}
+                        {groupOrder.orderStatusText}
                       </Text>
                       <Text style={d.groupName} numberOfLines={1}>
-                        {groupOrder.productName || 'Vintage Inspired Ring'}
+                        {groupOrder.productName}
                       </Text>
                     </View>
 
@@ -1130,18 +1181,18 @@ const MyOrderDetailsScreen = () => {
                     <View>
                       <Text style={d.groupMetaLabel}>Order ID :</Text>
                       <Text style={d.groupMetaValue}>
-                        {`#${groupOrder.orderNumber || 'ORD43446456547'}`}
+                        {`#${groupOrder.orderNumber}`}
                       </Text>
                     </View>
                     <View style={d.groupMetaRight}>
                       <Text style={d.groupMetaLabel}>Total Amount :</Text>
                       <Text style={d.groupTotal}>
-                        {money(groupOrder.grandTotal || 30249)}
+                        {money(groupOrder.grandTotal)}
                       </Text>
                     </View>
                   </View>
 
-                  {index < displayGroupOrders.length - 1 && (
+                  {index < groupOrders.length - 1 && (
                     <View style={d.groupRule} />
                   )}
                 </View>
@@ -1151,7 +1202,9 @@ const MyOrderDetailsScreen = () => {
         )}
 
         {/* Rating Block if eligible */}
-        {!!header?.canMarkOverallReview &&
+        {(!!header?.canMarkOverallReview ||
+          Boolean(route.params?.focusRating) ||
+          isDelivered) &&
           !ratingSubmitted &&
           !hasOverallRating && (
             <View style={[d.summaryCard, d.rateCard, { marginHorizontal: dp(16) }]}>
