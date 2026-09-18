@@ -41,8 +41,7 @@ import FallbackImage from '../../components/FallbackImage';
 import { OrderDetails, OrderLineItem } from '../../types/order';
 import { isCashOnDelivery } from './status/paymentMeta';
 
-const CLASSY_KNOT_RING_IMG = require('../../assets/images/orders/classy_knot_ring.jpg');
-const VINTAGE_GOLD_RING_IMG = require('../../assets/images/orders/vintage_gold_ring.jpg');
+const DEFAULT_FALLBACK_IMAGE = require('../../assets/images/orders/ring.jpg');
 
 const STEPPER_STAGES = [
   { label: 'Confirmed', keys: ['pending', 'placed', 'accepted', 'confirmed'] },
@@ -71,7 +70,7 @@ const longDate = (value?: string) => {
   return `${day} ${month} ${year}`;
 };
 
-const getImageUrl = (imagePath?: string | any, fallbackImage = CLASSY_KNOT_RING_IMG) => {
+const getImageUrl = (imagePath?: string | any, fallbackImage = DEFAULT_FALLBACK_IMAGE) => {
   if (!imagePath) return fallbackImage;
   if (typeof imagePath !== 'string') return imagePath;
   if (imagePath.startsWith('http')) return { uri: imagePath };
@@ -81,6 +80,36 @@ const getImageUrl = (imagePath?: string | any, fallbackImage = CLASSY_KNOT_RING_
       '$1',
     ),
   };
+};
+
+const extractItemSpecs = (item?: OrderLineItem | any) => {
+  if (!item) return '';
+  if (
+    item.specifications &&
+    typeof item.specifications === 'string' &&
+    item.specifications.trim()
+  ) {
+    return item.specifications.trim();
+  }
+  if (
+    item.subtitle &&
+    typeof item.subtitle === 'string' &&
+    item.subtitle.trim()
+  ) {
+    return item.subtitle.trim();
+  }
+  const parts = [
+    item.purity,
+    item.metalType || item.metal,
+    item.diamondWeight || (item.carat ? `${item.carat} ct` : null),
+    item.weight ? `${item.weight}g` : null,
+    item.size ? `Size ${item.size}` : null,
+  ].filter(Boolean);
+
+  if (parts.length > 0) {
+    return parts.join(' • ');
+  }
+  return item.categoryName || item.catName || '';
 };
 
 type RatingBlockProps = {
@@ -623,21 +652,11 @@ const MyOrderDetailsScreen = () => {
   const shipping = orderDetails?.shippingAddress;
   const rawItems = orderDetails?.items || [];
 
-  const primaryItem =
+  const primaryItem: OrderLineItem | null =
     rawItems[0] ||
     (selectedItem?.productName ? selectedItem : null) ||
-    (orderParam?.items && Array.isArray(orderParam.items) && orderParam.items[0]) || {
-      orderItemId: 'item-primary-1',
-      productName: 'Classy Knot Diamond Ring',
-      featuredImage: CLASSY_KNOT_RING_IMG,
-      quantity: 1,
-      unitPrice: 162899,
-      lineTotal: 162899,
-      mrp: 163778,
-      subtitle: '14 KT Yellow Gold \u2022 0.65 ct \u2022 Size 12',
-      savings: 914,
-      savingsPercent: 6,
-    };
+    (orderParam?.items && Array.isArray(orderParam.items) && orderParam.items[0]) ||
+    null;
 
   const payment = orderDetails?.payments?.[0];
   const groupOrders: any[] = orderDetails?.groupOrders || [];
@@ -687,11 +706,22 @@ const MyOrderDetailsScreen = () => {
       0,
   );
 
-  const itemTotal = header?.subtotal ?? header?.subTotal ?? (fallbackTotal || 0);
-  const discountTotal = header?.discountTotal ?? 0;
-  const deliveryCharge = header?.deliveryCharge ?? 0;
-  const taxTotal = header?.taxTotal ?? 0;
-  const grandTotal = header?.grandTotal ?? (fallbackTotal || 0);
+  const itemTotal = Number(
+    header?.subtotal ?? header?.subTotal ?? header?.itemTotal ?? fallbackTotal ?? 0,
+  );
+  const discountTotal = Number(
+    header?.discountTotal ?? header?.totalDiscount ?? header?.productDiscount ?? 0,
+  );
+  const deliveryCharge = Number(
+    header?.deliveryCharge ?? header?.deliveryAmount ?? 0,
+  );
+  const taxTotal = Number(header?.taxTotal ?? header?.totalTax ?? 0);
+  const grandTotal = Number(
+    header?.grandTotal ?? header?.totalAmount ?? (fallbackTotal || (itemTotal + deliveryCharge - discountTotal)) ?? 0,
+  );
+  const totalSavings = Number(
+    header?.totalSavings ?? header?.savings ?? discountTotal ?? 0,
+  );
 
   const isCod = isCashOnDelivery(payment?.paymentMethod || '');
   const isDelivered =
@@ -717,27 +747,24 @@ const MyOrderDetailsScreen = () => {
   const hasAgentRating = Number(header?.deliveryAgentRating ?? 0) > 0;
 
   // Primary item calculations
-  const itemCurrentPrice =
-    primaryItem.lineTotal ||
-    primaryItem.unitPrice ||
-    primaryItem.soldPrice ||
-    162899;
-  const itemOldPrice =
-    primaryItem.mrp ||
-    (primaryItem as any).originalPrice ||
-    (itemCurrentPrice > 0 ? itemCurrentPrice + 879 : 163778);
+  const itemCurrentPrice = Number(
+    primaryItem?.lineTotal ||
+      primaryItem?.unitPrice ||
+      primaryItem?.soldPrice ||
+      primaryItem?.price ||
+      0,
+  );
+  const itemOldPrice = Number(
+    primaryItem?.mrp || (primaryItem as any)?.originalPrice || 0,
+  );
   const itemSavings =
-    (primaryItem as any).savings ||
-    (itemOldPrice > itemCurrentPrice ? itemOldPrice - itemCurrentPrice : 914);
+    itemOldPrice > itemCurrentPrice ? itemOldPrice - itemCurrentPrice : 0;
   const itemSavingsPercent =
-    (primaryItem as any).savingsPercent ||
-    Math.round((itemSavings / itemOldPrice) * 100) ||
-    6;
+    itemSavings > 0 && itemOldPrice > 0
+      ? Math.round((itemSavings / itemOldPrice) * 100)
+      : 0;
 
-  const itemSpecs =
-    (primaryItem as any).subtitle ||
-    (primaryItem as any).specifications ||
-    '14 KT Yellow Gold \u2022 0.65 ct \u2022 Size 12';
+  const itemSpecs = extractItemSpecs(primaryItem);
 
   const customerName =
     shipping?.custName || profile?.name || 'Customer';
@@ -755,6 +782,62 @@ const MyOrderDetailsScreen = () => {
     ]
       .filter(Boolean)
       .join(', ');
+
+  const additionalGroupItems: any[] =
+    groupOrders.length > 0
+      ? groupOrders
+      : rawItems.length > 1
+      ? rawItems.slice(1).map(rawItem => ({
+          orderId: order?.orderId || resolveOrderId(),
+          orderNumber: orderNumber || resolveOrderId(),
+          productName: rawItem.productName,
+          featuredImage:
+            rawItem.featuredImage || rawItem.productImage || rawItem.image,
+          orderStatusText:
+            header?.orderStatusText ||
+            header?.status ||
+            'Order Confirmed',
+          orderDate: header?.orderDate || order?.orderDate,
+          grandTotal:
+            rawItem.lineTotal || rawItem.soldPrice || rawItem.unitPrice || 0,
+        }))
+      : [];
+
+  if (!orderDetails && !primaryItem) {
+    return (
+      <SafeAreaView style={d.screen} edges={['top']}>
+        <StatusBar
+          barStyle="dark-content"
+          backgroundColor={DESIGN_COLORS.screen}
+        />
+        <View style={d.header}>
+          <TouchableOpacity
+            onPress={() => {
+              if (navigation.canGoBack()) {
+                navigation.goBack();
+              } else {
+                navigation.dispatch(
+                  CommonActions.reset({
+                    index: 0,
+                    routes: [{ name: 'KshopeHome' }],
+                  }),
+                );
+              }
+            }}
+            style={d.backButton}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+          >
+            <AppIcons.Back color={DESIGN_COLORS.ink} size={dp(22)} />
+          </TouchableOpacity>
+          <Text style={d.headerTitle}>Order Details</Text>
+        </View>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color={DESIGN_COLORS.darkGreen} />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={d.screen} edges={['top']}>
@@ -826,56 +909,66 @@ const MyOrderDetailsScreen = () => {
         }
       >
         {/* Main Product Item Card */}
-        <View style={d.productCard}>
-          <View style={d.productImageBox}>
-            <FallbackImage
-              source={getImageUrl(primaryItem.featuredImage, CLASSY_KNOT_RING_IMG)}
-              style={d.productImage}
-              resizeMode="contain"
-            />
-          </View>
-
-          <View style={d.productInfo}>
-            <Text style={d.productTitle} numberOfLines={2}>
-              {primaryItem.productName || 'Classy Knot Diamond Ring'}
-            </Text>
-
-            <Text style={d.productSpecs} numberOfLines={1}>
-              {itemSpecs}
-            </Text>
-
-            <View style={d.priceRow}>
-              <Text style={d.productPrice}>{formatCurrency(itemCurrentPrice)}</Text>
-              {itemOldPrice > itemCurrentPrice && (
-                <Text style={d.productOldPrice}>{formatCurrency(itemOldPrice)}</Text>
-              )}
+        {!!primaryItem && (
+          <View style={d.productCard}>
+            <View style={d.productImageBox}>
+              <FallbackImage
+                source={getImageUrl(
+                  primaryItem.featuredImage ||
+                    primaryItem.productImage ||
+                    primaryItem.image,
+                )}
+                style={d.productImage}
+                resizeMode="contain"
+              />
             </View>
 
-            <View style={d.savingsRow}>
-              <View style={d.savingsDot} />
-              <Text style={d.savingsText}>
-                {`You save ${formatCurrency(itemSavings)} (${itemSavingsPercent}% OFF)`}
+            <View style={d.productInfo}>
+              <Text style={d.productTitle} numberOfLines={2}>
+                {primaryItem.productName || order?.productName || 'Order Item'}
               </Text>
-            </View>
 
-            {isCancelled ? (
-              <View style={d.cancelOrderRow}>
-                <Text style={d.orderCancelledText}>Order Cancelled</Text>
+              {!!itemSpecs && (
+                <Text style={d.productSpecs} numberOfLines={1}>
+                  {itemSpecs}
+                </Text>
+              )}
+
+              <View style={d.priceRow}>
+                <Text style={d.productPrice}>{formatCurrency(itemCurrentPrice)}</Text>
+                {itemOldPrice > itemCurrentPrice && (
+                  <Text style={d.productOldPrice}>{formatCurrency(itemOldPrice)}</Text>
+                )}
               </View>
-            ) : canCancel ? (
-              <TouchableOpacity
-                style={d.cancelOrderRow}
-                activeOpacity={0.8}
-                onPress={() => setConfirmModal({ visible: true, type: 'cancel' })}
-                accessibilityRole="button"
-                accessibilityLabel="Cancel Order"
-              >
-                <Text style={d.cancelOrderText}>Cancel Order</Text>
-                <AppIcons.ChevronRight size={dp(13)} color={DESIGN_COLORS.teal} />
-              </TouchableOpacity>
-            ) : null}
+
+              {itemSavings > 0 && (
+                <View style={d.savingsRow}>
+                  <View style={d.savingsDot} />
+                  <Text style={d.savingsText}>
+                    {`You save ${formatCurrency(itemSavings)} (${itemSavingsPercent}% OFF)`}
+                  </Text>
+                </View>
+              )}
+
+              {isCancelled ? (
+                <View style={d.cancelOrderRow}>
+                  <Text style={d.orderCancelledText}>Order Cancelled</Text>
+                </View>
+              ) : canCancel ? (
+                <TouchableOpacity
+                  style={d.cancelOrderRow}
+                  activeOpacity={0.8}
+                  onPress={() => setConfirmModal({ visible: true, type: 'cancel' })}
+                  accessibilityRole="button"
+                  accessibilityLabel="Cancel Order"
+                >
+                  <Text style={d.cancelOrderText}>Cancel Order</Text>
+                  <AppIcons.ChevronRight size={dp(13)} color={DESIGN_COLORS.teal} />
+                </TouchableOpacity>
+              ) : null}
+            </View>
           </View>
-        </View>
+        )}
 
         {/* Order Summary Heading */}
         <Text style={d.orderSummaryHeading}>Order Summary</Text>
@@ -897,12 +990,14 @@ const MyOrderDetailsScreen = () => {
               </Text>
             </View>
 
-            <View style={d.billRow}>
-              <Text style={d.billLabel}>Item discount</Text>
-              <Text style={d.billValueGreen}>
-                {`- ${money(discountTotal)}`}
-              </Text>
-            </View>
+            {discountTotal > 0 && (
+              <View style={d.billRow}>
+                <Text style={d.billLabel}>Item discount</Text>
+                <Text style={d.billValueGreen}>
+                  {`- ${money(discountTotal)}`}
+                </Text>
+              </View>
+            )}
 
             <View style={d.billRule} />
 
@@ -910,21 +1005,23 @@ const MyOrderDetailsScreen = () => {
               <View>
                 <Text style={d.toPayLabel}>To pay</Text>
                 <Text style={d.toPayNote}>
-                  {`inclusive of GST ${money(taxTotal)}`}
+                  {taxTotal > 0
+                    ? `inclusive of GST ${money(taxTotal)}`
+                    : 'inclusive of all taxes'}
                 </Text>
               </View>
               <Text style={d.toPayValue}>{money(grandTotal)}</Text>
             </View>
           </View>
 
-          {discountTotal > 0 && !isCancelled && (
+          {totalSavings > 0 && !isCancelled && (
             <View style={d.savedStrip}>
               <AppIcons.CheckCircle
                 size={dp(15)}
                 color={DESIGN_COLORS.greenDeep}
               />
               <Text style={d.savedText}>
-                {`You saved ${money(discountTotal)} on this order`}
+                {`You saved ${money(totalSavings)} on this order`}
               </Text>
             </View>
           )}
@@ -944,14 +1041,16 @@ const MyOrderDetailsScreen = () => {
 
             <View style={d.payBody}>
               <Text style={d.payMethod}>
-                {isCod ? 'Cash on delivery' : 'Online payment'}
+                {payment?.paymentMethod ||
+                  header?.paymentMethod ||
+                  (isCod ? 'Cash on delivery' : 'Online payment')}
               </Text>
               <Text style={d.payCaption}>Total Amount</Text>
             </View>
 
             <View style={d.payValueCol}>
               <Text style={d.payAmount}>{money(grandTotal)}</Text>
-              {isPaid && (
+              {isPaid ? (
                 <View style={d.paidPill}>
                   <AppIcons.CheckMark
                     size={dp(10)}
@@ -959,37 +1058,64 @@ const MyOrderDetailsScreen = () => {
                   />
                   <Text style={d.paidPillText}>Paid successfully</Text>
                 </View>
+              ) : isCancelled ? (
+                <View style={[d.paidPill, { backgroundColor: '#FEE2E2' }]}>
+                  <Text style={[d.paidPillText, { color: DESIGN_COLORS.danger }]}>
+                    Cancelled
+                  </Text>
+                </View>
+              ) : (
+                <View style={[d.paidPill, { backgroundColor: '#FEF3C7' }]}>
+                  <Text style={[d.paidPillText, { color: '#B45309' }]}>
+                    {isCod ? 'Pay on Delivery' : 'Payment Pending'}
+                  </Text>
+                </View>
               )}
             </View>
           </View>
         </View>
 
         {/* View invoice Card */}
-        <TouchableOpacity
-          style={d.invoiceCard}
-          activeOpacity={0.85}
-          onPress={downloadInvoice}
-          disabled={downloading || !canDownload}
-          accessibilityRole="button"
-          accessibilityLabel="View invoice"
-        >
-          <View style={d.iconTile}>
-            {downloading ? (
-              <ActivityIndicator size="small" color={DESIGN_COLORS.darkGreen} />
-            ) : (
+        {canDownload ? (
+          <TouchableOpacity
+            style={d.invoiceCard}
+            activeOpacity={0.85}
+            onPress={downloadInvoice}
+            disabled={downloading}
+            accessibilityRole="button"
+            accessibilityLabel="View invoice"
+          >
+            <View style={d.iconTile}>
+              {downloading ? (
+                <ActivityIndicator size="small" color={DESIGN_COLORS.darkGreen} />
+              ) : (
+                <AppIcons.Invoice size={dp(20)} color={DESIGN_COLORS.body} />
+              )}
+            </View>
+
+            <View style={d.invoiceBody}>
+              <Text style={d.invoiceTitle}>View invoice</Text>
+              <Text style={d.invoiceNo}>
+                {`Invoice: ${invoiceNumber}`}
+              </Text>
+            </View>
+
+            <AppIcons.ChevronRight size={dp(18)} color={DESIGN_COLORS.faint} />
+          </TouchableOpacity>
+        ) : invoiceNumber ? (
+          <View style={d.invoiceCard}>
+            <View style={d.iconTile}>
               <AppIcons.Invoice size={dp(20)} color={DESIGN_COLORS.body} />
-            )}
-          </View>
+            </View>
 
-          <View style={d.invoiceBody}>
-            <Text style={d.invoiceTitle}>View invoice</Text>
-            <Text style={d.invoiceNo}>
-              {`Invoice: ${invoiceNumber}`}
-            </Text>
+            <View style={d.invoiceBody}>
+              <Text style={d.invoiceTitle}>Invoice</Text>
+              <Text style={d.invoiceNo}>
+                {`Invoice: ${invoiceNumber}`}
+              </Text>
+            </View>
           </View>
-
-          <AppIcons.ChevronRight size={dp(18)} color={DESIGN_COLORS.faint} />
-        </TouchableOpacity>
+        ) : null}
 
         {/* Divider before Tracking */}
         <View style={d.divider} />
@@ -999,21 +1125,30 @@ const MyOrderDetailsScreen = () => {
           <View style={d.trackHeaderRow}>
             <View style={d.trackThumbBox}>
               <FallbackImage
-                source={getImageUrl(primaryItem.featuredImage, CLASSY_KNOT_RING_IMG)}
+                source={getImageUrl(
+                  primaryItem?.featuredImage ||
+                    primaryItem?.productImage ||
+                    primaryItem?.image,
+                )}
                 style={d.trackThumb}
                 resizeMode="contain"
               />
             </View>
 
             <View style={d.trackInfo}>
-              <Text style={d.trackEta}>
-                {header?.orderStatusText || 'Arriving Today by 8:00pm'}
+              <Text style={d.trackEta} numberOfLines={1}>
+                {header?.orderStatusText ||
+                  (isDelivered
+                    ? 'Delivered'
+                    : isCancelled
+                    ? 'Order Cancelled'
+                    : 'In Transit')}
               </Text>
               <Text style={d.trackName} numberOfLines={1}>
-                {primaryItem.productName || 'Classy Knot Diamond Ring'}
+                {primaryItem?.productName || order?.productName || 'Order Item'}
               </Text>
               <Text style={d.trackOrderNo}>
-                {`Order #ORD - ${orderNumber}`}
+                {orderNumber ? `Order #ORD - ${orderNumber}` : `Order #${resolveOrderId()}`}
               </Text>
             </View>
 
@@ -1098,17 +1233,22 @@ const MyOrderDetailsScreen = () => {
 
           <View style={d.deliveryRule} />
 
-          <View style={d.deliveryRowTop}>
-            <View style={d.deliveryIconCol}>
-              <AppIcons.PhoneOutline size={dp(19)} color={DESIGN_COLORS.ink} />
-            </View>
-            <View style={d.deliveryBody}>
-              <Text style={d.deliverySectionTitle}>Contact Details</Text>
-              <Text style={d.deliveryValue}>{`+91 ${customerPhone}`}</Text>
-            </View>
-          </View>
-
-          <View style={d.deliveryGap} />
+          {!!customerPhone && (
+            <>
+              <View style={d.deliveryRowTop}>
+                <View style={d.deliveryIconCol}>
+                  <AppIcons.PhoneOutline size={dp(19)} color={DESIGN_COLORS.ink} />
+                </View>
+                <View style={d.deliveryBody}>
+                  <Text style={d.deliverySectionTitle}>Contact Details</Text>
+                  <Text style={d.deliveryValue}>
+                    {customerPhone.startsWith('+') ? customerPhone : `+91 ${customerPhone}`}
+                  </Text>
+                </View>
+              </View>
+              <View style={d.deliveryGap} />
+            </>
+          )}
 
           {!!customerAddress && (
             <View style={d.deliveryRowTop}>
@@ -1131,19 +1271,21 @@ const MyOrderDetailsScreen = () => {
         </View>
 
         {/* Group Order Placed Section */}
-        {groupOrders.length > 0 && (
+        {additionalGroupItems.length > 0 && (
           <View>
             <Text style={d.groupHeading}>
-              {`Group Order Placed on, ${longDate(groupOrders[0]?.orderDate)}`}
+              {`Group Order Placed on, ${longDate(
+                additionalGroupItems[0]?.orderDate || header?.orderDate || order?.orderDate,
+              )}`}
             </Text>
 
             <View style={d.groupCard}>
-              {groupOrders.map((groupOrder, index) => (
-                <View key={groupOrder.orderId || index}>
+              {additionalGroupItems.map((groupOrder, index) => (
+                <View key={groupOrder.orderId ? `${groupOrder.orderId}-${index}` : index}>
                   <View style={d.groupRow}>
                     <View style={d.groupThumbBox}>
                       <FallbackImage
-                        source={getImageUrl(groupOrder.featuredImage, VINTAGE_GOLD_RING_IMG)}
+                        source={getImageUrl(groupOrder.featuredImage)}
                         style={d.groupThumb}
                         resizeMode="contain"
                       />
@@ -1151,7 +1293,7 @@ const MyOrderDetailsScreen = () => {
 
                     <View style={d.groupInfo}>
                       <Text style={d.groupStatusText}>
-                        {groupOrder.orderStatusText}
+                        {groupOrder.orderStatusText || 'Order Processing'}
                       </Text>
                       <Text style={d.groupName} numberOfLines={1}>
                         {groupOrder.productName}
@@ -1161,13 +1303,15 @@ const MyOrderDetailsScreen = () => {
                     <TouchableOpacity
                       style={d.groupPillBtn}
                       activeOpacity={0.85}
-                      onPress={() =>
-                        navigation.push('KshopeMyOrderDetails', {
-                          orderId: groupOrder.orderId,
-                        })
-                      }
+                      onPress={() => {
+                        if (groupOrder.orderId && groupOrder.orderId !== resolveOrderId()) {
+                          navigation.push('KshopeMyOrderDetails', {
+                            orderId: groupOrder.orderId,
+                          });
+                        }
+                      }}
                       accessibilityRole="button"
-                      accessibilityLabel={`View status of order ${groupOrder.orderNumber}`}
+                      accessibilityLabel={`View status of ${groupOrder.productName}`}
                     >
                       <Text style={d.groupPillText}>Status</Text>
                       <AppIcons.ChevronRight
@@ -1181,7 +1325,7 @@ const MyOrderDetailsScreen = () => {
                     <View>
                       <Text style={d.groupMetaLabel}>Order ID :</Text>
                       <Text style={d.groupMetaValue}>
-                        {`#${groupOrder.orderNumber}`}
+                        {`#${groupOrder.orderNumber || orderNumber || resolveOrderId()}`}
                       </Text>
                     </View>
                     <View style={d.groupMetaRight}>
@@ -1192,7 +1336,7 @@ const MyOrderDetailsScreen = () => {
                     </View>
                   </View>
 
-                  {index < groupOrders.length - 1 && (
+                  {index < additionalGroupItems.length - 1 && (
                     <View style={d.groupRule} />
                   )}
                 </View>

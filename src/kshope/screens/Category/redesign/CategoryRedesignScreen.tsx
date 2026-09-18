@@ -22,6 +22,7 @@ import {
   HOME_FONTS,
   SPACE,
   fs,
+  s,
 } from '../../Home/redesign/theme';
 import FilterSheet from './sections/FilterSheet';
 import CategoryHeader from './sections/CategoryHeader';
@@ -31,6 +32,8 @@ import PromoBanner from './sections/PromoBanner';
 import ProductCard from './sections/ProductCard';
 import { useCategoryData } from './data/useCategoryData';
 import type { Filters } from './data/useCategoryData';
+
+const AnimatedFlatList = (Animated as any)?.FlatList ?? FlatList;
 
 const CategoryStatusBar: React.FC = () => {
   const isFocused = useIsFocused();
@@ -66,7 +69,6 @@ const CategoryRedesignScreen: React.FC = () => {
     categoryTiles,
     subCategoryTiles,
     productCards,
-    activeCategory,
     categoryName,
     banner,
     selectedCategoryId,
@@ -120,6 +122,18 @@ const CategoryRedesignScreen: React.FC = () => {
     });
   }, [clearSearch]);
 
+  const onWishlistPress = useCallback(() => {
+    try {
+      navigation.navigate('Wishlist');
+    } catch {
+      navigation.navigate('KshopeHome', { screen: 'Wishlist' });
+    }
+  }, [navigation]);
+
+  const onCartPress = useCallback(() => {
+    navigation.navigate('KshopeCart');
+  }, [navigation]);
+
   const applyFilters = useCallback(
     (applied: Filters) => {
       setFilterVisible(false);
@@ -133,32 +147,30 @@ const CategoryRedesignScreen: React.FC = () => {
       <CategoryStatusBar />
 
       <CategoryHeader
-        title={categoryName}
-        subtitle={activeCategory?.shortDescription}
         searchOpen={searchOpen}
         searchText={searchText}
         onToggleSearch={toggleSearch}
         onChangeSearch={setSearchText}
         onClearSearch={clearSearch}
         onFilterPress={() => setFilterVisible(true)}
-        onBack={
-          navigation.canGoBack?.() ? () => navigation.goBack() : undefined
-        }
         filtersActive={filtersActive}
+        onWishlistPress={onWishlistPress}
+        onCartPress={onCartPress}
+        onBack={
+          catId && navigation.canGoBack?.() ? () => navigation.goBack() : undefined
+        }
       />
 
-      <PromoBanner source={banner} />
-
-      <Animated.FlatList
+      <AnimatedFlatList
         ref={listRef as any}
         data={productCards}
-        keyExtractor={item => item.id}
+        keyExtractor={(item: ProductTile) => item.id}
         numColumns={2}
         showsVerticalScrollIndicator={false}
         {...cartPillScroll}
         columnWrapperStyle={styles.column}
         contentContainerStyle={styles.listContent}
-        renderItem={({ item }) => (
+        renderItem={({ item }: { item: ProductTile }) => (
           <ProductCard
             item={item}
             wishlisted={isInWishlist(item.raw?.productId ?? item.id)}
@@ -168,16 +180,29 @@ const CategoryRedesignScreen: React.FC = () => {
         )}
         ListHeaderComponent={
           <View style={styles.header}>
+            {/* Screen Title Block */}
+            <View style={styles.titleSection}>
+              <Text style={styles.title}>Categories</Text>
+              <Text style={styles.subtitle}>Discover jewellery for every story</Text>
+            </View>
+
+            {/* Promo Banner */}
+            <PromoBanner source={banner} />
+
+            {/* Top Category Circles Row */}
             <CategoryChipRow
               items={categoryTiles}
               activeId={selectedCategoryId}
               onPress={onSelectCategory}
             />
+
+            {/* Explore By Type / SubCategories */}
             <SubCategoryRow
               items={subCategoryTiles}
               activeId={selectedSubCategoryId}
               onPress={onSelectSubCategory}
             />
+
             {activeSearchTerm && resultCount > 0 ? (
               <Text style={styles.resultCount}>
                 {`${resultCount} result${
@@ -193,7 +218,7 @@ const CategoryRedesignScreen: React.FC = () => {
           isLoadingMore ? (
             <ActivityIndicator
               size="small"
-              color={HOME_COLORS.orange}
+              color={HOME_COLORS.darkEmerald}
               style={styles.footerLoader}
             />
           ) : null
@@ -225,10 +250,28 @@ const CategoryRedesignScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: HOME_COLORS.white,
+    backgroundColor: '#FFFFFF',
   },
   header: {
     marginHorizontal: -GUTTER,
+  },
+  titleSection: {
+    paddingHorizontal: GUTTER,
+    paddingTop: SPACE.xs,
+    paddingBottom: SPACE.sm,
+  },
+  title: {
+    fontFamily: HOME_FONTS.regular,
+    fontSize: fs(28),
+    lineHeight: fs(32),
+    color: '#0C382E',
+    letterSpacing: 0.2,
+  },
+  subtitle: {
+    fontFamily: HOME_FONTS.regular,
+    fontSize: fs(12),
+    color: '#767676',
+    marginTop: s(2),
   },
   listContent: {
     paddingHorizontal: GUTTER,
@@ -250,12 +293,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: GUTTER,
     fontFamily: HOME_FONTS.regular,
     fontSize: fs(11),
-    color: HOME_COLORS.muted,
+    color: '#767676',
   },
   emptyText: {
     fontFamily: HOME_FONTS.regular,
     fontSize: fs(13),
-    color: HOME_COLORS.muted,
+    color: '#767676',
   },
 });
 

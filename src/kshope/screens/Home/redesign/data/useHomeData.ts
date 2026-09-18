@@ -298,26 +298,26 @@ export const useHomeData = () => {
         tabs.map((t: any) => resolveCatName(t, '')).filter(Boolean),
         CATEGORY_TABS,
       ),
-      featured: orFallback(firstProducts.map(mapProductTile), FEATURED_PRODUCTS),
-      featuredTitle: splitTitle('Top Deals'),
+      featured: firstProducts.map(mapProductTile),
+      featuredTitle: splitTitle(blockTitle(firstBlock, 'Curated for you')),
       featuredBlock: firstBlock,
-      categoryChips: orFallback(tabs.map(mapTabChip), CATEGORY_CHIPS),
+      categoryChips: tabs.map(mapTabChip),
       categoryCardsFor: (chipId: string): Tile[] => {
         const tab = tabs.find(
           (t: any, i: number) =>
             String(mapTabChip(t, i).id) === String(chipId),
         );
         const items = tab?.items || tab?.Items || [];
-        return orFallback(items.map(mapCategoryTile), CATEGORY_CARDS);
+        return items.map(mapCategoryTile);
       },
       bestSelling: bestSellingTiles,
-      brands: orFallback(rawBrands.map(mapBrandTile), BRANDS),
-      recommended: recommendedCards,
+      brands: rawBrands.map(mapBrandTile),
+      recommended: thirdProducts.slice(0, 6).map(mapRecCard),
       secondStrip: secondProducts.map(mapProductTile),
-      secondTitle: splitTitle(blockTitle(secondBlock, 'Recently Viewed')),
+      secondTitle: splitTitle(blockTitle(secondBlock, 'Trending Now')),
       secondBlock,
       thirdStrip: thirdProducts.map(mapProductTile),
-      thirdTitle: splitTitle(blockTitle(thirdBlock, 'Just For You')),
+      thirdTitle: splitTitle(blockTitle(thirdBlock, 'Recently Viewed')),
       thirdBlock,
       exploreRowOne: exploreTiles.slice(0, 5),
       exploreRowTwo: exploreTiles.slice(5, 10),

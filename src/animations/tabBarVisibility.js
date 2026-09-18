@@ -2,7 +2,8 @@ import { Platform } from 'react-native';
 import { makeMutable, withTiming } from 'react-native-reanimated';
 import { heightPercentageToDP as hp } from 'react-native-responsive-screen';
 
-export const tabBarVisibility = makeMutable(1);
+export const tabBarVisibility =
+  typeof makeMutable === 'function' ? makeMutable(1) : { value: 1 };
 
 export const TAB_BAR_ANIM_DURATION = 250;
 export const SCROLL_HIDE_THRESHOLD = 4;

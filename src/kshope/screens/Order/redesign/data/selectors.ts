@@ -50,7 +50,7 @@ export const getOrderStatusType = (order?: OrderListItem): OrderStatusType => {
     return 'cancelled';
   }
   if (
-    status.includes('deliver') &&
+    (status.includes('deliver') || status.includes('return')) &&
     !status.includes('out for') &&
     !status.includes('agent')
   ) {

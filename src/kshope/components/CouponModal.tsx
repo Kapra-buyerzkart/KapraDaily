@@ -1,26 +1,17 @@
 import React, { useMemo, useState } from 'react';
 import {
   View,
+  Text,
   Image,
   Modal,
   TextInput,
   TouchableOpacity,
   FlatList,
   StyleSheet,
+  Platform,
 } from 'react-native';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import {
-  UI_COLORS,
-  UI_ELEVATION,
-  UI_RADIUS,
-  UI_SPACING,
-  UI_TYPE,
-  MAX_FONT_SCALE,
-  hitSlopTo,
-  wp,
-  hp,
-} from '../theme/tokens';
-import { AppText, IconDisc } from './atoms';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import { CART_COLORS, CART_FONTS, fs, s } from '../screens/Cart/cartRedesignTheme';
 
 interface CouponModalProps {
   visible: boolean;
@@ -52,14 +43,8 @@ const describeOffer = (item: any) => {
 
 const MetaChip = ({ icon, label }: { icon: string; label: string }) => (
   <View style={styles.metaChip}>
-    <MaterialCommunityIcons
-      name={icon}
-      size={wp('3.4%')}
-      color={UI_COLORS.textMuted}
-    />
-    <AppText variant="micro" tone="muted">
-      {label}
-    </AppText>
+    <Ionicons name={icon} size={s(13)} color={CART_COLORS.textMuted} />
+    <Text style={styles.metaChipText}>{label}</Text>
   </View>
 );
 
@@ -77,32 +62,31 @@ const OfferCard = ({
 
   return (
     <TouchableOpacity
-      activeOpacity={0.85}
+      activeOpacity={0.88}
       onPress={() => onPress(item)}
       style={styles.card}
     >
       <View style={styles.cardTopRow}>
         <View style={styles.codeChip}>
-          <MaterialCommunityIcons
-            name="tag-outline"
-            size={wp('3.6%')}
-            color={UI_COLORS.primary}
+          <Ionicons
+            name="pricetag-outline"
+            size={s(13)}
+            color={CART_COLORS.darkEmerald}
+            style={{ transform: [{ rotate: '-45deg' }] }}
           />
-          <AppText variant="captionStrong" tone="brand">
-            {code}
-          </AppText>
+          <Text style={styles.codeText}>{code}</Text>
         </View>
 
-        <View style={styles.actionPill}>
-          <AppText variant="micro" tone="brand" style={styles.actionText}>
-            {actionLabel}
-          </AppText>
-        </View>
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => onPress(item)}
+          style={styles.actionPill}
+        >
+          <Text style={styles.actionText}>{actionLabel}</Text>
+        </TouchableOpacity>
       </View>
 
-      <AppText variant="bodyStrong" style={styles.cardTitle}>
-        {describeOffer(item)}
-      </AppText>
+      <Text style={styles.cardTitle}>{describeOffer(item)}</Text>
 
       {item.minOrderAmount > 0 || expiry ? (
         <>
@@ -110,12 +94,12 @@ const OfferCard = ({
           <View style={styles.metaRow}>
             {item.minOrderAmount > 0 ? (
               <MetaChip
-                icon="basket-outline"
+                icon="bag-handle-outline"
                 label={`Min. order ₹${item.minOrderAmount}`}
               />
             ) : null}
             {expiry ? (
-              <MetaChip icon="clock-outline" label={`Expires ${expiry}`} />
+              <MetaChip icon="time-outline" label={`Expires ${expiry}`} />
             ) : null}
           </View>
         </>
@@ -160,61 +144,60 @@ const CouponModal: React.FC<CouponModalProps> = ({
         />
 
         <View style={styles.sheet}>
+          {/* Top Handle */}
           <View style={styles.handleHitArea}>
             <View style={styles.handle} />
           </View>
 
+          {/* Header */}
           <View style={styles.headerRow}>
-            <IconDisc size={wp('10%')} tone="brand">
-              <MaterialCommunityIcons
-                name={isGiftCard ? 'gift-outline' : 'ticket-percent-outline'}
-                size={wp('5.2%')}
-                color={UI_COLORS.primary}
+            <View style={styles.iconCircle}>
+              <Ionicons
+                name={isGiftCard ? 'gift-outline' : 'pricetag-outline'}
+                size={s(19)}
+                color={CART_COLORS.darkEmerald}
               />
-            </IconDisc>
+            </View>
 
             <View style={styles.headerCopy}>
-              <AppText variant="heading">
+              <Text style={styles.headerTitle}>
                 {isGiftCard ? 'Apply Gift Card' : 'Apply Coupon'}
-              </AppText>
-              <AppText variant="micro" tone="muted">
+              </Text>
+              <Text style={styles.headerSubtitle}>
                 {data.length > 0
                   ? `${data.length} ${noun}${
                       data.length > 1 ? 's' : ''
                     } available for you`
                   : `No ${noun}s available right now`}
-              </AppText>
+              </Text>
             </View>
 
             <TouchableOpacity
               onPress={onClose}
-              hitSlop={hitSlopTo(40)}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               style={styles.closeBtn}
             >
-              <MaterialCommunityIcons
-                name="close"
-                size={wp('4.6%')}
-                color={UI_COLORS.textSecondary}
-              />
+              <Ionicons name="close" size={s(20)} color={CART_COLORS.textDark} />
             </TouchableOpacity>
           </View>
 
+          {/* Manual Input Row */}
           {!isCopyOnly ? (
             <View style={styles.inputRow}>
               <View style={styles.inputCard}>
-                <MaterialCommunityIcons
-                  name="tag-outline"
-                  size={wp('4.6%')}
-                  color={UI_COLORS.textFaint}
+                <Ionicons
+                  name="pricetag-outline"
+                  size={s(16)}
+                  color={CART_COLORS.textMuted}
+                  style={{ transform: [{ rotate: '-45deg' }] }}
                 />
                 <TextInput
                   value={manualCode}
                   onChangeText={setManualCode}
                   placeholder={`Enter ${noun} code`}
-                  placeholderTextColor={UI_COLORS.textFaint}
+                  placeholderTextColor="#9E9E9E"
                   autoCapitalize="characters"
                   autoCorrect={false}
-                  maxFontSizeMultiplier={MAX_FONT_SCALE}
                   style={styles.input}
                   returnKeyType="done"
                   onSubmitEditing={
@@ -231,21 +214,24 @@ const CouponModal: React.FC<CouponModalProps> = ({
                 onPress={() => onCouponClick({ code: typedCode })}
                 style={[styles.applyBtn, !canApply && styles.applyBtnDisabled]}
               >
-                <AppText
-                  variant="cta"
-                  tone={canApply ? 'onDark' : 'faint'}
-                  style={styles.applyBtnText}
+                <Text
+                  style={[
+                    styles.applyBtnText,
+                    !canApply && styles.applyBtnTextDisabled,
+                  ]}
                 >
                   Apply
-                </AppText>
+                </Text>
               </TouchableOpacity>
             </View>
           ) : null}
 
-          <AppText variant="micro" tone="muted" style={styles.sectionLabel}>
-            {isGiftCard ? 'Available gift cards' : 'Available coupons'}
-          </AppText>
+          {/* Section Header */}
+          <Text style={styles.sectionLabel}>
+            {isGiftCard ? 'AVAILABLE GIFT CARDS' : 'AVAILABLE COUPONS'}
+          </Text>
 
+          {/* Coupon Cards List */}
           <FlatList
             style={styles.list}
             data={data}
@@ -269,13 +255,14 @@ const CouponModal: React.FC<CouponModalProps> = ({
                       : require('../assets/images/noimages/nocoupon.png')
                   }
                   style={styles.emptyImage}
+                  resizeMode="contain"
                 />
-                <AppText variant="bodyStrong" tone="secondary">
-                  {isGiftCard ? 'No gift cards yet' : 'No coupons yet'}
-                </AppText>
-                <AppText variant="micro" tone="muted" style={styles.emptyNote}>
-                  New offers drop in often, check back soon
-                </AppText>
+                <Text style={styles.emptyTitle}>
+                  {isGiftCard ? 'No Gift Cards Yet' : 'No Coupons Yet'}
+                </Text>
+                <Text style={styles.emptyNote}>
+                  New offers drop in often, check back soon for special discounts.
+                </Text>
               </View>
             }
             contentContainerStyle={styles.listContent}
@@ -286,170 +273,228 @@ const CouponModal: React.FC<CouponModalProps> = ({
   );
 };
 
-export default React.memo(CouponModal);
-
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: UI_COLORS.overlay,
+    backgroundColor: 'rgba(0, 0, 0, 0.48)',
     justifyContent: 'flex-end',
   },
   dismissArea: {
     flex: 1,
   },
   sheet: {
-    backgroundColor: UI_COLORS.background,
-    borderTopLeftRadius: UI_RADIUS.card,
-    borderTopRightRadius: UI_RADIUS.card,
-    maxHeight: hp('82%'),
-    paddingHorizontal: UI_SPACING.lg,
-    paddingTop: UI_SPACING.xs,
-    paddingBottom: UI_SPACING.md,
+    backgroundColor: CART_COLORS.white,
+    borderTopLeftRadius: s(24),
+    borderTopRightRadius: s(24),
+    maxHeight: '82%',
+    paddingHorizontal: s(20),
+    paddingTop: s(6),
+    paddingBottom: Platform.OS === 'ios' ? s(34) : s(18),
+    borderWidth: 1,
+    borderColor: CART_COLORS.cardBorder,
   },
   handleHitArea: {
     width: '100%',
-    paddingVertical: 10,
+    paddingVertical: s(6),
     alignItems: 'center',
   },
   handle: {
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#DADADA',
+    width: s(40),
+    height: s(4),
+    borderRadius: s(2),
+    backgroundColor: '#DCD6CE',
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: UI_SPACING.md,
+    gap: s(12),
+    marginTop: s(4),
+    paddingBottom: s(12),
+    borderBottomWidth: 1,
+    borderBottomColor: CART_COLORS.cardBorderSubtle,
+  },
+  iconCircle: {
+    width: s(38),
+    height: s(38),
+    borderRadius: s(19),
+    backgroundColor: CART_COLORS.emeraldTint,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   headerCopy: {
     flex: 1,
-    gap: 2,
+    gap: s(2),
+  },
+  headerTitle: {
+    fontFamily: CART_FONTS.serifBold,
+    fontSize: fs(20),
+    color: CART_COLORS.textDark,
+  },
+  headerSubtitle: {
+    fontFamily: CART_FONTS.sansRegular,
+    fontSize: fs(12),
+    color: CART_COLORS.textMuted,
   },
   closeBtn: {
-    width: wp('8.5%'),
-    height: wp('8.5%'),
-    borderRadius: UI_RADIUS.pill,
-    backgroundColor: UI_COLORS.card,
+    width: s(32),
+    height: s(32),
+    borderRadius: s(16),
+    backgroundColor: '#FAF8F5',
+    borderWidth: 1,
+    borderColor: CART_COLORS.cardBorder,
     alignItems: 'center',
     justifyContent: 'center',
   },
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: UI_SPACING.sm,
-    marginTop: UI_SPACING.lg,
+    gap: s(10),
+    marginTop: s(14),
   },
   inputCard: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: UI_SPACING.sm,
+    gap: s(8),
     borderWidth: 1,
-    borderColor: UI_COLORS.border,
-    borderRadius: UI_RADIUS.input,
-    backgroundColor: UI_COLORS.card,
-    paddingHorizontal: UI_SPACING.md,
-    paddingVertical: hp('1.3%'),
+    borderColor: CART_COLORS.cardBorder,
+    borderRadius: s(12),
+    backgroundColor: '#FAF8F5',
+    paddingHorizontal: s(14),
+    height: s(46),
   },
   input: {
     flex: 1,
-    ...UI_TYPE.body,
-    color: UI_COLORS.textPrimary,
+    fontFamily: CART_FONTS.sansBold,
+    fontSize: fs(13.5),
+    color: CART_COLORS.textDark,
     padding: 0,
   },
   applyBtn: {
-    paddingHorizontal: UI_SPACING.xl,
-    paddingVertical: hp('1.6%'),
-    borderRadius: UI_RADIUS.button,
-    backgroundColor: UI_COLORS.primary,
+    paddingHorizontal: s(20),
+    height: s(46),
+    borderRadius: s(12),
+    backgroundColor: CART_COLORS.darkEmerald,
     alignItems: 'center',
     justifyContent: 'center',
   },
   applyBtnDisabled: {
-    backgroundColor: UI_COLORS.well,
+    backgroundColor: '#E8E4DD',
   },
   applyBtnText: {
-    letterSpacing: 0.2,
+    fontFamily: CART_FONTS.sansBold,
+    fontSize: fs(13),
+    color: CART_COLORS.white,
+    letterSpacing: 0.3,
+  },
+  applyBtnTextDisabled: {
+    color: '#9E9E9E',
   },
   sectionLabel: {
-    marginTop: UI_SPACING.xl,
-    marginBottom: UI_SPACING.sm,
-    letterSpacing: 0.4,
-    textTransform: 'uppercase',
+    marginTop: s(16),
+    marginBottom: s(10),
+    fontFamily: CART_FONTS.sansBold,
+    fontSize: fs(11),
+    letterSpacing: 0.6,
+    color: '#7A7A7A',
   },
   list: {
-    maxHeight: hp('55%'),
+    maxHeight: s(360),
   },
   listContent: {
-    paddingBottom: hp('6%'),
-    gap: UI_SPACING.md,
+    paddingBottom: s(16),
+    gap: s(12),
   },
   card: {
-    backgroundColor: UI_COLORS.card,
-    borderRadius: UI_RADIUS.card,
-    padding: UI_SPACING.lg,
-    ...UI_ELEVATION.card,
+    backgroundColor: '#FAF8F5',
+    borderRadius: s(14),
+    padding: s(14),
+    borderWidth: 1,
+    borderColor: CART_COLORS.cardBorder,
   },
   cardTopRow: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    gap: UI_SPACING.sm,
+    alignItems: 'center',
+    marginBottom: s(8),
   },
   codeChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: UI_SPACING.xs,
+    gap: s(6),
+    backgroundColor: CART_COLORS.emeraldTint,
+    paddingHorizontal: s(10),
+    paddingVertical: s(4),
+    borderRadius: s(6),
     borderWidth: 1,
-    borderStyle: 'dashed',
-    borderColor: UI_COLORS.primaryEdge,
-    backgroundColor: UI_COLORS.primaryTint,
-    borderRadius: UI_RADIUS.xs,
-    paddingHorizontal: UI_SPACING.sm,
-    paddingVertical: hp('0.5%'),
+    borderColor: '#C6DFD4',
+  },
+  codeText: {
+    fontFamily: CART_FONTS.sansBold,
+    fontSize: fs(12),
+    color: CART_COLORS.darkEmerald,
+    letterSpacing: 0.5,
   },
   actionPill: {
-    borderRadius: UI_RADIUS.pill,
-    backgroundColor: UI_COLORS.primaryTint,
-    paddingHorizontal: UI_SPACING.md,
-    paddingVertical: hp('0.6%'),
+    backgroundColor: CART_COLORS.darkEmerald,
+    paddingHorizontal: s(12),
+    paddingVertical: s(4),
+    borderRadius: s(6),
   },
   actionText: {
-    letterSpacing: 0.6,
+    fontFamily: CART_FONTS.sansBold,
+    fontSize: fs(11),
+    color: CART_COLORS.white,
+    letterSpacing: 0.3,
   },
   cardTitle: {
-    marginTop: UI_SPACING.md,
+    fontFamily: CART_FONTS.serifSemiBold,
+    fontSize: fs(15),
+    color: CART_COLORS.textDark,
+    lineHeight: fs(20),
   },
   cardDivider: {
     height: 1,
-    backgroundColor: UI_COLORS.border,
-    marginVertical: UI_SPACING.md,
+    backgroundColor: CART_COLORS.cardBorderSubtle,
+    marginVertical: s(10),
   },
   metaRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     alignItems: 'center',
-    gap: UI_SPACING.md,
+    gap: s(14),
   },
   metaChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: UI_SPACING.xs,
+    gap: s(4),
+  },
+  metaChipText: {
+    fontFamily: CART_FONTS.sansRegular,
+    fontSize: fs(11),
+    color: CART_COLORS.textMuted,
   },
   emptyContainer: {
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: hp('3%'),
-    gap: UI_SPACING.xs,
+    paddingVertical: s(36),
+    gap: s(8),
   },
   emptyImage: {
-    width: wp('38%'),
-    height: wp('38%'),
-    resizeMode: 'contain',
-    marginBottom: UI_SPACING.sm,
+    width: s(60),
+    height: s(60),
+    opacity: 0.8,
+  },
+  emptyTitle: {
+    fontFamily: CART_FONTS.serifBold,
+    fontSize: fs(17),
+    color: CART_COLORS.textDark,
   },
   emptyNote: {
+    fontFamily: CART_FONTS.sansRegular,
+    fontSize: fs(12),
+    color: CART_COLORS.textMuted,
     textAlign: 'center',
+    paddingHorizontal: s(24),
   },
 });
+
+export default React.memo(CouponModal);

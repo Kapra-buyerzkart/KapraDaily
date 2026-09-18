@@ -128,8 +128,13 @@ const OVERLAY_LABELS = [
 const WishlistScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const isFocused = useIsFocused();
-  const { wishlistItems, loadWishlist, isLoading, toggleWishlist, isInWishlist } =
-    useWishlist();
+  const {
+    wishlistItems,
+    loadWishlist,
+    isLoading,
+    toggleWishlist,
+    isInWishlist,
+  } = useWishlist();
   const { cartCount, loadCart } = useCart();
   const [itemToRemove, setItemToRemove] = useState<any>(null);
   const [suggestedProducts, setSuggestedProducts] = useState<any[]>(
@@ -168,8 +173,8 @@ const WishlistScreen: React.FC = () => {
               id: tile.id,
               name: tile.name,
               detail: tile.raw?.weight
-                ? `${tile.raw?.metalType || '18K Gold'} • ${tile.raw?.weight}`
-                : tile.raw?.metalType || '18K Gold',
+                ? `${tile.raw?.metalType} • ${tile.raw?.weight}`
+                : tile.raw?.metalType,
               price: tile.price,
               overlayBadge: OVERLAY_LABELS[(idx + 2) % OVERLAY_LABELS.length],
               image: tile.image,
@@ -499,8 +504,8 @@ const WishlistScreen: React.FC = () => {
     index: number;
   }) => {
     const detail = item.raw?.weight
-      ? `${item.raw.metalType || '18K Gold'} • ${item.raw.weight}`
-      : item.raw?.metalType || '18K Gold';
+      ? `${item.raw.metalType} • ${item.raw.weight}`
+      : item.raw?.metalType;
     const overlayLabel = OVERLAY_LABELS[index % OVERLAY_LABELS.length];
 
     return (
@@ -632,13 +637,13 @@ const WishlistScreen: React.FC = () => {
 
         {cards.length === 0 ? renderEmptyState() : renderWishlistGrid()}
 
-        {renderCategoryRow()}
+        {/* {renderCategoryRow()} */}
 
-        {renderCuratedSuggestions()}
+        {/* {renderCuratedSuggestions()} */}
+        {/* {cards.length > 0 && renderBottomBar()} */}
       </ScrollView>
 
       {/* Floating Bottom Button */}
-      {cards.length > 0 && renderBottomBar()}
 
       <ConfirmationModal
         visible={!!itemToRemove}
@@ -669,10 +674,10 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.bg,
   },
   scrollContent: {
-    paddingBottom: 32,
+    paddingBottom: 200,
   },
   scrollContentWithBar: {
-    paddingBottom: 100, // Space for floating bottom bar
+    paddingBottom: 200, // Space for floating bottom bar
   },
   loadingIndicator: {
     marginVertical: 24,

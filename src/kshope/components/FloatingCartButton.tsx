@@ -28,8 +28,9 @@ import {
   tabBarVisibility,
   getTabBarClearance,
 } from '../../animations/tabBarVisibility';
+import { CART_COLORS, CART_FONTS } from '../screens/Cart/cartRedesignTheme';
 
-const CAPSULE_BG = '#F25000';
+const CAPSULE_BG = CART_COLORS.darkEmerald;
 const MAX_VISIBLE_THUMBNAILS = 3;
 
 const THUMBNAIL_SIZE = 40;
@@ -410,11 +411,13 @@ const styles = StyleSheet.create({
     height: CAPSULE_HEIGHT,
     borderRadius: CAPSULE_RADIUS,
     backgroundColor: CAPSULE_BG,
-    shadowColor: '#7A2400',
+    shadowColor: '#051814',
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.28,
-    shadowRadius: 12,
-    elevation: 8,
+    shadowOpacity: 0.35,
+    shadowRadius: 14,
+    elevation: 10,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
   },
   clip: {
     flex: 1,
@@ -438,9 +441,9 @@ const styles = StyleSheet.create({
     width: THUMBNAIL_SIZE,
     borderRadius: THUMBNAIL_RADIUS,
     backgroundColor: '#FFFFFF',
-    shadowColor: '#5A1B00',
+    shadowColor: '#051814',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.25,
     shadowRadius: 4,
   },
   productImage: {
@@ -448,16 +451,19 @@ const styles = StyleSheet.create({
     width: '100%',
     borderRadius: THUMBNAIL_RADIUS,
     borderWidth: THUMBNAIL_RING,
-    borderColor: '#FFFFFF',
+    borderColor: '#FAF5EE',
     backgroundColor: '#FFFFFF',
   },
   extraCard: {
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: '#FAF5EE',
+    borderWidth: 1,
+    borderColor: CART_COLORS.goldMetallic,
   },
   extraBadgeText: {
     color: CAPSULE_BG,
-    fontFamily: Fonts.gilroySemiBold,
+    fontFamily: CART_FONTS.sansBold,
     fontSize: 12,
   },
   compactBadge: {
@@ -468,17 +474,17 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 10,
     paddingHorizontal: 3,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#FAF5EE',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: CAPSULE_BG,
+    borderWidth: 1.5,
+    borderColor: CART_COLORS.goldMetallic,
     zIndex: MAX_VISIBLE_THUMBNAILS + 2,
     elevation: MAX_VISIBLE_THUMBNAILS + 2,
   },
   compactBadgeText: {
     color: CAPSULE_BG,
-    fontFamily: Fonts.gilroySemiBold,
+    fontFamily: CART_FONTS.sansBold,
     fontSize: 11,
   },
   viewOne: {
@@ -486,25 +492,26 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   viewCartText: {
-    fontSize: 17,
-    lineHeight: 21,
+    fontSize: 16,
+    lineHeight: 20,
     color: '#FFFFFF',
-    fontFamily: Fonts.gilroySemiBold,
-    letterSpacing: 0.2,
+    fontFamily: CART_FONTS.sansBold,
+    letterSpacing: 0.25,
   },
   itemsText: {
-    color: '#FFFFFF',
-    fontFamily: Fonts.gilroyRegular,
-    fontSize: 13,
-    lineHeight: 16,
-    opacity: 0.85,
+    color: '#DFD7C7',
+    fontFamily: CART_FONTS.sansRegular,
+    fontSize: 12,
+    lineHeight: 15,
     marginTop: 3,
   },
   arrowButton: {
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#FAF8F5',
+    borderWidth: 1,
+    borderColor: '#EFE7DB',
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: ARROW_GAP,

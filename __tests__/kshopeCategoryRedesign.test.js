@@ -106,8 +106,14 @@ const {
   toCategoryTiles,
   toSubCategoryTiles,
   toProductCards,
+  formatProductSubtitle,
   ALL_TILE_ID,
 } = require('../src/kshope/screens/Category/redesign/data/selectors');
+
+const PromoBanner =
+  require('../src/kshope/screens/Category/redesign/sections/PromoBanner').default;
+const FilterSheet =
+  require('../src/kshope/screens/Category/redesign/sections/FilterSheet').default;
 
 const CategoryRedesignScreen =
   require('../src/kshope/screens/Category/redesign/CategoryRedesignScreen').default;
@@ -163,6 +169,53 @@ describe('category redesign selectors', () => {
       mrp: '₹2499/-',
       discount: '40% OFF',
     });
+  });
+
+  it('does not invent dummy specifications when product has no metadata', () => {
+    expect(formatProductSubtitle(null)).toBe('');
+    expect(formatProductSubtitle({})).toBe('');
+    expect(formatProductSubtitle({ purity: '22k Gold' })).toBe('22k Gold');
+    expect(formatProductSubtitle({ purity: '18k Gold', gemstone: 'Emerald' })).toBe(
+      '18k Gold | Emerald',
+    );
+  });
+
+  it('does not cycle dummy fallback ring images for subcategories without images', () => {
+    const subcatsWithoutImg = [{ catId: 99, catName: 'Chains' }];
+    const tiles = toSubCategoryTiles(subcatsWithoutImg, null);
+    expect(tiles[1].image).toBeNull();
+  });
+
+  it('renders null for PromoBanner when source is not available', () => {
+    let tree;
+    act(() => {
+      tree = renderer.create(React.createElement(PromoBanner, { source: null }));
+    });
+    expect(tree.toJSON()).toBeNull();
+  });
+});
+
+describe('luxury filter sheet', () => {
+  it('renders redesigned Filter & Sort title and category subtitle', () => {
+    let tree;
+    act(() => {
+      tree = renderer.create(
+        React.createElement(FilterSheet, {
+          visible: true,
+          filters: { sortBy: 'relevance', priceMin: 0, priceMax: 50000 },
+          categoryName: 'Rings',
+          onClose: jest.fn(),
+          onApply: jest.fn(),
+        }),
+      );
+    });
+    const text = flatten(tree.toJSON()).join('\n');
+    expect(text).toContain('Filter & Sort');
+    expect(text).toContain('In Rings');
+    expect(text).toContain('SORT BY');
+    expect(text).toContain('PRICE RANGE');
+    expect(text).toContain('Apply');
+    expect(text).toContain('Reset');
   });
 });
 

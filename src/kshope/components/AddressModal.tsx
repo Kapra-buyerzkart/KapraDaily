@@ -9,10 +9,9 @@ import {
   Dimensions,
   Platform,
 } from 'react-native';
-import { colors } from '../theme/colours';
-import { Fonts } from '../theme/fonts';
-import { AppIcons } from '../assets/icons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
+import { CART_COLORS, CART_FONTS, fs, s } from '../screens/Cart/cartRedesignTheme';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -36,9 +35,13 @@ const AddressModal: React.FC<AddressModalProps> = ({
 
   const renderAddressItem = (item: any) => {
     const isSelected = item.selected;
+    const isHome = item.type?.toLowerCase() === 'home';
+    const isOffice = item.type?.toLowerCase() === 'office' || item.type?.toLowerCase() === 'work';
+
     return (
       <TouchableOpacity
         key={item.id}
+        activeOpacity={0.85}
         style={[styles.addressItem, isSelected && styles.addressItemActive]}
         onPress={() => {
           onSelectAddress(item.id, false);
@@ -48,19 +51,16 @@ const AddressModal: React.FC<AddressModalProps> = ({
         <View style={styles.addressTypeHeader}>
           <View style={styles.typeRow}>
             <View
-              style={[styles.typeIcon, isSelected && styles.typeIconActive]}
+              style={[
+                styles.typeIcon,
+                isSelected && styles.typeIconActive,
+              ]}
             >
-              {item.type?.toLowerCase() === 'home' ? (
-                <AppIcons.Home
-                  color={isSelected ? colors.white : colors.themeTeal}
-                  size={16}
-                />
-              ) : (
-                <AppIcons.Person
-                  color={isSelected ? colors.white : colors.themeTeal}
-                  size={16}
-                />
-              )}
+              <Ionicons
+                name={isHome ? 'home-outline' : isOffice ? 'business-outline' : 'location-outline'}
+                size={s(16)}
+                color={isSelected ? CART_COLORS.white : CART_COLORS.darkEmerald}
+              />
             </View>
             <Text style={styles.addressTypeText}>{item.type || 'Home'}</Text>
           </View>
@@ -70,7 +70,7 @@ const AddressModal: React.FC<AddressModalProps> = ({
             {isSelected && <View style={styles.radioInner} />}
           </View>
         </View>
-        <Text style={styles.addressText} numberOfLines={2}>
+        <Text style={styles.addressText} numberOfLines={3}>
           {item.address}
         </Text>
       </TouchableOpacity>
@@ -91,25 +91,38 @@ const AddressModal: React.FC<AddressModalProps> = ({
           onPress={onClose}
         />
         <View style={styles.content}>
+          {/* Top Sheet Pull Indicator */}
+          <View style={styles.pullIndicator} />
+
+          {/* Modal Header */}
           <View style={styles.header}>
             <View style={styles.headerTop}>
-              <Text style={styles.title}>Select Address</Text>
+              <Text style={styles.title}>Select Delivery Address</Text>
               <TouchableOpacity
-                style={styles.addNewButton}
-                onPress={() => {
-                  navigation.navigate('KshopeAddLocation');
-                  onClose();
-                }}
+                style={styles.closeButton}
+                activeOpacity={0.7}
+                onPress={onClose}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
-                <AppIcons.Add color={colors.themeTeal} size={18} />
-                <Text style={styles.addNewText}>Add New </Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                <AppIcons.Close color={colors.black} size={24} />
+                <Ionicons name="close" size={s(20)} color={CART_COLORS.textDark} />
               </TouchableOpacity>
             </View>
+
+            {/* Add New Address Action Pill */}
+            <TouchableOpacity
+              activeOpacity={0.8}
+              style={styles.addNewButton}
+              onPress={() => {
+                navigation.navigate('KshopeAddLocation');
+                onClose();
+              }}
+            >
+              <Ionicons name="add" size={s(17)} color={CART_COLORS.darkEmerald} />
+              <Text style={styles.addNewText}>Add New Address</Text>
+            </TouchableOpacity>
           </View>
 
+          {/* Address List */}
           <ScrollView
             style={styles.scroll}
             contentContainerStyle={styles.scrollContent}
@@ -119,14 +132,21 @@ const AddressModal: React.FC<AddressModalProps> = ({
               addresses.map(renderAddressItem)
             ) : (
               <View style={styles.emptyState}>
-                <Text style={styles.emptyText}>No addresses found.</Text>
+                <Ionicons name="location-outline" size={s(36)} color="#C0B8AD" />
+                <Text style={styles.emptyTitle}>No Addresses Found</Text>
+                <Text style={styles.emptyText}>Add a delivery address to complete your order.</Text>
               </View>
             )}
           </ScrollView>
 
+          {/* Footer Deliver Button */}
           <View style={styles.footer}>
-            <TouchableOpacity style={styles.confirmButton} onPress={onClose}>
-              <Text style={styles.confirmButtonText}>Deliver Here</Text>
+            <TouchableOpacity
+              style={styles.confirmButton}
+              activeOpacity={0.88}
+              onPress={onClose}
+            >
+              <Text style={styles.confirmButtonText}>Deliver to Selected Address</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -138,153 +158,179 @@ const AddressModal: React.FC<AddressModalProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.48)',
     justifyContent: 'flex-end',
   },
   dismissArea: {
     flex: 1,
   },
   content: {
-    backgroundColor: colors.white,
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-    maxHeight: SCREEN_HEIGHT * 0.8,
-    paddingBottom: Platform.OS === 'ios' ? 40 : 20,
+    backgroundColor: CART_COLORS.white,
+    borderTopLeftRadius: s(24),
+    borderTopRightRadius: s(24),
+    maxHeight: SCREEN_HEIGHT * 0.82,
+    paddingBottom: Platform.OS === 'ios' ? s(34) : s(18),
+    borderWidth: 1,
+    borderColor: CART_COLORS.cardBorder,
+  },
+  pullIndicator: {
+    width: s(40),
+    height: s(4),
+    borderRadius: s(2),
+    backgroundColor: '#DCD6CE',
+    alignSelf: 'center',
+    marginTop: s(10),
+    marginBottom: s(6),
   },
   header: {
-    padding: 24,
+    paddingHorizontal: s(20),
+    paddingTop: s(8),
+    paddingBottom: s(14),
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: CART_COLORS.cardBorderSubtle,
   },
   headerTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: s(12),
   },
   title: {
-    fontSize: 20,
-    fontFamily: Fonts.gilroyBold,
-    color: colors.black,
+    fontSize: fs(20),
+    fontFamily: CART_FONTS.serifBold,
+    color: CART_COLORS.textDark,
   },
   closeButton: {
-    padding: 4,
+    width: s(32),
+    height: s(32),
+    borderRadius: s(16),
+    backgroundColor: '#FAF8F5',
+    borderWidth: 1,
+    borderColor: CART_COLORS.cardBorder,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   addNewButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#',
-    padding: 8,
-    right: 40,
-    position: 'absolute',
-    borderRadius: 12,
+    alignSelf: 'flex-start',
+    backgroundColor: CART_COLORS.emeraldTint,
+    paddingVertical: s(6),
+    paddingHorizontal: s(12),
+    borderRadius: s(20),
     borderWidth: 1,
-    borderColor: colors.themeTeal,
-    borderStyle: 'dashed',
+    borderColor: '#C8DFD4',
+    gap: s(4),
   },
   addNewText: {
-    marginLeft: 8,
-    fontSize: 16,
-    fontFamily: Fonts.gilroyMedium,
-    color: colors.themeTeal,
+    fontSize: fs(12.5),
+    fontFamily: CART_FONTS.sansBold,
+    color: CART_COLORS.darkEmerald,
   },
   scroll: {
-    padding: 24,
+    paddingHorizontal: s(20),
+    paddingTop: s(14),
   },
   scrollContent: {
-    paddingBottom: 24,
+    paddingBottom: s(16),
+    gap: s(10),
   },
   addressItem: {
-    backgroundColor: '#F9F9F9',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 0.5,
-    borderColor: '#EEE',
+    backgroundColor: '#FAF8F5',
+    borderRadius: s(14),
+    padding: s(14),
+    borderWidth: 1,
+    borderColor: CART_COLORS.cardBorder,
   },
   addressItemActive: {
-    backgroundColor: colors.figmaTeal,
-    borderColor: colors.themeTeal,
+    backgroundColor: '#F5FAF7',
+    borderColor: CART_COLORS.darkEmerald,
   },
   addressTypeHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: s(6),
   },
   typeRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: s(8),
   },
   typeIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    backgroundColor: colors.figmaTeal,
+    width: s(28),
+    height: s(28),
+    borderRadius: s(8),
+    backgroundColor: CART_COLORS.emeraldTint,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 10,
   },
   typeIconActive: {
-    backgroundColor: colors.themeTeal,
+    backgroundColor: CART_COLORS.darkEmerald,
   },
   addressTypeText: {
-    fontSize: 16,
-    fontFamily: Fonts.gilroyBold,
-    color: colors.black,
+    fontSize: fs(14),
+    fontFamily: CART_FONTS.sansBold,
+    color: CART_COLORS.textDark,
   },
   radioOuter: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: '#CCC',
+    width: s(18),
+    height: s(18),
+    borderRadius: s(9),
+    borderWidth: 1.5,
+    borderColor: '#CCC5BC',
     justifyContent: 'center',
     alignItems: 'center',
   },
   radioOuterActive: {
-    borderColor: colors.themeTeal,
+    borderColor: CART_COLORS.darkEmerald,
   },
   radioInner: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: colors.themeTeal,
+    width: s(9),
+    height: s(9),
+    borderRadius: s(4.5),
+    backgroundColor: CART_COLORS.darkEmerald,
   },
   addressText: {
-    fontSize: 14,
-    fontFamily: Fonts.gilroyRegular,
-    color: '#666',
-    lineHeight: 20,
+    fontSize: fs(12),
+    fontFamily: CART_FONTS.sansRegular,
+    color: CART_COLORS.textMuted,
+    lineHeight: fs(17),
+    marginTop: s(2),
   },
   footer: {
-    paddingHorizontal: 24,
-    paddingTop: 12,
+    paddingHorizontal: s(20),
+    paddingTop: s(10),
+    borderTopWidth: 1,
+    borderTopColor: CART_COLORS.cardBorderSubtle,
   },
   confirmButton: {
-    backgroundColor: colors.themeTeal,
-    height: 54,
-    borderRadius: 15,
+    backgroundColor: CART_COLORS.darkEmerald,
+    height: s(48),
+    borderRadius: s(12),
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: colors.themeTeal,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 5,
   },
   confirmButtonText: {
-    color: colors.white,
-    fontSize: 16,
-    fontFamily: Fonts.gilroyBold,
+    color: CART_COLORS.white,
+    fontSize: fs(14),
+    fontFamily: CART_FONTS.sansBold,
   },
   emptyState: {
-    padding: 40,
+    paddingVertical: s(36),
     alignItems: 'center',
+    gap: s(8),
+  },
+  emptyTitle: {
+    fontSize: fs(16),
+    fontFamily: CART_FONTS.serifBold,
+    color: CART_COLORS.textDark,
   },
   emptyText: {
-    color: '#999',
-    fontFamily: Fonts.gilroyMedium,
+    color: CART_COLORS.textMuted,
+    fontFamily: CART_FONTS.sansRegular,
+    fontSize: fs(12.5),
+    textAlign: 'center',
   },
 });
 

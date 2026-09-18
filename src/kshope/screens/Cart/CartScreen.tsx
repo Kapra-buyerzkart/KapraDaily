@@ -1,33 +1,22 @@
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  RefreshControl,
-  Modal,
-  StatusBar,
-} from 'react-native';
 import React, { useContext, useState, useEffect, useRef } from 'react';
 import {
-  SafeAreaView,
-} from 'react-native-safe-area-context';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+  View,
+  StyleSheet,
+  ScrollView,
+  RefreshControl,
+  StatusBar,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
-import CartItemCard from '../../components/CartItemCard';
-import SaveMoneySection from '../../components/SaveMoneySection';
-import { AppText, Badge, Divider } from '../../components/atoms';
-import CartStepper from './components/CartStepper';
-import AddressCard from './components/AddressCard';
-import CheckoutBar from './components/CheckoutBar';
-import { UI_COLORS, UI_RADIUS, UI_SPACING, hp, wp } from '../../theme/tokens';
-import { colors } from '../../theme/colours';
-import { Fonts } from '../../theme/fonts';
-import { AppIcons } from '../../assets/icons';
+import Toast from 'react-native-simple-toast';
+import RazorpayCheckout from 'react-native-razorpay';
+
 import { useCartScreen } from '../../hooks/useCartScreen';
 import { useCart } from '../../context/CartContext';
+import { useWishlist } from '../../context/WishlistContext';
+import { useUser } from '../../context/UserContext';
 import { LoaderContext } from '../../context/loaderContext';
-import ConfirmationModal from '../../components/ConfirmationModal';
+
 import { getPaymentModesApi } from '../../api/services/configService';
 import { createOrderApi, confirmCodApi } from '../../api/services/orderService';
 import {
@@ -38,16 +27,35 @@ import {
   updateCartItemApi,
   removeFromCartApi,
 } from '../../api/services/cartService';
-import RazorpayCheckout from 'react-native-razorpay';
-import Toast from 'react-native-simple-toast';
+import { searchProductsApi } from '../../api/services/productService';
 import { isCartSuccess, cartErrorMessage } from '../../utils/cartFeedback';
+import KSHOPE_CONFIG from '../../globals/config';
+import { getKshopeAreaId } from '../../globals/storage';
+
+import AddressModal from '../../components/AddressModal';
+import AddressConfirmationModal from '../../components/AddressConfirmationModal';
+import DeliverySlotModal from '../../components/DeliverySlotModal';
+import CouponModal from '../../components/CouponModal';
+import StatusModal from '../../components/StatusModal';
+import ConfirmationModal from '../../components/ConfirmationModal';
+
+// Redesign components
+import { CartHeader } from './components/CartHeader';
+import { CartSpecialBanner } from './components/CartSpecialBanner';
+import { CartItemLuxuryCard } from './components/CartItemLuxuryCard';
+import { CartAddressCard } from './components/CartAddressCard';
+import { CartOffersSection } from './components/CartOffersSection';
+import { CartCouponCard } from './components/CartCouponCard';
+import { CartSummarySection } from './components/CartSummarySection';
+import { CartPaymentSection } from './components/CartPaymentSection';
+import { CartTrustBadges } from './components/CartTrustBadges';
+import { CartStickyBottomBar } from './components/CartStickyBottomBar';
+import { CartEmptyLuxury } from './components/CartEmptyLuxury';
+import { CART_COLORS, s } from './cartRedesignTheme';
 
 const CartStatusBar = () => {
   const isFocused = useIsFocused();
-
-  if (!isFocused) {
-    return null;
-  }
+  if (!isFocused) return null;
 
   return (
     <StatusBar
@@ -60,15 +68,6 @@ const CartStatusBar = () => {
 
 const QTY_UPDATE_FAILED = 'Could not update the quantity';
 const ITEM_REMOVE_FAILED = 'Could not remove this item';
-
-import AddressModal from '../../components/AddressModal';
-import AddressConfirmationModal from '../../components/AddressConfirmationModal';
-import DeliverySlotModal from '../../components/DeliverySlotModal';
-import CouponModal from '../../components/CouponModal';
-import BillSection from '../../components/BillSection';
-import CartEmptyComponent from '../../components/CartEmptyComponent';
-import StatusModal from '../../components/StatusModal';
-import { useUser } from '../../context/UserContext';
 
 const CartScreen = () => {
   const navigation = useNavigation<any>();
@@ -109,11 +108,10 @@ const CartScreen = () => {
 
   const { showLoader } = useContext(LoaderContext);
   const { refreshCart } = useCart();
+  const { isInWishlist, toggleWishlist } = useWishlist();
 
-  const [isClearCartModalVisible, setIsClearCartModalVisible] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('Online');
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentModes, setPaymentModes] = useState<any[]>([]);
   const [showAddressModal, setShowAddressModal] = useState(false);
 
@@ -124,14 +122,108 @@ const CartScreen = () => {
   const [chosenSlot, setChosenSlot] = useState<any>(null);
   const [isFinalizingOrder, setIsFinalizingOrder] = useState(false);
   const [itemToRemove, setItemToRemove] = useState<any>(null);
+  const [recommendedProducts, setRecommendedProducts] = useState<any[]>([]);
 
   const scrollViewRef = useRef<ScrollView>(null);
 
+  // Fetch live products for "Offers For You" carousel
+  useEffect(() => {
+    let cancelled = false;
+    const fetchOffers = async () => {
+      try {
+        const storedAreaId = await getKshopeAreaId();
+        const areaId =
+          selectedAddress?.pincodeAreaId ||
+          storedAreaId ||
+          KSHOPE_CONFIG.default_pincode_area_id;
+        const response = await searchProductsApi({
+          pincodeAreaId: areaId,
+          pageNumber: 1,
+          pageSize: 10,
+        });
+        if (!cancelled && response?.success && response?.data?.items) {
+          setRecommendedProducts(response.data.items);
+        }
+      } catch (err) {
+        console.error('Error fetching cart offers:', err);
+      }
+    };
+    fetchOffers();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedAddress?.pincodeAreaId]);
 
+  // Fetch payment modes
+  useEffect(() => {
+    const fetchPaymentModes = async () => {
+      try {
+        const response = await getPaymentModesApi();
+        if (response?.success && response?.data) {
+          let modes = [...response.data];
+          if (
+            !modes.some(m =>
+              ['online', 'razorpay', 'upi'].includes(
+                m.paymentModeName?.toLowerCase(),
+              ),
+            )
+          ) {
+            modes.push({
+              paymentModeId: 'online_test',
+              paymentModeName: 'Online',
+              description: 'UPI, Cards, Net Banking',
+            });
+          }
+          setPaymentModes(modes);
+          const online = modes.find(m =>
+            ['online', 'razorpay', 'upi', 'online payment'].includes(
+              m.paymentModeName?.toLowerCase(),
+            ),
+          );
+          if (online) {
+            setPaymentMethod(online.paymentModeName);
+          } else if (modes.length > 0) {
+            setPaymentMethod(modes[0].paymentModeName);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching payment modes:', err);
+      }
+    };
+    fetchPaymentModes();
+  }, []);
+
+  const onRefresh = React.useCallback(async () => {
+    setRefreshing(true);
+    try {
+      const storedAreaId = await getKshopeAreaId();
+      const areaId =
+        selectedAddress?.pincodeAreaId ||
+        storedAreaId ||
+        KSHOPE_CONFIG.default_pincode_area_id;
+      await Promise.all([
+        getCartSummary(),
+        refreshAddresses(),
+        searchProductsApi({
+          pincodeAreaId: areaId,
+          pageNumber: 1,
+          pageSize: 10,
+        })
+          .then(res => {
+            if (res?.success && res?.data?.items) {
+              setRecommendedProducts(res.data.items);
+            }
+          })
+          .catch(() => {}),
+      ]);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [getCartSummary, refreshAddresses, selectedAddress?.pincodeAreaId]);
 
   const handleUpdateQty = async (item: any, newQty: number) => {
     if (newQty < 1) {
-      handleRemoveItem(item);
+      setItemToRemove(item);
       return;
     }
     try {
@@ -191,53 +283,6 @@ const CartScreen = () => {
       showLoader(false);
     }
   };
-
-  useEffect(() => {
-    const fetchPaymentModes = async () => {
-      try {
-        const response = await getPaymentModesApi();
-        if (response?.success && response?.data) {
-          let modes = [...response.data];
-          if (
-            !modes.some(m =>
-              ['online', 'razorpay', 'upi'].includes(
-                m.paymentModeName?.toLowerCase(),
-              ),
-            )
-          ) {
-            modes.push({
-              paymentModeId: 'online_test',
-              paymentModeName: 'Online',
-              description: 'UPI, Cards, Net Banking',
-            });
-          }
-          setPaymentModes(modes);
-          const online = modes.find(m =>
-            ['online', 'razorpay', 'upi', 'online payment'].includes(
-              m.paymentModeName?.toLowerCase(),
-            ),
-          );
-          if (online) {
-            setPaymentMethod(online.paymentModeName);
-          } else if (modes.length > 0) {
-            setPaymentMethod(modes[0].paymentModeName);
-          }
-        }
-      } catch (err) {
-        console.error('Error fetching payment modes:', err);
-      }
-    };
-    fetchPaymentModes();
-  }, []);
-
-  const onRefresh = React.useCallback(async () => {
-    setRefreshing(true);
-    try {
-      await Promise.all([getCartSummary(), refreshAddresses()]);
-    } finally {
-      setRefreshing(false);
-    }
-  }, [getCartSummary, fetchAddresses]);
 
   const handleConfirmOrder = async () => {
     if (!selectedAddress) {
@@ -454,7 +499,7 @@ const CartScreen = () => {
             email: profile?.email || '',
             contact: profile?.phone || profile?.phoneNo || '',
           },
-          theme: { color: '#F25000' },
+          theme: { color: '#0C382E' },
         };
 
         showLoader(false);
@@ -562,67 +607,53 @@ const CartScreen = () => {
     }
   };
 
-  const mappedItems = cartItems.map(item => ({
-    id: String(item.cartItemId),
-    title: item.productName,
-    price: item.specialPrice || item.unitPrice,
-    originalPrice: item.unitPrice,
-    discount:
-      item.unitPrice > (item.specialPrice || item.unitPrice)
-        ? `${Math.round(
-            ((item.unitPrice - (item.specialPrice || item.unitPrice)) /
-              item.unitPrice) *
-              100,
-          )}%`
-        : '0%',
-    quantity: item.quantity,
-    image: item.productImage,
-  }));
+  const onWishlistPress = () => {
+    try {
+      navigation.navigate('Wishlist');
+    } catch {
+      navigation.navigate('KshopeHome', { screen: 'Wishlist' });
+    }
+  };
+
+  const onExploreJewellery = () => {
+    navigation.navigate('KshopeCategory');
+  };
+
+  const onProductDetails = (item: any) => {
+    navigation.navigate('KshopeProductDetails', {
+      productId: item.productId || item.id,
+      product: item,
+    });
+  };
+
+  const supportsCOD = paymentModes.some(
+    m => m.paymentModeName?.toUpperCase() === 'COD',
+  );
 
   if (cartItems.length === 0 && !isFinalizingOrder) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
         <CartStatusBar />
-        <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={styles.backButton}
-          >
-            <AppIcons.Back color={UI_COLORS.textPrimary} size={22} />
-          </TouchableOpacity>
-          <AppText variant="title">Cart</AppText>
-        </View>
-        <View
-          style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
-        >
-          <CartEmptyComponent />
-        </View>
+        <CartHeader
+          cartCount={0}
+          onBack={() => navigation.goBack()}
+          onWishlist={onWishlistPress}
+        />
+        <CartEmptyLuxury onExplore={onExploreJewellery} />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <CartStatusBar />
-      <View style={styles.topContainer}>
-        <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={styles.backButton}
-          >
-            <AppIcons.Back color={UI_COLORS.textPrimary} size={22} />
-          </TouchableOpacity>
-          <AppText variant="title">Summary</AppText>
-        </View>
 
-        <CartStepper current={1} />
-
-        <AddressCard
-          addressType={selectedAddress?.type}
-          addressLine={selectedAddress?.address}
-          onChange={() => setShowAddressModal(true)}
-        />
-      </View>
+      {/* 1. Header with circular Back, Wishlist, and Bag badge count */}
+      <CartHeader
+        cartCount={cartItems.length}
+        onBack={() => navigation.goBack()}
+        onWishlist={onWishlistPress}
+      />
 
       <ScrollView
         ref={scrollViewRef}
@@ -632,83 +663,77 @@ const CartScreen = () => {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        <View style={styles.sectionCard}>
-          <View style={styles.itemsHeading}>
-            <AppText variant="heading">Your items</AppText>
-            <Badge
-              tone="neutral"
-              label={`${cartItems.length} ${
-                cartItems.length === 1 ? 'item' : 'items'
-              }`}
-            />
-          </View>
-          {mappedItems.map(item => (
-            <React.Fragment key={item.id}>
-              <Divider inset={UI_SPACING.lg} />
-              <CartItemCard
-                item={item}
-                embedded
-                onDelete={id => {
-                  const originalItem = cartItems.find(
-                    i => String(i.cartItemId) === id,
-                  );
-                  if (originalItem) setItemToRemove(originalItem);
-                }}
-                onIncrement={id => {
-                  const originalItem = cartItems.find(
-                    i => String(i.cartItemId) === id,
-                  );
-                  if (originalItem)
-                    handleUpdateQty(
-                      originalItem,
-                      (originalItem.quantity || 0) + 1,
-                    );
-                }}
-                onDecrement={id => {
-                  const originalItem = cartItems.find(
-                    i => String(i.cartItemId) === id,
-                  );
-                  if (originalItem) {
-                    if ((originalItem.quantity || 0) <= 1) {
-                      setItemToRemove(originalItem);
-                    } else {
-                      handleUpdateQty(
-                        originalItem,
-                        (originalItem.quantity || 0) - 1,
-                      );
-                    }
-                  }
-                }}
-              />
-            </React.Fragment>
-          ))}
-        </View>
+        {/* 2. "Make it Special" Gifting Banner */}
+        <CartSpecialBanner onExploreGifts={onExploreJewellery} />
 
-        <SaveMoneySection
-          appliedCouponCode={appliedCouponCode}
-          appliedGiftCardCode={appliedGiftCardCode}
-          bcoinsAppliedValue={billCalculations.bcoinsAppliedValue || 0}
-          availableBCoins={
-            profile?.totalBCoins ||
-            profile?.bCoins ||
-            profile?.bCoinBalance ||
-            0
-          }
-          onApplyOffer={onApplyOffer}
-          onRejectOffer={onRejectOffer}
-          bordered
+        {/* 3. Luxury Cart Item Cards */}
+        {cartItems.map(item => (
+          <CartItemLuxuryCard
+            key={String(item.cartItemId)}
+            item={item}
+            onIncrement={target =>
+              handleUpdateQty(target, (target.quantity || 0) + 1)
+            }
+            onDecrement={target => {
+              if ((target.quantity || 0) <= 1) {
+                setItemToRemove(target);
+              } else {
+                handleUpdateQty(target, (target.quantity || 0) - 1);
+              }
+            }}
+            onDelete={target => setItemToRemove(target)}
+            onDetails={target => onProductDetails(target)}
+          />
+        ))}
+
+        {/* 4. Edit Saved Address Card */}
+        <CartAddressCard
+          address={selectedAddress}
+          onEditAddress={() => setShowAddressModal(true)}
         />
-        <BillSection billCalculations={billCalculations} bordered />
+
+        {/* 5. "Offers For You" Horizontal Products Carousel */}
+        <CartOffersSection
+          products={recommendedProducts}
+          isInWishlist={isInWishlist}
+          onToggleWishlist={toggleWishlist}
+          onSelectProduct={onProductDetails}
+          onViewAll={onExploreJewellery}
+        />
+
+        {/* 6. Apply Coupon Card */}
+        <CartCouponCard
+          appliedCouponCode={appliedCouponCode}
+          onPress={() => setShowCouponModal(true)}
+        />
+
+        {/* 7. Cart Summary Breakdown */}
+        <CartSummarySection billCalculations={billCalculations} />
+
+        {/* 8. Payment Method Card */}
+        {/* <CartPaymentSection
+          paymentMethod={paymentMethod}
+          onSelectPaymentMethod={setPaymentMethod}
+          onApplyBankOffer={() => setShowCouponModal(true)}
+          supportsCOD={supportsCOD}
+        /> */}
+
+        {/* 9. 3-Column Trust Badges */}
+        <CartTrustBadges />
       </ScrollView>
 
-      <CheckoutBar
-        totalSavings={billCalculations.totalSavings}
+      {/* 10. Sticky Bottom Bar with Place Order Action */}
+      <CartStickyBottomBar
         toPay={billCalculations.toPay}
-        paymentMethod={paymentMethod}
-        onSelectPayment={() => setShowPaymentModal(true)}
-        onPay={handleConfirmOrder}
+        mrpTotal={billCalculations.mrpTotal || billCalculations.itemTotal}
+        totalSavings={billCalculations.totalSavings || billCalculations.savings}
+        onViewDetails={() => {
+          scrollViewRef.current?.scrollToEnd({ animated: true });
+        }}
+        onPlaceOrder={handleConfirmOrder}
       />
 
+      {/* Modals */}
       <StatusModal
         visible={statusModalVisible}
         onClose={() => setStatusModalVisible(false)}
@@ -716,12 +741,14 @@ const CartScreen = () => {
         title={statusTitle}
         message={statusMessage}
       />
+
       <AddressModal
         visible={showAddressModal}
         onClose={() => setShowAddressModal(false)}
         addresses={addresses}
         onSelectAddress={onSelectAddress}
       />
+
       <DeliverySlotModal
         visible={showSlotModal}
         onClose={() => setShowSlotModal(false)}
@@ -732,6 +759,7 @@ const CartScreen = () => {
         datesList={datesList}
         slotsByDate={slotsByDate}
       />
+
       <CouponModal
         profile="cart"
         visible={showCouponModal}
@@ -740,18 +768,6 @@ const CartScreen = () => {
         availableCoupons={availableCoupons}
         availableGiftCards={availableGiftCards}
         onCouponClick={handleCouponClick}
-      />
-      <ConfirmationModal
-        visible={isClearCartModalVisible}
-        onClose={() => setIsClearCartModalVisible(false)}
-        onConfirm={() => {
-          clearCart();
-          setIsClearCartModalVisible(false);
-        }}
-        title="Clear Cart"
-        message="Are you sure you want to remove all items?"
-        confirmText="Clear All"
-        themeColor={colors.red}
       />
 
       <ConfirmationModal
@@ -764,9 +780,9 @@ const CartScreen = () => {
           }
         }}
         title="Remove Item"
-        message="Are you sure you want to remove this item from your cart?"
+        message="Are you sure you want to remove this jewellery piece from your cart?"
         confirmText="Remove"
-        themeColor={UI_COLORS.primary}
+        themeColor={CART_COLORS.darkEmerald}
       />
 
       <AddressConfirmationModal
@@ -778,104 +794,6 @@ const CartScreen = () => {
         onConfirm={submitOrder}
         data={addressConfirmationData}
       />
-
-      <Modal
-        visible={showPaymentModal}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => setShowPaymentModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <TouchableOpacity
-            style={{ flex: 1 }}
-            activeOpacity={1}
-            onPress={() => setShowPaymentModal(false)}
-          />
-          <View style={styles.paymentModalContent}>
-            <View style={styles.modalHeaderIndicator} />
-            <View style={styles.modalHeaderRow}>
-              <Text style={styles.modalTitle}>Choose Payment Method</Text>
-              <TouchableOpacity onPress={() => setShowPaymentModal(false)}>
-                <MaterialCommunityIcons name="close" size={24} color="#000" />
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.paymentOptionsGrid}>
-              {paymentModes.map((mode, index) => {
-                const isSelected = paymentMethod === mode.paymentModeName;
-                const isCOD = mode.paymentModeName?.toUpperCase() === 'COD';
-                return (
-                  <TouchableOpacity
-                    key={mode.paymentModeId || index}
-                    style={[
-                      styles.paymentMethodOption,
-                      isSelected && styles.paymentMethodOptionActive,
-                    ]}
-                    onPress={() => {
-                      setPaymentMethod(mode.paymentModeName);
-                      setShowPaymentModal(false);
-                    }}
-                    activeOpacity={0.7}
-                  >
-                    <View
-                      style={[
-                        styles.radioCircle,
-                        isSelected && styles.radioCircleActive,
-                      ]}
-                    >
-                      {isSelected && <View style={styles.radioInner} />}
-                    </View>
-                    <MaterialCommunityIcons
-                      name={isCOD ? 'cash' : 'cellphone'}
-                      size={22}
-                      color={UI_COLORS.ink}
-                      style={{ marginRight: 10 }}
-                    />
-                    <View style={{ flex: 1 }}>
-                      <Text
-                        style={[
-                          styles.paymentMethodName,
-                          isSelected && styles.paymentMethodNameActive,
-                        ]}
-                      >
-                        {mode.paymentModeName}
-                      </Text>
-                      <Text
-                        style={{
-                          fontSize: 12,
-                          color: '#999',
-                          fontFamily: Fonts.gilroyRegular,
-                          marginTop: 2,
-                        }}
-                      >
-                        {isCOD
-                          ? 'Pay when you receive'
-                          : 'UPI, Cards, Net Banking'}
-                      </Text>
-                    </View>
-                    {isSelected && (
-                      <AppIcons.Check color={UI_COLORS.ink} size={16} />
-                    )}
-                  </TouchableOpacity>
-                );
-              })}
-              {paymentModes.length === 0 && (
-                <Text
-                  style={{
-                    fontSize: 14,
-                    color: '#999',
-                    fontFamily: Fonts.gilroyMedium,
-                    textAlign: 'center',
-                    paddingVertical: 12,
-                  }}
-                >
-                  Loading payment methods...
-                </Text>
-              )}
-            </View>
-          </View>
-        </View>
-      </Modal>
     </SafeAreaView>
   );
 };
@@ -885,124 +803,10 @@ export default CartScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: UI_COLORS.card,
-  },
-  topContainer: {
-    backgroundColor: UI_COLORS.card,
-    paddingBottom: UI_SPACING.lg,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: UI_COLORS.borderStrong,
-    zIndex: 10,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: UI_SPACING.sm,
-    paddingHorizontal: UI_SPACING.lg,
-    paddingVertical: UI_SPACING.md,
-  },
-  backButton: {
-    width: wp('9%'),
-    height: wp('9%'),
-    borderRadius: UI_RADIUS.pill,
-    backgroundColor: UI_COLORS.well,
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: CART_COLORS.background,
   },
   scrollContent: {
-    paddingHorizontal: UI_SPACING.lg,
-    paddingTop: UI_SPACING.lg,
-    paddingBottom: hp('20%'),
-  },
-  sectionCard: {
-    backgroundColor: UI_COLORS.card,
-    borderRadius: UI_RADIUS.card,
-    borderWidth: 1,
-    borderColor: UI_COLORS.borderStrong,
-    overflow: 'hidden',
-  },
-  itemsHeading: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: UI_SPACING.sm,
-    paddingHorizontal: UI_SPACING.lg,
-    paddingVertical: UI_SPACING.md,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: UI_COLORS.overlay,
-    justifyContent: 'flex-end',
-  },
-  paymentModalContent: {
-    backgroundColor: UI_COLORS.card,
-    borderTopLeftRadius: UI_RADIUS.card + 8,
-    borderTopRightRadius: UI_RADIUS.card + 8,
-    padding: UI_SPACING.xxl,
-    paddingBottom: hp('5%'),
-  },
-  modalHeaderIndicator: {
-    width: wp('11%'),
-    height: 4,
-    backgroundColor: UI_COLORS.borderStrong,
-    borderRadius: 2,
-    alignSelf: 'center',
-    marginBottom: UI_SPACING.lg,
-  },
-  modalHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: UI_SPACING.xl,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontFamily: Fonts.gilroyBold,
-    color: UI_COLORS.textPrimary,
-  },
-  paymentOptionsGrid: {
-    gap: UI_SPACING.sm,
-  },
-  paymentMethodOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: UI_SPACING.lg,
-    paddingHorizontal: UI_SPACING.lg,
-    borderRadius: UI_RADIUS.productCard,
-    borderWidth: 1,
-    borderColor: UI_COLORS.border,
-    backgroundColor: UI_COLORS.card,
-    marginBottom: UI_SPACING.md,
-  },
-  paymentMethodOptionActive: {
-    borderColor: UI_COLORS.ink,
-    backgroundColor: UI_COLORS.inkTint,
-  },
-  paymentMethodName: {
-    fontSize: 15,
-    fontFamily: Fonts.gilroyMedium,
-    color: UI_COLORS.textPrimary,
-  },
-  paymentMethodNameActive: {
-    fontFamily: Fonts.gilroyBold,
-    color: UI_COLORS.textPrimary,
-  },
-  radioCircle: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: UI_COLORS.borderStrong,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: UI_SPACING.md,
-  },
-  radioCircleActive: {
-    borderColor: UI_COLORS.ink,
-  },
-  radioInner: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: UI_COLORS.ink,
+    paddingTop: s(6),
+    paddingBottom: s(30),
   },
 });

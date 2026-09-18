@@ -92,7 +92,10 @@ describe('bucketOrders', () => {
 
   it('survives a missing list', () => {
     expect(bucketOrders(null)).toEqual({
+      all: [],
       active: [],
+      processing: [],
+      shipped: [],
       delivered: [],
       cancelled: [],
     });
@@ -132,6 +135,7 @@ describe('detailParams', () => {
       items: [{ productName: 'A', productId: 3 }],
     };
     expect(detailParams(order)).toEqual({
+      orderId: 7,
       order,
       selectedItem: {
         productName: 'A',
@@ -144,6 +148,6 @@ describe('detailParams', () => {
 
   it('sends an empty selection when the order has no items', () => {
     const order = { orderId: 7 };
-    expect(detailParams(order)).toEqual({ order, selectedItem: {} });
+    expect(detailParams(order)).toEqual({ orderId: 7, order, selectedItem: {} });
   });
 });

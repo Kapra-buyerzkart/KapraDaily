@@ -1,74 +1,69 @@
 import React, { useState } from 'react';
-import { Image, StyleSheet, View } from 'react-native';
-import { HOME_ART } from '../../../Home/redesign/assets';
+import {
+  Image,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import {
   GUTTER,
-  HOME_COLORS,
   RADIUS,
-  SPACE,
   SCREEN_WIDTH,
+  SPACE,
+  s,
 } from '../../../Home/redesign/theme';
+import { CATEGORY_ART } from '../categoryAssets';
 
 type Props = {
-  source: { uri: string } | null;
+  source?: { uri: string } | null;
+  onPress?: () => void;
 };
 
-const PromoBanner: React.FC<Props> = ({ source }) => {
+const BANNER_W = SCREEN_WIDTH - GUTTER * 2;
+const BANNER_H = BANNER_W * 0.393;
+
+const PromoBanner: React.FC<Props> = ({ source, onPress }) => {
   const [failed, setFailed] = useState(false);
 
   if (!source || failed) {
-    return (
-      <View style={styles.wrap}>
-        <View style={[styles.image, styles.fallbackWrap]}>
-          <Image
-            source={HOME_ART.bannerFallback}
-            resizeMode="contain"
-            style={styles.fallbackImage}
-          />
-        </View>
-      </View>
-    );
+    return null;
   }
 
   return (
     <View style={styles.wrap}>
-      <Image
-        source={source}
-        onError={() => setFailed(true)}
-        resizeMode="cover"
-        style={styles.image}
-        defaultSource={HOME_ART.placeholder}
-      />
+      <TouchableOpacity
+        activeOpacity={0.92}
+        onPress={onPress}
+        disabled={!onPress}
+        style={styles.container}
+      >
+        <Image
+          source={source}
+          onError={() => setFailed(true)}
+          resizeMode="cover"
+          style={styles.image}
+        />
+      </TouchableOpacity>
     </View>
   );
 };
 
-const BANNER_W = SCREEN_WIDTH - GUTTER * 2;
-const BANNER_H = BANNER_W * 0.21;
-
 const styles = StyleSheet.create({
   wrap: {
     paddingHorizontal: GUTTER,
-    marginTop: SPACE.sm,
-    marginBottom: SPACE.lg,
+    marginTop: SPACE.xs,
+    marginBottom: SPACE.md,
   },
-  image: {
+  container: {
     width: BANNER_W,
     height: BANNER_H,
-    borderRadius: RADIUS.sm,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: HOME_COLORS.cardBorder,
-  },
-  fallbackWrap: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#F2F2F2',
+    borderRadius: s(14),
     overflow: 'hidden',
+    backgroundColor: '#F8F3ED',
   },
-  fallbackImage: {
-    width: BANNER_W * 0.45,
-    height: BANNER_H * 0.6,
-    tintColor: '#1A1A1A',
+  image: {
+    width: '100%',
+    height: '100%',
   },
 });
 

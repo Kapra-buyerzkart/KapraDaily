@@ -1,146 +1,184 @@
 import React, { useEffect, useRef } from 'react';
 import {
-    View,
-    Text,
-    Modal,
-    TouchableOpacity,
-    StyleSheet,
-    Animated,
-  } from 'react-native';
-import { colors } from '../theme/colours';
-import { Fonts } from '../theme/fonts';
-import { AppIcons } from '../assets/icons';
-
+  View,
+  Text,
+  Modal,
+  TouchableOpacity,
+  StyleSheet,
+  Animated,
+} from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import { CART_COLORS, CART_FONTS, fs, s } from '../screens/Cart/cartRedesignTheme';
 
 interface StatusModalProps {
-    visible: boolean;
-    onClose: () => void;
-    type: 'success' | 'error' | 'warning' | any;
-    title: string;
-    message: string;
+  visible: boolean;
+  onClose: () => void;
+  type: 'success' | 'error' | 'warning' | any;
+  title: string;
+  message: string;
 }
 
 const StatusModal: React.FC<StatusModalProps> = ({
-    visible,
-    onClose,
-    type = 'success',
-    title,
-    message
+  visible,
+  onClose,
+  type = 'success',
+  title,
+  message,
 }) => {
-    const scaleAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0)).current;
 
-    useEffect(() => {
-        if (visible) {
-            Animated.spring(scaleAnim, {
-                toValue: 1,
-                tension: 50,
-                friction: 7,
-                useNativeDriver: true,
-            }).start();
-        } else {
-            scaleAnim.setValue(0);
-        }
-    }, [visible]);
+  useEffect(() => {
+    if (visible) {
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        tension: 50,
+        friction: 7,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      scaleAnim.setValue(0);
+    }
+  }, [scaleAnim, visible]);
 
-    const getIcon = () => {
-        switch (type) {
-            case 'error':
-                return <AppIcons.Delete color={colors.white} size={32} />;
-            case 'warning':
-                return <AppIcons.ArrowUp color={colors.white} size={32} style={{ transform: [{ rotate: '180deg' }] }} />;
-            default:
-                return <AppIcons.Check color={colors.white} size={32} />;
-        }
-    };
+  const getIconConfig = () => {
+    switch (type) {
+      case 'error':
+        return {
+          icon: 'close',
+          color: CART_COLORS.orange,
+          bg: '#FFF4EC',
+          border: '#FCDCC8',
+        };
+      case 'warning':
+        return {
+          icon: 'alert-outline',
+          color: CART_COLORS.gold,
+          bg: '#FEF8EA',
+          border: '#FCE8B2',
+        };
+      default:
+        return {
+          icon: 'checkmark',
+          color: CART_COLORS.darkEmerald,
+          bg: CART_COLORS.emeraldTint,
+          border: '#D1E6DD',
+        };
+    }
+  };
 
-    const getIconBackground = () => {
-        switch (type) {
-            case 'error': return '#FF5252';
-            case 'warning': return '#FFAB40';
-            default: return colors.themeTeal;
-        }
-    };
+  const { icon, color, bg, border } = getIconConfig();
 
-    return (
-        <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-            <View style={styles.overlay}>
-                <Animated.View style={[styles.content, { transform: [{ scale: scaleAnim }] }]}>
-                    <View style={[styles.iconContainer, { backgroundColor: getIconBackground() }]}>
-                        {getIcon()}
-                    </View>
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onClose}
+    >
+      <View style={styles.overlay}>
+        <TouchableOpacity
+          style={styles.backdropTouch}
+          activeOpacity={1}
+          onPress={onClose}
+        />
+        <Animated.View
+          style={[styles.content, { transform: [{ scale: scaleAnim }] }]}
+        >
+          {/* Circular Luxury Status Icon */}
+          <View
+            style={[
+              styles.iconContainer,
+              { backgroundColor: bg, borderColor: border },
+            ]}
+          >
+            <Ionicons name={icon} color={color} size={s(28)} />
+          </View>
 
-                    <Text style={styles.title}>{title}</Text>
-                    <Text style={styles.message}>{message}</Text>
+          {/* Title */}
+          <Text style={styles.title}>{title}</Text>
 
-                    <TouchableOpacity
-                        style={styles.closeButton}
-                        onPress={onClose}
-                        activeOpacity={0.8}
-                    >
-                        <Text style={styles.closeButtonText}>OK</Text>
-                    </TouchableOpacity>
-                </Animated.View>
-            </View>
-        </Modal>
-    );
+          {/* Message */}
+          <Text style={styles.message}>{message}</Text>
+
+          {/* Primary Action Button */}
+          <TouchableOpacity
+            style={styles.closeButton}
+            onPress={onClose}
+            activeOpacity={0.88}
+          >
+            <Text style={styles.closeButtonText}>OK</Text>
+          </TouchableOpacity>
+        </Animated.View>
+      </View>
+    </Modal>
+  );
 };
 
 const styles = StyleSheet.create({
-    overlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.6)',
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 40,
-    },
-    content: {
-        backgroundColor: colors.white,
-        borderRadius: 30,
-        padding: 30,
-        width: '100%',
-        alignItems: 'center',
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.1,
-        shadowRadius: 20,
-        elevation: 10,
-    },
-    iconContainer: {
-        width: 64,
-        height: 64,
-        borderRadius: 32,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: 20,
-    },
-    title: {
-        fontSize: 20,
-        fontFamily: Fonts.gilroyBold,
-        color: colors.black,
-        marginBottom: 12,
-        textAlign: 'center',
-    },
-    message: {
-        fontSize: 14,
-        fontFamily: Fonts.gilroyMedium,
-        color: '#666',
-        textAlign: 'center',
-        marginBottom: 24,
-        lineHeight: 20,
-    },
-    closeButton: {
-        backgroundColor: colors.themeTeal,
-        paddingHorizontal: 40,
-        paddingVertical: 12,
-        borderRadius: 15,
-        width: '100%',
-        alignItems: 'center',
-    },
-    closeButtonText: {
-        color: colors.white,
-        fontFamily: Fonts.gilroyBold,
-        fontSize: 16,
-    },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.48)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: s(24),
+  },
+  backdropTouch: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  content: {
+    backgroundColor: CART_COLORS.white,
+    borderRadius: s(22),
+    paddingVertical: s(24),
+    paddingHorizontal: s(22),
+    width: '100%',
+    maxWidth: s(340),
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: CART_COLORS.cardBorder,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 18,
+    elevation: 8,
+  },
+  iconContainer: {
+    width: s(54),
+    height: s(54),
+    borderRadius: s(27),
+    borderWidth: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: s(14),
+  },
+  title: {
+    fontSize: fs(20),
+    fontFamily: CART_FONTS.serifBold,
+    color: CART_COLORS.textDark,
+    marginBottom: s(8),
+    textAlign: 'center',
+  },
+  message: {
+    fontSize: fs(13),
+    fontFamily: CART_FONTS.sansRegular,
+    color: CART_COLORS.textMuted,
+    textAlign: 'center',
+    marginBottom: s(22),
+    lineHeight: fs(18),
+    paddingHorizontal: s(6),
+  },
+  closeButton: {
+    backgroundColor: CART_COLORS.darkEmerald,
+    height: s(48),
+    borderRadius: s(12),
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closeButtonText: {
+    color: CART_COLORS.white,
+    fontFamily: CART_FONTS.sansBold,
+    fontSize: fs(14),
+  },
 });
 
 export default StatusModal;

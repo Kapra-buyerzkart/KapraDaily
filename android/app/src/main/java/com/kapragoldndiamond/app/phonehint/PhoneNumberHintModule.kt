@@ -1,4 +1,4 @@
-package com.kapragoldnDiamond.app.phonehint
+package com.kapragoldndiamond.app.phonehint
 
 import android.app.Activity
 import android.content.Intent

@@ -78,13 +78,13 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace "com.kapragoldnDiamond.app"
+    namespace "com.kapragoldndiamond.app"
     
     androidResources {
         noCompress 'tflite'
     }
     defaultConfig {
-        applicationId "com.kapragoldnDiamond.app"
+        applicationId "com.kapragoldndiamond.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 25062
@@ -151,7 +151,7 @@ dependencies {
     implementation("com.facebook.fresco:animated-gif:3.6.0")
 
     // Phone Number Hint API used by the PhoneNumberHint TurboModule in
-    // android/app/src/main/java/com/kgoldanddiamonds/customer/phonehint/.
+    // android/app/src/main/java/com/kapragoldndiamond/app/phonehint/.
     implementation("com.google.android.gms:play-services-auth:21.3.0")
 
     if (hermesEnabled.toBoolean()) {

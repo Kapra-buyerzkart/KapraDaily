@@ -1,4 +1,4 @@
-package com.kapragoldnDiamond.app
+package com.kapragoldndiamond.app
 
 import android.os.Bundle
 import android.view.ViewGroup

@@ -12,7 +12,8 @@ import {
   updateTabBarVisibilityWorklet,
 } from '../../animations/tabBarVisibility';
 
-const scrollAnchor = makeMutable(0);
+const scrollAnchor =
+  typeof makeMutable === 'function' ? makeMutable(0) : ({ value: 0 } as any);
 
 const SCROLL_END_SLOP = 2;
 
@@ -35,11 +36,14 @@ export const resetCartPillScroll = () => {
 };
 
 const useCartPillScrollReset = () => {
-  useFocusEffect(
-    useCallback(() => {
-      resetCartPillScroll();
-    }, []),
-  );
+  if (typeof useFocusEffect === 'function') {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    useFocusEffect(
+      useCallback(() => {
+        resetCartPillScroll();
+      }, []),
+    );
+  }
 };
 
 export const useCartPillScrollHandler = () => {

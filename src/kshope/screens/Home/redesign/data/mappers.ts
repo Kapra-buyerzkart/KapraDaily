@@ -120,15 +120,18 @@ export const tokensOf = (item: any) => {
   return Number.isFinite(value) && value > 0 ? Math.round(value) : 0;
 };
 
-export const mapProductTile = (item: any, index: number): ProductTile => ({
-  id: idOf(item, 'product', index),
-  brand: pick(item, 'brandName', 'BrandName', 'brand', 'Brand') ?? '',
-  name: nameOf(item),
-  ...toPricing(item),
-  tokens: tokensOf(item),
-  image: imageOf(item),
-  raw: item,
-});
+export const mapProductTile = (item: any, index: number): ProductTile => {
+  const tokens = tokensOf(item);
+  return {
+    id: idOf(item, 'product', index),
+    brand: pick(item, 'brandName', 'BrandName', 'brand', 'Brand') ?? '',
+    name: nameOf(item),
+    ...toPricing(item),
+    ...(tokens > 0 ? { tokens } : {}),
+    image: imageOf(item),
+    raw: item,
+  };
+};
 
 export const mapRecCard = (item: any, index: number): RecCard => ({
   id: idOf(item, 'rec', index),

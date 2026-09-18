@@ -1,34 +1,16 @@
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import Svg, { Path } from 'react-native-svg';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import type { ProductTile } from '../../../Home/redesign/content';
-import {
-  StrikePrice,
-  TokenBadge,
-  ProductImage,
-} from '../../../Home/redesign/parts';
+import { Fonts } from '../../../../theme/fonts';
+import { pt } from '../../../../theme/tokens';
 import {
   CARD_GAP,
-  HOME_COLORS,
-  HOME_FONTS,
-  RADIUS,
   SPACE,
   colWidth,
-  fs,
   s,
 } from '../../../Home/redesign/theme';
 import { isOutOfStock } from '../data/selectors';
-
-const Heart: React.FC<{ active?: boolean }> = ({ active }) => (
-  <Svg width={s(16)} height={s(14)} viewBox="-0.8 -0.8 15.6 13.6" fill="none">
-    <Path
-      d="M13.6613 2.45916C13.4441 1.97793 13.1309 1.54184 12.7392 1.17532C12.3472 0.807695 11.8851 0.51555 11.3779 0.31477C10.852 0.105731 10.288 -0.0012594 9.71847 1.11852e-05C8.91954 1.11852e-05 8.14005 0.209334 7.46266 0.60472C7.3006 0.699 7.14666 0.802563 7.00082 0.914939C6.85498 0.802563 6.70104 0.699 6.53898 0.60472C5.86159 0.209334 5.0821 1.11852e-05 4.28317 1.11852e-05C3.71362 -0.0012594 3.14965 0.105731 2.62371 0.31477C2.11491 0.51555 1.65442 0.807695 1.2624 1.17532C0.870729 1.54184 0.557527 1.97793 0.340362 2.45916C0.114559 2.95949 0 3.49103 0 4.03789C0 4.55354 0.111323 5.09084 0.332273 5.63855C0.517301 6.09646 0.782452 6.57139 1.12129 7.05064C1.65792 7.80891 2.39605 8.59972 3.3129 9.40095C4.83184 10.7284 6.33594 11.6449 6.39975 11.6821L6.7873 11.9167C6.91427 11.9932 7.08574 11.9932 7.21271 11.9167L7.60026 11.6821C7.66407 11.6438 9.16709 10.7284 10.6871 9.40095C11.604 8.59972 12.3421 7.80891 12.8787 7.05064C13.2176 6.57139 13.4838 6.09646 13.6677 5.63855C13.8887 5.09084 14 4.55354 14 4.03789C14 3.49103 13.8854 2.95949 13.6613 2.45916Z"
-      fill={active ? HOME_COLORS.orange : 'none'}
-      stroke={active ? HOME_COLORS.orange : HOME_COLORS.muted}
-      strokeWidth={1.1}
-    />
-  </Svg>
-);
 
 type Props = {
   item: ProductTile;
@@ -50,31 +32,27 @@ const ProductCard: React.FC<Props> = ({
   onToggleWishlist,
 }) => {
   const outOfStock = isOutOfStock(item.raw);
-  const cardWidth = width ?? CARD_W;
+  const cardWidth = width ?? (compact ? CARD_W * 0.88 : CARD_W);
+  const imageSource =
+    typeof item.image === 'string' ? { uri: item.image } : item.image;
 
   return (
     <TouchableOpacity
+      testID={`product-card-${item.id}`}
       activeOpacity={0.9}
       onPress={() => onPress?.(item)}
       style={[styles.card, { width: cardWidth }]}
     >
-      <View style={[styles.cardTop, { height: cardWidth * 1.13 }]}>
-        <ProductImage source={item.image} style={styles.image} />
-        {item.discount ? (
-          <View
-            style={[
-              styles.discountBadge,
-              compact && compactStyles.discountBadge,
-            ]}
-          >
-            <Text
-              style={[styles.discount, compact && compactStyles.discount]}
-              numberOfLines={1}
-            >
-              {item.discount}
-            </Text>
+      {/* Product Image */}
+      <View style={[styles.imageContainer, { height: cardWidth * 0.92 }]}>
+        {imageSource ? (
+          <Image source={imageSource} resizeMode="cover" style={styles.image} />
+        ) : (
+          <View style={styles.imagePlaceholder}>
+            <Ionicons name="diamond-outline" size={s(28)} color="#C5A869" />
           </View>
-        ) : null}
+        )}
+
         {outOfStock ? (
           <View style={styles.stockOverlay}>
             <Text style={styles.stockText}>OUT OF STOCK</Text>
@@ -82,54 +60,56 @@ const ProductCard: React.FC<Props> = ({
         ) : null}
       </View>
 
-      <View style={[styles.cardBody, compact && compactStyles.cardBody]}>
-        <View style={styles.nameRow}>
+      {/* Card Info Below Image */}
+      <View style={styles.body}>
+        {/* Line 1: Title + Heart */}
+        <View style={styles.titleRow}>
           <View style={styles.nameBlock}>
             {item.brand ? (
-              <Text
-                style={[styles.brand, compact && compactStyles.brand]}
-                numberOfLines={1}
-              >
+              <Text style={styles.brand} numberOfLines={1}>
                 {item.brand}
               </Text>
             ) : null}
-            <Text
-              style={[styles.name, compact && compactStyles.name]}
-              numberOfLines={1}
-            >
+            <Text style={styles.name} numberOfLines={1}>
               {item.name}
             </Text>
           </View>
           <TouchableOpacity
+            testID={`product-heart-${item.id}`}
             activeOpacity={0.7}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             onPress={() => onToggleWishlist?.(item)}
+            style={styles.heartButton}
           >
-            <Heart active={wishlisted} />
+            <Ionicons
+              name={wishlisted ? 'heart' : 'heart-outline'}
+              size={s(16)}
+              color={wishlisted ? '#C45A5A' : '#1A1A1A'}
+            />
           </TouchableOpacity>
         </View>
 
-        {item.tokens > 0 ? (
-          <TokenBadge
-            tokens={item.tokens}
-            size={compact ? 8 : 9}
-            style={styles.tokenBadge}
-          />
+        {/* Line 2: Specification Subtitle */}
+        {item.subtitle ? (
+          <Text style={styles.subtitle} numberOfLines={1}>
+            {item.subtitle}
+          </Text>
         ) : null}
 
-        <View style={[styles.priceRow, compact && compactStyles.priceRow]}>
-          <Text
-            style={[styles.price, compact && compactStyles.price]}
-            numberOfLines={1}
-          >
-            {item.price}
+        {/* Line 3: Price + MRP + Discount */}
+        <View style={styles.priceRow}>
+          <Text style={styles.price} numberOfLines={1}>
+            {item.price || '₹ —'}
           </Text>
           {item.mrp ? (
-            <StrikePrice
-              value={item.mrp}
-              size={compact ? 9 : 12}
-              color={HOME_COLORS.strike}
-            />
+            <Text style={styles.mrp} numberOfLines={1}>
+              {item.mrp}
+            </Text>
+          ) : null}
+          {item.discount ? (
+            <Text style={styles.discount} numberOfLines={1}>
+              {item.discount}
+            </Text>
           ) : null}
         </View>
       </View>
@@ -137,129 +117,100 @@ const ProductCard: React.FC<Props> = ({
   );
 };
 
-const compactStyles = StyleSheet.create({
-  cardBody: {
-    paddingHorizontal: SPACE.xs,
-    paddingTop: SPACE.xs,
-    paddingBottom: SPACE.sm,
-  },
-  brand: {
-    fontSize: fs(11),
-    lineHeight: fs(11) * 1.3,
-  },
-  name: {
-    fontSize: fs(11),
-    lineHeight: fs(11) * 1.3,
-  },
-  priceRow: {
-    marginTop: SPACE.xs,
-    gap: SPACE.xxs,
-  },
-  price: {
-    fontSize: fs(12),
-    lineHeight: fs(12) * 1.3,
-  },
-  discount: {
-    fontSize: fs(9),
-    lineHeight: fs(9) * 1.35,
-  },
-  discountBadge: {
-    top: SPACE.xs,
-    left: SPACE.xs,
-    paddingHorizontal: s(5),
-    paddingVertical: s(2),
-  },
-});
-
 const styles = StyleSheet.create({
   card: {
-    width: CARD_W,
-    borderRadius: RADIUS.sm,
-    backgroundColor: HOME_COLORS.white,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: HOME_COLORS.recCardBorder,
-    overflow: 'hidden',
     marginBottom: SPACE.lg,
   },
-  cardTop: {
+  imageContainer: {
     width: '100%',
+    borderRadius: s(14),
+    backgroundColor: '#FAF7F2',
     overflow: 'hidden',
+    position: 'relative',
   },
   image: {
     width: '100%',
     height: '100%',
   },
+  imagePlaceholder: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   stockOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(255,255,255,0.6)',
+    backgroundColor: 'rgba(255,255,255,0.7)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   stockText: {
-    fontFamily: HOME_FONTS.semiBold,
-    fontSize: fs(10),
-    color: HOME_COLORS.black,
-    backgroundColor: 'rgba(255,255,255,0.9)',
+    fontFamily: Fonts.lexend.semiBold,
+    fontSize: pt(9.5),
+    color: '#0C382E',
+    backgroundColor: '#FFFFFF',
     paddingHorizontal: SPACE.xs,
-    paddingVertical: SPACE.xxs / 2,
-    borderRadius: RADIUS.sm / 2,
-    overflow: 'hidden',
+    paddingVertical: s(2),
+    borderRadius: s(4),
   },
-  cardBody: {
-    paddingHorizontal: SPACE.sm,
-    paddingTop: SPACE.sm,
-    paddingBottom: SPACE.md,
+  body: {
+    paddingTop: s(8),
   },
-  nameRow: {
+  titleRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    gap: SPACE.xs,
   },
   nameBlock: {
     flex: 1,
+    marginRight: s(6),
   },
   brand: {
-    fontFamily: HOME_FONTS.semiBold,
-    fontSize: fs(14),
-    lineHeight: fs(14) * 1.3,
-    color: HOME_COLORS.black,
+    fontFamily: Fonts.cormorantGaramond.semiBold,
+    fontSize: pt(13),
+    color: '#1A1A1A',
+    lineHeight: pt(17),
   },
   name: {
-    fontFamily: HOME_FONTS.regular,
-    fontSize: fs(14),
-    lineHeight: fs(14) * 1.3,
-    color: HOME_COLORS.muted,
+    fontFamily: Fonts.cormorantGaramond.semiBold,
+    fontSize: pt(15),
+    lineHeight: pt(19),
+    color: '#1A1A1A',
   },
-  tokenBadge: {
-    marginTop: SPACE.xs,
+  heartButton: {
+    padding: s(2),
+  },
+  subtitle: {
+    fontFamily: Fonts.lexend.regular,
+    fontSize: pt(9.5),
+    lineHeight: pt(14),
+    color: '#767676',
+    marginTop: 3,
   },
   priceRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: SPACE.sm,
-    gap: SPACE.xs,
+    alignItems: 'baseline',
+    marginTop: 6,
+    gap: s(4),
   },
   price: {
-    fontFamily: HOME_FONTS.semiBold,
-    fontSize: fs(16),
-    lineHeight: fs(16) * 1.3,
-    color: HOME_COLORS.black,
+    fontFamily: Fonts.lexend.semiBold,
+    fontSize: pt(14),
+    lineHeight: pt(19),
+    color: '#1A1A1A',
   },
-  discountBadge: {
-    position: 'absolute',
-    top: SPACE.sm,
-    left: SPACE.sm,
-    paddingHorizontal: s(7),
-    paddingVertical: s(3),
-    borderRadius: s(999),
-    backgroundColor: HOME_COLORS.orange,
+  mrp: {
+    fontFamily: Fonts.lexend.regular,
+    fontSize: pt(11),
+    lineHeight: pt(15),
+    color: '#8E8E8E',
+    textDecorationLine: 'line-through',
   },
   discount: {
-    fontFamily: HOME_FONTS.semiBold,
-    fontSize: fs(11),
-    lineHeight: fs(11) * 1.35,
-    color: HOME_COLORS.white,
+    fontFamily: Fonts.lexend.semiBold,
+    fontSize: pt(10.5),
+    lineHeight: pt(14),
+    color: '#0C382E',
+    marginLeft: s(2),
   },
 });
 

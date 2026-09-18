@@ -7,16 +7,16 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import type { Tile } from '../../../Home/redesign/content';
 import { imageSource } from '../../../Home/redesign/parts';
 import {
   GUTTER,
   HOME_COLORS,
   HOME_FONTS,
-  RADIUS,
   SPACE,
-  colWidth,
   fs,
+  s,
 } from '../../../Home/redesign/theme';
 
 type Props = {
@@ -24,6 +24,8 @@ type Props = {
   activeId: string | null;
   onPress: (id: string) => void;
 };
+
+const CIRCLE_SIZE = s(52);
 
 const CategoryChipRow: React.FC<Props> = ({ items, activeId, onPress }) => (
   <FlatList
@@ -34,80 +36,93 @@ const CategoryChipRow: React.FC<Props> = ({ items, activeId, onPress }) => (
     contentContainerStyle={styles.row}
     renderItem={({ item }) => {
       const isActive = item.id === activeId;
+      const imgSrc = imageSource(item.image);
       return (
-        <View style={styles.item}>
-          <TouchableOpacity
-            testID={`category-chip-${item.id}`}
-            activeOpacity={0.85}
-            onPress={() => onPress(item.id)}
-            style={[styles.tile, isActive && styles.tileActive]}
-          >
-            <Image
-              source={imageSource(item.image)}
-              resizeMode="contain"
-              style={styles.icon}
-            />
-          </TouchableOpacity>
+        <TouchableOpacity
+          testID={`category-chip-${item.id}`}
+          activeOpacity={0.8}
+          onPress={() => onPress(item.id)}
+          style={styles.item}
+        >
+          {/* Circular Category Icon */}
+          <View style={styles.circle}>
+            {imgSrc ? (
+              <Image
+                source={imgSrc}
+                resizeMode="contain"
+                style={styles.icon}
+              />
+            ) : (
+              <Ionicons
+                name="sparkles-outline"
+                size={s(20)}
+                color="#C5A869"
+              />
+            )}
+          </View>
+
+          {/* Label */}
           <Text
             style={[styles.label, isActive && styles.labelActive]}
-            numberOfLines={2}
+            numberOfLines={1}
           >
             {item.label}
           </Text>
-        </View>
+
+          {/* Underline Indicator */}
+          <View
+            style={[styles.indicator, isActive && styles.indicatorActive]}
+          />
+        </TouchableOpacity>
       );
     }}
   />
 );
 
-const TILE_W = colWidth(5, SPACE.md);
-
 const styles = StyleSheet.create({
   row: {
     paddingHorizontal: GUTTER,
-    paddingTop: SPACE.sm,
-    paddingBottom: SPACE.md,
-    gap: SPACE.md,
+    paddingTop: SPACE.xs,
+    paddingBottom: SPACE.sm,
+    gap: s(14),
   },
   item: {
-    width: TILE_W,
     alignItems: 'center',
+    width: s(58),
   },
-  tile: {
-    width: TILE_W,
-    height: TILE_W * 0.93,
-    borderRadius: RADIUS.lg,
-    backgroundColor: HOME_COLORS.white,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: HOME_COLORS.cardBorder,
+  circle: {
+    width: CIRCLE_SIZE,
+    height: CIRCLE_SIZE,
+    borderRadius: CIRCLE_SIZE / 2,
+    backgroundColor: '#F7F2EB',
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
   },
-  tileActive: {
-    borderColor: HOME_COLORS.orange,
-    shadowColor: HOME_COLORS.orange,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    borderWidth: 2,
-    shadowRadius: 7.4,
-    elevation: 3,
-  },
   icon: {
-    width: '100%',
-    height: '100%',
+    width: '74%',
+    height: '74%',
   },
   label: {
     fontFamily: HOME_FONTS.regular,
-    fontSize: fs(10),
-    lineHeight: fs(10) * 1.4,
+    fontSize: fs(11),
     color: '#494949',
-    marginTop: SPACE.xs,
+    marginTop: s(6),
     textAlign: 'center',
   },
   labelActive: {
-    fontFamily: HOME_FONTS.medium,
-    color: HOME_COLORS.orange,
+    fontFamily: HOME_FONTS.semiBold,
+    color: '#0C382E',
+  },
+  indicator: {
+    width: s(24),
+    height: s(2),
+    borderRadius: s(1),
+    backgroundColor: 'transparent',
+    marginTop: s(4),
+  },
+  indicatorActive: {
+    backgroundColor: '#0C382E',
   },
 });
 

@@ -1,141 +1,202 @@
 import React from 'react';
 import { View, Text, Modal, TouchableOpacity, StyleSheet } from 'react-native';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
-import { colors } from '../theme/colours';
-import { Fonts } from '../theme/fonts';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import { CART_COLORS, CART_FONTS, fs, s } from '../screens/Cart/cartRedesignTheme';
 
 interface ConfirmationModalProps {
-    visible: boolean;
-    onClose: () => void;
-    onConfirm: () => void;
-    title: string;
-    message: string;
-    confirmText?: string;
-    cancelText?: string;
-    iconName?: string;
-    themeColor?: string;
+  visible: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  title: string;
+  message: string;
+  confirmText?: string;
+  cancelText?: string;
+  iconName?: string;
+  themeColor?: string;
 }
 
 const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
-    visible,
-    onClose,
-    onConfirm,
-    title,
-    message,
-    confirmText = "Confirm",
-    cancelText = "Cancel",
-    iconName,
-    themeColor
+  visible,
+  onClose,
+  onConfirm,
+  title,
+  message,
+  confirmText = 'Confirm',
+  cancelText = 'Cancel',
+  iconName,
+  themeColor,
 }) => {
-    return (
-        <Modal
-            transparent={true}
-            visible={visible}
-            animationType="fade"
-            onRequestClose={onClose}
-        >
-            <View style={styles.overlay}>
-                <View style={styles.modalContainer}>
-                    <View style={styles.iconContainer}>
-                        <MaterialIcons name={iconName || "warning"} size={wp('12%')} color={themeColor || colors.red} />
-                    </View>
+  const isDestructive =
+    !themeColor ||
+    themeColor === CART_COLORS.darkEmerald ||
+    themeColor.toLowerCase().includes('red') ||
+    confirmText.toLowerCase().includes('remove') ||
+    confirmText.toLowerCase().includes('delete');
 
-                    <Text style={styles.title}>{title}</Text>
-                    <Text style={styles.message}>{message}</Text>
+  const resolvedIcon =
+    iconName === 'trash' || confirmText.toLowerCase().includes('remove')
+      ? 'trash-outline'
+      : iconName === 'warning'
+      ? 'alert-circle-outline'
+      : 'help-circle-outline';
 
-                    <View style={styles.buttonContainer}>
-                        <TouchableOpacity
-                            style={[styles.button, styles.cancelButton]}
-                            onPress={onClose}
-                        >
-                            <Text style={styles.cancelButtonText} numberOfLines={1} adjustsFontSizeToFit>{cancelText}</Text>
-                        </TouchableOpacity>
+  return (
+    <Modal
+      transparent
+      visible={visible}
+      animationType="fade"
+      onRequestClose={onClose}
+    >
+      <View style={styles.overlay}>
+        <TouchableOpacity
+          style={styles.backdropTouch}
+          activeOpacity={1}
+          onPress={onClose}
+        />
+        <View style={styles.modalContainer}>
+          {/* Circular Luxury Icon Badge */}
+          <View
+            style={[
+              styles.iconCircle,
+              {
+                backgroundColor: isDestructive ? '#FFF4EC' : CART_COLORS.emeraldTint,
+                borderColor: isDestructive ? '#FCDCC8' : '#D1E6DD',
+              },
+            ]}
+          >
+            <Ionicons
+              name={resolvedIcon}
+              size={s(26)}
+              color={themeColor || (isDestructive ? CART_COLORS.orange : CART_COLORS.darkEmerald)}
+            />
+          </View>
 
-                        <TouchableOpacity
-                            style={[styles.button, styles.confirmButton, themeColor ? { backgroundColor: themeColor } : {}]}
-                            onPress={() => {
-                                onClose();
-                                onConfirm();
-                            }}
-                        >
-                            <Text style={styles.confirmButtonText} numberOfLines={1} adjustsFontSizeToFit>{confirmText}</Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
-            </View>
-        </Modal>
-    );
+          {/* Title with Serif Luxury Typography */}
+          <Text style={styles.title}>{title}</Text>
+
+          {/* Descriptive Message */}
+          <Text style={styles.message}>{message}</Text>
+
+          {/* Action Buttons */}
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              style={styles.cancelButton}
+              activeOpacity={0.8}
+              onPress={onClose}
+            >
+              <Text style={styles.cancelButtonText} numberOfLines={1}>
+                {cancelText}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.confirmButton,
+                themeColor ? { backgroundColor: themeColor } : {},
+              ]}
+              activeOpacity={0.85}
+              onPress={() => {
+                onClose();
+                onConfirm();
+              }}
+            >
+              <Text style={styles.confirmButtonText} numberOfLines={1}>
+                {confirmText}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
 };
 
 const styles = StyleSheet.create({
-    overlay: {
-        flex: 1,
-        backgroundColor: colors.halfTransparent,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    modalContainer: {
-        width: wp('85%'),
-        backgroundColor: colors.white,
-        borderRadius: wp('5%'),
-        padding: wp('5%'),
-        alignItems: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
-        elevation: 5,
-    },
-    iconContainer: {
-        marginBottom: hp('1%'),
-    },
-    title: {
-        fontFamily: Fonts.gilroySemiBold,
-        fontSize: wp('4.5%'),
-        color: colors.black,
-        marginBottom: hp('1%'),
-        textAlign: 'center',
-    },
-    message: {
-        fontFamily: Fonts.gilroyRegular,
-        fontSize: wp('3.5%'),
-        color: colors.grey,
-        textAlign: 'center',
-        marginBottom: hp('3%'),
-        lineHeight: wp('5%'),
-    },
-    buttonContainer: {
-        flexDirection: 'row',
-        width: '100%',
-        justifyContent: 'space-between',
-        gap: wp('3%'),
-    },
-    button: {
-        flex: 1,
-        paddingVertical: hp('1.5%'),
-        borderRadius: wp('2.5%'),
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    cancelButton: {
-        backgroundColor: colors.white,
-        borderWidth: 1,
-        borderColor: colors.lightGrey,
-    },
-    confirmButton: {
-        backgroundColor: colors.red,
-    },
-    cancelButtonText: {
-        fontFamily: Fonts.gilroyMedium,
-        fontSize: wp('3.7%'),
-        color: colors.grey,
-    },
-    confirmButtonText: {
-        fontFamily: Fonts.gilroyMedium,
-        fontSize: wp('3.7%'),
-        color: colors.white,
-    },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.48)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: s(24),
+  },
+  backdropTouch: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  modalContainer: {
+    width: '100%',
+    maxWidth: s(340),
+    backgroundColor: CART_COLORS.white,
+    borderRadius: s(20),
+    paddingVertical: s(24),
+    paddingHorizontal: s(20),
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: CART_COLORS.cardBorder,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 18,
+    elevation: 8,
+  },
+  iconCircle: {
+    width: s(54),
+    height: s(54),
+    borderRadius: s(27),
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: s(14),
+  },
+  title: {
+    fontFamily: CART_FONTS.serifBold,
+    fontSize: fs(20),
+    color: CART_COLORS.textDark,
+    marginBottom: s(8),
+    textAlign: 'center',
+    lineHeight: fs(24),
+  },
+  message: {
+    fontFamily: CART_FONTS.sansRegular,
+    fontSize: fs(13),
+    color: CART_COLORS.textMuted,
+    textAlign: 'center',
+    marginBottom: s(22),
+    lineHeight: fs(19),
+    paddingHorizontal: s(6),
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    width: '100%',
+    gap: s(10),
+  },
+  cancelButton: {
+    flex: 1,
+    paddingVertical: s(12),
+    borderRadius: s(12),
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FAF8F5',
+    borderWidth: 1,
+    borderColor: CART_COLORS.cardBorder,
+  },
+  confirmButton: {
+    flex: 1,
+    paddingVertical: s(12),
+    borderRadius: s(12),
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: CART_COLORS.darkEmerald,
+  },
+  cancelButtonText: {
+    fontFamily: CART_FONTS.sansMedium,
+    fontSize: fs(13.5),
+    color: CART_COLORS.textDark,
+  },
+  confirmButtonText: {
+    fontFamily: CART_FONTS.sansBold,
+    fontSize: fs(13.5),
+    color: CART_COLORS.white,
+  },
 });
 
 export default ConfirmationModal;

@@ -50,6 +50,7 @@ const images = {
   claimticketBtn: require('./claimticketBtn.png'),
   no_vocher_booking: require('./noimages/no_vocher_booking.png'),
   maplocationnbanner: require('./maplocationnbanner.png'),
+  detailsheader: require('./detailsheader.png'),
 };
 
 export default images;

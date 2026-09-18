@@ -57,7 +57,7 @@ export const useCategoryData = (initialCatId?: string | number) => {
       showLoader(true);
       const response = await getCategoriesApi(ROOT_PARENT_ID);
       const items = response?.success ? response?.data?.items : null;
-      if (items) {
+      if (items && Array.isArray(items) && items.length > 0) {
         setCategories(items);
         const target =
           initialCatId?.toString() ?? items[0]?.catId?.toString() ?? null;
@@ -77,6 +77,11 @@ export const useCategoryData = (initialCatId?: string | number) => {
 
   const fetchSubCategories = useCallback(
     async (parentId: string) => {
+      if (!parentId || parentId === ALL_TILE_ID) {
+        setSubCategories([]);
+        setSelectedSubCategoryId(null);
+        return;
+      }
       try {
         showLoader(true);
         const response = await getCategoriesApi(parentId);
@@ -94,7 +99,7 @@ export const useCategoryData = (initialCatId?: string | number) => {
   );
 
   const fetchProducts = useCallback(
-    async (categoryId: string, page = 1) => {
+    async (categoryId: string | null, page = 1) => {
       const showsLoader = page === 1;
       try {
         if (showsLoader) {
@@ -103,10 +108,15 @@ export const useCategoryData = (initialCatId?: string | number) => {
           setIsLoadingMore(true);
         }
 
+        const targetCatId =
+          categoryId && categoryId !== ALL_TILE_ID
+            ? parseInt(categoryId, 10)
+            : null;
+
         const response = await searchProductsApi({
           pincodeAreaId: areaIdRef.current,
           prName: debouncedSearchText.trim(),
-          catId: parseInt(categoryId, 10),
+          catId: targetCatId,
           priceMin: filters.priceMin,
           priceMax: filters.priceMax,
           filterValues: null,
@@ -165,24 +175,26 @@ export const useCategoryData = (initialCatId?: string | number) => {
   }, []);
 
   useEffect(() => {
-    if (selectedCategoryId) {
+    if (selectedCategoryId && selectedCategoryId !== ALL_TILE_ID) {
       fetchSubCategories(selectedCategoryId);
+    } else {
+      setSubCategories([]);
+      setSelectedSubCategoryId(null);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCategoryId]);
+  }, [selectedCategoryId, fetchSubCategories]);
 
   useEffect(() => {
     const target = selectedSubCategoryId || selectedCategoryId;
     if (target) {
       fetchProducts(target);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     selectedSubCategoryId,
     selectedCategoryId,
     debouncedSearchText,
     filters,
     pincodeAreaId,
+    fetchProducts,
   ]);
 
   const loadMore = useCallback(() => {
@@ -218,7 +230,7 @@ export const useCategoryData = (initialCatId?: string | number) => {
   return {
     loading,
     isLoadingMore,
-    categoryTiles: useMemo(() => toCategoryTiles(categories), [categories]),
+    categoryTiles: useMemo(() => toCategoryTiles(categories, true), [categories]),
     subCategoryTiles: useMemo(
       () => toSubCategoryTiles(subCategories, activeCategory),
       [subCategories, activeCategory],

@@ -577,8 +577,8 @@ export const detailsStyles = StyleSheet.create({
 
   // Group Order Section
   groupHeading: {
-    fontFamily: Fonts.lexend?.bold || Fonts.gilroyBold,
-    fontSize: dp(16),
+    fontFamily: Fonts.cormorantGaramond?.semiBold || Fonts.semiBold,
+    fontSize: dp(20),
     color: DESIGN_COLORS.ink,
     marginHorizontal: dp(16),
     marginTop: dp(24),

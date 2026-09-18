@@ -18,21 +18,39 @@ export const HOME_COLORS = {
   creamRule: '#F3D0A2',
   peach: '#FFDFB8',
   peachRule: '#E4A85D',
-  heading: '#3B1010',
-  script: '#6A0000',
+  heading: '#1A1A1A',
+  script: '#0C382E',
   cocoa: '#592626',
   orange: '#F25000',
   orangeSoft: '#FFA87E',
-  searchField: '#D9D9D9',
-  searchDivider: '#6A6A6A',
-  placeholder: '#868686',
-  cardBorder: '#BCBCBC',
-  tileBorder: '#BABABA',
-  recCardBorder: '#C9C9C9',
-  muted: '#656565',
-  strike: '#5C5C5C',
+  searchField: '#FFFFFF',
+  searchDivider: '#E5E5E5',
+  placeholder: '#8E8E8E',
+  cardBorder: '#EBE6DF',
+  tileBorder: '#E5DFD7',
+  recCardBorder: '#EBE6DF',
+  muted: '#686868',
+  strike: '#8E8E8E',
   white: '#FFFFFF',
   black: '#000000',
+
+  // Kapra Gold & Diamonds Luxury Palette
+  darkEmerald: '#0C382E',
+  deepEmerald: '#082B22',
+  emeraldTint: '#E8F1EE',
+  gold: '#B68D40',
+  goldMetallic: '#C5A869',
+  goldLight: '#F3DFBF',
+  goldBorder: '#E3CFA8',
+  luxuryCream: '#FBF9F5',
+  cardBg: '#F7F5F0',
+  pillBg: '#0C382E',
+  textDark: '#1A1A1A',
+  textMuted: '#686868',
+  textFaint: '#9E9E9E',
+  borderLight: '#EBE6DF',
+  heartRed: '#C45A5A',
+  certifiedBadge: '#0C382E',
 };
 
 export const TOKEN_COLORS = {
@@ -43,12 +61,12 @@ export const TOKEN_COLORS = {
 };
 
 export const TILE_TINTS = [
-  '#FFEBD8',
-  '#E7F2F8',
-  '#F6E9F1',
-  '#E9F3E6',
-  '#FDF0D6',
-  '#EDEBF7',
+  '#F5EFE6',
+  '#F7F4EE',
+  '#F3ECE3',
+  '#F9F6F0',
+  '#F5EFE6',
+  '#F7F4EE',
 ];
 
 export const HOME_FONTS = {
@@ -57,7 +75,13 @@ export const HOME_FONTS = {
   semiBold: Fonts.cormorantGaramond.semiBold,
   bold: Fonts.cormorantGaramond.bold,
   light: Fonts.cormorantGaramond.light,
-  script: Fonts.madelyn,
+  italic: Fonts.cormorantGaramond.italic,
+  semiBoldItalic: Fonts.cormorantGaramond.semiBoldItalic,
+  boldItalic: Fonts.cormorantGaramond.boldItalic,
+  script: Fonts.madelyn || Fonts.cormorantGaramond.italic,
+  lexend: Fonts.lexend.regular,
+  lexendMedium: Fonts.lexend.medium,
+  lexendBold: Fonts.lexend.bold,
 };
 
 export const GUTTER = s(16);

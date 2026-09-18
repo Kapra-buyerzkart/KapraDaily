@@ -7,35 +7,39 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import type { Tile } from '../../../Home/redesign/content';
-import { SectionTitle, imageSource } from '../../../Home/redesign/parts';
+import { imageSource } from '../../../Home/redesign/parts';
 import {
-  CARD_GAP,
   GUTTER,
-  HOME_COLORS,
   HOME_FONTS,
-  RADIUS,
   SPACE,
-  TITLE_GAP,
-  colWidth,
   fs,
+  s,
 } from '../../../Home/redesign/theme';
 
 type Props = {
   items: Tile[];
-  activeId: string;
+  activeId: string | null;
   onPress: (id: string) => void;
 };
 
+const CARD_SIZE = s(80);
+
 const SubCategoryRow: React.FC<Props> = ({ items, activeId, onPress }) => {
-  if (items.length === 0) {
+  if (!items || items.length === 0) {
     return null;
   }
 
   return (
     <View style={styles.wrap}>
-      <SectionTitle text="explore by" accent="Category" style={styles.title} />
+      {/* Header Block */}
+      <View style={styles.headerBlock}>
+        <Text style={styles.title}>explore by type</Text>
+        <Text style={styles.subtitle}>Shop by Category</Text>
+      </View>
 
+      {/* Cards Row */}
       <FlatList
         data={items}
         horizontal
@@ -44,19 +48,28 @@ const SubCategoryRow: React.FC<Props> = ({ items, activeId, onPress }) => {
         contentContainerStyle={styles.row}
         renderItem={({ item }) => {
           const isActive = item.id === activeId;
+          const imgSrc = imageSource(item.image);
           return (
             <TouchableOpacity
               testID={`subcategory-chip-${item.id}`}
-              activeOpacity={0.9}
+              activeOpacity={0.85}
               onPress={() => onPress(item.id)}
               style={styles.item}
             >
               <View style={[styles.card, isActive && styles.cardActive]}>
-                <Image
-                  source={imageSource(item.image)}
-                  resizeMode="contain"
-                  style={styles.cardImage}
-                />
+                {imgSrc ? (
+                  <Image
+                    source={imgSrc}
+                    resizeMode="contain"
+                    style={styles.cardImage}
+                  />
+                ) : (
+                  <Ionicons
+                    name="sparkles-outline"
+                    size={s(24)}
+                    color="#C5A869"
+                  />
+                )}
               </View>
               <Text
                 style={[styles.label, isActive && styles.labelActive]}
@@ -72,61 +85,67 @@ const SubCategoryRow: React.FC<Props> = ({ items, activeId, onPress }) => {
   );
 };
 
-const CARD_W = colWidth(4, CARD_GAP);
-
 const styles = StyleSheet.create({
   wrap: {
-    backgroundColor: HOME_COLORS.white,
+    backgroundColor: '#FFFFFF',
+    marginTop: SPACE.md,
+    marginBottom: SPACE.sm,
+  },
+  headerBlock: {
+    paddingHorizontal: GUTTER,
+    marginBottom: SPACE.sm,
   },
   title: {
-    paddingHorizontal: GUTTER,
-    marginTop: SPACE.md,
-    marginBottom: TITLE_GAP,
+    fontFamily: HOME_FONTS.regular,
+    fontSize: fs(22),
+    lineHeight: fs(26),
+    color: '#0C382E',
+  },
+  subtitle: {
+    fontFamily: HOME_FONTS.regular,
+    fontSize: fs(11.5),
+    color: '#767676',
+    marginTop: s(1),
   },
   row: {
     paddingHorizontal: GUTTER,
-    paddingBottom: SPACE.md,
-    gap: CARD_GAP,
+    paddingBottom: SPACE.sm,
+    gap: s(12),
   },
   item: {
-    width: CARD_W,
+    width: CARD_SIZE,
     alignItems: 'center',
   },
   card: {
-    width: CARD_W,
-    height: CARD_W * 1.19,
-    borderRadius: RADIUS.md,
-    backgroundColor: HOME_COLORS.white,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: HOME_COLORS.cardBorder,
+    width: CARD_SIZE,
+    height: CARD_SIZE,
+    borderRadius: s(14),
+    backgroundColor: '#FAF6F0',
+    borderWidth: 1,
+    borderColor: '#EFE8DE',
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
   },
   cardActive: {
-    borderColor: HOME_COLORS.orange,
-    shadowColor: HOME_COLORS.orange,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.59,
-    borderWidth: 2,
-    shadowRadius: 8,
-    elevation: 3,
+    borderColor: '#0C382E',
+    borderWidth: 1.5,
   },
   cardImage: {
-    width: '82%',
-    height: '72%',
+    width: '78%',
+    height: '78%',
   },
   label: {
     fontFamily: HOME_FONTS.regular,
-    fontSize: fs(10),
-    lineHeight: fs(10) * 1.4,
-    color: '#494949',
-    marginTop: SPACE.xs,
+    fontSize: fs(11),
+    lineHeight: fs(11) * 1.3,
+    color: '#1A1A1A',
+    marginTop: s(6),
     textAlign: 'center',
   },
   labelActive: {
-    fontFamily: HOME_FONTS.medium,
-    color: HOME_COLORS.orange,
+    fontFamily: HOME_FONTS.semiBold,
+    color: '#0C382E',
   },
 });
 
