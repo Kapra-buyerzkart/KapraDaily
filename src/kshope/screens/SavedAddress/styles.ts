@@ -1,69 +1,88 @@
-import { StyleSheet } from 'react-native';
+import { Dimensions, StyleSheet } from 'react-native';
 import { Fonts } from '../../theme/fonts';
-import { UI_TYPE, hp, wp } from '../../theme/tokens';
 
-const HAIRLINE = StyleSheet.hairlineWidth;
+const DESIGN_WIDTH = 440;
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+export const s = (n: number) => (n / DESIGN_WIDTH) * SCREEN_WIDTH;
+const TYPE_RATIO = Math.min(Math.max(SCREEN_WIDTH / DESIGN_WIDTH, 0.92), 1.1);
+export const fs = (n: number) => Math.round(n * TYPE_RATIO * 10) / 10;
+
+// Kapra Gold & Diamonds Luxury Palette
+export const DARK_EMERALD = '#0C382E';
+export const DEEP_EMERALD = '#082B22';
+export const EMERALD_TINT = '#E8F2EE';
+export const EMERALD_FAINT = '#F4F8F6';
+export const GOLD = '#B68D40';
+export const GOLD_METALLIC = '#C5A869';
 
 export const SURFACE_BASE = '#FFFFFF';
-export const SURFACE_SUNKEN = '#F5F6F8';
-export const SURFACE_TINT = '#FFF6F2';
-export const RULE = 'rgba(17,19,26,0.05)';
-export const EDGE = 'rgba(17,19,26,0.12)';
+export const CANVAS = '#FAF9F6';
+export const SURFACE_SUNKEN = '#F7F5F0';
+export const SURFACE_TINT = '#F7FAF8';
+export const RULE = '#F0ECE4';
+export const EDGE = '#ECE7DE';
 
-export const INK_STRONG = '#12131A';
-export const INK_BASE = '#2B2D36';
-export const INK_MUTED = '#6B7280';
+export const INK_STRONG = '#1A1A1A';
+export const INK_BASE = '#2C2D30';
+export const INK_MUTED = '#686868';
+export const INK_FAINT = '#9E9E9E';
 
-export const PRIMARY = '#F25000';
-export const PRIMARY_SOFT = '#FFE9E0';
-export const SUCCESS = '#0E9F4F';
-export const SUCCESS_SOFT = '#E7F7EE';
-export const SUCCESS_TEXT = '#0B7A3D';
-export const DISCOUNT = '#C2410C';
+export const PRIMARY = DARK_EMERALD;
+export const PRIMARY_SOFT = EMERALD_TINT;
+export const SUCCESS = DARK_EMERALD;
+export const SUCCESS_SOFT = EMERALD_TINT;
+export const SUCCESS_TEXT = DARK_EMERALD;
+export const DISCOUNT = '#C45A5A'; // Luxury crimson for destructive actions
 
-export const GUTTER = wp('4.6%');
-
-export const SPACE = { xs: 4, sm: 8, md: 12, base: 16 };
-export const RADIUS = { md: 16, lg: 20, pill: 999 };
+export const GUTTER = s(16);
 
 export const ICON = {
-  type: wp('4.4%'),
-  meta: wp('3.6%'),
-  action: wp('4.4%'),
-  plus: wp('4.6%'),
-  chevron: wp('4%'),
-  empty: wp('8%'),
-  check: wp('3.2%'),
+  type: s(16),
+  meta: s(14),
+  action: s(16),
+  plus: s(18),
+  chevron: s(16),
+  empty: s(28),
+  check: s(12),
 };
 
 export default StyleSheet.create({
   mainContainer: {
     flex: 1,
-    backgroundColor: SURFACE_BASE,
+    backgroundColor: CANVAS,
   },
   headerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: GUTTER,
-    paddingTop: hp('1.5%'),
-    paddingBottom: hp('1.5%'),
-    borderBottomWidth: HAIRLINE,
-    borderBottomColor: RULE,
+    paddingTop: s(10),
+    paddingBottom: s(12),
+    backgroundColor: SURFACE_BASE,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0EBE1',
+  },
+  backButton: {
+    width: s(36),
+    height: s(36),
+    borderRadius: s(18),
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: SURFACE_SUNKEN,
   },
   headerText: {
-    fontFamily: Fonts.gilroySemiBold,
-    fontSize: wp('4.65%'),
+    fontFamily: Fonts.cormorantGaramond.bold,
+    fontSize: fs(21),
     color: INK_STRONG,
-    marginLeft: wp('3%'),
-    letterSpacing: -0.3,
+    marginLeft: s(12),
+    letterSpacing: 0.3,
   },
   listContent: {
     paddingHorizontal: GUTTER,
-    paddingTop: SPACE.base,
-    paddingBottom: hp('6%'),
+    paddingTop: s(16),
+    paddingBottom: s(40),
   },
   listContentWithBar: {
-    paddingBottom: hp('16%'),
+    paddingBottom: s(110),
   },
 
   confirmBar: {
@@ -72,193 +91,240 @@ export default StyleSheet.create({
     right: 0,
     bottom: 0,
     paddingHorizontal: GUTTER,
-    paddingTop: SPACE.md,
-    paddingBottom: SPACE.md,
+    paddingTop: s(12),
+    paddingBottom: s(16),
     backgroundColor: SURFACE_BASE,
-    borderTopWidth: HAIRLINE,
-    borderTopColor: RULE,
+    borderTopWidth: 1,
+    borderTopColor: '#F0EBE1',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 6,
   },
   confirmButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: PRIMARY,
-    borderRadius: RADIUS.md,
-    paddingVertical: hp('1.8%'),
+    backgroundColor: DARK_EMERALD,
+    borderRadius: s(12),
+    paddingVertical: s(13),
+    gap: s(8),
   },
   confirmButtonText: {
-    marginLeft: SPACE.sm,
-    ...UI_TYPE.heading,
-    color: SURFACE_BASE,
+    fontFamily: Fonts.lexend.bold,
+    fontSize: fs(13.5),
+    color: '#FFFFFF',
+    letterSpacing: 0.3,
   },
   confirmHint: {
-    marginBottom: SPACE.sm,
-    ...UI_TYPE.caption,
-    fontFamily: Fonts.gilroyMedium,
+    marginBottom: s(8),
+    fontFamily: Fonts.lexend.regular,
+    fontSize: fs(11.5),
     color: INK_MUTED,
+    textAlign: 'center',
   },
 
   addRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SURFACE_TINT,
-    borderRadius: RADIUS.md,
-    paddingHorizontal: SPACE.md,
-    paddingVertical: SPACE.md,
-    marginBottom: SPACE.base,
+    backgroundColor: SURFACE_BASE,
+    borderRadius: s(14),
+    borderWidth: 1,
+    borderColor: '#D8E5DF',
+    paddingHorizontal: s(14),
+    paddingVertical: s(12),
+    marginBottom: s(16),
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 3,
+    elevation: 1,
   },
   addIconWell: {
-    width: wp('8%'),
-    height: wp('8%'),
-    borderRadius: RADIUS.pill,
-    backgroundColor: PRIMARY_SOFT,
+    width: s(36),
+    height: s(36),
+    borderRadius: s(18),
+    backgroundColor: EMERALD_TINT,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  addRowText: {
+  addRowTextCol: {
     flex: 1,
-    marginLeft: SPACE.md,
-    ...UI_TYPE.bodyStrong,
-    color: PRIMARY,
+    marginLeft: s(12),
+  },
+  addRowText: {
+    fontFamily: Fonts.lexend.bold,
+    fontSize: fs(13),
+    color: DARK_EMERALD,
+  },
+  addRowSubtext: {
+    fontFamily: Fonts.lexend.regular,
+    fontSize: fs(10.8),
+    color: INK_MUTED,
+    marginTop: 2,
   },
 
   card: {
-    borderRadius: RADIUS.lg,
-    borderWidth: HAIRLINE,
+    borderRadius: s(16),
+    borderWidth: 1,
     borderColor: EDGE,
     backgroundColor: SURFACE_BASE,
-    marginBottom: SPACE.md,
+    marginBottom: s(12),
     overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 1,
   },
   cardSelected: {
     borderWidth: 1.5,
-    borderColor: SUCCESS,
+    borderColor: DARK_EMERALD,
+    backgroundColor: '#FCFDFD',
   },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: SPACE.md,
-    paddingVertical: SPACE.sm,
-    minHeight: hp('5.6%'),
+    paddingHorizontal: s(14),
+    paddingTop: s(12),
+    paddingBottom: s(10),
   },
   typeCluster: {
     flexDirection: 'row',
     alignItems: 'center',
     flexShrink: 1,
-    marginRight: SPACE.sm,
   },
   typeWell: {
-    width: wp('8%'),
-    height: wp('8%'),
-    borderRadius: RADIUS.pill,
+    width: s(32),
+    height: s(32),
+    borderRadius: s(16),
     backgroundColor: SURFACE_SUNKEN,
     alignItems: 'center',
     justifyContent: 'center',
   },
   typeWellActive: {
-    backgroundColor: SUCCESS_SOFT,
+    backgroundColor: EMERALD_TINT,
   },
   typeText: {
-    marginLeft: SPACE.sm,
-    ...UI_TYPE.bodyStrong,
+    marginLeft: s(8),
+    fontFamily: Fonts.lexend.bold,
+    fontSize: fs(13),
     color: INK_STRONG,
-    flexShrink: 1,
+    letterSpacing: 0.2,
   },
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: s(8),
   },
   selectedPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SUCCESS_SOFT,
-    borderRadius: RADIUS.pill,
-    paddingHorizontal: SPACE.sm,
-    paddingVertical: 3,
+    backgroundColor: DARK_EMERALD,
+    borderRadius: s(12),
+    paddingHorizontal: s(8),
+    paddingVertical: s(4),
+    gap: s(4),
   },
   selectedPillText: {
-    marginLeft: 3,
-    ...UI_TYPE.microStrong,
-    color: SUCCESS_TEXT,
+    fontFamily: Fonts.lexend.bold,
+    fontSize: fs(10),
+    color: '#FFFFFF',
+    letterSpacing: 0.3,
   },
   menuButton: {
-    paddingLeft: SPACE.sm,
-    paddingVertical: SPACE.xs,
+    width: s(28),
+    height: s(28),
+    borderRadius: s(14),
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: SURFACE_SUNKEN,
   },
 
   actionsRow: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: SURFACE_SUNKEN,
-    borderRadius: RADIUS.pill,
-    paddingHorizontal: SPACE.xs,
+    borderRadius: s(16),
+    paddingHorizontal: s(4),
+    paddingVertical: s(2),
   },
   actionButton: {
-    paddingHorizontal: SPACE.sm,
-    paddingVertical: SPACE.xs,
+    paddingHorizontal: s(8),
+    paddingVertical: s(6),
   },
   actionSeparator: {
-    width: HAIRLINE,
-    alignSelf: 'stretch',
-    marginVertical: SPACE.xs,
-    backgroundColor: EDGE,
+    width: 1,
+    height: s(14),
+    backgroundColor: '#E0DDD8',
   },
 
   cardDivider: {
-    height: HAIRLINE,
-    backgroundColor: RULE,
+    height: 1,
+    backgroundColor: '#F3EFE8',
+    marginHorizontal: s(14),
   },
   cardBody: {
-    paddingHorizontal: SPACE.md,
-    paddingTop: SPACE.sm,
-    paddingBottom: SPACE.md,
+    paddingHorizontal: s(14),
+    paddingTop: s(10),
+    paddingBottom: s(14),
   },
   addressLine: {
-    ...UI_TYPE.label,
-    fontFamily: Fonts.gilroyRegular,
+    fontFamily: Fonts.lexend.regular,
+    fontSize: fs(12.8),
+    lineHeight: fs(18.5),
     color: INK_BASE,
   },
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: SPACE.md,
+    flexWrap: 'wrap',
+    gap: s(8),
+    marginTop: s(10),
   },
-  metaCluster: {
+  metaBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    flexShrink: 1,
+    backgroundColor: SURFACE_SUNKEN,
+    paddingHorizontal: s(8),
+    paddingVertical: s(4),
+    borderRadius: s(6),
+    gap: s(4),
   },
   metaText: {
-    marginLeft: SPACE.xs,
-    ...UI_TYPE.caption,
-    fontFamily: Fonts.gilroyMedium,
+    fontFamily: Fonts.lexend.medium,
+    fontSize: fs(11),
     color: INK_MUTED,
   },
 
   emptyState: {
     alignItems: 'center',
-    paddingTop: hp('6%'),
-    paddingHorizontal: wp('8%'),
+    justifyContent: 'center',
+    paddingTop: s(50),
+    paddingHorizontal: s(24),
   },
   emptyIconWell: {
-    width: wp('16%'),
-    height: wp('16%'),
-    borderRadius: RADIUS.pill,
-    backgroundColor: SURFACE_SUNKEN,
+    width: s(64),
+    height: s(64),
+    borderRadius: s(32),
+    backgroundColor: EMERALD_TINT,
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: s(16),
   },
   emptyTitle: {
-    marginTop: SPACE.base,
-    ...UI_TYPE.heading,
+    fontFamily: Fonts.cormorantGaramond.bold,
+    fontSize: fs(22),
     color: INK_STRONG,
+    marginBottom: s(6),
+    textAlign: 'center',
   },
   emptyBody: {
-    marginTop: SPACE.xs,
-    ...UI_TYPE.label,
-    fontFamily: Fonts.gilroyRegular,
+    fontFamily: Fonts.lexend.regular,
+    fontSize: fs(12.5),
+    lineHeight: fs(18),
     color: INK_MUTED,
     textAlign: 'center',
   },

@@ -1,8 +1,7 @@
 import React from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { HOME_FONTS, fs, s } from '../../../Home/redesign/theme';
 import { TokenBadge } from '../../../Home/redesign/parts';
-import { PDP_ART } from '../assets';
 import { PDP_COLORS } from '../theme';
 
 type Props = {
@@ -11,12 +10,18 @@ type Props = {
   price: string;
   mrp: string;
   saveLabel: string;
-  average: string;
-  ratings: number;
-  reviews: number;
-  hasRating: boolean;
-  tokens: number;
-  action?: React.ReactNode;
+  savingBadge?: string;
+  average?: string;
+  ratings?: number;
+  reviews?: number;
+  hasRating?: boolean;
+  tokens?: number;
+};
+
+const formatPriceWithSlash = (val: string) => {
+  if (!val) return '';
+  const trimmed = val.trim();
+  return trimmed.endsWith('/-') ? trimmed : `${trimmed}/-`;
 };
 
 const PriceHeader: React.FC<Props> = ({
@@ -25,155 +30,134 @@ const PriceHeader: React.FC<Props> = ({
   price,
   mrp,
   saveLabel,
-  average,
-  ratings,
-  reviews,
-  hasRating,
-  tokens,
-  action,
-}) => (
-  <View style={styles.wrap}>
-    <View style={styles.main}>
-      <Text style={styles.title}>{title}</Text>
-      {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+  savingBadge,
+  tokens = 0,
+}) => {
+  const displaySave = savingBadge || (saveLabel ? `You are saving ${saveLabel}` : '');
 
-      <View style={styles.priceRow}>
-        <Text style={styles.price} numberOfLines={1}>
-          {price}
+  return (
+    <View style={styles.wrap}>
+      {/* Left column: Title & Subtitle */}
+      <View style={styles.titleCol}>
+        <Text style={styles.title} numberOfLines={2}>
+          {title}
         </Text>
-        {mrp ? (
-          <Text style={styles.mrp} numberOfLines={1}>{`MRP ${mrp}`}</Text>
+        {subtitle ? (
+          <Text style={styles.subtitle} numberOfLines={1}>
+            {subtitle}
+          </Text>
+        ) : null}
+        {tokens > 0 ? (
+          <TokenBadge tokens={tokens} size={11} style={styles.tokenBadge} />
         ) : null}
       </View>
 
-      <View style={styles.actionRow}>
-        <View style={styles.actionMeta}>
-          {saveLabel ? (
-            <Text style={styles.save} numberOfLines={1}>
-              {saveLabel}
+      {/* Vertical Divider */}
+      <View style={styles.divider} />
+
+      {/* Right column: Price, MRP & Savings */}
+      <View style={styles.priceCol}>
+        <View style={styles.priceRow}>
+          <Text style={styles.price} numberOfLines={1}>
+            {formatPriceWithSlash(price)}
+          </Text>
+          {mrp ? (
+            <Text style={styles.mrp} numberOfLines={1}>
+              {formatPriceWithSlash(mrp)}
             </Text>
           ) : null}
-          {tokens > 0 ? (
-            <TokenBadge tokens={tokens} size={11} style={styles.tokenBadge} />
-          ) : null}
         </View>
-        {action}
+
+        {displaySave ? (
+          <View style={styles.savingsPill}>
+            <Text style={styles.savingsText} numberOfLines={1}>
+              {displaySave}
+            </Text>
+          </View>
+        ) : null}
       </View>
     </View>
-
-    {hasRating ? (
-      <View style={styles.ratingCol}>
-        <View style={styles.ratingRow}>
-          <Image
-            source={PDP_ART.ratingStar}
-            resizeMode="contain"
-            style={styles.star}
-          />
-          <Text style={styles.average}>{average}</Text>
-        </View>
-        {ratings > 0 ? (
-          <Text style={styles.ratingMeta}>{`${ratings} Rating`}</Text>
-        ) : null}
-        {reviews > 0 ? (
-          <Text style={styles.ratingMeta}>{`${reviews} Reviews`}</Text>
-        ) : null}
-      </View>
-    ) : null}
-  </View>
-);
+  );
+};
 
 const styles = StyleSheet.create({
   wrap: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    paddingHorizontal: s(26),
-    paddingTop: s(24),
+    alignItems: 'center',
+    paddingHorizontal: s(16),
+    paddingTop: s(16),
+    paddingBottom: s(14),
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: PDP_COLORS.rule,
   },
-  main: {
-    flex: 1,
-    paddingRight: s(12),
+  titleCol: {
+    flex: 1.15,
+    justifyContent: 'center',
+    paddingRight: s(10),
   },
   title: {
-    fontFamily: HOME_FONTS.semiBold,
-    fontSize: fs(20),
-    lineHeight: fs(20) * 1.3,
-    color: PDP_COLORS.black,
+    fontFamily: HOME_FONTS.regular,
+    fontSize: fs(21),
+    lineHeight: fs(21) * 1.25,
+    color: '#1A1A1A',
   },
   subtitle: {
-    fontFamily: HOME_FONTS.regular,
-    fontSize: fs(14),
-    lineHeight: fs(14) * 1.35,
-    color: PDP_COLORS.black,
-    marginTop: s(10),
+    fontFamily: HOME_FONTS.lexend,
+    fontSize: fs(11),
+    lineHeight: fs(11) * 1.35,
+    color: '#777777',
+    marginTop: s(4),
+  },
+  tokenBadge: {
+    alignSelf: 'flex-start',
+    marginTop: s(6),
+  },
+  divider: {
+    width: 1,
+    backgroundColor: '#E5DFD7',
+    alignSelf: 'stretch',
+    marginRight: s(12),
+  },
+  priceCol: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'flex-start',
   },
   priceRow: {
     flexDirection: 'row',
     alignItems: 'baseline',
     flexWrap: 'wrap',
-    columnGap: s(10),
-    rowGap: s(4),
-    marginTop: s(12),
+    columnGap: s(6),
+    rowGap: s(2),
   },
   price: {
-    fontFamily: HOME_FONTS.semiBold,
-    fontSize: fs(32),
-    lineHeight: fs(32) * 1.1,
-    color: PDP_COLORS.black,
+    fontFamily: HOME_FONTS.lexendBold,
+    fontSize: fs(17),
+    lineHeight: fs(17) * 1.2,
+    color: PDP_COLORS.darkGreen,
   },
   mrp: {
-    fontFamily: HOME_FONTS.regular,
-    fontSize: fs(14),
-    lineHeight: fs(32) * 1.1,
-    color: PDP_COLORS.muted,
+    fontFamily: HOME_FONTS.lexend,
+    fontSize: fs(11),
+    lineHeight: fs(11) * 1.2,
+    color: '#8E8E8E',
     textDecorationLine: 'line-through',
-    textDecorationColor: PDP_COLORS.muted,
+    textDecorationColor: '#8E8E8E',
   },
-  save: {
-    fontFamily: HOME_FONTS.medium,
-    fontSize: fs(14),
-    lineHeight: fs(14) * 1.35,
-    color: PDP_COLORS.save,
+  savingsPill: {
+    backgroundColor: PDP_COLORS.savingsBg,
+    borderRadius: s(3),
+    paddingHorizontal: s(6),
+    paddingVertical: s(3),
+    marginTop: s(5),
   },
-  actionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: s(12),
-    marginTop: s(12),
-  },
-  actionMeta: {
-    flex: 1,
-    gap: s(8),
-    alignItems: 'flex-start',
-  },
-  tokenBadge: {
-    alignSelf: 'flex-start',
-  },
-  ratingCol: {
-    alignItems: 'flex-start',
-    paddingTop: s(56),
-  },
-  ratingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: s(7),
-  },
-  star: {
-    width: s(20),
-    height: s(20),
-  },
-  average: {
-    fontFamily: HOME_FONTS.medium,
-    fontSize: fs(16),
-    color: PDP_COLORS.black,
-  },
-  ratingMeta: {
-    fontFamily: HOME_FONTS.regular,
-    fontSize: fs(12),
-    lineHeight: fs(12) * 1.35,
-    color: PDP_COLORS.black,
-    marginTop: s(2),
+  savingsText: {
+    fontFamily: HOME_FONTS.lexendMedium,
+    fontSize: fs(10),
+    lineHeight: fs(10) * 1.25,
+    color: PDP_COLORS.savingsGreen,
   },
 });
 
 export default PriceHeader;
+

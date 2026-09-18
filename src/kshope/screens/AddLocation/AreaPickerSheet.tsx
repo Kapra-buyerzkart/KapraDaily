@@ -55,7 +55,7 @@ const AreaRow = memo<{
       <Ionicons
         name="checkmark-circle"
         size={wp('5.6%')}
-        color={UI_COLORS.primary}
+        color="#0C382E"
       />
     ) : null}
   </TouchableOpacity>
@@ -171,7 +171,7 @@ const AreaPickerSheet: React.FC<Props> = ({
 
           {loading ? (
             <View style={styles.areaSheetState}>
-              <ActivityIndicator color={UI_COLORS.primary} />
+              <ActivityIndicator color="#0C382E" />
               <AppText variant="label" tone="muted" style={styles.areaSheetStateText}>
                 Finding areas in {pincode}
               </AppText>

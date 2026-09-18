@@ -213,7 +213,7 @@ export default StyleSheet.create({
     width: 3,
     height: 14,
     borderRadius: UI_RADIUS.xs,
-    backgroundColor: UI_COLORS.textPrimary,
+    backgroundColor: '#0C382E',
     marginRight: UI_SPACING.sm,
   },
   sectionTitleHint: {
@@ -242,8 +242,8 @@ export default StyleSheet.create({
   },
   typeChipActive: {
     borderWidth: 1.2,
-    borderColor: UI_COLORS.borderStrong,
-    backgroundColor: 'rgba(17,19,26,0.06)',
+    borderColor: '#0C382E',
+    backgroundColor: '#E8F2EE',
   },
 
   fieldWrapper: {
@@ -420,8 +420,8 @@ export default StyleSheet.create({
   },
   areaRowSelected: {
     borderWidth: 1.2,
-    borderColor: UI_COLORS.borderStrong,
-    backgroundColor: UI_COLORS.card,
+    borderColor: '#0C382E',
+    backgroundColor: '#F7FAF8',
   },
   areaRowLabel: {
     flex: 1,
@@ -450,7 +450,7 @@ export default StyleSheet.create({
     justifyContent: 'center',
     gap: UI_SPACING.sm,
     borderRadius: UI_RADIUS.button,
-    backgroundColor: UI_COLORS.primary,
+    backgroundColor: '#0C382E',
   },
   saveButtonBusy: {
     opacity: 0.7,

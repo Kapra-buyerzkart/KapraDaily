@@ -73,23 +73,23 @@ const SimilarProducts: React.FC<Props> = ({
 
 const styles = StyleSheet.create({
   wrap: {
-    marginTop: s(38),
+    marginTop: s(26),
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: s(26),
+    paddingHorizontal: s(16),
   },
   heading: {
-    fontFamily: HOME_FONTS.medium,
-    fontSize: fs(20),
-    lineHeight: fs(20) * 1.3,
-    color: PDP_COLORS.black,
+    fontFamily: HOME_FONTS.regular,
+    fontSize: fs(21),
+    lineHeight: fs(21) * 1.25,
+    color: '#1A1A1A',
   },
   list: {
-    paddingHorizontal: s(26),
-    paddingTop: s(20),
+    paddingHorizontal: s(16),
+    paddingTop: s(14),
   },
   separator: {
     width: SPACE.md,

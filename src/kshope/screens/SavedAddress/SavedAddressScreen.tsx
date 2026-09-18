@@ -6,7 +6,6 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { useAddresses } from '../../hooks/useAddresses';
-import { AppIcons } from '../../assets/icons';
 import { MAX_FONT_SCALE, hitSlopTo, wp } from '../../theme/tokens';
 import AddressConfirmationModal from '../../components/AddressConfirmationModal';
 import styles, {
@@ -35,7 +34,7 @@ const RowActions: React.FC<{
       <MaterialCommunityIcons
         name="pencil-outline"
         size={ICON.action}
-        color={INK_BASE}
+        color={PRIMARY}
       />
     </TouchableOpacity>
     <View style={styles.actionSeparator} />
@@ -74,7 +73,13 @@ const AddressCard = React.memo<{
   onCloseMenu: () => void;
 }>(({ item, onPress, onEdit, onMenu, onDelete, onCloseMenu }) => {
   const isSelected = !!item.selected;
-  const isHome = String(item.type).toLowerCase() === 'home';
+  const typeLower = String(item.type || '').toLowerCase();
+  const iconName =
+    typeLower === 'home'
+      ? 'home-outline'
+      : typeLower === 'office'
+      ? 'briefcase-outline'
+      : 'location-outline';
 
   return (
     <TouchableOpacity
@@ -91,7 +96,7 @@ const AddressCard = React.memo<{
         <View style={styles.typeCluster}>
           <View style={[styles.typeWell, isSelected && styles.typeWellActive]}>
             <Ionicons
-              name={isHome ? 'home-outline' : 'briefcase-outline'}
+              name={iconName}
               size={ICON.type}
               color={isSelected ? SUCCESS_TEXT : INK_BASE}
             />
@@ -116,9 +121,9 @@ const AddressCard = React.memo<{
             {isSelected && (
               <View style={styles.selectedPill}>
                 <Ionicons
-                  name="checkmark"
+                  name="checkmark-circle"
                   size={ICON.check}
-                  color={SUCCESS_TEXT}
+                  color="#FFFFFF"
                 />
                 <Text
                   style={styles.selectedPillText}
@@ -153,32 +158,36 @@ const AddressCard = React.memo<{
         </Text>
 
         <View style={styles.metaRow}>
-          <View style={styles.metaCluster}>
-            <MaterialCommunityIcons
-              name="phone-outline"
-              size={ICON.meta}
-              color={INK_MUTED}
-            />
-            <Text
-              style={styles.metaText}
-              maxFontSizeMultiplier={MAX_FONT_SCALE}
-            >
-              {item.phone}
-            </Text>
-          </View>
-          <View style={styles.metaCluster}>
-            <MaterialCommunityIcons
-              name="map-marker-outline"
-              size={ICON.meta}
-              color={INK_MUTED}
-            />
-            <Text
-              style={styles.metaText}
-              maxFontSizeMultiplier={MAX_FONT_SCALE}
-            >
-              {item.pin}
-            </Text>
-          </View>
+          {item.phone ? (
+            <View style={styles.metaBadge}>
+              <Ionicons
+                name="call-outline"
+                size={ICON.meta}
+                color={INK_MUTED}
+              />
+              <Text
+                style={styles.metaText}
+                maxFontSizeMultiplier={MAX_FONT_SCALE}
+              >
+                {item.phone}
+              </Text>
+            </View>
+          ) : null}
+          {item.pin ? (
+            <View style={styles.metaBadge}>
+              <Ionicons
+                name="location-outline"
+                size={ICON.meta}
+                color={INK_MUTED}
+              />
+              <Text
+                style={styles.metaText}
+                maxFontSizeMultiplier={MAX_FONT_SCALE}
+              >
+                {item.pin}
+              </Text>
+            </View>
+          ) : null}
         </View>
       </View>
     </TouchableOpacity>
@@ -251,10 +260,18 @@ const SavedAddressScreen: React.FC = () => {
         <View style={styles.addIconWell}>
           <Ionicons name="add" size={ICON.plus} color={PRIMARY} />
         </View>
-        <Text style={styles.addRowText} maxFontSizeMultiplier={MAX_FONT_SCALE}>
-          Add new location
-        </Text>
-        <Ionicons name="chevron-forward" size={ICON.chevron} color={PRIMARY} />
+        <View style={styles.addRowTextCol}>
+          <Text style={styles.addRowText} maxFontSizeMultiplier={MAX_FONT_SCALE}>
+            Add New Address
+          </Text>
+          <Text
+            style={styles.addRowSubtext}
+            maxFontSizeMultiplier={MAX_FONT_SCALE}
+          >
+            Deliver to your home, office, or loved ones
+          </Text>
+        </View>
+        <Ionicons name="chevron-forward" size={ICON.chevron} color={INK_MUTED} />
       </TouchableOpacity>
     ),
     [goToEditor],
@@ -268,17 +285,17 @@ const SavedAddressScreen: React.FC = () => {
             <Ionicons
               name="location-outline"
               size={ICON.empty}
-              color={INK_MUTED}
+              color={PRIMARY}
             />
           </View>
           <Text
             style={styles.emptyTitle}
             maxFontSizeMultiplier={MAX_FONT_SCALE}
           >
-            No saved addresses
+            No Saved Addresses
           </Text>
           <Text style={styles.emptyBody} maxFontSizeMultiplier={MAX_FONT_SCALE}>
-            Add a delivery location to see what we can bring to your door.
+            Add a delivery location to explore collections and enjoy swift doorstep delivery.
           </Text>
         </View>
       ),
@@ -299,11 +316,12 @@ const SavedAddressScreen: React.FC = () => {
           accessibilityRole="button"
           accessibilityLabel="Go back"
           onPress={() => navigation.goBack()}
+          style={styles.backButton}
         >
-          <AppIcons.Back color={INK_STRONG} size={22} />
+          <Ionicons name="arrow-back" size={20} color={INK_STRONG} />
         </TouchableOpacity>
         <Text style={styles.headerText} maxFontSizeMultiplier={MAX_FONT_SCALE}>
-          Address
+          Saved Addresses
         </Text>
       </View>
 

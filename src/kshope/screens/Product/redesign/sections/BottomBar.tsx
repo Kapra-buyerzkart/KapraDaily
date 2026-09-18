@@ -2,175 +2,127 @@ import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { HOME_FONTS, fs, s } from '../../../Home/redesign/theme';
-import { CartIcon } from '../icons';
+import { CartIcon, HeartSolidIcon } from '../icons';
 import { PDP_COLORS } from '../theme';
 
 type Props = {
-  quantity: number;
-  price: string;
-  mrp: string;
+  inWishlist: boolean;
+  onToggleWishlist: () => void;
   inCart: boolean;
   outOfStock: boolean;
-  onDecrement: () => void;
-  onIncrement: () => void;
-  onSubmit: () => void;
+  onAddToCart: () => void;
+  style?: any;
 };
 
-const BottomBar: React.FC<Props> = ({
-  quantity,
-  price,
-  mrp,
+export const BottomBar: React.FC<Props> = ({
+  inWishlist,
+  onToggleWishlist,
   inCart,
   outOfStock,
-  onDecrement,
-  onIncrement,
-  onSubmit,
+  onAddToCart,
+  style,
 }) => {
   const { bottom } = useSafeAreaInsets();
 
   return (
-    <View style={[styles.bar, { paddingBottom: s(12) + bottom }]}>
-      <View style={styles.priceCol}>
-        <Text style={styles.price} numberOfLines={1} adjustsFontSizeToFit>
-          {price}
-        </Text>
-        {mrp ? (
-          <Text style={styles.mrp} numberOfLines={1}>{`MRP ${mrp}`}</Text>
+    <View
+      style={[
+        styles.container,
+        { paddingBottom: Math.max(bottom, s(12)) },
+        style,
+      ]}
+    >
+      {/* ADD TO WISHLIST Button */}
+      <TouchableOpacity
+        activeOpacity={0.8}
+        onPress={onToggleWishlist}
+        style={[
+          styles.button,
+          styles.wishlistButton,
+          inWishlist && styles.wishlistButtonActive,
+        ]}
+      >
+        {inWishlist ? (
+          <HeartSolidIcon
+            width={16}
+            height={16}
+            color={PDP_COLORS.white}
+            style={styles.btnIcon}
+          />
         ) : null}
-      </View>
-
-      <View style={[styles.stepper, outOfStock && styles.stepperDisabled]}>
-        <TouchableOpacity
-          activeOpacity={0.7}
-          disabled={outOfStock}
-          onPress={onDecrement}
-          style={styles.stepperButton}
-        >
-          <Text style={[styles.stepperSymbol, outOfStock && styles.mutedText]}>
-            −
-          </Text>
-        </TouchableOpacity>
-        <Text style={[styles.quantity, outOfStock && styles.mutedText]}>
-          {quantity}
+        <Text style={styles.buttonText} numberOfLines={1}>
+          {inWishlist ? 'WISHLISTED' : 'ADD TO WISHLIST'}
         </Text>
-        <TouchableOpacity
-          activeOpacity={0.7}
-          disabled={outOfStock}
-          onPress={onIncrement}
-          style={styles.stepperButton}
-        >
-          <Text style={[styles.stepperSymbol, outOfStock && styles.mutedText]}>
-            +
-          </Text>
-        </TouchableOpacity>
-      </View>
+      </TouchableOpacity>
 
+      {/* ADD TO BAG Button */}
       <TouchableOpacity
         activeOpacity={0.85}
         disabled={outOfStock}
-        onPress={onSubmit}
-        style={[styles.action, outOfStock && styles.actionDisabled]}
+        onPress={onAddToCart}
+        style={[
+          styles.button,
+          styles.bagButton,
+          outOfStock && styles.bagButtonDisabled,
+        ]}
       >
-        {outOfStock ? (
-          <Text style={styles.actionText}>Out of Stock</Text>
-        ) : (
-          <>
-            <CartIcon width={22} height={20} color={PDP_COLORS.white} />
-            <Text style={styles.actionText}>
-              {inCart ? 'Update Cart' : 'Add to Cart'}
-            </Text>
-          </>
-        )}
+        {!outOfStock ? (
+          <CartIcon
+            width={18}
+            height={16}
+            color={PDP_COLORS.white}
+            style={styles.btnIcon}
+          />
+        ) : null}
+        <Text style={styles.buttonText} numberOfLines={1}>
+          {outOfStock ? 'OUT OF STOCK' : inCart ? 'ADDED TO BAG' : 'ADD TO BAG'}
+        </Text>
       </TouchableOpacity>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  bar: {
+  container: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: s(12),
-    paddingVertical: s(12),
+    paddingHorizontal: s(16),
+    paddingTop: s(12),
     backgroundColor: PDP_COLORS.white,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: PDP_COLORS.rule,
+    borderTopWidth: 1,
+    borderTopColor: '#EBE6DF',
+    gap: s(12),
   },
-  stepper: {
-    width: s(112),
-    height: s(36),
-    borderRadius: s(20),
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: PDP_COLORS.cardBorder,
+  button: {
+    flex: 1,
+    height: s(48),
+    borderRadius: s(8),
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: s(14),
+    justifyContent: 'center',
+    paddingHorizontal: s(10),
+  },
+  btnIcon: {
     marginRight: s(8),
   },
-  stepperDisabled: {
-    opacity: 0.5,
+  wishlistButton: {
+    backgroundColor: PDP_COLORS.bottomWishlist,
   },
-  mutedText: {
-    color: PDP_COLORS.muted,
+  wishlistButtonActive: {
+    backgroundColor: PDP_COLORS.bottomWishlistActive,
   },
-  stepperButton: {
-    paddingHorizontal: s(4),
+  bagButton: {
+    backgroundColor: PDP_COLORS.bottomBag,
   },
-  stepperSymbol: {
-    fontFamily: HOME_FONTS.medium,
-    fontSize: fs(20),
-    lineHeight: fs(20) * 1.2,
-    color: PDP_COLORS.black,
+  bagButtonDisabled: {
+    backgroundColor: '#CCCCCC',
   },
-  quantity: {
-    fontFamily: HOME_FONTS.medium,
-    fontSize: fs(20),
-    lineHeight: fs(20) * 1.2,
-    color: PDP_COLORS.black,
-  },
-  priceCol: {
-    flex: 1,
-    alignItems: 'flex-start',
-    justifyContent: 'center',
-    paddingLeft: s(8),
-    paddingRight: s(8),
-  },
-  price: {
-    fontFamily: HOME_FONTS.medium,
-    fontSize: fs(20),
-    lineHeight: fs(20) * 1.15,
-    color: PDP_COLORS.black,
-    textAlign: 'left',
-  },
-  mrp: {
-    fontFamily: HOME_FONTS.regular,
+  buttonText: {
+    fontFamily: HOME_FONTS.lexendBold,
     fontSize: fs(12),
-    lineHeight: fs(12) * 1.15,
-    color: PDP_COLORS.muted,
-    textAlign: 'left',
-    textDecorationLine: 'line-through',
-    textDecorationColor: PDP_COLORS.muted,
-    marginTop: s(1),
-  },
-  action: {
-    width: s(140),
-    height: s(47),
-    borderRadius: s(10),
-    backgroundColor: PDP_COLORS.orange,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: s(8),
-  },
-  actionDisabled: {
-    backgroundColor: PDP_COLORS.cardBorder,
-  },
-  actionText: {
-    fontFamily: HOME_FONTS.medium,
-    fontSize: fs(14),
+    letterSpacing: 0.8,
     color: PDP_COLORS.white,
+    textTransform: 'uppercase',
   },
 });
 

@@ -154,6 +154,7 @@ const styles = StyleSheet.create({
   },
   body: {
     paddingTop: s(8),
+    paddingHorizontal: s(4),
   },
   titleRow: {
     flexDirection: 'row',
@@ -189,28 +190,29 @@ const styles = StyleSheet.create({
   priceRow: {
     flexDirection: 'row',
     alignItems: 'baseline',
-    marginTop: 6,
-    gap: s(4),
+    flexWrap: 'wrap',
+    marginTop: 4,
+    gap: s(3),
+    rowGap: s(1),
   },
   price: {
     fontFamily: Fonts.lexend.semiBold,
-    fontSize: pt(14),
-    lineHeight: pt(19),
+    fontSize: pt(12.5),
+    lineHeight: pt(17),
     color: '#1A1A1A',
   },
   mrp: {
     fontFamily: Fonts.lexend.regular,
-    fontSize: pt(11),
-    lineHeight: pt(15),
+    fontSize: pt(9.5),
+    lineHeight: pt(13),
     color: '#8E8E8E',
     textDecorationLine: 'line-through',
   },
   discount: {
     fontFamily: Fonts.lexend.semiBold,
-    fontSize: pt(10.5),
-    lineHeight: pt(14),
+    fontSize: pt(9.5),
+    lineHeight: pt(13),
     color: '#0C382E',
-    marginLeft: s(2),
   },
 });
 

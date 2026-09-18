@@ -255,10 +255,10 @@ const HomeRedesignScreen: React.FC = () => {
         />
 
         {/* 7. Full-width Hanging Jhumka Feature Banner */}
-        <HangingJhumkaBanner
+        {/* <HangingJhumkaBanner
           banner={featureBanner}
           onPress={() => openBanner(featureBanner)}
-        />
+        /> */}
 
         {/* 8. "Trending Now" Product Rail (from API secondProductBlock) */}
         <JewelryProductRail
@@ -271,14 +271,14 @@ const HomeRedesignScreen: React.FC = () => {
         />
 
         {/* 9. Side-by-Side Promo Tiles: Diamond Dreams & The Gold Edit */}
-        <SideBySidePromos
+        {/* <SideBySidePromos
           onPressLeft={() =>
             openSearch({ query: 'Diamond', catName: 'Diamond Dreams' })
           }
           onPressRight={() =>
             openSearch({ query: 'Gold', catName: 'The Gold Edit' })
           }
-        />
+        /> */}
 
         {/* 10. "Recently Viewed" Product Rail (from API thirdProductBlock) */}
         {/* <JewelryProductRail

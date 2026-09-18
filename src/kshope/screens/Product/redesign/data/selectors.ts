@@ -81,6 +81,7 @@ export const pricing = (product: any) => {
     percent,
     discountLabel: percent > 0 ? `${percent}%` : '',
     saveLabel: saved > 0 ? `You save ${money(saved)} (${percent}% OFF)` : '',
+    savingBadge: saved > 0 ? `You are saving ${money(saved)}/-` : '',
   };
 };
 

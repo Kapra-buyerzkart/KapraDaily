@@ -10,26 +10,25 @@ import { useWishlist } from '../../../context/WishlistContext';
 import { s } from '../../Home/redesign/theme';
 import Gallery from './sections/Gallery';
 import PriceHeader from './sections/PriceHeader';
-import TrustStrip from './sections/TrustStrip';
-import DetailsAccordion from './sections/DetailsAccordion';
-import FeatureGrid from './sections/FeatureGrid';
+import SpecDetailsRow from './sections/SpecDetailsRow';
+import ProductInfoSection from './sections/ProductInfoSection';
 import ReviewTabs from './sections/ReviewTabs';
+import TrustStrip from './sections/TrustStrip';
 import SimilarProducts from './sections/SimilarProducts';
-import CartAction from './sections/CartAction';
+import BottomBar from './sections/BottomBar';
 import { useProductDetails } from './data/useProductDetails';
 import {
-  featureList,
   galleryImages,
   isOutOfStock,
   pricing,
   productDescription,
   productSubtitle,
-  tokenCount,
   productTitle,
   ratingSummary,
   reviewList,
   reviewSummary,
   specificationList,
+  tokenCount,
   warrantyText,
 } from './data/selectors';
 import { PDP_COLORS } from './theme';
@@ -69,7 +68,6 @@ const ProductDetailsRedesignScreen: React.FC = () => {
     cartQty,
     stockBlocked,
     addToCart,
-    setQuantity,
   } = useProductDetails(id, product);
 
   const wishlistId = current?.productId ?? rawId;
@@ -78,6 +76,10 @@ const ProductDetailsRedesignScreen: React.FC = () => {
   const outOfStock = isOutOfStock(current) || stockBlocked;
   const reviewStats = reviewSummary(details);
   const reviews = reviewList(details);
+  const specs = specificationList(details);
+  const title = productTitle(current);
+  const sku = current?.sku || current?.productCode || details?.sku || '';
+  const description = productDescription(current);
 
   const openProduct = (item: any) =>
     navigation.push('KshopeProductDetails', {
@@ -90,6 +92,7 @@ const ProductDetailsRedesignScreen: React.FC = () => {
       <ProductStatusBar />
 
       <Animated.ScrollView
+        style={{ flex: 1 }}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
       >
@@ -97,38 +100,28 @@ const ProductDetailsRedesignScreen: React.FC = () => {
           images={galleryImages(details, current)}
           discountLabel={prices.discountLabel}
           wishlisted={isInWishlist(wishlistId)}
+          title={title}
           onBack={() => navigation.goBack()}
           onToggleWishlist={() => toggleWishlist(current)}
         />
 
         <PriceHeader
-          title={productTitle(current)}
+          title={title}
           subtitle={productSubtitle(current)}
           price={prices.price}
           mrp={prices.mrp}
           saveLabel={prices.saveLabel}
+          savingBadge={prices.savingBadge}
           average={rating.average}
           ratings={rating.ratings}
           reviews={rating.reviews}
           hasRating={rating.hasRating}
           tokens={tokenCount(current, details, product)}
-          action={
-            <CartAction
-              quantity={cartQty}
-              outOfStock={outOfStock}
-              onAdd={addToCart}
-              onIncrement={() => setQuantity(cartQty + 1)}
-              onDecrement={() => setQuantity(cartQty - 1)}
-            />
-          }
         />
 
-        <View style={styles.stripSpacer} />
-        <TrustStrip />
+        <SpecDetailsRow attributes={specs} />
 
-        <View style={styles.detailsSpacer} />
-        <DetailsAccordion description={productDescription(current)} />
-        <FeatureGrid features={featureList(details)} />
+        <ProductInfoSection sku={sku} description={description} />
 
         <ReviewTabs
           average={reviewStats.average}
@@ -136,9 +129,13 @@ const ProductDetailsRedesignScreen: React.FC = () => {
           bars={reviewStats.bars}
           reviews={reviews}
           hasRatings={reviewStats.hasData}
-          specs={specificationList(details)}
+          specs={specs}
           warranty={warrantyText(details, current)}
+          priceBreakup={prices}
         />
+
+        <View style={styles.stripSpacer} />
+        <TrustStrip />
 
         <SimilarProducts
           items={related}
@@ -146,6 +143,18 @@ const ProductDetailsRedesignScreen: React.FC = () => {
           onPress={openProduct}
           onToggleWishlist={toggleWishlist}
         />
+
+        <View style={styles.barTopSpacer} />
+
+        <BottomBar
+          inWishlist={isInWishlist(wishlistId)}
+          onToggleWishlist={() => toggleWishlist(current)}
+          inCart={cartQty > 0}
+          outOfStock={outOfStock}
+          onAddToCart={addToCart}
+        />
+
+        <View style={styles.barBottomSpacer} />
       </Animated.ScrollView>
     </View>
   );
@@ -157,13 +166,16 @@ const styles = StyleSheet.create({
     backgroundColor: PDP_COLORS.white,
   },
   content: {
-    paddingBottom: s(110),
+    paddingBottom: s(36),
   },
   stripSpacer: {
+    height: s(20),
+  },
+  barTopSpacer: {
     height: s(24),
   },
-  detailsSpacer: {
-    height: s(19),
+  barBottomSpacer: {
+    height: s(40),
   },
 });
 

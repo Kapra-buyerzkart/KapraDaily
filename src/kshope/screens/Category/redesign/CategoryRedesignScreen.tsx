@@ -17,6 +17,7 @@ import { useWishlist } from '../../../context/WishlistContext';
 import { useCartPillScrollProps } from '../../../components/cartPillScroll';
 import type { ProductTile } from '../../Home/redesign/content';
 import {
+  CARD_GAP,
   GUTTER,
   HOME_COLORS,
   HOME_FONTS,
@@ -279,6 +280,7 @@ const styles = StyleSheet.create({
   },
   column: {
     justifyContent: 'space-between',
+    gap: CARD_GAP,
   },
   footerLoader: {
     marginVertical: SPACE.xl,

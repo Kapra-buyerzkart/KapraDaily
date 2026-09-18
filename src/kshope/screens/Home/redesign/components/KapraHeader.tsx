@@ -31,7 +31,10 @@ const KapraHeader: React.FC<KapraHeaderProps> = ({
 
   const displayLocation = React.useMemo(() => {
     if (!address) return 'Kochi';
-    const parts = address.split('·').map(p => p.trim()).filter(Boolean);
+    const parts = address
+      .split('·')
+      .map(p => p.trim())
+      .filter(Boolean);
     const primary = parts[parts.length - 1] || parts[0] || 'Kochi';
     const firstWord = primary.split(',')[0]?.trim() || 'Kochi';
     return firstWord.length > 12 ? `${firstWord.slice(0, 11)}…` : firstWord;
@@ -145,8 +148,8 @@ const styles = StyleSheet.create({
     marginBottom: s(12),
   },
   brandLogo: {
-    width: s(105),
-    height: s(36),
+    width: s(120),
+    height: s(50),
   },
   rightActions: {
     flexDirection: 'row',
@@ -203,6 +206,7 @@ const styles = StyleSheet.create({
   trustItem: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     flex: 1,
     gap: s(6),
   },
@@ -220,10 +224,10 @@ const styles = StyleSheet.create({
     color: '#767676',
   },
   stripDivider: {
-    width: StyleSheet.hairlineWidth,
+    width: 1,
     height: s(20),
-    backgroundColor: '#E5DFD7',
-    marginHorizontal: s(6),
+    backgroundColor: '#767676',
+    marginHorizontal: s(4),
   },
 });
 

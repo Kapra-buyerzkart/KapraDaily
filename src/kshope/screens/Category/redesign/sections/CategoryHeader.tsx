@@ -183,8 +183,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   brandLogo: {
-    width: s(105),
-    height: s(36),
+    width: s(120),
+    height: s(50),
   },
   actions: {
     flexDirection: 'row',

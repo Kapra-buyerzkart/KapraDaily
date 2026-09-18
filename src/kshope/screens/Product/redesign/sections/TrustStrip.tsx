@@ -1,28 +1,50 @@
 import React from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { HOME_FONTS, fs, s } from '../../../Home/redesign/theme';
-import { PDP_ART } from '../assets';
 import { PDP_COLORS } from '../theme';
 
-const ITEMS = [
-  { id: 'quality', icon: PDP_ART.trustQuality, lines: ['Quality', 'Products'] },
-  { id: 'returns', icon: PDP_ART.trustReturns, lines: ['Easy', 'Returns'] },
-  { id: 'secure', icon: PDP_ART.trustSecure, lines: ['Secure', 'Transaction'] },
+const TRUST_ITEMS = [
+  {
+    id: 'quality',
+    icon: 'shield-checkmark-outline',
+    title: '100% Quality',
+    subtitle: 'Certified Products',
+  },
+  {
+    id: 'returns',
+    icon: 'swap-horizontal-outline',
+    title: 'Easy Returns',
+    subtitle: 'Hassle-Free Policy',
+  },
+  {
+    id: 'secure',
+    icon: 'lock-closed-outline',
+    title: 'Secure Shopping',
+    subtitle: '100% Safe Payment',
+  },
 ];
 
 const TrustStrip: React.FC = () => (
-  <View style={styles.strip}>
-    {ITEMS.map((item, index) => (
+  <View style={styles.card}>
+    {TRUST_ITEMS.map((item, index) => (
       <React.Fragment key={item.id}>
         {index > 0 ? <View style={styles.divider} /> : null}
         <View style={styles.item}>
-          <Image source={item.icon} resizeMode="contain" style={styles.icon} />
-          <View>
-            {item.lines.map(line => (
-              <Text key={line} style={styles.label}>
-                {line}
-              </Text>
-            ))}
+          <View style={styles.iconCircle}>
+            <Ionicons
+              name={item.icon}
+              size={s(16)}
+              color={PDP_COLORS.darkGreen}
+            />
+          </View>
+          <View style={styles.textCol}>
+            <Text style={styles.title} numberOfLines={1}>
+              {item.title}
+            </Text>
+            <Text style={styles.subtitle} numberOfLines={1}>
+              {item.subtitle}
+            </Text>
           </View>
         </View>
       </React.Fragment>
@@ -31,33 +53,54 @@ const TrustStrip: React.FC = () => (
 );
 
 const styles = StyleSheet.create({
-  strip: {
-    height: s(69),
-    backgroundColor: PDP_COLORS.trustStrip,
+  card: {
+    marginHorizontal: s(16),
+    backgroundColor: PDP_COLORS.specsBg,
+    borderRadius: s(12),
+    borderWidth: 1,
+    borderColor: PDP_COLORS.specsBorder,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: s(12),
+    paddingHorizontal: s(8),
   },
   item: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: s(8),
+    gap: s(6),
+    paddingHorizontal: s(2),
+  },
+  iconCircle: {
+    width: s(30),
+    height: s(30),
+    borderRadius: s(15),
+    backgroundColor: '#EBE5D8',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  textCol: {
+    flexShrink: 1,
+  },
+  title: {
+    fontFamily: HOME_FONTS.lexendBold,
+    fontSize: fs(10),
+    lineHeight: fs(10) * 1.3,
+    color: '#1A1A1A',
+  },
+  subtitle: {
+    fontFamily: HOME_FONTS.lexend,
+    fontSize: fs(8),
+    lineHeight: fs(8) * 1.3,
+    color: '#707070',
+    marginTop: s(1),
   },
   divider: {
     width: StyleSheet.hairlineWidth,
-    height: s(52),
-    backgroundColor: PDP_COLORS.orange,
-  },
-  icon: {
-    width: s(27),
-    height: s(27),
-  },
-  label: {
-    fontFamily: HOME_FONTS.regular,
-    fontSize: fs(12),
-    lineHeight: fs(12) * 1.3,
-    color: PDP_COLORS.black,
+    height: s(28),
+    backgroundColor: '#E2DDD5',
   },
 });
 
