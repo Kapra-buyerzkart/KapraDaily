@@ -1,14 +1,11 @@
 import React from 'react';
-import { StyleSheet, TouchableOpacity, View } from 'react-native';
-import { AppText } from '../../../../../components/atoms';
-import { AppIcons } from '../../../../../assets/icons';
+import { StyleSheet, TouchableOpacity, View, Text, Platform } from 'react-native';
+import Feather from 'react-native-vector-icons/Feather';
 import {
-  UI_COLORS,
-  UI_RADIUS,
-  UI_SPACING,
-  hitSlopTo,
-  hp,
-} from '../../../../../theme/tokens';
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from 'react-native-responsive-screen';
+import { CONTACT_COLORS, CONTACT_FONTS } from '../contactTheme';
 
 interface Props {
   isPhone: boolean;
@@ -27,27 +24,27 @@ const UpdateContactHeader: React.FC<Props> = ({
     <TouchableOpacity
       onPress={onBack}
       style={styles.backBtn}
-      hitSlop={hitSlopTo(24)}
+      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
       activeOpacity={0.7}
       accessibilityRole="button"
       accessibilityLabel="Go back"
     >
-      <AppIcons.ArrowBack size={22} color={UI_COLORS.textPrimary} />
+      <Feather name="chevron-left" size={wp('5.5%')} color={CONTACT_COLORS.emerald} />
     </TouchableOpacity>
 
     <View style={styles.titleBlock}>
-      <AppText variant="title" accessibilityRole="header">
-        {isPhone ? 'Change Number' : 'Change Email'}
-      </AppText>
-      <AppText variant="caption" tone="muted">
-        {step === 1 ? 'Enter new details' : 'Verify with OTP'}
-      </AppText>
+      <Text style={styles.title} numberOfLines={1}>
+        {isPhone ? 'Update Phone' : 'Update Email'}
+      </Text>
+      <Text style={styles.subtitle} numberOfLines={1}>
+        {step === 1 ? 'Enter new contact details' : 'Verify with one-time code'}
+      </Text>
     </View>
 
     <View style={styles.stepChip}>
-      <AppText variant="micro" tone="muted">
-        Step {step} of {totalSteps}
-      </AppText>
+      <Text style={styles.stepChipText}>
+        {step}/{totalSteps}
+      </Text>
     </View>
   </View>
 );
@@ -58,22 +55,62 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: UI_SPACING.lg,
-    paddingVertical: hp('1.2%'),
-    backgroundColor: UI_COLORS.card,
-    gap: UI_SPACING.sm,
+    justifyContent: 'space-between',
+    paddingHorizontal: wp('5%'),
+    paddingVertical: hp('1.6%'),
+    backgroundColor: CONTACT_COLORS.canvas,
   },
   backBtn: {
-    padding: UI_SPACING.xs,
+    width: wp('10%'),
+    height: wp('10%'),
+    borderRadius: wp('5%'),
+    backgroundColor: CONTACT_COLORS.card,
+    borderWidth: 1,
+    borderColor: CONTACT_COLORS.border,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 3,
+      },
+      android: {
+        elevation: 1,
+      },
+    }),
   },
   titleBlock: {
     flex: 1,
-    marginLeft: UI_SPACING.xs,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: wp('2%'),
+  },
+  title: {
+    fontFamily: CONTACT_FONTS.title,
+    fontSize: wp('5.5%'),
+    color: CONTACT_COLORS.emerald,
+    letterSpacing: 0.3,
+  },
+  subtitle: {
+    fontFamily: CONTACT_FONTS.body,
+    fontSize: wp('2.8%'),
+    color: CONTACT_COLORS.textMuted,
+    marginTop: hp('0.2%'),
   },
   stepChip: {
-    backgroundColor: UI_COLORS.well,
-    borderRadius: UI_RADIUS.pill,
-    paddingHorizontal: UI_SPACING.md,
-    paddingVertical: hp('0.7%'),
+    backgroundColor: CONTACT_COLORS.goldTint,
+    borderWidth: 1,
+    borderColor: CONTACT_COLORS.goldBorder,
+    borderRadius: 999,
+    paddingHorizontal: wp('3%'),
+    paddingVertical: hp('0.5%'),
+  },
+  stepChipText: {
+    fontFamily: CONTACT_FONTS.bodySemiBold,
+    fontSize: wp('2.8%'),
+    color: CONTACT_COLORS.gold,
+    letterSpacing: 0.5,
   },
 });

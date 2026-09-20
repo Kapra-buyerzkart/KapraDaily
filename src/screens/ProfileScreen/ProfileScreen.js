@@ -23,10 +23,8 @@ import {
 } from './menuItems';
 import ProfileHeaderBar from './organisms/ProfileHeaderBar';
 import ProfileHeroCard from './organisms/ProfileHeroCard';
-import QuickActionsGrid from './organisms/QuickActionsGrid';
 import MenuSection from './organisms/MenuSection';
 import LogoutRow from './molecules/LogoutRow';
-import AppVersion from './molecules/AppVersion';
 import SuggestProductsModal from './components/SuggestProductsModal';
 import {
   BAR_SOLID_AT,
@@ -135,14 +133,11 @@ export default function ProfileScreen() {
   });
 
   const offersItems = buildOffersItems({
-    onBCoin: () => navigation.navigate('KshopeBCoin'),
     onSmartPoint: () => openOffersModal('Gift Cards'),
     onCoupons: () => openOffersModal('Coupons'),
   });
   const myAccountItems = buildMyAccountItems({
     navigation,
-    onLanguage: () => setIsLanguageModalVisible(true),
-    isTicketValidationVisible: profile?.isTicketValidationVisible,
   });
   const informationItems = buildInformationItems({
     navigation,
@@ -175,36 +170,36 @@ export default function ProfileScreen() {
           nameStyle={barNameStyle}
         />
 
-        <View style={styles.heroBlock}>
-          <ProfileHeroCard
-            profile={profile}
-            isPrivileged={profile?.isPrivileged}
-            walletData={walletData}
-            onEditProfile={() => navigation.navigate('KshopeEditProfile')}
-            onWallet={() => navigation.navigate('KshopeBCoin')}
-            onMeasure={onHeroMeasure}
-            entering={entrance(0)}
+        <ProfileHeroCard
+          profile={profile}
+          isPrivileged={profile?.isPrivileged}
+          walletData={walletData}
+          onEditProfile={() => navigation.navigate('KshopeEditProfile')}
+          onWallet={() => navigation.navigate('KshopeBCoin')}
+          onMeasure={onHeroMeasure}
+          entering={entrance(0)}
+        />
+
+        <Animated.View entering={entrance(1)}>
+          <MenuSection
+            title="REWARDS / BENEFITS"
+            subtitle="Your Rewards, More Brilliance"
+            items={offersItems}
           />
-
-          <Animated.View entering={entrance(1)}>
-            <QuickActionsGrid
-              onMyOrders={() => navigation.navigate('KshopeMyOrders')}
-              onSavedAddress={() => navigation.navigate('KshopeSavedAddress')}
-              onCoPartnerDashboard={() => {}}
-              onRefer={() => navigation.navigate('KshopeReferral')}
-            />
-          </Animated.View>
-        </View>
-
-        <Animated.View entering={entrance(2)}>
-          <MenuSection title="Offers" items={offersItems} />
-          <MenuSection title="My Account" items={myAccountItems} />
-          <MenuSection title="Information" items={informationItems} />
+          <MenuSection
+            title="MY ACCOUNT"
+            subtitle="Manage Your Account"
+            items={myAccountItems}
+          />
+          <MenuSection
+            title="INFORMATION"
+            subtitle="Help & Support"
+            items={informationItems}
+          />
         </Animated.View>
 
-        <Animated.View entering={entrance(3)}>
+        <Animated.View entering={entrance(2)}>
           <LogoutRow onPress={() => setIsLogoutModalVisible(true)} />
-          <AppVersion />
         </Animated.View>
       </Animated.ScrollView>
 

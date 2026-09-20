@@ -208,74 +208,95 @@ const LoginScreen = () => {
         barStyle={'dark-content'}
       />
       <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardAvoid}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
-          contentContainerStyle={{ flexGrow: 1 }}
+          contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
+          bounces={false}
+          showsVerticalScrollIndicator={false}
         >
-          <ImageBackground
-            style={styles.backgroundImage}
-            source={images.login_landing}
-          >
-            <View />
-            <Animated.Image
-              style={[
-                styles.tagLine,
-                {
-                  opacity: tagLineOpacity,
-                  transform: [{ translateY: tagLineTranslate }],
-                },
-              ]}
-              source={require('../assets/images/login_content.png')}
+          <View style={styles.topImageContainer}>
+            <ImageBackground
+              style={styles.backgroundImage}
+              source={images.loginLuxuryBg}
+              resizeMode="cover"
             />
-          </ImageBackground>
+          </View>
           <Animated.View
             style={[
               styles.bottomContainer,
-              { transform: [{ translateY: bottomTranslate }] },
+              {
+                opacity: bottomOpacity,
+                transform: [{ translateY: bottomTranslate }],
+              },
             ]}
           >
-            <Text style={styles.headerText}>
-              {type === 'reset' ? 'Forgot Password' : 'Login or Sign up'}
+            <Text style={styles.welcomeText}>Welcome to</Text>
+            <Text style={styles.brandTitleText}>Kapra Gold & Diamonds</Text>
+            <Text style={styles.subHeaderText}>
+              {type === 'reset' ? 'RESET PASSWORD' : 'LOG IN TO CONTINUE'}
             </Text>
-            <Text style={styles.enterNumberText}>Enter your mobile number</Text>
+
+            <View style={styles.titleDivider} />
+
+            <View style={styles.signUpRow}>
+              <Text style={styles.dontHaveText}>
+                {type === 'reset'
+                  ? 'Remember password? '
+                  : "Don't have an account? "}
+              </Text>
+              <TouchableOpacity
+                onPress={() => {
+                  if (type === 'reset') {
+                    navigation.navigate('LoginScreen');
+                  } else {
+                    navigation.navigate('RegistraionScreen');
+                  }
+                }}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.signUpLinkText}>
+                  {type === 'reset' ? 'Log in' : 'Sign up'}
+                </Text>
+              </TouchableOpacity>
+            </View>
 
             <View style={styles.inputWrapper}>
               <Text style={styles.countryCode}>+91</Text>
-
-              <View style={styles.divider} />
-
+              <View style={styles.inputDivider} />
               <TextInput
-                placeholder="9999999999"
-                placeholderTextColor="#c1c1c1"
+                placeholder="Enter phone number"
+                placeholderTextColor="rgba(255, 255, 255, 0.45)"
                 keyboardType="number-pad"
                 style={styles.input}
                 value={phone}
                 maxLength={10}
                 textContentType="telephoneNumber"
                 autoComplete="tel"
+                selectionColor="#FFFFFF"
                 onChangeText={setPhone}
               />
             </View>
+
             <TouchableOpacity
               onPress={
-                type === 'reset'
-                  ? handleContinueRest
-                  : handleContinueLogin
+                type === 'reset' ? handleContinueRest : handleContinueLogin
               }
               style={styles.continueButton}
               disabled={loading}
+              activeOpacity={0.88}
             >
               {loading ? (
-                <BallPulse size={'large'} color={'#FFFFFF'} />
+                <BallPulse size={'large'} color={'#0A2A20'} />
               ) : (
-                <Text style={styles.continueButtonText}>Continue</Text>
+                <Text style={styles.continueButtonText}>
+                  {type === 'reset' ? 'Send Reset OTP' : 'Send OTP'}
+                </Text>
               )}
             </TouchableOpacity>
           </Animated.View>
-          {}
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
@@ -289,38 +310,123 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFFFFF',
   },
+  keyboardAvoid: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'space-between',
+    backgroundColor: '#FFFFFF',
+  },
+  topImageContainer: {
+    width: '100%',
+    height: hp('52%'),
+    overflow: 'hidden',
+  },
+  backgroundImage: {
+    width: '100%',
+    height: '100%',
+  },
+  bottomContainer: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    paddingHorizontal: wp('7%'),
+    paddingBottom: hp('10%'),
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 6,
+  },
+  welcomeText: {
+    fontFamily: 'CormorantGaramond-Italic',
+    fontSize: wp('6.5%'),
+    lineHeight: wp('7.8%'),
+    color: '#12372A',
+    textAlign: 'center',
+  },
+  brandTitleText: {
+    fontFamily: 'CormorantGaramond-SemiBold',
+    fontSize: wp('7.6%'),
+    lineHeight: wp('9.2%'),
+    color: '#12372A',
+    textAlign: 'center',
+    marginTop: 2,
+    letterSpacing: -0.2,
+  },
+  subHeaderText: {
+    fontFamily: 'Lexend-Medium',
+    fontSize: wp('3%'),
+    letterSpacing: 2,
+    color: '#262626',
+    textAlign: 'center',
+    marginTop: 12,
+  },
+  titleDivider: {
+    width: wp('44%'),
+    height: 1.5,
+    backgroundColor: '#1E3E30',
+    alignSelf: 'center',
+    marginTop: 14,
+    marginBottom: 26,
+  },
+  signUpRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  dontHaveText: {
+    fontFamily: 'Lexend-Regular',
+    fontSize: wp('3.6%'),
+    color: '#262626',
+  },
+  signUpLinkText: {
+    fontFamily: 'Lexend-SemiBold',
+    fontSize: wp('3.6%'),
+    color: '#165A42',
+  },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: hp('5.36%'),
-    borderRadius: wp('2.33%'),
-    borderWidth: 1,
-    borderColor: '#E5E5E5',
-    paddingHorizontal: wp('4.18%'),
-    backgroundColor: '#fff',
+    height: 52,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    backgroundColor: '#0A2A20',
   },
   countryCode: {
-    fontSize: wp('4.19%'),
-    color: '#000000',
-    marginRight: 12,
+    fontFamily: 'Lexend-Medium',
+    fontSize: 15,
+    color: '#FFFFFF',
   },
-  divider: {
+  inputDivider: {
     width: 1,
-    height: hp('4%'),
-    backgroundColor: '#E5E5E5',
-    marginRight: wp('4%'),
+    height: 22,
+    backgroundColor: 'rgba(255, 255, 255, 0.35)',
+    marginHorizontal: 14,
   },
   input: {
     flex: 1,
-    color: '#000',
-    fontSize: wp('4.19%'),
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontFamily: 'Lexend-Medium',
+    paddingVertical: 0,
   },
-  backgroundImage: {
-    flex: 1,
+  continueButton: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: '#0A2A20',
+    width: '100%',
+    height: 52,
+    justifyContent: 'center',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: hp('6%'),
-    paddingBottom: hp('7.5%'),
+    borderRadius: 12,
+    marginTop: 14,
+  },
+  continueButtonText: {
+    fontFamily: 'Lexend-Medium',
+    fontSize: 14.5,
+    color: '#0A2A20',
   },
   kapraLogo: {
     width: wp('47%'),
@@ -331,15 +437,6 @@ const styles = StyleSheet.create({
     width: wp('50.7%'),
     height: hp('16.95%'),
     resizeMode: 'cover',
-  },
-  bottomContainer: {
-    height: hp('30.33%'),
-    paddingHorizontal: wp('5.8%'),
-    paddingTop: hp('3%'),
-    borderTopLeftRadius: wp('9.3%'),
-    borderTopRightRadius: wp('9.3%'),
-    backgroundColor: '#FFFFFF',
-    bottom: hp('4%'),
   },
   headerText: {
     fontFamily: FONTS.gilroy.semiBold,
@@ -352,20 +449,6 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3.72%'),
     color: '#616161',
-  },
-  continueButton: {
-    backgroundColor: '#F25000',
-    width: '100%',
-    height: hp('6.11%'),
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: wp('2.33%'),
-    marginTop: hp('5%'),
-  },
-  continueButtonText: {
-    fontFamily: FONTS.gilroy.bold,
-    fontSize: wp('4.18%'),
-    color: '#FFFFFF',
   },
   inputContainer: {
     marginTop: hp('1.5%'),
@@ -381,5 +464,11 @@ const styles = StyleSheet.create({
     color: '#F25000',
     fontFamily: FONTS.gilroy.medium,
     fontSize: wp('3.25%'),
+  },
+  divider: {
+    width: 1,
+    height: hp('4%'),
+    backgroundColor: '#E5E5E5',
+    marginRight: wp('4%'),
   },
 });

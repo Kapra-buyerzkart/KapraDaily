@@ -115,15 +115,21 @@ export const useHomeData = () => {
       homeData?.featuredCategories || homeData?.FeaturedCategories || [];
 
     const firstBlock = unwrapBlock(
-      homeData?.firstProductBlock || homeData?.firstproductblock,
+      homeData?.firstProductBlock ||
+        homeData?.FirstProductBlock ||
+        homeData?.firstproductblock,
     );
     const firstProducts = getProducts(firstBlock);
     const secondBlock = unwrapBlock(
-      homeData?.secondProductBlock || homeData?.secondproductblock,
+      homeData?.secondProductBlock ||
+        homeData?.SecondProductBlock ||
+        homeData?.secondproductblock,
     );
     const secondProducts = getProducts(secondBlock);
     const thirdBlock = unwrapBlock(
-      homeData?.thirdProductBlock || homeData?.thirdproductblock,
+      homeData?.thirdProductBlock ||
+        homeData?.ThirdProductBlock ||
+        homeData?.thirdproductblock,
     );
 
     const rawBrands =
@@ -196,7 +202,34 @@ export const useHomeData = () => {
       });
 
     const goatDeals = bannersFor(homeData, 'app_home_cat_top_sidebyside_four');
-    const thirdProducts = getProducts(thirdBlock);
+    let thirdProducts = getProducts(thirdBlock);
+
+    // If thirdProductBlock has no products, check any other available product blocks/arrays in the API
+    if (thirdProducts.length === 0) {
+      const candidates = [
+        homeData?.featuredProducts,
+        homeData?.FeaturedProducts,
+        homeData?.fourthProductBlock,
+        homeData?.FourthProductBlock,
+        homeData?.fourthproductblock,
+        homeData?.categoryDiscovery?.products,
+        homeData?.categoryDiscovery?.Products,
+        homeData?.bestOffers,
+        homeData?.BestOffers,
+        homeData?.halfPriceStore,
+        homeData?.HalfPriceStore,
+        homeData?.products,
+        homeData?.Products,
+      ];
+      for (const candidate of candidates) {
+        const unwrapped = unwrapBlock(candidate);
+        const prods = getProducts(unwrapped);
+        if (prods && prods.length > 0) {
+          thirdProducts = prods;
+          break;
+        }
+      }
+    }
 
     const productIndex = new Map<string, any>();
     [...thirdProducts, ...secondProducts, ...firstProducts].forEach(product => {
@@ -317,7 +350,7 @@ export const useHomeData = () => {
       secondTitle: splitTitle(blockTitle(secondBlock, 'Trending Now')),
       secondBlock,
       thirdStrip: thirdProducts.map(mapProductTile),
-      thirdTitle: splitTitle(blockTitle(thirdBlock, 'Recently Viewed')),
+      thirdTitle: splitTitle(blockTitle(thirdBlock, 'Time less design')),
       thirdBlock,
       exploreRowOne: exploreTiles.slice(0, 5),
       exploreRowTwo: exploreTiles.slice(5, 10),
@@ -327,6 +360,7 @@ export const useHomeData = () => {
         midBottom: bannersFor(homeData, 'app_home_mid_banner_bottom'),
         bottom: bannersFor(homeData, 'app_home_bottom'),
         topSection: bannersFor(homeData, 'app_home_top_banner_top_section'),
+        sideBySide: bannersFor(homeData, 'app_home_top_sidebyside_two'),
       },
       recommendedTitleBlock: thirdBlock,
       recommendedFooterImage: resolveImageSource(

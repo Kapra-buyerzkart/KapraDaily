@@ -1,6 +1,5 @@
 import React, { useContext, useState, useEffect, useRef } from 'react';
 import {
-  View,
   StyleSheet,
   ScrollView,
   RefreshControl,
@@ -47,7 +46,6 @@ import { CartAddressCard } from './components/CartAddressCard';
 import { CartOffersSection } from './components/CartOffersSection';
 import { CartCouponCard } from './components/CartCouponCard';
 import { CartSummarySection } from './components/CartSummarySection';
-import { CartPaymentSection } from './components/CartPaymentSection';
 import { CartTrustBadges } from './components/CartTrustBadges';
 import { CartStickyBottomBar } from './components/CartStickyBottomBar';
 import { CartEmptyLuxury } from './components/CartEmptyLuxury';
@@ -79,7 +77,6 @@ const CartScreen = () => {
     loadCart,
     getCartSummary,
     clearCart,
-    fetchAddresses,
 
     showCouponModal,
     setShowCouponModal,
@@ -87,9 +84,6 @@ const CartScreen = () => {
     availableCoupons,
     availableGiftCards,
     appliedCouponCode,
-    appliedGiftCardCode,
-    onApplyOffer,
-    onRejectOffer,
     handleCouponClick,
 
     selectedDeliveryType,
@@ -112,7 +106,7 @@ const CartScreen = () => {
 
   const [refreshing, setRefreshing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('Online');
-  const [paymentModes, setPaymentModes] = useState<any[]>([]);
+  const [_paymentModes, setPaymentModes] = useState<any[]>([]);
   const [showAddressModal, setShowAddressModal] = useState(false);
 
   const [statusModalVisible, setStatusModalVisible] = useState(false);
@@ -284,6 +278,7 @@ const CartScreen = () => {
     }
   };
 
+  // --- Order Placement Logic (Migrated from Initial Stable Flow) ---
   const handleConfirmOrder = async () => {
     if (!selectedAddress) {
       setShowAddressModal(true);
@@ -292,6 +287,8 @@ const CartScreen = () => {
 
     try {
       showLoader(true);
+      // Perform a final summary sync before showing confirmation modal
+      // This ensures we have the latest cartVersion and calculation
       const summaryRes = await getCartSummary(
         selectedDeliveryType,
         chosenSlot?.id,
@@ -301,6 +298,24 @@ const CartScreen = () => {
       );
 
       showLoader(false);
+
+      // Min Cart Value Validation
+      const grandTotal =
+        summaryRes?.data?.grandTotal || billCalculations?.toPay || 0;
+      const minVal = summaryRes?.data?.minCartValue || 0;
+      if (
+        summaryRes?.data &&
+        summaryRes.data.isEligibleToPlaceOrder === 0 &&
+        grandTotal < minVal
+      ) {
+        setStatusType('error');
+        setStatusTitle('Minimum Order Value');
+        setStatusMessage(
+          `Minimum cart value required ₹${minVal}. Please add more items.`,
+        );
+        setStatusModalVisible(true);
+        return;
+      }
 
       const pincode = selectedAddress.pin || '';
       const area =
@@ -312,18 +327,26 @@ const CartScreen = () => {
         selectedAddress.raw?.district ||
         'N/A';
 
-      if (
+      const isUnserviceable =
         summaryRes?.success === false &&
         (summaryRes?.status === 'STORE_NOT_FOUND' ||
-          summaryRes?.status === 'STORE_CLOSED_FOR_DELIVERY')
-      ) {
+          summaryRes?.status === 'STORE_CLOSED_FOR_DELIVERY' ||
+          String(summaryRes?.message || '')
+            .toLowerCase()
+            .includes('no store') ||
+          String(summaryRes?.message || '')
+            .toLowerCase()
+            .includes('not found'));
+
+      if (isUnserviceable) {
         setAddressConfirmationData({
           pincode,
           areaName: area,
           isPlacingOrder: true,
           isServiceable: false,
           unavailableMessage:
-            summaryRes?.message || 'Store is currently closed for delivery',
+            summaryRes?.message ||
+            'Store is currently closed for delivery in this area.',
         });
       } else {
         setAddressConfirmationData({
@@ -334,7 +357,8 @@ const CartScreen = () => {
           cartVersion:
             summaryRes?.data?.cartVersion ||
             summaryRes?.data?.cart?.cartVersion ||
-            summaryRes?.cartVersion,
+            summaryRes?.cartVersion ||
+            cartSummary?.cartVersion,
         });
       }
     } catch (error: any) {
@@ -380,6 +404,8 @@ const CartScreen = () => {
   };
 
   const submitOrder = async () => {
+    setAddressConfirmationData(null);
+
     const onlineTerms = [
       'online',
       'prepaid',
@@ -394,47 +420,81 @@ const CartScreen = () => {
 
     try {
       showLoader(true);
-      setAddressConfirmationData(null);
 
-      const refreshedCart = await loadCart();
-      const latestVersion =
-        refreshedCart?.cartVersion ||
-        refreshedCart?.cart?.cartVersion ||
-        addressConfirmationData?.cartVersion ||
-        cartSummary?.cartVersion;
-      const resolvedCartId =
-        refreshedCart?.cartId ??
-        refreshedCart?.cart?.cartId ??
+      let currentCartId =
         cartSummary?.cartId ??
         cartSummary?.cart?.cartId ??
         cartItems?.[0]?.cartId;
+      let currentCartVersion =
+        addressConfirmationData?.cartVersion ||
+        cartSummary?.cartVersion ||
+        cartSummary?.cart?.cartVersion;
 
-      if (resolvedCartId === undefined || resolvedCartId === null) {
-        throw new Error('Could not resolve cart ID. Please try again.');
+      if (!currentCartId) {
+        console.log('🔄 [ORDER] No cartId found, attempting auto-refresh...');
+        const refreshRes = await getCartSummary(
+          selectedDeliveryType,
+          chosenSlot?.id,
+          null,
+          null,
+          selectedAddress?.pincodeAreaId,
+        );
+
+        if (
+          refreshRes?.success &&
+          (refreshRes?.data?.cartId || refreshRes?.data?.cart?.cartId)
+        ) {
+          currentCartId =
+            refreshRes.data.cartId || refreshRes.data.cart?.cartId;
+          currentCartVersion =
+            refreshRes.data.cartVersion || refreshRes.data.cart?.cartVersion;
+        } else {
+          const refreshedCart = await loadCart();
+          currentCartId =
+            refreshedCart?.cartId ??
+            refreshedCart?.cart?.cartId ??
+            cartItems?.[0]?.cartId;
+          currentCartVersion =
+            refreshedCart?.cartVersion ??
+            refreshedCart?.cart?.cartVersion ??
+            currentCartVersion;
+        }
+
+        if (!currentCartId) {
+          throw new Error('Your cart session has expired. Please try again.');
+        }
       }
 
+      const storedAreaId = await getKshopeAreaId();
+      const resolvedAreaId =
+        selectedAddress?.pincodeAreaId ||
+        storedAreaId ||
+        KSHOPE_CONFIG.default_pincode_area_id;
+
       const createPayload = {
-        ...(resolvedCartId !== undefined &&
-          resolvedCartId !== null && { cartId: resolvedCartId }),
-        shippingAddressId: selectedAddress?.id,
-        billingAddressId: selectedAddress?.id,
-        paymentMethod: paymentMethod,
-        ifMatchCartVersion: latestVersion,
+        cartId: currentCartId,
+        shippingAddressId: selectedAddress.id,
+        billingAddressId: selectedAddress.id,
+        paymentMethod: isOnlinePayment ? 'online' : paymentMethod || 'COD',
+        ifMatchCartVersion: currentCartVersion,
         deliverySlotDate:
           selectedDeliveryType === 'slot'
-            ? chosenSlot?.date?.split('T')[0] ||
-              (typeof chosenSlot?.date === 'string' ? chosenSlot.date : null)
+            ? chosenSlot?.date?.includes('T')
+              ? chosenSlot.date.split('T')[0]
+              : chosenSlot?.date || null
             : null,
         deliverySlotTime:
           selectedDeliveryType === 'slot'
             ? chosenSlot?.slotValue || null
             : null,
-        deliveryMode: 'express',
+        deliveryMode: selectedDeliveryType === 'slot' ? 'slotted' : 'express',
         orderPlacedFromDevice: 'app',
-        pincodeAreaId: selectedAddress?.pincodeAreaId,
+        pincodeAreaId: resolvedAreaId,
       };
 
+      console.log('📦 [ORDER] Creating Order Payload:', JSON.stringify(createPayload, null, 2));
       const createResponse = await createOrderApi(createPayload);
+      console.log('📦 [ORDER] Create Response:', JSON.stringify(createResponse, null, 2));
 
       if (createResponse?.success && createResponse?.data?.orderId) {
         const orderId = createResponse.data.orderId;
@@ -443,16 +503,23 @@ const CartScreen = () => {
         if (isOnlinePayment) {
           await handlePaymentFlow(orderId, orderNumber);
         } else {
+          // --- COD FLOW ---
           const confirmResponse = await confirmCodApi(orderId);
           if (confirmResponse?.success) {
             await finalizeOrder(createResponse.data);
           } else {
-            throw new Error(
-              confirmResponse?.message || 'Failed to confirm COD',
+            showLoader(false);
+            setStatusType('error');
+            setStatusTitle('Error');
+            setStatusMessage(
+              confirmResponse?.message || 'Failed to confirm COD order',
             );
+            setStatusModalVisible(true);
           }
         }
       } else if (createResponse?.status === 'CART_CONFLICT') {
+        console.log('🔄 [ORDER] Conflict detected, refreshing cart...');
+        await refreshCart();
         showLoader(false);
         setStatusType('error');
         setStatusTitle('Price/Stock Changed');
@@ -461,7 +528,11 @@ const CartScreen = () => {
         );
         setStatusModalVisible(true);
       } else {
-        throw new Error(createResponse?.message || 'Failed to create order');
+        showLoader(false);
+        setStatusType('error');
+        setStatusTitle('Order Failed');
+        setStatusMessage(createResponse?.message || 'Failed to create order');
+        setStatusModalVisible(true);
       }
     } catch (error: any) {
       showLoader(false);
@@ -482,22 +553,40 @@ const CartScreen = () => {
 
   const handlePaymentFlow = async (orderId: any, orderNumber: any) => {
     try {
+      console.log('💳 [RAZORPAY] Initiating Payment Flow for Order:', orderId);
       const rzpResponse = await createRazorpayOrderApi({ orderId });
+      console.log('💳 [RAZORPAY] Create Response:', JSON.stringify(rzpResponse, null, 2));
+
       if (rzpResponse?.success && rzpResponse?.data) {
-        const keyId = rzpResponse.data.keyId || rzpResponse.data.razorpayKeyId;
-        const razorpayOrderId = rzpResponse.data.razorpayOrderId;
+        const keyId =
+          rzpResponse.data.keyId ||
+          rzpResponse.data.razorpayKeyId ||
+          rzpResponse.data.razorPayKeyId;
+        const razorpayOrderId =
+          rzpResponse.data.razorpayOrderId || rzpResponse.data.razorPayOrderId;
         const amount = rzpResponse.data.amount;
+
+        if (!keyId || !razorpayOrderId) {
+          throw new Error(
+            'Incomplete payment details received (Missing Key or Order ID)',
+          );
+        }
 
         const options = {
           key: keyId,
           amount: amount,
           currency: 'INR',
-          name: 'KShopee',
+          name: 'Kapra Daily',
           description: `Order #${orderNumber}`,
           order_id: razorpayOrderId,
           prefill: {
             email: profile?.email || '',
-            contact: profile?.phone || profile?.phoneNo || '',
+            contact:
+              profile?.phone ||
+              profile?.phoneNo ||
+              selectedAddress?.phone ||
+              selectedAddress?.phoneNo ||
+              '',
           },
           theme: { color: '#0C382E' },
         };
@@ -521,6 +610,7 @@ const CartScreen = () => {
 
             const attemptVerification = async () => {
               try {
+                console.log(`🔍 [RAZORPAY] Verification Attempt ${retryCount + 1}...`);
                 return await verifyRazorpayPaymentApi(verifyPayload);
               } catch {
                 return null;
@@ -534,9 +624,8 @@ const CartScreen = () => {
               retryCount < maxRetries
             ) {
               retryCount++;
-              await new Promise(resolve =>
-                setTimeout(() => resolve(undefined), 3000),
-              );
+              console.log(`🔄 [RAZORPAY] Retrying verification (Count: ${retryCount}) in 3s...`);
+              await new Promise(resolve => setTimeout(() => resolve(undefined), 3000));
               verifyResponse = await attemptVerification();
             }
 
@@ -561,18 +650,32 @@ const CartScreen = () => {
               orderNumber,
               paymentMethod: paymentMethod || 'online',
               totalItems: cartItems?.length || 0,
-              totalAmount: billCalculations?.toPay || 0,
+              totalAmount: billCalculations?.toPay || amount || 0,
             });
             refreshCart();
           }
         }, 500);
+      } else {
+        throw new Error(rzpResponse?.message || 'Payment initiation failed');
       }
     } catch (error: any) {
       showLoader(false);
+      const errorMsg = error.message || String(error);
+      const isSessionExpiry =
+        errorMsg.toLowerCase().includes('expired') ||
+        errorMsg.toLowerCase().includes('not found');
+
       setStatusType('error');
-      setStatusTitle('Payment Error');
-      setStatusMessage(error.message || 'Failed to initialize payment');
+      setStatusTitle(isSessionExpiry ? 'Session Refreshed' : 'Payment Error');
+      setStatusMessage(
+        isSessionExpiry
+          ? 'Your session was refreshed. Please try placing the order again.'
+          : errorMsg || 'Failed to initialize payment',
+      );
       setStatusModalVisible(true);
+      if (isSessionExpiry) {
+        refreshCart();
+      }
     }
   };
 
@@ -585,6 +688,8 @@ const CartScreen = () => {
     try {
       setIsFinalizingOrder(true);
       await clearCart();
+    } catch (error) {
+      console.error('⚠️ [ORDER SUCCESS] Error clearing cart:', error);
     } finally {
       showLoader(false);
       navigation.reset({
@@ -608,11 +713,7 @@ const CartScreen = () => {
   };
 
   const onWishlistPress = () => {
-    try {
-      navigation.navigate('Wishlist');
-    } catch {
-      navigation.navigate('KshopeHome', { screen: 'Wishlist' });
-    }
+    navigation.navigate('KshopeHome', { screen: 'WishlistScreen' });
   };
 
   const onExploreJewellery = () => {
@@ -625,10 +726,6 @@ const CartScreen = () => {
       product: item,
     });
   };
-
-  const supportsCOD = paymentModes.some(
-    m => m.paymentModeName?.toUpperCase() === 'COD',
-  );
 
   if (cartItems.length === 0 && !isFinalizingOrder) {
     return (

@@ -29,10 +29,10 @@ import {
   sortByNewest,
   type OrderBucket,
 } from './data/selectors';
-import { DEMO_ORDERS } from './data/demoOrders';
 import OrderCard from './sections/OrderCard';
 import OrdersSummaryCard from './sections/OrdersSummaryCard';
 import OrderTabs from './sections/OrderTabs';
+import OrdersEmptyState from './sections/OrdersEmptyState';
 import { ORDER_COLORS } from './sections/theme';
 
 const MyOrdersRedesignScreen: React.FC = () => {
@@ -181,12 +181,12 @@ const MyOrdersRedesignScreen: React.FC = () => {
     [navigation, openDetails, showLoader],
   );
 
-  // Use real orders if available, otherwise show the demo jewelry orders
+  // Only display real orders from API, never dummy fallback orders
   const displayOrders = useMemo(() => {
     if (orderData && orderData.length > 0) {
       return sortByNewest(orderData);
     }
-    return DEMO_ORDERS;
+    return [];
   }, [orderData]);
 
   // Dynamic statistics calculations
@@ -208,11 +208,10 @@ const MyOrdersRedesignScreen: React.FC = () => {
         deliveredCount: delivered,
       };
     }
-    // Matching design reference demo counts
     return {
-      totalCount: 12,
-      activeCount: 3,
-      deliveredCount: 8,
+      totalCount: 0,
+      activeCount: 0,
+      deliveredCount: 0,
     };
   }, [orderData]);
 
@@ -275,24 +274,49 @@ const MyOrdersRedesignScreen: React.FC = () => {
     if (loading) {
       return null;
     }
+    const isFiltered = tab !== 'all' && totalCount > 0;
+    if (isFiltered) {
+      return (
+        <View style={styles.emptyWrap}>
+          <View style={styles.emptyIconCircle}>
+            <Ionicons
+              name="bag-handle-outline"
+              size={pt(38)}
+              color={ORDER_COLORS.darkGreen}
+            />
+          </View>
+          <Text style={styles.emptyTitle}>{`No ${tab} orders`}</Text>
+          <Text style={styles.emptySubtitle}>
+            {`You don't have any ${tab} orders at this moment.`}
+          </Text>
+          <TouchableOpacity
+            testID="orders-empty-view-all-btn"
+            style={styles.exploreButton}
+            onPress={() => setTab('all')}
+            activeOpacity={0.88}
+          >
+            <Text style={styles.exploreButtonText}>View All Orders</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
     return (
-      <View style={styles.emptyWrap}>
-        <Ionicons
-          name="bag-handle-outline"
-          size={52}
-          color={ORDER_COLORS.inkFaint}
-        />
-        <Text style={styles.emptyTitle}>No orders in this section</Text>
-        <Text style={styles.emptySubtitle}>
-          You don't have any {tab} orders at this moment.
-        </Text>
-      </View>
+      <OrdersEmptyState
+        onExplore={() => navigation.navigate('KshopeHome')}
+        onWishlist={() =>
+          navigation.navigate('KshopeHome', { screen: 'WishlistScreen' })
+        }
+        onBookConsultation={() =>
+          navigation.navigate('KshopeSearch', { query: 'Showroom' })
+        }
+      />
     );
-  }, [loading, tab]);
+  }, [loading, navigation, tab, totalCount]);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      <StatusBar barStyle="dark-content" backgroundColor="#F8F9F8" />
 
       <FlatList
         data={filteredOrders}
@@ -327,7 +351,7 @@ const MyOrdersRedesignScreen: React.FC = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F8F9F8',
   },
   headerRow: {
     flexDirection: 'row',
@@ -376,21 +400,55 @@ const styles = StyleSheet.create({
   emptyWrap: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 50,
-    paddingHorizontal: 30,
+    paddingTop: pt(60),
+    paddingBottom: pt(40),
+    paddingHorizontal: pt(28),
+  },
+  emptyIconCircle: {
+    width: pt(76),
+    height: pt(76),
+    borderRadius: pt(38),
+    backgroundColor: '#F5F2EC',
+    borderWidth: 1,
+    borderColor: '#E8E0D5',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: pt(18),
   },
   emptyTitle: {
-    fontFamily: Fonts.lexend.semiBold,
-    fontSize: pt(15),
-    color: ORDER_COLORS.ink,
-    marginTop: 14,
+    fontFamily: Fonts.cormorantGaramond.semiBold,
+    fontSize: pt(24),
+    lineHeight: pt(30),
+    color: ORDER_COLORS.darkGreen,
+    letterSpacing: -0.3,
+    textAlign: 'center',
   },
   emptySubtitle: {
     fontFamily: Fonts.lexend.regular,
-    fontSize: pt(11),
+    fontSize: pt(12),
+    lineHeight: pt(18),
     color: ORDER_COLORS.inkMuted,
     textAlign: 'center',
-    marginTop: 6,
+    marginTop: pt(8),
+    maxWidth: pt(280),
+  },
+  exploreButton: {
+    marginTop: pt(24),
+    backgroundColor: ORDER_COLORS.darkGreen,
+    paddingVertical: pt(12),
+    paddingHorizontal: pt(26),
+    borderRadius: pt(24),
+    shadowColor: ORDER_COLORS.darkGreen,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  exploreButtonText: {
+    fontFamily: Fonts.lexend.medium,
+    fontSize: pt(13),
+    color: '#FFFFFF',
+    letterSpacing: 0.2,
   },
 });
 

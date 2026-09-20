@@ -1,8 +1,11 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import CartText from '@/screens/cart/components/atoms/CartText';
-import { CART_COLORS, CART_SPACING, wp } from '@/styles/cartTheme';
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from 'react-native-responsive-screen';
+import { PWD_COLORS, PWD_FONTS } from '../theme';
 
 const InlineError = ({ message }) => {
   if (!message) return null;
@@ -11,12 +14,10 @@ const InlineError = ({ message }) => {
     <View style={styles.row}>
       <MaterialCommunityIcons
         name="alert-circle-outline"
-        size={wp('3.4%')}
-        color={CART_COLORS.danger}
+        size={wp('3.6%')}
+        color={PWD_COLORS.danger}
       />
-      <CartText variant="caption" tone="danger" style={styles.text}>
-        {message}
-      </CartText>
+      <Text style={styles.text}>{message}</Text>
     </View>
   );
 };
@@ -27,10 +28,13 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: CART_SPACING.xs,
-    marginTop: CART_SPACING.sm,
+    gap: wp('1.5%'),
+    marginTop: hp('0.8%'),
   },
   text: {
     flexShrink: 1,
+    fontFamily: PWD_FONTS.body,
+    fontSize: wp('3%'),
+    color: PWD_COLORS.danger,
   },
 });

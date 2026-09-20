@@ -11,7 +11,12 @@ import {
   Platform,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { CART_COLORS, CART_FONTS, fs, s } from '../screens/Cart/cartRedesignTheme';
+import {
+  CART_COLORS,
+  CART_FONTS,
+  fs,
+  s,
+} from '../screens/Cart/cartRedesignTheme';
 
 interface CouponModalProps {
   visible: boolean;
@@ -177,7 +182,11 @@ const CouponModal: React.FC<CouponModalProps> = ({
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               style={styles.closeBtn}
             >
-              <Ionicons name="close" size={s(20)} color={CART_COLORS.textDark} />
+              <Ionicons
+                name="close"
+                size={s(20)}
+                color={CART_COLORS.textDark}
+              />
             </TouchableOpacity>
           </View>
 
@@ -248,20 +257,24 @@ const CouponModal: React.FC<CouponModalProps> = ({
             )}
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
-                <Image
-                  source={
-                    isGiftCard
-                      ? require('../assets/images/noimages/nogiftcard.png')
-                      : require('../assets/images/noimages/nocoupon.png')
-                  }
-                  style={styles.emptyImage}
-                  resizeMode="contain"
-                />
+                <View style={styles.emptyAvatarWrapper}>
+                  <Image
+                    source={
+                      isGiftCard
+                        ? require('../assets/images/noimages/luxury_no_gift_cards.jpg')
+                        : require('../assets/images/noimages/luxury_no_coupons.jpg')
+                    }
+                    style={styles.emptyImage}
+                    resizeMode="cover"
+                  />
+                </View>
                 <Text style={styles.emptyTitle}>
-                  {isGiftCard ? 'No Gift Cards Yet' : 'No Coupons Yet'}
+                  {isGiftCard ? 'No Gift Cards Available' : 'No Coupons Available'}
                 </Text>
                 <Text style={styles.emptyNote}>
-                  New offers drop in often, check back soon for special discounts.
+                  {isGiftCard
+                    ? 'Exclusive gift cards and reward vouchers will appear here when available.'
+                    : 'Exclusive discounts and curated offers will appear here when available for your cart.'}
                 </Text>
               </View>
             }
@@ -283,7 +296,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   sheet: {
-    backgroundColor: CART_COLORS.white,
+    backgroundColor: '#FFFFFF',
     borderTopLeftRadius: s(24),
     borderTopRightRadius: s(24),
     maxHeight: '82%',
@@ -291,7 +304,7 @@ const styles = StyleSheet.create({
     paddingTop: s(6),
     paddingBottom: Platform.OS === 'ios' ? s(34) : s(18),
     borderWidth: 1,
-    borderColor: CART_COLORS.cardBorder,
+    borderColor: '#ECEAE5',
   },
   handleHitArea: {
     width: '100%',
@@ -311,13 +324,15 @@ const styles = StyleSheet.create({
     marginTop: s(4),
     paddingBottom: s(12),
     borderBottomWidth: 1,
-    borderBottomColor: CART_COLORS.cardBorderSubtle,
+    borderBottomColor: '#F0ECE6',
   },
   iconCircle: {
     width: s(38),
     height: s(38),
     borderRadius: s(19),
-    backgroundColor: CART_COLORS.emeraldTint,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E8E4DD',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -339,9 +354,9 @@ const styles = StyleSheet.create({
     width: s(32),
     height: s(32),
     borderRadius: s(16),
-    backgroundColor: '#FAF8F5',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: CART_COLORS.cardBorder,
+    borderColor: '#ECEAE5',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -357,9 +372,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: s(8),
     borderWidth: 1,
-    borderColor: CART_COLORS.cardBorder,
+    borderColor: '#ECEAE5',
     borderRadius: s(12),
-    backgroundColor: '#FAF8F5',
+    backgroundColor: '#FFFFFF',
     paddingHorizontal: s(14),
     height: s(46),
   },
@@ -406,11 +421,22 @@ const styles = StyleSheet.create({
     gap: s(12),
   },
   card: {
-    backgroundColor: '#FAF8F5',
+    backgroundColor: '#FFFFFF',
     borderRadius: s(14),
     padding: s(14),
     borderWidth: 1,
-    borderColor: CART_COLORS.cardBorder,
+    borderColor: '#ECEAE5',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1.5 },
+        shadowOpacity: 0.04,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 1.5,
+      },
+    }),
   },
   cardTopRow: {
     flexDirection: 'row',
@@ -422,7 +448,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: s(6),
-    backgroundColor: CART_COLORS.emeraldTint,
+    backgroundColor: '#F0F7F4',
     paddingHorizontal: s(10),
     paddingVertical: s(4),
     borderRadius: s(6),
@@ -455,7 +481,7 @@ const styles = StyleSheet.create({
   },
   cardDivider: {
     height: 1,
-    backgroundColor: CART_COLORS.cardBorderSubtle,
+    backgroundColor: '#F0ECE6',
     marginVertical: s(10),
   },
   metaRow: {
@@ -475,25 +501,49 @@ const styles = StyleSheet.create({
   },
   emptyContainer: {
     alignItems: 'center',
-    paddingVertical: s(36),
-    gap: s(8),
+    paddingVertical: s(32),
+    paddingHorizontal: s(16),
+  },
+  emptyAvatarWrapper: {
+    width: s(84),
+    height: s(84),
+    borderRadius: s(42),
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#ECEAE5',
+    overflow: 'hidden',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: s(14),
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 6,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
   },
   emptyImage: {
-    width: s(60),
-    height: s(60),
-    opacity: 0.8,
+    width: s(84),
+    height: s(84),
   },
   emptyTitle: {
     fontFamily: CART_FONTS.serifBold,
-    fontSize: fs(17),
+    fontSize: fs(18),
     color: CART_COLORS.textDark,
+    marginBottom: s(6),
   },
   emptyNote: {
     fontFamily: CART_FONTS.sansRegular,
     fontSize: fs(12),
     color: CART_COLORS.textMuted,
     textAlign: 'center',
-    paddingHorizontal: s(24),
+    lineHeight: fs(17),
+    paddingHorizontal: s(20),
   },
 });
 

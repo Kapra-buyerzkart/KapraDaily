@@ -69,10 +69,10 @@ function createStyles({
   });
 }
 
-const ProfileAvatarBadge: React.FC<{ size?: number; isPrivileged?: boolean }> = ({
-  size = 40,
-  isPrivileged = false,
-}) => {
+const ProfileAvatarBadge: React.FC<{
+  size?: number;
+  isPrivileged?: boolean;
+}> = ({ size = 40, isPrivileged = false }) => {
   const badgeSize = size * 0.42;
   const crownHeadroom = badgeSize * 0.62;
   const ringSize = size - crownHeadroom;

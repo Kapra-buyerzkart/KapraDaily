@@ -45,6 +45,14 @@ const HomeStatusBar: React.FC = () => {
   );
 };
 
+const isGifBanner = (b: any): boolean => {
+  if (!b) return false;
+  const rawUrl =
+    b?.imageUrl || b?.ImageUrl || b?.image || b?.uri?.uri || b?.uri || '';
+  const url = typeof rawUrl === 'string' ? rawUrl.toLowerCase().trim() : '';
+  return url.includes('.gif');
+};
+
 const HomeRedesignScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
@@ -168,16 +176,105 @@ const HomeRedesignScreen: React.FC = () => {
     [toggleWishlist],
   );
 
+  // Filter out any main home GIF and select any other banner available from the API
+  const heroBanner = useMemo(() => {
+    const nonGifTop = (sections.banners.top || []).find(
+      b => b && !isGifBanner(b),
+    );
+    if (nonGifTop) return nonGifTop;
+
+    const nonGifTopSection = (sections.banners.topSection || []).find(
+      b => b && !isGifBanner(b),
+    );
+    if (nonGifTopSection) return nonGifTopSection;
+
+    const nonGifMid = (sections.banners.mid || []).find(
+      b => b && !isGifBanner(b),
+    );
+    if (nonGifMid) return nonGifMid;
+
+    const nonGifBottom = (sections.banners.bottom || []).find(
+      b => b && !isGifBanner(b),
+    );
+    if (nonGifBottom) return nonGifBottom;
+
+    const nonGifMidBottom = (sections.banners.midBottom || []).find(
+      b => b && !isGifBanner(b),
+    );
+    if (nonGifMidBottom) return nonGifMidBottom;
+
+    const anyApiBanner = (homeData?.banners || []).find(
+      (b: any) => b && !isGifBanner(b),
+    );
+    if (anyApiBanner) return anyApiBanner;
+
+    return null;
+  }, [sections.banners, homeData?.banners]);
+
+  const midBanner = useMemo(() => {
+    const candidates = [
+      ...(sections.banners.mid || []),
+      ...(sections.banners.bottom || []),
+      ...(sections.banners.topSection || []),
+      ...(sections.banners.midBottom || []),
+    ].filter(b => b && !isGifBanner(b) && b !== heroBanner);
+
+    return candidates[0] || null;
+  }, [sections.banners, heroBanner]);
+
+  const featureBanner = useMemo(() => {
+    const candidates = [
+      ...(sections.banners.topSection || []),
+      ...(sections.banners.bottom || []),
+      ...(sections.banners.mid || []),
+    ].filter(b => b && !isGifBanner(b) && b !== heroBanner && b !== midBanner);
+
+    return candidates[0] || null;
+  }, [sections.banners, heroBanner, midBanner]);
+
+  const sideBySideLeft = useMemo(() => {
+    const fromPlacement = (sections.banners.sideBySide || []).find(
+      b => b && !isGifBanner(b),
+    );
+    if (fromPlacement) return fromPlacement;
+
+    const fromMidBottom = (sections.banners.midBottom || []).find(
+      b =>
+        b &&
+        !isGifBanner(b) &&
+        b !== heroBanner &&
+        b !== midBanner &&
+        b !== featureBanner,
+    );
+    return fromMidBottom || null;
+  }, [sections.banners, heroBanner, midBanner, featureBanner]);
+
+  const sideBySideRight = useMemo(() => {
+    const list = (sections.banners.sideBySide || []).filter(
+      b => b && !isGifBanner(b) && b !== sideBySideLeft,
+    );
+    if (list.length > 0) return list[0];
+
+    const fromMidBottom = (sections.banners.midBottom || []).filter(
+      b =>
+        b &&
+        !isGifBanner(b) &&
+        b !== heroBanner &&
+        b !== midBanner &&
+        b !== featureBanner &&
+        b !== sideBySideLeft,
+    );
+    return fromMidBottom[0] || null;
+  }, [sections.banners, heroBanner, midBanner, featureBanner, sideBySideLeft]);
+
+  const categoriesList = useMemo(
+    () => homeData?.featuredCategories || homeData?.FeaturedCategories || [],
+    [homeData?.featuredCategories, homeData?.FeaturedCategories],
+  );
+
   if (loading) {
     return <HomeSkeleton />;
   }
-
-  const topBanner = sections.banners.top?.[0];
-  const midBanner = sections.banners.mid?.[0];
-  const featureBanner =
-    sections.banners.topSection?.[0] || sections.banners.bottom?.[0];
-  const categoriesList =
-    homeData?.featuredCategories || homeData?.FeaturedCategories || [];
 
   return (
     <View style={styles.root}>
@@ -220,8 +317,11 @@ const HomeRedesignScreen: React.FC = () => {
           onViewAllPress={openCategoryTab}
         />
 
-        {/* 2. Hero Promotional Banner: "Crafted for every chapter" */}
-        <HeroBanner banner={topBanner} onPress={() => openBanner(topBanner)} />
+        {/* 2. Hero Promotional Banner: "Crafted for every chapter" or non-GIF API banner */}
+        <HeroBanner
+          banner={heroBanner}
+          onPress={() => openBanner(heroBanner)}
+        />
 
         {/* 3. Three Quick Action Cards */}
         <QuickActionCards
@@ -242,23 +342,26 @@ const HomeRedesignScreen: React.FC = () => {
           onViewAll={() => openSearch({ query: 'Curated' })}
         />
 
-        {/* 5. "EVERYDAY DIAMONDS" Mid Banner */}
+        {/* 5. "EVERYDAY DIAMONDS" Mid Banner from API */}
         <EverydayDiamondsBanner
           banner={midBanner}
           onPress={() => openBanner(midBanner)}
         />
 
-        {/* 6. "Shop by occasion" 4-Card Grid */}
+        {/* 6. "Shop by occasion" mapped to backend categories */}
         <ShopByOccasion
+          title="Shop by occasion"
+          categories={categoriesList}
+          onSelectCategory={openCategory}
           onSelectOccasion={openOccasion}
           onViewAll={openCategoryTab}
         />
 
-        {/* 7. Full-width Hanging Jhumka Feature Banner */}
-        {/* <HangingJhumkaBanner
+        {/* 7. Full-width Hanging Jhumka Feature Banner from API */}
+        <HangingJhumkaBanner
           banner={featureBanner}
           onPress={() => openBanner(featureBanner)}
-        /> */}
+        />
 
         {/* 8. "Trending Now" Product Rail (from API secondProductBlock) */}
         <JewelryProductRail
@@ -270,25 +373,25 @@ const HomeRedesignScreen: React.FC = () => {
           onViewAll={() => openSearch({ query: 'Trending' })}
         />
 
-        {/* 9. Side-by-Side Promo Tiles: Diamond Dreams & The Gold Edit */}
+        {/* 9. Side-by-Side Promo Tiles from API */}
         {/* <SideBySidePromos
-          onPressLeft={() =>
-            openSearch({ query: 'Diamond', catName: 'Diamond Dreams' })
-          }
-          onPressRight={() =>
-            openSearch({ query: 'Gold', catName: 'The Gold Edit' })
-          }
+          leftBanner={sideBySideLeft}
+          rightBanner={sideBySideRight}
+          onPressLeft={() => openBanner(sideBySideLeft)}
+          onPressRight={() => openBanner(sideBySideRight)}
         /> */}
 
-        {/* 10. "Recently Viewed" Product Rail (from API thirdProductBlock) */}
-        {/* <JewelryProductRail
-          title="Recently Viewed"
-          items={sections.thirdStrip}
-          compact
-          wishlisted={wishlisted}
-          onPressProduct={openProduct}
-          onToggleWishlist={onToggleWishlist}
-        /> */}
+        {/* 10. "Time less design" Product Rail (from API thirdProductBlock / available product data) */}
+        {sections.thirdStrip.length > 0 && (
+          <JewelryProductRail
+            title="Time less design"
+            items={sections.thirdStrip}
+            wishlisted={wishlisted}
+            onPressProduct={openProduct}
+            onToggleWishlist={onToggleWishlist}
+            onViewAll={() => openSearch({ query: 'Timeless' })}
+          />
+        )}
 
         {/* 11. Marquee Ticker: Continuous Gold Brand Assurances */}
         <MarqueeTicker />

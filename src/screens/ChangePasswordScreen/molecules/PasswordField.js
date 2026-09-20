@@ -3,13 +3,10 @@ import { View, StyleSheet, TextInput, Platform } from 'react-native';
 import { useSharedValue, withTiming } from 'react-native-reanimated';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {
-  CART_COLORS,
-  CART_SPACING,
-  CART_TYPE,
-  MAX_FONT_SCALE,
-  wp,
-  hp,
-} from '@/styles/cartTheme';
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from 'react-native-responsive-screen';
+import { PWD_COLORS, PWD_FONTS } from '../theme';
 import FieldLabel from '../atoms/FieldLabel';
 import FieldWell from '../atoms/FieldWell';
 import InlineError from '../atoms/InlineError';
@@ -26,12 +23,12 @@ const PasswordField = forwardRef(
     const focus = useSharedValue(0);
 
     const iconColor = error
-      ? CART_COLORS.danger
+      ? PWD_COLORS.danger
       : success
-      ? CART_COLORS.successDeep
+      ? PWD_COLORS.emerald
       : focused
-      ? CART_COLORS.textSecondary
-      : CART_COLORS.textMuted;
+      ? PWD_COLORS.gold
+      : PWD_COLORS.textMuted;
 
     return (
       <View>
@@ -40,7 +37,7 @@ const PasswordField = forwardRef(
         <FieldWell focus={focus} error={error} success={success}>
           <MaterialCommunityIcons
             name={success && !error ? 'check-circle-outline' : icon}
-            size={wp('4.2%')}
+            size={wp('4.5%')}
             color={iconColor}
             style={styles.icon}
           />
@@ -50,12 +47,12 @@ const PasswordField = forwardRef(
             style={styles.input}
             value={value}
             onChangeText={onChangeText}
-            placeholderTextColor={CART_COLORS.textFaint}
+            placeholderTextColor={PWD_COLORS.textFaint}
             secureTextEntry={!revealed}
             autoCapitalize="none"
             autoCorrect={false}
-            selectionColor={CART_COLORS.textSecondary}
-            maxFontSizeMultiplier={MAX_FONT_SCALE}
+            selectionColor={PWD_COLORS.gold}
+            maxFontSizeMultiplier={1.3}
             onFocus={() => {
               setFocused(true);
               focus.value = withTiming(1, FOCUS_FADE);
@@ -88,16 +85,17 @@ export default React.memo(PasswordField);
 
 const styles = StyleSheet.create({
   icon: {
-    marginRight: CART_SPACING.sm,
+    marginRight: wp('2.5%'),
   },
   input: {
     flex: 1,
-    ...CART_TYPE.bodyStrong,
-    color: CART_COLORS.textPrimary,
+    fontFamily: PWD_FONTS.bodyMedium,
+    fontSize: wp('3.8%'),
+    color: PWD_COLORS.textPrimary,
     letterSpacing: 1.2,
-    paddingVertical: CART_SPACING.sm,
-    paddingRight: CART_SPACING.sm,
-    bottom: Platform.OS === 'ios' ? hp(0.2) : 0,
+    paddingVertical: hp('1%'),
+    paddingRight: wp('2%'),
+    bottom: Platform.OS === 'ios' ? hp('0.2%') : 0,
     includeFontPadding: false,
   },
 });

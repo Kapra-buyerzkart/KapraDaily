@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { TouchableOpacity } from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import Feather from 'react-native-vector-icons/Feather';
 import FormField from './FormField';
-import { CART_COLORS, hitSlopTo, wp } from '../../../../styles/cartTheme';
 
 const PasswordField = ({ label, required, value, onChangeText, ...rest }) => {
   const [visible, setVisible] = useState(false);
@@ -19,14 +18,15 @@ const PasswordField = ({ label, required, value, onChangeText, ...rest }) => {
       accessory={
         <TouchableOpacity
           onPress={() => setVisible(current => !current)}
-          hitSlop={hitSlopTo(wp('5%'))}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          activeOpacity={0.7}
           accessibilityRole="button"
           accessibilityLabel={visible ? 'Hide password' : 'Show password'}
         >
-          <Ionicons
-            name={visible ? 'eye-outline' : 'eye-off-outline'}
-            size={wp('5%')}
-            color={visible ? CART_COLORS.primary : CART_COLORS.textMuted}
+          <Feather
+            name={visible ? 'eye' : 'eye-off'}
+            size={18}
+            color="rgba(255, 255, 255, 0.75)"
           />
         </TouchableOpacity>
       }

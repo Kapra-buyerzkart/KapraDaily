@@ -2,11 +2,11 @@ import type { StatusBullet } from './components';
 
 export const SUCCESS_COPY = {
   topBarTitle: 'Order status',
-  topBarSubtitle: 'Your 48hrs Deals order is confirmed',
+  topBarSubtitle: 'Your Kapra jewellery order is confirmed',
   statusLabel: 'CONFIRMED',
   statusTitle: 'Order placed',
   statusSubtitle:
-    'Thank you for shopping 48hrs Deals. Your order is confirmed and being packed.',
+    'Thank you for shopping with Kapra. Your jewellery order is confirmed and being packed.',
   summaryTitle: 'Order summary',
   stepsTitle: 'What happens next',
   supportTitle: 'Need help with this order?',

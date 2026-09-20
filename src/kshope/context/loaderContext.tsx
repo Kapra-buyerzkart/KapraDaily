@@ -1,8 +1,6 @@
 import React, { createContext } from 'react';
-import { Dimensions, StyleSheet, View } from 'react-native';
-import LottieView from 'lottie-react-native';
-
-const windowWidth = Dimensions.get('window').width;
+import { StyleSheet, View } from 'react-native';
+import LuxuryLoader from '../../components/LuxuryLoader';
 
 export const LoaderContext = createContext<any>(null);
 
@@ -42,24 +40,7 @@ export const LoaderContextProvider = ({ children }: { children: React.ReactNode 
             <LoaderContext.Provider value={value}>{children}</LoaderContext.Provider>
             {loading && (
                 <View style={styles.overlay} pointerEvents="auto">
-                        <LottieView
-                            source={require('../assets/Lottie/CartLoader1.json')}
-                            style={{
-                                height: windowWidth * (40 / 100),
-                                width: windowWidth * (40 / 100),
-                            }}
-                            colorFilters={[
-                                { keypath: "cart 2.**", color: '#F25000' },
-                                { keypath: "right wheel 2.**", color: '#F25000' },
-                                { keypath: "left wheel 2.**", color: '#F25000' },
-                                { keypath: "cart.**", color: '#F25000' },
-                                { keypath: "right wheel.**", color: '#F25000' },
-                                { keypath: "left wheel.**", color: '#F25000' },
-                                { keypath: "**.Stroke 1", color: '#F25000' },
-                            ]}
-                            autoPlay
-                            loop
-                        />
+                    <LuxuryLoader />
                 </View>
             )}
         </View>
@@ -72,8 +53,7 @@ const styles = StyleSheet.create({
     },
     overlay: {
         ...StyleSheet.absoluteFillObject,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'rgba(255,255,255,.7)',
+        zIndex: 9999,
+        elevation: 9999,
     },
 });

@@ -1,14 +1,19 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import CartText from '@/screens/cart/components/atoms/CartText';
-import { CART_COLORS, CART_SPACING, wp } from '@/styles/cartTheme';
+import { View, StyleSheet, Text } from 'react-native';
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from 'react-native-responsive-screen';
+import { PWD_COLORS, PWD_FONTS } from '../theme';
 import MeterSegment from '../atoms/MeterSegment';
 import { METER_SEGMENTS, STRENGTH_COPY } from '../constants';
 
-const AMBER = '#B45309';
-
 export const strengthInk = score =>
-  score <= 1 ? CART_COLORS.danger : score === 2 ? AMBER : CART_COLORS.successDeep;
+  score <= 1
+    ? PWD_COLORS.danger
+    : score === 2
+    ? PWD_COLORS.gold
+    : PWD_COLORS.emerald;
 
 const StrengthMeter = ({ score }) => {
   const ink = strengthInk(score);
@@ -19,9 +24,9 @@ const StrengthMeter = ({ score }) => {
         <MeterSegment key={index} filled={index < score} ink={ink} />
       ))}
 
-      <CartText variant="micro" tone={ink} style={styles.label}>
+      <Text style={[styles.label, { color: ink }]}>
         {STRENGTH_COPY[score]}
-      </CartText>
+      </Text>
     </View>
   );
 };
@@ -32,11 +37,13 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: CART_SPACING.xs + 2,
+    gap: 6,
   },
   label: {
-    width: wp('17%'),
+    width: wp('18%'),
     textAlign: 'right',
-    marginLeft: CART_SPACING.xs,
+    marginLeft: wp('1%'),
+    fontFamily: PWD_FONTS.bodyMedium,
+    fontSize: wp('2.8%'),
   },
 });

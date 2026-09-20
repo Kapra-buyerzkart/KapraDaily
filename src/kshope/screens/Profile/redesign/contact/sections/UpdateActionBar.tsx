@@ -1,16 +1,18 @@
 import React from 'react';
-import { ActivityIndicator, Platform, StyleSheet, TouchableOpacity } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import AntDesign from 'react-native-vector-icons/AntDesign';
-import { AppText } from '../../../../../components/atoms';
 import {
-  UI_COLORS,
-  UI_ELEVATION,
-  UI_RADIUS,
-  UI_SPACING,
-  wp,
-  hp,
-} from '../../../../../theme/tokens';
+  ActivityIndicator,
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import Feather from 'react-native-vector-icons/Feather';
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from 'react-native-responsive-screen';
+import { CONTACT_COLORS, CONTACT_FONTS } from '../contactTheme';
 
 interface Props {
   enabled: boolean;
@@ -29,31 +31,30 @@ const UpdateActionBar: React.FC<Props> = ({
 }) => (
   <SafeAreaView edges={['bottom']} style={styles.footer}>
     <TouchableOpacity
-      activeOpacity={0.9}
+      activeOpacity={0.88}
       style={[styles.btn, !enabled && styles.btnDisabled]}
       onPress={onPress}
-      disabled={!enabled}
+      disabled={!enabled || loading}
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityState={{ disabled: !enabled }}
       accessibilityHint={enabled ? undefined : hint}
     >
       {loading ? (
-        <ActivityIndicator color={UI_COLORS.onPrimary} />
+        <ActivityIndicator color={CONTACT_COLORS.white} />
       ) : (
         <>
-          <AppText
-            variant="cta"
-            tone={enabled ? 'onDark' : 'faint'}
+          <Text
+            style={[styles.btnText, !enabled && styles.btnTextDisabled]}
             numberOfLines={1}
           >
             {enabled ? label : hint}
-          </AppText>
+          </Text>
           {enabled && (
-            <AntDesign
-              name="arrowright"
-              size={wp('4%')}
-              color={UI_COLORS.onPrimary}
+            <Feather
+              name="arrow-right"
+              size={wp('4.4%')}
+              color={CONTACT_COLORS.white}
             />
           )}
         </>
@@ -66,36 +67,57 @@ export default React.memo(UpdateActionBar);
 
 const styles = StyleSheet.create({
   footer: {
-    backgroundColor: UI_COLORS.card,
-    paddingHorizontal: UI_SPACING.lg,
-    paddingTop: UI_SPACING.md,
-    borderTopLeftRadius: UI_RADIUS.card,
-    borderTopRightRadius: UI_RADIUS.card,
-    ...UI_ELEVATION.bar,
+    backgroundColor: CONTACT_COLORS.card,
+    paddingHorizontal: wp('5%'),
+    paddingTop: hp('1.5%'),
+    borderTopWidth: 1,
+    borderTopColor: CONTACT_COLORS.border,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: -3 },
+        shadowOpacity: 0.05,
+        shadowRadius: 5,
+      },
+      android: {
+        elevation: 6,
+      },
+    }),
   },
   btn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: UI_SPACING.sm,
-    backgroundColor: UI_COLORS.primary,
-    borderRadius: UI_RADIUS.button,
-    paddingHorizontal: UI_SPACING.lg,
-    paddingVertical: hp('1.6%'),
-    marginBottom: UI_SPACING.md,
+    backgroundColor: CONTACT_COLORS.emerald,
+    borderRadius: 14,
+    paddingVertical: hp('1.8%'),
+    marginBottom: hp('1%'),
+    borderWidth: 1,
+    borderColor: 'rgba(182, 141, 64, 0.35)',
+    gap: wp('2%'),
     ...Platform.select({
       ios: {
-        shadowColor: UI_COLORS.primary,
-        shadowOpacity: 0.22,
-        shadowOffset: { width: 0, height: 6 },
-        shadowRadius: 12,
+        shadowColor: CONTACT_COLORS.emerald,
+        shadowOpacity: 0.25,
+        shadowOffset: { width: 0, height: 4 },
+        shadowRadius: 8,
       },
-      android: { elevation: 1 },
+      android: { elevation: 3 },
     }),
   },
   btnDisabled: {
-    backgroundColor: UI_COLORS.well,
+    backgroundColor: CONTACT_COLORS.well,
+    borderColor: CONTACT_COLORS.border,
     shadowOpacity: 0,
     elevation: 0,
+  },
+  btnText: {
+    fontFamily: CONTACT_FONTS.bodySemiBold,
+    fontSize: wp('4%'),
+    color: CONTACT_COLORS.white,
+    letterSpacing: 0.3,
+  },
+  btnTextDisabled: {
+    color: CONTACT_COLORS.textFaint,
   },
 });

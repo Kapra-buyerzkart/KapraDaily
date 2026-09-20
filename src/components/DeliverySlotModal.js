@@ -95,7 +95,7 @@ const DeliverySlotModal = ({
           <MaterialCommunityIcons
             name="clock-outline"
             size={wp('5.5%')}
-            color="#F25000"
+            color="#0C382E"
           />
           <Text style={styles.headerTitle}>Select Delivery Slot</Text>
         </View>
@@ -103,13 +103,13 @@ const DeliverySlotModal = ({
           onPress={onClose}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
-          <Ionicons name="close" size={wp('6%')} color="#000" />
+          <Ionicons name="close" size={wp('5.5%')} color="#666666" />
         </TouchableOpacity>
       </View>
 
       {loading ? (
         <View style={styles.loadingContainer}>
-          <BallPulse size="large" color="#F25000" />
+          <BallPulse size="large" color="#0C382E" />
           <Text style={styles.loadingText}>Loading available slots...</Text>
         </View>
       ) : slotGroups.length === 0 ? (
@@ -123,7 +123,6 @@ const DeliverySlotModal = ({
         </View>
       ) : (
         <View style={{ flex: 1 }}>
-          {}
           <View style={styles.dayTabsContainer}>
             <ScrollView
               horizontal
@@ -139,29 +138,30 @@ const DeliverySlotModal = ({
                       setSelectedDay(index);
                       setSelectedSlot(null);
                     }}
-                    activeOpacity={0.7}
+                    activeOpacity={0.8}
                     style={{ marginRight: wp('2.5%') }}
                   >
-                    {isActive ? (
-                      <View
-                        style={[styles.dayTab, { backgroundColor: '#F25000' }]}
+                    <View
+                      style={[
+                        styles.dayTab,
+                        isActive && styles.dayTabActive,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.dayTabText,
+                          isActive && styles.dayTabTextActive,
+                        ]}
                       >
-                        <Text style={[styles.dayTabText, { color: '#FFFFFF' }]}>
-                          {group.title}
-                        </Text>
-                      </View>
-                    ) : (
-                      <View style={styles.dayTab}>
-                        <Text style={styles.dayTabText}>{group.title}</Text>
-                      </View>
-                    )}
+                        {group.title}
+                      </Text>
+                    </View>
                   </TouchableOpacity>
                 );
               })}
             </ScrollView>
           </View>
 
-          {}
           <ScrollView
             style={styles.slotsScrollView}
             showsVerticalScrollIndicator={false}
@@ -192,7 +192,7 @@ const DeliverySlotModal = ({
                         !isAvailable
                           ? '#DDDDDD'
                           : isSelected
-                          ? '#F25000'
+                          ? '#0C382E'
                           : '#CCCCCC'
                       }
                     />
@@ -230,27 +230,21 @@ const DeliverySlotModal = ({
         </View>
       )}
 
-      {}
       <View style={styles.footer}>
         <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
           <Text style={styles.cancelButtonText}>Cancel</Text>
         </TouchableOpacity>
-        <LinearGradient
-          colors={
-            selectedSlot ? ['#F25000', '#FF7B3A'] : ['#CCCCCC', '#CCCCCC']
-          }
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.confirmGradient}
+        <TouchableOpacity
+          style={[
+            styles.confirmButton,
+            !selectedSlot && styles.confirmButtonDisabled,
+          ]}
+          onPress={handleConfirm}
+          disabled={!selectedSlot}
+          activeOpacity={0.88}
         >
-          <TouchableOpacity
-            style={styles.confirmButton}
-            onPress={handleConfirm}
-            disabled={!selectedSlot}
-          >
-            <Text style={styles.confirmButtonText}>Confirm Slot</Text>
-          </TouchableOpacity>
-        </LinearGradient>
+          <Text style={styles.confirmButtonText}>Confirm Slot</Text>
+        </TouchableOpacity>
       </View>
     </CustomModal>
   );
@@ -259,6 +253,9 @@ const DeliverySlotModal = ({
 const styles = StyleSheet.create({
   modalContent: {
     paddingTop: hp('1.5%'),
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
   },
   header: {
     flexDirection: 'row',
@@ -267,17 +264,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: wp('5%'),
     paddingBottom: hp('1.5%'),
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: '#ECE7DE',
   },
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   headerTitle: {
-    fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('4.5%'),
-    color: '#000000',
+    fontFamily: 'CormorantGaramond-SemiBold',
+    fontSize: wp('5.2%'),
+    color: '#12372A',
     marginLeft: wp('2%'),
+    letterSpacing: -0.2,
   },
   loadingContainer: {
     alignItems: 'center',
@@ -285,9 +283,9 @@ const styles = StyleSheet.create({
     paddingVertical: hp('8%'),
   },
   loadingText: {
-    fontFamily: FONTS.gilroy.regular,
+    fontFamily: 'Lexend-Regular',
     fontSize: wp('3.5%'),
-    color: '#999999',
+    color: '#888888',
     marginTop: hp('1.5%'),
   },
   emptyContainer: {
@@ -296,9 +294,9 @@ const styles = StyleSheet.create({
     paddingVertical: hp('5%'),
   },
   emptyText: {
-    fontFamily: FONTS.gilroy.regular,
-    fontSize: wp('3.8%'),
-    color: '#999999',
+    fontFamily: 'Lexend-Regular',
+    fontSize: wp('3.6%'),
+    color: '#888888',
     marginTop: hp('1%'),
   },
   dayTabsContainer: {
@@ -310,29 +308,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   dayTab: {
-    paddingHorizontal: wp('5%'),
+    paddingHorizontal: wp('4.5%'),
     paddingVertical: hp('1%'),
-    borderRadius: wp('5%'),
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E5E5E5',
-    backgroundColor: '#FFFFFF',
+    borderColor: '#ECE7DE',
+    backgroundColor: '#FAF8F5',
   },
   dayTabActive: {
-    paddingHorizontal: wp('6%'),
-    paddingVertical: hp('1.5%'),
-    borderRadius: wp('6%'),
-    justifyContent: 'center',
-    alignItems: 'center',
-    minWidth: wp('25%'),
+    backgroundColor: '#0C382E',
+    borderColor: '#0C382E',
   },
   dayTabText: {
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('3.5%'),
-    color: '#666666',
+    fontFamily: 'Lexend-Medium',
+    fontSize: wp('3.4%'),
+    color: '#555555',
   },
   dayTabTextActive: {
-    fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('3.8%'),
+    fontFamily: 'Lexend-Medium',
+    fontSize: wp('3.4%'),
     color: '#FFFFFF',
   },
   slotsScrollView: {
@@ -345,19 +339,19 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: hp('1.5%'),
     paddingHorizontal: wp('4%'),
-    borderRadius: 12,
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#F0F0F0',
+    borderColor: '#ECE7DE',
     marginBottom: hp('1%'),
     backgroundColor: '#FFFFFF',
   },
   slotCardSelected: {
-    borderColor: '#F25000',
-    backgroundColor: '#FFF8F5',
+    borderColor: '#0C382E',
+    backgroundColor: '#FAF8F5',
   },
   slotCardDisabled: {
-    backgroundColor: '#F9F9F9',
-    borderColor: '#EEEEEE',
+    backgroundColor: '#FAF9F6',
+    borderColor: '#F0ECE6',
   },
   slotLeft: {
     flexDirection: 'row',
@@ -368,40 +362,41 @@ const styles = StyleSheet.create({
     marginLeft: wp('3%'),
   },
   slotTime: {
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('3.8%'),
+    fontFamily: 'Lexend-Regular',
+    fontSize: wp('3.6%'),
     color: '#333333',
   },
   slotTimeSelected: {
-    color: '#F25000',
-    fontFamily: FONTS.gilroy.semiBold,
+    color: '#0C382E',
+    fontFamily: 'Lexend-Medium',
   },
   slotTimeDisabled: {
     color: '#CCCCCC',
   },
   slotUnavailable: {
-    fontFamily: FONTS.gilroy.regular,
+    fontFamily: 'Lexend-Regular',
     fontSize: wp('2.8%'),
-    color: '#FF4444',
+    color: '#B83A3A',
     marginTop: hp('0.2%'),
   },
   slotBadge: {
-    backgroundColor: '#E8F5E9',
+    backgroundColor: '#E8F2EE',
     paddingHorizontal: wp('2.5%'),
-    paddingVertical: hp('0.3%'),
-    borderRadius: 20,
+    paddingVertical: hp('0.4%'),
+    borderRadius: 10,
   },
   slotBadgeText: {
-    fontFamily: FONTS.gilroy.medium,
+    fontFamily: 'Lexend-Medium',
     fontSize: wp('2.8%'),
-    color: '#2E7D32',
+    color: '#0C382E',
   },
   footer: {
     flexDirection: 'row',
     paddingHorizontal: wp('5%'),
     paddingTop: hp('1.5%'),
+    paddingBottom: hp('1%'),
     borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
+    borderTopColor: '#ECE7DE',
     gap: wp('3%'),
   },
   cancelButton: {
@@ -409,28 +404,32 @@ const styles = StyleSheet.create({
     height: hp('5.5%'),
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 12,
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#F25000',
+    borderColor: '#D8D4CC',
+    backgroundColor: '#FAF8F5',
   },
   cancelButtonText: {
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('3.8%'),
-    color: '#F25000',
-  },
-  confirmGradient: {
-    flex: 2,
-    borderRadius: 12,
+    fontFamily: 'Lexend-Medium',
+    fontSize: wp('3.6%'),
+    color: '#12372A',
   },
   confirmButton: {
+    flex: 2,
     height: hp('5.5%'),
     justifyContent: 'center',
     alignItems: 'center',
+    borderRadius: 14,
+    backgroundColor: '#0C382E',
+  },
+  confirmButtonDisabled: {
+    backgroundColor: '#D1DDD8',
   },
   confirmButtonText: {
-    fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('3.8%'),
+    fontFamily: 'Lexend-Medium',
+    fontSize: wp('3.6%'),
     color: '#FFFFFF',
+    letterSpacing: 0.2,
   },
 });
 

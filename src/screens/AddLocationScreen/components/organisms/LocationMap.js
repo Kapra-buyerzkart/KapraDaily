@@ -21,6 +21,19 @@ const LocationMap = ({
       ref={mapRef}
       style={styles.map}
       initialRegion={region}
+      onPress={e => {
+        const coord = e?.nativeEvent?.coordinate;
+        if (coord?.latitude && coord?.longitude && onRegionChangeComplete) {
+          const next = {
+            latitude: coord.latitude,
+            longitude: coord.longitude,
+            latitudeDelta: region?.latitudeDelta || 0.005,
+            longitudeDelta: region?.longitudeDelta || 0.005,
+          };
+          mapRef.current?.animateToRegion(next, 400);
+          onRegionChangeComplete(next);
+        }
+      }}
       onRegionChange={onRegionChange}
       onRegionChangeComplete={onRegionChangeComplete}
       showsUserLocation
@@ -38,7 +51,9 @@ const styles = StyleSheet.create({
   container: {
     position: 'absolute',
     top: 0,
-    width: wp('100%'),
+    left: 0,
+    right: 0,
+    width: '100%',
     height: MAP_HEIGHT,
   },
   map: {

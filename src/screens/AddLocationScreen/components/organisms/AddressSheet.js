@@ -22,10 +22,14 @@ const AddressSheet = ({
 
   return (
     <KeyboardAvoidingView
+      pointerEvents="box-none"
       style={styles.flex}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <View style={[styles.sheet, isExpanded && { marginTop: sheetTop }]}>
+      <View
+        pointerEvents="auto"
+        style={[styles.sheet, isExpanded && { marginTop: sheetTop }]}
+      >
         <GrabHandle />
         <SheetHeader
           title={isEditMode ? 'Edit location' : 'Confirm location'}

@@ -3,6 +3,7 @@ import {
   Platform,
   StyleSheet,
   StyleProp,
+  Text,
   TextInput,
   TextInputProps,
   View,
@@ -16,25 +17,20 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { AppText } from '../../../../components/atoms';
 import {
-  UI_COLORS,
-  UI_RADIUS,
-  UI_SPACING,
-  UI_TYPE,
-  MAX_FONT_SCALE,
-  wp,
-  hp,
-} from '../../../../theme/tokens';
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from 'react-native-responsive-screen';
+import { CONTACT_COLORS, CONTACT_FONTS } from './contactTheme';
 import { FOCUS_FADE, OTP_LENGTH } from './constants';
 
 export const FieldLabel: React.FC<{
   children: React.ReactNode;
   style?: StyleProp<ViewStyle>;
 }> = React.memo(({ children, style }) => (
-  <AppText variant="micro" tone="muted" style={[styles.label, style]}>
+  <Text style={[styles.label, style]}>
     {children}
-  </AppText>
+  </Text>
 ));
 
 export const FieldWell: React.FC<{
@@ -47,12 +43,12 @@ export const FieldWell: React.FC<{
     backgroundColor: interpolateColor(
       focus.value,
       [0, 1],
-      [UI_COLORS.well, UI_COLORS.card],
+      [CONTACT_COLORS.well, CONTACT_COLORS.card],
     ),
     borderColor: interpolateColor(
       focus.value,
       [0, 1],
-      [UI_COLORS.border, UI_COLORS.borderStrong],
+      [CONTACT_COLORS.border, CONTACT_COLORS.gold],
     ),
   }));
 
@@ -73,12 +69,12 @@ export const InlineError: React.FC<{ message?: string | null }> = React.memo(
       <View style={styles.errorRow}>
         <MaterialCommunityIcons
           name="alert-circle-outline"
-          size={wp('3.4%')}
-          color={UI_COLORS.danger}
+          size={wp('3.6%')}
+          color={CONTACT_COLORS.danger}
         />
-        <AppText variant="caption" tone="danger" style={styles.errorText}>
+        <Text style={styles.errorText}>
           {message}
-        </AppText>
+        </Text>
       </View>
     );
   },
@@ -97,12 +93,12 @@ export const OtpBox = React.memo(
       backgroundColor: interpolateColor(
         focus.value,
         [0, 1],
-        [UI_COLORS.well, UI_COLORS.card],
+        [CONTACT_COLORS.well, CONTACT_COLORS.card],
       ),
       borderColor: interpolateColor(
         focus.value,
         [0, 1],
-        [UI_COLORS.border, UI_COLORS.textSecondary],
+        [CONTACT_COLORS.border, CONTACT_COLORS.gold],
       ),
     }));
 
@@ -116,8 +112,8 @@ export const OtpBox = React.memo(
           textContentType="oneTimeCode"
           autoComplete={Platform.OS === 'android' ? 'sms-otp' : 'one-time-code'}
           maxLength={OTP_LENGTH}
-          selectionColor={UI_COLORS.textSecondary}
-          maxFontSizeMultiplier={MAX_FONT_SCALE}
+          selectionColor={CONTACT_COLORS.gold}
+          maxFontSizeMultiplier={1.3}
           onFocus={() => {
             focus.value = withTiming(1, FOCUS_FADE);
           }}
@@ -138,50 +134,56 @@ OtpBox.displayName = 'OtpBox';
 
 const styles = StyleSheet.create({
   label: {
-    letterSpacing: 0.8,
+    fontFamily: CONTACT_FONTS.bodyMedium,
+    fontSize: wp('2.9%'),
+    color: CONTACT_COLORS.textSecondary,
+    letterSpacing: 0.6,
     textTransform: 'uppercase',
-    marginBottom: UI_SPACING.sm,
+    marginBottom: hp('0.8%'),
   },
   well: {
     flexDirection: 'row',
     alignItems: 'center',
-    minHeight: hp('6%'),
-    borderRadius: UI_RADIUS.input,
+    minHeight: hp('6.2%'),
+    borderRadius: 12,
     borderWidth: 1,
-    paddingHorizontal: UI_SPACING.md,
+    paddingHorizontal: wp('3.5%'),
   },
   wellError: {
-    backgroundColor: UI_COLORS.dangerTint,
-    borderColor: UI_COLORS.danger,
+    backgroundColor: CONTACT_COLORS.dangerTint,
+    borderColor: CONTACT_COLORS.danger,
   },
   errorRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: UI_SPACING.xs,
-    marginTop: UI_SPACING.sm,
+    gap: wp('1.5%'),
+    marginTop: hp('0.8%'),
   },
   errorText: {
     flexShrink: 1,
+    fontFamily: CONTACT_FONTS.body,
+    fontSize: wp('3%'),
+    color: CONTACT_COLORS.danger,
   },
   box: {
     flex: 1,
-    height: hp('6.4%'),
-    borderRadius: UI_RADIUS.input,
+    height: hp('6.8%'),
+    borderRadius: 12,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
   boxError: {
-    backgroundColor: UI_COLORS.dangerTint,
-    borderColor: UI_COLORS.danger,
+    backgroundColor: CONTACT_COLORS.dangerTint,
+    borderColor: CONTACT_COLORS.danger,
   },
   otpInput: {
     width: '100%',
     height: '100%',
     textAlign: 'center',
-    ...UI_TYPE.priceLarge,
-    lineHeight: undefined,
-    color: UI_COLORS.textPrimary,
+    fontFamily: CONTACT_FONTS.bodyBold,
+    fontSize: wp('5.5%'),
+    color: CONTACT_COLORS.textPrimary,
     textAlignVertical: 'center',
     padding: 0,
     includeFontPadding: false,

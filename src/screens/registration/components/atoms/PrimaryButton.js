@@ -1,39 +1,21 @@
 import React from 'react';
-import { TouchableOpacity, StyleSheet, Platform } from 'react-native';
-import AntDesign from 'react-native-vector-icons/AntDesign';
+import { TouchableOpacity, Text, StyleSheet } from 'react-native';
 import BallPulse from '../../../../components/BallPulse';
-import CartText from '../../../cart/components/atoms/CartText';
-import {
-  CART_COLORS,
-  CART_RADIUS,
-  CART_SPACING,
-  wp,
-  hp,
-} from '../../../../styles/cartTheme';
 
 const PrimaryButton = ({ label, onPress, loading = false, style }) => (
   <TouchableOpacity
-    activeOpacity={0.9}
+    activeOpacity={0.88}
     onPress={onPress}
     disabled={loading}
     accessibilityRole="button"
     accessibilityLabel={label}
     accessibilityState={{ busy: loading, disabled: loading }}
-    style={[styles.button, loading && styles.busy, style]}
+    style={[styles.button, style]}
   >
     {loading ? (
-      <BallPulse color={CART_COLORS.onPrimary} />
+      <BallPulse size="large" color="#0A2A20" />
     ) : (
-      <>
-        <CartText variant="cta" tone="onDark">
-          {label}
-        </CartText>
-        <AntDesign
-          name="arrowright"
-          size={wp('4%')}
-          color={CART_COLORS.onPrimary}
-        />
-      </>
+      <Text style={styles.buttonText}>{label}</Text>
     )}
   </TouchableOpacity>
 );
@@ -42,25 +24,19 @@ export default React.memo(PrimaryButton);
 
 const styles = StyleSheet.create({
   button: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: '#0A2A20',
+    width: '100%',
+    height: 52,
     justifyContent: 'center',
-    gap: CART_SPACING.sm,
-    backgroundColor: CART_COLORS.primary,
-    borderRadius: CART_RADIUS.button,
-    paddingVertical: hp('1.85%'),
-    paddingHorizontal: CART_SPACING.lg,
-    ...Platform.select({
-      ios: {
-        shadowColor: CART_COLORS.primary,
-        shadowOpacity: 0.28,
-        shadowOffset: { width: 0, height: 6 },
-        shadowRadius: 12,
-      },
-      android: { elevation: 1 },
-    }),
+    alignItems: 'center',
+    borderRadius: 12,
+    marginTop: 10,
   },
-  busy: {
-    opacity: 0.85,
+  buttonText: {
+    fontFamily: 'Lexend-Medium',
+    fontSize: 14.5,
+    color: '#0A2A20',
   },
 });

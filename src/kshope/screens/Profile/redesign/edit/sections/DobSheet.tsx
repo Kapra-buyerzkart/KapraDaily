@@ -6,15 +6,14 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
   View,
+  Text,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { AppText } from '../../../../../components/atoms';
 import {
-  UI_COLORS,
-  UI_RADIUS,
-  UI_SPACING,
-  hp,
-} from '../../../../../theme/tokens';
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from 'react-native-responsive-screen';
+import { EDIT_COLORS, EDIT_FONTS } from '../editTheme';
 
 interface Props {
   visible: boolean;
@@ -62,20 +61,16 @@ const DobSheet: React.FC<Props> = ({
         <View style={styles.sheet}>
           <View style={styles.header}>
             <TouchableOpacity onPress={onCancel} style={styles.action}>
-              <AppText variant="label" tone="muted">
-                Cancel
-              </AppText>
+              <Text style={styles.cancelText}>Cancel</Text>
             </TouchableOpacity>
 
-            <AppText variant="heading">Select Date of Birth</AppText>
+            <Text style={styles.headerTitle}>Select Date of Birth</Text>
 
             <TouchableOpacity
               onPress={() => onConfirm(value)}
               style={styles.action}
             >
-              <AppText variant="labelStrong" tone="brand">
-                Done
-              </AppText>
+              <Text style={styles.doneText}>Done</Text>
             </TouchableOpacity>
           </View>
 
@@ -86,7 +81,7 @@ const DobSheet: React.FC<Props> = ({
               display="spinner"
               maximumDate={new Date()}
               onChange={(_event, selected) => selected && onChange(selected)}
-              textColor={UI_COLORS.textPrimary}
+              textColor={EDIT_COLORS.textPrimary}
             />
           </View>
         </View>
@@ -104,12 +99,12 @@ const styles = StyleSheet.create({
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: UI_COLORS.overlay,
+    backgroundColor: 'rgba(12, 56, 46, 0.45)',
   },
   sheet: {
-    backgroundColor: UI_COLORS.card,
-    borderTopLeftRadius: UI_RADIUS.card,
-    borderTopRightRadius: UI_RADIUS.card,
+    backgroundColor: EDIT_COLORS.card,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
     paddingBottom: Platform.OS === 'ios' ? hp('4%') : hp('2%'),
     overflow: 'hidden',
   },
@@ -117,18 +112,34 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: UI_SPACING.lg,
-    paddingVertical: UI_SPACING.lg,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: UI_COLORS.border,
+    paddingHorizontal: wp('5%'),
+    paddingVertical: hp('1.8%'),
+    borderBottomWidth: 1,
+    borderBottomColor: EDIT_COLORS.border,
   },
   action: {
-    paddingVertical: UI_SPACING.xs,
+    paddingVertical: hp('0.5%'),
+    paddingHorizontal: wp('2%'),
+  },
+  cancelText: {
+    fontFamily: EDIT_FONTS.body,
+    fontSize: wp('3.5%'),
+    color: EDIT_COLORS.textMuted,
+  },
+  headerTitle: {
+    fontFamily: EDIT_FONTS.heading,
+    fontSize: wp('4.6%'),
+    color: EDIT_COLORS.textPrimary,
+  },
+  doneText: {
+    fontFamily: EDIT_FONTS.bodySemiBold,
+    fontSize: wp('3.5%'),
+    color: EDIT_COLORS.emerald,
   },
   picker: {
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: UI_SPACING.lg,
-    backgroundColor: UI_COLORS.card,
+    paddingVertical: hp('2%'),
+    backgroundColor: EDIT_COLORS.card,
   },
 });

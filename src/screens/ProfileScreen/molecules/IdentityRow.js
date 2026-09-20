@@ -4,12 +4,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import ProfileAvatarBadge from '@/components/ProfileAvatarBadge';
 import { ProfileText, PressableScale } from '../atoms';
 import { PRIVILEGE_INK, PRIVILEGE_SOFT } from '../styles';
-import {
-  CART_COLORS,
-  CART_RADIUS,
-  CART_SPACING,
-  wp,
-} from '@/styles/cartTheme';
+import { CART_COLORS, CART_RADIUS, CART_SPACING, wp } from '@/styles/cartTheme';
 
 const IdentityRow = ({ profile, isPrivileged, onEditProfile }) => (
   <View style={styles.row}>
@@ -36,23 +31,6 @@ const IdentityRow = ({ profile, isPrivileged, onEditProfile }) => (
         </View>
       )}
     </View>
-
-    <PressableScale
-      to={0.94}
-      contentStyle={styles.editChip}
-      onPress={onEditProfile}
-      accessibilityRole="button"
-      accessibilityLabel="Edit profile"
-    >
-      <MaterialCommunityIcons
-        name="pencil-outline"
-        size={wp('3.2%')}
-        color={CART_COLORS.textSecondary}
-      />
-      <ProfileText variant="micro" tone="secondary">
-        Edit
-      </ProfileText>
-    </PressableScale>
   </View>
 );
 
@@ -80,16 +58,5 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: CART_RADIUS.pill,
     backgroundColor: PRIVILEGE_SOFT,
-  },
-  editChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: CART_SPACING.xs,
-    paddingHorizontal: CART_SPACING.md,
-    paddingVertical: CART_SPACING.xs + 2,
-    borderRadius: CART_RADIUS.pill,
-    backgroundColor: CART_COLORS.well,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: CART_COLORS.border,
   },
 });

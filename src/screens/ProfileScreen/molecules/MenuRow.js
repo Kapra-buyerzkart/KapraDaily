@@ -1,32 +1,52 @@
 import React from 'react';
-import { View, Pressable, StyleSheet } from 'react-native';
-import { ProfileText, IconDisc, RowChevron } from '../atoms';
-import { CART_COLORS, CART_SPACING, hp, wp } from '@/styles/cartTheme';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import Feather from 'react-native-vector-icons/Feather';
 
-const MenuRow = ({ label, icon, tone = 'neutral', textColor, onPress }) => (
-  <Pressable
-    onPress={onPress}
-    style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
-    accessibilityRole="button"
-    accessibilityLabel={label}
-  >
-    <IconDisc size={wp('9%')} tone={tone}>
-      {icon}
-    </IconDisc>
+const MenuRow = ({
+  label,
+  icon,
+  tone = 'neutral',
+  textColor,
+  onPress,
+}) => {
+  const isDanger = tone === 'danger';
 
-    <View style={styles.copy}>
-      <ProfileText
-        variant="label"
-        tone={textColor || 'secondary'}
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      style={styles.row}
+      activeOpacity={0.7}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+    >
+      <View
+        style={[
+          styles.iconBadge,
+          isDanger ? styles.iconBadgeDanger : styles.iconBadgeDefault,
+        ]}
+      >
+        {icon}
+      </View>
+
+      <Text
+        style={[
+          styles.label,
+          isDanger ? styles.labelDanger : styles.labelDefault,
+          textColor ? { color: textColor } : null,
+        ]}
         numberOfLines={1}
       >
         {label}
-      </ProfileText>
-    </View>
+      </Text>
 
-    <RowChevron color={textColor || CART_COLORS.textFaint} />
-  </Pressable>
-);
+      <Feather
+        name="chevron-right"
+        size={16}
+        color={isDanger ? '#E53935' : '#C4C4C4'}
+      />
+    </TouchableOpacity>
+  );
+};
 
 export default React.memo(MenuRow);
 
@@ -34,14 +54,32 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: CART_SPACING.md,
-    paddingHorizontal: CART_SPACING.lg,
-    paddingVertical: hp('1.1%'),
+    paddingHorizontal: 14,
+    height: 54,
   },
-  rowPressed: {
-    backgroundColor: CART_COLORS.well,
+  iconBadge: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  copy: {
+  iconBadgeDefault: {
+    backgroundColor: '#FAF5EE',
+  },
+  iconBadgeDanger: {
+    backgroundColor: '#FEF2F2',
+  },
+  label: {
     flex: 1,
+    marginLeft: 14,
+    fontSize: 14,
+    fontFamily: 'Lexend-Medium',
+  },
+  labelDefault: {
+    color: '#262626',
+  },
+  labelDanger: {
+    color: '#E53935',
   },
 });

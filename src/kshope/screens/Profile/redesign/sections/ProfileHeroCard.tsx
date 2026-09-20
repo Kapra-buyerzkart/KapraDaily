@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Image, StyleSheet } from 'react-native';
+import { View, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import Animated from 'react-native-reanimated';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {
@@ -29,7 +29,13 @@ const IdentityRow: React.FC<{ profile: any; onEditProfile: () => void }> = ({
   profile,
   onEditProfile,
 }) => (
-  <View style={styles.identityRow}>
+  <TouchableOpacity
+    style={styles.identityRow}
+    onPress={onEditProfile}
+    activeOpacity={0.85}
+    accessibilityRole="button"
+    accessibilityLabel="View or edit profile"
+  >
     <ProfileAvatarBadge size={wp('13.5%')} />
 
     <View style={styles.copy}>
@@ -40,24 +46,7 @@ const IdentityRow: React.FC<{ profile: any; onEditProfile: () => void }> = ({
         {profile?.phoneNo || ''}
       </AppText>
     </View>
-
-    <PressableScale
-      to={0.94}
-      contentStyle={styles.editChip}
-      onPress={onEditProfile}
-      accessibilityRole="button"
-      accessibilityLabel="Edit profile"
-    >
-      <MaterialCommunityIcons
-        name="pencil-outline"
-        size={wp('3.2%')}
-        color={UI_COLORS.textSecondary}
-      />
-      <AppText variant="micro" tone="secondary">
-        Edit
-      </AppText>
-    </PressableScale>
-  </View>
+  </TouchableOpacity>
 );
 
 const WalletRow: React.FC<{
@@ -155,17 +144,6 @@ const styles = StyleSheet.create({
   copy: {
     flex: 1,
     gap: 1,
-  },
-  editChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: UI_SPACING.xs,
-    paddingHorizontal: UI_SPACING.md,
-    paddingVertical: UI_SPACING.xs + 2,
-    borderRadius: UI_RADIUS.pill,
-    backgroundColor: UI_COLORS.well,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: UI_COLORS.border,
   },
   walletRow: {
     flexDirection: 'row',

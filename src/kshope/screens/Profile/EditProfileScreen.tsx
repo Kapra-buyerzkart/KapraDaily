@@ -23,9 +23,11 @@ import ContactDetailsCard from './redesign/edit/sections/ContactDetailsCard';
 import SaveBar from './redesign/edit/sections/SaveBar';
 import DobSheet from './redesign/edit/sections/DobSheet';
 import { BAR_SOLID_AT, BORDER_FADE_RANGE, entrance } from './redesign/motion';
+import { EDIT_COLORS } from './redesign/edit/editTheme';
+import { wp } from '../../theme/tokens';
 
-const BAR_REST = UI_COLORS.background;
-const BAR_SOLID = UI_COLORS.card;
+const BAR_REST = EDIT_COLORS.canvas;
+const BAR_SOLID = EDIT_COLORS.canvas;
 
 const DEFAULT_DOB = new Date(2000, 0, 1);
 
@@ -78,9 +80,7 @@ const EditProfileScreen: React.FC = () => {
       ? new Date(profile.dob).toDateString() !== dob.toDateString()
       : true;
 
-    return (
-      isNameChanged || isPincodeChanged || isGenderChanged || isDobChanged
-    );
+    return isNameChanged || isPincodeChanged || isGenderChanged || isDobChanged;
   }, [fullName, pincode, gender, dob, profile]);
 
   const pincodeRef = React.useRef<TextInput>(null);
@@ -268,19 +268,20 @@ export default EditProfileScreen;
 const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
-    backgroundColor: UI_COLORS.background,
+    backgroundColor: EDIT_COLORS.canvas,
   },
   keyboardAvoidingView: {
     flex: 1,
   },
   scrollView: {
-    backgroundColor: UI_COLORS.background,
+    backgroundColor: EDIT_COLORS.canvas,
   },
   scrollContent: {
     paddingBottom: hp('4%'),
   },
   body: {
-    paddingTop: UI_SPACING.xs,
-    gap: UI_SPACING.md,
+    paddingTop: hp('1.5%'),
+    paddingHorizontal: wp('4.5%'),
+    gap: hp('1.8%'),
   },
 });

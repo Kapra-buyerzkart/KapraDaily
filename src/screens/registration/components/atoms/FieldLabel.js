@@ -1,23 +1,24 @@
 import React from 'react';
-import { StyleSheet } from 'react-native';
-import CartText from '../../../cart/components/atoms/CartText';
-import { CART_COLORS } from '../../../../styles/cartTheme';
+import { Text, StyleSheet } from 'react-native';
 
 const FieldLabel = ({ children, required = false, style }) => (
-  <CartText variant="micro" tone="muted" style={[styles.label, style]}>
+  <Text style={[styles.label, style]}>
     {children}
-    {required ? <CartText style={styles.star}>{' *'}</CartText> : null}
-  </CartText>
+    {required ? <Text style={styles.star}>{' *'}</Text> : null}
+  </Text>
 );
 
 export default React.memo(FieldLabel);
 
 const styles = StyleSheet.create({
   label: {
+    fontFamily: 'Lexend-Medium',
+    fontSize: 12,
+    color: '#12372A',
     textTransform: 'uppercase',
-    letterSpacing: 0.6,
+    letterSpacing: 0.8,
   },
   star: {
-    color: CART_COLORS.danger,
+    color: '#D93025',
   },
 });

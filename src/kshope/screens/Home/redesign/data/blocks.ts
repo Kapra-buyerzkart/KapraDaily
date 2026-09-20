@@ -33,6 +33,10 @@ export const unwrapBlock = (block: any): any => {
     else if (current.SecondProductBlock) current = current.SecondProductBlock;
     else if (current.thirdProductBlock) current = current.thirdProductBlock;
     else if (current.ThirdProductBlock) current = current.ThirdProductBlock;
+    else if (current.fourthProductBlock) current = current.fourthProductBlock;
+    else if (current.FourthProductBlock) current = current.FourthProductBlock;
+    else if (current.featuredProducts) current = current.featuredProducts;
+    else if (current.FeaturedProducts) current = current.FeaturedProducts;
     else if (current.data && !current.items && !current.Items)
       current = current.data;
 
@@ -62,7 +66,19 @@ export const getItems = (block: any): any[] => {
 };
 
 export const getProducts = (block: any): any[] =>
-  getItems(block).filter((i: any) => i && (i.productId || i.id));
+  getItems(block).filter(
+    (i: any) =>
+      i &&
+      (i.productId !== undefined ||
+        i.ProductId !== undefined ||
+        i.id !== undefined ||
+        i.Id !== undefined ||
+        i.prId !== undefined ||
+        i.prName !== undefined ||
+        i.productName !== undefined ||
+        i.ProductName !== undefined ||
+        i.name !== undefined),
+  );
 
 export const bannersFor = (homeData: any, placementKey: string): any[] =>
   homeData?.banners?.filter(

@@ -81,7 +81,7 @@ const EmailOtpBottomSheet = forwardRef((props, ref) => {
       <View style={styles.container}>
         <Text style={styles.title}>Send OTP to Email</Text>
         <Text style={styles.subtitle}>
-          We'll send a one-time password to this email address.
+          We'll send a one-time verification code to this email address.
         </Text>
 
         <View
@@ -116,6 +116,7 @@ const EmailOtpBottomSheet = forwardRef((props, ref) => {
         <View style={styles.buttonRow}>
           <TouchableOpacity
             style={[styles.button, styles.cancelButton]}
+            activeOpacity={0.8}
             onPress={handleClose}
             disabled={submitting}
           >
@@ -128,6 +129,7 @@ const EmailOtpBottomSheet = forwardRef((props, ref) => {
               styles.sendButton,
               (!isValidEmail || submitting) && styles.sendButtonDisabled,
             ]}
+            activeOpacity={0.88}
             onPress={handleSend}
             disabled={!isValidEmail || submitting}
           >
@@ -161,14 +163,15 @@ const styles = StyleSheet.create({
     paddingTop: hp('0.5%'),
   },
   title: {
-    fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('4.65%'),
-    color: '#000000',
+    fontFamily: 'CormorantGaramond-SemiBold',
+    fontSize: wp('5.4%'),
+    color: '#12372A',
+    letterSpacing: -0.2,
   },
   subtitle: {
-    fontFamily: FONTS.gilroy.regular,
-    fontSize: wp('3.25%'),
-    color: '#616161',
+    fontFamily: 'Lexend-Regular',
+    fontSize: wp('3.3%'),
+    color: '#666666',
     marginTop: hp('0.5%'),
     marginBottom: hp('2.5%'),
   },
@@ -176,61 +179,64 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#DADADA',
-    borderRadius: wp('2.33%'),
+    borderColor: '#ECE7DE',
+    borderRadius: 14,
     paddingHorizontal: wp('3.5%'),
-    height: hp('6.11%'),
-    backgroundColor: '#FAFAFA',
+    height: hp('5.8%'),
+    backgroundColor: '#FAF8F5',
   },
   inputWrapperError: {
-    borderColor: '#D32F2F',
+    borderColor: '#B83A3A',
   },
   inputIcon: {
     marginRight: wp('2.5%'),
   },
   input: {
     flex: 1,
-    fontFamily: FONTS.gilroy.regular,
-    fontSize: wp('3.72%'),
-    color: '#000000',
+    fontFamily: 'Lexend-Regular',
+    fontSize: wp('3.6%'),
+    color: '#12372A',
     padding: 0,
   },
   errorText: {
-    fontFamily: FONTS.gilroy.regular,
+    fontFamily: 'Lexend-Regular',
     fontSize: wp('3%'),
-    color: '#D32F2F',
+    color: '#B83A3A',
     marginTop: hp('0.8%'),
   },
   buttonRow: {
     flexDirection: 'row',
-    marginTop: hp('3%'),
+    marginTop: hp('2.5%'),
     gap: wp('3%'),
   },
   button: {
     flex: 1,
-    height: hp('6.11%'),
-    borderRadius: wp('2.33%'),
+    height: hp('5.6%'),
+    borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
   },
   cancelButton: {
-    backgroundColor: '#F2F2F2',
+    backgroundColor: '#FAF8F5',
+    borderWidth: 1,
+    borderColor: '#D8D4CC',
   },
   cancelButtonText: {
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('3.72%'),
-    color: '#616161',
+    fontFamily: 'Lexend-Medium',
+    fontSize: wp('3.6%'),
+    color: '#12372A',
   },
   sendButton: {
-    backgroundColor: '#F25000',
+    backgroundColor: '#0C382E',
   },
   sendButtonDisabled: {
-    backgroundColor: '#F2A98A',
+    backgroundColor: '#D1DDD8',
   },
   sendButtonText: {
-    fontFamily: FONTS.gilroy.bold,
-    fontSize: wp('3.72%'),
+    fontFamily: 'Lexend-Medium',
+    fontSize: wp('3.6%'),
     color: '#FFFFFF',
+    letterSpacing: 0.2,
   },
 });
 

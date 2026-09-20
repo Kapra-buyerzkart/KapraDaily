@@ -65,7 +65,7 @@ const RatingModal = ({
                     key={star}
                     style={[
                       styles.starIcon,
-                      { tintColor: star <= rating ? '#F2C94C' : '#DADADA' },
+                      { tintColor: star <= rating ? '#B68D40' : '#E5E0D8' },
                     ]}
                     source={require('../assets/images/star.png')}
                   />
@@ -86,15 +86,12 @@ const RatingModal = ({
               />
             </View>
 
-            <TouchableOpacity onPress={handleSubmit}>
-              <LinearGradient
-                colors={['#F25000', '#FF7B3A']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.submitButton}
-              >
-                <Text style={styles.submitText}>Submit Rating</Text>
-              </LinearGradient>
+            <TouchableOpacity
+              activeOpacity={0.88}
+              onPress={handleSubmit}
+              style={styles.submitButton}
+            >
+              <Text style={styles.submitText}>Submit Rating</Text>
             </TouchableOpacity>
           </View>
         </TouchableWithoutFeedback>
@@ -106,13 +103,15 @@ const RatingModal = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.65)',
     justifyContent: 'flex-end',
   },
   modalContainer: {
     backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: wp('8%'),
-    borderTopRightRadius: wp('8%'),
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    borderWidth: 1,
+    borderColor: '#ECE7DE',
     paddingHorizontal: wp('6%'),
     paddingTop: hp('2.5%'),
     paddingBottom: hp('4.5%'),
@@ -122,12 +121,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: hp('2.5%'),
+    marginBottom: hp('2%'),
   },
   title: {
-    fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('4.8%'),
-    color: '#000000',
+    fontFamily: 'CormorantGaramond-SemiBold',
+    fontSize: wp('5.4%'),
+    color: '#12372A',
+    letterSpacing: -0.2,
   },
   closeButton: {
     padding: wp('2%'),
@@ -135,16 +135,16 @@ const styles = StyleSheet.create({
   closeIcon: {
     width: wp('4%'),
     height: wp('4%'),
-    tintColor: '#000000',
+    tintColor: '#666666',
   },
   ratingContainer: {
     alignItems: 'center',
-    marginBottom: hp('3%'),
+    marginBottom: hp('2.5%'),
   },
   ratingLabel: {
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('3.8%'),
-    color: '#616161',
+    fontFamily: 'Lexend-Medium',
+    fontSize: wp('3.6%'),
+    color: '#666666',
     marginBottom: hp('1%'),
   },
   starContainer: {
@@ -156,35 +156,37 @@ const styles = StyleSheet.create({
     marginHorizontal: wp('1%'),
   },
   inputWrapper: {
-    marginBottom: hp('3.5%'),
+    marginBottom: hp('3%'),
   },
   label: {
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('3.8%'),
-    color: '#000000',
+    fontFamily: 'Lexend-Medium',
+    fontSize: wp('3.6%'),
+    color: '#12372A',
     marginBottom: hp('1%'),
   },
   input: {
-    height: hp('15%'),
-    backgroundColor: '#F9F9F9',
-    borderRadius: wp('3%'),
+    height: hp('14%'),
+    backgroundColor: '#FAF8F5',
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#EEEEEE',
+    borderColor: '#ECE7DE',
     padding: wp('4%'),
-    fontFamily: FONTS.gilroy.regular,
+    fontFamily: 'Lexend-Regular',
     fontSize: wp('3.5%'),
-    color: '#000000',
+    color: '#12372A',
   },
   submitButton: {
-    height: hp('6%'),
-    borderRadius: wp('3%'),
+    height: hp('5.8%'),
+    borderRadius: 14,
+    backgroundColor: '#0C382E',
     justifyContent: 'center',
     alignItems: 'center',
   },
   submitText: {
-    fontFamily: FONTS.gilroy.bold,
-    fontSize: wp('4.1%'),
+    fontFamily: 'Lexend-Medium',
+    fontSize: wp('3.8%'),
     color: '#FFFFFF',
+    letterSpacing: 0.2,
   },
 });
 

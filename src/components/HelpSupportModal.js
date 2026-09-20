@@ -19,47 +19,27 @@ import {
 } from '@gorhom/bottom-sheet';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import {
-  CART_COLORS,
-  CART_RADIUS,
-  CART_SPACING,
-  CART_TYPE,
-  MAX_FONT_SCALE,
-  hitSlopTo,
-  wp,
-  hp,
-} from '../styles/cartTheme';
+import Feather from 'react-native-vector-icons/Feather';
 
 const HELPLINE_PHONE = '+91 9048801110';
-const HELPLINE_EMAIL = 'support@udendeal.com';
+const HELPLINE_EMAIL = 'support@kapragoldndiamond.com';
 
-const HelpOption = ({ icon, iconColor, tint, label, value, onPress }) => (
+const HelpOption = ({ icon, tint, label, value, onPress }) => (
   <TouchableOpacity
     activeOpacity={0.75}
     style={styles.optionCard}
     onPress={onPress}
-    hitSlop={hitSlopTo(44)}
   >
     <View style={[styles.iconDisc, { backgroundColor: tint }]}>{icon}</View>
 
     <View style={styles.optionDetails}>
-      <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={styles.optionLabel}>
-        {label}
-      </Text>
-      <Text
-        maxFontSizeMultiplier={MAX_FONT_SCALE}
-        style={styles.optionValue}
-        numberOfLines={1}
-      >
+      <Text style={styles.optionLabel}>{label}</Text>
+      <Text style={styles.optionValue} numberOfLines={1}>
         {value}
       </Text>
     </View>
 
-    <MaterialIcons
-      name="chevron-right"
-      size={wp('5%')}
-      color={CART_COLORS.textFaint}
-    />
+    <Feather name="chevron-right" size={18} color="#9CA3AF" />
   </TouchableOpacity>
 );
 
@@ -90,7 +70,7 @@ const HelpSupportModal = forwardRef((_props, ref) => {
   };
 
   const openWhatsApp = () => {
-    const phone = HELPLINE_PHONE.replace('+', '');
+    const phone = HELPLINE_PHONE.replace(/[^0-9]/g, '');
     Linking.openURL(`whatsapp://send?phone=${phone}`).catch(() => {
       Linking.openURL(`https://wa.me/${phone}`).catch(() => {});
     });
@@ -112,52 +92,38 @@ const HelpSupportModal = forwardRef((_props, ref) => {
     >
       <BottomSheetView style={styles.content}>
         <View style={styles.headingRow}>
-          <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={styles.title}>
-            Need Help?
-          </Text>
-          <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={styles.subtitle}>
-            Reach out to us anytime
+          <Text style={styles.title}>Need Assistance?</Text>
+          <Text style={styles.subtitle}>
+            Reach out to our jewellery specialists anytime
           </Text>
         </View>
 
         <HelpOption
-          tint={CART_COLORS.primaryTint}
-          icon={
-            <MaterialIcons
-              name="call"
-              size={wp('5%')}
-              color={CART_COLORS.primary}
-            />
-          }
-          label="Call us"
+          tint="#EDF5F0"
+          icon={<MaterialIcons name="call" size={20} color="#12372A" />}
+          label="Call our specialists"
           value={HELPLINE_PHONE}
           onPress={callNumber}
         />
 
         <HelpOption
-          tint={CART_COLORS.successTint}
+          tint="#E8F6EE"
           icon={
             <MaterialCommunityIcons
               name="whatsapp"
-              size={wp('5%')}
-              color={CART_COLORS.successDeep}
+              size={20}
+              color="#1B7C4B"
             />
           }
-          label="WhatsApp us"
+          label="Chat on WhatsApp"
           value={HELPLINE_PHONE}
           onPress={openWhatsApp}
         />
 
         <HelpOption
-          tint={CART_COLORS.tokenTint}
-          icon={
-            <MaterialIcons
-              name="email"
-              size={wp('5%')}
-              color={CART_COLORS.token}
-            />
-          }
-          label="Email us"
+          tint="#F7F4EB"
+          icon={<MaterialIcons name="email" size={20} color="#A6823E" />}
+          label="Write to us"
           value={HELPLINE_EMAIL}
           onPress={sendEmail}
         />
@@ -170,46 +136,53 @@ HelpSupportModal.displayName = 'HelpSupportModal';
 
 const styles = StyleSheet.create({
   background: {
-    backgroundColor: CART_COLORS.card,
-    borderTopLeftRadius: CART_RADIUS.card,
-    borderTopRightRadius: CART_RADIUS.card,
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
   },
   handleIndicator: {
-    backgroundColor: CART_COLORS.graySoftColor,
-    width: wp('12%'),
+    backgroundColor: '#D8D4CC',
+    width: 44,
+    height: 4,
+    borderRadius: 2,
   },
   content: {
-    paddingHorizontal: CART_SPACING.lg,
-    paddingTop: CART_SPACING.xs,
+    paddingHorizontal: 20,
+    paddingTop: 8,
   },
   headingRow: {
-    marginBottom: CART_SPACING.md,
-    gap: 2,
+    marginBottom: 16,
   },
   title: {
-    ...CART_TYPE.heading,
-    color: CART_COLORS.textPrimary,
+    fontFamily: 'CormorantGaramond-SemiBold',
+    fontSize: 23,
+    lineHeight: 28,
+    color: '#12372A',
+    letterSpacing: -0.2,
   },
   subtitle: {
-    ...CART_TYPE.micro,
-    color: CART_COLORS.textMuted,
+    fontFamily: 'Lexend-Regular',
+    fontSize: 12,
+    lineHeight: 16,
+    color: '#6B7280',
+    marginTop: 3,
   },
   optionCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: CART_SPACING.md,
+    gap: 14,
     borderWidth: 1,
-    borderColor: CART_COLORS.border,
-    borderRadius: CART_RADIUS.card,
-    backgroundColor: CART_COLORS.card,
-    paddingVertical: hp('1.4%'),
-    paddingHorizontal: CART_SPACING.md,
-    marginBottom: CART_SPACING.md,
+    borderColor: '#ECE7DE',
+    borderRadius: 16,
+    backgroundColor: '#FAF9F6',
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    marginBottom: 10,
   },
   iconDisc: {
-    width: wp('9.5%'),
-    height: wp('9.5%'),
-    borderRadius: CART_RADIUS.icon,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -218,12 +191,14 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   optionLabel: {
-    ...CART_TYPE.labelStrong,
-    color: CART_COLORS.textPrimary,
+    fontFamily: 'Lexend-Medium',
+    fontSize: 13.5,
+    color: '#12372A',
   },
   optionValue: {
-    ...CART_TYPE.micro,
-    color: CART_COLORS.textMuted,
+    fontFamily: 'Lexend-Regular',
+    fontSize: 11.5,
+    color: '#6B7280',
   },
 });
 

@@ -1,8 +1,12 @@
 import React from 'react';
-import { StyleSheet } from 'react-native';
-import { Surface, SectionHeading } from '../../../../../components/atoms';
+import { StyleSheet, View, Text, Platform } from 'react-native';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from 'react-native-responsive-screen';
+import { EDIT_COLORS, EDIT_FONTS } from '../editTheme';
 import { ProfileTextField, InfoNote } from '../fields';
-import { UI_SPACING } from '../../../../../theme/tokens';
 
 interface Props {
   email?: string;
@@ -17,14 +21,25 @@ const ContactDetailsCard: React.FC<Props> = ({
   onChangeEmail,
   onChangePhone,
 }) => (
-  <Surface style={styles.card}>
-    <SectionHeading
-      title="Contact details"
-      subtitle="Used to sign you in and send order updates"
-    />
+  <View style={styles.card}>
+    <View style={styles.headingRow}>
+      <View style={styles.headingIcon}>
+        <MaterialCommunityIcons
+          name="shield-account-outline"
+          size={wp('4.5%')}
+          color={EDIT_COLORS.emerald}
+        />
+      </View>
+      <View style={styles.headingTextCol}>
+        <Text style={styles.headingTitle}>Contact Details</Text>
+        <Text style={styles.headingSubtitle}>
+          Used to sign you in and deliver insured order updates
+        </Text>
+      </View>
+    </View>
 
     <ProfileTextField
-      label="Email ID"
+      label="Email Address"
       icon="email-outline"
       placeholder="Not added yet"
       value={email}
@@ -38,7 +53,7 @@ const ContactDetailsCard: React.FC<Props> = ({
       label="Phone Number"
       icon="phone-outline"
       placeholder="Not added yet"
-      value={phone}
+      value={phone ? `+91 ${phone}` : ''}
       editable={false}
       verified={!!phone}
       onChangePress={onChangePhone}
@@ -46,17 +61,59 @@ const ContactDetailsCard: React.FC<Props> = ({
     />
 
     <InfoNote>
-      These are verified. Tap Change and we’ll send an OTP to confirm it’s
-      you.
+      These contact details are verified for your security. Tap Change to update with an OTP.
     </InfoNote>
-  </Surface>
+  </View>
 );
 
 export default React.memo(ContactDetailsCard);
 
 const styles = StyleSheet.create({
   card: {
-    padding: UI_SPACING.lg,
-    gap: UI_SPACING.lg,
+    backgroundColor: EDIT_COLORS.card,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: EDIT_COLORS.border,
+    padding: wp('4.5%'),
+    gap: hp('1.8%'),
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.04,
+        shadowRadius: 5,
+      },
+      android: {
+        elevation: 1.5,
+      },
+    }),
+  },
+  headingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: hp('0.5%'),
+  },
+  headingIcon: {
+    width: wp('9%'),
+    height: wp('9%'),
+    borderRadius: wp('4.5%'),
+    backgroundColor: EDIT_COLORS.emeraldTint,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: wp('3%'),
+  },
+  headingTextCol: {
+    flex: 1,
+  },
+  headingTitle: {
+    fontFamily: EDIT_FONTS.heading,
+    fontSize: wp('4.6%'),
+    color: EDIT_COLORS.textPrimary,
+  },
+  headingSubtitle: {
+    fontFamily: EDIT_FONTS.body,
+    fontSize: wp('2.8%'),
+    color: EDIT_COLORS.textMuted,
+    marginTop: hp('0.2%'),
   },
 });

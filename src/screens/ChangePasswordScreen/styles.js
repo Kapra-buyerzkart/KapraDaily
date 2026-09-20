@@ -1,24 +1,29 @@
 import { StyleSheet } from 'react-native';
-import { CART_COLORS, CART_SPACING, hp } from '@/styles/cartTheme';
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from 'react-native-responsive-screen';
+import { PWD_COLORS } from './theme';
 
 export const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
-    backgroundColor: CART_COLORS.canvas,
+    backgroundColor: PWD_COLORS.canvas,
   },
   keyboardAvoidingView: {
     flex: 1,
   },
   topBar: {
-    backgroundColor: CART_COLORS.card,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: CART_COLORS.border,
+    backgroundColor: PWD_COLORS.canvas,
+    borderBottomWidth: 1,
+    borderBottomColor: PWD_COLORS.border,
     zIndex: 5,
   },
   scrollContent: {
     flexGrow: 1,
-    paddingTop: CART_SPACING.lg,
-    paddingBottom: hp('3%'),
-    gap: CART_SPACING.md,
+    paddingTop: hp('2%'),
+    paddingBottom: hp('4%'),
+    paddingHorizontal: wp('4.5%'),
+    gap: hp('2%'),
   },
 });

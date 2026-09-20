@@ -5,7 +5,7 @@ import { COLORS } from '../styles/colors';
 const AppLoader = () => (
   <View style={styles.container}>
     <Image
-      source={require('../assets/images/kapra_logo.png')}
+      source={require('../assets/icons/kapragnd.png')}
       style={styles.logo}
       resizeMode="contain"
     />
@@ -15,13 +15,14 @@ const AppLoader = () => (
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.primary,
+    backgroundColor: '#0C382E',
     justifyContent: 'center',
     alignItems: 'center',
   },
   logo: {
     width: 220,
-    height: 126,
+    height: 91,
+    tintColor: '#FFFFFF',
   },
 });
 

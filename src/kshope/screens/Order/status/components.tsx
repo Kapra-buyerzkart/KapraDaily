@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, {
   Easing,
@@ -9,33 +9,22 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import Feather from 'react-native-vector-icons/Feather';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import AppText from '../../../components/atoms/AppText';
-import Surface from '../../../components/atoms/Surface';
-import Divider from '../../../components/atoms/Divider';
-import IconDisc from '../../../components/atoms/IconDisc';
-import SectionHeading from '../../../components/atoms/SectionHeading';
-import { UI_COLORS, hitSlopTo } from '../../../theme/tokens';
-import { DISC, ICON, styles } from './styles';
+import { DISC, ICON, STATUS_COLORS, styles } from './styles';
 
 export type StatusTone = 'success' | 'danger' | 'brand';
 
 const TONE_COLOR: Record<StatusTone, string> = {
-  success: UI_COLORS.successDeep,
-  danger: UI_COLORS.danger,
-  brand: UI_COLORS.primary,
-};
-
-const TONE_DISC: Record<StatusTone, string> = {
-  success: 'success',
-  danger: 'danger',
-  brand: 'brand',
+  success: STATUS_COLORS.success,
+  danger: STATUS_COLORS.danger,
+  brand: STATUS_COLORS.pending,
 };
 
 const TONE_RING: Record<StatusTone, string> = {
-  success: UI_COLORS.successEdge,
-  danger: 'rgba(217,48,37,0.18)',
-  brand: UI_COLORS.primaryEdge,
+  success: STATUS_COLORS.successDiscBorder,
+  danger: STATUS_COLORS.dangerDiscBorder,
+  brand: STATUS_COLORS.pendingDiscBorder,
 };
 
 export const StatusDot: React.FC<{ tone: StatusTone; pulse?: boolean }> = ({
@@ -89,12 +78,17 @@ export const StatusDisc: React.FC<{
     opacity: animated ? 0.4 + progress.value * 0.6 : 1,
   }));
 
+  const isDanger = tone === 'danger';
+  const isSuccess = tone === 'success';
+
   return (
-    <IconDisc
-      size={DISC.status}
-      tone={TONE_DISC[tone]}
-      radius={DISC.status / 2}
-      style={styles.statusDisc}
+    <View
+      style={[
+        styles.statusDisc,
+        isDanger && styles.statusDiscDanger,
+        isSuccess && styles.statusDiscSuccess,
+        !isDanger && !isSuccess && styles.statusDiscBrand,
+      ]}
     >
       <Animated.View
         style={[styles.statusRing, { borderColor: TONE_RING[tone] }, ringStyle]}
@@ -104,7 +98,7 @@ export const StatusDisc: React.FC<{
         size={ICON.status}
         color={TONE_COLOR[tone]}
       />
-    </IconDisc>
+    </View>
   );
 };
 
@@ -122,34 +116,44 @@ export const StatusTopBar: React.FC<{
         style={styles.topBarBack}
         onPress={onBack}
         activeOpacity={0.75}
-        hitSlop={hitSlopTo(40)}
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         accessibilityRole="button"
         accessibilityLabel="Go back"
       >
-        <Feather
-          name="arrow-left"
-          size={ICON.meta}
-          color={UI_COLORS.textPrimary}
-        />
+        <Ionicons name="chevron-back" size={20} color={STATUS_COLORS.ink} />
       </TouchableOpacity>
     ) : null}
 
     <View style={styles.topBarCopy}>
-      <AppText variant="title" accessibilityRole="header">
+      <Text style={styles.topBarTitle} accessibilityRole="header">
         {title}
-      </AppText>
+      </Text>
       {subtitle ? (
-        <AppText variant="caption" tone="muted">
+        <Text style={styles.topBarSubtitle}>
           {subtitle}
-        </AppText>
+        </Text>
       ) : null}
     </View>
 
-    <View style={styles.statusPill}>
+    <View
+      style={[
+        styles.statusPill,
+        tone === 'danger' && styles.statusPillDanger,
+        tone === 'success' && styles.statusPillSuccess,
+        tone === 'brand' && styles.statusPillBrand,
+      ]}
+    >
       <StatusDot tone={tone} pulse={pulse} />
-      <AppText variant="micro" tone="muted">
+      <Text
+        style={[
+          styles.statusPillText,
+          tone === 'danger' && styles.statusPillTextDanger,
+          tone === 'success' && styles.statusPillTextSuccess,
+          tone === 'brand' && styles.statusPillTextBrand,
+        ]}
+      >
         {statusLabel}
-      </AppText>
+      </Text>
     </View>
   </View>
 );
@@ -159,9 +163,7 @@ export const MetaRow: React.FC<{
   children: React.ReactNode;
 }> = ({ label, children }) => (
   <View style={styles.metaRow}>
-    <AppText variant="label" tone="muted">
-      {label}
-    </AppText>
+    <Text style={styles.metaLabel}>{label}</Text>
     <View style={styles.metaValueWrap}>{children}</View>
   </View>
 );
@@ -171,14 +173,12 @@ export const CopyChip: React.FC<{ onPress: () => void }> = ({ onPress }) => (
     style={styles.copyChip}
     onPress={onPress}
     activeOpacity={0.75}
-    hitSlop={hitSlopTo(28)}
+    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
     accessibilityRole="button"
     accessibilityLabel="Copy order number"
   >
-    <Feather name="copy" size={ICON.chip} color={UI_COLORS.textMuted} />
-    <AppText variant="micro" tone="muted">
-      Copy
-    </AppText>
+    <Feather name="copy" size={ICON.chip} color={STATUS_COLORS.inkSecondary} />
+    <Text style={styles.copyChipText}>Copy</Text>
   </TouchableOpacity>
 );
 
@@ -194,57 +194,54 @@ export const BulletCard: React.FC<{
   bullets: StatusBullet[];
   right?: React.ReactNode;
 }> = ({ title, bullets, right }) => (
-  <Surface style={styles.section}>
-    <View style={styles.card}>
-      <SectionHeading title={title} right={right} />
+  <View style={styles.cardContainer}>
+    <View style={styles.cardHeaderRow}>
+      <Text style={styles.cardHeading}>{title}</Text>
+      {right}
+    </View>
 
-      <View style={styles.bulletGroup}>
-        {bullets.map((bullet, index) => (
-          <View key={bullet.id}>
-            {index > 0 ? <Divider style={styles.bulletSeparator} /> : null}
-            <View style={styles.bulletRow}>
-              <IconDisc size={DISC.bullet} tone="neutral">
-                <Feather
-                  name={bullet.icon}
-                  size={ICON.bullet}
-                  color={UI_COLORS.textSecondary}
-                />
-              </IconDisc>
-              <View style={styles.bulletCopy}>
-                <AppText variant="labelStrong">{bullet.title}</AppText>
-                <AppText variant="caption" tone="muted">
-                  {bullet.description}
-                </AppText>
-              </View>
+    <View style={styles.bulletGroup}>
+      {bullets.map((bullet, index) => (
+        <View key={bullet.id}>
+          {index > 0 ? <View style={styles.bulletSeparator} /> : null}
+          <View style={styles.bulletRow}>
+            <View style={styles.bulletIconDisc}>
+              <Feather
+                name={bullet.icon}
+                size={ICON.bullet}
+                color={STATUS_COLORS.darkGreen}
+              />
+            </View>
+            <View style={styles.bulletCopy}>
+              <Text style={styles.bulletTitle}>{bullet.title}</Text>
+              <Text style={styles.bulletDesc}>{bullet.description}</Text>
             </View>
           </View>
-        ))}
-      </View>
+        </View>
+      ))}
     </View>
-  </Surface>
+  </View>
 );
 
 export const SupportCard: React.FC<{ title: string; subtitle: string }> = ({
   title,
   subtitle,
 }) => (
-  <Surface style={styles.section}>
+  <View style={styles.cardContainer}>
     <View style={styles.supportRow}>
-      <IconDisc size={DISC.meta} tone="neutral">
+      <View style={styles.bulletIconDisc}>
         <Feather
           name="headphones"
           size={ICON.meta}
-          color={UI_COLORS.textSecondary}
+          color={STATUS_COLORS.darkGreen}
         />
-      </IconDisc>
+      </View>
       <View style={styles.supportCopy}>
-        <AppText variant="labelStrong">{title}</AppText>
-        <AppText variant="caption" tone="muted">
-          {subtitle}
-        </AppText>
+        <Text style={styles.bulletTitle}>{title}</Text>
+        <Text style={styles.bulletDesc}>{subtitle}</Text>
       </View>
     </View>
-  </Surface>
+  </View>
 );
 
 export const FooterStrip: React.FC<{ icon?: string; note: string }> = ({
@@ -252,14 +249,8 @@ export const FooterStrip: React.FC<{ icon?: string; note: string }> = ({
   note,
 }) => (
   <View style={styles.footerStrip}>
-    <Feather name={icon} size={ICON.meta} color={UI_COLORS.textSecondary} />
-    <AppText
-      variant="captionStrong"
-      tone="secondary"
-      style={styles.footerStripCopy}
-    >
-      {note}
-    </AppText>
+    <Feather name={icon} size={ICON.meta} color={STATUS_COLORS.darkGreen} />
+    <Text style={styles.footerStripCopy}>{note}</Text>
   </View>
 );
 
@@ -279,7 +270,7 @@ export const StatusActionBar: React.FC<{
   onGhost,
 }) => {
   const icon = (
-    <Feather name={primaryIcon} size={ICON.cta} color={UI_COLORS.onPrimary} />
+    <Feather name={primaryIcon} size={ICON.cta} color="#FFFFFF" />
   );
 
   return (
@@ -287,13 +278,11 @@ export const StatusActionBar: React.FC<{
       <TouchableOpacity
         style={styles.primaryBtn}
         onPress={onPrimary}
-        activeOpacity={0.9}
+        activeOpacity={0.88}
         accessibilityRole="button"
       >
         {primaryIconTrailing ? null : icon}
-        <AppText variant="cta" tone="onDark">
-          {primaryLabel}
-        </AppText>
+        <Text style={styles.primaryBtnText}>{primaryLabel}</Text>
         {primaryIconTrailing ? icon : null}
       </TouchableOpacity>
 
@@ -303,10 +292,8 @@ export const StatusActionBar: React.FC<{
         activeOpacity={0.7}
         accessibilityRole="button"
       >
-        <Feather name="home" size={ICON.ghost} color={UI_COLORS.textMuted} />
-        <AppText variant="bodyStrong" tone="muted">
-          {ghostLabel}
-        </AppText>
+        <Feather name="home" size={ICON.ghost} color={STATUS_COLORS.inkSecondary} />
+        <Text style={styles.ghostBtnText}>{ghostLabel}</Text>
       </TouchableOpacity>
     </SafeAreaView>
   );

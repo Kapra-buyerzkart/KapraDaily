@@ -6,7 +6,6 @@ import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
-import { FONTS } from '../styles/typography';
 import CustomModal, { MODAL_POSITION } from './modal/CustomModal';
 import { SUPPORTED_LANGUAGES } from '../config/i18n';
 
@@ -37,7 +36,8 @@ const LanguageSwitcherModal = ({ visible, onClose }) => {
         return (
           <TouchableOpacity
             key={language.code}
-            style={styles.row}
+            style={[styles.row, isActive && styles.rowActive]}
+            activeOpacity={0.7}
             onPress={() => {
               i18n.changeLanguage(language.code);
               onClose();
@@ -47,7 +47,7 @@ const LanguageSwitcherModal = ({ visible, onClose }) => {
               {language.label}
             </Text>
             {isActive && (
-              <Ionicons name="checkmark-circle" size={wp('5%')} color="#F04B1B" />
+              <Ionicons name="checkmark-circle" size={wp('5.2%')} color="#0C382E" />
             )}
           </TouchableOpacity>
         );
@@ -58,31 +58,42 @@ const LanguageSwitcherModal = ({ visible, onClose }) => {
 
 const styles = StyleSheet.create({
   content: {
-    padding: wp('5%'),
+    paddingVertical: hp('2.5%'),
+    paddingHorizontal: wp('5.5%'),
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: '#ECE7DE',
   },
   title: {
-    fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('4.5%'),
-    color: '#000000',
-    marginBottom: hp('2%'),
+    fontFamily: 'CormorantGaramond-SemiBold',
+    fontSize: wp('5.2%'),
+    color: '#12372A',
+    marginBottom: hp('1.5%'),
     textAlign: 'center',
+    letterSpacing: -0.2,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: hp('1.5%'),
+    paddingVertical: hp('1.6%'),
+    paddingHorizontal: wp('2%'),
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: '#ECE7DE',
+    borderRadius: 8,
+  },
+  rowActive: {
+    backgroundColor: '#FAF8F5',
   },
   label: {
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('3.8%'),
-    color: '#333333',
+    fontFamily: 'Lexend-Regular',
+    fontSize: wp('3.7%'),
+    color: '#444444',
   },
   labelActive: {
-    color: '#F04B1B',
-    fontFamily: FONTS.gilroy.semiBold,
+    color: '#0C382E',
+    fontFamily: 'Lexend-Medium',
   },
 });
 

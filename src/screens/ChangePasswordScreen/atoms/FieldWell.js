@@ -4,19 +4,22 @@ import Animated, {
   interpolateColor,
   useAnimatedStyle,
 } from 'react-native-reanimated';
-import { CART_COLORS, CART_RADIUS, CART_SPACING, hp } from '@/styles/cartTheme';
+import {
+  heightPercentageToDP as hp,
+} from 'react-native-responsive-screen';
+import { PWD_COLORS, PWD_RADIUS } from '../theme';
 
 const FieldWell = ({ focus, error, success, style, children }) => {
   const animatedStyle = useAnimatedStyle(() => ({
     backgroundColor: interpolateColor(
       focus.value,
       [0, 1],
-      [CART_COLORS.well, CART_COLORS.card],
+      [PWD_COLORS.well, PWD_COLORS.card],
     ),
     borderColor: interpolateColor(
       focus.value,
       [0, 1],
-      [CART_COLORS.border, CART_COLORS.borderStrong],
+      [PWD_COLORS.border, PWD_COLORS.gold],
     ),
   }));
 
@@ -42,15 +45,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     minHeight: hp('6%'),
-    borderRadius: CART_RADIUS.input,
+    borderRadius: PWD_RADIUS.input,
     borderWidth: 1,
-    paddingHorizontal: CART_SPACING.md,
+    paddingHorizontal: 12,
   },
   wellSuccess: {
-    borderColor: CART_COLORS.success,
+    borderColor: PWD_COLORS.emerald,
   },
   wellError: {
-    backgroundColor: CART_COLORS.dangerTint,
-    borderColor: CART_COLORS.danger,
+    backgroundColor: PWD_COLORS.dangerTint,
+    borderColor: PWD_COLORS.danger,
   },
 });

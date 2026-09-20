@@ -1,31 +1,17 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
-import CartText from '../../../cart/components/atoms/CartText';
-import IconDisc from '../../../cart/components/atoms/IconDisc';
+import { View, Text, StyleSheet } from 'react-native';
+import Feather from 'react-native-vector-icons/Feather';
 import AreaOption from '../molecules/AreaOption';
-import {
-  CART_COLORS,
-  CART_RADIUS,
-  CART_SPACING,
-  wp,
-} from '../../../../styles/cartTheme';
 
 const AreaSelectCard = ({ areas, selectedArea, onSelect }) => (
   <View style={styles.card}>
     <View style={styles.header}>
-      <IconDisc size={wp('8%')} tone="brand">
-        <Ionicons
-          name="location-sharp"
-          size={wp('4.2%')}
-          color={CART_COLORS.primary}
-        />
-      </IconDisc>
+      <View style={styles.iconCircle}>
+        <Feather name="map-pin" size={16} color="#FFFFFF" />
+      </View>
       <View style={styles.copy}>
-        <CartText variant="labelStrong">Select your area</CartText>
-        <CartText variant="micro" tone="muted">
-          Please select your Pincode area
-        </CartText>
+        <Text style={styles.title}>Select your area</Text>
+        <Text style={styles.subtitle}>Please select your Pincode area</Text>
       </View>
     </View>
 
@@ -46,23 +32,42 @@ export default React.memo(AreaSelectCard);
 
 const styles = StyleSheet.create({
   card: {
-    gap: CART_SPACING.md,
-    padding: CART_SPACING.md,
-    borderRadius: CART_RADIUS.card,
-    borderWidth: 1,
-    borderColor: CART_COLORS.border,
-    backgroundColor: CART_COLORS.card,
+    gap: 12,
+    padding: 14,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: '#0A2A20',
+    backgroundColor: '#FFFFFF',
+    marginTop: 4,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: CART_SPACING.sm,
+    gap: 10,
+  },
+  iconCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#0A2A20',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   copy: {
     flex: 1,
-    gap: 1,
+  },
+  title: {
+    fontFamily: 'Lexend-SemiBold',
+    fontSize: 14,
+    color: '#12372A',
+  },
+  subtitle: {
+    fontFamily: 'Lexend-Regular',
+    fontSize: 12,
+    color: '#666666',
+    marginTop: 2,
   },
   options: {
-    gap: CART_SPACING.sm,
+    gap: 8,
   },
 });

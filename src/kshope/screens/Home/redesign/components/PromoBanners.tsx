@@ -25,11 +25,26 @@ interface HeroBannerProps {
 }
 
 export const HeroBanner: React.FC<HeroBannerProps> = ({ banner, onPress }) => {
-  const customImage = banner?.imageUrl || banner?.ImageUrl || banner?.image;
-  const imageSource = customImage
-    ? typeof customImage === 'string'
-      ? { uri: customImage.startsWith('http') ? customImage : `https://kshadmin.kapradaily.com/${customImage.replace(/^\//, '')}` }
-      : customImage
+  const [imgFailed, setImgFailed] = React.useState(false);
+
+  const rawImage = banner?.imageUrl || banner?.ImageUrl || banner?.image;
+  const isGif =
+    typeof rawImage === 'string' &&
+    rawImage.toLowerCase().includes('.gif');
+  const validCustomImage = isGif ? null : rawImage;
+  const hasCustomImage = Boolean(validCustomImage) && !imgFailed;
+
+  const imageSource = hasCustomImage
+    ? typeof validCustomImage === 'string'
+      ? {
+          uri: validCustomImage.startsWith('http')
+            ? validCustomImage
+            : `https://kshadmin.kapradaily.com/${validCustomImage.replace(
+                /^\//,
+                '',
+              )}`,
+        }
+      : validCustomImage
     : KAPRA_ART.heroCraftedChapter;
 
   return (
@@ -42,26 +57,39 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ banner, onPress }) => {
         source={imageSource}
         style={styles.heroImage}
         resizeMode="cover"
+        onError={() => setImgFailed(true)}
       />
-      <LinearGradient
-        colors={['rgba(8,43,34,0.92)', 'rgba(8,43,34,0.45)', 'rgba(8,43,34,0.05)']}
-        start={{ x: 0, y: 0.5 }}
-        end={{ x: 0.75, y: 0.5 }}
-        style={styles.heroGradient}
-      />
+      {!hasCustomImage && (
+        <>
+          <LinearGradient
+            colors={[
+              'rgba(8,43,34,0.92)',
+              'rgba(8,43,34,0.45)',
+              'rgba(8,43,34,0.05)',
+            ]}
+            start={{ x: 0, y: 0.5 }}
+            end={{ x: 0.75, y: 0.5 }}
+            style={styles.heroGradient}
+          />
 
-      {/* Content overlay */}
-      <View style={styles.heroContent}>
-        <Text style={styles.heroEyebrow}>JEWELLERY FOR A MORE MEANINGFUL YOU</Text>
-        <Text style={styles.heroTitle}>
-          Crafted <Text style={styles.heroTitleItalic}>for</Text> every chapter
-        </Text>
-        <Text style={styles.heroSubtitle}>Tradition. Today. Always Yours.</Text>
+          {/* Content overlay for Kapra branding */}
+          <View style={styles.heroContent}>
+            <Text style={styles.heroEyebrow}>
+              JEWELLERY FOR A MORE MEANINGFUL YOU
+            </Text>
+            <Text style={styles.heroTitle}>
+              Crafted <Text style={styles.heroTitleItalic}>for</Text> every chapter
+            </Text>
+            <Text style={styles.heroSubtitle}>
+              Tradition. Today. Always Yours.
+            </Text>
 
-        <View style={styles.heroButton}>
-          <Text style={styles.heroButtonText}>Explore Collection →</Text>
-        </View>
-      </View>
+            <View style={styles.heroButton}>
+              <Text style={styles.heroButtonText}>Explore Collection →</Text>
+            </View>
+          </View>
+        </>
+      )}
     </TouchableOpacity>
   );
 };
@@ -77,6 +105,34 @@ export const EverydayDiamondsBanner: React.FC<EverydayDiamondsBannerProps> = ({
   banner,
   onPress,
 }) => {
+  const [imgFailed, setImgFailed] = React.useState(false);
+
+  const rawImage = banner?.imageUrl || banner?.ImageUrl || banner?.image;
+  const isGif =
+    typeof rawImage === 'string' && rawImage.toLowerCase().includes('.gif');
+  const validImage = isGif || imgFailed ? null : rawImage;
+
+  const imageSource = validImage
+    ? typeof validImage === 'string'
+      ? {
+          uri: validImage.startsWith('http')
+            ? validImage
+            : `https://kshadmin.kapradaily.com/${validImage.replace(/^\//, '')}`,
+        }
+      : validImage
+    : KAPRA_ART.everydayDiamondsBanner;
+
+  const title = (
+    banner?.title ||
+    banner?.Title ||
+    'EVERYDAY\nDIAMONDS'
+  ).toUpperCase();
+  const subtitle =
+    banner?.subTitle ||
+    banner?.SubTitle ||
+    banner?.subtitle ||
+    'Subtle. Stylish. Uniquely You.';
+
   return (
     <TouchableOpacity
       style={styles.everydayWrap}
@@ -84,8 +140,12 @@ export const EverydayDiamondsBanner: React.FC<EverydayDiamondsBannerProps> = ({
       onPress={onPress}
     >
       <View style={styles.everydayLeft}>
-        <Text style={styles.everydayTitle}>EVERYDAY{'\n'}DIAMONDS</Text>
-        <Text style={styles.everydaySubtitle}>Subtle. Stylish. Uniquely You.</Text>
+        <Text style={styles.everydayTitle} numberOfLines={2}>
+          {title}
+        </Text>
+        <Text style={styles.everydaySubtitle} numberOfLines={1}>
+          {subtitle}
+        </Text>
         <View style={styles.everydayButton}>
           <Text style={styles.everydayButtonText}>Explore Now →</Text>
         </View>
@@ -93,12 +153,15 @@ export const EverydayDiamondsBanner: React.FC<EverydayDiamondsBannerProps> = ({
 
       <View style={styles.everydayRight}>
         <Image
-          source={KAPRA_ART.everydayDiamondsBanner}
+          source={imageSource}
           style={styles.everydayImage}
           resizeMode="cover"
+          onError={() => setImgFailed(true)}
         />
         <View style={styles.everydayBadge}>
-          <Text style={styles.everydayBadgeText}>SMALL SPARKLES{'\n'}BRIGHTER DAYS</Text>
+          <Text style={styles.everydayBadgeText}>
+            SMALL SPARKLES{'\n'}BRIGHTER DAYS
+          </Text>
         </View>
       </View>
     </TouchableOpacity>
@@ -116,11 +179,22 @@ export const HangingJhumkaBanner: React.FC<HangingJhumkaBannerProps> = ({
   banner,
   onPress,
 }) => {
-  const customImage = banner?.imageUrl || banner?.ImageUrl;
-  const imageSource = customImage
-    ? typeof customImage === 'string'
-      ? { uri: customImage.startsWith('http') ? customImage : `https://kshadmin.kapradaily.com/${customImage.replace(/^\//, '')}` }
-      : customImage
+  const [imgFailed, setImgFailed] = React.useState(false);
+
+  const customImage = banner?.imageUrl || banner?.ImageUrl || banner?.image;
+  const isGif =
+    typeof customImage === 'string' &&
+    customImage.toLowerCase().includes('.gif');
+  const validImage = isGif || imgFailed ? null : customImage;
+
+  const imageSource = validImage
+    ? typeof validImage === 'string'
+      ? {
+          uri: validImage.startsWith('http')
+            ? validImage
+            : `https://kshadmin.kapradaily.com/${validImage.replace(/^\//, '')}`,
+        }
+      : validImage
     : KAPRA_ART.hangingJhumkaBanner;
 
   return (
@@ -133,6 +207,7 @@ export const HangingJhumkaBanner: React.FC<HangingJhumkaBannerProps> = ({
         source={imageSource}
         style={styles.jhumkaImage}
         resizeMode="cover"
+        onError={() => setImgFailed(true)}
       />
     </TouchableOpacity>
   );
@@ -153,6 +228,44 @@ export const SideBySidePromos: React.FC<SideBySidePromosProps> = ({
   onPressLeft,
   onPressRight,
 }) => {
+  const [leftFailed, setLeftFailed] = React.useState(false);
+  const [rightFailed, setRightFailed] = React.useState(false);
+
+  const leftRaw =
+    leftBanner?.imageUrl || leftBanner?.ImageUrl || leftBanner?.image;
+  const leftIsGif =
+    typeof leftRaw === 'string' && leftRaw.toLowerCase().includes('.gif');
+  const leftValid = leftIsGif || leftFailed ? null : leftRaw;
+  const leftSource = leftValid
+    ? typeof leftValid === 'string'
+      ? {
+          uri: leftValid.startsWith('http')
+            ? leftValid
+            : `https://kshadmin.kapradaily.com/${leftValid.replace(/^\//, '')}`,
+        }
+      : leftValid
+    : KAPRA_ART.promoDiamondDreams;
+
+  const rightRaw =
+    rightBanner?.imageUrl || rightBanner?.ImageUrl || rightBanner?.image;
+  const rightIsGif =
+    typeof rightRaw === 'string' && rightRaw.toLowerCase().includes('.gif');
+  const rightValid = rightIsGif || rightFailed ? null : rightRaw;
+  const rightSource = rightValid
+    ? typeof rightValid === 'string'
+      ? {
+          uri: rightValid.startsWith('http')
+            ? rightValid
+            : `https://kshadmin.kapradaily.com/${rightValid.replace(/^\//, '')}`,
+        }
+      : rightValid
+    : KAPRA_ART.promoGoldEdit;
+
+  const leftTitle =
+    leftBanner?.title || leftBanner?.Title || 'Diamond\nDreams';
+  const rightTitle =
+    rightBanner?.title || rightBanner?.Title || 'The Gold\nEdit';
+
   return (
     <View style={styles.splitWrap}>
       {/* Left Tile: Diamond Dreams */}
@@ -162,18 +275,25 @@ export const SideBySidePromos: React.FC<SideBySidePromosProps> = ({
         onPress={onPressLeft}
       >
         <Image
-          source={KAPRA_ART.promoDiamondDreams}
+          source={leftSource}
           style={styles.splitCardBg}
           resizeMode="cover"
+          onError={() => setLeftFailed(true)}
         />
         <LinearGradient
           colors={['rgba(8,43,34,0.92)', 'rgba(8,43,34,0.3)']}
           style={StyleSheet.absoluteFillObject}
         />
         <View style={styles.splitCardBody}>
-          <Text style={styles.splitTitleEmerald}>Diamond{'\n'}Dreams</Text>
-          <Text style={styles.splitSubtitleEmerald}>For life's special{'\n'}milestones</Text>
-          <Text style={styles.splitLinkEmerald}>Explore Diamond Jewellery →</Text>
+          <Text style={styles.splitTitleEmerald} numberOfLines={2}>
+            {leftTitle}
+          </Text>
+          <Text style={styles.splitSubtitleEmerald}>
+            For life's special{'\n'}milestones
+          </Text>
+          <Text style={styles.splitLinkEmerald}>
+            Explore Diamond Jewellery →
+          </Text>
         </View>
       </TouchableOpacity>
 
@@ -184,18 +304,25 @@ export const SideBySidePromos: React.FC<SideBySidePromosProps> = ({
         onPress={onPressRight}
       >
         <Image
-          source={KAPRA_ART.promoGoldEdit}
+          source={rightSource}
           style={styles.splitCardBg}
           resizeMode="cover"
+          onError={() => setRightFailed(true)}
         />
         <LinearGradient
           colors={['rgba(247,242,232,0.92)', 'rgba(247,242,232,0.35)']}
           style={StyleSheet.absoluteFillObject}
         />
         <View style={styles.splitCardBody}>
-          <Text style={styles.splitTitleGold}>The Gold{'\n'}Edit</Text>
-          <Text style={styles.splitSubtitleGold}>Classic. Contemporary.{'\n'}Always You.</Text>
-          <Text style={styles.splitLinkGold}>Explore Gold Jewellery →</Text>
+          <Text style={styles.splitTitleGold} numberOfLines={2}>
+            {rightTitle}
+          </Text>
+          <Text style={styles.splitSubtitleGold}>
+            Classic. Contemporary.{'\n'}Always You.
+          </Text>
+          <Text style={styles.splitLinkGold}>
+            Explore Gold Jewellery →
+          </Text>
         </View>
       </TouchableOpacity>
     </View>

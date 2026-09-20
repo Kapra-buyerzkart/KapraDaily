@@ -4,8 +4,7 @@ import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
-import { FONTS } from '../styles/typography';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import CustomModal, { MODAL_POSITION } from './modal/CustomModal';
 
 const ConfirmationModal = ({
@@ -18,6 +17,8 @@ const ConfirmationModal = ({
   confirmText = 'Remove',
   cancelText = 'Cancel',
   dismissible = true,
+  iconName,
+  themeColor,
 }) => {
   const modalRef = useRef(null);
   useEffect(() => {
@@ -27,6 +28,17 @@ const ConfirmationModal = ({
       modalRef.current?.close();
     }
   }, [visible]);
+
+  const isDestructive =
+    confirmText.toLowerCase().includes('remove') ||
+    confirmText.toLowerCase().includes('delete');
+
+  const resolvedIcon =
+    iconName ||
+    (isDestructive ? 'trash-outline' : 'alert-circle-outline');
+  const iconColor = themeColor || (isDestructive ? '#B83A3A' : '#0C382E');
+  const iconBg = isDestructive ? '#FFF4EC' : '#E8F2EE';
+  const iconBorder = isDestructive ? '#FCDCC8' : '#D1E6DD';
 
   return (
     <CustomModal
@@ -38,8 +50,13 @@ const ConfirmationModal = ({
       closeOnBackPress={dismissible}
       contentStyle={styles.content}
     >
-      <View style={styles.iconContainer}>
-        <MaterialIcons name="warning" size={wp('12%')} color="#F04B1B" />
+      <View
+        style={[
+          styles.iconCircle,
+          { backgroundColor: iconBg, borderColor: iconBorder },
+        ]}
+      >
+        <Ionicons name={resolvedIcon} size={wp('6.8%')} color={iconColor} />
       </View>
 
       <Text style={styles.title}>{title}</Text>
@@ -48,6 +65,7 @@ const ConfirmationModal = ({
       <View style={styles.buttonContainer}>
         <TouchableOpacity
           style={[styles.button, styles.cancelButton]}
+          activeOpacity={0.8}
           onPress={() => {
             onClose();
             onCancel?.();
@@ -63,7 +81,12 @@ const ConfirmationModal = ({
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.button, styles.confirmButton]}
+          style={[
+            styles.button,
+            styles.confirmButton,
+            themeColor ? { backgroundColor: themeColor } : null,
+          ]}
+          activeOpacity={0.88}
           onPress={() => {
             onClose();
             onConfirm();
@@ -84,26 +107,39 @@ const ConfirmationModal = ({
 
 const styles = StyleSheet.create({
   content: {
-    padding: wp('5%'),
+    paddingVertical: hp('3%'),
+    paddingHorizontal: wp('5.5%'),
     alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: '#ECE7DE',
   },
-  iconContainer: {
-    marginBottom: hp('2%'),
+  iconCircle: {
+    width: wp('14%'),
+    height: wp('14%'),
+    borderRadius: wp('7%'),
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: hp('1.8%'),
   },
   title: {
-    fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('4.5%'),
-    color: '#000000',
-    marginBottom: hp('1%'),
+    fontFamily: 'CormorantGaramond-SemiBold',
+    fontSize: wp('5.2%'),
+    color: '#12372A',
+    marginBottom: hp('0.8%'),
     textAlign: 'center',
+    letterSpacing: -0.2,
   },
   message: {
-    fontFamily: FONTS.gilroy.regular,
-    fontSize: wp('3.5%'),
+    fontFamily: 'Lexend-Regular',
+    fontSize: wp('3.3%'),
     color: '#666666',
     textAlign: 'center',
-    marginBottom: hp('3%'),
-    lineHeight: wp('5%'),
+    marginBottom: hp('2.8%'),
+    lineHeight: wp('4.8%'),
+    paddingHorizontal: wp('2%'),
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -113,27 +149,27 @@ const styles = StyleSheet.create({
   },
   button: {
     flex: 1,
-    paddingVertical: hp('1.5%'),
-    borderRadius: wp('2.5%'),
+    height: hp('5.6%'),
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },
   cancelButton: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#FAF8F5',
     borderWidth: 1,
-    borderColor: '#DADADA',
+    borderColor: '#D8D4CC',
   },
   confirmButton: {
-    backgroundColor: '#F04B1B',
+    backgroundColor: '#0C382E',
   },
   cancelButtonText: {
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('3.7%'),
-    color: '#666666',
+    fontFamily: 'Lexend-Medium',
+    fontSize: wp('3.6%'),
+    color: '#12372A',
   },
   confirmButtonText: {
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('3.7%'),
+    fontFamily: 'Lexend-Medium',
+    fontSize: wp('3.6%'),
     color: '#FFFFFF',
   },
 });

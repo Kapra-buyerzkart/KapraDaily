@@ -1,12 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ScrollView, StatusBar, View } from 'react-native';
+import { ScrollView, StatusBar, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute } from '@react-navigation/native';
-import AppText from '../../components/atoms/AppText';
-import Surface from '../../components/atoms/Surface';
-import Divider from '../../components/atoms/Divider';
-import SectionHeading from '../../components/atoms/SectionHeading';
-import { UI_COLORS } from '../../theme/tokens';
 import { getOrderDetailsApi } from '../../api/services/orderService';
 import {
   BulletCard,
@@ -101,7 +96,7 @@ const OrderSuccessScreen: React.FC = () => {
     <View style={styles.screen}>
       <StatusBar
         barStyle="dark-content"
-        backgroundColor={UI_COLORS.card}
+        backgroundColor="#FFFFFF"
         translucent={false}
       />
 
@@ -118,75 +113,76 @@ const OrderSuccessScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        <Surface style={styles.section}>
+        {/* 1. Status Hero Card */}
+        <View style={styles.cardContainer}>
           <View style={styles.card}>
             <View style={styles.statusRow}>
               <StatusDisc tone="success" icon="check" />
               <View style={styles.statusCopy}>
-                <AppText variant="heading">{SUCCESS_COPY.statusTitle}</AppText>
-                <AppText variant="caption" tone="muted">
+                <Text style={styles.statusTitle}>{SUCCESS_COPY.statusTitle}</Text>
+                <Text style={styles.statusSubtitle}>
                   {SUCCESS_COPY.statusSubtitle}
-                </AppText>
+                </Text>
               </View>
             </View>
           </View>
+        </View>
 
-        </Surface>
-
-        <Surface style={styles.section}>
+        {/* 2. Order Summary Card */}
+        <View style={styles.cardContainer}>
           <View style={styles.card}>
-            <SectionHeading title={SUCCESS_COPY.summaryTitle} />
+            <Text style={styles.cardHeading}>{SUCCESS_COPY.summaryTitle}</Text>
 
-            <Divider style={styles.rule} />
+            <View style={styles.divider} />
 
             <View style={styles.metaGroup}>
               <MetaRow label="Order number">
-                <AppText variant="labelStrong">#{displayOrderNumber}</AppText>
+                <Text style={styles.orderNumberText}>#{displayOrderNumber}</Text>
                 <CopyChip onPress={handleCopyOrderNumber} />
               </MetaRow>
 
               <MetaRow label="Payment">
-                <AppText variant="labelStrong" tone="secondary">
+                <Text style={styles.metaValueText}>
                   {paymentLabel}
-                </AppText>
+                </Text>
               </MetaRow>
 
               {itemsLabel ? (
                 <MetaRow label="Items">
-                  <AppText variant="labelStrong" tone="secondary">
+                  <Text style={styles.metaValueText}>
                     {itemsLabel}
-                  </AppText>
+                  </Text>
                 </MetaRow>
               ) : null}
 
               {deliveryLabel ? (
                 <MetaRow label="Delivery">
-                  <AppText variant="labelStrong" tone="secondary">
+                  <Text style={styles.metaValueText}>
                     {deliveryLabel}
-                  </AppText>
+                  </Text>
                 </MetaRow>
               ) : null}
 
               {displayAddress ? (
                 <MetaRow label="Delivering to">
-                  <AppText
-                    variant="labelStrong"
-                    tone="secondary"
+                  <Text
                     numberOfLines={2}
                     style={styles.metaValueText}
                   >
                     {displayAddress}
-                  </AppText>
+                  </Text>
                 </MetaRow>
               ) : null}
             </View>
 
+            <View style={styles.divider} />
+
             <View style={styles.totalRow}>
-              <AppText variant="labelStrong">Order total</AppText>
-              <AppText variant="price">{amountLabel}</AppText>
+              <Text style={styles.totalLabel}>Order total</Text>
+              <Text style={styles.totalAmount}>{amountLabel}</Text>
             </View>
           </View>
-        </Surface>
+        </View>
 
         <BulletCard title={SUCCESS_COPY.stepsTitle} bullets={SUCCESS_STEPS} />
 
@@ -195,9 +191,9 @@ const OrderSuccessScreen: React.FC = () => {
           subtitle={SUCCESS_COPY.supportSubtitle}
         />
 
-        <AppText variant="micro" tone="faint" style={styles.footerNote}>
+        <Text style={styles.footerNote}>
           {SUCCESS_COPY.footerNote}
-        </AppText>
+        </Text>
       </ScrollView>
 
       <StatusActionBar

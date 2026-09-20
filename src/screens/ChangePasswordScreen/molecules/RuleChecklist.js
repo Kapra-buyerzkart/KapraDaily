@@ -1,8 +1,11 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Text } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import CartText from '@/screens/cart/components/atoms/CartText';
-import { CART_COLORS, CART_SPACING, wp } from '@/styles/cartTheme';
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from 'react-native-responsive-screen';
+import { PWD_COLORS, PWD_FONTS } from '../theme';
 
 const RuleChecklist = ({ checks }) => (
   <View style={styles.list}>
@@ -10,15 +13,20 @@ const RuleChecklist = ({ checks }) => (
       <View key={check.key} style={styles.row}>
         <MaterialCommunityIcons
           name={check.passed ? 'check-circle' : 'circle-outline'}
-          size={wp('3.4%')}
-          color={check.passed ? CART_COLORS.success : CART_COLORS.textFaint}
+          size={wp('3.6%')}
+          color={check.passed ? PWD_COLORS.emerald : PWD_COLORS.textFaint}
         />
-        <CartText
-          variant={check.passed ? 'captionStrong' : 'caption'}
-          tone={check.passed ? 'success' : 'muted'}
+        <Text
+          style={[
+            styles.label,
+            {
+              color: check.passed ? PWD_COLORS.emerald : PWD_COLORS.textMuted,
+              fontFamily: check.passed ? PWD_FONTS.bodyMedium : PWD_FONTS.body,
+            },
+          ]}
         >
           {check.label}
-        </CartText>
+        </Text>
       </View>
     ))}
   </View>
@@ -30,11 +38,14 @@ const styles = StyleSheet.create({
   list: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: CART_SPACING.md,
+    gap: wp('3%'),
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: CART_SPACING.xs,
+    gap: wp('1.5%'),
+  },
+  label: {
+    fontSize: wp('2.8%'),
   },
 });

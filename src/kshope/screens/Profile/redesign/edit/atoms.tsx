@@ -1,20 +1,17 @@
 import React from 'react';
-import { View, StyleSheet, StyleProp, ViewStyle } from 'react-native';
+import { View, StyleSheet, StyleProp, ViewStyle, Text } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Animated, {
   SharedValue,
   interpolateColor,
   useAnimatedStyle,
 } from 'react-native-reanimated';
-import { AppText } from '../../../../components/atoms';
-import { PressableScale } from '../atoms';
 import {
-  UI_COLORS,
-  UI_RADIUS,
-  UI_SPACING,
-  hp,
-  wp,
-} from '../../../../theme/tokens';
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from 'react-native-responsive-screen';
+import { PressableScale } from '../atoms';
+import { EDIT_COLORS, EDIT_FONTS } from './editTheme';
 
 export const FieldLabel: React.FC<{
   children: React.ReactNode;
@@ -22,13 +19,13 @@ export const FieldLabel: React.FC<{
   style?: StyleProp<ViewStyle>;
 }> = ({ children, optional, style }) => (
   <View style={[styles.labelRow, style]}>
-    <AppText variant="micro" tone="muted" style={styles.label}>
+    <Text style={styles.label}>
       {children}
-    </AppText>
+    </Text>
     {!!optional && (
-      <AppText variant="micro" tone="faint">
+      <Text style={styles.optionalText}>
         Optional
-      </AppText>
+      </Text>
     )}
   </View>
 );
@@ -44,12 +41,12 @@ export const FieldWell: React.FC<{
     backgroundColor: interpolateColor(
       focus.value,
       [0, 1],
-      [UI_COLORS.well, UI_COLORS.card],
+      [EDIT_COLORS.well, EDIT_COLORS.card],
     ),
     borderColor: interpolateColor(
       focus.value,
       [0, 1],
-      [UI_COLORS.border, UI_COLORS.borderStrong],
+      [EDIT_COLORS.border, EDIT_COLORS.gold],
     ),
   }));
 
@@ -74,12 +71,12 @@ export const InlineError: React.FC<{ message?: string }> = ({ message }) => {
     <View style={styles.errorRow}>
       <MaterialCommunityIcons
         name="alert-circle-outline"
-        size={wp('3.4%')}
-        color={UI_COLORS.danger}
+        size={wp('3.6%')}
+        color={EDIT_COLORS.danger}
       />
-      <AppText variant="caption" tone="danger" style={styles.errorText}>
+      <Text style={styles.errorText}>
         {message}
-      </AppText>
+      </Text>
     </View>
   );
 };
@@ -88,12 +85,12 @@ export const VerifiedPill: React.FC = () => (
   <View style={styles.pill}>
     <MaterialCommunityIcons
       name="check-decagram"
-      size={wp('3.2%')}
-      color={UI_COLORS.successDeep}
+      size={wp('3.4%')}
+      color={EDIT_COLORS.emerald}
     />
-    <AppText variant="micro" tone="success">
+    <Text style={styles.pillText}>
       Verified
-    </AppText>
+    </Text>
   </View>
 );
 
@@ -112,17 +109,19 @@ export const GenderChip: React.FC<{
     accessibilityLabel={label}
   >
     <MaterialCommunityIcons
-      name="check"
+      name={selected ? 'check' : 'circle-outline'}
       size={wp('3.4%')}
-      color={selected ? UI_COLORS.primary : 'transparent'}
+      color={selected ? EDIT_COLORS.emerald : EDIT_COLORS.textFaint}
     />
-    <AppText
-      variant={selected ? 'labelStrong' : 'label'}
-      tone={selected ? 'primary' : 'muted'}
+    <Text
+      style={[
+        styles.chipText,
+        selected && styles.chipTextSelected,
+      ]}
       numberOfLines={1}
     >
       {label}
-    </AppText>
+    </Text>
   </PressableScale>
 );
 
@@ -130,47 +129,62 @@ const styles = StyleSheet.create({
   labelRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: UI_SPACING.xs + 2,
-    marginBottom: UI_SPACING.sm,
+    gap: wp('1.5%'),
+    marginBottom: hp('0.8%'),
   },
   label: {
-    letterSpacing: 0.8,
+    fontFamily: EDIT_FONTS.bodyMedium,
+    fontSize: wp('2.9%'),
+    color: EDIT_COLORS.textSecondary,
+    letterSpacing: 0.6,
     textTransform: 'uppercase',
+  },
+  optionalText: {
+    fontFamily: EDIT_FONTS.body,
+    fontSize: wp('2.6%'),
+    color: EDIT_COLORS.textFaint,
   },
   well: {
     flexDirection: 'row',
     alignItems: 'center',
-    minHeight: hp('6%'),
-    borderRadius: UI_RADIUS.input,
+    minHeight: hp('6.2%'),
+    borderRadius: 12,
     borderWidth: 1,
-    paddingHorizontal: UI_SPACING.md,
+    paddingHorizontal: wp('3.5%'),
   },
   wellLocked: {
-    backgroundColor: UI_COLORS.well,
-    borderColor: 'transparent',
+    backgroundColor: EDIT_COLORS.well,
+    borderColor: EDIT_COLORS.borderLight,
   },
   wellError: {
-    backgroundColor: UI_COLORS.dangerTint,
-    borderColor: UI_COLORS.danger,
+    backgroundColor: EDIT_COLORS.dangerTint,
+    borderColor: EDIT_COLORS.danger,
   },
   errorRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: UI_SPACING.xs,
-    marginTop: UI_SPACING.sm,
+    gap: wp('1.5%'),
+    marginTop: hp('0.8%'),
   },
   errorText: {
     flexShrink: 1,
+    fontFamily: EDIT_FONTS.body,
+    fontSize: wp('3%'),
+    color: EDIT_COLORS.danger,
   },
   pill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 3,
-    marginLeft: UI_SPACING.sm,
-    paddingHorizontal: UI_SPACING.sm,
-    paddingVertical: 3,
-    borderRadius: UI_RADIUS.pill,
-    backgroundColor: UI_COLORS.successTint,
+    backgroundColor: EDIT_COLORS.emeraldTint,
+    paddingHorizontal: wp('2.2%'),
+    paddingVertical: hp('0.4%'),
+    borderRadius: 999,
+    gap: wp('1%'),
+  },
+  pillText: {
+    fontFamily: EDIT_FONTS.bodyMedium,
+    fontSize: wp('2.6%'),
+    color: EDIT_COLORS.emerald,
   },
   chipPressable: {
     flex: 1,
@@ -179,16 +193,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: UI_SPACING.xs,
-    minHeight: hp('5.4%'),
-    paddingHorizontal: UI_SPACING.xs,
-    borderRadius: UI_RADIUS.input,
+    gap: wp('1.5%'),
+    paddingVertical: hp('1.2%'),
+    paddingHorizontal: wp('2%'),
+    borderRadius: 12,
+    backgroundColor: EDIT_COLORS.well,
     borderWidth: 1,
-    borderColor: UI_COLORS.border,
-    backgroundColor: UI_COLORS.well,
+    borderColor: EDIT_COLORS.border,
   },
   chipSelected: {
-    backgroundColor: UI_COLORS.card,
-    borderColor: UI_COLORS.borderStrong,
+    backgroundColor: EDIT_COLORS.emeraldTint,
+    borderColor: EDIT_COLORS.emerald,
+  },
+  chipText: {
+    fontFamily: EDIT_FONTS.body,
+    fontSize: wp('3.2%'),
+    color: EDIT_COLORS.textMuted,
+  },
+  chipTextSelected: {
+    fontFamily: EDIT_FONTS.bodySemiBold,
+    color: EDIT_COLORS.emerald,
   },
 });

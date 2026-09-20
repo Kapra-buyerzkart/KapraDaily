@@ -4,11 +4,8 @@ import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import CustomModal, { MODAL_POSITION } from './modal/CustomModal';
-import { CART_COLORS, CART_RADIUS } from '../styles/cartTheme';
-import { FONTS } from '../styles/typography';
 
 const QuantityLimitModal = ({ visible, message, maxQuantity, onClose }) => {
   const modalRef = useRef(null);
@@ -30,17 +27,17 @@ const QuantityLimitModal = ({ visible, message, maxQuantity, onClose }) => {
       contentStyle={styles.content}
     >
       <View style={styles.iconCircle}>
-        <MaterialCommunityIcons
-          name="basket-remove-outline"
-          size={wp('9%')}
-          color={CART_COLORS.primary}
+        <Ionicons
+          name="alert-circle-outline"
+          size={wp('7%')}
+          color="#0C382E"
         />
       </View>
 
-      <Text style={styles.title}>Quantity limit reached</Text>
+      <Text style={styles.title}>Quantity Limit Reached</Text>
 
       <Text style={styles.message}>
-        {message || 'Maximum quantity allowed for this product is exceeded.'}
+        {message || 'Maximum quantity allowed for this item has been reached.'}
       </Text>
 
       {maxQuantity ? (
@@ -54,7 +51,7 @@ const QuantityLimitModal = ({ visible, message, maxQuantity, onClose }) => {
       <TouchableOpacity
         style={styles.button}
         onPress={onClose}
-        activeOpacity={0.85}
+        activeOpacity={0.88}
         accessibilityRole="button"
       >
         <Text style={styles.buttonText}>Got it</Text>
@@ -65,58 +62,69 @@ const QuantityLimitModal = ({ visible, message, maxQuantity, onClose }) => {
 
 const styles = StyleSheet.create({
   content: {
-    paddingHorizontal: wp('5%'),
+    paddingHorizontal: wp('5.5%'),
     paddingVertical: hp('3%'),
     alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: '#ECE7DE',
   },
   iconCircle: {
-    width: wp('16%'),
-    height: wp('16%'),
-    borderRadius: wp('8%'),
-    backgroundColor: CART_COLORS.primaryTint,
+    width: wp('14%'),
+    height: wp('14%'),
+    borderRadius: wp('7%'),
+    backgroundColor: '#E8F2EE',
+    borderWidth: 1,
+    borderColor: '#D1E6DD',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: hp('2%'),
+    marginBottom: hp('1.8%'),
   },
   title: {
-    fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('4.5%'),
-    color: CART_COLORS.textPrimary,
+    fontFamily: 'CormorantGaramond-SemiBold',
+    fontSize: wp('5.2%'),
+    color: '#12372A',
     textAlign: 'center',
-    marginBottom: hp('1%'),
+    marginBottom: hp('0.8%'),
+    letterSpacing: -0.2,
   },
   message: {
-    fontFamily: FONTS.gilroy.regular,
-    fontSize: wp('3.5%'),
-    color: CART_COLORS.textMuted,
+    fontFamily: 'Lexend-Regular',
+    fontSize: wp('3.3%'),
+    color: '#666666',
     textAlign: 'center',
-    lineHeight: wp('5%'),
+    lineHeight: wp('4.8%'),
+    paddingHorizontal: wp('2%'),
   },
   limitPill: {
     marginTop: hp('1.5%'),
     paddingHorizontal: wp('3.5%'),
-    paddingVertical: hp('0.7%'),
-    borderRadius: CART_RADIUS.sm,
-    backgroundColor: CART_COLORS.primaryTint,
+    paddingVertical: hp('0.6%'),
+    borderRadius: 10,
+    backgroundColor: '#FAF8F5',
+    borderWidth: 1,
+    borderColor: '#ECE7DE',
   },
   limitPillText: {
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('3.2%'),
-    color: CART_COLORS.primary,
+    fontFamily: 'Lexend-Medium',
+    fontSize: wp('3%'),
+    color: '#0C382E',
   },
   button: {
     width: '100%',
-    marginTop: hp('3%'),
-    paddingVertical: hp('1.6%'),
-    borderRadius: CART_RADIUS.button,
-    backgroundColor: CART_COLORS.primary,
+    marginTop: hp('2.5%'),
+    height: hp('5.6%'),
+    borderRadius: 14,
+    backgroundColor: '#0C382E',
     alignItems: 'center',
     justifyContent: 'center',
   },
   buttonText: {
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('3.8%'),
+    fontFamily: 'Lexend-Medium',
+    fontSize: wp('3.6%'),
     color: '#FFFFFF',
+    letterSpacing: 0.2,
   },
 });
 

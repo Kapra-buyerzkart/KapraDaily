@@ -3,7 +3,7 @@
     <item android:drawable="@color/bootsplash_background" />
     <item
         android:width="220dp"
-        android:height="126dp"
+        android:height="91dp"
         android:gravity="center">
         <bitmap
             android:gravity="fill"

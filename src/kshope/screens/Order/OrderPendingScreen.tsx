@@ -1,11 +1,7 @@
 import React from 'react';
-import { ScrollView, StatusBar, View } from 'react-native';
+import { ScrollView, StatusBar, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute } from '@react-navigation/native';
-import AppText from '../../components/atoms/AppText';
-import Surface from '../../components/atoms/Surface';
-import Divider from '../../components/atoms/Divider';
-import { UI_COLORS } from '../../theme/tokens';
 import {
   BulletCard,
   CopyChip,
@@ -44,7 +40,7 @@ const OrderPendingScreen: React.FC = () => {
     <View style={styles.screen}>
       <StatusBar
         barStyle="dark-content"
-        backgroundColor={UI_COLORS.card}
+        backgroundColor="#FFFFFF"
         translucent={false}
       />
 
@@ -63,45 +59,40 @@ const OrderPendingScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        <Surface style={styles.section}>
+        <View style={styles.cardContainer}>
           <View style={styles.card}>
             <View style={styles.statusRow}>
               <StatusDisc tone="brand" icon="timer-sand" animated />
               <View style={styles.statusCopy}>
-                <AppText variant="heading">{PENDING_COPY.statusTitle}</AppText>
-                <AppText variant="caption" tone="muted">
+                <Text style={styles.statusTitle}>{PENDING_COPY.statusTitle}</Text>
+                <Text style={styles.statusSubtitle}>
                   {PENDING_COPY.statusSubtitle}
-                </AppText>
+                </Text>
               </View>
             </View>
 
-            <Divider style={styles.rule} />
+            <View style={styles.divider} />
 
             <View style={styles.metaGroup}>
               <MetaRow label="Order number">
-                <AppText variant="labelStrong">#{displayOrderNumber}</AppText>
+                <Text style={styles.orderNumberText}>#{displayOrderNumber}</Text>
                 <CopyChip onPress={handleCopyOrderNumber} />
               </MetaRow>
 
               <MetaRow label="Payment">
-                <AppText variant="labelStrong" tone="secondary">
+                <Text style={styles.metaValueText}>
                   {PENDING_COPY.paymentLabel}
-                </AppText>
+                </Text>
               </MetaRow>
             </View>
           </View>
 
           <FooterStrip note={PENDING_COPY.assuranceNote} />
-        </Surface>
+        </View>
 
         <BulletCard
           title={PENDING_COPY.stepsTitle}
           bullets={PENDING_STEPS}
-          right={
-            <AppText variant="micro" tone="faint">
-              {PENDING_STEPS.length} steps
-            </AppText>
-          }
         />
 
         <SupportCard
@@ -109,9 +100,9 @@ const OrderPendingScreen: React.FC = () => {
           subtitle={PENDING_COPY.supportSubtitle}
         />
 
-        <AppText variant="micro" tone="faint" style={styles.footerNote}>
+        <Text style={styles.footerNote}>
           {PENDING_COPY.footerNote}
-        </AppText>
+        </Text>
       </ScrollView>
 
       <StatusActionBar

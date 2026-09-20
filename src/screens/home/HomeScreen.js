@@ -234,6 +234,26 @@ const HomeScreen = () => {
   const bottomShowcaseBanner = data?.banners?.bottomShowcaseBanner;
   const bottomShowcaseProducts =
     data?.banners?.bottomShowcaseProducts || EMPTY_BANNERS;
+
+  const showcaseBackgroundUri = useMemo(() => {
+    const isGif = uri => {
+      if (!uri) return false;
+      const str = typeof uri === 'string' ? uri : uri?.uri || '';
+      return str.toLowerCase().includes('.gif');
+    };
+    const primaryUri = topBanner[0]?.uri;
+    if (primaryUri && !isGif(primaryUri)) {
+      return primaryUri;
+    }
+    const alternatives = [
+      ...(topSectionBanner || []),
+      ...(midBanner || []),
+      ...(bottomBanner || []),
+      ...(data?.banners?.banners || []),
+    ];
+    const nonGif = alternatives.find(b => b?.uri && !isGif(b?.uri));
+    return nonGif?.uri || (primaryUri && !isGif(primaryUri) ? primaryUri : null);
+  }, [topBanner, topSectionBanner, midBanner, bottomBanner, data?.banners]);
   const firstProductBlock = data?.firstProductBlock;
   const secondProductBlock = data?.secondProductBlock;
   const thirdProductBlock = data?.thirdProductBlock;
@@ -409,7 +429,7 @@ const HomeScreen = () => {
       >
         {!isStoreUnavailable && !noLocationSelected && (
           <TopShowcase
-            backgroundUri={topBanner[0]?.uri}
+            backgroundUri={showcaseBackgroundUri}
             announcementUri={topAnnouncementBanner[0]?.uri}
             sideBySide={topSideBySide}
             onBannerPress={handleBannerPress}

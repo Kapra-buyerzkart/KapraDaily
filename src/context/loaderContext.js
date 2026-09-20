@@ -1,10 +1,6 @@
-import React, { createContext, useState } from 'react';
-import { Dimensions } from 'react-native';
-import { Modal, View } from 'react-native';
-import LottieView from 'lottie-react-native';
-
-const windowHeight = Dimensions.get('window').height;
-const windowWidth = Dimensions.get('window').width;
+import React, { createContext } from 'react';
+import { Modal } from 'react-native';
+import LuxuryLoader from '../components/LuxuryLoader';
 
 export const LoaderContext = createContext();
 
@@ -45,25 +41,14 @@ export const LoaderContextProvider = ({ children }) => {
         <>
             <LoaderContext.Provider value={value}>{children}</LoaderContext.Provider>
             {loading && (
-                <Modal transparent visible={loading}>
-                    <View
-                        style={{
-                            flex: 1,
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            backgroundColor: 'rgba(255,255,255,.7)',
-                        }}>
-                        <LottieView
-                            source={require('../assets/Lottie/CartLoader1.json')}
-                            style={{
-                                height: windowWidth * (40 / 100),
-                                width: windowWidth * (40 / 100),
-                            }}
-                            autoPlay
-                            loop
-                        />
-                        {}
-                    </View>
+                <Modal
+                    transparent
+                    visible={loading}
+                    animationType="fade"
+                    statusBarTranslucent
+                    onRequestClose={() => {}}
+                >
+                    <LuxuryLoader />
                 </Modal>
             )}
         </>

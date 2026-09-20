@@ -1,22 +1,27 @@
-import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
-import React, { useState } from 'react';
-import logger from '../utils/logger';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  View,
+  StatusBar,
+  TouchableOpacity,
+  Animated,
+  Easing,
+} from 'react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import Feather from 'react-native-vector-icons/Feather';
+import { OneSignal } from 'react-native-onesignal';
 import { getAreasByPincode, registerUser } from '../api';
 import { useCart } from '../context/CartContext';
 import secureStore from '../utils/secureStore';
-import { OneSignal } from 'react-native-onesignal';
 import { setTokens } from '../api/tokenService';
 import { syncKshopeSession } from '../kshope/api/session';
+import logger from '../utils/logger';
 import RegistrationHero from './registration/components/organisms/RegistrationHero';
 import RegistrationForm from './registration/components/organisms/RegistrationForm';
 import { styles } from './registration/styles/Registration.styles';
-
-const PINCODE_AREA_MAP = {
-  676519: ['Chungathara', 'Pukkottumanna', 'Manjeri'],
-  682001: ['Kochi', 'Edappally', 'Vyttila'],
-};
 
 const mergeCustomerIdIntoProfile = async custId => {
   const storedProfile = await secureStore.getItem('profile');
@@ -42,11 +47,31 @@ const RegistrationScreen = () => {
   const [loading, setLoading] = useState(false);
 
   const route = useRoute();
+  const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const { showStatus } = useCart();
 
   const { registerToken, phone } = route.params || {};
 
-  const navigation = useNavigation();
+  const bottomOpacity = useRef(new Animated.Value(0)).current;
+  const bottomTranslate = useRef(new Animated.Value(20)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(bottomOpacity, {
+        toValue: 1,
+        duration: 500,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(bottomTranslate, {
+        toValue: 0,
+        duration: 500,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [bottomOpacity, bottomTranslate]);
 
   const handlePincodeChange = async value => {
     setPincode(value);
@@ -188,20 +213,49 @@ const RegistrationScreen = () => {
     }
   };
 
+  const backButtonStyle = [
+    styles.backButton,
+    { top: insets.top ? insets.top + 8 : 16 },
+  ];
+
   return (
-    <SafeAreaView edges={['bottom']} style={styles.screen}>
+    <View style={styles.screen}>
+      <StatusBar
+        translucent
+        backgroundColor="transparent"
+        barStyle="dark-content"
+      />
+
+      <TouchableOpacity
+        style={backButtonStyle}
+        onPress={() => navigation.goBack()}
+        hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+        activeOpacity={0.8}
+      >
+        <Feather name="arrow-left" size={20} color="#12372A" />
+      </TouchableOpacity>
+
       <KeyboardAvoidingView
         style={styles.keyboardView}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
+          bounces={false}
         >
           <RegistrationHero />
 
-          <View style={styles.sheetWrap}>
+          <Animated.View
+            style={[
+              styles.sheetWrap,
+              {
+                opacity: bottomOpacity,
+                transform: [{ translateY: bottomTranslate }],
+              },
+            ]}
+          >
             <RegistrationForm
               phone={phone}
               onEditPhone={handleEditPhone}
@@ -224,10 +278,10 @@ const RegistrationScreen = () => {
               loading={loading}
               onSubmit={handleContinue}
             />
-          </View>
+          </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 };
 

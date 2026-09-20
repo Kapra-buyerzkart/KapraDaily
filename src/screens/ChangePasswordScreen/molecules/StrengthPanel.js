@@ -1,7 +1,11 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
-import { CART_COLORS, CART_RADIUS, CART_SPACING } from '@/styles/cartTheme';
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from 'react-native-responsive-screen';
+import { PWD_COLORS, PWD_RADIUS } from '../theme';
 import StrengthMeter from './StrengthMeter';
 import RuleChecklist from './RuleChecklist';
 
@@ -22,12 +26,14 @@ export default React.memo(StrengthPanel);
 
 const styles = StyleSheet.create({
   panel: {
-    marginTop: CART_SPACING.md,
-    padding: CART_SPACING.md,
-    borderRadius: CART_RADIUS.sm,
-    backgroundColor: CART_COLORS.well,
+    marginTop: hp('1.2%'),
+    padding: wp('3.5%'),
+    borderRadius: PWD_RADIUS.sm,
+    backgroundColor: PWD_COLORS.well,
+    borderWidth: 1,
+    borderColor: PWD_COLORS.borderLight,
   },
   rules: {
-    marginTop: CART_SPACING.md,
+    marginTop: hp('1.2%'),
   },
 });

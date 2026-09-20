@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   FlatList,
   StyleSheet,
+  Platform,
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {
@@ -152,13 +153,13 @@ const CouponModal = ({
       contentStyle={styles.sheet}
     >
       <View style={styles.headerRow}>
-        <IconDisc size={wp('10%')} tone="brand">
+        <View style={styles.headerDisc}>
           <MaterialCommunityIcons
             name={isGiftCard ? 'gift-outline' : 'ticket-percent-outline'}
             size={wp('5.2%')}
-            color={CART_COLORS.primary}
+            color="#0C382E"
           />
-        </IconDisc>
+        </View>
 
         <View style={styles.headerCopy}>
           <CartText variant="heading">
@@ -245,19 +246,24 @@ const CouponModal = ({
         )}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Image
-              source={
-                isGiftCard
-                  ? require('../assets/images/noimages/noCouponCode.png')
-                  : require('../assets/images/noimages/noCoupons.png')
-              }
-              style={styles.emptyImage}
-            />
-            <CartText variant="bodyStrong" tone="secondary">
-              {isGiftCard ? 'No gift cards yet' : 'No coupons yet'}
+            <View style={styles.emptyAvatarWrapper}>
+              <Image
+                source={
+                  isGiftCard
+                    ? require('../assets/images/noimages/luxury_no_gift_cards.jpg')
+                    : require('../assets/images/noimages/luxury_no_coupons.jpg')
+                }
+                style={styles.emptyImage}
+                resizeMode="cover"
+              />
+            </View>
+            <CartText variant="heading" style={styles.emptyTitle}>
+              {isGiftCard ? 'No Gift Cards Available' : 'No Coupons Available'}
             </CartText>
-            <CartText variant="micro" tone="muted" style={styles.emptyNote}>
-              New offers drop in often, check back soon
+            <CartText variant="caption" tone="muted" style={styles.emptyNote}>
+              {isGiftCard
+                ? 'Exclusive gift cards and reward vouchers will appear here when available.'
+                : 'Exclusive discounts and curated offers will appear here when available for your cart.'}
             </CartText>
           </View>
         }
@@ -271,9 +277,10 @@ export default React.memo(CouponModal);
 
 const styles = StyleSheet.create({
   sheetShell: {
-    backgroundColor: CART_COLORS.background,
+    backgroundColor: '#FFFFFF',
   },
   sheet: {
+    backgroundColor: '#FFFFFF',
     paddingHorizontal: CART_SPACING.lg,
     paddingTop: CART_SPACING.sm,
   },
@@ -281,6 +288,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: CART_SPACING.md,
+    paddingBottom: CART_SPACING.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0ECE6',
+  },
+  headerDisc: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#ECEAE5',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerCopy: {
     flex: 1,
@@ -290,7 +310,9 @@ const styles = StyleSheet.create({
     width: wp('8.5%'),
     height: wp('8.5%'),
     borderRadius: CART_RADIUS.pill,
-    backgroundColor: CART_COLORS.card,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#ECEAE5',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -306,28 +328,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: CART_SPACING.sm,
     borderWidth: 1,
-    borderColor: CART_COLORS.border,
-    borderRadius: CART_RADIUS.input,
-    backgroundColor: CART_COLORS.card,
+    borderColor: '#ECEAE5',
+    borderRadius: 14,
+    backgroundColor: '#FFFFFF',
     paddingHorizontal: CART_SPACING.md,
     paddingVertical: hp('1.3%'),
   },
   input: {
     flex: 1,
     ...CART_TYPE.body,
-    color: CART_COLORS.textPrimary,
+    color: '#12372A',
     padding: 0,
   },
   applyBtn: {
     paddingHorizontal: CART_SPACING.xl,
     paddingVertical: hp('1.6%'),
-    borderRadius: CART_RADIUS.button,
-    backgroundColor: CART_COLORS.primary,
+    borderRadius: 14,
+    backgroundColor: '#0C382E',
     alignItems: 'center',
     justifyContent: 'center',
   },
   applyBtnDisabled: {
-    backgroundColor: CART_COLORS.well,
+    backgroundColor: '#D1DDD8',
   },
   applyBtnText: {
     letterSpacing: 0.2,
@@ -346,10 +368,22 @@ const styles = StyleSheet.create({
     gap: CART_SPACING.md,
   },
   card: {
-    backgroundColor: CART_COLORS.card,
-    borderRadius: CART_RADIUS.card,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#ECEAE5',
     padding: CART_SPACING.lg,
-    ...CART_ELEVATION.card,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1.5 },
+        shadowOpacity: 0.04,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 1.5,
+      },
+    }),
   },
   cardTopRow: {
     flexDirection: 'row',
@@ -363,27 +397,28 @@ const styles = StyleSheet.create({
     gap: CART_SPACING.xs,
     borderWidth: 1,
     borderStyle: 'dashed',
-    borderColor: CART_COLORS.primaryEdge,
-    backgroundColor: CART_COLORS.primaryTint,
-    borderRadius: CART_RADIUS.xs,
+    borderColor: '#0C382E',
+    backgroundColor: '#F0F7F4',
+    borderRadius: 8,
     paddingHorizontal: CART_SPACING.sm,
     paddingVertical: hp('0.5%'),
   },
   actionPill: {
     borderRadius: CART_RADIUS.pill,
-    backgroundColor: CART_COLORS.primaryTint,
+    backgroundColor: '#0C382E',
     paddingHorizontal: CART_SPACING.md,
     paddingVertical: hp('0.6%'),
   },
   actionText: {
     letterSpacing: 0.6,
+    color: '#FFFFFF',
   },
   cardTitle: {
     marginTop: CART_SPACING.md,
   },
   cardDivider: {
     height: 1,
-    backgroundColor: CART_COLORS.border,
+    backgroundColor: '#F0ECE6',
     marginVertical: CART_SPACING.md,
   },
   metaRow: {
@@ -400,16 +435,44 @@ const styles = StyleSheet.create({
   emptyContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: hp('3%'),
-    gap: CART_SPACING.xs,
+    paddingVertical: hp('4%'),
+    paddingHorizontal: wp('6%'),
+  },
+  emptyAvatarWrapper: {
+    width: wp('22%'),
+    height: wp('22%'),
+    borderRadius: wp('11%'),
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#ECEAE5',
+    overflow: 'hidden',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: hp('1.8%'),
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 6,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
   },
   emptyImage: {
-    width: wp('38%'),
-    height: wp('38%'),
-    resizeMode: 'contain',
-    marginBottom: CART_SPACING.sm,
+    width: wp('22%'),
+    height: wp('22%'),
+  },
+  emptyTitle: {
+    color: '#0C382E',
+    letterSpacing: 0.2,
+    marginBottom: hp('0.5%'),
   },
   emptyNote: {
     textAlign: 'center',
+    paddingHorizontal: wp('6%'),
+    lineHeight: hp('2.2%'),
   },
 });

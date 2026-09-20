@@ -17,6 +17,7 @@ type Props = {
   wishlisted?: boolean;
   width?: number;
   compact?: boolean;
+  style?: any;
   onPress?: (item: ProductTile) => void;
   onToggleWishlist?: (item: ProductTile) => void;
 };
@@ -28,6 +29,7 @@ const ProductCard: React.FC<Props> = ({
   wishlisted,
   width,
   compact,
+  style,
   onPress,
   onToggleWishlist,
 }) => {
@@ -41,7 +43,7 @@ const ProductCard: React.FC<Props> = ({
       testID={`product-card-${item.id}`}
       activeOpacity={0.9}
       onPress={() => onPress?.(item)}
-      style={[styles.card, { width: cardWidth }]}
+      style={[styles.card, { width: cardWidth }, style]}
     >
       {/* Product Image */}
       <View style={[styles.imageContainer, { height: cardWidth * 0.92 }]}>

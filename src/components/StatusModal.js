@@ -4,8 +4,7 @@ import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
-import { FONTS } from '../styles/typography';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import CustomModal, { MODAL_POSITION } from './modal/CustomModal';
 
 const StatusModal = ({
@@ -17,10 +16,11 @@ const StatusModal = ({
   autoCloseMs = 0,
 }) => {
   const isSuccess = type === 'success';
-  const isOrange = type === 'orange';
-  const iconName = isSuccess || isOrange ? 'check-circle' : 'error';
-  const iconColor = isOrange ? '#F25000' : isSuccess ? '#0CA201' : '#FF0000';
-  const buttonColor = isOrange ? '#F25000' : isSuccess ? '#0CA201' : '#FF0000';
+  const isOrange = type === 'orange' || type === 'warning';
+  const iconName = isSuccess ? 'checkmark' : isOrange ? 'alert-outline' : 'close';
+  const iconColor = isSuccess ? '#0C382E' : isOrange ? '#B68D40' : '#B83A3A';
+  const iconBg = isSuccess ? '#E8F2EE' : isOrange ? '#FEF8EA' : '#FFF4EC';
+  const iconBorder = isSuccess ? '#D1E6DD' : isOrange ? '#FCE8B2' : '#FCDCC8';
 
   const modalRef = useRef(null);
   const onCloseRef = useRef(onClose);
@@ -59,8 +59,13 @@ const StatusModal = ({
       onClose={handleClose}
       contentStyle={styles.content}
     >
-      <View style={styles.iconContainer}>
-        <MaterialIcons name={iconName} size={wp('12%')} color={iconColor} />
+      <View
+        style={[
+          styles.iconCircle,
+          { backgroundColor: iconBg, borderColor: iconBorder },
+        ]}
+      >
+        <Ionicons name={iconName} size={wp('6.8%')} color={iconColor} />
       </View>
 
       <Text style={styles.title}>{title}</Text>
@@ -68,8 +73,9 @@ const StatusModal = ({
 
       <View style={styles.buttonContainer}>
         <TouchableOpacity
-          style={[styles.button, { backgroundColor: buttonColor }]}
+          style={styles.button}
           onPress={handleClose}
+          activeOpacity={0.88}
         >
           <Text style={styles.buttonText}>OK</Text>
         </TouchableOpacity>
@@ -80,41 +86,56 @@ const StatusModal = ({
 
 const styles = StyleSheet.create({
   content: {
-    padding: wp('5%'),
+    paddingVertical: hp('3%'),
+    paddingHorizontal: wp('5.5%'),
     alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: '#ECE7DE',
   },
-  iconContainer: {
-    marginBottom: hp('2%'),
+  iconCircle: {
+    width: wp('14%'),
+    height: wp('14%'),
+    borderRadius: wp('7%'),
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: hp('1.8%'),
   },
   title: {
-    fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('4.5%'),
-    color: '#000000',
-    marginBottom: hp('1%'),
+    fontFamily: 'CormorantGaramond-SemiBold',
+    fontSize: wp('5.2%'),
+    color: '#12372A',
+    marginBottom: hp('0.8%'),
     textAlign: 'center',
+    letterSpacing: -0.2,
   },
   message: {
-    fontFamily: FONTS.gilroy.regular,
-    fontSize: wp('3.5%'),
-    color: '#616161',
+    fontFamily: 'Lexend-Regular',
+    fontSize: wp('3.3%'),
+    color: '#666666',
     textAlign: 'center',
-    marginBottom: hp('3%'),
-    lineHeight: wp('5%'),
+    marginBottom: hp('2.8%'),
+    lineHeight: wp('4.8%'),
+    paddingHorizontal: wp('2%'),
   },
   buttonContainer: {
     width: '100%',
   },
   button: {
     width: '100%',
-    paddingVertical: hp('1.5%'),
-    borderRadius: wp('2.5%'),
+    height: hp('5.8%'),
+    borderRadius: 14,
+    backgroundColor: '#0C382E',
     alignItems: 'center',
     justifyContent: 'center',
   },
   buttonText: {
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('3.7%'),
+    fontFamily: 'Lexend-Medium',
+    fontSize: wp('3.6%'),
     color: '#FFFFFF',
+    letterSpacing: 0.3,
   },
 });
 

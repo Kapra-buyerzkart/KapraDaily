@@ -154,12 +154,14 @@ CustomBottomModal.displayName = 'CustomBottomModal';
 const styles = StyleSheet.create({
   background: {
     backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
   },
   handleIndicator: {
-    backgroundColor: '#DADADA',
-    width: wp('12%'),
+    backgroundColor: '#D8D4CC',
+    width: 44,
+    height: 4,
+    borderRadius: 2,
   },
   content: {
     flex: 1,
@@ -167,8 +169,8 @@ const styles = StyleSheet.create({
   shadow: {
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
+    shadowOpacity: 0.1,
+    shadowRadius: 16,
     elevation: 16,
   },
 });

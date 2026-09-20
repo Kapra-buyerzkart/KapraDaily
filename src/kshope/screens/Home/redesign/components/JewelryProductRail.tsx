@@ -14,8 +14,8 @@ import { HOME_FONTS, s, fs } from '../theme';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const GUTTER = s(16);
-const CARD_GAP = s(10);
-const CARD_WIDTH = (SCREEN_WIDTH - GUTTER * 2 - CARD_GAP * 2) / 3;
+const CARD_GAP = s(12);
+const CARD_WIDTH = Math.round((SCREEN_WIDTH - GUTTER * 2 - CARD_GAP) / 2.3);
 
 interface JewelryProductRailProps {
   title: string;
@@ -41,7 +41,7 @@ const JewelryProductRail: React.FC<JewelryProductRailProps> = ({
   }
 
   const effectiveCardWidth = compact
-    ? Math.round((SCREEN_WIDTH - GUTTER * 2 - CARD_GAP * 3) / 3.6)
+    ? Math.round((SCREEN_WIDTH - GUTTER * 2 - CARD_GAP * 2) / 3)
     : CARD_WIDTH;
 
   return (

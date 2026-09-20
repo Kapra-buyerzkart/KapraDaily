@@ -1,14 +1,6 @@
 import React, { useState } from 'react';
 import { View, TextInput, StyleSheet } from 'react-native';
 import FieldLabel from '../atoms/FieldLabel';
-import {
-  CART_COLORS,
-  CART_RADIUS,
-  CART_SPACING,
-  CART_TYPE,
-  MAX_FONT_SCALE,
-  hp,
-} from '../../../../styles/cartTheme';
 
 const FormField = ({
   label,
@@ -23,12 +15,12 @@ const FormField = ({
 
   return (
     <View style={[styles.container, containerStyle]}>
-      <FieldLabel required={required}>{label}</FieldLabel>
+      {label ? <FieldLabel required={required}>{label}</FieldLabel> : null}
 
       <View style={[styles.field, focused && styles.fieldFocused]}>
         <TextInput
-          maxFontSizeMultiplier={MAX_FONT_SCALE}
-          placeholderTextColor={CART_COLORS.textFaint}
+          placeholderTextColor="rgba(255, 255, 255, 0.45)"
+          selectionColor="#FFFFFF"
           {...inputProps}
           style={styles.input}
           onFocus={event => {
@@ -50,27 +42,26 @@ export default React.memo(FormField);
 
 const styles = StyleSheet.create({
   container: {
-    gap: CART_SPACING.xs,
+    gap: 6,
   },
   field: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: CART_SPACING.sm,
-    minHeight: hp('6%'),
-    paddingHorizontal: CART_SPACING.md,
-    borderRadius: CART_RADIUS.input,
+    height: 52,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    backgroundColor: '#0A2A20',
     borderWidth: 1,
-    borderColor: CART_COLORS.border,
-    backgroundColor: CART_COLORS.well,
+    borderColor: 'transparent',
   },
   fieldFocused: {
-    borderColor: CART_COLORS.primaryEdge,
-    backgroundColor: CART_COLORS.card,
+    borderColor: 'rgba(255, 255, 255, 0.35)',
   },
   input: {
     flex: 1,
     paddingVertical: 0,
-    color: CART_COLORS.textPrimary,
-    ...CART_TYPE.body,
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontFamily: 'Lexend-Medium',
   },
 });

@@ -1,9 +1,8 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
-import { CART_COLORS, CART_RADIUS, wp } from '../../../../styles/cartTheme';
+import Feather from 'react-native-vector-icons/Feather';
 
-const CheckBox = ({ checked = false, size = wp('5%') }) => (
+const CheckBox = ({ checked = false, size = 20 }) => (
   <View
     style={[
       styles.box,
@@ -12,11 +11,7 @@ const CheckBox = ({ checked = false, size = wp('5%') }) => (
     ]}
   >
     {checked ? (
-      <Ionicons
-        name="checkmark"
-        size={size * 0.68}
-        color={CART_COLORS.onPrimary}
-      />
+      <Feather name="check" size={size * 0.72} color="#FFFFFF" />
     ) : null}
   </View>
 );
@@ -25,16 +20,16 @@ export default React.memo(CheckBox);
 
 const styles = StyleSheet.create({
   box: {
-    borderRadius: CART_RADIUS.xs,
+    borderRadius: 6,
     alignItems: 'center',
     justifyContent: 'center',
   },
   idle: {
     borderWidth: 1.5,
-    borderColor: CART_COLORS.borderStrong,
-    backgroundColor: CART_COLORS.card,
+    borderColor: '#0A2A20',
+    backgroundColor: '#FFFFFF',
   },
   checked: {
-    backgroundColor: CART_COLORS.primary,
+    backgroundColor: '#0A2A20',
   },
 });

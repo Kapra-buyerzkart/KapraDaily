@@ -151,14 +151,14 @@ const LocationModal = forwardRef(({ onClose }, ref) => {
 
         {searching ? (
           <View style={styles.loaderContainer}>
-            <BallPulse color={'#FF7148'} size="large" />
+            <BallPulse color={'#0C382E'} size="large" />
           </View>
         ) : noResults ? (
           <View style={styles.emptyState}>
             <MaterialIcons
               name="location-off"
               size={wp('10%')}
-              color="#ff4d1cff"
+              color="#B83A3A"
             />
             <Text style={styles.emptyTitle}>No delivery here yet</Text>
             <Text style={styles.emptySubtitle}>
@@ -190,7 +190,7 @@ const LocationModal = forwardRef(({ onClose }, ref) => {
                   {isSelecting && (
                     <BallPulse
                       size="small"
-                      color="#FF7148"
+                      color="#0C382E"
                       style={styles.itemSpinner}
                     />
                   )}
@@ -219,11 +219,19 @@ const LocationModal = forwardRef(({ onClose }, ref) => {
     }
     if (index >= 0) {
       focusRafRef.current = requestAnimationFrame(() => {
-        inputRef.current?.focus();
         focusRafRef.current = null;
+        inputRef.current?.focus();
       });
     }
   }, []);
+
+  const handleSheetChange = useCallback(
+    index => {
+      handleSheetSettle(index);
+      if (index === -1) onClose?.();
+    },
+    [handleSheetSettle, onClose],
+  );
 
   useEffect(
     () => () => {
@@ -237,9 +245,10 @@ const LocationModal = forwardRef(({ onClose }, ref) => {
   return (
     <CustomBottomModal
       ref={sheetRef}
-      snapPoints={['50%', '50%']}
-      onClose={handleSheetClose}
-      onChange={handleSheetSettle}
+      snapPoints={['70%']}
+      enablePanDownToClose
+      onClose={onClose}
+      onChange={handleSheetChange}
       renderContent={renderContent}
     />
   );
@@ -252,6 +261,7 @@ export default LocationModal;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#FFFFFF',
   },
   header: {
     flexDirection: 'row',
@@ -260,6 +270,8 @@ const styles = StyleSheet.create({
     paddingBottom: wp('2%'),
     paddingHorizontal: wp('5%'),
     alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#ECE7DE',
   },
   titleRow: {
     flexDirection: 'row',
@@ -267,28 +279,32 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   title: {
-    fontSize: wp('4.3%'),
-    fontFamily: FONTS.gilroy.semiBold,
-    color: '#FF7148',
+    fontSize: wp('5.2%'),
+    fontFamily: 'CormorantGaramond-SemiBold',
+    color: '#12372A',
     flexShrink: 1,
+    letterSpacing: -0.2,
   },
   input: {
     margin: wp('5%'),
-    padding: wp('3%'),
-    backgroundColor: '#F2F2F7',
-    borderRadius: 8,
-    fontSize: wp('3.2%'),
-    fontFamily: FONTS.gilroy.regular,
+    padding: wp('3.5%'),
+    backgroundColor: '#FAF8F5',
+    borderWidth: 1,
+    borderColor: '#ECE7DE',
+    borderRadius: 14,
+    fontSize: wp('3.4%'),
+    fontFamily: 'Lexend-Regular',
+    color: '#12372A',
   },
   item: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: wp('4%'),
-    paddingLeft: wp('7%'),
+    paddingVertical: wp('3.5%'),
+    paddingLeft: wp('6%'),
     paddingRight: wp('5%'),
     borderBottomWidth: 1,
-    borderBottomColor: '#EEE',
+    borderBottomColor: '#ECE7DE',
   },
   emptyState: {
     flex: 1,
@@ -302,32 +318,28 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingTop: wp('10%'),
   },
-  emptyImage: {
-    width: wp('40%'),
-    height: wp('40%'),
-    marginBottom: wp('4%'),
-  },
   emptyTitle: {
-    fontSize: wp('4%'),
-    fontFamily: FONTS.gilroy.semiBold,
-    color: '#1A1A1A',
-    marginBottom: wp('1.5%'),
+    fontSize: wp('4.8%'),
+    fontFamily: 'CormorantGaramond-SemiBold',
+    color: '#12372A',
+    marginTop: wp('2%'),
+    marginBottom: wp('1%'),
   },
   emptySubtitle: {
     fontSize: wp('3.2%'),
-    fontFamily: FONTS.gilroy.regular,
-    color: '#757575',
+    fontFamily: 'Lexend-Regular',
+    color: '#666666',
     textAlign: 'center',
   },
   itemText: {
     flex: 1,
-    fontSize: wp('3.3%'),
-    fontFamily: FONTS.gilroy.regular,
-    color: '#000000',
+    fontSize: wp('3.4%'),
+    fontFamily: 'Lexend-Regular',
+    color: '#12372A',
   },
   itemTextActive: {
-    color: '#FF7148',
-    fontFamily: FONTS.gilroy.semiBold,
+    color: '#0C382E',
+    fontFamily: 'Lexend-Medium',
   },
   itemSpinner: {
     marginLeft: wp('3%'),

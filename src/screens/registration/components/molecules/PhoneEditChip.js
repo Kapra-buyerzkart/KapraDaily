@@ -1,77 +1,51 @@
 import React from 'react';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
-import CartText from '../../../cart/components/atoms/CartText';
-import IconDisc from '../../../cart/components/atoms/IconDisc';
-import {
-  CART_COLORS,
-  CART_RADIUS,
-  CART_SPACING,
-  wp,
-  hp,
-} from '../../../../styles/cartTheme';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import Feather from 'react-native-vector-icons/Feather';
 
 const PhoneEditChip = ({ phone, onPress }) => (
   <TouchableOpacity
-    activeOpacity={0.75}
+    activeOpacity={0.8}
     onPress={onPress}
-    style={styles.chip}
+    style={styles.phoneEditBox}
     accessibilityRole="button"
     accessibilityLabel={`Registered mobile number +91 ${phone}. Change number`}
   >
-    <IconDisc size={wp('7.6%')} tone="neutral" radius={CART_RADIUS.pill}>
-      <Ionicons
-        name="call-outline"
-        size={wp('3.8%')}
-        color={CART_COLORS.textSecondary}
-      />
-    </IconDisc>
-
-    <View style={styles.copy}>
-      <CartText variant="micro" tone="muted">
-        MOBILE NUMBER
-      </CartText>
-      <CartText variant="labelStrong" numberOfLines={1}>
-        +91 {phone}
-      </CartText>
-    </View>
-
-    <View style={styles.editChip}>
-      <Ionicons
-        name="create-outline"
-        size={wp('3.2%')}
-        color={CART_COLORS.primary}
-      />
-      <CartText variant="micro" tone="brand">
-        Edit
-      </CartText>
-    </View>
+    <Text style={styles.countryCode}>+91</Text>
+    <View style={styles.phoneDivider} />
+    <Text style={styles.phoneNumberText}>{phone}</Text>
+    <Feather name="edit-2" size={16} color="#0A2A20" />
   </TouchableOpacity>
 );
 
 export default React.memo(PhoneEditChip);
 
 const styles = StyleSheet.create({
-  chip: {
+  phoneEditBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: CART_SPACING.sm,
-    paddingHorizontal: CART_SPACING.md,
-    paddingVertical: hp('0.9%'),
-    borderRadius: CART_RADIUS.button,
-    backgroundColor: CART_COLORS.well,
+    height: 48,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#0A2A20',
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 16,
+    marginBottom: 4,
   },
-  copy: {
+  countryCode: {
+    fontFamily: 'Lexend-Medium',
+    fontSize: 14.5,
+    color: '#000000',
+  },
+  phoneDivider: {
+    width: 1,
+    height: 20,
+    backgroundColor: '#0A2A20',
+    marginHorizontal: 12,
+  },
+  phoneNumberText: {
     flex: 1,
-    gap: 1,
-  },
-  editChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-    paddingHorizontal: CART_SPACING.sm,
-    paddingVertical: hp('0.4%'),
-    borderRadius: CART_RADIUS.pill,
-    backgroundColor: CART_COLORS.primaryTint,
+    fontFamily: 'Lexend-Medium',
+    fontSize: 14.5,
+    color: '#000000',
   },
 });

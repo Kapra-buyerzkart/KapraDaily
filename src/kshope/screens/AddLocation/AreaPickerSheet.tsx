@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   FlatList,
   Modal,
+  Text,
   TextInput,
   TouchableOpacity,
   View,
@@ -10,9 +11,8 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
-import { UI_COLORS, UI_SPACING, MAX_FONT_SCALE, hitSlopTo, wp } from '../../theme/tokens';
-import { AppText } from '../../components/atoms';
-import styles from './styles';
+import { UI_SPACING, MAX_FONT_SCALE, hitSlopTo, wp } from '../../theme/tokens';
+import styles, { LUXURY_COLORS } from './styles';
 
 export type AreaItem = { label: string; value: number };
 
@@ -26,7 +26,7 @@ type Props = {
   loading?: boolean;
 };
 
-const SEARCH_THRESHOLD = 6;
+const SEARCH_THRESHOLD = 5;
 
 const keyExtractor = (item: AreaItem) => String(item.value);
 
@@ -43,21 +43,26 @@ const AreaRow = memo<{
     accessibilityLabel={item.label}
     style={[styles.areaRow, selected && styles.areaRowSelected]}
   >
-    <AppText
-      variant={selected ? 'bodyStrong' : 'body'}
-      tone={selected ? 'primary' : 'secondary'}
+    <Text
+      maxFontSizeMultiplier={MAX_FONT_SCALE}
       numberOfLines={2}
-      style={styles.areaRowLabel}
+      style={[styles.areaRowLabel, selected && styles.areaRowLabelSelected]}
     >
       {item.label}
-    </AppText>
+    </Text>
     {selected ? (
       <Ionicons
         name="checkmark-circle"
-        size={wp('5.6%')}
-        color="#0C382E"
+        size={wp('5.4%')}
+        color={LUXURY_COLORS.emerald}
       />
-    ) : null}
+    ) : (
+      <Ionicons
+        name="ellipse-outline"
+        size={wp('5%')}
+        color={LUXURY_COLORS.borderStrong}
+      />
+    )}
   </TouchableOpacity>
 ));
 
@@ -96,15 +101,19 @@ const AreaPickerSheet: React.FC<Props> = ({
 
   const renderItem = useCallback(
     ({ item }: { item: AreaItem }) => (
-      <AreaRow item={item} selected={item.value === value} onPress={handleSelect} />
+      <AreaRow
+        item={item}
+        selected={item.value === value}
+        onPress={handleSelect}
+      />
     ),
     [value, handleSelect],
   );
 
   const context = loading
-    ? `Looking up ${pincode || 'your PIN code'}`
+    ? `Looking up areas for PIN ${pincode || 'code'}…`
     : items.length
-    ? `${items.length} ${items.length === 1 ? 'area' : 'areas'} in ${pincode}`
+    ? `${items.length} ${items.length === 1 ? 'area' : 'areas'} found for PIN ${pincode}`
     : `PIN code ${pincode}`;
 
   return (
@@ -134,12 +143,20 @@ const AreaPickerSheet: React.FC<Props> = ({
 
           <View style={styles.areaSheetHeader}>
             <View style={styles.areaSheetHeadline}>
-              <AppText variant="title" numberOfLines={1}>
-                Delivery area
-              </AppText>
-              <AppText variant="caption" tone="muted" style={styles.areaSheetContext}>
+              <Text
+                maxFontSizeMultiplier={MAX_FONT_SCALE}
+                numberOfLines={1}
+                style={styles.areaSheetTitle}
+              >
+                Select Delivery Area
+              </Text>
+              <Text
+                maxFontSizeMultiplier={MAX_FONT_SCALE}
+                numberOfLines={1}
+                style={styles.areaSheetContext}
+              >
                 {context}
-              </AppText>
+              </Text>
             </View>
 
             <TouchableOpacity
@@ -149,32 +166,55 @@ const AreaPickerSheet: React.FC<Props> = ({
               accessibilityLabel="Close"
               style={styles.areaSheetClose}
             >
-              <Ionicons name="close" size={wp('5%')} color={UI_COLORS.textPrimary} />
+              <Ionicons
+                name="close"
+                size={wp('5%')}
+                color={LUXURY_COLORS.textPrimary}
+              />
             </TouchableOpacity>
           </View>
 
           {showSearch ? (
             <View style={styles.areaSearch}>
-              <Ionicons name="search" size={wp('4.2%')} color={UI_COLORS.textFaint} />
+              <Ionicons
+                name="search"
+                size={wp('4.2%')}
+                color={LUXURY_COLORS.textMuted}
+              />
               <TextInput
                 value={query}
                 onChangeText={setQuery}
-                placeholder="Search areas"
-                placeholderTextColor={UI_COLORS.textFaint}
+                placeholder="Search area by name…"
+                placeholderTextColor={LUXURY_COLORS.textFaint}
                 maxFontSizeMultiplier={MAX_FONT_SCALE}
                 underlineColorAndroid="transparent"
                 autoCorrect={false}
                 style={styles.areaSearchInput}
               />
+              {query.length > 0 ? (
+                <TouchableOpacity
+                  onPress={() => setQuery('')}
+                  hitSlop={hitSlopTo(20)}
+                >
+                  <Ionicons
+                    name="close-circle"
+                    size={wp('4.5%')}
+                    color={LUXURY_COLORS.textMuted}
+                  />
+                </TouchableOpacity>
+              ) : null}
             </View>
           ) : null}
 
           {loading ? (
             <View style={styles.areaSheetState}>
-              <ActivityIndicator color="#0C382E" />
-              <AppText variant="label" tone="muted" style={styles.areaSheetStateText}>
-                Finding areas in {pincode}
-              </AppText>
+              <ActivityIndicator size="small" color={LUXURY_COLORS.emerald} />
+              <Text
+                maxFontSizeMultiplier={MAX_FONT_SCALE}
+                style={styles.areaSheetStateText}
+              >
+                Finding areas in {pincode}…
+              </Text>
             </View>
           ) : (
             <FlatList
@@ -187,18 +227,25 @@ const AreaPickerSheet: React.FC<Props> = ({
               keyboardShouldPersistTaps="handled"
               ListEmptyComponent={
                 <View style={styles.areaSheetState}>
-                  <AppText variant="bodyStrong" tone="secondary">
-                    {query ? 'No match' : 'No areas for this PIN code'}
-                  </AppText>
-                  <AppText
-                    variant="label"
-                    tone="muted"
+                  <Ionicons
+                    name="location-outline"
+                    size={36}
+                    color={LUXURY_COLORS.textFaint}
+                  />
+                  <Text
+                    maxFontSizeMultiplier={MAX_FONT_SCALE}
+                    style={styles.areaSheetStateTitle}
+                  >
+                    {query ? 'No matching area found' : 'No areas for this PIN code'}
+                  </Text>
+                  <Text
+                    maxFontSizeMultiplier={MAX_FONT_SCALE}
                     style={styles.areaSheetStateText}
                   >
                     {query
-                      ? 'Try a shorter search term.'
-                      : 'Check the PIN code and try again.'}
-                  </AppText>
+                      ? 'Try typing a different keyword.'
+                      : 'Please verify the PIN code and try again.'}
+                  </Text>
                 </View>
               }
             />

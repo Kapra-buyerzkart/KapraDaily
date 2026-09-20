@@ -19,19 +19,15 @@ import {
 } from '@gorhom/bottom-sheet';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import Feather from 'react-native-vector-icons/Feather';
 import {
   MAX_FONT_SCALE,
-  UI_COLORS,
-  UI_RADIUS,
-  UI_SPACING,
-  UI_TYPE,
   hitSlopTo,
-  hp,
   wp,
 } from '../theme/tokens';
 
 const HELPLINE_PHONE = '+91 9048801110';
-const HELPLINE_EMAIL = 'support@udendeal.com';
+const HELPLINE_EMAIL = 'support@kapragoldndiamond.com';
 
 export interface HelpSupportModalRef {
   open: () => void;
@@ -74,11 +70,7 @@ const HelpOption: React.FC<HelpOptionProps> = ({
       </Text>
     </View>
 
-    <MaterialIcons
-      name="chevron-right"
-      size={wp('5%')}
-      color={UI_COLORS.textFaint}
-    />
+    <Feather name="chevron-right" size={18} color="#9CA3AF" />
   </TouchableOpacity>
 );
 
@@ -109,7 +101,7 @@ const HelpSupportModal = forwardRef<HelpSupportModalRef>((_props, ref) => {
   };
 
   const openWhatsApp = () => {
-    const phone = HELPLINE_PHONE.replace('+', '');
+    const phone = HELPLINE_PHONE.replace(/[^0-9]/g, '');
     Linking.openURL(`whatsapp://send?phone=${phone}`).catch(() => {
       Linking.openURL(`https://wa.me/${phone}`).catch(() => {});
     });
@@ -132,51 +124,39 @@ const HelpSupportModal = forwardRef<HelpSupportModalRef>((_props, ref) => {
       <BottomSheetView style={styles.content}>
         <View style={styles.headingRow}>
           <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={styles.title}>
-            Need Help?
+            Need Assistance?
           </Text>
           <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={styles.subtitle}>
-            Reach out to us anytime
+            Reach out to our jewellery specialists anytime
           </Text>
         </View>
 
         <HelpOption
-          tint={UI_COLORS.primaryTint}
-          icon={
-            <MaterialIcons
-              name="call"
-              size={wp('5%')}
-              color={UI_COLORS.primary}
-            />
-          }
-          label="Call us"
+          tint="#EDF5F0"
+          icon={<MaterialIcons name="call" size={20} color="#12372A" />}
+          label="Call our specialists"
           value={HELPLINE_PHONE}
           onPress={callNumber}
         />
 
         <HelpOption
-          tint={UI_COLORS.successTint}
+          tint="#E8F6EE"
           icon={
             <MaterialCommunityIcons
               name="whatsapp"
-              size={wp('5%')}
-              color={UI_COLORS.successDeep}
+              size={20}
+              color="#1B7C4B"
             />
           }
-          label="WhatsApp us"
+          label="Chat on WhatsApp"
           value={HELPLINE_PHONE}
           onPress={openWhatsApp}
         />
 
         <HelpOption
-          tint={UI_COLORS.tokenTint}
-          icon={
-            <MaterialIcons
-              name="email"
-              size={wp('5%')}
-              color={UI_COLORS.token}
-            />
-          }
-          label="Email us"
+          tint="#F7F4EB"
+          icon={<MaterialIcons name="email" size={20} color="#A6823E" />}
+          label="Write to us"
           value={HELPLINE_EMAIL}
           onPress={sendEmail}
         />
@@ -189,46 +169,54 @@ HelpSupportModal.displayName = 'HelpSupportModal';
 
 const styles = StyleSheet.create({
   background: {
-    backgroundColor: UI_COLORS.card,
-    borderTopLeftRadius: UI_RADIUS.card,
-    borderTopRightRadius: UI_RADIUS.card,
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
   },
   handleIndicator: {
-    backgroundColor: UI_COLORS.borderStrong,
-    width: wp('12%'),
+    backgroundColor: '#D8D4CC',
+    width: 44,
+    height: 4,
+    borderRadius: 2,
   },
   content: {
-    paddingHorizontal: UI_SPACING.lg,
-    paddingTop: UI_SPACING.xs,
+    paddingHorizontal: 20,
+    paddingTop: 8,
   },
   headingRow: {
-    marginBottom: UI_SPACING.md,
+    marginBottom: 16,
     gap: 2,
   },
   title: {
-    ...UI_TYPE.heading,
-    color: UI_COLORS.textPrimary,
+    fontFamily: 'CormorantGaramond-SemiBold',
+    fontSize: 23,
+    lineHeight: 28,
+    color: '#12372A',
+    letterSpacing: -0.2,
   },
   subtitle: {
-    ...UI_TYPE.micro,
-    color: UI_COLORS.textMuted,
+    fontFamily: 'Lexend-Regular',
+    fontSize: 12,
+    lineHeight: 16,
+    color: '#6B7280',
+    marginTop: 3,
   },
   optionCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: UI_SPACING.md,
+    gap: 14,
     borderWidth: 1,
-    borderColor: UI_COLORS.border,
-    borderRadius: UI_RADIUS.card,
-    backgroundColor: UI_COLORS.card,
-    paddingVertical: hp('1.4%'),
-    paddingHorizontal: UI_SPACING.md,
-    marginBottom: UI_SPACING.md,
+    borderColor: '#ECE7DE',
+    borderRadius: 16,
+    backgroundColor: '#FAF9F6',
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    marginBottom: 10,
   },
   iconDisc: {
-    width: wp('9.5%'),
-    height: wp('9.5%'),
-    borderRadius: UI_RADIUS.icon,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -237,12 +225,14 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   optionLabel: {
-    ...UI_TYPE.labelStrong,
-    color: UI_COLORS.textPrimary,
+    fontFamily: 'Lexend-Medium',
+    fontSize: 13.5,
+    color: '#12372A',
   },
   optionValue: {
-    ...UI_TYPE.micro,
-    color: UI_COLORS.textMuted,
+    fontFamily: 'Lexend-Regular',
+    fontSize: 11.5,
+    color: '#6B7280',
   },
 });
 

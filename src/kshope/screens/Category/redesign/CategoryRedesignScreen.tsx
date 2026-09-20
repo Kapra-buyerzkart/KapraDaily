@@ -124,11 +124,7 @@ const CategoryRedesignScreen: React.FC = () => {
   }, [clearSearch]);
 
   const onWishlistPress = useCallback(() => {
-    try {
-      navigation.navigate('Wishlist');
-    } catch {
-      navigation.navigate('KshopeHome', { screen: 'Wishlist' });
-    }
+    navigation.navigate('KshopeHome', { screen: 'WishlistScreen' });
   }, [navigation]);
 
   const onCartPress = useCallback(() => {

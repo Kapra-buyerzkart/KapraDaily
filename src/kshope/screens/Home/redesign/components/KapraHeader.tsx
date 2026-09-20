@@ -214,12 +214,12 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   trustTitle: {
-    fontSize: fs(9.5),
+    fontSize: fs(11),
     fontFamily: HOME_FONTS.bold,
     color: '#1A1A1A',
   },
   trustSubtitle: {
-    fontSize: fs(7.8),
+    fontSize: fs(9),
     fontFamily: HOME_FONTS.regular,
     color: '#767676',
   },

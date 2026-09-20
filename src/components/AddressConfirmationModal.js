@@ -4,8 +4,6 @@ import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
-import { FONTS } from '../styles/typography';
-import LinearGradient from 'react-native-linear-gradient';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import CustomModal, { MODAL_POSITION } from './modal/CustomModal';
 
@@ -58,8 +56,8 @@ const AddressConfirmationModal = ({
     <CustomModal
       ref={modalRef}
       position={MODAL_POSITION.CENTER}
-      width={wp('90%')}
-      backdropOpacity={0.7}
+      width={wp('88%')}
+      backdropOpacity={0.65}
       closeOnBackdropPress={false}
       onClose={onClose}
       containerStyle={styles.container}
@@ -67,14 +65,16 @@ const AddressConfirmationModal = ({
     >
       <View
         style={[
-          styles.iconContainer,
-          !display.isServiceable && styles.iconContainerWarning,
+          styles.iconCircle,
+          display.isServiceable
+            ? styles.iconCircleSuccess
+            : styles.iconCircleWarning,
         ]}
       >
         <Ionicons
-          name={display.isServiceable ? 'location' : 'warning'}
-          size={wp('8%')}
-          color={display.isServiceable ? '#F25000' : '#FF0000'}
+          name={display.isServiceable ? 'location-outline' : 'alert-circle-outline'}
+          size={wp('7%')}
+          color={display.isServiceable ? '#0C382E' : '#B83A3A'}
         />
       </View>
 
@@ -83,20 +83,18 @@ const AddressConfirmationModal = ({
       </Text>
 
       {display.isServiceable ? (
-        <Text style={styles.message}>
-          <Text style={styles.messageRegular}>
-            Your order will be delivered to pincode{' '}
+        <View style={styles.addressBox}>
+          <Text style={styles.addressText}>
+            Your jewellery order will be delivered to{' '}
+            <Text style={styles.addressHighlight}>
+              {display.pincode} {display.areaName}
+            </Text>
           </Text>
-          <Text style={styles.messageHighlight}>
-            {display.pincode} {display.areaName}
-          </Text>
-        </Text>
+        </View>
       ) : (
         <Text style={styles.message}>
-          <Text style={styles.messageRegular}>
-            {display.unavailableMessage ||
-              'We currently do not serve this area: '}
-          </Text>
+          {display.unavailableMessage ||
+            'We currently do not serve this delivery area.'}
         </Text>
       )}
 
@@ -104,39 +102,49 @@ const AddressConfirmationModal = ({
         <Text style={styles.warningMessage}>
           {display.isPlacingOrder
             ? 'Clicking Confirm will finalize your order.'
-            : 'Note: your cart might have been updated due to address change'}
+            : 'Note: your cart will be updated based on this delivery area.'}
         </Text>
       )}
 
       <View style={styles.buttonContainer}>
         {display.isServiceable ? (
-          <TouchableOpacity
-            style={{ width: '100%' }}
-            activeOpacity={0.8}
-            onPress={() => {
-              if (onConfirm) {
-                onConfirm();
-              } else {
-                onClose();
-              }
-            }}
-          >
-            <LinearGradient
-              colors={['#F25000', '#FF8C00']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.gradientButton}
+          <>
+            <TouchableOpacity
+              style={styles.primaryButton}
+              activeOpacity={0.88}
+              onPress={() => {
+                if (onConfirm) {
+                  onConfirm();
+                } else {
+                  onClose();
+                }
+              }}
             >
-              <Text style={styles.buttonText}>
+              <Text style={styles.primaryButtonText}>
                 {display.isPlacingOrder
                   ? 'Confirm & Place Order'
                   : 'Confirm Delivery'}
               </Text>
-            </LinearGradient>
-          </TouchableOpacity>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.outlineButton}
+              activeOpacity={0.8}
+              onPress={() => {
+                if (onChangeAddress) {
+                  onChangeAddress();
+                } else {
+                  onClose();
+                }
+              }}
+            >
+              <Text style={styles.outlineButtonText}>Change Address</Text>
+            </TouchableOpacity>
+          </>
         ) : (
           <TouchableOpacity
-            style={[styles.outlineButton, { width: '100%' }]}
+            style={styles.primaryButton}
+            activeOpacity={0.88}
             onPress={() => {
               if (onChangeAddress) {
                 onChangeAddress();
@@ -145,7 +153,7 @@ const AddressConfirmationModal = ({
               }
             }}
           >
-            <Text style={styles.outlineButtonText}>Change Address</Text>
+            <Text style={styles.primaryButtonText}>Change Address</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -155,96 +163,112 @@ const AddressConfirmationModal = ({
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: wp('8%'),
+    borderRadius: 24,
   },
   content: {
-    paddingVertical: wp('6%'),
-    paddingHorizontal: wp('5%'),
+    paddingVertical: hp('3%'),
+    paddingHorizontal: wp('5.5%'),
     alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: '#ECE7DE',
   },
-  iconContainer: {
-    width: wp('16%'),
-    height: wp('16%'),
-    borderRadius: wp('8%'),
-    backgroundColor: '#FFF5F0',
+  iconCircle: {
+    width: wp('14%'),
+    height: wp('14%'),
+    borderRadius: wp('7%'),
+    borderWidth: 1,
+    alignItems: 'center',
     justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: hp('2%'),
+    marginBottom: hp('1.8%'),
   },
-  iconContainerWarning: {
-    backgroundColor: '#FFF0F0',
+  iconCircleSuccess: {
+    backgroundColor: '#E8F2EE',
+    borderColor: '#D1E6DD',
+  },
+  iconCircleWarning: {
+    backgroundColor: '#FFF4EC',
+    borderColor: '#FCDCC8',
   },
   title: {
-    fontFamily: FONTS.gilroy.bold,
-    fontSize: wp('4.8%'),
-    color: '#1A1A1A',
-    marginBottom: hp('1.5%'),
+    fontFamily: 'CormorantGaramond-SemiBold',
+    fontSize: wp('5.4%'),
+    color: '#12372A',
+    marginBottom: hp('1.2%'),
     textAlign: 'center',
+    letterSpacing: -0.2,
+  },
+  addressBox: {
+    backgroundColor: '#FAF8F5',
+    borderRadius: 14,
+    paddingVertical: hp('1.6%'),
+    paddingHorizontal: wp('4%'),
+    borderWidth: 1,
+    borderColor: '#ECE7DE',
+    width: '100%',
+    marginBottom: hp('1.6%'),
+  },
+  addressText: {
+    fontFamily: 'Lexend-Regular',
+    fontSize: wp('3.4%'),
+    color: '#555555',
+    textAlign: 'center',
+    lineHeight: wp('5%'),
+  },
+  addressHighlight: {
+    fontFamily: 'Lexend-Medium',
+    color: '#0C382E',
   },
   message: {
+    fontFamily: 'Lexend-Regular',
+    fontSize: wp('3.4%'),
+    color: '#666666',
     textAlign: 'center',
     marginBottom: hp('2.5%'),
-    lineHeight: wp('5.8%'),
+    lineHeight: wp('5%'),
     paddingHorizontal: wp('2%'),
   },
-  messageRegular: {
-    fontFamily: FONTS.gilroy.regular,
-    fontSize: wp('3.6%'),
-    color: '#4A4A4A',
-  },
-  messageHighlight: {
-    fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('3.8%'),
-    color: '#F25000',
-  },
   warningMessage: {
-    fontFamily: FONTS.gilroy.medium,
+    fontFamily: 'Lexend-Regular',
     fontSize: wp('2.8%'),
     color: '#8C8C8C',
     textAlign: 'center',
-    marginBottom: hp('3%'),
-    backgroundColor: '#F9F9F9',
-    paddingVertical: hp('1%'),
-    paddingHorizontal: wp('4%'),
-    borderRadius: wp('3%'),
-    overflow: 'hidden',
+    marginBottom: hp('2.5%'),
+    paddingHorizontal: wp('2%'),
   },
   buttonContainer: {
     width: '100%',
+    gap: hp('1.2%'),
   },
-  gradientButton: {
+  primaryButton: {
     width: '100%',
-    height: wp('13%'),
-    borderRadius: wp('4%'),
+    height: hp('5.8%'),
+    borderRadius: 14,
+    backgroundColor: '#0C382E',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#F25000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
   },
-  buttonText: {
-    fontFamily: FONTS.gilroy.bold,
-    fontSize: wp('4.2%'),
+  primaryButtonText: {
+    fontFamily: 'Lexend-Medium',
+    fontSize: wp('3.7%'),
     color: '#FFFFFF',
-    textAlign: 'center',
+    letterSpacing: 0.2,
   },
   outlineButton: {
     width: '100%',
-    height: wp('13%'),
-    borderRadius: wp('4%'),
+    height: hp('5.6%'),
+    borderRadius: 14,
+    backgroundColor: '#FAF8F5',
+    borderWidth: 1,
+    borderColor: '#D8D4CC',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: '#F25000',
-    backgroundColor: '#FFFFFF',
   },
   outlineButtonText: {
-    fontFamily: FONTS.gilroy.bold,
-    fontSize: wp('4%'),
-    color: '#F25000',
-    textAlign: 'center',
+    fontFamily: 'Lexend-Medium',
+    fontSize: wp('3.6%'),
+    color: '#12372A',
   },
 });
 

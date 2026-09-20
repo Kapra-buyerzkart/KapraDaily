@@ -38,15 +38,13 @@ import { validatePhoneNumbers } from '../../utils/validation';
 import { logApi } from '../../utils/apiLog';
 import { getAddressLine1 } from '../../../utils/addressFormat';
 import {
-  UI_COLORS,
   UI_SPACING,
   MAX_FONT_SCALE,
   hitSlopTo,
   wp,
 } from '../../theme/tokens';
-import { AppText, IconDisc } from '../../components/atoms';
 import useKeyboardVisible from '../../hooks/useKeyboardVisible';
-import styles, { placesStyles } from './styles';
+import styles, { placesStyles, LUXURY_COLORS } from './styles';
 import AreaPickerSheet from './AreaPickerSheet';
 
 const GOOGLE_MAPS_API_KEY = 'AIzaSyDhItv0zoWdQbDh-5jjKLAEjwRDDrFNc1Y';
@@ -70,14 +68,21 @@ const SectionTitle = memo<{ title: string; hint?: string }>(
     <View style={styles.sectionTitleWrap}>
       <View style={styles.sectionTitleRow}>
         <View style={styles.sectionTitleBar} />
-        <AppText variant="labelStrong" numberOfLines={1}>
+        <Text
+          maxFontSizeMultiplier={MAX_FONT_SCALE}
+          numberOfLines={1}
+          style={styles.sectionTitleText}
+        >
           {title}
-        </AppText>
+        </Text>
       </View>
       {hint ? (
-        <AppText variant="micro" tone="muted" style={styles.sectionTitleHint}>
+        <Text
+          maxFontSizeMultiplier={MAX_FONT_SCALE}
+          style={styles.sectionTitleHint}
+        >
           {hint}
-        </AppText>
+        </Text>
       ) : null}
     </View>
   ),
@@ -116,7 +121,7 @@ const Field = memo<FieldProps>(
       <View style={[styles.fieldWrapper, wrapperStyle]}>
         <FieldLabel label={label} required={required} isActive={focused} />
         <TextInput
-          placeholderTextColor={UI_COLORS.textFaint}
+          placeholderTextColor={LUXURY_COLORS.textFaint}
           maxFontSizeMultiplier={MAX_FONT_SCALE}
           accessibilityLabel={label}
           underlineColorAndroid="transparent"
@@ -148,6 +153,7 @@ type MapPanelProps = {
   onPlaceSelected: (lat: number, lng: number) => void;
   onRecenter: () => void;
   onBack: () => void;
+  onMapPress?: (e: any) => void;
 };
 
 const MapPanel = memo<MapPanelProps>(
@@ -168,6 +174,7 @@ const MapPanel = memo<MapPanelProps>(
     onPlaceSelected,
     onRecenter,
     onBack,
+    onMapPress,
   }) => {
     const placesQuery = useMemo(
       () => ({
@@ -180,7 +187,7 @@ const MapPanel = memo<MapPanelProps>(
 
     const textInputProps = useMemo(
       () => ({
-        placeholderTextColor: UI_COLORS.textFaint,
+        placeholderTextColor: LUXURY_COLORS.textFaint,
         returnKeyType: 'search' as const,
         maxFontSizeMultiplier: MAX_FONT_SCALE,
         underlineColorAndroid: 'transparent' as const,
@@ -203,7 +210,7 @@ const MapPanel = memo<MapPanelProps>(
         <Ionicons
           name="search"
           size={wp('4.4%')}
-          color={UI_COLORS.textMuted}
+          color={LUXURY_COLORS.emerald}
           style={styles.searchIcon}
         />
       ),
@@ -218,6 +225,7 @@ const MapPanel = memo<MapPanelProps>(
             style={styles.map}
             initialRegion={initialRegion}
             onMapReady={onMapReady}
+            onPress={onMapPress}
             onRegionChange={onRegionChange}
             onRegionChangeComplete={onRegionChangeComplete}
             showsUserLocation={hasLocationPermission}
@@ -233,21 +241,35 @@ const MapPanel = memo<MapPanelProps>(
             <View
               style={[styles.pinCallout, isDragging && styles.pinCalloutHidden]}
             >
-              <AppText variant="captionStrong" numberOfLines={1}>
-                Order will be delivered here
-              </AppText>
-              <AppText variant="micro" tone="muted" numberOfLines={1}>
-                Move the map to set exact spot
-              </AppText>
+              <View style={styles.pinCalloutRow}>
+                <View style={styles.pinCalloutDot} />
+                <Text
+                  maxFontSizeMultiplier={MAX_FONT_SCALE}
+                  numberOfLines={1}
+                  style={styles.pinCalloutTitle}
+                >
+                  Order will be delivered here
+                </Text>
+              </View>
+              <Text
+                maxFontSizeMultiplier={MAX_FONT_SCALE}
+                numberOfLines={1}
+                style={styles.pinCalloutSubtitle}
+              >
+                Move map to set exact spot
+              </Text>
               <View style={styles.pinCalloutTail} />
             </View>
 
-            <Ionicons
-              name="location"
-              size={wp('11%')}
-              color={UI_COLORS.primary}
-              style={[styles.pinIcon, isDragging && styles.pinIconLifted]}
-            />
+            <View style={styles.pinIconContainer}>
+              <Ionicons
+                name="location"
+                size={wp('11%')}
+                color={LUXURY_COLORS.emerald}
+                style={[styles.pinIcon, isDragging && styles.pinIconLifted]}
+              />
+              <View style={[styles.pinShadow, isDragging && styles.pinShadowExpanded]} />
+            </View>
           </View>
 
           <TouchableOpacity
@@ -261,9 +283,14 @@ const MapPanel = memo<MapPanelProps>(
             <Ionicons
               name="locate"
               size={wp('4.2%')}
-              color={UI_COLORS.textPrimary}
+              color={LUXURY_COLORS.emerald}
             />
-            <AppText variant="captionStrong">Use current location</AppText>
+            <Text
+              maxFontSizeMultiplier={MAX_FONT_SCALE}
+              style={styles.recenterText}
+            >
+              Use current location
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -283,7 +310,7 @@ const MapPanel = memo<MapPanelProps>(
               <Ionicons
                 name="arrow-back"
                 size={wp('5.2%')}
-                color={UI_COLORS.textPrimary}
+                color={LUXURY_COLORS.emerald}
               />
             </TouchableOpacity>
 
@@ -303,10 +330,13 @@ const MapPanel = memo<MapPanelProps>(
 
               {isGeocoding && !isInitialLoading ? (
                 <View style={styles.geocodingBanner}>
-                  <ActivityIndicator size="small" color={UI_COLORS.textMuted} />
-                  <AppText variant="caption" tone="secondary">
+                  <ActivityIndicator size="small" color={LUXURY_COLORS.emerald} />
+                  <Text
+                    maxFontSizeMultiplier={MAX_FONT_SCALE}
+                    style={styles.geocodingText}
+                  >
                     Fetching address…
-                  </AppText>
+                  </Text>
                 </View>
               ) : null}
             </View>
@@ -482,6 +512,13 @@ const AddLocationScreen: React.FC = () => {
     mapRef.current?.animateToRegion(targetRegionRef.current, 0);
   });
 
+  const handleMapPress = useStableCallback((e: any) => {
+    const coord = e?.nativeEvent?.coordinate;
+    if (coord?.latitude && coord?.longitude) {
+      moveTo(coord.latitude, coord.longitude);
+    }
+  });
+
   const handleRegionChange = useStableCallback(() => {
     if (isDraggingRef.current) return;
     isDraggingRef.current = true;
@@ -489,10 +526,17 @@ const AddLocationScreen: React.FC = () => {
   });
 
   const handleRegionChangeComplete = useStableCallback((nextRegion: any) => {
-    if (isDraggingRef.current) {
-      isDraggingRef.current = false;
-      setIsDragging(false);
+    isDraggingRef.current = false;
+    setIsDragging(false);
+
+    if (
+      !nextRegion ||
+      typeof nextRegion.latitude !== 'number' ||
+      typeof nextRegion.longitude !== 'number'
+    ) {
+      return;
     }
+
     targetRegionRef.current = nextRegion;
 
     const moved =
@@ -705,7 +749,7 @@ const AddLocationScreen: React.FC = () => {
 
   return (
     <View style={styles.screen}>
-      <StatusBar barStyle="dark-content" backgroundColor={UI_COLORS.card} />
+      <StatusBar barStyle="dark-content" backgroundColor={LUXURY_COLORS.card} />
 
       <MapPanel
         mapRef={mapRef}
@@ -724,27 +768,36 @@ const AddLocationScreen: React.FC = () => {
         onPlaceSelected={moveTo}
         onRecenter={recenter}
         onBack={goBack}
+        onMapPress={handleMapPress}
       />
 
       <KeyboardAvoidingView
+        pointerEvents="box-none"
         style={styles.flex}
-        behavior={IS_ANDROID ? 'height' : 'padding'}
+        enabled={!IS_ANDROID}
+        behavior={IS_ANDROID ? undefined : 'padding'}
       >
-        <View style={[styles.sheet, isFormFocused && { marginTop: topInset }]}>
+        <View
+          pointerEvents="auto"
+          style={[styles.sheet, isFormFocused && { marginTop: topInset }]}
+        >
           <View style={styles.grabHandle} />
 
           <View style={styles.sheetHeader}>
-            <AppText variant="heading" numberOfLines={1}>
-              {isEditMode ? 'Edit location' : 'Confirm location'}
-            </AppText>
-            <AppText
-              variant="caption"
-              tone="muted"
+            <Text
+              maxFontSizeMultiplier={MAX_FONT_SCALE}
+              numberOfLines={1}
+              style={styles.sheetTitle}
+            >
+              {isEditMode ? 'Edit Delivery Address' : 'Confirm Delivery Location'}
+            </Text>
+            <Text
+              maxFontSizeMultiplier={MAX_FONT_SCALE}
               numberOfLines={1}
               style={styles.sheetSubtitle}
             >
-              Drag the map above to fine-tune your spot
-            </AppText>
+              Drag the map above to fine-tune your exact spot
+            </Text>
           </View>
 
           <ScrollView
@@ -757,35 +810,37 @@ const AddLocationScreen: React.FC = () => {
             nestedScrollEnabled
           >
             <View style={styles.resolvedCard}>
-              <IconDisc tone="neutral" size={wp('10%')}>
+              <View style={styles.resolvedIconBadge}>
                 <Ionicons
-                  name="location-outline"
-                  size={wp('5%')}
-                  color={UI_COLORS.textSecondary}
+                  name="location"
+                  size={wp('5.2%')}
+                  color={LUXURY_COLORS.emerald}
                 />
-              </IconDisc>
+              </View>
 
               <View style={styles.resolvedCopy}>
-                <AppText
-                  variant="micro"
-                  tone="muted"
+                <Text
+                  maxFontSizeMultiplier={MAX_FONT_SCALE}
                   style={styles.resolvedEyebrow}
                 >
-                  {isResolving ? 'LOCATING…' : 'SELECTED LOCATION'}
-                </AppText>
-                <AppText variant="bodyStrong" numberOfLines={2}>
+                  {isResolving ? 'LOCATING PINNED SPOT…' : 'SELECTED LOCATION'}
+                </Text>
+                <Text
+                  maxFontSizeMultiplier={MAX_FONT_SCALE}
+                  numberOfLines={2}
+                  style={styles.resolvedAddressMain}
+                >
                   {addLine1 ||
-                    (isResolving ? 'Fetching location…' : 'Address not found')}
-                </AppText>
+                    (isResolving ? 'Detecting address…' : 'Address not found')}
+                </Text>
                 {addLine2 && !isDuplicateLine2 ? (
-                  <AppText
-                    variant="caption"
-                    tone="muted"
+                  <Text
+                    maxFontSizeMultiplier={MAX_FONT_SCALE}
                     numberOfLines={1}
                     style={styles.resolvedLine2}
                   >
                     {addLine2}
-                  </AppText>
+                  </Text>
                 ) : null}
               </View>
             </View>
@@ -811,18 +866,21 @@ const AddLocationScreen: React.FC = () => {
                     >
                       <MaterialCommunityIcons
                         name={type.icon}
-                        size={wp('4%')}
+                        size={wp('4.2%')}
                         color={
-                          selected ? UI_COLORS.textPrimary : UI_COLORS.textFaint
+                          selected ? LUXURY_COLORS.emerald : LUXURY_COLORS.textMuted
                         }
                       />
-                      <AppText
-                        variant={selected ? 'labelStrong' : 'label'}
-                        tone={selected ? 'primary' : 'muted'}
+                      <Text
+                        maxFontSizeMultiplier={MAX_FONT_SCALE}
+                        style={[
+                          styles.typeChipLabel,
+                          selected && styles.typeChipLabelActive,
+                        ]}
                         numberOfLines={1}
                       >
                         {type.label}
-                      </AppText>
+                      </Text>
                     </TouchableOpacity>
                   );
                 })}
@@ -843,7 +901,7 @@ const AddLocationScreen: React.FC = () => {
               />
 
               <Field
-                label="Appartment / Road / Area"
+                label="Apartment / Road / Area"
                 value={addLine2}
                 onChangeText={handleAddLine2Change}
               />
@@ -876,24 +934,26 @@ const AddLocationScreen: React.FC = () => {
                     }}
                     style={[styles.areaTrigger, open && styles.areaTriggerOpen]}
                   >
-                    <AppText
-                      variant="label"
-                      tone={selectedAreaName ? 'primary' : 'faint'}
+                    <Text
+                      maxFontSizeMultiplier={MAX_FONT_SCALE}
                       numberOfLines={1}
-                      style={styles.areaTriggerLabel}
+                      style={[
+                        styles.areaTriggerLabel,
+                        !selectedAreaName && styles.areaTriggerPlaceholder,
+                      ]}
                     >
                       {selectedAreaName || 'Choose area'}
-                    </AppText>
+                    </Text>
                     {isAreasLoading ? (
                       <ActivityIndicator
                         size="small"
-                        color={UI_COLORS.textMuted}
+                        color={LUXURY_COLORS.emerald}
                       />
                     ) : (
                       <Ionicons
                         name="chevron-down"
                         size={wp('4.2%')}
-                        color={UI_COLORS.textMuted}
+                        color={LUXURY_COLORS.textMuted}
                       />
                     )}
                   </TouchableOpacity>
@@ -901,7 +961,7 @@ const AddLocationScreen: React.FC = () => {
               </View>
 
               <Field
-                label="Land mark / Delivery instruction"
+                label="Landmark / Delivery instruction"
                 value={landmark}
                 onChangeText={setLandmark}
                 placeholder="eg. Near Lulu Mall"
@@ -943,16 +1003,19 @@ const AddLocationScreen: React.FC = () => {
               style={[styles.saveButton, isLoading && styles.saveButtonBusy]}
             >
               {isLoading ? (
-                <ActivityIndicator color={UI_COLORS.onPrimary} />
+                <ActivityIndicator color={LUXURY_COLORS.white} />
               ) : (
                 <>
-                  <AppText variant="cta" tone="onDark">
+                  <Text
+                    maxFontSizeMultiplier={MAX_FONT_SCALE}
+                    style={styles.saveButtonText}
+                  >
                     {saveLabel}
-                  </AppText>
+                  </Text>
                   <Ionicons
                     name="arrow-forward"
                     size={wp('4.4%')}
-                    color={UI_COLORS.onPrimary}
+                    color={LUXURY_COLORS.white}
                   />
                 </>
               )}

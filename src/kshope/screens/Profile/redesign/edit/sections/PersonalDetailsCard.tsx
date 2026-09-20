@@ -1,12 +1,12 @@
 import React from 'react';
-import { StyleSheet, TextInput } from 'react-native';
-import { Surface, SectionHeading } from '../../../../../components/atoms';
+import { StyleSheet, TextInput, View, Text, Platform } from 'react-native';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {
-  ProfileTextField,
-  DateOfBirthField,
-  GenderField,
-} from '../fields';
-import { UI_SPACING } from '../../../../../theme/tokens';
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from 'react-native-responsive-screen';
+import { EDIT_COLORS, EDIT_FONTS } from '../editTheme';
+import { ProfileTextField, DateOfBirthField, GenderField } from '../fields';
 
 interface Props {
   fullName: string;
@@ -33,16 +33,27 @@ const PersonalDetailsCard: React.FC<Props> = ({
   errors,
   pincodeRef,
 }) => (
-  <Surface style={styles.card}>
-    <SectionHeading
-      title="Personal details"
-      subtitle="How we address you across orders and offers"
-    />
+  <View style={styles.card}>
+    <View style={styles.headingRow}>
+      <View style={styles.headingIcon}>
+        <MaterialCommunityIcons
+          name="card-account-details-outline"
+          size={wp('4.5%')}
+          color={EDIT_COLORS.emerald}
+        />
+      </View>
+      <View style={styles.headingTextCol}>
+        <Text style={styles.headingTitle}>Personal Details</Text>
+        <Text style={styles.headingSubtitle}>
+          How we address you across orders and certificates
+        </Text>
+      </View>
+    </View>
 
     <ProfileTextField
       label="Full Name"
       icon="account-outline"
-      placeholder="Enter your name"
+      placeholder="Enter your full name"
       value={fullName}
       onChangeText={onChangeFullName}
       error={errors.fullName}
@@ -59,7 +70,7 @@ const PersonalDetailsCard: React.FC<Props> = ({
       ref={pincodeRef}
       label="Pin Code"
       icon="map-marker-outline"
-      placeholder="00 00 00"
+      placeholder="000 000"
       value={pincode}
       onChangeText={onChangePincode}
       error={errors.pincode}
@@ -67,14 +78,57 @@ const PersonalDetailsCard: React.FC<Props> = ({
       maxLength={6}
       returnKeyType="done"
     />
-  </Surface>
+  </View>
 );
 
 export default React.memo(PersonalDetailsCard);
 
 const styles = StyleSheet.create({
   card: {
-    padding: UI_SPACING.lg,
-    gap: UI_SPACING.lg,
+    backgroundColor: EDIT_COLORS.card,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: EDIT_COLORS.border,
+    padding: wp('4.5%'),
+    gap: hp('1.8%'),
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.04,
+        shadowRadius: 5,
+      },
+      android: {
+        elevation: 1.5,
+      },
+    }),
+  },
+  headingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: hp('0.5%'),
+  },
+  headingIcon: {
+    width: wp('9%'),
+    height: wp('9%'),
+    borderRadius: wp('4.5%'),
+    backgroundColor: EDIT_COLORS.emeraldTint,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: wp('3%'),
+  },
+  headingTextCol: {
+    flex: 1,
+  },
+  headingTitle: {
+    fontFamily: EDIT_FONTS.heading,
+    fontSize: wp('4.6%'),
+    color: EDIT_COLORS.textPrimary,
+  },
+  headingSubtitle: {
+    fontFamily: EDIT_FONTS.body,
+    fontSize: wp('2.8%'),
+    color: EDIT_COLORS.textMuted,
+    marginTop: hp('0.2%'),
   },
 });

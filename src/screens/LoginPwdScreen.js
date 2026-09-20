@@ -3,28 +3,29 @@ import {
   Text,
   StyleSheet,
   ImageBackground,
-  Image,
   TextInput,
   TouchableOpacity,
   ScrollView,
-  Alert,
   Platform,
+  StatusBar,
+  Animated,
+  Easing,
 } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
-import React, { useState } from 'react';
-import logger from '../utils/logger';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useState, useRef, useEffect } from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
-import { FONTS } from '../styles/typography';
+import Feather from 'react-native-vector-icons/Feather';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useCart } from '../context/CartContext';
-import { loginWithPassword, sendLoginOtp } from '../api';
+import { loginWithPassword } from '../api';
 import secureStore from '../utils/secureStore';
 import { setTokens } from '../api/tokenService';
 import { syncKshopeSession } from '../kshope/api/session';
+import logger from '../utils/logger';
 import images from '@/assets/images';
 import BallPulse from '@/components/BallPulse';
 
@@ -45,14 +46,34 @@ const mergeCustomerIdIntoProfile = async custId => {
 
 const LoginPwdScreen = () => {
   const navigation = useNavigation();
+  const route = useRoute();
+  const insets = useSafeAreaInsets();
   const { showStatus } = useCart();
+  const { phone } = route.params || {};
+
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const phoneNumber = '8137956574';
-  const route = useRoute();
-  const { phone } = route.params || {};
+  const bottomOpacity = useRef(new Animated.Value(0)).current;
+  const bottomTranslate = useRef(new Animated.Value(20)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(bottomOpacity, {
+        toValue: 1,
+        duration: 500,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(bottomTranslate, {
+        toValue: 0,
+        duration: 500,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [bottomOpacity, bottomTranslate]);
 
   const handleContinue = async () => {
     if (!password) {
@@ -123,76 +144,142 @@ const LoginPwdScreen = () => {
     }
   };
 
+  const backButtonStyle = [
+    styles.backButton,
+    { top: insets.top ? insets.top + 8 : 16 },
+  ];
+
   return (
     <View style={styles.mainContainer}>
+      <StatusBar
+        translucent
+        backgroundColor="transparent"
+        barStyle="dark-content"
+      />
+
+      <TouchableOpacity
+        style={backButtonStyle}
+        onPress={() => navigation.goBack()}
+        hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+        activeOpacity={0.8}
+      >
+        <Feather name="arrow-left" size={20} color="#12372A" />
+      </TouchableOpacity>
+
       <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardAvoid}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
-          contentContainerStyle={{ flexGrow: 1 }}
+          contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          bounces={false}
         >
-          <ImageBackground
-            style={styles.backgroundImage}
-            source={images.login_landing}
-          >
-            <View />
-            <Image
-              style={styles.tagLine}
-              source={require('../assets/images/login_content.png')}
+          <View style={styles.topImageContainer}>
+            <ImageBackground
+              style={styles.backgroundImage}
+              source={images.pwdLuxuryBg}
+              resizeMode="cover"
             />
-          </ImageBackground>
-          {}
-          <View style={styles.bottomContainer}>
-            <Text style={styles.headerText}>Login</Text>
-            <Text style={styles.enterNumberText}>Enter your password</Text>
+          </View>
 
-            <View style={styles.inputContainer}>
-              <View style={styles.inputWrapper}>
-                <TextInput
-                  placeholder="Enter password"
-                  placeholderTextColor="#DADADA"
-                  style={styles.input}
-                  secureTextEntry={!showPassword}
-                  onChangeText={setPassword}
+          <Animated.View
+            style={[
+              styles.bottomContainer,
+              {
+                opacity: bottomOpacity,
+                transform: [{ translateY: bottomTranslate }],
+              },
+            ]}
+          >
+            <Text style={styles.welcomeText}>Welcome to</Text>
+            <Text style={styles.brandTitleText}>Kapra Gold & Diamonds</Text>
+            <Text style={styles.subHeaderText}>ENTER YOUR PASSWORD</Text>
+
+            <View style={styles.titleDivider} />
+
+            {phone ? (
+              <TouchableOpacity
+                onPress={() => navigation.navigate('LoginScreen', { phone })}
+                style={styles.phoneEditBox}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.countryCode}>+91</Text>
+                <View style={styles.phoneDivider} />
+                <Text style={styles.phoneNumberText}>{phone}</Text>
+                <Feather name="edit-2" size={16} color="#0A2A20" />
+              </TouchableOpacity>
+            ) : null}
+
+            <View style={styles.inputWrapper}>
+              <TextInput
+                placeholder="Enter your password"
+                placeholderTextColor="rgba(255, 255, 255, 0.45)"
+                style={styles.input}
+                secureTextEntry={!showPassword}
+                value={password}
+                onChangeText={setPassword}
+                selectionColor="#FFFFFF"
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+              <TouchableOpacity
+                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                onPress={() => setShowPassword(!showPassword)}
+                activeOpacity={0.7}
+              >
+                <Feather
+                  name={showPassword ? 'eye' : 'eye-off'}
+                  size={18}
+                  color="rgba(255, 255, 255, 0.75)"
                 />
-                <TouchableOpacity
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                  onPress={() => setShowPassword(!showPassword)}
-                >
-                  <Image
-                    tintColor={showPassword ? 'red' : undefined}
-                    style={styles.eyeIcon}
-                    source={require('../assets/images/eye_icon.png')}
-                  />
-                </TouchableOpacity>
-              </View>
+              </TouchableOpacity>
             </View>
 
-            <TouchableOpacity
-              onPress={() =>
-                navigation.navigate('LoginScreen', {
-                  type: 'reset',
-                  phone,
-                })
-              }
-            >
-              <Text style={styles.forgotPwdText}>Forgot password</Text>
-            </TouchableOpacity>
+            <View style={styles.optionsRow}>
+              {phone ? (
+                <TouchableOpacity
+                  onPress={() =>
+                    navigation.navigate('OtpScreen', {
+                      phone,
+                      type: 'login',
+                    })
+                  }
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.optionLinkText}>Log in with OTP</Text>
+                </TouchableOpacity>
+              ) : (
+                <View />
+              )}
+
+              <TouchableOpacity
+                onPress={() =>
+                  navigation.navigate('LoginScreen', {
+                    type: 'reset',
+                    phone,
+                  })
+                }
+                activeOpacity={0.7}
+              >
+                <Text style={styles.optionLinkText}>Forgot password?</Text>
+              </TouchableOpacity>
+            </View>
 
             <TouchableOpacity
               onPress={handleContinue}
               style={styles.continueButton}
               disabled={loading}
+              activeOpacity={0.88}
             >
               {loading ? (
-                <BallPulse size="large" color="#FFFFFF" />
+                <BallPulse size="large" color="#0A2A20" />
               ) : (
-                <Text style={styles.continueButtonText}>Continue</Text>
+                <Text style={styles.continueButtonText}>Log In</Text>
               )}
             </TouchableOpacity>
-          </View>
+          </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
@@ -206,97 +293,155 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFFFFF',
   },
+  keyboardAvoid: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'space-between',
+    backgroundColor: '#FFFFFF',
+  },
+  backButton: {
+    position: 'absolute',
+    left: 16,
+    zIndex: 10,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  topImageContainer: {
+    width: '100%',
+    height: hp('48%'),
+    overflow: 'hidden',
+  },
+  backgroundImage: {
+    width: '100%',
+    height: '100%',
+  },
+  bottomContainer: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    paddingHorizontal: wp('7%'),
+    paddingBottom: hp('8%'),
+    marginTop: -32,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 6,
+  },
+  welcomeText: {
+    fontFamily: 'CormorantGaramond-Italic',
+    fontSize: wp('6.5%'),
+    lineHeight: wp('7.8%'),
+    color: '#12372A',
+    textAlign: 'center',
+    marginTop: 4,
+  },
+  brandTitleText: {
+    fontFamily: 'CormorantGaramond-SemiBold',
+    fontSize: wp('7.6%'),
+    lineHeight: wp('9.2%'),
+    color: '#12372A',
+    textAlign: 'center',
+    marginTop: 2,
+    letterSpacing: -0.2,
+  },
+  subHeaderText: {
+    fontFamily: 'Lexend-Medium',
+    fontSize: wp('3%'),
+    letterSpacing: 2,
+    color: '#262626',
+    textAlign: 'center',
+    marginTop: 12,
+  },
+  titleDivider: {
+    width: wp('44%'),
+    height: 1.5,
+    backgroundColor: '#1E3E30',
+    alignSelf: 'center',
+    marginTop: 14,
+    marginBottom: 20,
+  },
+  phoneEditBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 48,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#0A2A20',
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 16,
+    marginBottom: 14,
+  },
+  countryCode: {
+    fontFamily: 'Lexend-Medium',
+    fontSize: 14.5,
+    color: '#000000',
+  },
+  phoneDivider: {
+    width: 1,
+    height: 20,
+    backgroundColor: '#0A2A20',
+    marginHorizontal: 12,
+  },
+  phoneNumberText: {
+    flex: 1,
+    fontFamily: 'Lexend-Medium',
+    fontSize: 14.5,
+    color: '#000000',
+  },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: hp('5.36%'),
-    borderRadius: wp('2.33%'),
-    borderWidth: 1,
-    borderColor: '#E5E5E5',
-    paddingHorizontal: wp('4.18%'),
-    backgroundColor: '#fff',
-  },
-  countryCode: {
-    fontSize: wp('4.19%'),
-    color: '#000000',
-    marginRight: 12,
-  },
-  divider: {
-    width: 1,
-    height: hp('4%'),
-    backgroundColor: '#E5E5E5',
-    marginRight: wp('4%'),
+    height: 52,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    backgroundColor: '#0A2A20',
   },
   input: {
     flex: 1,
-    color: '#000',
-    fontSize: wp('4.19%'),
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontFamily: 'Lexend-Medium',
+    paddingVertical: 0,
   },
-  backgroundImage: {
-    flex: 1,
+  optionsRow: {
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: hp('6%'),
-    paddingBottom: hp('7.5%'),
+    marginTop: 12,
+    marginBottom: 4,
+    paddingHorizontal: 2,
   },
-  kapraLogo: {
-    width: wp('47%'),
-    height: hp('10%'),
-    resizeMode: 'cover',
-  },
-  tagLine: {
-    width: wp('50.7%'),
-    height: hp('16.95%'),
-    resizeMode: 'cover',
-  },
-  bottomContainer: {
-    height: hp('30.33%'),
-    paddingHorizontal: wp('5.8%'),
-    paddingTop: hp('3%'),
-    borderTopLeftRadius: wp('9.3%'),
-    borderTopRightRadius: wp('9.3%'),
-    backgroundColor: '#FFFFFF',
-    bottom: hp('4%'),
-  },
-  headerText: {
-    fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('4.65%'),
-    color: '#000000',
-    alignSelf: 'center',
-    marginBottom: hp('3%'),
-  },
-  enterNumberText: {
-    fontFamily: FONTS.gilroy.regular,
-    fontSize: wp('3.72%'),
-    color: '#616161',
+  optionLinkText: {
+    fontFamily: 'Lexend-Medium',
+    fontSize: wp('3.2%'),
+    color: '#165A42',
   },
   continueButton: {
-    backgroundColor: '#F25000',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: '#0A2A20',
     width: '100%',
-    height: hp('6.11%'),
+    height: 52,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: wp('2.33%'),
-    marginTop: hp('5%'),
+    borderRadius: 12,
+    marginTop: 16,
   },
   continueButtonText: {
-    fontFamily: FONTS.gilroy.bold,
-    fontSize: wp('4.18%'),
-    color: '#FFFFFF',
-  },
-  inputContainer: {
-    marginTop: hp('1.5%'),
-  },
-  eyeIcon: {
-    width: wp('4.19%'),
-    height: hp('1.29%'),
-    resizeMode: 'contain',
-  },
-  forgotPwdText: {
-    alignSelf: 'flex-end',
-    marginTop: hp('0.5%'),
-    color: '#F25000',
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('3.25%'),
+    fontFamily: 'Lexend-Medium',
+    fontSize: 14.5,
+    color: '#0A2A20',
   },
 });

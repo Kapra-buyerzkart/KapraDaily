@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { ScrollView, StatusBar, View } from 'react-native';
+import { ScrollView, StatusBar, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   useNavigation,
@@ -7,11 +7,6 @@ import {
   CommonActions,
 } from '@react-navigation/native';
 import Feather from 'react-native-vector-icons/Feather';
-import AppText from '../../components/atoms/AppText';
-import Surface from '../../components/atoms/Surface';
-import Divider from '../../components/atoms/Divider';
-import SectionHeading from '../../components/atoms/SectionHeading';
-import { UI_COLORS } from '../../theme/tokens';
 import {
   BulletCard,
   CopyChip,
@@ -30,7 +25,7 @@ import {
   useCopyOrderNumber,
   useLockedBack,
 } from './status/useOrderStatus';
-import { ICON, styles } from './status/styles';
+import { ICON, STATUS_COLORS, styles } from './status/styles';
 
 const OrderFailedScreen: React.FC = () => {
   const navigation = useNavigation<any>();
@@ -81,7 +76,7 @@ const OrderFailedScreen: React.FC = () => {
     <View style={styles.screen}>
       <StatusBar
         barStyle="dark-content"
-        backgroundColor={UI_COLORS.card}
+        backgroundColor="#FFFFFF"
         translucent={false}
       />
 
@@ -99,15 +94,16 @@ const OrderFailedScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        <Surface style={styles.section}>
+        {/* 1. Status hero card */}
+        <View style={styles.cardContainer}>
           <View style={styles.card}>
             <View style={styles.statusRow}>
               <StatusDisc tone="danger" icon="close" />
               <View style={styles.statusCopy}>
-                <AppText variant="heading">{FAILED_COPY.statusTitle}</AppText>
-                <AppText variant="caption" tone="muted">
+                <Text style={styles.statusTitle}>{FAILED_COPY.statusTitle}</Text>
+                <Text style={styles.statusSubtitle}>
                   {FAILED_COPY.statusSubtitle}
-                </AppText>
+                </Text>
               </View>
             </View>
 
@@ -116,71 +112,68 @@ const OrderFailedScreen: React.FC = () => {
                 <Feather
                   name="alert-triangle"
                   size={ICON.meta}
-                  color={UI_COLORS.danger}
+                  color={STATUS_COLORS.danger}
                 />
-                <AppText
-                  variant="caption"
-                  tone="danger"
-                  style={styles.errorStripCopy}
-                >
-                  {failureReason}
-                </AppText>
+                <Text style={styles.errorStripCopy}>{failureReason}</Text>
               </View>
             ) : null}
           </View>
 
           <FooterStrip note={FAILED_COPY.refundNote} />
-        </Surface>
+        </View>
 
-        <Surface style={styles.section}>
+        {/* 2. Order summary card */}
+        <View style={styles.cardContainer}>
           <View style={styles.card}>
-            <SectionHeading title={FAILED_COPY.summaryTitle} />
+            <Text style={styles.cardHeading}>{FAILED_COPY.summaryTitle}</Text>
 
-            <Divider style={styles.rule} />
+            <View style={styles.divider} />
 
             <View style={styles.metaGroup}>
               <MetaRow label="Order number">
-                <AppText variant="labelStrong">#{displayOrderNumber}</AppText>
+                <Text style={styles.orderNumberText}>#{displayOrderNumber}</Text>
                 <CopyChip onPress={handleCopyOrderNumber} />
               </MetaRow>
 
               <MetaRow label="Payment">
-                <AppText variant="labelStrong" tone="secondary">
-                  {paymentLabel}
-                </AppText>
+                <Text style={styles.metaValueText}>{paymentLabel}</Text>
               </MetaRow>
 
               {itemsLabel ? (
                 <MetaRow label="Items">
-                  <AppText variant="labelStrong" tone="secondary">
-                    {itemsLabel}
-                  </AppText>
+                  <Text style={styles.metaValueText}>{itemsLabel}</Text>
                 </MetaRow>
               ) : null}
             </View>
 
+            <View style={styles.divider} />
+
             <View style={styles.totalRow}>
-              <AppText variant="labelStrong">Order total</AppText>
-              <AppText variant="price">{amountLabel}</AppText>
+              <Text style={styles.totalLabel}>Order total</Text>
+              <Text style={styles.totalAmount}>{amountLabel}</Text>
             </View>
           </View>
-        </Surface>
+        </View>
 
+        {/* 3. Common reasons */}
         <BulletCard title={FAILED_COPY.reasonsTitle} bullets={FAILED_REASONS} />
 
+        {/* 4. Support concierge card */}
         <SupportCard
           title={FAILED_COPY.supportTitle}
           subtitle={FAILED_COPY.supportSubtitle}
         />
 
-        <AppText variant="micro" tone="faint" style={styles.footerNote}>
+        {/* 5. Footer note */}
+        <Text style={styles.footerNote}>
           {FAILED_COPY.footerNote}
-        </AppText>
+        </Text>
       </ScrollView>
 
+      {/* Fixed bottom action bar with luxury dark emerald button */}
       <StatusActionBar
         primaryLabel={FAILED_COPY.retryCta}
-        primaryIcon="refresh-cw"
+        primaryIcon="rotate-cw"
         ghostLabel={FAILED_COPY.homeCta}
         onPrimary={handleRetryPayment}
         onGhost={handleBackToHome}

@@ -442,10 +442,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   handle: {
-    width: 40,
+    width: 44,
     height: 4,
     borderRadius: 2,
-    backgroundColor: '#DADADA',
+    backgroundColor: '#D8D4CC',
   },
 });
 

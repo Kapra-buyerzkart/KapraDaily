@@ -1,21 +1,17 @@
 import React from 'react';
-import { TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { TouchableOpacity, StyleSheet, Text, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import CartText from '@/screens/cart/components/atoms/CartText';
 import {
-  CART_COLORS,
-  CART_ELEVATION,
-  CART_RADIUS,
-  CART_SPACING,
-  wp,
-  hp,
-} from '@/styles/cartTheme';
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from 'react-native-responsive-screen';
+import { PWD_COLORS, PWD_FONTS, PWD_RADIUS } from '../theme';
 
 const ChangePasswordActionBar = ({ enabled, label, hint, onPress }) => (
   <SafeAreaView edges={['bottom']} style={styles.footer}>
     <TouchableOpacity
-      activeOpacity={0.9}
+      activeOpacity={0.88}
       style={[styles.btn, !enabled && styles.btnDisabled]}
       onPress={onPress}
       disabled={!enabled}
@@ -26,16 +22,15 @@ const ChangePasswordActionBar = ({ enabled, label, hint, onPress }) => (
     >
       <MaterialCommunityIcons
         name={enabled ? 'lock-check-outline' : 'lock-outline'}
-        size={wp('4%')}
-        color={enabled ? CART_COLORS.onPrimary : CART_COLORS.textFaint}
+        size={wp('4.8%')}
+        color={enabled ? PWD_COLORS.goldMetallic : PWD_COLORS.textFaint}
       />
-      <CartText
-        variant="cta"
-        tone={enabled ? 'onDark' : 'faint'}
+      <Text
+        style={[styles.btnText, !enabled && styles.btnTextDisabled]}
         numberOfLines={1}
       >
         {enabled ? label : hint}
-      </CartText>
+      </Text>
     </TouchableOpacity>
   </SafeAreaView>
 );
@@ -44,36 +39,57 @@ export default React.memo(ChangePasswordActionBar);
 
 const styles = StyleSheet.create({
   footer: {
-    backgroundColor: CART_COLORS.card,
-    paddingHorizontal: CART_SPACING.lg,
-    paddingTop: CART_SPACING.md,
-    borderTopLeftRadius: CART_RADIUS.card,
-    borderTopRightRadius: CART_RADIUS.card,
-    ...CART_ELEVATION.bar,
+    backgroundColor: PWD_COLORS.card,
+    paddingHorizontal: wp('5%'),
+    paddingTop: hp('1.5%'),
+    borderTopWidth: 1,
+    borderTopColor: PWD_COLORS.border,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: -3 },
+        shadowOpacity: 0.05,
+        shadowRadius: 5,
+      },
+      android: {
+        elevation: 6,
+      },
+    }),
   },
   btn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: CART_SPACING.sm,
-    backgroundColor: CART_COLORS.primary,
-    borderRadius: CART_RADIUS.button,
-    paddingHorizontal: CART_SPACING.lg,
-    paddingVertical: hp('1.6%'),
-    marginBottom: CART_SPACING.md,
+    backgroundColor: PWD_COLORS.emerald,
+    borderRadius: PWD_RADIUS.button,
+    paddingVertical: hp('1.8%'),
+    marginBottom: hp('1%'),
+    borderWidth: 1,
+    borderColor: 'rgba(182, 141, 64, 0.35)',
     ...Platform.select({
       ios: {
-        shadowColor: CART_COLORS.primary,
-        shadowOpacity: 0.22,
-        shadowOffset: { width: 0, height: 6 },
-        shadowRadius: 12,
+        shadowColor: PWD_COLORS.emerald,
+        shadowOpacity: 0.25,
+        shadowOffset: { width: 0, height: 4 },
+        shadowRadius: 8,
       },
-      android: { elevation: 1 },
+      android: { elevation: 3 },
     }),
   },
   btnDisabled: {
-    backgroundColor: CART_COLORS.well,
+    backgroundColor: PWD_COLORS.well,
+    borderColor: PWD_COLORS.border,
     shadowOpacity: 0,
     elevation: 0,
+  },
+  btnText: {
+    fontFamily: PWD_FONTS.bodySemiBold,
+    fontSize: wp('4%'),
+    color: PWD_COLORS.white,
+    marginLeft: wp('2%'),
+    letterSpacing: 0.3,
+  },
+  btnTextDisabled: {
+    color: PWD_COLORS.textFaint,
   },
 });

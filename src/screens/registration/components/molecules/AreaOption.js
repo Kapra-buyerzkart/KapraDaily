@@ -1,32 +1,25 @@
 import React from 'react';
-import { TouchableOpacity, StyleSheet } from 'react-native';
-import CartText from '../../../cart/components/atoms/CartText';
-import RadioDot from '../atoms/RadioDot';
-import {
-  CART_COLORS,
-  CART_RADIUS,
-  CART_SPACING,
-  hp,
-} from '../../../../styles/cartTheme';
+import { TouchableOpacity, Text, View, StyleSheet } from 'react-native';
+import Feather from 'react-native-vector-icons/Feather';
 
 const AreaOption = ({ label, selected, onPress }) => (
   <TouchableOpacity
-    activeOpacity={0.75}
+    activeOpacity={0.8}
     onPress={onPress}
     style={[styles.row, selected && styles.rowSelected]}
     accessibilityRole="radio"
     accessibilityState={{ selected }}
     accessibilityLabel={label}
   >
-    <CartText
-      variant={selected ? 'labelStrong' : 'label'}
-      tone={selected ? 'brand' : 'secondary'}
-      style={styles.label}
+    <Text
+      style={[styles.label, selected ? styles.labelSelected : styles.labelIdle]}
       numberOfLines={1}
     >
       {label}
-    </CartText>
-    <RadioDot selected={selected} />
+    </Text>
+    <View style={[styles.indicator, selected && styles.indicatorSelected]}>
+      {selected ? <Feather name="check" size={14} color="#0A2A20" /> : null}
+    </View>
   </TouchableOpacity>
 );
 
@@ -36,19 +29,42 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: CART_SPACING.sm,
-    paddingHorizontal: CART_SPACING.md,
-    paddingVertical: hp('1.3%'),
-    borderRadius: CART_RADIUS.sm,
-    borderWidth: 1,
-    borderColor: 'transparent',
-    backgroundColor: CART_COLORS.well,
+    justifyContent: 'space-between',
+    paddingHorizontal: 14,
+    height: 46,
+    borderRadius: 10,
+    borderWidth: 1.2,
+    borderColor: '#E2DFD8',
+    backgroundColor: '#FAF9F6',
   },
   rowSelected: {
-    borderColor: CART_COLORS.primaryEdge,
-    backgroundColor: CART_COLORS.primaryTint,
+    borderColor: '#0A2A20',
+    backgroundColor: '#0A2A20',
   },
   label: {
     flex: 1,
+    fontSize: 14,
+  },
+  labelIdle: {
+    fontFamily: 'Lexend-Regular',
+    color: '#12372A',
+  },
+  labelSelected: {
+    fontFamily: 'Lexend-SemiBold',
+    color: '#FFFFFF',
+  },
+  indicator: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: '#9E9E9E',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+  },
+  indicatorSelected: {
+    borderColor: '#FFFFFF',
+    backgroundColor: '#FFFFFF',
   },
 });

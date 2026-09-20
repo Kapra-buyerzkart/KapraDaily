@@ -1,16 +1,13 @@
 import React from 'react';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import { View, TouchableOpacity, StyleSheet, Text, Platform } from 'react-native';
+import Feather from 'react-native-vector-icons/Feather';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { AppText } from '../../../../../components/atoms';
 import {
-  UI_COLORS,
-  UI_SPACING,
-  hitSlopTo,
-  hp,
-  wp,
-} from '../../../../../theme/tokens';
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from 'react-native-responsive-screen';
+import { EDIT_COLORS, EDIT_FONTS } from '../editTheme';
 
 interface Props {
   onBack: () => void;
@@ -30,29 +27,27 @@ const EditProfileHeader: React.FC<Props> = ({
       style={[
         styles.header,
         backgroundStyle,
-        { paddingTop: insets.top + UI_SPACING.sm },
+        { paddingTop: insets.top + hp('0.8%') },
       ]}
     >
       <TouchableOpacity
         onPress={onBack}
         style={styles.backBtn}
-        hitSlop={hitSlopTo(wp('6%'))}
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         activeOpacity={0.7}
         accessibilityRole="button"
         accessibilityLabel="Go back"
       >
-        <Ionicons
-          name="arrow-back"
-          size={wp('6%')}
-          color={UI_COLORS.textPrimary}
-        />
+        <Feather name="chevron-left" size={wp('5.5%')} color={EDIT_COLORS.emerald} />
       </TouchableOpacity>
 
       <View style={styles.titleBlock}>
-        <AppText variant="title" numberOfLines={1} accessibilityRole="header">
+        <Text style={styles.title} numberOfLines={1} accessibilityRole="header">
           Edit Profile
-        </AppText>
+        </Text>
       </View>
+
+      <View style={styles.headerRightPlaceholder} />
 
       <Animated.View style={[styles.border, borderStyle]} />
     </Animated.View>
@@ -65,24 +60,53 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: UI_SPACING.sm,
-    paddingHorizontal: UI_SPACING.lg,
-    paddingBottom: hp('1.2%'),
+    justifyContent: 'space-between',
+    paddingHorizontal: wp('5%'),
+    paddingBottom: hp('1.4%'),
+    backgroundColor: EDIT_COLORS.canvas,
   },
   backBtn: {
-    padding: UI_SPACING.xs,
+    width: wp('10%'),
+    height: wp('10%'),
+    borderRadius: wp('5%'),
+    backgroundColor: EDIT_COLORS.card,
+    borderWidth: 1,
+    borderColor: EDIT_COLORS.border,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 3,
+      },
+      android: {
+        elevation: 1,
+      },
+    }),
   },
   titleBlock: {
     flex: 1,
-    marginLeft: UI_SPACING.xs,
+    alignItems: 'center',
     justifyContent: 'center',
+  },
+  title: {
+    fontFamily: EDIT_FONTS.title,
+    fontSize: wp('5.5%'),
+    color: EDIT_COLORS.emerald,
+    letterSpacing: 0.3,
+    textAlign: 'center',
+  },
+  headerRightPlaceholder: {
+    width: wp('10%'),
   },
   border: {
     position: 'absolute',
     left: 0,
     right: 0,
     bottom: 0,
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: UI_COLORS.border,
+    height: 1,
+    backgroundColor: EDIT_COLORS.border,
   },
 });

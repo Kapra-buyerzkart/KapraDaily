@@ -1,46 +1,42 @@
 import React from 'react';
-import { View, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, Text, Platform } from 'react-native';
+import Feather from 'react-native-vector-icons/Feather';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import icons from '@/assets/icons';
-import CartText from '@/screens/cart/components/atoms/CartText';
-import IconDisc from '@/screens/cart/components/atoms/IconDisc';
 import {
-  CART_COLORS,
-  CART_SPACING,
-  hitSlopTo,
-  wp,
-  hp,
-} from '@/styles/cartTheme';
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from 'react-native-responsive-screen';
+import { PWD_COLORS, PWD_FONTS } from '../theme';
 
 const ChangePasswordHeader = ({ onBack }) => (
   <View style={styles.header}>
     <TouchableOpacity
       onPress={onBack}
       style={styles.backBtn}
-      hitSlop={hitSlopTo(24)}
+      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
       activeOpacity={0.7}
       accessibilityRole="button"
       accessibilityLabel="Go back"
     >
-      <Image source={icons.backArrowNew} style={styles.backIcon} />
+      <Feather name="chevron-left" size={wp('5.5%')} color={PWD_COLORS.emerald} />
     </TouchableOpacity>
 
     <View style={styles.titleBlock}>
-      <CartText variant="title" accessibilityRole="header">
-        Change Password
-      </CartText>
-      <CartText variant="caption" tone="muted">
-        Keep your account secure
-      </CartText>
+      <Text style={styles.title} numberOfLines={1}>
+        Update Password
+      </Text>
+      <Text style={styles.subtitle} numberOfLines={1}>
+        Keep your account safe & secure
+      </Text>
     </View>
 
-    <IconDisc size={wp('9%')} tone="neutral">
+    <View style={styles.iconCircle}>
       <MaterialCommunityIcons
         name="shield-lock-outline"
-        size={wp('4.4%')}
-        color={CART_COLORS.textSecondary}
+        size={wp('4.8%')}
+        color={PWD_COLORS.gold}
       />
-    </IconDisc>
+    </View>
   </View>
 );
 
@@ -50,20 +46,58 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: CART_SPACING.lg,
-    paddingVertical: hp('1.2%'),
-    backgroundColor: CART_COLORS.card,
-    gap: CART_SPACING.sm,
+    justifyContent: 'space-between',
+    paddingHorizontal: wp('5%'),
+    paddingVertical: hp('1.6%'),
+    backgroundColor: PWD_COLORS.canvas,
   },
   backBtn: {
-    padding: CART_SPACING.xs,
-  },
-  backIcon: {
-    resizeMode: 'contain',
-    tintColor: CART_COLORS.textPrimary,
+    width: wp('10%'),
+    height: wp('10%'),
+    borderRadius: wp('5%'),
+    backgroundColor: PWD_COLORS.card,
+    borderWidth: 1,
+    borderColor: PWD_COLORS.border,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 3,
+      },
+      android: {
+        elevation: 1,
+      },
+    }),
   },
   titleBlock: {
     flex: 1,
-    marginLeft: CART_SPACING.xs,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: wp('2%'),
+  },
+  title: {
+    fontFamily: PWD_FONTS.title,
+    fontSize: wp('5.5%'),
+    color: PWD_COLORS.emerald,
+    letterSpacing: 0.3,
+  },
+  subtitle: {
+    fontFamily: PWD_FONTS.body,
+    fontSize: wp('2.8%'),
+    color: PWD_COLORS.textMuted,
+    marginTop: hp('0.2%'),
+  },
+  iconCircle: {
+    width: wp('10%'),
+    height: wp('10%'),
+    borderRadius: wp('5%'),
+    backgroundColor: PWD_COLORS.goldTint,
+    borderWidth: 1,
+    borderColor: PWD_COLORS.goldBorder,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

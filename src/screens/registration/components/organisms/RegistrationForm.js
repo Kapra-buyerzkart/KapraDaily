@@ -1,13 +1,13 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import CartText from '../../../cart/components/atoms/CartText';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import PrimaryButton from '../atoms/PrimaryButton';
 import FormField from '../molecules/FormField';
 import PasswordField from '../molecules/PasswordField';
 import PhoneEditChip from '../molecules/PhoneEditChip';
 import TermsRow from '../molecules/TermsRow';
 import AreaSelectCard from './AreaSelectCard';
-import { CART_COLORS, CART_SPACING, hp } from '../../../../styles/cartTheme';
 
 const RegistrationForm = ({
   phone,
@@ -28,103 +28,165 @@ const RegistrationForm = ({
   onPressTerms,
   loading,
   onSubmit,
-}) => (
-  <View style={styles.sheet}>
-    <View style={styles.grabber} />
+}) => {
+  const navigation = useNavigation();
 
-    <View style={styles.heading}>
-      <CartText variant="title">Create your account</CartText>
-      <CartText variant="caption" tone="muted">
-        Fields marked <CartText style={styles.star}>*</CartText> are mandatory
-      </CartText>
-    </View>
+  return (
+    <View style={styles.sheet}>
+      <Text style={styles.welcomeText}>Welcome to</Text>
+      <Text style={styles.brandTitleText}>Kapra Gold & Diamonds</Text>
+      <Text style={styles.subHeaderText}>CREATE YOUR ACCOUNT</Text>
 
-    <PhoneEditChip phone={phone} onPress={onEditPhone} />
+      <View style={styles.titleDivider} />
 
-    <View style={styles.fields}>
-      <FormField
-        label="Name"
-        required
-        placeholder="Enter your full name"
-        value={name}
-        onChangeText={onChangeName}
-        autoCapitalize="words"
-        returnKeyType="next"
-      />
+      <View style={styles.loginRow}>
+        <Text style={styles.alreadyHaveText}>Already have an account? </Text>
+        <TouchableOpacity
+          onPress={() => navigation.navigate('LoginScreen')}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.loginLinkText}>Log in</Text>
+        </TouchableOpacity>
+      </View>
 
-      <FormField
-        label="Email ID"
-        placeholder="Enter your email ID"
-        value={email}
-        onChangeText={onChangeEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        autoCorrect={false}
-        returnKeyType="next"
-      />
+      {phone ? <PhoneEditChip phone={phone} onPress={onEditPhone} /> : null}
 
-      <PasswordField
-        label="Password"
-        required
-        placeholder="Create a password"
-        value={password}
-        onChangeText={onChangePassword}
-        returnKeyType="next"
-      />
+      <Text style={styles.mandatoryNotice}>
+        Fields marked <Text style={styles.star}>*</Text> are mandatory
+      </Text>
 
-      <FormField
-        label="Pincode"
-        required
-        placeholder="00 00 00"
-        value={pincode}
-        onChangeText={onChangePincode}
-        keyboardType="number-pad"
-        maxLength={6}
-        returnKeyType="done"
-      />
-
-      {areas.length > 0 ? (
-        <AreaSelectCard
-          areas={areas}
-          selectedArea={selectedArea}
-          onSelect={onSelectArea}
+      <View style={styles.fields}>
+        <FormField
+          label="Full Name"
+          required
+          placeholder="Enter your full name"
+          value={name}
+          onChangeText={onChangeName}
+          autoCapitalize="words"
+          returnKeyType="next"
         />
-      ) : null}
+
+        <FormField
+          label="Email ID"
+          placeholder="Enter your email address"
+          value={email}
+          onChangeText={onChangeEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoCorrect={false}
+          returnKeyType="next"
+        />
+
+        <PasswordField
+          label="Password"
+          required
+          placeholder="Create a password"
+          value={password}
+          onChangeText={onChangePassword}
+          returnKeyType="next"
+        />
+
+        <FormField
+          label="Pincode"
+          required
+          placeholder="Enter 6-digit pincode"
+          value={pincode}
+          onChangeText={onChangePincode}
+          keyboardType="number-pad"
+          maxLength={6}
+          returnKeyType="done"
+        />
+
+        {areas.length > 0 ? (
+          <AreaSelectCard
+            areas={areas}
+            selectedArea={selectedArea}
+            onSelect={onSelectArea}
+          />
+        ) : null}
+      </View>
+
+      <TermsRow
+        checked={termsAccepted}
+        onToggle={onToggleTerms}
+        onPressTerms={onPressTerms}
+      />
+
+      <PrimaryButton
+        label="Create Account"
+        loading={loading}
+        onPress={onSubmit}
+      />
     </View>
-
-    <TermsRow
-      checked={termsAccepted}
-      onToggle={onToggleTerms}
-      onPressTerms={onPressTerms}
-    />
-
-    <PrimaryButton label="Continue" loading={loading} onPress={onSubmit} />
-  </View>
-);
+  );
+};
 
 export default React.memo(RegistrationForm);
 
 const styles = StyleSheet.create({
   sheet: {
-    gap: CART_SPACING.lg,
-    paddingHorizontal: CART_SPACING.lg,
-    paddingTop: CART_SPACING.md,
-    paddingBottom: hp('4%'),
+    paddingHorizontal: wp('7%'),
+    paddingTop: 8,
+    paddingBottom: 36,
   },
-  grabber: {
+  welcomeText: {
+    fontFamily: 'CormorantGaramond-Italic',
+    fontSize: wp('6.5%'),
+    lineHeight: wp('7.8%'),
+    color: '#12372A',
+    textAlign: 'center',
+    marginTop: 4,
+  },
+  brandTitleText: {
+    fontFamily: 'CormorantGaramond-SemiBold',
+    fontSize: wp('7.6%'),
+    lineHeight: wp('9.2%'),
+    color: '#12372A',
+    textAlign: 'center',
+    marginTop: 2,
+    letterSpacing: -0.2,
+  },
+  subHeaderText: {
+    fontFamily: 'Lexend-Medium',
+    fontSize: wp('3%'),
+    letterSpacing: 2,
+    color: '#262626',
+    textAlign: 'center',
+    marginTop: 12,
+  },
+  titleDivider: {
+    width: wp('44%'),
+    height: 1.5,
+    backgroundColor: '#1E3E30',
     alignSelf: 'center',
-    width: 44,
-    height: 4,
-    borderRadius: 999,
-    backgroundColor: CART_COLORS.graySoftColor,
+    marginTop: 14,
+    marginBottom: 20,
   },
-  heading: {
-    gap: CART_SPACING.xs,
+  loginRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
   },
-  fields: {
-    gap: CART_SPACING.md,
+  alreadyHaveText: {
+    fontFamily: 'Lexend-Regular',
+    fontSize: wp('3.6%'),
+    color: '#262626',
+  },
+  loginLinkText: {
+    fontFamily: 'Lexend-SemiBold',
+    fontSize: wp('3.6%'),
+    color: '#165A42',
+  },
+  mandatoryNotice: {
+    fontFamily: 'Lexend-Regular',
+    fontSize: 12,
+    color: '#666666',
+    marginBottom: 14,
   },
   star: {
-    color: CART_COLORS.danger,
+    color: '#D93025',
+  },
+  fields: {
+    gap: 14,
   },
 });

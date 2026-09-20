@@ -1,20 +1,26 @@
 import React from 'react';
-import { StyleSheet } from 'react-native';
-import CartText from '@/screens/cart/components/atoms/CartText';
-import { CART_SPACING } from '@/styles/cartTheme';
+import { StyleSheet, Text } from 'react-native';
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from 'react-native-responsive-screen';
+import { PWD_COLORS, PWD_FONTS } from '../theme';
 
 const FieldLabel = ({ children, style }) => (
-  <CartText variant="micro" tone="muted" style={[styles.label, style]}>
+  <Text style={[styles.label, style]}>
     {children}
-  </CartText>
+  </Text>
 );
 
 export default React.memo(FieldLabel);
 
 const styles = StyleSheet.create({
   label: {
-    letterSpacing: 0.8,
+    fontFamily: PWD_FONTS.bodyMedium,
+    fontSize: wp('3%'),
+    color: PWD_COLORS.textSecondary,
+    letterSpacing: 0.5,
     textTransform: 'uppercase',
-    marginBottom: CART_SPACING.sm,
+    marginBottom: hp('0.8%'),
   },
 });

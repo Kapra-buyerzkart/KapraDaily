@@ -31,7 +31,7 @@ import {
   hp,
 } from '../../../styles/cartTheme';
 
-const QUICK_PICKS = ['Biscuits', 'Cakes', 'Fruits', 'Snacks', 'Beverages'];
+const QUICK_PICKS = ['Gold Coins', 'Diamond Rings', 'Bangles', 'Chains', 'Earrings'];
 
 const QuickPick = ({ label, selected, onPress }) => (
   <TouchableOpacity
@@ -94,21 +94,21 @@ const SuggestProductsModal = forwardRef(function SuggestProductsModal(
         <View style={styles.headerRow}>
           <View style={styles.headerDisc}>
             <MaterialCommunityIcons
-              name="cart-plus"
+              name="diamond-stone"
               size={wp('5.2%')}
-              color={CART_COLORS.primary}
+              color="#0C382E"
             />
           </View>
 
           <View style={styles.headerCopy}>
             <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={styles.title}>
-              Didn't find your product?
+              Looking for a piece?
             </Text>
             <Text
               maxFontSizeMultiplier={MAX_FONT_SCALE}
               style={styles.subtitle}
             >
-              Tell us what to stock and we'll try to add it
+              Tell our jewellers what you're seeking and we'll craft it
             </Text>
           </View>
         </View>
@@ -117,13 +117,13 @@ const SuggestProductsModal = forwardRef(function SuggestProductsModal(
           <MaterialIcons
             name="search"
             size={wp('5%')}
-            color={CART_COLORS.textFaint}
+            color="#9E9E9E"
           />
           <BottomSheetTextInput
             value={requestText}
             onChangeText={setRequestText}
-            placeholder="eg: biscuits, cake, fruits ..."
-            placeholderTextColor={CART_COLORS.textFaint}
+            placeholder="eg: solitaire ring, floral bangle ..."
+            placeholderTextColor="#9E9E9E"
             maxFontSizeMultiplier={MAX_FONT_SCALE}
             style={styles.input}
             returnKeyType="send"
@@ -137,7 +137,7 @@ const SuggestProductsModal = forwardRef(function SuggestProductsModal(
               <MaterialIcons
                 name="close"
                 size={wp('4.6%')}
-                color={CART_COLORS.textMuted}
+                color="#666666"
               />
             </TouchableOpacity>
           ) : null}
@@ -165,29 +165,27 @@ const SuggestProductsModal = forwardRef(function SuggestProductsModal(
           <MaterialCommunityIcons
             name="information-outline"
             size={wp('4%')}
-            color={CART_COLORS.textMuted}
+            color="#666666"
           />
           <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={styles.noteText}>
-            We review every request and notify you once it's live
+            Our jewellery specialists review each request promptly
           </Text>
         </View>
 
         <TouchableOpacity
-          activeOpacity={0.85}
+          activeOpacity={0.88}
           onPress={onSubmit}
           disabled={!canSubmit}
           style={[styles.submitBtn, !canSubmit && styles.submitBtnDisabled]}
         >
           {isSubmittingRequest ? (
-            <ActivityIndicator size="small" color={CART_COLORS.onPrimary} />
+            <ActivityIndicator size="small" color="#FFFFFF" />
           ) : (
             <>
               <MaterialIcons
                 name="send"
                 size={wp('4.4%')}
-                color={
-                  canSubmit ? CART_COLORS.onPrimary : CART_COLORS.textFaint
-                }
+                color={canSubmit ? '#FFFFFF' : '#9E9E9E'}
               />
               <Text
                 maxFontSizeMultiplier={MAX_FONT_SCALE}
@@ -211,29 +209,33 @@ export default SuggestProductsModal;
 
 const styles = StyleSheet.create({
   background: {
-    backgroundColor: CART_COLORS.card,
-    borderTopLeftRadius: CART_RADIUS.card,
-    borderTopRightRadius: CART_RADIUS.card,
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
   },
   handleIndicator: {
-    backgroundColor: CART_COLORS.graySoftColor,
-    width: wp('12%'),
+    backgroundColor: '#D8D4CC',
+    width: 44,
+    height: 4,
+    borderRadius: 2,
   },
   content: {
-    paddingHorizontal: CART_SPACING.lg,
-    paddingTop: CART_SPACING.xs,
+    paddingHorizontal: 20,
+    paddingTop: 8,
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: CART_SPACING.md,
-    marginBottom: CART_SPACING.lg,
+    gap: 12,
+    marginBottom: 16,
   },
   headerDisc: {
-    width: wp('10%'),
-    height: wp('10%'),
-    borderRadius: CART_RADIUS.icon,
-    backgroundColor: CART_COLORS.primaryTint,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: '#E8F2EE',
+    borderWidth: 1,
+    borderColor: '#D1E6DD',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -242,93 +244,107 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   title: {
-    ...CART_TYPE.heading,
-    color: CART_COLORS.textPrimary,
+    fontFamily: 'CormorantGaramond-SemiBold',
+    fontSize: 22,
+    lineHeight: 26,
+    color: '#12372A',
+    letterSpacing: -0.2,
   },
   subtitle: {
-    ...CART_TYPE.micro,
-    color: CART_COLORS.textMuted,
+    fontFamily: 'Lexend-Regular',
+    fontSize: 12,
+    lineHeight: 16,
+    color: '#666666',
   },
   inputCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: CART_SPACING.sm,
+    gap: 8,
     borderWidth: 1,
-    borderColor: CART_COLORS.border,
-    borderRadius: CART_RADIUS.input,
-    backgroundColor: CART_COLORS.well,
-    paddingHorizontal: CART_SPACING.md,
+    borderColor: '#ECE7DE',
+    borderRadius: 14,
+    backgroundColor: '#FAF8F5',
+    paddingHorizontal: 14,
     paddingVertical: hp('1.3%'),
   },
   input: {
     flex: 1,
-    ...CART_TYPE.body,
-    color: CART_COLORS.textPrimary,
+    fontFamily: 'Lexend-Regular',
+    fontSize: 13.5,
+    color: '#12372A',
     padding: 0,
   },
   sectionLabel: {
-    ...CART_TYPE.micro,
-    color: CART_COLORS.textMuted,
-    marginTop: CART_SPACING.lg,
-    marginBottom: CART_SPACING.sm,
+    fontFamily: 'Lexend-Medium',
+    fontSize: 12,
+    color: '#12372A',
+    marginTop: 16,
+    marginBottom: 8,
   },
   chipRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: CART_SPACING.sm,
+    gap: 8,
   },
   chip: {
     borderWidth: 1,
-    borderColor: CART_COLORS.border,
-    backgroundColor: CART_COLORS.card,
-    borderRadius: CART_RADIUS.pill,
-    paddingHorizontal: CART_SPACING.md,
+    borderColor: '#ECE7DE',
+    backgroundColor: '#FAF8F5',
+    borderRadius: 20,
+    paddingHorizontal: 14,
     paddingVertical: hp('0.7%'),
   },
   chipSelected: {
-    borderColor: CART_COLORS.primaryEdge,
-    backgroundColor: CART_COLORS.primaryTint,
+    borderColor: '#0C382E',
+    backgroundColor: '#E8F2EE',
   },
   chipText: {
-    ...CART_TYPE.micro,
-    color: CART_COLORS.textSecondary,
+    fontFamily: 'Lexend-Regular',
+    fontSize: 12,
+    color: '#555555',
   },
   chipTextSelected: {
-    color: CART_COLORS.primary,
+    color: '#0C382E',
+    fontFamily: 'Lexend-Medium',
   },
   noteRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: CART_SPACING.sm,
-    marginTop: CART_SPACING.lg,
-    paddingHorizontal: CART_SPACING.md,
+    gap: 8,
+    marginTop: 16,
+    paddingHorizontal: 14,
     paddingVertical: hp('1.1%'),
-    borderRadius: CART_RADIUS.button,
-    backgroundColor: CART_COLORS.well,
+    borderRadius: 12,
+    backgroundColor: '#FAF8F5',
+    borderWidth: 1,
+    borderColor: '#ECE7DE',
   },
   noteText: {
     flex: 1,
-    ...CART_TYPE.micro,
-    color: CART_COLORS.textMuted,
+    fontFamily: 'Lexend-Regular',
+    fontSize: 11.5,
+    color: '#666666',
   },
   submitBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: CART_SPACING.sm,
-    marginTop: CART_SPACING.lg,
-    paddingVertical: hp('1.6%'),
-    borderRadius: CART_RADIUS.button,
-    backgroundColor: CART_COLORS.primary,
+    gap: 8,
+    marginTop: 16,
+    height: hp('5.6%'),
+    borderRadius: 14,
+    backgroundColor: '#0C382E',
   },
   submitBtnDisabled: {
-    backgroundColor: CART_COLORS.well,
+    backgroundColor: '#D1DDD8',
   },
   submitText: {
-    ...CART_TYPE.cta,
-    color: CART_COLORS.onPrimary,
+    fontFamily: 'Lexend-Medium',
+    fontSize: 14,
+    color: '#FFFFFF',
+    letterSpacing: 0.2,
   },
   submitTextDisabled: {
-    color: CART_COLORS.textFaint,
+    color: '#888888',
   },
 });

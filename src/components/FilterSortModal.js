@@ -34,11 +34,11 @@ const SORT_OPTIONS = [
 
 const SELECTION_DURATION = 150;
 const CHIP_BG_INACTIVE = '#FFFFFF';
-const CHIP_BG_ACTIVE = '#FFF5F0';
-const CHIP_BORDER_INACTIVE = '#E5E5E5';
-const CHIP_BORDER_ACTIVE = '#F25000';
-const CHIP_TEXT_INACTIVE = '#666';
-const CHIP_TEXT_ACTIVE = '#F25000';
+const CHIP_BG_ACTIVE = '#E8F2EE';
+const CHIP_BORDER_INACTIVE = '#ECE7DE';
+const CHIP_BORDER_ACTIVE = '#0C382E';
+const CHIP_TEXT_INACTIVE = '#666666';
+const CHIP_TEXT_ACTIVE = '#0C382E';
 
 const AnimatedTouchable =
   ReanimatedAnimated.createAnimatedComponent(TouchableOpacity);
@@ -259,8 +259,10 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: wp('6%'),
-    borderTopRightRadius: wp('6%'),
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    borderWidth: 1,
+    borderColor: '#ECE7DE',
     paddingBottom: hp('4%'),
     paddingTop: hp('2%'),
     maxHeight: hp('85%'),
@@ -273,20 +275,21 @@ const styles = StyleSheet.create({
     marginBottom: hp('2%'),
     paddingBottom: hp('1%'),
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: '#ECE7DE',
   },
   headerTitle: {
-    fontFamily: FONTS.lexend.semiBold,
-    fontSize: wp('4.5%'),
-    color: '#000000',
+    fontFamily: 'CormorantGaramond-SemiBold',
+    fontSize: wp('5.2%'),
+    color: '#12372A',
+    letterSpacing: -0.2,
   },
   body: {
     paddingHorizontal: wp('6%'),
   },
   sectionTitle: {
-    fontFamily: FONTS.lexend.medium,
+    fontFamily: 'Lexend-Medium',
     fontSize: wp('4%'),
-    color: '#333',
+    color: '#12372A',
     marginBottom: hp('1.5%'),
   },
   sortContainer: {
@@ -295,28 +298,28 @@ const styles = StyleSheet.create({
     gap: wp('2%'),
   },
   sortOption: {
-    paddingHorizontal: wp('3%'),
-    paddingVertical: hp('0.8%'),
-    borderRadius: wp('5%'),
+    paddingHorizontal: wp('3.5%'),
+    paddingVertical: hp('0.9%'),
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E5E5E5',
+    borderColor: '#ECE7DE',
     marginBottom: hp('1%'),
   },
   sortLabel: {
-    fontFamily: FONTS.gilroy.regular,
+    fontFamily: 'Lexend-Regular',
     fontSize: wp('3.2%'),
   },
   selectedSortLabel: {
-    fontFamily: FONTS.gilroy.medium,
+    fontFamily: 'Lexend-Medium',
   },
   priceDisplay: {
     alignItems: 'center',
     marginBottom: hp('1%'),
   },
   priceLabel: {
-    fontFamily: FONTS.gilroy.semiBold,
+    fontFamily: 'Lexend-Medium',
     fontSize: wp('4%'),
-    color: '#F25000',
+    color: '#0C382E',
   },
   sliderContainer: {
     height: 40,
@@ -326,12 +329,12 @@ const styles = StyleSheet.create({
   },
   sliderTrack: {
     height: 4,
-    backgroundColor: '#E5E5E5',
+    backgroundColor: '#ECE7DE',
     borderRadius: 2,
   },
   sliderActiveTrack: {
     height: 4,
-    backgroundColor: '#F25000',
+    backgroundColor: '#0C382E',
     position: 'absolute',
     top: 18,
   },
@@ -341,7 +344,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: '#FFFFFF',
     borderWidth: 2,
-    borderColor: '#F25000',
+    borderColor: '#0C382E',
     position: 'absolute',
     top: 8,
     shadowColor: '#000',
@@ -356,9 +359,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: wp('6.5%'),
   },
   sliderLimitText: {
-    fontFamily: FONTS.gilroy.regular,
+    fontFamily: 'Lexend-Regular',
     fontSize: wp('2.8%'),
-    color: '#999',
+    color: '#888888',
   },
   footer: {
     flexDirection: 'row',
@@ -368,31 +371,33 @@ const styles = StyleSheet.create({
   },
   resetButton: {
     flex: 1,
-    height: hp('5.5%'),
+    height: hp('5.6%'),
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: wp('3%'),
-    borderRadius: wp('2%'),
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#F25000',
+    borderColor: '#D8D4CC',
+    backgroundColor: '#FAF8F5',
   },
   resetButtonText: {
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('4%'),
-    color: '#F25000',
+    fontFamily: 'Lexend-Medium',
+    fontSize: wp('3.8%'),
+    color: '#12372A',
   },
   applyButton: {
     flex: 2,
-    height: hp('5.5%'),
-    backgroundColor: '#F25000',
+    height: hp('5.6%'),
+    backgroundColor: '#0C382E',
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: wp('2%'),
+    borderRadius: 14,
   },
   applyButtonText: {
-    fontFamily: FONTS.gilroy.bold,
-    fontSize: wp('4%'),
+    fontFamily: 'Lexend-Medium',
+    fontSize: wp('3.8%'),
     color: '#FFFFFF',
+    letterSpacing: 0.2,
   },
 });
 

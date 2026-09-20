@@ -1,51 +1,28 @@
 import React from 'react';
-import { View, ImageBackground, Image, StyleSheet } from 'react-native';
-import { CART_COLORS, wp, hp } from '../../../../styles/cartTheme';
+import { View, ImageBackground, StyleSheet } from 'react-native';
+import { heightPercentageToDP as hp } from 'react-native-responsive-screen';
+import images from '@/assets/images';
 
 const RegistrationHero = () => (
-  <ImageBackground
-    style={styles.hero}
-    imageStyle={styles.heroImage}
-    source={require('../../../../assets/images/login_background_image.jpg')}
-  >
-    <View style={styles.scrim} />
-    <Image
-      style={styles.logo}
-      source={require('../../../../assets/images/kapra_logo.png')}
+  <View style={styles.heroContainer}>
+    <ImageBackground
+      style={styles.hero}
+      source={images.registrationLuxuryBg}
+      resizeMode="cover"
     />
-    <Image
-      style={styles.tagLine}
-      source={require('../../../../assets/images/login_content.png')}
-    />
-  </ImageBackground>
+  </View>
 );
 
 export default React.memo(RegistrationHero);
 
 const styles = StyleSheet.create({
+  heroContainer: {
+    width: '100%',
+    height: hp('38%'),
+    overflow: 'hidden',
+  },
   hero: {
-    height: hp('34%'),
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: hp('4%'),
-    paddingBottom: hp('6%'),
-    backgroundColor: CART_COLORS.canvas,
-  },
-  heroImage: {
-    resizeMode: 'cover',
-  },
-  scrim: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-  },
-  logo: {
-    width: wp('42%'),
-    height: hp('8%'),
-    resizeMode: 'contain',
-  },
-  tagLine: {
-    width: wp('50.7%'),
-    height: hp('14%'),
-    resizeMode: 'contain',
+    width: '100%',
+    height: '100%',
   },
 });

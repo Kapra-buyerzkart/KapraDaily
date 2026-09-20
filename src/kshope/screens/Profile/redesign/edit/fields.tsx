@@ -3,6 +3,7 @@ import {
   View,
   StyleSheet,
   StyleProp,
+  Text,
   TextInput,
   TextInputProps,
   TextStyle,
@@ -10,7 +11,10 @@ import {
 } from 'react-native';
 import { useSharedValue, withTiming } from 'react-native-reanimated';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { AppText } from '../../../../components/atoms';
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from 'react-native-responsive-screen';
 import {
   FieldLabel,
   FieldWell,
@@ -19,15 +23,7 @@ import {
   VerifiedPill,
 } from './atoms';
 import { FOCUS_FADE, GENDER_OPTIONS } from './constants';
-import {
-  UI_COLORS,
-  UI_RADIUS,
-  UI_SPACING,
-  UI_TYPE,
-  MAX_FONT_SCALE,
-  hitSlopTo,
-  wp,
-} from '../../../../theme/tokens';
+import { EDIT_COLORS, EDIT_FONTS } from './editTheme';
 
 const ICON_SIZE = wp('4.4%');
 
@@ -82,12 +78,12 @@ export const ProfileTextField = React.forwardRef<
     };
 
     const iconColor = error
-      ? UI_COLORS.danger
+      ? EDIT_COLORS.danger
       : !editable
-      ? UI_COLORS.textFaint
+      ? EDIT_COLORS.textFaint
       : focused
-      ? UI_COLORS.textSecondary
-      : UI_COLORS.textMuted;
+      ? EDIT_COLORS.gold
+      : EDIT_COLORS.textMuted;
 
     return (
       <View>
@@ -108,11 +104,11 @@ export const ProfileTextField = React.forwardRef<
             style={[styles.input, !editable && styles.inputLocked, inputStyle]}
             value={value}
             editable={editable}
-            placeholderTextColor={UI_COLORS.textFaint}
-            selectionColor={UI_COLORS.textSecondary}
+            placeholderTextColor={EDIT_COLORS.textFaint}
+            selectionColor={EDIT_COLORS.gold}
             onFocus={handleFocus}
             onBlur={handleBlur}
-            maxFontSizeMultiplier={MAX_FONT_SCALE}
+            maxFontSizeMultiplier={1.3}
             {...inputProps}
           />
 
@@ -124,7 +120,7 @@ export const ProfileTextField = React.forwardRef<
                 <MaterialCommunityIcons
                   name="lock-outline"
                   size={ICON_SIZE}
-                  color={UI_COLORS.textFaint}
+                  color={EDIT_COLORS.textFaint}
                   style={styles.trailing}
                 />
               )
@@ -134,14 +130,14 @@ export const ProfileTextField = React.forwardRef<
             <TouchableOpacity
               onPress={onChangePress}
               activeOpacity={0.7}
-              hitSlop={hitSlopTo(24)}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               style={styles.changeBtn}
               accessibilityRole="button"
               accessibilityLabel={`${changeLabel} ${label}`}
             >
-              <AppText variant="captionStrong" tone="brand">
+              <Text style={styles.changeBtnText}>
                 {changeLabel}
-              </AppText>
+              </Text>
             </TouchableOpacity>
           )}
         </FieldWell>
@@ -150,9 +146,9 @@ export const ProfileTextField = React.forwardRef<
           <InlineError message={error} />
         ) : (
           !!hint && (
-            <AppText variant="caption" tone="faint" style={styles.hint}>
+            <Text style={styles.hint}>
               {hint}
-            </AppText>
+            </Text>
           )
         )}
       </View>
@@ -179,16 +175,16 @@ export const DateOfBirthField: React.FC<{
       <MaterialCommunityIcons
         name="cake-variant-outline"
         size={ICON_SIZE}
-        color={UI_COLORS.textMuted}
+        color={EDIT_COLORS.emerald}
         style={styles.icon}
       />
-      <AppText variant="bodyStrong" style={styles.dateText}>
+      <Text style={styles.dateText}>
         {value.toLocaleDateString('en-GB')}
-      </AppText>
+      </Text>
       <MaterialCommunityIcons
         name="chevron-down"
         size={ICON_SIZE}
-        color={UI_COLORS.textFaint}
+        color={EDIT_COLORS.textMuted}
       />
     </TouchableOpacity>
   </View>
@@ -221,71 +217,91 @@ export const InfoNote: React.FC<{
   <View style={styles.noteRow}>
     <MaterialCommunityIcons
       name={icon}
-      size={wp('3.8%')}
-      color={UI_COLORS.textMuted}
+      size={wp('4.2%')}
+      color={EDIT_COLORS.gold}
       style={styles.noteIcon}
     />
-    <AppText variant="micro" tone="muted" style={styles.noteText}>
-      {children}
-    </AppText>
+    <Text style={styles.noteText}>{children}</Text>
   </View>
 );
 
 const styles = StyleSheet.create({
   icon: {
-    marginRight: UI_SPACING.md,
+    marginRight: wp('2.5%'),
   },
   input: {
     flex: 1,
-    ...UI_TYPE.bodyStrong,
-    color: UI_COLORS.textPrimary,
-    paddingVertical: UI_SPACING.md,
+    fontFamily: EDIT_FONTS.bodyMedium,
+    fontSize: wp('3.8%'),
+    color: EDIT_COLORS.textPrimary,
+    paddingVertical: hp('1%'),
     includeFontPadding: false,
   },
   inputLocked: {
-    color: UI_COLORS.textMuted,
+    color: EDIT_COLORS.textMuted,
   },
   trailing: {
-    marginLeft: UI_SPACING.sm,
+    marginLeft: wp('2%'),
   },
   changeBtn: {
-    marginLeft: UI_SPACING.sm,
+    backgroundColor: EDIT_COLORS.emeraldTint,
+    paddingHorizontal: wp('3%'),
+    paddingVertical: hp('0.5%'),
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(12, 56, 46, 0.15)',
+    marginLeft: wp('2%'),
+  },
+  changeBtnText: {
+    fontFamily: EDIT_FONTS.bodySemiBold,
+    fontSize: wp('3%'),
+    color: EDIT_COLORS.emerald,
   },
   hint: {
-    marginTop: UI_SPACING.sm - 2,
+    fontFamily: EDIT_FONTS.body,
+    fontSize: wp('2.8%'),
+    color: EDIT_COLORS.textFaint,
+    marginTop: hp('0.5%'),
   },
   dateWell: {
     flexDirection: 'row',
     alignItems: 'center',
-    minHeight: wp('12%'),
-    borderRadius: UI_RADIUS.input,
+    minHeight: hp('6.2%'),
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: UI_COLORS.border,
-    backgroundColor: UI_COLORS.well,
-    paddingHorizontal: UI_SPACING.md,
-    paddingVertical: UI_SPACING.md,
+    borderColor: EDIT_COLORS.border,
+    backgroundColor: EDIT_COLORS.well,
+    paddingHorizontal: wp('3.5%'),
   },
   dateText: {
     flex: 1,
+    fontFamily: EDIT_FONTS.bodyMedium,
+    fontSize: wp('3.8%'),
+    color: EDIT_COLORS.textPrimary,
     letterSpacing: 1.2,
   },
   genderRow: {
     flexDirection: 'row',
-    gap: UI_SPACING.sm,
+    gap: wp('2%'),
   },
   noteRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: UI_SPACING.sm,
-    padding: UI_SPACING.md,
-    borderRadius: UI_RADIUS.sm,
-    backgroundColor: UI_COLORS.well,
+    gap: wp('2.5%'),
+    padding: wp('3.5%'),
+    borderRadius: 12,
+    backgroundColor: EDIT_COLORS.goldTint,
+    borderWidth: 1,
+    borderColor: EDIT_COLORS.goldBorder,
   },
   noteIcon: {
     marginTop: 1,
   },
   noteText: {
     flex: 1,
-    lineHeight: wp('4.4%'),
+    fontFamily: EDIT_FONTS.body,
+    fontSize: wp('2.9%'),
+    color: EDIT_COLORS.textSecondary,
+    lineHeight: wp('4.2%'),
   },
 });

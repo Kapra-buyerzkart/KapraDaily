@@ -11,6 +11,7 @@ import {
   Platform,
   Alert,
   Keyboard,
+  StatusBar,
 } from 'react-native';
 import React, { useRef, useState, useEffect } from 'react';
 import logger from '../utils/logger';
@@ -37,6 +38,7 @@ import RNOtpVerify from 'react-native-otp-verify';
 import { AppContext } from '../context/appContext';
 import { OneSignal } from 'react-native-onesignal';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import Feather from 'react-native-vector-icons/Feather';
 import HelpSupportModal from '../components/HelpSupportModal';
 import EmailOtpBottomSheet from '../components/EmailOtpBottomSheet';
 import { setTokens } from '../api/tokenService';
@@ -396,6 +398,11 @@ const OtpScreen = () => {
 
   return (
     <View style={styles.mainContainer}>
+      <StatusBar
+        translucent
+        backgroundColor="transparent"
+        barStyle={'dark-content'}
+      />
       <SafeAreaView style={styles.helpButtonSafeArea}>
         <TouchableOpacity
           style={styles.helpButton}
@@ -408,7 +415,6 @@ const OtpScreen = () => {
 
       <HelpSupportModal ref={helpSheetRef} />
 
-      {}
       <View style={styles.imagePreloader} pointerEvents="none">
         <Image
           source={require('../assets/images/splash/backgroundbg.png')}
@@ -441,35 +447,30 @@ const OtpScreen = () => {
           resizeMode="contain"
         />
       </View>
-      {}
+
       <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardAvoid}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
-          contentContainerStyle={{ flexGrow: 1 }}
+          contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
+          bounces={false}
         >
-          <ImageBackground
-            style={styles.backgroundImage}
-            source={images.login_landing}
-          >
-            <View />
-            <Image
-              style={styles.tagLine}
-              source={require('../assets/images/login_content.png')}
+          <View style={styles.topImageContainer}>
+            <ImageBackground
+              style={styles.backgroundImage}
+              source={images.otpLuxuryBg}
+              resizeMode="cover"
             />
-          </ImageBackground>
+          </View>
 
           <View style={styles.bottomContainer}>
-            <Text style={styles.headerText}>
-              {type === 'login'
-                ? 'Login'
-                : type === 'reset'
-                ? 'Forgot Password'
-                : 'Register'}
-            </Text>
+            <Text style={styles.welcomeText}>Welcome to</Text>
+            <Text style={styles.brandTitleText}>Kapra Gold & Diamonds</Text>
+
+            <View style={styles.titleDivider} />
 
             <TouchableOpacity
               onPress={() =>
@@ -477,43 +478,48 @@ const OtpScreen = () => {
                   type: type,
                 })
               }
-              style={styles.phoneNoEditContainer}
+              style={styles.phoneEditBox}
+              activeOpacity={0.8}
             >
-              <Text style={styles.phoneNoText}>{phone}</Text>
-              <Image
-                style={
-                  Platform.OS === 'android'
-                    ? [styles.editIconImage, { bottom: hp('0.2%') }]
-                    : styles.editIconImage
-                }
-                tintColor={'#000000'}
-                source={require('../assets/images/edit_icon.png')}
-              />
+              <Text style={styles.countryCode}>+91</Text>
+              <View style={styles.phoneDivider} />
+              <Text style={styles.phoneNumberText}>{phone}</Text>
+              <Feather name="edit-2" size={16} color="#0A2A20" />
             </TouchableOpacity>
-            <Text style={styles.otpSentText}>
-              OTP has been sent to your phone & WhatsApp
+
+            <Text style={styles.otpSentNotice}>
+              We have sent OTP to your phone and whatsapp
             </Text>
-            <Text style={styles.enterNumberText}>Enter OTP</Text>
 
             <View style={styles.otpContainer}>
-              {otp.map((digit, index) => (
-                <View style={styles.numberBox} key={index}>
-                  <TextInput
-                    ref={inputRefs[index]}
-                    style={styles.otpInput}
-                    keyboardType="numeric"
-                    maxLength={1}
-                    value={digit}
-                    textContentType="oneTimeCode"
-                    autoComplete="sms-otp"
-                    onChangeText={text => handleChange(text, index)}
-                    onKeyPress={e => handleKeyPress(e, index)}
-                  />
-                </View>
-              ))}
+              {otp.map((digit, index) => {
+                const isFilled = Boolean(digit);
+                return (
+                  <View
+                    style={[
+                      styles.numberBox,
+                      isFilled && styles.numberBoxFilled,
+                    ]}
+                    key={index}
+                  >
+                    <TextInput
+                      ref={inputRefs[index]}
+                      style={styles.otpInput}
+                      keyboardType="numeric"
+                      maxLength={1}
+                      value={digit}
+                      textContentType="oneTimeCode"
+                      autoComplete="sms-otp"
+                      onChangeText={text => handleChange(text, index)}
+                      onKeyPress={e => handleKeyPress(e, index)}
+                      selectionColor="#0A2A20"
+                    />
+                  </View>
+                );
+              })}
             </View>
 
-            <View style={styles.pwdResendTimeContainer}>
+            <View style={styles.resendRow}>
               {type === 'login' ? (
                 <TouchableOpacity
                   onPress={() =>
@@ -521,34 +527,29 @@ const OtpScreen = () => {
                       phone,
                     })
                   }
+                  activeOpacity={0.7}
                 >
                   <Text style={styles.usePwdText}>Use password</Text>
                 </TouchableOpacity>
               ) : (
                 <View />
               )}
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <View style={styles.timerWrap}>
                 {isResendDisabled ? (
                   <>
-                    <Text style={[styles.usePwdText, { color: '#616161' }]}>
-                      Resend OTP in{' '}
-                    </Text>
-                    <Text style={styles.time}>
-                      {Math.floor(timer / 60)}:
+                    <Text style={styles.resendNotice}>Resend OTP in </Text>
+                    <Text style={styles.timerText}>
+                      {String(Math.floor(timer / 60)).padStart(2, '0')}:
                       {String(timer % 60).padStart(2, '0')}
                     </Text>
                   </>
                 ) : (
-                  <TouchableOpacity style={{}} onPress={handleResendOtp}>
-                    <Text style={[styles.usePwdText, { color: '#F25000' }]}>
-                      Resend OTP
-                    </Text>
+                  <TouchableOpacity onPress={handleResendOtp} activeOpacity={0.7}>
+                    <Text style={styles.resendAction}>Resend OTP</Text>
                   </TouchableOpacity>
                 )}
               </View>
             </View>
-
-            {}
 
             <TouchableOpacity
               style={styles.continueButton}
@@ -560,11 +561,20 @@ const OtpScreen = () => {
                   : handleContinueRegister
               }
               disabled={loading}
+              activeOpacity={0.88}
             >
               {loading ? (
                 <BallPulse size={'large'} color={'#FFFFFF'} />
               ) : (
-                <Text style={styles.continueButtonText}>Continue</Text>
+                <View style={styles.continueContent}>
+                  <Text style={styles.continueButtonText}>Continue</Text>
+                  <Feather
+                    name="arrow-right"
+                    size={16}
+                    color="#FFFFFF"
+                    style={styles.continueArrow}
+                  />
+                </View>
               )}
             </TouchableOpacity>
           </View>
@@ -587,17 +597,19 @@ const styles = StyleSheet.create({
   helpButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.35)',
-    paddingHorizontal: wp('3%'),
-    paddingVertical: hp('0.8%'),
-    borderRadius: wp('5%'),
-    marginTop: hp('1.5%'),
+    backgroundColor: 'rgba(10, 42, 32, 0.45)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.25)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 18,
+    marginTop: hp('1.2%'),
     marginRight: wp('4%'),
-    gap: wp('1.2%'),
+    gap: 5,
   },
   helpButtonText: {
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('3.25%'),
+    fontFamily: 'Lexend-Medium',
+    fontSize: 12,
     color: '#FFFFFF',
   },
   imagePreloader: {
@@ -611,24 +623,180 @@ const styles = StyleSheet.create({
   preloadLogo: { width: wp('70%'), height: hp('20%') },
   preloadLarge: { width: wp('90%'), height: hp('22%') },
   preloadSmall: { width: wp('44.5%'), height: hp('22%') },
+  keyboardAvoid: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'space-between',
+    backgroundColor: '#FFFFFF',
+  },
+  topImageContainer: {
+    width: '100%',
+    height: hp('50%'),
+    overflow: 'hidden',
+  },
   backgroundImage: {
-    width: wp('100%'),
-    height: hp('60%'),
+    width: '100%',
+    height: '100%',
+  },
+  bottomContainer: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    paddingHorizontal: wp('7%'),
+    paddingTop: 32,
+    paddingBottom: hp('5%'),
+    marginTop: -32,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 6,
+  },
+  welcomeText: {
+    fontFamily: 'CormorantGaramond-Italic',
+    fontSize: wp('6.5%'),
+    lineHeight: wp('7.8%'),
+    color: '#12372A',
+    textAlign: 'center',
+  },
+  brandTitleText: {
+    fontFamily: 'CormorantGaramond-SemiBold',
+    fontSize: wp('7.6%'),
+    lineHeight: wp('9.2%'),
+    color: '#12372A',
+    textAlign: 'center',
+    marginTop: 2,
+    letterSpacing: -0.2,
+  },
+  titleDivider: {
+    width: wp('44%'),
+    height: 1.5,
+    backgroundColor: '#1E3E30',
+    alignSelf: 'center',
+    marginTop: 14,
+    marginBottom: 24,
+  },
+  phoneEditBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 52,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#0A2A20',
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 16,
+  },
+  countryCode: {
+    fontFamily: 'Lexend-Medium',
+    fontSize: 15,
+    color: '#000000',
+  },
+  phoneDivider: {
+    width: 1,
+    height: 22,
+    backgroundColor: '#0A2A20',
+    marginHorizontal: 14,
+  },
+  phoneNumberText: {
+    flex: 1,
+    fontFamily: 'Lexend-Medium',
+    fontSize: 15,
+    color: '#000000',
+  },
+  otpSentNotice: {
+    fontFamily: 'Lexend-Regular',
+    fontSize: wp('3.1%'),
+    color: '#757575',
+    textAlign: 'center',
+    marginTop: 12,
+    marginBottom: 18,
+  },
+  otpContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 8,
+    marginBottom: 14,
+  },
+  numberBox: {
+    flex: 1,
+    height: 52,
+    backgroundColor: '#F5F5F3',
+    borderRadius: 12,
+    borderWidth: 1.2,
+    borderColor: '#DCD9D2',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  numberBoxFilled: {
+    borderColor: '#0A2A20',
+    backgroundColor: '#FFFFFF',
+  },
+  otpInput: {
+    fontSize: 18,
+    fontFamily: 'Lexend-Medium',
+    color: '#0A2A20',
+    textAlign: 'center',
+    width: '100%',
+    paddingVertical: 0,
+  },
+  resendRow: {
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: hp('6%'),
-    paddingBottom: hp('7.5%'),
+    marginBottom: 22,
   },
-  kapraLogo: { width: wp('47%'), height: hp('10%'), resizeMode: 'cover' },
-  tagLine: { width: wp('50.7%'), height: hp('16.95%'), resizeMode: 'cover' },
-  bottomContainer: {
-    paddingHorizontal: wp('5.8%'),
-    paddingTop: hp('3.5%'),
-    paddingBottom: hp('5%'),
-    borderTopLeftRadius: wp('9.3%'),
-    borderTopRightRadius: wp('9.3%'),
-    backgroundColor: '#FFFFFF',
-    marginTop: -hp('5%'),
+  timerWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 'auto',
+  },
+  usePwdText: {
+    fontFamily: 'Lexend-Regular',
+    fontSize: wp('3.2%'),
+    color: '#165A42',
+  },
+  resendNotice: {
+    fontFamily: 'Lexend-Regular',
+    fontSize: wp('3.2%'),
+    color: '#757575',
+  },
+  timerText: {
+    fontFamily: 'Lexend-Medium',
+    fontSize: wp('3.2%'),
+    color: '#12372A',
+  },
+  resendAction: {
+    fontFamily: 'Lexend-SemiBold',
+    fontSize: wp('3.2%'),
+    color: '#165A42',
+  },
+  continueButton: {
+    backgroundColor: '#0A2A20',
+    width: '100%',
+    height: 52,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 12,
+    shadowColor: '#0A2A20',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  continueContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  continueButtonText: {
+    fontFamily: 'Lexend-Medium',
+    fontSize: 15,
+    color: '#FFFFFF',
+  },
+  continueArrow: {
+    marginLeft: 6,
   },
   headerText: {
     fontFamily: FONTS.gilroy.semiBold,
@@ -639,9 +807,6 @@ const styles = StyleSheet.create({
   phoneNoEditContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: hp('1%'),
-    alignSelf: 'center',
-    marginBottom: hp('1%'),
   },
   phoneNoText: {
     fontFamily: FONTS.gilroy.regular,
@@ -652,8 +817,6 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.gilroy.light,
     fontSize: wp('3.12%'),
     color: '#616161',
-    alignSelf: 'center',
-    marginBottom: hp('3%'),
   },
   editIconImage: {
     width: wp('2.79%'),
@@ -664,34 +827,10 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3.72%'),
     color: '#616161',
-    paddingBottom: 20,
-    marginBottom: hp('0.5%'),
-    alignSelf: 'center',
   },
-  otpContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: wp('5%'),
-  },
-  numberBox: {
-    width: wp('13.95%'),
-    height: hp('5.36%'),
-    backgroundColor: '#DADADA',
-    borderRadius: wp('2.33%'),
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  otpInput: { fontSize: wp('4.5%'), textAlign: 'center', width: '100%' },
   pwdResendTimeContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: hp('0.8%'),
-    paddingHorizontal: wp('5%'),
-  },
-  usePwdText: {
-    fontFamily: FONTS.gilroy.regular,
-    fontSize: wp('3.25%'),
-    color: '#F25000',
   },
   time: {
     fontFamily: FONTS.gilroy.medium,
@@ -700,32 +839,13 @@ const styles = StyleSheet.create({
   },
   emailFallbackContainer: {
     alignSelf: 'center',
-    marginTop: hp('1.8%'),
-    paddingVertical: hp('0.5%'),
-    paddingHorizontal: wp('2%'),
   },
   emailFallbackText: {
     fontFamily: FONTS.gilroy.regular,
-    fontSize: wp('3.25%'),
-    color: '#616161',
-    textAlign: 'center',
   },
   emailFallbackLink: {
     fontFamily: FONTS.gilroy.medium,
-    color: '#F25000',
   },
-  continueButton: {
-    backgroundColor: '#F25000',
-    width: '100%',
-    height: hp('6.11%'),
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: wp('2.33%'),
-    marginTop: hp('3.5%'),
-  },
-  continueButtonText: {
-    fontFamily: FONTS.gilroy.bold,
-    fontSize: wp('4.18%'),
-    color: '#FFFFFF',
-  },
+  kapraLogo: { width: wp('47%'), height: hp('10%'), resizeMode: 'cover' },
+  tagLine: { width: wp('50.7%'), height: hp('16.95%'), resizeMode: 'cover' },
 });

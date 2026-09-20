@@ -1,7 +1,8 @@
-import React, { useContext, useEffect } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { AppContext } from '../context/appContext';
 import AppLoader from '../components/AppLoader';
+import SplashScreen from '../screens/SplashScreen';
 import lazyScreen from './lazyScreen';
 
 import AppUpdateModal from '../components/AppUpdateModal';
@@ -42,12 +43,19 @@ export default function RootNavigator() {
     updateInfo,
   } = useContext(AppContext);
 
+  const [isSplashFinished, setIsSplashFinished] = useState(false);
+
   useEffect(() => {
     loadProfile();
   }, []);
 
-  if (!profile) {
-    return <AppLoader />;
+  if (!profile || !isSplashFinished) {
+    return (
+      <SplashScreen
+        isReady={Boolean(profile)}
+        onFinish={() => setIsSplashFinished(true)}
+      />
+    );
   }
 
   return (
@@ -56,6 +64,7 @@ export default function RootNavigator() {
         initialRouteName={profile?.custId ? 'KshopeScreen' : 'LoginScreen'}
         screenOptions={SCREEN_OPTIONS}
       >
+        <Stack.Screen name="SplashScreen" component={SplashScreen} />
         <Stack.Screen name="KshopeScreen" component={KshopeScreen} />
         <Stack.Screen name="LoginScreen" component={LoginScreen} />
         <Stack.Screen name="LoginPwdScreen" component={LoginPwdScreen} />
