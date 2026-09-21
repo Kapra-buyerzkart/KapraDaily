@@ -8,8 +8,21 @@ function StatusPill({ status }) {
   const meta = statusMeta(status);
 
   return (
-    <View style={[styles.statusPill, { backgroundColor: meta.bg }]}>
-      <View style={[styles.statusDot, { backgroundColor: meta.fg }]} />
+    <View
+      style={[
+        styles.statusPill,
+        {
+          backgroundColor: meta.bg,
+          borderColor: meta.border || meta.bg,
+        },
+      ]}
+    >
+      <View
+        style={[
+          styles.statusDot,
+          { backgroundColor: meta.dot || meta.fg },
+        ]}
+      />
       <Text
         style={[styles.statusText, { color: meta.fg }]}
         numberOfLines={1}

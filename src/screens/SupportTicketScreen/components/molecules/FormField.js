@@ -7,7 +7,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { CANVAS, INK, MAX_FONT_SCALE } from '@/styles/homeTheme';
+import { MAX_FONT_SCALE } from '@/styles/homeTheme';
 import {
   FIELD_FOCUS_EDGE,
   FIELD_REST_BG,
@@ -16,6 +16,7 @@ import {
   styles,
 } from '../../styles';
 import { FOCUS_FADE } from '../../motion';
+import { LUXURY_COLORS } from '../../SupportTicketsListScreen/supportLuxuryTheme';
 import FieldLabel from '../atoms/FieldLabel';
 import FieldFooter from '../atoms/FieldFooter';
 
@@ -31,7 +32,7 @@ const FormField = React.forwardRef(
       backgroundColor: interpolateColor(
         focus.value,
         [0, 1],
-        [FIELD_REST_BG, CANVAS],
+        [FIELD_REST_BG, LUXURY_COLORS.card],
       ),
       borderColor: interpolateColor(
         focus.value,
@@ -54,7 +55,7 @@ const FormField = React.forwardRef(
           <MaterialCommunityIcons
             name={icon}
             size={ICON.field}
-            color={focused ? INK.base : INK.muted}
+            color={focused ? LUXURY_COLORS.emerald : LUXURY_COLORS.textMuted}
             style={[styles.fieldIcon, multiline && styles.fieldIconMultiline]}
           />
 
@@ -63,7 +64,7 @@ const FormField = React.forwardRef(
             style={[styles.fieldInput, multiline && styles.fieldInputMultiline]}
             value={value}
             onChangeText={onChangeText}
-            placeholderTextColor={INK.faint}
+            placeholderTextColor={LUXURY_COLORS.textFaint}
             multiline={multiline}
             maxFontSizeMultiplier={MAX_FONT_SCALE}
             onFocus={() => {

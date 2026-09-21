@@ -1,10 +1,10 @@
 import { View, RefreshControl } from 'react-native';
 import React, { useCallback } from 'react';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
-import { ACCENT } from '@/styles/homeTheme';
 import { styles } from '../../styles';
 import { entrance } from '../../motion';
 import { SKELETON_COUNT } from '../../constants';
+import { LUXURY_COLORS } from '../../supportLuxuryTheme';
 import SectionLabel from '../atoms/SectionLabel';
 import TicketCard from '../molecules/TicketCard';
 import TicketCardSkeleton from '../molecules/TicketCardSkeleton';
@@ -44,7 +44,7 @@ export default function TicketList({
           <RaiseTicketCTA onPress={onRaise} />
         </Animated.View>
         {isFirstLoad || tickets.length > 0 ? (
-          <SectionLabel title="Your tickets" count={tickets.length} />
+          <SectionLabel title="Support History" count={tickets.length} />
         ) : null}
       </>
     ),
@@ -80,8 +80,8 @@ export default function TicketList({
         <RefreshControl
           refreshing={isLoading && !isFirstLoad}
           onRefresh={onRefresh}
-          tintColor={ACCENT.primary}
-          colors={[ACCENT.primary]}
+          tintColor={LUXURY_COLORS.emerald}
+          colors={[LUXURY_COLORS.emerald]}
         />
       }
     />

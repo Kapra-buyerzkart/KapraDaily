@@ -219,6 +219,14 @@ export const styles = StyleSheet.create({
     width: wp('50%'),
     height: 70,
   },
+  versionText: {
+    marginTop: hp('1.2%'),
+    letterSpacing: 0.3,
+  },
+  rightsText: {
+    marginTop: hp('0.4%'),
+    letterSpacing: 0.2,
+  },
   backgroundImage: {
     width: '100%',
     backgroundColor: 'yellow',

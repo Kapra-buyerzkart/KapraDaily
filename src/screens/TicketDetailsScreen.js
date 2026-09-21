@@ -4,7 +4,7 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Image,
+  Platform,
 } from 'react-native';
 import React, { useState, useEffect, useContext } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -12,13 +12,16 @@ import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
-import AntDesign from 'react-native-vector-icons/AntDesign';
-import icons from '@/assets/icons';
+import Feather from 'react-native-vector-icons/Feather';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { FONTS } from '../styles/typography';
 import { getTicketDetailsApi } from '../api/supportService';
 import { LoaderContext } from '../context/loaderContext';
 import StatusModal from '../components/StatusModal';
+import {
+  LUXURY_COLORS,
+  LUXURY_FONTS,
+} from './SupportTicketsListScreen/supportLuxuryTheme';
 
 const TicketDetailsScreen = () => {
   const navigation = useNavigation();
@@ -69,31 +72,68 @@ const TicketDetailsScreen = () => {
 
   useEffect(() => {
     fetchDetails();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ticketId]);
 
   const getPriorityStyle = priority => {
     switch (priority?.toLowerCase()) {
       case 'high':
-        return { color: '#EB5757', bg: '#EB575715' };
+        return {
+          color: LUXURY_COLORS.danger,
+          bg: LUXURY_COLORS.dangerTint,
+          border: LUXURY_COLORS.dangerBorder,
+        };
       case 'medium':
-        return { color: '#F2994A', bg: '#F2994A15' };
+      case 'urgent':
+        return {
+          color: LUXURY_COLORS.gold,
+          bg: LUXURY_COLORS.goldTint,
+          border: LUXURY_COLORS.goldBorder,
+        };
       case 'low':
-        return { color: '#27AE60', bg: '#27AE6015' };
+      case 'normal':
+        return {
+          color: LUXURY_COLORS.emerald,
+          bg: LUXURY_COLORS.emeraldTint,
+          border: LUXURY_COLORS.emeraldBorder,
+        };
       default:
-        return { color: '#F2994A', bg: '#F2994A15' };
+        return {
+          color: LUXURY_COLORS.emerald,
+          bg: LUXURY_COLORS.emeraldTint,
+          border: LUXURY_COLORS.emeraldBorder,
+        };
     }
   };
 
   const getStatusStyle = status => {
     switch (status?.toLowerCase()) {
       case 'open':
-        return { color: '#2F80ED', bg: '#2F80ED15' };
+        return {
+          color: LUXURY_COLORS.emerald,
+          bg: LUXURY_COLORS.emeraldTint,
+          border: LUXURY_COLORS.emeraldBorder,
+        };
       case 'closed':
-        return { color: '#27AE60', bg: '#27AE6015' };
+      case 'resolved':
+        return {
+          color: '#2C5E43',
+          bg: '#EAF4EE',
+          border: '#C8E4D3',
+        };
       case 'pending':
-        return { color: '#F2C94C', bg: '#F2C94C15' };
+      case 'in progress':
+        return {
+          color: LUXURY_COLORS.gold,
+          bg: LUXURY_COLORS.goldTint,
+          border: LUXURY_COLORS.goldBorder,
+        };
       default:
-        return { color: '#6B7280', bg: '#6B728015' };
+        return {
+          color: LUXURY_COLORS.textSecondary,
+          bg: LUXURY_COLORS.well,
+          border: LUXURY_COLORS.border,
+        };
     }
   };
 
@@ -106,49 +146,66 @@ const TicketDetailsScreen = () => {
     <SafeAreaView style={styles.mainContainer}>
       <View style={styles.header}>
         <TouchableOpacity
-          hitSlop={40}
           onPress={() => navigation.goBack()}
           style={styles.backButton}
+          activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
         >
-          <Image
-            source={icons.backArrowNew}
-            style={{
-              resizeMode: 'contain',
-              tintColor: '#000',
-            }}
-          />
+          <Feather name="chevron-left" size={22} color={LUXURY_COLORS.emerald} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Ticket Details</Text>
-        <View style={{ width: wp('5%') }} />
+        <View style={{ width: wp('10%') }} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.container}>
+      <ScrollView
+        contentContainerStyle={styles.container}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.topCard}>
           <View style={styles.row}>
-            <Text style={styles.idText}>Ticket #{ticket.supportId}</Text>
-            <View style={[styles.badge, { backgroundColor: statusStyle.bg }]}>
+            <View style={styles.idTag}>
+              <Text style={styles.idTagText}>#{ticket.supportId}</Text>
+            </View>
+            <View
+              style={[
+                styles.badge,
+                {
+                  backgroundColor: statusStyle.bg,
+                  borderColor: statusStyle.border,
+                },
+              ]}
+            >
               <Text style={[styles.badgeText, { color: statusStyle.color }]}>
                 {ticket.status || 'Open'}
               </Text>
             </View>
           </View>
           <Text style={styles.titleText}>{ticket.title}</Text>
-          <View style={styles.row}>
+          <View style={styles.metaRow}>
             <View style={styles.metaItem}>
               <Text style={styles.metaLabel}>Priority</Text>
               <View
-                style={[styles.badge, { backgroundColor: priorityStyle.bg }]}
+                style={[
+                  styles.badge,
+                  {
+                    backgroundColor: priorityStyle.bg,
+                    borderColor: priorityStyle.border,
+                  },
+                ]}
               >
                 <Text
                   style={[styles.badgeText, { color: priorityStyle.color }]}
                 >
-                  {ticket.priority?.charAt(0).toUpperCase() +
-                    ticket.priority?.slice(1)}
+                  {ticket.priority
+                    ? ticket.priority.charAt(0).toUpperCase() +
+                      ticket.priority.slice(1)
+                    : 'Normal'}
                 </Text>
               </View>
             </View>
             <View style={styles.metaItem}>
-              <Text style={styles.metaLabel}>Submitted on</Text>
+              <Text style={styles.metaLabel}>Submitted On</Text>
               <Text style={styles.dateText}>
                 {new Date(
                   ticket.createdOn || ticket.createdAt,
@@ -160,28 +217,45 @@ const TicketDetailsScreen = () => {
 
         {ticket.orderId > 0 && (
           <View style={styles.orderCard}>
-            <AntDesign name="shoppingcart" size={wp('5%')} color="#F25000" />
-            <Text style={styles.orderText}>
-              Related to Order Number:{' '}
-              <Text style={{ fontFamily: FONTS.gilroy.semiBold }}>
+            <View style={styles.orderIconWell}>
+              <Feather
+                name="shopping-bag"
+                size={18}
+                color={LUXURY_COLORS.gold}
+              />
+            </View>
+            <View style={styles.orderCopy}>
+              <Text style={styles.orderLabel}>Related Order</Text>
+              <Text style={styles.orderText}>
                 #{ticket.orderNumber || ticket.orderId}
               </Text>
-            </Text>
+            </View>
           </View>
         )}
 
         <View style={styles.contentCard}>
-          <Text style={styles.sectionTitle}>Message</Text>
+          <Text style={styles.sectionTitle}>Your Message</Text>
           <Text style={styles.messageText}>{ticket.message}</Text>
         </View>
 
         {ticket.adminReply && (
-          <View style={[styles.contentCard, { backgroundColor: '#F2F2F2' }]}>
-            <Text style={styles.sectionTitle}>Admin Reply</Text>
+          <View style={styles.replyCard}>
+            <View style={styles.replyHeader}>
+              <View style={styles.replyIconWell}>
+                <MaterialCommunityIcons
+                  name="face-agent"
+                  size={18}
+                  color={LUXURY_COLORS.gold}
+                />
+              </View>
+              <Text style={styles.replySectionTitle}>Concierge Response</Text>
+            </View>
             <Text style={styles.messageText}>{ticket.adminReply}</Text>
-            <Text style={styles.replyDate}>
-              {new Date(ticket.replyOn).toLocaleDateString()}
-            </Text>
+            {ticket.replyOn && (
+              <Text style={styles.replyDate}>
+                {new Date(ticket.replyOn).toLocaleDateString()}
+              </Text>
+            )}
           </View>
         )}
       </ScrollView>
@@ -205,115 +279,220 @@ export default TicketDetailsScreen;
 const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: LUXURY_COLORS.canvas,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: wp('5%'),
-    paddingVertical: hp('2%'),
-    backgroundColor: '#FFF',
+    paddingHorizontal: wp('4.5%'),
+    paddingVertical: hp('1.6%'),
+    backgroundColor: LUXURY_COLORS.canvas,
+    borderBottomWidth: 1,
+    borderBottomColor: LUXURY_COLORS.border,
   },
   headerTitle: {
-    fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('5%'),
-    color: '#000',
+    fontFamily: LUXURY_FONTS.heading,
+    fontSize: wp('5.6%'),
+    color: LUXURY_COLORS.emerald,
   },
   backButton: {
-    padding: wp('1%'),
+    width: wp('10%'),
+    height: wp('10%'),
+    borderRadius: wp('5%'),
+    backgroundColor: LUXURY_COLORS.card,
+    borderWidth: 1,
+    borderColor: LUXURY_COLORS.border,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.04,
+        shadowRadius: 3,
+      },
+      android: {
+        elevation: 1,
+      },
+    }),
   },
   container: {
-    padding: wp('5%'),
+    paddingHorizontal: wp('4.5%'),
+    paddingTop: hp('2%'),
+    paddingBottom: hp('4%'),
   },
   topCard: {
-    backgroundColor: '#FFF',
-    borderRadius: 12,
+    backgroundColor: LUXURY_COLORS.card,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: LUXURY_COLORS.border,
     padding: wp('4%'),
-    marginBottom: hp('2%'),
-    elevation: 2,
+    marginBottom: hp('1.8%'),
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.04,
+        shadowRadius: 6,
+      },
+      android: {
+        elevation: 1.5,
+      },
+    }),
   },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: hp('1.5%'),
+    marginBottom: hp('1.2%'),
   },
-  idText: {
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('3.5%'),
-    color: '#7D7D7D',
+  idTag: {
+    backgroundColor: LUXURY_COLORS.goldTint,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: LUXURY_COLORS.goldBorder,
+    paddingHorizontal: wp('2.5%'),
+    paddingVertical: 3,
+  },
+  idTagText: {
+    fontFamily: LUXURY_FONTS.bodySemiBold,
+    fontSize: wp('3%'),
+    color: LUXURY_COLORS.gold,
+    letterSpacing: 0.3,
   },
   badge: {
-    width: wp('20%'),
-    paddingHorizontal: wp('1%'),
-    paddingVertical: hp('0.5%'),
-    borderRadius: 20,
+    paddingHorizontal: wp('3%'),
+    paddingVertical: 4,
+    borderRadius: 999,
+    borderWidth: 1,
     alignItems: 'center',
   },
   badgeText: {
-    fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('3%'),
+    fontFamily: LUXURY_FONTS.bodyMedium,
+    fontSize: wp('2.8%'),
   },
   titleText: {
-    fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('4.5%'),
-    color: '#000',
-    marginBottom: hp('2%'),
+    fontFamily: LUXURY_FONTS.bodySemiBold,
+    fontSize: wp('4.4%'),
+    color: LUXURY_COLORS.textPrimary,
+    lineHeight: wp('5.8%'),
+    marginBottom: hp('1.6%'),
+  },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: hp('1.2%'),
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: LUXURY_COLORS.borderLight,
   },
   metaItem: {
     flex: 1,
   },
   metaLabel: {
-    fontFamily: FONTS.gilroy.regular,
-    fontSize: wp('3%'),
-    color: '#9E9E9E',
-    marginBottom: hp('0.5%'),
+    fontFamily: LUXURY_FONTS.body,
+    fontSize: wp('2.8%'),
+    color: LUXURY_COLORS.textMuted,
+    marginBottom: 4,
   },
   dateText: {
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('3.5%'),
-    color: '#4F4F4F',
+    fontFamily: LUXURY_FONTS.bodyMedium,
+    fontSize: wp('3.2%'),
+    color: LUXURY_COLORS.textPrimary,
   },
   orderCard: {
-    backgroundColor: '#FFF',
+    backgroundColor: LUXURY_COLORS.card,
     flexDirection: 'row',
     alignItems: 'center',
-    padding: wp('4%'),
-    borderRadius: 12,
-    marginBottom: hp('2%'),
-    borderLeftWidth: 4,
-    borderLeftColor: '#F25000',
+    padding: wp('3.5%'),
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: LUXURY_COLORS.border,
+    marginBottom: hp('1.8%'),
+  },
+  orderIconWell: {
+    width: wp('10%'),
+    height: wp('10%'),
+    borderRadius: 10,
+    backgroundColor: LUXURY_COLORS.goldTint,
+    borderWidth: 1,
+    borderColor: LUXURY_COLORS.goldBorder,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: wp('3%'),
+  },
+  orderCopy: {
+    flex: 1,
+  },
+  orderLabel: {
+    fontFamily: LUXURY_FONTS.body,
+    fontSize: wp('2.8%'),
+    color: LUXURY_COLORS.textMuted,
   },
   orderText: {
-    fontFamily: FONTS.gilroy.regular,
-    fontSize: wp('3.5%'),
-    color: '#4F4F4F',
-    marginLeft: wp('3%'),
+    fontFamily: LUXURY_FONTS.bodySemiBold,
+    fontSize: wp('3.4%'),
+    color: LUXURY_COLORS.emerald,
+    marginTop: 1,
   },
   contentCard: {
-    backgroundColor: '#FFF',
-    borderRadius: 12,
+    backgroundColor: LUXURY_COLORS.card,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: LUXURY_COLORS.border,
     padding: wp('4%'),
-    marginBottom: hp('2%'),
+    marginBottom: hp('1.8%'),
   },
   sectionTitle: {
-    fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('3.8%'),
-    color: '#7D7D7D',
-    marginBottom: hp('1%'),
+    fontFamily: LUXURY_FONTS.bodySemiBold,
+    fontSize: wp('3%'),
+    color: LUXURY_COLORS.emerald,
+    marginBottom: hp('0.8%'),
+    letterSpacing: 0.8,
     textTransform: 'uppercase',
   },
   messageText: {
-    fontFamily: FONTS.gilroy.regular,
-    fontSize: wp('3.8%'),
-    color: '#4F4F4F',
-    lineHeight: hp('2.5%'),
+    fontFamily: LUXURY_FONTS.body,
+    fontSize: wp('3.4%'),
+    color: LUXURY_COLORS.textSecondary,
+    lineHeight: wp('5%'),
+  },
+  replyCard: {
+    backgroundColor: LUXURY_COLORS.goldTint,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: LUXURY_COLORS.goldBorder,
+    padding: wp('4%'),
+    marginBottom: hp('1.8%'),
+  },
+  replyHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: hp('1%'),
+  },
+  replyIconWell: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: LUXURY_COLORS.white,
+    borderWidth: 1,
+    borderColor: LUXURY_COLORS.goldBorder,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
+  },
+  replySectionTitle: {
+    fontFamily: LUXURY_FONTS.bodySemiBold,
+    fontSize: wp('3%'),
+    color: LUXURY_COLORS.gold,
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
   },
   replyDate: {
-    fontFamily: FONTS.gilroy.italic,
-    fontSize: wp('3%'),
-    color: '#9E9E9E',
+    fontFamily: LUXURY_FONTS.body,
+    fontSize: wp('2.8%'),
+    color: LUXURY_COLORS.textMuted,
     alignSelf: 'flex-end',
     marginTop: hp('1%'),
   },

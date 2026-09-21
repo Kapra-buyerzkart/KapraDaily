@@ -1,12 +1,13 @@
 import { View, Text, Pressable } from 'react-native';
 import React from 'react';
 import Animated from 'react-native-reanimated';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { INK, MAX_FONT_SCALE } from '@/styles/homeTheme';
+import Feather from 'react-native-vector-icons/Feather';
+import { MAX_FONT_SCALE } from '@/styles/homeTheme';
 import { ICON, styles } from '../../styles';
 import { CARD_LAYOUT, entrance } from '../../motion';
 import { MAX_STAGGER, statusMeta } from '../../constants';
 import { formatTicketDate } from '../../utils';
+import { LUXURY_COLORS } from '../../supportLuxuryTheme';
 import TicketIdTag from '../atoms/TicketIdTag';
 import StatusPill from '../atoms/StatusPill';
 import PriorityChip from '../atoms/PriorityChip';
@@ -59,10 +60,10 @@ function TicketCard({ item, index, onPress }) {
 
         <View style={styles.cardFooter}>
           <View style={styles.cardFooterMeta}>
-            <MaterialCommunityIcons
-              name="calendar-blank-outline"
+            <Feather
+              name="calendar"
               size={ICON.meta}
-              color={INK.muted}
+              color={LUXURY_COLORS.textMuted}
             />
             <Text
               style={styles.cardFooterMetaText}
@@ -77,12 +78,12 @@ function TicketCard({ item, index, onPress }) {
               style={styles.cardFooterActionText}
               maxFontSizeMultiplier={MAX_FONT_SCALE}
             >
-              View details
+              View Details
             </Text>
-            <MaterialCommunityIcons
+            <Feather
               name="chevron-right"
-              size={ICON.chevron}
-              color={INK.base}
+              size={14}
+              color={LUXURY_COLORS.emerald}
             />
           </View>
         </View>

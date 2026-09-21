@@ -135,12 +135,12 @@ export const buildInformationItems = ({
     ),
     onPress: () => navigation.navigate('KshopeSupportTickets'),
   },
-  {
-    key: 'udc-login',
-    label: 'UDC Login',
-    icon: <Feather name="globe" color={GOLD} size={ICON_SIZE} />,
-    onPress: () => Linking.openURL(CONFIG.image_base_url),
-  },
+  // {
+  //   key: 'udc-login',
+  //   label: 'UDC Login',
+  //   icon: <Feather name="globe" color={GOLD} size={ICON_SIZE} />,
+  //   onPress: () => Linking.openURL(CONFIG.image_base_url),
+  // },
   {
     key: 'delete-account',
     label: 'Delete Account',

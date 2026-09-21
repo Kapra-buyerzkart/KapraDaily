@@ -34,7 +34,9 @@ import {
   getAvailableGiftCardsApi,
 } from '../../api/services/cartService';
 import Toast from 'react-native-simple-toast';
+import DeviceInfo from 'react-native-device-info';
 
+import { AppText } from '../../components/atoms';
 import ProfileHeaderBar from './redesign/sections/ProfileHeaderBar';
 import ProfileHeroCard from './redesign/sections/ProfileHeroCard';
 import QuickActionsGrid from './redesign/sections/QuickActionsGrid';
@@ -49,8 +51,9 @@ import {
 } from './redesign/motion';
 
 const INK = UI_COLORS.textSecondary;
-const RED = UI_COLORS.danger;
 const ICON_SIZE = wp('4%');
+const APP_VERSION = DeviceInfo.getVersion ? DeviceInfo.getVersion() : '1.0.0';
+const CURRENT_YEAR = new Date().getFullYear();
 
 const ProfileScreen: React.FC = () => {
   const navigation = useNavigation<any>();
@@ -75,6 +78,7 @@ const ProfileScreen: React.FC = () => {
     loadProfile();
     fetchWalletData();
     fetchOffersData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchWalletData = async () => {
@@ -411,6 +415,12 @@ const ProfileScreen: React.FC = () => {
             style={styles.footerLogo}
             resizeMode="contain"
           />
+          <AppText variant="caption" tone="muted" style={styles.versionText}>
+            {`Version ${APP_VERSION}`}
+          </AppText>
+          <AppText variant="micro" tone="faint" style={styles.rightsText}>
+            {`© ${CURRENT_YEAR} Kshope. All Rights Reserved.`}
+          </AppText>
         </Animated.View>
       </Animated.ScrollView>
 

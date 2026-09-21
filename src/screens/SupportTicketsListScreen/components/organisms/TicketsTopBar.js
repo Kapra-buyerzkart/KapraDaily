@@ -1,12 +1,12 @@
-import { Text, TouchableOpacity, Image, Pressable, View } from 'react-native';
+import { Text, TouchableOpacity, Pressable, View } from 'react-native';
 import React from 'react';
 import Animated from 'react-native-reanimated';
-import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Feather from 'react-native-vector-icons/Feather';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import icons from '@/assets/icons';
-import { INK, MAX_FONT_SCALE, SPACE, hitSlopTo } from '@/styles/homeTheme';
-import { ICON, styles } from '../../styles';
+import { MAX_FONT_SCALE } from '@/styles/homeTheme';
+import { styles } from '../../styles';
+import { LUXURY_COLORS } from '../../supportLuxuryTheme';
 
 export default function TicketsTopBar({
   title,
@@ -16,18 +16,21 @@ export default function TicketsTopBar({
   borderStyle,
 }) {
   const insets = useSafeAreaInsets();
+  const dynamicTopBarStyle = [
+    styles.topBar,
+    { paddingTop: insets.top ? insets.top + 8 : 14 },
+  ];
 
   return (
-    <Animated.View
-      style={[styles.topBar, { paddingTop: insets.top + SPACE.md }]}
-    >
+    <Animated.View style={dynamicTopBarStyle}>
       <TouchableOpacity
-        hitSlop={hitSlopTo(wp('6%'))}
         onPress={onBack}
+        style={styles.backBtn}
         accessibilityRole="button"
         accessibilityLabel="Go back"
+        activeOpacity={0.7}
       >
-        <Image source={icons.backArrowNew} style={styles.backIcon} />
+        <Feather name="chevron-left" size={22} color={LUXURY_COLORS.emerald} />
       </TouchableOpacity>
 
       <View style={styles.topBarCopy}>
@@ -59,12 +62,12 @@ export default function TicketsTopBar({
           pressed && styles.topBarActionPressed,
         ]}
       >
-        <MaterialCommunityIcons name="plus" size={ICON.plus} color={INK.base} />
+        <MaterialCommunityIcons name="plus" size={16} color={LUXURY_COLORS.white} />
         <Text
           style={styles.topBarActionText}
           maxFontSizeMultiplier={MAX_FONT_SCALE}
         >
-          New
+          New Ticket
         </Text>
       </Pressable>
 

@@ -1,67 +1,63 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
-import { FONTS } from '@/styles/typography';
 import {
-  CANVAS,
-  SURFACE,
-  HAIRLINE,
-  INK,
-  ACCENT,
-  RADIUS,
-  SPACE,
-  TYPE,
-  GUTTER,
-} from '@/styles/homeTheme';
+  LUXURY_COLORS,
+  LUXURY_FONTS,
+} from '../SupportTicketsListScreen/supportLuxuryTheme';
 
-export const CARD_EDGE = 'rgba(17,19,26,0.07)';
-export const CARD_EDGE_STRONG = 'rgba(17,19,26,0.12)';
+export const CARD_EDGE = LUXURY_COLORS.border;
+export const CARD_EDGE_STRONG = LUXURY_COLORS.borderStrong;
 
-export const FIELD_REST_BG = SURFACE.sunken;
-export const FIELD_REST_EDGE = 'rgba(17,19,26,0.10)';
-export const FIELD_FOCUS_EDGE = 'rgba(17,19,26,0.34)';
+export const FIELD_REST_BG = LUXURY_COLORS.well;
+export const FIELD_REST_EDGE = LUXURY_COLORS.border;
+export const FIELD_FOCUS_EDGE = LUXURY_COLORS.emerald;
 export const FIELD_BORDER_WIDTH = 1.2;
 
-export const WELL = wp('10.6%');
-export const WELL_RADIUS = RADIUS.md - 2;
+export const WELL = wp('11%');
+export const WELL_RADIUS = 12;
 
 export const ICON = {
-  field: wp('4.4%'),
-  well: wp('4.8%'),
-  chip: wp('4%'),
+  field: wp('4.6%'),
+  well: wp('5%'),
+  chip: wp('4.2%'),
   meta: wp('3.6%'),
-  action: wp('4.4%'),
+  action: wp('4.6%'),
 };
 
-export const CARD_LIFT = {
-  shadowColor: '#0B1020',
-  shadowOffset: { width: 0, height: 2 },
-  shadowOpacity: 0.05,
-  shadowRadius: 8,
-  elevation: 2,
-};
+export const CARD_LIFT = Platform.select({
+  ios: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+  },
+  android: {
+    elevation: 1.5,
+  },
+});
 
 export const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: SURFACE.sunken,
+    backgroundColor: LUXURY_COLORS.canvas,
   },
   keyboardView: {
     flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
-    paddingBottom: SPACE.xl,
+    paddingBottom: hp('4%'),
   },
 
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: GUTTER,
-    paddingBottom: SPACE.md,
-    backgroundColor: CANVAS,
+    paddingHorizontal: wp('4.5%'),
+    paddingBottom: hp('1.6%'),
+    backgroundColor: LUXURY_COLORS.canvas,
   },
   topBarBorder: {
     position: 'absolute',
@@ -69,124 +65,143 @@ export const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     height: StyleSheet.hairlineWidth,
-    backgroundColor: CARD_EDGE_STRONG,
+    backgroundColor: LUXURY_COLORS.border,
   },
-  backIcon: {
-    resizeMode: 'contain',
-    tintColor: INK.strong,
+  backBtn: {
+    width: wp('10%'),
+    height: wp('10%'),
+    borderRadius: wp('5%'),
+    backgroundColor: LUXURY_COLORS.card,
+    borderWidth: 1,
+    borderColor: LUXURY_COLORS.border,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.04,
+        shadowRadius: 3,
+      },
+      android: {
+        elevation: 1,
+      },
+    }),
   },
   topBarTitle: {
     flex: 1,
-    marginLeft: SPACE.md,
-    ...TYPE.heading,
-    fontFamily: FONTS.gilroy.semiBold,
-    color: INK.strong,
-    letterSpacing: -0.3,
+    marginLeft: wp('3.5%'),
+    fontFamily: LUXURY_FONTS.heading,
+    fontSize: wp('5.6%'),
+    color: LUXURY_COLORS.emerald,
+    letterSpacing: -0.2,
   },
 
   intro: {
-    backgroundColor: CANVAS,
-    paddingHorizontal: GUTTER,
-    paddingTop: SPACE.sm,
-    paddingBottom: SPACE.lg,
+    backgroundColor: LUXURY_COLORS.canvas,
+    paddingHorizontal: wp('4.5%'),
+    paddingTop: hp('1%'),
+    paddingBottom: hp('1.8%'),
   },
   introTitle: {
-    ...TYPE.title,
-    fontFamily: FONTS.gilroy.bold,
-    color: INK.strong,
-    letterSpacing: -0.4,
+    fontFamily: LUXURY_FONTS.heading,
+    fontSize: wp('6%'),
+    color: LUXURY_COLORS.emerald,
+    letterSpacing: -0.3,
   },
   introSubtitle: {
-    marginTop: SPACE.xs + 2,
-    ...TYPE.label,
-    fontFamily: FONTS.gilroy.regular,
-    color: INK.muted,
-    maxWidth: wp('84%'),
+    marginTop: hp('0.5%'),
+    fontFamily: LUXURY_FONTS.body,
+    fontSize: wp('3.3%'),
+    color: LUXURY_COLORS.textMuted,
+    lineHeight: wp('4.8%'),
   },
 
   formCard: {
-    marginHorizontal: GUTTER,
-    marginTop: SPACE.base,
-    borderRadius: RADIUS.lg,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: CARD_EDGE,
-    backgroundColor: CANVAS,
-    paddingHorizontal: SPACE.md,
-    paddingTop: SPACE.base,
-    paddingBottom: SPACE.xs,
+    marginHorizontal: wp('4.5%'),
+    marginTop: hp('0.8%'),
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: LUXURY_COLORS.border,
+    backgroundColor: LUXURY_COLORS.card,
+    paddingHorizontal: wp('4%'),
+    paddingTop: hp('2%'),
+    paddingBottom: hp('1%'),
     ...CARD_LIFT,
   },
 
   field: {
-    marginBottom: SPACE.base,
+    marginBottom: hp('2%'),
   },
   fieldLabel: {
-    ...TYPE.micro,
-    fontFamily: FONTS.gilroy.semiBold,
-    color: INK.muted,
-    letterSpacing: 0.6,
+    fontFamily: LUXURY_FONTS.bodySemiBold,
+    fontSize: wp('3%'),
+    color: LUXURY_COLORS.emerald,
+    letterSpacing: 0.8,
     textTransform: 'uppercase',
-    marginBottom: SPACE.xs + 2,
+    marginBottom: hp('0.8%'),
   },
   fieldWell: {
     flexDirection: 'row',
     alignItems: 'center',
-    minHeight: hp('6.4%'),
-    borderRadius: RADIUS.md,
+    minHeight: hp('6%'),
+    borderRadius: 12,
     borderWidth: FIELD_BORDER_WIDTH,
-    paddingHorizontal: SPACE.md,
+    paddingHorizontal: wp('3.5%'),
+    backgroundColor: LUXURY_COLORS.well,
+    borderColor: LUXURY_COLORS.border,
   },
   fieldWellMultiline: {
     alignItems: 'flex-start',
-    minHeight: hp('16%'),
-    paddingVertical: SPACE.md,
+    minHeight: hp('14%'),
+    paddingVertical: hp('1.2%'),
   },
   fieldIcon: {
-    marginRight: SPACE.md,
+    marginRight: wp('3%'),
   },
   fieldIconMultiline: {
-    marginTop: hp('0.3%'),
+    marginTop: hp('0.4%'),
   },
   fieldInput: {
     flex: 1,
     paddingVertical: 0,
-    ...TYPE.body,
-    fontFamily: FONTS.gilroy.medium,
-    color: INK.strong,
+    fontFamily: LUXURY_FONTS.body,
+    fontSize: wp('3.5%'),
+    color: LUXURY_COLORS.textPrimary,
   },
   fieldInputMultiline: {
     textAlignVertical: 'top',
-    minHeight: hp('12%'),
+    minHeight: hp('11%'),
   },
   fieldFooter: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: SPACE.xs + 2,
-    paddingHorizontal: SPACE.xs,
+    marginTop: hp('0.6%'),
+    paddingHorizontal: 2,
   },
   fieldHelper: {
     flex: 1,
-    ...TYPE.micro,
-    fontFamily: FONTS.gilroy.regular,
-    color: INK.muted,
+    fontFamily: LUXURY_FONTS.body,
+    fontSize: wp('2.8%'),
+    color: LUXURY_COLORS.textMuted,
   },
   fieldCounter: {
-    marginLeft: SPACE.sm,
-    ...TYPE.micro,
-    fontFamily: FONTS.gilroy.medium,
-    color: INK.faint,
+    marginLeft: wp('2%'),
+    fontFamily: LUXURY_FONTS.bodyMedium,
+    fontSize: wp('2.8%'),
+    color: LUXURY_COLORS.textFaint,
   },
 
   linkedOrderCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: RADIUS.md,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: CARD_EDGE,
-    backgroundColor: SURFACE.sunken,
-    paddingHorizontal: SPACE.md,
-    paddingVertical: SPACE.md,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: LUXURY_COLORS.border,
+    backgroundColor: LUXURY_COLORS.well,
+    paddingHorizontal: wp('3.5%'),
+    paddingVertical: hp('1.2%'),
   },
   linkedOrderWell: {
     width: WELL,
@@ -194,121 +209,142 @@ export const styles = StyleSheet.create({
     borderRadius: WELL_RADIUS,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: CANVAS,
-    marginRight: SPACE.md,
+    backgroundColor: LUXURY_COLORS.goldTint,
+    borderWidth: 1,
+    borderColor: LUXURY_COLORS.goldBorder,
+    marginRight: wp('3%'),
   },
   linkedOrderCopy: {
     flex: 1,
   },
   linkedOrderCaption: {
-    ...TYPE.micro,
-    fontFamily: FONTS.gilroy.regular,
-    color: INK.muted,
+    fontFamily: LUXURY_FONTS.body,
+    fontSize: wp('2.8%'),
+    color: LUXURY_COLORS.textMuted,
   },
   linkedOrderValue: {
     marginTop: 1,
-    ...TYPE.body,
-    fontFamily: FONTS.gilroy.semiBold,
-    color: INK.strong,
+    fontFamily: LUXURY_FONTS.bodySemiBold,
+    fontSize: wp('3.4%'),
+    color: LUXURY_COLORS.emerald,
   },
 
   priorityRow: {
     flexDirection: 'row',
-    marginHorizontal: -SPACE.xs,
+    marginHorizontal: -wp('1%'),
   },
   priorityChipHit: {
     flex: 1,
-    paddingHorizontal: SPACE.xs,
+    paddingHorizontal: wp('1%'),
   },
   priorityChip: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: hp('5.2%'),
-    borderRadius: RADIUS.sm,
+    minHeight: hp('5%'),
+    borderRadius: 10,
     borderWidth: FIELD_BORDER_WIDTH,
-    paddingHorizontal: SPACE.sm,
+    paddingHorizontal: wp('2%'),
+    backgroundColor: LUXURY_COLORS.well,
+    borderColor: LUXURY_COLORS.border,
   },
   priorityChipText: {
-    marginLeft: SPACE.xs + 2,
-    ...TYPE.label,
-    fontFamily: FONTS.gilroy.medium,
+    marginLeft: 4,
+    fontFamily: LUXURY_FONTS.bodyMedium,
+    fontSize: wp('3%'),
+    color: LUXURY_COLORS.textSecondary,
   },
   priorityChipTextActive: {
-    fontFamily: FONTS.gilroy.semiBold,
+    fontFamily: LUXURY_FONTS.bodySemiBold,
   },
   priorityHintRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: SPACE.md,
-    paddingHorizontal: SPACE.xs,
+    marginTop: hp('1%'),
+    paddingHorizontal: 2,
   },
   priorityDot: {
-    width: wp('1.6%'),
-    height: wp('1.6%'),
-    borderRadius: RADIUS.pill,
-    marginRight: SPACE.sm,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: wp('2%'),
   },
   priorityHintText: {
     flex: 1,
-    ...TYPE.micro,
-    fontFamily: FONTS.gilroy.regular,
-    color: INK.muted,
+    fontFamily: LUXURY_FONTS.body,
+    fontSize: wp('2.8%'),
+    color: LUXURY_COLORS.textMuted,
+    lineHeight: wp('3.8%'),
   },
 
   noteRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    marginHorizontal: GUTTER,
-    marginTop: SPACE.md,
-    borderRadius: RADIUS.md,
-    backgroundColor: SURFACE.sunken,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: CARD_EDGE,
-    paddingHorizontal: SPACE.md,
-    paddingVertical: SPACE.md,
+    marginHorizontal: wp('4.5%'),
+    marginTop: hp('2%'),
+    borderRadius: 14,
+    backgroundColor: LUXURY_COLORS.goldTint,
+    borderWidth: 1,
+    borderColor: LUXURY_COLORS.goldBorder,
+    paddingHorizontal: wp('3.5%'),
+    paddingVertical: hp('1.4%'),
   },
   noteIcon: {
-    marginRight: SPACE.sm,
-    marginTop: 1,
+    marginRight: wp('2.5%'),
+    marginTop: 2,
   },
   noteText: {
     flex: 1,
-    ...TYPE.caption,
-    fontFamily: FONTS.gilroy.regular,
-    color: INK.muted,
+    fontFamily: LUXURY_FONTS.body,
+    fontSize: wp('3%'),
+    color: LUXURY_COLORS.textSecondary,
+    lineHeight: wp('4.4%'),
   },
 
   actionBar: {
-    paddingHorizontal: GUTTER,
-    paddingTop: SPACE.md,
-    backgroundColor: CANVAS,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: HAIRLINE,
+    paddingHorizontal: wp('4.5%'),
+    paddingTop: hp('1.6%'),
+    paddingBottom: hp('3%'),
+    backgroundColor: LUXURY_COLORS.canvas,
+    borderTopWidth: 1,
+    borderTopColor: LUXURY_COLORS.border,
   },
   actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: hp('6.4%'),
-    borderRadius: RADIUS.sm,
-    backgroundColor: ACCENT.primary,
+    minHeight: hp('6%'),
+    borderRadius: 12,
+    backgroundColor: LUXURY_COLORS.emerald,
+    ...Platform.select({
+      ios: {
+        shadowColor: LUXURY_COLORS.emerald,
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.25,
+        shadowRadius: 6,
+      },
+      android: {
+        elevation: 3,
+      },
+    }),
   },
   actionButtonResting: {
-    backgroundColor: SURFACE.sunken,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: CARD_EDGE_STRONG,
+    backgroundColor: LUXURY_COLORS.well,
+    borderWidth: 1,
+    borderColor: LUXURY_COLORS.border,
+    shadowOpacity: 0,
+    elevation: 0,
   },
   actionButtonIcon: {
-    marginRight: SPACE.sm,
+    marginRight: wp('2%'),
   },
   actionButtonText: {
-    ...TYPE.body,
-    fontFamily: FONTS.gilroy.semiBold,
-    color: INK.onDark,
+    fontFamily: LUXURY_FONTS.bodySemiBold,
+    fontSize: wp('3.6%'),
+    color: LUXURY_COLORS.white,
     letterSpacing: 0.2,
   },
   actionButtonTextResting: {
-    color: INK.muted,
+    color: LUXURY_COLORS.textFaint,
   },
 });

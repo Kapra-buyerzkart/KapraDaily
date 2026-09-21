@@ -9,10 +9,18 @@ function PriorityChip({ priority }) {
   if (!meta) return null;
 
   return (
-    <View style={styles.chip}>
+    <View
+      style={[
+        styles.chip,
+        {
+          backgroundColor: meta.bg,
+          borderColor: meta.border || meta.bg,
+        },
+      ]}
+    >
       <View style={[styles.chipDot, { backgroundColor: meta.dot }]} />
       <Text
-        style={styles.chipText}
+        style={[styles.chipText, { color: meta.fg }]}
         numberOfLines={1}
         maxFontSizeMultiplier={MAX_FONT_SCALE}
       >

@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import Animated from 'react-native-reanimated';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+
+const AVATAR_IMAGE = require('../../../assets/images/profile/Avatar with Camera Badge.png');
 
 const ProfileHeroCard = ({ profile, onEditProfile, onMeasure, entering }) => {
   const handleLayout = React.useCallback(
@@ -33,9 +34,11 @@ const ProfileHeroCard = ({ profile, onEditProfile, onMeasure, entering }) => {
         accessibilityLabel="View or edit profile"
       >
         <View style={styles.avatarWrap}>
-          <View style={styles.avatarCircle}>
-            <Ionicons name="person-outline" size={32} color="#12372A" />
-          </View>
+          <Image
+            source={AVATAR_IMAGE}
+            style={styles.avatarImage}
+            resizeMode="contain"
+          />
         </View>
 
         <View style={styles.details}>
@@ -83,18 +86,12 @@ const styles = StyleSheet.create({
   },
   avatarWrap: {
     position: 'relative',
-    width: 62,
-    height: 62,
+    width: 60,
+    height: 60,
   },
-  avatarCircle: {
-    width: 62,
-    height: 62,
-    borderRadius: 31,
-    borderWidth: 1.8,
-    borderColor: '#12372A',
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
+  avatarImage: {
+    width: 60,
+    height: 60,
   },
   details: {
     flex: 1,

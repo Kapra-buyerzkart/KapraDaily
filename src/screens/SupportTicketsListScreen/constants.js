@@ -1,25 +1,69 @@
-import { ACCENT, INK, SURFACE } from '@/styles/homeTheme';
+import { LUXURY_COLORS } from './supportLuxuryTheme';
 
 export const SKELETON_COUNT = 3;
 
 export const MAX_STAGGER = 4;
 
 const STATUS_META = {
-  open: { label: 'Open', fg: '#1D4ED8', bg: '#EDF2FF' },
-  pending: { label: 'Pending', fg: '#8A6100', bg: '#FBF3E0' },
-  'in progress': { label: 'In progress', fg: '#8A6100', bg: '#FBF3E0' },
+  open: {
+    label: 'Open',
+    fg: LUXURY_COLORS.emerald,
+    bg: LUXURY_COLORS.emeraldTint,
+    border: LUXURY_COLORS.emeraldBorder,
+    dot: LUXURY_COLORS.emerald,
+  },
+  pending: {
+    label: 'Pending',
+    fg: LUXURY_COLORS.gold,
+    bg: LUXURY_COLORS.goldTint,
+    border: LUXURY_COLORS.goldBorder,
+    dot: LUXURY_COLORS.gold,
+  },
+  'in progress': {
+    label: 'In Progress',
+    fg: LUXURY_COLORS.gold,
+    bg: LUXURY_COLORS.goldTint,
+    border: LUXURY_COLORS.goldBorder,
+    dot: LUXURY_COLORS.gold,
+  },
   resolved: {
     label: 'Resolved',
-    fg: ACCENT.successText,
-    bg: ACCENT.successSoft,
+    fg: '#2C5E43',
+    bg: '#EAF4EE',
+    border: '#C8E4D3',
+    dot: '#2C5E43',
   },
-  closed: { label: 'Closed', fg: ACCENT.successText, bg: ACCENT.successSoft },
+  closed: {
+    label: 'Closed',
+    fg: LUXURY_COLORS.textMuted,
+    bg: '#F2F1EE',
+    border: '#E2E0D8',
+    dot: LUXURY_COLORS.textMuted,
+  },
 };
 
 const PRIORITY_META = {
-  high: { label: 'High priority', dot: ACCENT.discount },
-  medium: { label: 'Medium priority', dot: '#B27A00' },
-  low: { label: 'Low priority', dot: ACCENT.success },
+  high: {
+    label: 'High Priority',
+    fg: LUXURY_COLORS.danger,
+    bg: LUXURY_COLORS.dangerTint,
+    border: LUXURY_COLORS.dangerBorder,
+    dot: LUXURY_COLORS.danger,
+  },
+  medium: {
+    label: 'Medium Priority',
+    fg: LUXURY_COLORS.warning,
+    bg: LUXURY_COLORS.warningTint,
+    border: LUXURY_COLORS.warningBorder,
+    dot: LUXURY_COLORS.warning,
+  },
+  low: {
+    label: 'Low Priority',
+    fg: LUXURY_COLORS.emerald,
+    bg: LUXURY_COLORS.emeraldTint,
+    border: LUXURY_COLORS.emeraldBorder,
+    dot: LUXURY_COLORS.emerald,
+  },
 };
 
 const normalize = value =>
@@ -35,8 +79,10 @@ export const statusMeta = status => {
   return (
     STATUS_META[key] || {
       label: titleCase(key) || 'Open',
-      fg: INK.base,
-      bg: SURFACE.sunken,
+      fg: LUXURY_COLORS.emerald,
+      bg: LUXURY_COLORS.emeraldTint,
+      border: LUXURY_COLORS.emeraldBorder,
+      dot: LUXURY_COLORS.emerald,
     }
   );
 };
@@ -46,8 +92,11 @@ export const priorityMeta = priority => {
   if (!key) return null;
   return (
     PRIORITY_META[key] || {
-      label: `${titleCase(key)} priority`,
-      dot: INK.faint,
+      label: `${titleCase(key)} Priority`,
+      fg: LUXURY_COLORS.textSecondary,
+      bg: LUXURY_COLORS.well,
+      border: LUXURY_COLORS.border,
+      dot: LUXURY_COLORS.textMuted,
     }
   );
 };

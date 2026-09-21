@@ -25,6 +25,7 @@ import ProfileHeaderBar from './organisms/ProfileHeaderBar';
 import ProfileHeroCard from './organisms/ProfileHeroCard';
 import MenuSection from './organisms/MenuSection';
 import LogoutRow from './molecules/LogoutRow';
+import AppVersion from './molecules/AppVersion';
 import SuggestProductsModal from './components/SuggestProductsModal';
 import {
   BAR_SOLID_AT,
@@ -200,6 +201,7 @@ export default function ProfileScreen() {
 
         <Animated.View entering={entrance(2)}>
           <LogoutRow onPress={() => setIsLogoutModalVisible(true)} />
+          <AppVersion />
         </Animated.View>
       </Animated.ScrollView>
 

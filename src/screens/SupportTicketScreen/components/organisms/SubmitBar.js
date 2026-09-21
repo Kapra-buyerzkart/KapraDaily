@@ -6,11 +6,12 @@ import Animated, {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import Feather from 'react-native-vector-icons/Feather';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { INK, MAX_FONT_SCALE, SPACE } from '@/styles/homeTheme';
-import { ICON, styles } from '../../styles';
+import { MAX_FONT_SCALE } from '@/styles/homeTheme';
+import { styles } from '../../styles';
 import { PRESS_IN, PRESS_OUT } from '../../motion';
+import { LUXURY_COLORS } from '../../SupportTicketsListScreen/supportLuxuryTheme';
 
 export default function SubmitBar({ complete, label, hint, onPress }) {
   const insets = useSafeAreaInsets();
@@ -24,7 +25,7 @@ export default function SubmitBar({ complete, label, hint, onPress }) {
     <View
       style={[
         styles.actionBar,
-        { paddingBottom: Math.max(insets.bottom, SPACE.md) },
+        { paddingBottom: Math.max(insets.bottom, 16) },
       ]}
     >
       <Pressable
@@ -46,10 +47,10 @@ export default function SubmitBar({ complete, label, hint, onPress }) {
             buttonStyle,
           ]}
         >
-          <MaterialCommunityIcons
-            name={complete ? 'send-outline' : 'pencil-outline'}
-            size={ICON.action}
-            color={complete ? INK.onDark : INK.muted}
+          <Feather
+            name={complete ? 'send' : 'edit-3'}
+            size={18}
+            color={complete ? LUXURY_COLORS.white : LUXURY_COLORS.textMuted}
             style={styles.actionButtonIcon}
           />
           <Text

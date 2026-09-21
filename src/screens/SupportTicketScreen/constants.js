@@ -1,29 +1,32 @@
-import { INK, SURFACE } from '@/styles/homeTheme';
+import { LUXURY_COLORS } from '../SupportTicketsListScreen/supportLuxuryTheme';
 
 export const PRIORITY_OPTIONS = [
   {
     key: 'normal',
     label: 'Normal',
     icon: 'clock-outline',
-    tint: INK.base,
-    soft: SURFACE.sunken,
-    hint: 'General question — we will get to it in turn.',
+    tint: LUXURY_COLORS.emerald,
+    soft: LUXURY_COLORS.emeraldTint,
+    border: LUXURY_COLORS.emeraldBorder,
+    hint: 'General question — we will review and resolve it promptly.',
   },
   {
     key: 'urgent',
     label: 'Urgent',
     icon: 'flash-outline',
-    tint: '#B27A00',
-    soft: '#FBF3E0',
-    hint: 'Time-sensitive — needs a quicker look.',
+    tint: LUXURY_COLORS.gold,
+    soft: LUXURY_COLORS.goldTint,
+    border: LUXURY_COLORS.goldBorder,
+    hint: 'Time-sensitive matter — priority queue attention.',
   },
   {
     key: 'high',
     label: 'High',
     icon: 'alert-outline',
-    tint: '#C2352B',
-    soft: '#FDECEA',
-    hint: 'Something is blocked or badly wrong.',
+    tint: LUXURY_COLORS.danger,
+    soft: LUXURY_COLORS.dangerTint,
+    border: LUXURY_COLORS.dangerBorder,
+    hint: 'Critical inquiry or urgent order issue requiring immediate review.',
   },
 ];
 

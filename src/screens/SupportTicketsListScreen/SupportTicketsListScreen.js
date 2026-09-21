@@ -47,7 +47,7 @@ export default function SupportTicketsListScreen() {
       />
 
       <TicketsTopBar
-        title="Support tickets"
+        title="Support Tickets"
         subtitle={subtitle}
         onBack={() => navigation.goBack()}
         onAdd={handleRaise}

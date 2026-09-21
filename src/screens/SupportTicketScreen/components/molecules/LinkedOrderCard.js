@@ -1,8 +1,10 @@
 import { View, Text } from 'react-native';
 import React from 'react';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { INK, MAX_FONT_SCALE } from '@/styles/homeTheme';
+import Feather from 'react-native-vector-icons/Feather';
+import { MAX_FONT_SCALE } from '@/styles/homeTheme';
 import { ICON, styles } from '../../styles';
+import { LUXURY_COLORS } from '../../SupportTicketsListScreen/supportLuxuryTheme';
 import FieldLabel from '../atoms/FieldLabel';
 
 function LinkedOrderCard({ orderNumber }) {
@@ -12,10 +14,10 @@ function LinkedOrderCard({ orderNumber }) {
 
       <View style={styles.linkedOrderCard}>
         <View style={styles.linkedOrderWell}>
-          <MaterialCommunityIcons
-            name="receipt"
-            size={ICON.well}
-            color={INK.base}
+          <Feather
+            name="shopping-bag"
+            size={18}
+            color={LUXURY_COLORS.gold}
           />
         </View>
 
@@ -24,7 +26,7 @@ function LinkedOrderCard({ orderNumber }) {
             style={styles.linkedOrderCaption}
             maxFontSizeMultiplier={MAX_FONT_SCALE}
           >
-            Linked to your order
+            Linked to order
           </Text>
           <Text
             style={styles.linkedOrderValue}
@@ -38,7 +40,7 @@ function LinkedOrderCard({ orderNumber }) {
         <MaterialCommunityIcons
           name="lock-outline"
           size={ICON.meta}
-          color={INK.faint}
+          color={LUXURY_COLORS.textFaint}
         />
       </View>
     </View>

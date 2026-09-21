@@ -1,8 +1,9 @@
 import { View, Text, Pressable } from 'react-native';
 import React from 'react';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { ACCENT, INK, MAX_FONT_SCALE } from '@/styles/homeTheme';
+import { MAX_FONT_SCALE } from '@/styles/homeTheme';
 import { ICON, styles } from '../../styles';
+import { LUXURY_COLORS } from '../../supportLuxuryTheme';
 
 export default function TicketsEmptyState({ onRaise }) {
   return (
@@ -11,16 +12,15 @@ export default function TicketsEmptyState({ onRaise }) {
         <MaterialCommunityIcons
           name="ticket-confirmation-outline"
           size={ICON.empty}
-          color={ACCENT.primary}
+          color={LUXURY_COLORS.gold}
         />
       </View>
 
       <Text style={styles.emptyTitle} maxFontSizeMultiplier={MAX_FONT_SCALE}>
-        No tickets yet
+        No Support Tickets
       </Text>
       <Text style={styles.emptyBody} maxFontSizeMultiplier={MAX_FONT_SCALE}>
-        Raise a ticket when something goes wrong with an order and our team will
-        pick it up.
+        You haven't submitted any support requests yet. We are here to assist you whenever you need help.
       </Text>
 
       <Pressable
@@ -35,13 +35,13 @@ export default function TicketsEmptyState({ onRaise }) {
         <MaterialCommunityIcons
           name="plus"
           size={ICON.plus}
-          color={INK.onDark}
+          color={LUXURY_COLORS.white}
         />
         <Text
           style={styles.emptyButtonText}
           maxFontSizeMultiplier={MAX_FONT_SCALE}
         >
-          Raise a ticket
+          Raise Support Ticket
         </Text>
       </Pressable>
     </View>
