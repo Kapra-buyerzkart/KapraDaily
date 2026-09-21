@@ -17,7 +17,10 @@ import {
   ActivityIndicator,
   PermissionsAndroid,
 } from 'react-native';
-import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import {
+  KeyboardAvoidingView,
+  KeyboardAwareScrollView,
+} from 'react-native-keyboard-controller';
 import MapView from 'react-native-maps';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -800,7 +803,7 @@ const AddLocationScreen: React.FC = () => {
             </Text>
           </View>
 
-          <ScrollView
+          <KeyboardAwareScrollView
             style={styles.scroll}
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
@@ -808,6 +811,7 @@ const AddLocationScreen: React.FC = () => {
             keyboardDismissMode="none"
             removeClippedSubviews={false}
             nestedScrollEnabled
+            bottomOffset={Platform.OS === 'ios' ? 90 : 70}
           >
             <View style={styles.resolvedCard}>
               <View style={styles.resolvedIconBadge}>
@@ -990,7 +994,7 @@ const AddLocationScreen: React.FC = () => {
                 maxLength={10}
               />
             </View>
-          </ScrollView>
+          </KeyboardAwareScrollView>
 
           <View style={footerStyle}>
             <TouchableOpacity

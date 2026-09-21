@@ -11,6 +11,8 @@ export interface HostAuthData {
     udenCustId?: number | null;
     kshopeCustId?: number | null;
   };
+  accessToken?: string;
+  refreshToken?: string;
   kshope?: {
     success?: boolean;
     status?: string;
@@ -36,16 +38,25 @@ export const syncKshopeSession = async (
   try {
     const kshope = authData?.kshope;
 
-    if (kshope?.success === false || !kshope?.accessToken) {
+    if (kshope?.success === false) {
       await wipe();
       return false;
     }
 
-    await kshopeTokenStore.setTokens(kshope.accessToken, kshope.refreshToken || '');
+    const accessToken = kshope?.accessToken || authData?.accessToken;
+    const refreshToken = kshope?.refreshToken || authData?.refreshToken || '';
+
+    if (!accessToken) {
+      await wipe();
+      return false;
+    }
+
+    await kshopeTokenStore.setTokens(accessToken, refreshToken);
     await ensureKshopeAreaId();
 
-    const hostCustId =
-      authData?.custId ?? getUserIdFromToken(await getHostAccessToken());
+    const hostToken = await getHostAccessToken();
+    const tokenUserId = hostToken ? getUserIdFromToken(hostToken) : null;
+    const hostCustId = authData?.custId ?? tokenUserId;
     if (hostCustId !== null && hostCustId !== undefined) {
       await secureStore.setItem(KSHOPE_HOST_CUST_ID_KEY, String(hostCustId));
     }

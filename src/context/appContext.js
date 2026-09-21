@@ -9,6 +9,7 @@ import { clearTokens } from '../api/tokenService';
 import { clearKshopeSession } from '../kshope/api/session';
 import { getGeneralSettingsApi, getAppUpdateCheckApi } from '../api/userService';
 import { setLogoutHandler, resetNetworkState } from '../api/networkUtils';
+import { setLogoutHandler as setKshopeLogoutHandler } from '../kshope/api/client';
 import * as NavigationService from '../api/NavigationService';
 import { oneSignalLogin, oneSignalLogout } from '../services/OneSignalService';
 import { queryClient } from '../queryClient';
@@ -231,6 +232,7 @@ export const AppContextProvider = ({ children }) => {
 
   useEffect(() => {
     setLogoutHandler(logout);
+    setKshopeLogoutHandler(logout);
   }, [logout]);
 
   useEffect(() => {

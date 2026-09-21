@@ -21,6 +21,14 @@ jest.mock('../src/utils/logger', () => ({
   log: jest.fn(), warn: jest.fn(), debug: jest.fn(), error: jest.fn(),
 }));
 
+const mockAsyncStore = new Map();
+jest.mock('@react-native-async-storage/async-storage', () => ({
+  getItem: jest.fn(async k => (mockAsyncStore.has(k) ? mockAsyncStore.get(k) : null)),
+  setItem: jest.fn(async (k, v) => { mockAsyncStore.set(k, v); }),
+  removeItem: jest.fn(async k => { mockAsyncStore.delete(k); }),
+  multiRemove: jest.fn(async ks => { ks.forEach(k => mockAsyncStore.delete(k)); }),
+}));
+
 const Keychain = require('react-native-keychain');
 const KSHOPE_CONFIG = require('../src/kshope/globals/config').default;
 const kshopeAxios = require('../src/kshope/api/client').default;
@@ -32,9 +40,9 @@ beforeEach(() => {
   jest.clearAllMocks();
 });
 
-test('module config points at kshopecore, not the host backend', () => {
-  expect(KSHOPE_CONFIG.base_url).toBe('https://kshopecore.kapradaily.com/api/v1/');
-  expect(KSHOPE_CONFIG.image_base_url).toBe('https://kshadmin.kapradaily.com/');
+test('module config points at gdapi and gdadmin udendeal endpoints', () => {
+  expect(KSHOPE_CONFIG.base_url).toBe('https://gdapi.udendeal.com/api/v1/');
+  expect(KSHOPE_CONFIG.image_base_url).toBe('https://gdadmin.udendeal.com/');
   expect(KSHOPE_CONFIG.referalUrl).toBe('https://kshonboarding.kapradaily.com/');
 });
 

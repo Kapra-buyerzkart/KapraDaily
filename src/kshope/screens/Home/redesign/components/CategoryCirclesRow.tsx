@@ -10,6 +10,7 @@ import {
 import { KAPRA_ART } from '../kapraAssets';
 import { KAPRA_CATEGORY_CIRCLES, Tile } from '../content';
 import { HOME_FONTS, s, fs } from '../theme';
+import KSHOPE_CONFIG from '../../../../globals/config';
 
 interface CategoryCirclesRowProps {
   categories?: any[];
@@ -39,7 +40,7 @@ const CategoryCirclesRow: React.FC<CategoryCirclesRowProps> = ({
         const imageUrl = cat.imageUrl || cat.ImageUrl || cat.image;
         const resolvedImage = imageUrl
           ? typeof imageUrl === 'string'
-            ? { uri: imageUrl.startsWith('http') ? imageUrl : `https://kshadmin.kapradaily.com/${imageUrl.replace(/^\//, '')}` }
+            ? { uri: imageUrl.startsWith('http') ? imageUrl : `${KSHOPE_CONFIG.image_base_url.replace(/\/$/, '')}/${imageUrl.replace(/^\//, '')}` }
             : imageUrl
           : fallbackImage;
 

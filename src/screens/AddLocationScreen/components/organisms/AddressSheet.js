@@ -1,6 +1,9 @@
 import React from 'react';
-import { Platform, ScrollView, StyleSheet, View } from 'react-native';
-import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import { Platform, StyleSheet, View } from 'react-native';
+import {
+  KeyboardAvoidingView,
+  KeyboardAwareScrollView,
+} from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { GrabHandle } from '../atoms';
@@ -36,14 +39,15 @@ const AddressSheet = ({
           subtitle="Drag the map above to fine-tune your spot"
         />
 
-        <ScrollView
+        <KeyboardAwareScrollView
           style={styles.scroll}
           contentContainerStyle={styles.content}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
+          bottomOffset={Platform.OS === 'ios' ? 80 : 60}
         >
           <AddressForm form={form} area={area} status={status} />
-        </ScrollView>
+        </KeyboardAwareScrollView>
 
         <View
           style={[

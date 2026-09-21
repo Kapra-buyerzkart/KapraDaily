@@ -8,6 +8,7 @@ import {
   DEFAULT_CATEGORY_FILTERS,
   isDefaultCategoryFilters,
 } from '../../constants';
+import { KAPRA_CATEGORY_CIRCLES } from '../../../Home/redesign/content';
 import {
   ALL_TILE_ID,
   bannerSource,
@@ -19,6 +20,23 @@ import {
 
 const ROOT_PARENT_ID = '1';
 const PAGE_SIZE = 100;
+
+const FALLBACK_CATEGORIES = KAPRA_CATEGORY_CIRCLES.map(tile => ({
+  catId: tile.id,
+  catName: tile.label,
+  displayTitle: tile.label,
+  imageUrl: tile.image,
+  image: tile.image,
+}));
+
+const extractItems = (response: any): any[] => {
+  if (!response) return [];
+  const rawData = response?.data ?? response?.Data ?? response;
+  if (Array.isArray(rawData)) return rawData;
+  if (Array.isArray(rawData?.items)) return rawData.items;
+  if (Array.isArray(rawData?.Items)) return rawData.Items;
+  return [];
+};
 
 export type Filters = {
   sortBy: string;
@@ -56,8 +74,22 @@ export const useCategoryData = (initialCatId?: string | number) => {
       setLoading(true);
       showLoader(true);
       const response = await getCategoriesApi(ROOT_PARENT_ID);
-      const items = response?.success ? response?.data?.items : null;
-      if (items && Array.isArray(items) && items.length > 0) {
+      let items = extractItems(response);
+
+      // If parentCatId '1' yielded no items, attempt '0' for backends using 0 as root
+      if (items.length === 0) {
+        try {
+          const altResponse = await getCategoriesApi('0');
+          const altItems = extractItems(altResponse);
+          if (altItems.length > 0) {
+            items = altItems;
+          }
+        } catch {
+          // ignore fallback attempt error
+        }
+      }
+
+      if (items && items.length > 0) {
         setCategories(items);
         const target =
           initialCatId?.toString() ?? items[0]?.catId?.toString() ?? null;
@@ -65,10 +97,21 @@ export const useCategoryData = (initialCatId?: string | number) => {
           setSelectedCategoryId(target);
         }
       } else {
-        setCategories([]);
+        setCategories(FALLBACK_CATEGORIES);
+        setSelectedCategoryId(
+          initialCatId?.toString() ??
+            FALLBACK_CATEGORIES[0]?.catId?.toString() ??
+            null,
+        );
       }
     } catch (error) {
       console.error('Error fetching categories:', error);
+      setCategories(FALLBACK_CATEGORIES);
+      setSelectedCategoryId(
+        initialCatId?.toString() ??
+          FALLBACK_CATEGORIES[0]?.catId?.toString() ??
+          null,
+      );
     } finally {
       setLoading(false);
       showLoader(false);
@@ -85,8 +128,8 @@ export const useCategoryData = (initialCatId?: string | number) => {
       try {
         showLoader(true);
         const response = await getCategoriesApi(parentId);
-        const items = response?.success ? response?.data?.items : null;
-        setSubCategories(items || []);
+        const items = extractItems(response);
+        setSubCategories(items);
         setSelectedSubCategoryId(null);
       } catch (error) {
         console.error('Error fetching subcategories:', error);
@@ -108,14 +151,22 @@ export const useCategoryData = (initialCatId?: string | number) => {
           setIsLoadingMore(true);
         }
 
+        const parsedCatId = categoryId ? parseInt(categoryId, 10) : NaN;
+        const isNumericId = !isNaN(parsedCatId);
         const targetCatId =
-          categoryId && categoryId !== ALL_TILE_ID
-            ? parseInt(categoryId, 10)
-            : null;
+          isNumericId && categoryId !== ALL_TILE_ID ? parsedCatId : null;
+
+        // If categoryId is non-numeric (e.g. from static jewelry fallback),
+        // use category title as query term if no search text was typed
+        const queryTerm =
+          debouncedSearchText.trim() ||
+          (!isNumericId && categoryId && categoryId !== ALL_TILE_ID
+            ? categoryId
+            : '');
 
         const response = await searchProductsApi({
           pincodeAreaId: areaIdRef.current,
-          prName: debouncedSearchText.trim(),
+          prName: queryTerm,
           catId: targetCatId,
           priceMin: filters.priceMin,
           priceMax: filters.priceMax,
@@ -125,8 +176,8 @@ export const useCategoryData = (initialCatId?: string | number) => {
           pageSize: PAGE_SIZE,
         });
 
-        const items = response?.success ? response?.data?.items : null;
-        if (items) {
+        const items = extractItems(response);
+        if (items && items.length > 0) {
           setProducts(prev => (page === 1 ? items : [...prev, ...items]));
           setPageNumber(page);
           setHasMore(items.length === PAGE_SIZE);

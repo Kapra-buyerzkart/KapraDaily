@@ -6,14 +6,13 @@ import {
   Image,
   TextInput,
   TouchableOpacity,
-  KeyboardAvoidingView,
   ScrollView,
   Platform,
   Alert,
   Keyboard,
   StatusBar,
 } from 'react-native';
-import React, { useRef, useState, useEffect } from 'react';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import logger from '../utils/logger';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -212,14 +211,58 @@ const OtpScreen = () => {
       });
       console.log('[OTP VERIFY login] response:', response);
 
-      if (response?.success && response?.data) {
-        const { accessToken, refreshToken, custId } = response.data;
+      const rawData = response?.data || response?.Data || response;
+      const accessToken =
+        rawData?.accessToken ||
+        rawData?.AccessToken ||
+        rawData?.access_token ||
+        rawData?.token ||
+        rawData?.Token ||
+        rawData?.jwtToken ||
+        rawData?.JwtToken ||
+        response?.accessToken ||
+        response?.AccessToken ||
+        response?.token;
+
+      const refreshToken =
+        rawData?.refreshToken ||
+        rawData?.RefreshToken ||
+        rawData?.refresh_token ||
+        response?.refreshToken ||
+        '';
+
+      const custId =
+        rawData?.custId ||
+        rawData?.CustId ||
+        rawData?.customerId ||
+        rawData?.CustomerId ||
+        rawData?.userId ||
+        rawData?.UserId ||
+        rawData?.id ||
+        rawData?.Id ||
+        response?.custId;
+
+      const isSuccess =
+        response?.success === true ||
+        response?.status === 200 ||
+        Boolean(accessToken);
+
+      if (isSuccess && accessToken) {
         await setTokens(accessToken, refreshToken);
-        await syncKshopeSession(response.data);
+        await syncKshopeSession({
+          ...(typeof rawData === 'object' ? rawData : {}),
+          accessToken,
+          refreshToken,
+          custId,
+        });
 
         if (custId) {
           await mergeCustomerIdIntoProfile(custId);
-          OneSignal.login(custId.toString());
+          try {
+            OneSignal.login(custId.toString());
+          } catch (e) {
+            logger.log('OneSignal login error:', e);
+          }
         }
 
         if (loadProfile) {
@@ -234,7 +277,10 @@ const OtpScreen = () => {
         showStatus({
           type: 'error',
           title: 'Error',
-          message: response?.message || 'OTP verification failed',
+          message:
+            response?.message ||
+            response?.Message ||
+            'OTP verification failed',
         });
       }
     } catch (error) {
@@ -448,16 +494,14 @@ const OtpScreen = () => {
         />
       </View>
 
-      <KeyboardAvoidingView
+      <KeyboardAwareScrollView
         style={styles.keyboardAvoid}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        bounces={false}
+        bottomOffset={Platform.OS === 'ios' ? 40 : 24}
       >
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-          bounces={false}
-        >
           <View style={styles.topImageContainer}>
             <ImageBackground
               style={styles.backgroundImage}
@@ -578,8 +622,7 @@ const OtpScreen = () => {
               )}
             </TouchableOpacity>
           </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+      </KeyboardAwareScrollView>
     </View>
   );
 };

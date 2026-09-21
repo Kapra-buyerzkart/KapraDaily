@@ -23,10 +23,10 @@ describe('resolveImageSource', () => {
 
   it('prefixes relative paths with the image base url', () => {
     expect(resolveImageSource('media/a.png')).toEqual({
-      uri: 'https://kshadmin.kapradaily.com/media/a.png',
+      uri: 'https://gdadmin.udendeal.com/media/a.png',
     });
     expect(resolveImageSource('/media/a.png')).toEqual({
-      uri: 'https://kshadmin.kapradaily.com/media/a.png',
+      uri: 'https://gdadmin.udendeal.com/media/a.png',
     });
   });
 
@@ -84,7 +84,7 @@ describe('mapProductTile', () => {
       price: '₹1500/-',
       mrp: '₹2000/-',
       discount: '25% OFF',
-      image: { uri: 'https://kshadmin.kapradaily.com/media/iron.png' },
+      image: { uri: 'https://gdadmin.udendeal.com/media/iron.png' },
       raw: item,
     });
   });
@@ -112,7 +112,7 @@ describe('mapRecCard', () => {
       price: '₹1499/-',
       mrp: '₹2499/-',
       discount: '40% OFF',
-      image: { uri: 'https://kshadmin.kapradaily.com/media/boat.png' },
+      image: { uri: 'https://gdadmin.udendeal.com/media/boat.png' },
       raw: item,
     });
   });
@@ -129,7 +129,7 @@ describe('mapCategoryTile', () => {
     expect(mapCategoryTile(cat, 0)).toEqual({
       id: '5',
       label: 'Television',
-      image: { uri: 'https://kshadmin.kapradaily.com/media/tv.png' },
+      image: { uri: 'https://gdadmin.udendeal.com/media/tv.png' },
       raw: cat,
     });
   });
@@ -141,7 +141,7 @@ describe('mapBrandTile', () => {
 
     expect(mapBrandTile(banner, 0)).toEqual({
       id: '9',
-      image: { uri: 'https://kshadmin.kapradaily.com/media/apple.png' },
+      image: { uri: 'https://gdadmin.udendeal.com/media/apple.png' },
       raw: banner,
     });
   });

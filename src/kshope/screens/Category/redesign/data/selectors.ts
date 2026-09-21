@@ -99,7 +99,12 @@ export const bannerSource = (category: any) =>
   resolveImageSource(category?.mobBannerImgUrl ?? category?.MobBannerImgUrl);
 
 export const findCategory = (items: any[], id: string | null) =>
-  (items || []).find(cat => cat?.catId?.toString() === id);
+  (items || []).find(
+    cat =>
+      cat?.catId?.toString() === id ||
+      cat?.id?.toString() === id ||
+      cat?.catName?.toLowerCase() === id?.toLowerCase(),
+  );
 
 export const isOutOfStock = (item: any) =>
   item?.stockQty <= 0 || item?.stockAvailability === 'Out Of Stock';

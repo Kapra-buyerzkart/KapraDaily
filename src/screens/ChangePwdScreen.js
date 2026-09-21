@@ -6,9 +6,10 @@ import {
   Image,
   TextInput,
   TouchableOpacity,
-  KeyboardAvoidingView,
   ScrollView,
+  Platform,
 } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import React, { useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -94,14 +95,14 @@ const ChangePwdScreen = () => {
   return (
     <SafeAreaView style={styles.mainContainer}>
       {}
-      <KeyboardAvoidingView
+      <KeyboardAwareScrollView
         style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        contentContainerStyle={{ flexGrow: 1 }}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        bounces={false}
+        bottomOffset={Platform.OS === 'ios' ? 40 : 24}
       >
-        <ScrollView
-          contentContainerStyle={{ flexGrow: 1 }}
-          keyboardShouldPersistTaps="handled"
-        >
           <ImageBackground
             style={styles.backgroundImage}
             source={require('../assets/images/login_background_image.jpg')}
@@ -188,8 +189,7 @@ const ChangePwdScreen = () => {
               )}
             </TouchableOpacity>
           </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+      </KeyboardAwareScrollView>
     </SafeAreaView>
   );
 };

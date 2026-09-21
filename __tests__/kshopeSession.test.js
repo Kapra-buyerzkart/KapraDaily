@@ -286,3 +286,15 @@ test('does not overwrite an area id that is already stored', async () => {
 
   expect(await storage.getKshopeAreaId()).toBe(99999);
 });
+
+test('stores tokens from top-level accessToken and refreshToken when kshope block is absent', async () => {
+  const ok = await syncKshopeSession({
+    custId: 42,
+    accessToken: 'top-access',
+    refreshToken: 'top-refresh',
+  });
+
+  expect(ok).toBe(true);
+  expect(await kshopeTokenStore.getAccessToken()).toBe('top-access');
+  expect(await kshopeTokenStore.getRefreshToken()).toBe('top-refresh');
+});

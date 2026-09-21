@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, Platform, ScrollView, StatusBar } from 'react-native';
-import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import { View, Platform, StatusBar } from 'react-native';
+import {
+  KeyboardAvoidingView,
+  KeyboardAwareScrollView,
+} from 'react-native-keyboard-controller';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -145,10 +148,11 @@ const UpdateContactScreen = () => {
         style={styles.keyboardAvoidingView}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <ScrollView
+        <KeyboardAwareScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
+          bottomOffset={Platform.OS === 'ios' ? 80 : 60}
         >
           <Animated.View entering={entrance(0)}>
             <ContactStepCard
@@ -160,7 +164,7 @@ const UpdateContactScreen = () => {
               onSubmitEditing={canRequestOtp ? handleRequestOtp : undefined}
             />
           </Animated.View>
-        </ScrollView>
+        </KeyboardAwareScrollView>
 
         <UpdateActionBar
           enabled={canRequestOtp}

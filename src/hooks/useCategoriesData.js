@@ -10,6 +10,15 @@ import { shuffle } from '../utils/shuffle';
 
 const PAGE_SIZE = 20;
 
+const extractItems = response => {
+  if (!response) return [];
+  const rawData = response?.data ?? response?.Data ?? response;
+  if (Array.isArray(rawData)) return rawData;
+  if (Array.isArray(rawData?.items)) return rawData.items;
+  if (Array.isArray(rawData?.Items)) return rawData.Items;
+  return [];
+};
+
 const useCategoriesData = (catId, debouncedSearchText, filters) => {
   const { profile, setStoreUnavailable } = useContext(AppContext);
 
@@ -88,13 +97,9 @@ const useCategoriesData = (catId, debouncedSearchText, filters) => {
         return;
       }
 
-      if (
-        response &&
-        response.success &&
-        response.data &&
-        response.data.items
-      ) {
-        const newProducts = shuffle(response.data.items);
+      const items = extractItems(response);
+      if (items && items.length > 0) {
+        const newProducts = shuffle(items);
         if (page === 1) {
           if (newProducts.length === 0 && debouncedSearchText) {
             await fetchGlobalFallback(requestId);
@@ -150,19 +155,15 @@ const useCategoriesData = (catId, debouncedSearchText, filters) => {
       );
       const response = await getCategoriesApi(1);
       console.log('Categories Response:', response);
-      if (
-        response &&
-        response.success &&
-        response.data &&
-        response.data.items
-      ) {
-        setCategoriesList(response.data.items);
+      const items = extractItems(response);
+      if (items && items.length > 0) {
+        setCategoriesList(items);
 
-        const targetCat = response.data.items.find(item => item.catId === 105);
+        const targetCat = items.find(item => item.catId === 105);
         if (targetCat) {
           setSelectedId('105');
-        } else if (response.data.items.length > 0) {
-          setSelectedId(response.data.items[0]?.catId?.toString());
+        } else if (items.length > 0) {
+          setSelectedId(items[0]?.catId?.toString());
         }
       } else if (
         response?.status === 'STORE_NOT_FOUND' ||
@@ -189,13 +190,9 @@ const useCategoriesData = (catId, debouncedSearchText, filters) => {
       );
       const response = await getCategoriesApi(parentId);
       console.log('SubCategories Response:', response);
-      if (
-        response &&
-        response.success &&
-        response.data &&
-        response.data.items
-      ) {
-        setSubCategoriesList(response.data.items);
+      const items = extractItems(response);
+      if (items && items.length > 0) {
+        setSubCategoriesList(items);
         setSelectedSubCatId(null);
       } else {
         setSubCategoriesList([]);

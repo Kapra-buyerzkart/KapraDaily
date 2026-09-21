@@ -1,6 +1,9 @@
 import React from 'react';
-import { View, StatusBar, Platform, ScrollView } from 'react-native';
-import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import { View, StatusBar, Platform } from 'react-native';
+import {
+  KeyboardAvoidingView,
+  KeyboardAwareScrollView,
+} from 'react-native-keyboard-controller';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import StatusModal from '@/components/StatusModal';
@@ -53,10 +56,11 @@ const ChangePasswordScreen = () => {
         style={styles.keyboardAvoidingView}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <ScrollView
+        <KeyboardAwareScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
+          bottomOffset={Platform.OS === 'ios' ? 80 : 60}
         >
           <Animated.View entering={entrance(0)}>
             <CurrentPasswordCard
@@ -84,7 +88,7 @@ const ChangePasswordScreen = () => {
               onSubmitConfirm={canSubmit ? handleUpdate : undefined}
             />
           </Animated.View>
-        </ScrollView>
+        </KeyboardAwareScrollView>
 
         <ChangePasswordActionBar
           enabled={canSubmit}

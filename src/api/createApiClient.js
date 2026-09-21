@@ -246,20 +246,16 @@ const createApiClient = ({
 
         const refreshToken = await tokenStore.getRefreshToken();
         if (!refreshToken) {
-          const hadAuthHeader = !!originalRequest.headers?.Authorization;
           logger.log(
-            ` [${label}]: No refresh token available. hadAuthHeader:`,
-            hadAuthHeader,
+            `🔒 [${label}]: No refresh token available on 401, triggering logout.`,
           );
 
-          if (hadAuthHeader) {
-            if (!isLoggingOut) {
-              isLoggingOut = true;
-              logoutHandler(true);
-              setTimeout(() => {
-                isLoggingOut = false;
-              }, 3000);
-            }
+          if (!isLoggingOut) {
+            isLoggingOut = true;
+            logoutHandler(true);
+            setTimeout(() => {
+              isLoggingOut = false;
+            }, 3000);
           }
           return Promise.reject(error);
         }

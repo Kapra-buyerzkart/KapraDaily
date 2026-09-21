@@ -84,12 +84,7 @@ export const useProfileScreen = () => {
   };
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      showLoader(true);
-      await loadProfile();
-      showLoader(false);
-    };
-    fetchProfile();
+    loadProfile();
     fetchWalletData();
     fetchGeneralSettings();
   }, []);

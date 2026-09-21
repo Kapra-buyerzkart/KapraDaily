@@ -11,6 +11,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { KAPRA_ART } from '../kapraAssets';
 import { KAPRA_OCCASIONS, OccasionTile } from '../content';
 import { HOME_FONTS, s, fs } from '../theme';
+import KSHOPE_CONFIG from '../../../../globals/config';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const GUTTER = s(16);
@@ -63,7 +64,7 @@ const ShopByOccasion: React.FC<ShopByOccasionProps> = ({
 
         const image = rawImg
           ? typeof rawImg === 'string'
-            ? { uri: rawImg.startsWith('http') ? rawImg : `https://kshadmin.kapradaily.com/${rawImg.replace(/^\//, '')}` }
+            ? { uri: rawImg.startsWith('http') ? rawImg : `${KSHOPE_CONFIG.image_base_url.replace(/\/$/, '')}/${rawImg.replace(/^\//, '')}` }
             : rawImg
           : fallbackImage;
 

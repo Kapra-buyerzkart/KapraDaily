@@ -11,8 +11,7 @@ import {
   Animated,
   Easing,
 } from 'react-native';
-import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
-import React, { useState, useRef, useEffect } from 'react';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   widthPercentageToDP as wp,
@@ -21,6 +20,8 @@ import {
 import Feather from 'react-native-vector-icons/Feather';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useCart } from '../context/CartContext';
+import { AppContext } from '../context/appContext';
+import { OneSignal } from 'react-native-onesignal';
 import { loginWithPassword } from '../api';
 import secureStore from '../utils/secureStore';
 import { setTokens } from '../api/tokenService';
@@ -49,6 +50,7 @@ const LoginPwdScreen = () => {
   const route = useRoute();
   const insets = useSafeAreaInsets();
   const { showStatus } = useCart();
+  const { loadProfile } = useContext(AppContext) || {};
   const { phone } = route.params || {};
 
   const [password, setPassword] = useState('');
@@ -97,20 +99,69 @@ const LoginPwdScreen = () => {
 
       console.log('[LOGIN PWD] response:', JSON.stringify(response, null, 2));
 
-      if (response?.success && response?.data) {
-        console.log('token data', response.data);
-        const { accessToken, refreshToken, custId } = response.data;
+      const rawData = response?.data || response?.Data || response;
+      const accessToken =
+        rawData?.accessToken ||
+        rawData?.AccessToken ||
+        rawData?.access_token ||
+        rawData?.token ||
+        rawData?.Token ||
+        rawData?.jwtToken ||
+        rawData?.JwtToken ||
+        (typeof rawData === 'string' ? rawData : null) ||
+        response?.accessToken ||
+        response?.AccessToken ||
+        response?.token;
 
-        console.log('[LOGIN PWD] accessToken:', accessToken);
-        console.log('[LOGIN PWD] refreshToken:', refreshToken);
-        console.log('[LOGIN PWD] custId:', custId);
+      const refreshToken =
+        rawData?.refreshToken ||
+        rawData?.RefreshToken ||
+        rawData?.refresh_token ||
+        response?.refreshToken ||
+        '';
+
+      const custId =
+        rawData?.custId ||
+        rawData?.CustId ||
+        rawData?.customerId ||
+        rawData?.CustomerId ||
+        rawData?.userId ||
+        rawData?.UserId ||
+        rawData?.id ||
+        rawData?.Id ||
+        response?.custId;
+
+      const isSuccess =
+        response?.success === true ||
+        response?.status === 200 ||
+        Boolean(accessToken);
+
+      if (isSuccess && accessToken) {
+        console.log('[LOGIN PWD] saving accessToken:', accessToken ? `${accessToken.slice(0, 15)}...` : null);
+        console.log('[LOGIN PWD] saving refreshToken:', refreshToken ? `${refreshToken.slice(0, 15)}...` : null);
+        console.log('[LOGIN PWD] saving custId:', custId);
 
         await setTokens(accessToken, refreshToken);
-        await syncKshopeSession(response.data);
+        await syncKshopeSession({
+          ...(typeof rawData === 'object' ? rawData : {}),
+          accessToken,
+          refreshToken,
+          custId,
+        });
 
         if (custId) {
           await mergeCustomerIdIntoProfile(custId);
+          try {
+            OneSignal.login(custId.toString());
+          } catch (e) {
+            logger.log('OneSignal login error:', e);
+          }
         }
+
+        if (loadProfile) {
+          await loadProfile();
+        }
+
         navigation.reset({
           index: 0,
           routes: [{ name: 'KshopeScreen' }],
@@ -119,7 +170,10 @@ const LoginPwdScreen = () => {
         showStatus({
           type: 'error',
           title: 'Error',
-          message: response?.message || 'Login failed',
+          message:
+            response?.message ||
+            response?.Message ||
+            'Login failed. Please check your credentials.',
         });
       }
     } catch (error) {
@@ -166,122 +220,110 @@ const LoginPwdScreen = () => {
         <Feather name="arrow-left" size={20} color="#12372A" />
       </TouchableOpacity>
 
-      <KeyboardAvoidingView
+      <KeyboardAwareScrollView
         style={styles.keyboardAvoid}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        bounces={false}
+        bottomOffset={Platform.OS === 'ios' ? 40 : 24}
       >
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-          bounces={false}
+        <View style={styles.topImageContainer}>
+          <ImageBackground
+            style={styles.backgroundImage}
+            source={images.pwdLuxuryBg}
+            resizeMode="cover"
+          />
+        </View>
+
+        <Animated.View
+          style={[
+            styles.bottomContainer,
+            {
+              opacity: bottomOpacity,
+              transform: [{ translateY: bottomTranslate }],
+            },
+          ]}
         >
-          <View style={styles.topImageContainer}>
-            <ImageBackground
-              style={styles.backgroundImage}
-              source={images.pwdLuxuryBg}
-              resizeMode="cover"
+          <Text style={styles.welcomeText}>Welcome to</Text>
+          <Text style={styles.brandTitleText}>Kapra Gold & Diamonds</Text>
+          <Text style={styles.subHeaderText}>ENTER YOUR PASSWORD</Text>
+
+          <View style={styles.titleDivider} />
+
+          {phone ? (
+            <TouchableOpacity
+              onPress={() => navigation.navigate('LoginScreen', { phone })}
+              style={styles.phoneEditBox}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.countryCode}>+91</Text>
+              <View style={styles.phoneDivider} />
+              <Text style={styles.phoneNumberText}>{phone}</Text>
+              <Feather name="edit-2" size={16} color="#0A2A20" />
+            </TouchableOpacity>
+          ) : null}
+
+          <View style={styles.inputWrapper}>
+            <TextInput
+              placeholder="Enter your password"
+              placeholderTextColor="rgba(255, 255, 255, 0.45)"
+              style={styles.input}
+              secureTextEntry={!showPassword}
+              value={password}
+              onChangeText={setPassword}
+              selectionColor="#FFFFFF"
+              autoCapitalize="none"
+              autoCorrect={false}
             />
+            <TouchableOpacity
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              onPress={() => setShowPassword(!showPassword)}
+              activeOpacity={0.7}
+            >
+              <Feather
+                name={showPassword ? 'eye' : 'eye-off'}
+                size={20}
+                color="rgba(255, 255, 255, 0.6)"
+              />
+            </TouchableOpacity>
           </View>
 
-          <Animated.View
-            style={[
-              styles.bottomContainer,
-              {
-                opacity: bottomOpacity,
-                transform: [{ translateY: bottomTranslate }],
-              },
-            ]}
-          >
-            <Text style={styles.welcomeText}>Welcome to</Text>
-            <Text style={styles.brandTitleText}>Kapra Gold & Diamonds</Text>
-            <Text style={styles.subHeaderText}>ENTER YOUR PASSWORD</Text>
-
-            <View style={styles.titleDivider} />
-
-            {phone ? (
-              <TouchableOpacity
-                onPress={() => navigation.navigate('LoginScreen', { phone })}
-                style={styles.phoneEditBox}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.countryCode}>+91</Text>
-                <View style={styles.phoneDivider} />
-                <Text style={styles.phoneNumberText}>{phone}</Text>
-                <Feather name="edit-2" size={16} color="#0A2A20" />
-              </TouchableOpacity>
-            ) : null}
-
-            <View style={styles.inputWrapper}>
-              <TextInput
-                placeholder="Enter your password"
-                placeholderTextColor="rgba(255, 255, 255, 0.45)"
-                style={styles.input}
-                secureTextEntry={!showPassword}
-                value={password}
-                onChangeText={setPassword}
-                selectionColor="#FFFFFF"
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
-              <TouchableOpacity
-                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-                onPress={() => setShowPassword(!showPassword)}
-                activeOpacity={0.7}
-              >
-                <Feather
-                  name={showPassword ? 'eye' : 'eye-off'}
-                  size={18}
-                  color="rgba(255, 255, 255, 0.75)"
-                />
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.optionsRow}>
-              {phone ? (
-                <TouchableOpacity
-                  onPress={() =>
-                    navigation.navigate('OtpScreen', {
-                      phone,
-                      type: 'login',
-                    })
-                  }
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.optionLinkText}>Log in with OTP</Text>
-                </TouchableOpacity>
-              ) : (
-                <View />
-              )}
-
-              <TouchableOpacity
-                onPress={() =>
-                  navigation.navigate('LoginScreen', {
-                    type: 'reset',
-                    phone,
-                  })
-                }
-                activeOpacity={0.7}
-              >
-                <Text style={styles.optionLinkText}>Forgot password?</Text>
-              </TouchableOpacity>
-            </View>
+          <View style={styles.optionsRow}>
+            <TouchableOpacity
+              onPress={() =>
+                navigation.navigate('OtpScreen', {
+                  phone,
+                  type: 'login',
+                })
+              }
+              activeOpacity={0.7}
+            >
+              <Text style={styles.optionLinkText}>Log in with OTP</Text>
+            </TouchableOpacity>
 
             <TouchableOpacity
-              onPress={handleContinue}
-              style={styles.continueButton}
-              disabled={loading}
-              activeOpacity={0.88}
+              onPress={handleForgotPassword}
+              activeOpacity={0.7}
             >
-              {loading ? (
-                <BallPulse size="large" color="#0A2A20" />
-              ) : (
-                <Text style={styles.continueButtonText}>Log In</Text>
-              )}
+              <Text style={styles.optionLinkText}>Forgot password?</Text>
             </TouchableOpacity>
-          </Animated.View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+          </View>
+
+          <TouchableOpacity
+            onPress={handleContinue}
+            style={styles.continueButton}
+            disabled={loading}
+            activeOpacity={0.88}
+          >
+            {loading ? (
+              <BallPulse size="large" color="#0A2A20" />
+            ) : (
+              <Text style={styles.continueButtonText}>Log In</Text>
+            )}
+          </TouchableOpacity>
+        </Animated.View>
+      </KeyboardAwareScrollView>
     </View>
   );
 };

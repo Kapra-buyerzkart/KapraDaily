@@ -14,8 +14,7 @@ import {
 } from 'react-native';
 import React, { useState, useContext, useRef, useEffect } from 'react';
 import logger from '../utils/logger';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
@@ -207,98 +206,95 @@ const LoginScreen = () => {
         backgroundColor="transparent"
         barStyle={'dark-content'}
       />
-      <KeyboardAvoidingView
+      <KeyboardAwareScrollView
         style={styles.keyboardAvoid}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        bounces={false}
+        showsVerticalScrollIndicator={false}
+        bottomOffset={Platform.OS === 'ios' ? 40 : 24}
       >
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-          bounces={false}
-          showsVerticalScrollIndicator={false}
+        <View style={styles.topImageContainer}>
+          <ImageBackground
+            style={styles.backgroundImage}
+            source={images.loginLuxuryBg}
+            resizeMode="cover"
+          />
+        </View>
+        <Animated.View
+          style={[
+            styles.bottomContainer,
+            {
+              opacity: bottomOpacity,
+              transform: [{ translateY: bottomTranslate }],
+            },
+          ]}
         >
-          <View style={styles.topImageContainer}>
-            <ImageBackground
-              style={styles.backgroundImage}
-              source={images.loginLuxuryBg}
-              resizeMode="cover"
+          <Text style={styles.welcomeText}>Welcome to</Text>
+          <Text style={styles.brandTitleText}>Kapra Gold & Diamonds</Text>
+          <Text style={styles.subHeaderText}>
+            {type === 'reset' ? 'RESET PASSWORD' : 'LOG IN TO CONTINUE'}
+          </Text>
+
+          <View style={styles.titleDivider} />
+
+          <View style={styles.signUpRow}>
+            <Text style={styles.dontHaveText}>
+              {type === 'reset'
+                ? 'Remember password? '
+                : "Don't have an account? "}
+            </Text>
+            <TouchableOpacity
+              onPress={() => {
+                if (type === 'reset') {
+                  navigation.navigate('LoginScreen');
+                } else {
+                  navigation.navigate('RegistraionScreen');
+                }
+              }}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.signUpLinkText}>
+                {type === 'reset' ? 'Log in' : 'Sign up'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.inputWrapper}>
+            <Text style={styles.countryCode}>+91</Text>
+            <View style={styles.inputDivider} />
+            <TextInput
+              placeholder="Enter phone number"
+              placeholderTextColor="rgba(255, 255, 255, 0.45)"
+              keyboardType="number-pad"
+              style={styles.input}
+              value={phone}
+              maxLength={10}
+              textContentType="telephoneNumber"
+              autoComplete="tel"
+              selectionColor="#FFFFFF"
+              onChangeText={setPhone}
             />
           </View>
-          <Animated.View
-            style={[
-              styles.bottomContainer,
-              {
-                opacity: bottomOpacity,
-                transform: [{ translateY: bottomTranslate }],
-              },
-            ]}
+
+          <TouchableOpacity
+            onPress={
+              type === 'reset' ? handleContinueRest : handleContinueLogin
+            }
+            style={styles.continueButton}
+            disabled={loading}
+            activeOpacity={0.88}
           >
-            <Text style={styles.welcomeText}>Welcome to</Text>
-            <Text style={styles.brandTitleText}>Kapra Gold & Diamonds</Text>
-            <Text style={styles.subHeaderText}>
-              {type === 'reset' ? 'RESET PASSWORD' : 'LOG IN TO CONTINUE'}
-            </Text>
-
-            <View style={styles.titleDivider} />
-
-            <View style={styles.signUpRow}>
-              <Text style={styles.dontHaveText}>
-                {type === 'reset'
-                  ? 'Remember password? '
-                  : "Don't have an account? "}
+            {loading ? (
+              <BallPulse size={'large'} color={'#0A2A20'} />
+            ) : (
+              <Text style={styles.continueButtonText}>
+                {type === 'reset' ? 'Send Reset OTP' : 'Send OTP'}
               </Text>
-              <TouchableOpacity
-                onPress={() => {
-                  if (type === 'reset') {
-                    navigation.navigate('LoginScreen');
-                  } else {
-                    navigation.navigate('RegistraionScreen');
-                  }
-                }}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.signUpLinkText}>
-                  {type === 'reset' ? 'Log in' : 'Sign up'}
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.inputWrapper}>
-              <Text style={styles.countryCode}>+91</Text>
-              <View style={styles.inputDivider} />
-              <TextInput
-                placeholder="Enter phone number"
-                placeholderTextColor="rgba(255, 255, 255, 0.45)"
-                keyboardType="number-pad"
-                style={styles.input}
-                value={phone}
-                maxLength={10}
-                textContentType="telephoneNumber"
-                autoComplete="tel"
-                selectionColor="#FFFFFF"
-                onChangeText={setPhone}
-              />
-            </View>
-
-            <TouchableOpacity
-              onPress={
-                type === 'reset' ? handleContinueRest : handleContinueLogin
-              }
-              style={styles.continueButton}
-              disabled={loading}
-              activeOpacity={0.88}
-            >
-              {loading ? (
-                <BallPulse size={'large'} color={'#0A2A20'} />
-              ) : (
-                <Text style={styles.continueButtonText}>
-                  {type === 'reset' ? 'Send Reset OTP' : 'Send OTP'}
-                </Text>
-              )}
-            </TouchableOpacity>
-          </Animated.View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+            )}
+          </TouchableOpacity>
+        </Animated.View>
+      </KeyboardAwareScrollView>
     </View>
   );
 };

@@ -10,6 +10,7 @@ import {
 import LinearGradient from 'react-native-linear-gradient';
 import { KAPRA_ART } from '../kapraAssets';
 import { HOME_FONTS, s, fs } from '../theme';
+import KSHOPE_CONFIG from '../../../../globals/config';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const GUTTER = s(16);
@@ -39,7 +40,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ banner, onPress }) => {
       ? {
           uri: validCustomImage.startsWith('http')
             ? validCustomImage
-            : `https://kshadmin.kapradaily.com/${validCustomImage.replace(
+            : `${KSHOPE_CONFIG.image_base_url.replace(/\/$/, '')}/${validCustomImage.replace(
                 /^\//,
                 '',
               )}`,
@@ -117,7 +118,7 @@ export const EverydayDiamondsBanner: React.FC<EverydayDiamondsBannerProps> = ({
       ? {
           uri: validImage.startsWith('http')
             ? validImage
-            : `https://kshadmin.kapradaily.com/${validImage.replace(/^\//, '')}`,
+            : `${KSHOPE_CONFIG.image_base_url.replace(/\/$/, '')}/${validImage.replace(/^\//, '')}`,
         }
       : validImage
     : KAPRA_ART.everydayDiamondsBanner;
@@ -192,7 +193,7 @@ export const HangingJhumkaBanner: React.FC<HangingJhumkaBannerProps> = ({
       ? {
           uri: validImage.startsWith('http')
             ? validImage
-            : `https://kshadmin.kapradaily.com/${validImage.replace(/^\//, '')}`,
+            : `${KSHOPE_CONFIG.image_base_url.replace(/\/$/, '')}/${validImage.replace(/^\//, '')}`,
         }
       : validImage
     : KAPRA_ART.hangingJhumkaBanner;
@@ -241,7 +242,7 @@ export const SideBySidePromos: React.FC<SideBySidePromosProps> = ({
       ? {
           uri: leftValid.startsWith('http')
             ? leftValid
-            : `https://kshadmin.kapradaily.com/${leftValid.replace(/^\//, '')}`,
+            : `${KSHOPE_CONFIG.image_base_url.replace(/\/$/, '')}/${leftValid.replace(/^\//, '')}`,
         }
       : leftValid
     : KAPRA_ART.promoDiamondDreams;
@@ -256,7 +257,7 @@ export const SideBySidePromos: React.FC<SideBySidePromosProps> = ({
       ? {
           uri: rightValid.startsWith('http')
             ? rightValid
-            : `https://kshadmin.kapradaily.com/${rightValid.replace(/^\//, '')}`,
+            : `${KSHOPE_CONFIG.image_base_url.replace(/\/$/, '')}/${rightValid.replace(/^\//, '')}`,
         }
       : rightValid
     : KAPRA_ART.promoGoldEdit;

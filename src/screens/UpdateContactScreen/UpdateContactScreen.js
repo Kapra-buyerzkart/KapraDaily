@@ -1,6 +1,9 @@
 import React from 'react';
-import { View, StatusBar, Platform, ScrollView } from 'react-native';
-import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import { View, StatusBar, Platform } from 'react-native';
+import {
+  KeyboardAvoidingView,
+  KeyboardAwareScrollView,
+} from 'react-native-keyboard-controller';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import StatusModal from '@/components/StatusModal';
@@ -60,10 +63,11 @@ const UpdateContactScreen = () => {
         style={styles.keyboardAvoidingView}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <ScrollView
+        <KeyboardAwareScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
+          bottomOffset={Platform.OS === 'ios' ? 80 : 60}
         >
           {step === 1 ? (
             <Animated.View key="step-contact" entering={entrance(0)}>
@@ -93,7 +97,7 @@ const UpdateContactScreen = () => {
               />
             </Animated.View>
           )}
-        </ScrollView>
+        </KeyboardAwareScrollView>
 
         <UpdateActionBar
           enabled={action.enabled}

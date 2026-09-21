@@ -1,13 +1,12 @@
 import {
-  KeyboardAvoidingView,
   Platform,
-  ScrollView,
   View,
   StatusBar,
   TouchableOpacity,
   Animated,
   Easing,
 } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import React, { useState, useRef, useEffect } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -235,52 +234,49 @@ const RegistrationScreen = () => {
         <Feather name="arrow-left" size={20} color="#12372A" />
       </TouchableOpacity>
 
-      <KeyboardAvoidingView
+      <KeyboardAwareScrollView
         style={styles.keyboardView}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        bounces={false}
+        bottomOffset={Platform.OS === 'ios' ? 40 : 24}
       >
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-          bounces={false}
-        >
-          <RegistrationHero />
+        <RegistrationHero />
 
-          <Animated.View
-            style={[
-              styles.sheetWrap,
-              {
-                opacity: bottomOpacity,
-                transform: [{ translateY: bottomTranslate }],
-              },
-            ]}
-          >
-            <RegistrationForm
-              phone={phone}
-              onEditPhone={handleEditPhone}
-              name={name}
-              onChangeName={setName}
-              email={email}
-              onChangeEmail={setEmail}
-              password={password}
-              onChangePassword={setPassword}
-              pincode={pincode}
-              onChangePincode={handlePincodeChange}
-              areas={areas}
-              selectedArea={selectedArea}
-              onSelectArea={handleSelectArea}
-              termsAccepted={termsAndConditionsClicked}
-              onToggleTerms={() =>
-                setTermsAndConditionsClicked(!termsAndConditionsClicked)
-              }
-              onPressTerms={handlePressTerms}
-              loading={loading}
-              onSubmit={handleContinue}
-            />
-          </Animated.View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+        <Animated.View
+          style={[
+            styles.sheetWrap,
+            {
+              opacity: bottomOpacity,
+              transform: [{ translateY: bottomTranslate }],
+            },
+          ]}
+        >
+          <RegistrationForm
+            phone={phone}
+            onEditPhone={handleEditPhone}
+            name={name}
+            onChangeName={setName}
+            email={email}
+            onChangeEmail={setEmail}
+            password={password}
+            onChangePassword={setPassword}
+            pincode={pincode}
+            onChangePincode={handlePincodeChange}
+            areas={areas}
+            selectedArea={selectedArea}
+            onSelectArea={handleSelectArea}
+            termsAccepted={termsAndConditionsClicked}
+            onToggleTerms={() =>
+              setTermsAndConditionsClicked(!termsAndConditionsClicked)
+            }
+            onPressTerms={handlePressTerms}
+            loading={loading}
+            onSubmit={handleContinue}
+          />
+        </Animated.View>
+      </KeyboardAwareScrollView>
     </View>
   );
 };

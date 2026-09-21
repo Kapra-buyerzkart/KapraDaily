@@ -1,17 +1,50 @@
 import * as Keychain from 'react-native-keychain';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const getItem = async key => {
-  const result = await Keychain.getGenericPassword({ service: key });
-  return result ? result.password : null;
+  try {
+    const result = await Keychain.getGenericPassword({ service: key });
+    if (result && result.password) {
+      return result.password;
+    }
+  } catch (error) {
+    // Keychain unavailable, check AsyncStorage fallback
+  }
+  try {
+    return await AsyncStorage.getItem(`@secure_${key}`);
+  } catch {
+    return null;
+  }
 };
 
-const removeItem = key => Keychain.resetGenericPassword({ service: key });
+const removeItem = async key => {
+  try {
+    await Keychain.resetGenericPassword({ service: key });
+  } catch (error) {
+    // ignore
+  }
+  try {
+    await AsyncStorage.removeItem(`@secure_${key}`);
+  } catch {
+    // ignore
+  }
+};
 
-const setItem = (key, value) => {
+const setItem = async (key, value) => {
   if (value === null || value === undefined || value === '') {
     return removeItem(key);
   }
-  return Keychain.setGenericPassword(key, String(value), { service: key });
+  const strVal = String(value);
+  try {
+    await Keychain.setGenericPassword(key, strVal, { service: key });
+  } catch (error) {
+    // ignore keychain error, store in AsyncStorage
+  }
+  try {
+    await AsyncStorage.setItem(`@secure_${key}`, strVal);
+  } catch {
+    // ignore
+  }
 };
 
 const multiSet = pairs =>
