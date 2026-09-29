@@ -49,8 +49,8 @@ const WishlistButton = ({ liked, isThreeColumn, productName, onPress }) => {
       <Animated.View style={heartAnimatedStyle}>
         <Ionicons
           name={liked ? 'heart' : 'heart-outline'}
-          size={16}
-          color={liked ? LIKED_COLOUR : ACCENT.primary}
+          size={isThreeColumn ? 13 : 16}
+          color={liked ? LIKED_COLOUR : '#374151'}
         />
       </Animated.View>
     </TouchableOpacity>

@@ -224,6 +224,8 @@ const MapPanel = memo<MapPanelProps>(
             showsMyLocationButton={false}
             moveOnMarkerPress={false}
             toolbarEnabled={false}
+            pitchEnabled={false}
+            rotateEnabled={false}
           />
 
           <View
@@ -727,10 +729,14 @@ const AddLocationScreen: React.FC = () => {
       />
 
       <KeyboardAvoidingView
+        pointerEvents="box-none"
         style={styles.flex}
         behavior={IS_ANDROID ? 'height' : 'padding'}
       >
-        <View style={[styles.sheet, isFormFocused && { marginTop: topInset }]}>
+        <View
+          pointerEvents="auto"
+          style={[styles.sheet, isFormFocused && { marginTop: topInset }]}
+        >
           <View style={styles.grabHandle} />
 
           <View style={styles.sheetHeader}>

@@ -21,7 +21,7 @@ const CartCounter = ({
   onIncrement,
   onDecrement,
 }) => {
-  const iconSize = isThreeColumn ? 15 : 17;
+  const iconSize = isThreeColumn ? 11 : 13;
 
   return (
     <Animated.View
@@ -43,7 +43,7 @@ const CartCounter = ({
             : `Decrease ${productName} quantity`
         }
       >
-        <Entypo name="minus" size={iconSize} color={INK.onDark} />
+        <Entypo name="minus" size={iconSize} color="#FFFFFF" />
       </AnimatedPressable>
 
       <Text
@@ -68,7 +68,7 @@ const CartCounter = ({
             : `Increase ${productName} quantity`
         }
       >
-        <Entypo name="plus" size={iconSize} color={INK.onDark} />
+        <Entypo name="plus" size={iconSize} color="#FFFFFF" />
       </AnimatedPressable>
     </Animated.View>
   );

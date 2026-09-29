@@ -88,6 +88,10 @@ const images = {
   no_vocher_booking: require('./noimages/no_vocher_booking.png'),
   maplocationnbanner: require('./maplocationnbanner.png'),
   test: require('./test.png'),
+  basketProduce: require('./basket_produce.jpg'),
+  offerSale: require('./offerSale.png'),
+  offerSaleHeader: require('./offerSale.png'),
+  gardenProduceTrim: require('./garden_produce_trim.jpg'),
 };
 
 export default images;

@@ -37,6 +37,8 @@ const useAddLocation = () => {
 
   const isMountedRef = useRef(true);
   const didResolveInitialRef = useRef(false);
+  const isDraggingRef = useRef(false);
+  const geocodeTimerRef = useRef(null);
   const mapRef = useRef(null);
   const searchRef = useRef(null);
 
@@ -77,6 +79,9 @@ const useAddLocation = () => {
   useEffect(() => {
     return () => {
       isMountedRef.current = false;
+      if (geocodeTimerRef.current) {
+        clearTimeout(geocodeTimerRef.current);
+      }
     };
   }, []);
 
@@ -252,13 +257,23 @@ const useAddLocation = () => {
     }
   }, [fetchAreas, isEditMode, pincode, setValue]);
 
-  const onRegionChange = useCallback(() => setIsDragging(true), []);
+  const onRegionChange = useCallback(() => {
+    if (isDraggingRef.current) return;
+    isDraggingRef.current = true;
+    setIsDragging(true);
+  }, []);
 
   const onRegionChangeComplete = useCallback(
     newRegion => {
-      setRegion(newRegion);
+      isDraggingRef.current = false;
       setIsDragging(false);
-      reverseGeocode(newRegion.latitude, newRegion.longitude);
+      setRegion(newRegion);
+      if (geocodeTimerRef.current) {
+        clearTimeout(geocodeTimerRef.current);
+      }
+      geocodeTimerRef.current = setTimeout(() => {
+        reverseGeocode(newRegion.latitude, newRegion.longitude);
+      }, 350);
     },
     [reverseGeocode],
   );

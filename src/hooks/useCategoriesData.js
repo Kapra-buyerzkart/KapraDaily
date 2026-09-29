@@ -6,7 +6,6 @@ import {
   getProductSuggestionsApi,
 } from '../api/productService';
 import { AppContext } from '../context/appContext';
-import { shuffle } from '../utils/shuffle';
 
 const PAGE_SIZE = 20;
 
@@ -94,7 +93,7 @@ const useCategoriesData = (catId, debouncedSearchText, filters) => {
         response.data &&
         response.data.items
       ) {
-        const newProducts = shuffle(response.data.items);
+        const newProducts = response.data.items;
         if (page === 1) {
           if (newProducts.length === 0 && debouncedSearchText) {
             await fetchGlobalFallback(requestId);

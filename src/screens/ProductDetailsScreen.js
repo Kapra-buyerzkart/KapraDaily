@@ -890,7 +890,7 @@ const ProductDetailsScreen = () => {
       )}
 
       {cartItems && cartItems.length > 0 && (
-        <View style={styles.floatingCart}>
+        <View style={styles.floatingCart} pointerEvents="box-none">
           {!isStoreUnavailable && (
             <SelectedProducts selectedProducts={cartItems} />
           )}

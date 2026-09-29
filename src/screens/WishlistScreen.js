@@ -223,6 +223,7 @@ export default function WishlistScreen() {
 
       {cartItems && cartItems.length > 0 && (
         <Animated.View
+          pointerEvents="box-none"
           style={[
             styles.floatingContainer,
             { bottom: hp('0.2%') + tabBarClearance },

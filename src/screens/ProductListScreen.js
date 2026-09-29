@@ -141,7 +141,7 @@ const ProductListScreen = () => {
         />
       )}
 
-      <View style={styles.floatingContainer}>
+      <View style={styles.floatingContainer} pointerEvents="box-none">
         <SelectedProducts />
       </View>
 

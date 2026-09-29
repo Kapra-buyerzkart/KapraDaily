@@ -57,15 +57,6 @@ import {
   getTabBarClearance,
 } from '../animations/tabBarVisibility';
 
-const selectedProducts = [
-  { id: '1', image: require('../assets/images/product1.png') },
-  { id: '2', image: require('../assets/images/product2.png') },
-  { id: '3', image: require('../assets/images/product3.png') },
-  { id: '4', image: require('../assets/images/product1.png') },
-  { id: '5', image: require('../assets/images/product2.png') },
-  { id: '6', image: require('../assets/images/product3.png') },
-];
-
 const SubCategoriesHeader = React.memo(function SubCategoriesHeader({
   data,
   renderItem,
@@ -406,7 +397,7 @@ export default function () {
           cartAnimatedStyle,
         ]}
       >
-        <SelectedProducts selectedProducts={selectedProducts} />
+        <SelectedProducts />
       </Animated.View>
       <FilterSortModal
         visible={isFilterSortModalVisible}

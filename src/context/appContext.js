@@ -177,6 +177,7 @@ export const AppContextProvider = ({ children }) => {
     const updatedProfile = {
       ...existingProfile,
       pincode: item?.pincodeAreaId,
+      postalPincode: item?.pincode ?? existingProfile?.postalPincode,
       pinAddress: item?.areaName ?? existingProfile.pinAddress,
     };
 

@@ -65,8 +65,8 @@ const PlacementBannerCarousel = ({
   const isInfinite = infinite && !!banners && banners.length > 1;
 
   const geometry = useMemo(() => {
-    const bannerWidth = fullWidth ? wp('100%') : wp('85%');
-    const bannerSpacing = fullWidth ? 0 : wp('4%');
+    const bannerWidth = fullWidth ? wp('100%') : wp('92%');
+    const bannerSpacing = fullWidth ? 0 : wp('3%');
     const itemMargin = bannerSpacing / 2;
     const contentPadding = fullWidth
       ? 0
@@ -85,15 +85,20 @@ const PlacementBannerCarousel = ({
       touchableStyle: {
         width: '100%',
         height: '100%',
-        borderRadius: fullWidth ? 0 : wp('4%'),
+        borderRadius: fullWidth ? 0 : 20,
         overflow: 'hidden',
       },
       listContentStyle: fullWidth
         ? undefined
-        : { paddingHorizontal: contentPadding, paddingVertical: hp('1%') },
+        : { paddingHorizontal: contentPadding },
       singleStyle: [
         !fullWidth && styles.carouselShadowWrapper,
-        { width: bannerWidth, alignSelf: 'center' },
+        {
+          width: bannerWidth,
+          alignSelf: 'center',
+          borderRadius: fullWidth ? 0 : 20,
+          overflow: 'hidden',
+        },
       ],
     };
   }, [fullWidth]);
@@ -217,12 +222,14 @@ const PlacementBannerCarousel = ({
 
   if (banners.length === 1) {
     return (
-      <View style={[geometry.singleStyle, style]}>
+      <View style={[listStyle, geometry.singleStyle]}>
         <TouchableOpacity
           activeOpacity={0.9}
           onPress={() => onBannerPress(banners[0])}
           style={
-            fullWidth ? styles.topHomeBannerViewFull : styles.topHomeBannerView
+            fullWidth
+              ? [styles.topHomeBannerViewFull, { height: '100%' }]
+              : [styles.topHomeBannerView, { height: '100%' }]
           }
         >
           <CachedImage
@@ -246,6 +253,8 @@ const PlacementBannerCarousel = ({
         snapToAlignment={fullWidth ? undefined : 'start'}
         decelerationRate="fast"
         showsHorizontalScrollIndicator={false}
+        style={{ flex: 1 }}
+        contentContainerStyle={[geometry.listContentStyle, { height: '100%' }]}
         onScroll={scrollHandler}
         onScrollBeginDrag={isInfinite ? onScrollBeginDrag : undefined}
         onMomentumScrollEnd={isInfinite ? onMomentumScrollEnd : undefined}
@@ -277,19 +286,14 @@ const PlacementBannerCarousel = ({
 const styles = StyleSheet.create({
   topHomeBannerView: {
     width: '100%',
-    height: hp('20%'),
+    height: '100%',
     alignSelf: 'center',
-    borderRadius: wp('4%'),
+    borderRadius: 20,
     overflow: 'hidden',
   },
   carouselShadowWrapper: {
-    shadowColor: '#ff4d00ff',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.18,
-    shadowRadius: 4.5,
-    elevation: 3,
     backgroundColor: '#FFFFFF',
-    borderRadius: wp('4%'),
+    borderRadius: 20,
   },
   topHomeBannerViewFull: {
     width: wp('100%'),

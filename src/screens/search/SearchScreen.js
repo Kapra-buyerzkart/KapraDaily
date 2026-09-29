@@ -259,7 +259,7 @@ const SearchScreen = () => {
         visible={isLocationModalVisible}
         onClose={() => setIsLocationModalVisible(false)}
       />
-      <KeyboardStickyView style={styles.floatingContainer}>
+      <KeyboardStickyView style={styles.floatingContainer} pointerEvents="box-none">
         <SelectedProducts />
       </KeyboardStickyView>
     </SafeAreaView>

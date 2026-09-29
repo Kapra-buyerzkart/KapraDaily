@@ -70,11 +70,11 @@ const ProductImage = ({ imageSource, isPlaceholder, isOutOfStock, onError }) => 
         />
       </Animated.View>
 
-      {!isPlaceholder && !loaded && (
+      {!isPlaceholder && !loaded ? (
         <ShimmerPlaceholder style={styles.imageShimmer} />
-      )}
+      ) : null}
 
-      {isOutOfStock && (
+      {isOutOfStock ? (
         <View style={styles.outOfStockOverlay}>
           <View style={styles.outOfStockPill}>
             <Text
@@ -85,7 +85,7 @@ const ProductImage = ({ imageSource, isPlaceholder, isOutOfStock, onError }) => 
             </Text>
           </View>
         </View>
-      )}
+      ) : null}
     </>
   );
 };

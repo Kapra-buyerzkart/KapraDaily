@@ -2,7 +2,7 @@ import React, { useCallback, useMemo } from 'react';
 import { FlatList, StyleSheet } from 'react-native';
 import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import TokenProductCard from '../../../components/TokenProductCard';
-const CARD_STRIDE = wp('37%');
+const CARD_STRIDE = wp('45%');
 
 const DEFAULT_CONTENT_STYLE = {
   paddingLeft: wp('3.2%'),

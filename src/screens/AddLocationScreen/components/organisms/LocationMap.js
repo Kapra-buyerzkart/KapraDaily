@@ -25,6 +25,8 @@ const LocationMap = ({
       onRegionChangeComplete={onRegionChangeComplete}
       showsUserLocation
       showsMyLocationButton={false}
+      pitchEnabled={false}
+      rotateEnabled={false}
     />
 
     <MapPin isLifted={isDragging} isHidden={isHidden} />

@@ -67,7 +67,7 @@ const TopShowcase = ({
               <CachedImage
                 source={banner.uri}
                 style={styles.cardImage}
-                resizeMode="contain"
+                resizeMode="cover"
                 accessible={false}
               />
             </AnimatedPressable>
@@ -106,13 +106,14 @@ const styles = StyleSheet.create({
   card: {
     aspectRatio: 48 / 52,
     top: CARD_TOP,
-    borderRadius: RADIUS.md,
+    borderRadius: 20,
     overflow: 'hidden',
     marginHorizontal: CARD_OVERLAP,
   },
   cardImage: {
     width: '100%',
     height: '65%',
+    borderRadius: 20,
   },
 });
 

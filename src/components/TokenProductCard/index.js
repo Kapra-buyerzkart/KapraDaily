@@ -1,10 +1,12 @@
 import React, { useMemo } from 'react';
+import { View, Text, Image } from 'react-native';
 import AnimatedPressable from '@/components/AnimatedPressable';
-import { SURFACE, categoryTint } from '@/styles/homeTheme';
-import ProductInfo from './components/ProductInfo';
-import ProductMedia from './components/ProductMedia';
+import icons from '@/assets/icons';
+import ProductImage from './components/ProductImage';
+import WishlistButton from './components/WishlistButton';
+import QuantityControl from './components/QuantityControl';
 import useTokenProductCard from './hooks/useTokenProductCard';
-import { resolveTintIndex } from './utils';
+import { formatAmount, resolveAmount } from './utils';
 import styles from './styles';
 
 const TokenProductCard = ({
@@ -27,7 +29,6 @@ const TokenProductCard = ({
     liked,
     imageSource,
     isPlaceholder,
-    isOpaqueImage,
     handleImageError,
     handleToggleWishlist,
     handleIncrement,
@@ -52,19 +53,40 @@ const TokenProductCard = ({
     price,
     offer,
     weight,
-    token,
     isOutOfStock,
-    rating,
-    deliveryEta,
   } = product;
 
-  const tint = useMemo(
-    () =>
-      isOpaqueImage
-        ? SURFACE.base
-        : categoryTint(resolveTintIndex(index, productId)),
-    [isOpaqueImage, index, productId],
-  );
+  // Discount calculation
+  const discountLabel = useMemo(() => {
+    if (offer) return offer;
+    const mrpNum = Number(mrp);
+    const priceNum = Number(price);
+    if (mrpNum > priceNum && priceNum > 0) {
+      const pct = Math.round(((mrpNum - priceNum) / mrpNum) * 100);
+      if (pct > 0) return `${pct}% OFF`;
+    }
+    return '';
+  }, [offer, mrp, price]);
+
+  // Price formatting
+  const amount = resolveAmount(price);
+  const priceLabel = formatAmount(amount) || amount;
+  const hasMrp = !!mrp && Number(mrp) > Number(price);
+  const mrpLabel = formatAmount(mrp) || mrp;
+
+  // Coin / UD value formatting
+  const tokenValue = useMemo(() => {
+    const rawVal =
+      item?.bTokenValue ??
+      item?.token ??
+      item?.btokens ??
+      product?.tokenValue;
+    if (rawVal != null) {
+      const parsed = parseInt(rawVal, 10);
+      if (!isNaN(parsed) && parsed > 0) return parsed;
+    }
+    return 4; // Default matching +4 UD reference design
+  }, [item, product]);
 
   return (
     <AnimatedPressable
@@ -80,36 +102,118 @@ const TokenProductCard = ({
       accessibilityActions={accessibilityActions}
       onAccessibilityAction={handleAccessibilityAction}
     >
-      <ProductMedia
-        imageSource={imageSource}
-        isPlaceholder={isPlaceholder}
-        isOutOfStock={isOutOfStock}
-        onImageError={handleImageError}
-        tint={tint}
-        name={name}
-        liked={liked}
-        hideWishlist={hideWishlist}
-        onToggleWishlist={handleToggleWishlist}
-        quantity={quantity}
-        isAtMaxQty={isAtMaxQty}
-        isThreeColumn={isThreeColumn}
-        onIncrement={handleIncrement}
-        onDecrement={handleDecrement}
-        onAdd={handleAdd}
-      />
+      {/* 1. Top Header Row: 50% OFF Badge (Left) + Wishlist Heart (Right) */}
+      <View style={styles.topRow}>
+        {discountLabel ? (
+          <View
+            style={[
+              styles.discountBadge,
+              isThreeColumn && styles.discountBadgeSmall,
+            ]}
+          >
+            <Text
+              style={[
+                styles.discountText,
+                isThreeColumn && styles.discountTextSmall,
+              ]}
+            >
+              {discountLabel}
+            </Text>
+          </View>
+        ) : (
+          <View style={styles.topRowSpacer} />
+        )}
 
-      <ProductInfo
-        name={name}
-        weight={weight}
-        price={price}
-        mrp={mrp}
-        offer={offer}
-        token={token}
-        rating={rating}
-        deliveryEta={deliveryEta}
-        showToken={!hideToken}
-        isThreeColumn={isThreeColumn}
-      />
+        {!hideWishlist ? (
+          <WishlistButton
+            liked={liked}
+            isThreeColumn={isThreeColumn}
+            productName={name}
+            onPress={handleToggleWishlist}
+          />
+        ) : null}
+      </View>
+
+      {/* 2. Product Image Centered */}
+      <View
+        style={[
+          styles.imageContainer,
+          isThreeColumn && styles.imageContainerSmall,
+        ]}
+      >
+        <ProductImage
+          imageSource={imageSource}
+          isPlaceholder={isPlaceholder}
+          isOutOfStock={isOutOfStock}
+          onError={handleImageError}
+        />
+      </View>
+
+      {/* 3. Product Weight */}
+      <Text
+        style={[styles.weightText, isThreeColumn && styles.weightTextSmall]}
+        numberOfLines={1}
+      >
+        {weight || ' '}
+      </Text>
+
+      {/* 4. Product Name */}
+      <Text
+        style={[styles.titleText, isThreeColumn && styles.titleTextSmall]}
+        numberOfLines={2}
+        ellipsizeMode="tail"
+      >
+        {name}
+      </Text>
+
+      {/* 5. Price Row (Selling Price in Emerald Green + Struck-through MRP) */}
+      <View style={styles.priceRow}>
+        <Text
+          style={[
+            styles.sellingPriceText,
+            isThreeColumn && styles.sellingPriceTextSmall,
+          ]}
+        >
+          ₹{priceLabel}
+        </Text>
+        {hasMrp ? (
+          <Text style={[styles.mrpText, isThreeColumn && styles.mrpTextSmall]}>
+            ₹{mrpLabel}
+          </Text>
+        ) : null}
+      </View>
+
+      {/* 6. Bottom Action Row: +4 UD Coin Pill (Left) + + ADD Button (Right) */}
+      <View style={styles.bottomRow}>
+        {!hideToken ? (
+          <View
+            style={[styles.coinPill, isThreeColumn && styles.coinPillSmall]}
+          >
+            <Image
+              source={icons.udCoinNew || icons.udcoin}
+              style={[styles.coinIcon, isThreeColumn && styles.coinIconSmall]}
+            />
+            <Text
+              style={[styles.coinText, isThreeColumn && styles.coinTextSmall]}
+            >
+              +{tokenValue} UD
+            </Text>
+          </View>
+        ) : (
+          <View />
+        )}
+
+        <QuantityControl
+          quantity={quantity}
+          isAtMaxQty={isAtMaxQty}
+          isOutOfStock={isOutOfStock}
+          isThreeColumn={isThreeColumn}
+          productName={name}
+          onIncrement={handleIncrement}
+          onDecrement={handleDecrement}
+          onAdd={handleAdd}
+        />
+      </View>
     </AnimatedPressable>
   );
 };
