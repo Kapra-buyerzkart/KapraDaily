@@ -62,7 +62,7 @@ export const SPACE = {
 
 export const SEARCH_FIELD = {
   height: 48,
-  radius: RADIUS.md,
+  radius: RADIUS.pill,
 };
 
 export const FIELD_RULE = 'rgba(17,19,26,0.12)';
@@ -156,6 +156,200 @@ export const HERO_LIFT = {
   elevation: 2,
 };
 
+// -------------------------------------------------------------
+// Backend Color Scheme & Dynamic Theming
+// -------------------------------------------------------------
+
+export const DEFAULT_HOME_COLOR_SCHEME = {
+  primary: '#889C54',
+  secondary: '#97A965',
+  gradient: ['#97A965', '#91A45F', '#889C54'],
+  accent: '#FF5722',
+  accentSoft: '#FFF0EB',
+  background: '#FFFFFF',
+  containerBackground: '#889C54',
+  tabActive: '#064E3B',
+  tabStroke: '#064E3B',
+  tabBackground: ['#E1E8CD', '#EFF4E3', '#FFFFFF'],
+  cartBackground: '#1E3A2F',
+  searchIcon: '#889C54',
+};
+
+export const normalizeHex = (hex, fallback = '#889C54') => {
+  if (!hex || typeof hex !== 'string') return fallback;
+  const clean = hex.trim();
+  const prefixed = clean.startsWith('#') ? clean : `#${clean}`;
+  return /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(prefixed)
+    ? prefixed
+    : fallback;
+};
+
+export const adjustBrightness = (hex, percent) => {
+  const norm = normalizeHex(hex, '#889C54');
+  const clean = norm.replace('#', '');
+  const fullHex = clean.length === 3
+    ? clean.split('').map(c => c + c).join('')
+    : clean.slice(0, 6);
+  const num = parseInt(fullHex, 16);
+  if (isNaN(num)) return norm;
+  const factor = Math.round((255 * percent) / 100);
+  let r = (num >> 16) + factor;
+  let g = ((num >> 8) & 0x00ff) + factor;
+  let b = (num & 0x0000ff) + factor;
+  r = Math.min(255, Math.max(0, r));
+  g = Math.min(255, Math.max(0, g));
+  b = Math.min(255, Math.max(0, b));
+  return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+};
+
+export const hexToRgba = (hex, alpha = 1) => {
+  const norm = normalizeHex(hex, '#889C54');
+  const clean = norm.replace('#', '');
+  const fullHex = clean.length === 3
+    ? clean.split('').map(c => c + c).join('')
+    : clean.slice(0, 6);
+  const num = parseInt(fullHex, 16);
+  if (isNaN(num)) return `rgba(136, 156, 84, ${alpha})`;
+  const r = (num >> 16) & 255;
+  const g = (num >> 8) & 255;
+  const b = num & 255;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+
+export const resolveHomeColorScheme = (rawScheme) => {
+  if (!rawScheme) return DEFAULT_HOME_COLOR_SCHEME;
+
+  let scheme = rawScheme;
+  if (typeof rawScheme === 'string') {
+    const trimmed = rawScheme.trim();
+    if (trimmed.startsWith('#') || /^[0-9a-fA-F]{6}$/.test(trimmed)) {
+      scheme = { primary: trimmed };
+    } else {
+      try {
+        scheme = JSON.parse(trimmed);
+      } catch {
+        scheme = { primary: trimmed };
+      }
+    }
+  }
+
+  if (typeof scheme !== 'object' || scheme === null) {
+    return DEFAULT_HOME_COLOR_SCHEME;
+  }
+
+  const primaryRaw =
+    scheme.primary ||
+    scheme.primaryColor ||
+    scheme.primary_color ||
+    scheme.headerColor ||
+    scheme.header_color ||
+    scheme.main;
+
+  const primary = primaryRaw
+    ? normalizeHex(primaryRaw, DEFAULT_HOME_COLOR_SCHEME.primary)
+    : DEFAULT_HOME_COLOR_SCHEME.primary;
+
+  const secondaryRaw =
+    scheme.secondary ||
+    scheme.secondaryColor ||
+    scheme.secondary_color;
+  const secondary = secondaryRaw
+    ? normalizeHex(secondaryRaw, adjustBrightness(primary, 8))
+    : adjustBrightness(primary, 8);
+
+  const rawGradient =
+    scheme.gradient ||
+    scheme.headerGradient ||
+    scheme.header_gradient ||
+    scheme.colors;
+
+  let gradient = DEFAULT_HOME_COLOR_SCHEME.gradient;
+  if (Array.isArray(rawGradient) && rawGradient.length >= 2) {
+    gradient = rawGradient.map(c => normalizeHex(c, primary));
+  } else if (typeof rawGradient === 'string') {
+    const parts = rawGradient.split(',').map(s => s.trim()).filter(Boolean);
+    if (parts.length >= 2) {
+      gradient = parts.map(c => normalizeHex(c, primary));
+    } else {
+      gradient = [
+        adjustBrightness(primary, 10),
+        adjustBrightness(primary, 5),
+        primary,
+      ];
+    }
+  } else if (primaryRaw) {
+    gradient = [
+      adjustBrightness(primary, 10),
+      adjustBrightness(primary, 5),
+      primary,
+    ];
+  }
+
+  const accentRaw =
+    scheme.accent ||
+    scheme.accentColor ||
+    scheme.accent_color;
+  const accent = accentRaw
+    ? normalizeHex(accentRaw, DEFAULT_HOME_COLOR_SCHEME.accent)
+    : DEFAULT_HOME_COLOR_SCHEME.accent;
+
+  const backgroundRaw =
+    scheme.background ||
+    scheme.backgroundColor ||
+    scheme.background_color;
+  const background = backgroundRaw
+    ? normalizeHex(backgroundRaw, '#FFFFFF')
+    : '#FFFFFF';
+
+  const tabActiveRaw =
+    scheme.tabActive ||
+    scheme.tabActiveColor ||
+    scheme.tab_active ||
+    scheme.activeTab ||
+    scheme.tabColor;
+  const tabActive = tabActiveRaw
+    ? normalizeHex(tabActiveRaw, adjustBrightness(primary, -35))
+    : adjustBrightness(primary, -35);
+
+  const tabBackgroundRaw =
+    scheme.tabBackground ||
+    scheme.tab_background ||
+    scheme.categoryBackground;
+  let tabBackground = DEFAULT_HOME_COLOR_SCHEME.tabBackground;
+  if (Array.isArray(tabBackgroundRaw) && tabBackgroundRaw.length >= 2) {
+    tabBackground = tabBackgroundRaw.map(c => normalizeHex(c, '#FFFFFF'));
+  } else if (primaryRaw) {
+    tabBackground = [
+      adjustBrightness(primary, 70),
+      adjustBrightness(primary, 82),
+      '#FFFFFF',
+    ];
+  }
+
+  const cartBgRaw =
+    scheme.cartBackground ||
+    scheme.cart_background ||
+    scheme.cartBg;
+  const cartBackground = cartBgRaw
+    ? normalizeHex(cartBgRaw, adjustBrightness(primary, -60))
+    : adjustBrightness(primary, -60);
+
+  return {
+    primary,
+    secondary,
+    gradient,
+    accent,
+    accentSoft: hexToRgba(accent, 0.12),
+    background,
+    containerBackground: primary,
+    tabActive,
+    tabStroke: tabActive,
+    tabBackground,
+    cartBackground,
+    searchIcon: primary,
+  };
+};
+
 export default {
   CANVAS,
   SURFACE,
@@ -184,4 +378,9 @@ export default {
   HERO_TOP,
   HERO_GRADIENT,
   HERO_LIFT,
+  DEFAULT_HOME_COLOR_SCHEME,
+  resolveHomeColorScheme,
+  normalizeHex,
+  adjustBrightness,
+  hexToRgba,
 };

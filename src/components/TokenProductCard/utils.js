@@ -62,8 +62,19 @@ export const deriveProductFields = item => {
     [item?.bTokenValue, item?.token, item?.btokens],
     DEFAULT_TOKEN_VALUE,
   );
-  const discount =
+  const rawDiscount =
     item?.offer || item?.discountPercentage || item?.discountPercent;
+  let derivedOffer = '';
+  if (rawDiscount) {
+    if (typeof rawDiscount === 'string' && rawDiscount.toUpperCase().includes('OFF')) {
+      derivedOffer = rawDiscount;
+    } else {
+      const num = parseFloat(rawDiscount);
+      if (!Number.isNaN(num) && num > 0) {
+        derivedOffer = `${Math.round(num)}% OFF`;
+      }
+    }
+  }
   const derivedRating = item?.rating ?? item?.avgRating ?? item?.ratingValue;
   const derivedEta =
     item?.deliveryTime ?? item?.deliveryEta ?? item?.eta ?? null;
@@ -73,8 +84,16 @@ export const deriveProductFields = item => {
     name: item?.prName || item?.name || '',
     mrp: firstPresent([item?.mrp, item?.unitPrice], ''),
     price: firstPresent([item?.price, item?.specialPrice], 0),
-    offer: discount ? `${Math.round(discount)}% OFF` : '',
+    offer: derivedOffer,
     weight: item?.weight,
+    subtitle:
+      item?.subtitle ||
+      item?.subTitle ||
+      item?.description ||
+      item?.categoryName ||
+      item?.catName ||
+      item?.weight ||
+      '',
     token: `${derivedTokenValue} UD ${
       Number(derivedTokenValue) > 1 ? 'Tokens' : 'Token'
     }`,

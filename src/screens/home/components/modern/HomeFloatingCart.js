@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -6,7 +6,15 @@ import {
   Image,
   StyleSheet,
 } from 'react-native';
-import Animated from 'react-native-reanimated';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withSpring,
+  withSequence,
+  withDelay,
+  Easing,
+} from 'react-native-reanimated';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -18,6 +26,7 @@ import { cartPillSlideIn, cartPillSlideOut } from '@/animations/cartItemPop';
 
 const CAPSULE_BG = '#0D5335';
 const MAX_VISIBLE_THUMBNAILS = 2;
+const BOUNCE_SPRING = { damping: 9, stiffness: 220, mass: 0.6 };
 
 const HomeFloatingCart = ({
   selectedProducts,
@@ -26,10 +35,12 @@ const HomeFloatingCart = ({
   bottom,
   onPress,
   buttonText = 'View Basket',
+  colorScheme,
 }) => {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const { cartItems: contextCartItems, cartSummary } = useCart();
+  const capsuleBg = colorScheme?.cartBackground || CAPSULE_BG;
 
   let isTabBarScreen = false;
   try {
@@ -72,6 +83,95 @@ const HomeFloatingCart = ({
   const discount = Math.round(
     (cartSummary && (cartSummary.totalDiscount || cartSummary.productDiscount)) || 0,
   );
+
+  const safeBottomMargin =
+    bottom === undefined && !isTabBarScreen && insets.bottom > 0
+      ? Math.max(0, insets.bottom - hp('0.5%'))
+      : 0;
+
+  const prevCountRef = useRef(totalCount);
+  const isFirstMountRef = useRef(true);
+
+  const bounceScale = useSharedValue(1);
+  const stackPulse = useSharedValue(1);
+  const arrowPulse = useSharedValue(1);
+  const countOpacity = useSharedValue(1);
+
+  const pulseExpanded = () => {
+    bounceScale.value = withSequence(
+      withTiming(1.05, { duration: 90 }),
+      withSpring(1, BOUNCE_SPRING),
+    );
+    stackPulse.value = withSequence(
+      withTiming(1.14, { duration: 100 }),
+      withSpring(1, BOUNCE_SPRING),
+    );
+    arrowPulse.value = withSequence(
+      withTiming(1.25, { duration: 100 }),
+      withSpring(1, BOUNCE_SPRING),
+    );
+    countOpacity.value = withSequence(
+      withTiming(0.35, { duration: 90 }),
+      withTiming(1, { duration: 130 }),
+    );
+  };
+
+  const runExpandSequence = () => {
+    bounceScale.value = withSequence(
+      withTiming(1.12, { duration: 90, easing: Easing.out(Easing.quad) }),
+      withSpring(1, BOUNCE_SPRING),
+    );
+    stackPulse.value = withSequence(
+      withDelay(80, withTiming(1.15, { duration: 100 })),
+      withSpring(1, BOUNCE_SPRING),
+    );
+    arrowPulse.value = withSequence(
+      withDelay(120, withTiming(1.2, { duration: 100 })),
+      withSpring(1, BOUNCE_SPRING),
+    );
+  };
+
+  useEffect(() => {
+    if (isFirstMountRef.current) {
+      isFirstMountRef.current = false;
+      if (totalCount > 0) {
+        runExpandSequence();
+      }
+      prevCountRef.current = totalCount;
+      return;
+    }
+
+    const prevCount = prevCountRef.current;
+    if (totalCount > prevCount) {
+      pulseExpanded();
+    } else if (totalCount < prevCount && totalCount > 0) {
+      countOpacity.value = withSequence(
+        withTiming(0.35, { duration: 90 }),
+        withTiming(1, { duration: 120 }),
+      );
+      bounceScale.value = withSequence(
+        withTiming(0.97, { duration: 80 }),
+        withSpring(1, BOUNCE_SPRING),
+      );
+    }
+    prevCountRef.current = totalCount;
+  }, [totalCount]);
+
+  const containerAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: bounceScale.value }],
+  }));
+
+  const stackAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: stackPulse.value }],
+  }));
+
+  const countAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: countOpacity.value,
+  }));
+
+  const buttonAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: arrowPulse.value }],
+  }));
 
   if (!cartItems || cartItems.length === 0) {
     return null;
@@ -131,11 +231,6 @@ const HomeFloatingCart = ({
     }
   };
 
-  const safeBottomMargin =
-    bottom === undefined && !isTabBarScreen && insets.bottom > 0
-      ? Math.max(0, insets.bottom - hp('0.5%'))
-      : 0;
-
   return (
     <Animated.View
       entering={cartPillSlideIn}
@@ -152,43 +247,50 @@ const HomeFloatingCart = ({
       <TouchableOpacity
         activeOpacity={0.92}
         onPress={handlePress}
-        style={styles.capsule}
       >
-        {/* Left Section: Thumbnails + Count + Total */}
-        <View style={styles.leftSection}>
-          <View style={styles.thumbnailsContainer}>
-            {previewItems.map((item, index) => (
-              <View
-                key={item.productId || item.id || item.cartItemId || index}
-                style={[
-                  styles.thumbnailCard,
-                  index > 0 && { marginLeft: -wp('3.5%'), zIndex: index },
-                ]}
-              >
-                <Image
-                  source={getImageSource(item)}
-                  style={styles.thumbnailImage}
-                  resizeMode="contain"
-                />
-              </View>
-            ))}
+        <Animated.View
+          style={[
+            styles.capsule,
+            { backgroundColor: capsuleBg },
+            containerAnimatedStyle,
+          ]}
+        >
+          {/* Left Section: Thumbnails + Count + Total */}
+          <View style={styles.leftSection}>
+            <Animated.View style={[styles.thumbnailsContainer, stackAnimatedStyle]}>
+              {previewItems.map((item, index) => (
+                <View
+                  key={item.productId || item.id || item.cartItemId || index}
+                  style={[
+                    styles.thumbnailCard,
+                    index > 0 && { marginLeft: -wp('3.5%'), zIndex: index },
+                  ]}
+                >
+                  <Image
+                    source={getImageSource(item)}
+                    style={styles.thumbnailImage}
+                    resizeMode="contain"
+                  />
+                </View>
+              ))}
+            </Animated.View>
+
+            <Animated.View style={[styles.textColumn, countAnimatedStyle]}>
+              <Text style={styles.mainTotalText} numberOfLines={1}>
+                {totalCount} {totalCount === 1 ? 'item' : 'items'} • ₹{grandTotal}
+              </Text>
+              <Text style={styles.savingsSubText} numberOfLines={1}>
+                {discount > 0 ? `₹${discount} saved on order` : 'Fast delivery in 30 mins'}
+              </Text>
+            </Animated.View>
           </View>
 
-          <View style={styles.textColumn}>
-            <Text style={styles.mainTotalText} numberOfLines={1}>
-              {totalCount} {totalCount === 1 ? 'item' : 'items'} • ₹{grandTotal}
-            </Text>
-            <Text style={styles.savingsSubText} numberOfLines={1}>
-              {discount > 0 ? `₹${discount} saved on order` : 'Fast delivery in 30 mins'}
-            </Text>
-          </View>
-        </View>
-
-        {/* Right Section: White View Basket Button */}
-        <View style={styles.viewBasketPill}>
-          <Text style={styles.viewBasketText}>{buttonText}</Text>
-          <Feather name="chevron-right" size={16} color={CAPSULE_BG} />
-        </View>
+          {/* Right Section: White View Basket Button */}
+          <Animated.View style={[styles.viewBasketPill, buttonAnimatedStyle]}>
+            <Text style={[styles.viewBasketText, { color: capsuleBg }]}>{buttonText}</Text>
+            <Feather name="chevron-right" size={16} color={capsuleBg} />
+          </Animated.View>
+        </Animated.View>
       </TouchableOpacity>
     </Animated.View>
   );

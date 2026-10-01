@@ -53,6 +53,7 @@ const TokenProductCard = ({
     price,
     offer,
     weight,
+    subtitle,
     isOutOfStock,
   } = product;
 
@@ -74,20 +75,6 @@ const TokenProductCard = ({
   const hasMrp = !!mrp && Number(mrp) > Number(price);
   const mrpLabel = formatAmount(mrp) || mrp;
 
-  // Coin / UD value formatting
-  const tokenValue = useMemo(() => {
-    const rawVal =
-      item?.bTokenValue ??
-      item?.token ??
-      item?.btokens ??
-      product?.tokenValue;
-    if (rawVal != null) {
-      const parsed = parseInt(rawVal, 10);
-      if (!isNaN(parsed) && parsed > 0) return parsed;
-    }
-    return 4; // Default matching +4 UD reference design
-  }, [item, product]);
-
   return (
     <AnimatedPressable
       entering={entering}
@@ -102,22 +89,16 @@ const TokenProductCard = ({
       accessibilityActions={accessibilityActions}
       onAccessibilityAction={handleAccessibilityAction}
     >
-      {/* 1. Top Header Row: 50% OFF Badge (Left) + Wishlist Heart (Right) */}
+      {/* 1. Top Header Row: UD Coins Pill (Left) + Wishlist Heart (Right) */}
       <View style={styles.topRow}>
-        {discountLabel ? (
-          <View
-            style={[
-              styles.discountBadge,
-              isThreeColumn && styles.discountBadgeSmall,
-            ]}
-          >
-            <Text
-              style={[
-                styles.discountText,
-                isThreeColumn && styles.discountTextSmall,
-              ]}
-            >
-              {discountLabel}
+        {!hideToken ? (
+          <View style={[styles.coinPill, isThreeColumn && styles.coinPillSmall]}>
+            <Image
+              source={icons.udCoinNew || icons.udcoin}
+              style={[styles.coinIcon, isThreeColumn && styles.coinIconSmall]}
+            />
+            <Text style={[styles.coinText, isThreeColumn && styles.coinTextSmall]}>
+              UD Coins
             </Text>
           </View>
         ) : (
@@ -149,15 +130,7 @@ const TokenProductCard = ({
         />
       </View>
 
-      {/* 3. Product Weight */}
-      <Text
-        style={[styles.weightText, isThreeColumn && styles.weightTextSmall]}
-        numberOfLines={1}
-      >
-        {weight || ' '}
-      </Text>
-
-      {/* 4. Product Name */}
+      {/* 3. Product Name */}
       <Text
         style={[styles.titleText, isThreeColumn && styles.titleTextSmall]}
         numberOfLines={2}
@@ -166,54 +139,73 @@ const TokenProductCard = ({
         {name}
       </Text>
 
-      {/* 5. Price Row (Selling Price in Emerald Green + Struck-through MRP) */}
+      {/* 4. Subtitle / Details / Weight */}
+      <Text
+        style={[styles.subtitleText, isThreeColumn && styles.subtitleTextSmall]}
+        numberOfLines={1}
+      >
+        {subtitle || weight || ' '}
+      </Text>
+
+      {/* 5. Dashed / Dotted Divider Line */}
+      <View style={styles.dashedDivider} />
+
+      {/* 6. Price & Discount Row */}
       <View style={styles.priceRow}>
-        <Text
-          style={[
-            styles.sellingPriceText,
-            isThreeColumn && styles.sellingPriceTextSmall,
-          ]}
-        >
-          ₹{priceLabel}
-        </Text>
-        {hasMrp ? (
-          <Text style={[styles.mrpText, isThreeColumn && styles.mrpTextSmall]}>
-            ₹{mrpLabel}
+        <View style={styles.priceValuesContainer}>
+          <Text
+            style={[
+              styles.sellingPriceText,
+              isThreeColumn && styles.sellingPriceTextSmall,
+            ]}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.8}
+          >
+            {`₹${priceLabel}/-`}
           </Text>
+          {hasMrp ? (
+            <Text
+              style={[styles.mrpText, isThreeColumn && styles.mrpTextSmall]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.8}
+            >
+              {`₹ ${mrpLabel}/-`}
+            </Text>
+          ) : null}
+        </View>
+        {discountLabel ? (
+          <View
+            style={[
+              styles.discountBadge,
+              isThreeColumn && styles.discountBadgeSmall,
+            ]}
+          >
+            <Text
+              style={[
+                styles.discountText,
+                isThreeColumn && styles.discountTextSmall,
+              ]}
+              numberOfLines={1}
+            >
+              {discountLabel}
+            </Text>
+          </View>
         ) : null}
       </View>
 
-      {/* 6. Bottom Action Row: +4 UD Coin Pill (Left) + + ADD Button (Right) */}
-      <View style={styles.bottomRow}>
-        {!hideToken ? (
-          <View
-            style={[styles.coinPill, isThreeColumn && styles.coinPillSmall]}
-          >
-            <Image
-              source={icons.udCoinNew || icons.udcoin}
-              style={[styles.coinIcon, isThreeColumn && styles.coinIconSmall]}
-            />
-            <Text
-              style={[styles.coinText, isThreeColumn && styles.coinTextSmall]}
-            >
-              +{tokenValue} UD
-            </Text>
-          </View>
-        ) : (
-          <View />
-        )}
-
-        <QuantityControl
-          quantity={quantity}
-          isAtMaxQty={isAtMaxQty}
-          isOutOfStock={isOutOfStock}
-          isThreeColumn={isThreeColumn}
-          productName={name}
-          onIncrement={handleIncrement}
-          onDecrement={handleDecrement}
-          onAdd={handleAdd}
-        />
-      </View>
+      {/* 7. Bottom Full-Width Add To Cart / Counter */}
+      <QuantityControl
+        quantity={quantity}
+        isAtMaxQty={isAtMaxQty}
+        isOutOfStock={isOutOfStock}
+        isThreeColumn={isThreeColumn}
+        productName={name}
+        onIncrement={handleIncrement}
+        onDecrement={handleDecrement}
+        onAdd={handleAdd}
+      />
     </AnimatedPressable>
   );
 };

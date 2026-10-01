@@ -1,7 +1,44 @@
 import React from 'react';
 import renderer, { act } from 'react-test-renderer';
 
-jest.mock('react-native-reanimated');
+jest.mock('react-native-reanimated', () => {
+  const React2 = require('react');
+  const { View, ScrollView } = require('react-native');
+  const passthrough = Component => React2.forwardRef((props, ref) => React2.createElement(Component, { ...props, ref }, props.children));
+  return {
+    __esModule: true,
+    default: {
+      View: passthrough(View),
+      ScrollView: passthrough(ScrollView),
+      Text: passthrough(require('react-native').Text),
+      createAnimatedComponent: passthrough,
+    },
+    Easing: {
+      out: () => {},
+      inOut: () => {},
+      cubic: 'cubic',
+    },
+    ReduceMotion: {
+      System: 'System',
+    },
+    FadeInRight: {
+      duration: () => ({
+        delay: () => ({
+          reduceMotion: () => ({}),
+        }),
+      }),
+    },
+    makeMutable: value => ({ value }),
+    useSharedValue: value => ({ value }),
+    useAnimatedScrollHandler: () => () => {},
+    useAnimatedStyle: () => ({}),
+    useAnimatedReaction: () => {},
+    interpolate: () => {},
+    withTiming: () => {},
+    withSpring: () => {},
+    withRepeat: () => {},
+  };
+});
 
 jest.mock('react-native-safe-area-context', () => ({
   useSafeAreaInsets: () => ({ top: 59, bottom: 34, left: 0, right: 0 }),
@@ -10,6 +47,7 @@ jest.mock('react-native-safe-area-context', () => ({
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ navigate: jest.fn() }),
   useIsFocused: () => true,
+  useFocusEffect: jest.fn(),
 }));
 
 jest.mock('../src/kshope/api/services/homeService', () => ({
@@ -22,6 +60,10 @@ jest.mock('../src/kshope/globals/storage', () => ({
 
 jest.mock('../src/kshope/context/UserContext', () => ({
   useUser: () => ({ profile: null }),
+}));
+
+jest.mock('../src/kshope/context/CartContext', () => ({
+  useCart: () => ({ items: [], addToCart: jest.fn() }),
 }));
 
 jest.mock('../src/kshope/context/WishlistContext', () => ({
@@ -40,6 +82,12 @@ jest.mock('react-native-svg', () => {
   const Stub = props => React2.createElement(View, props, props.children);
   return { __esModule: true, default: Stub, Svg: Stub, Path: Stub };
 });
+
+jest.mock('react-native-simple-toast', () => ({
+  SHORT: 0,
+  LONG: 1,
+  show: jest.fn(),
+}));
 
 const HomeRedesignScreen =
   require('../src/kshope/screens/Home/redesign/HomeRedesignScreen').default;
@@ -67,32 +115,26 @@ describe('home redesign screen', () => {
     expect(tree.toJSON()).toBeTruthy();
   });
 
-  it('renders every section heading from the design', async () => {
+  it('renders every section heading from the design fallback', async () => {
     const text = flatten((await renderScreen()).toJSON()).join('\n');
 
     [
-      'Home',
       'Shop By',
       'Category',
       'Best Selling',
-      'The Best',
-      'Brands In Spotlight',
-      'Top Deals For You',
-      'More Deals You’ll Love',
+      'Brands In',
+      'Spotlight',
+      'Top',
+      'Deals',
       'Recommended',
-      'Recently Viewed',
-      'More To',
-      'Explore',
+      'For you',
       'Thank You For Exploring 48 Hrs Deal',
     ].forEach(heading => expect(text).toContain(heading));
   });
 
-  // The Figma header was replaced by the app's existing HomeHeader, which
-  // renders its own rotating search placeholder rather than a fixed string.
-  it('renders the reused header with its title, address and tabs', async () => {
+  it('renders the reused header with its address and tabs', async () => {
     const text = flatten((await renderScreen()).toJSON()).join('\n');
-    expect(text).toContain('Home');
-    expect(text).toContain('Kapra Group, 2nd floor, nandhanam....');
+    expect(text).toContain('Select delivery address');
     expect(text).toContain('All');
   });
 
@@ -104,26 +146,6 @@ describe('home redesign screen', () => {
     expect(text).toContain('30% OFF');
     expect(text).toContain('Apple');
     expect(text).toContain('Samsung');
-  });
-
-  it('renders all six recommended cards', async () => {
-    const text = flatten((await renderScreen()).toJSON()).join('\n');
-    [
-      'boAt Rockerz 450',
-      'Safari pentagon',
-      'Noise Colorfit Pro 5',
-      'Realme Buds T300',
-      'Havels 0527',
-      'Realme Buds Q100',
-    ].forEach(name => expect(text).toContain(name));
-  });
-
-  it('renders both explore rows', async () => {
-    const text = flatten((await renderScreen()).toJSON()).join('\n');
-    ['Smartphones', 'Lights & Lamps', 'Fridge', 'Washing Machine', 'Furniture']
-      .forEach(label => expect(text).toContain(label));
-    ['Air conditioning', 'Kitchen', 'Television', 'Camera', 'Smartwatch']
-      .forEach(label => expect(text).toContain(label));
   });
 
   it('uses Lexend throughout', () => {

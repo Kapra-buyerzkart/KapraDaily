@@ -10,9 +10,9 @@ import {
 export default function useTabBarAnimation() {
   const scrollAnchor = useSharedValue(0);
 
-  const onScrollWorklet = y => {
+  const onScrollWorklet = (y, atEnd) => {
     'worklet';
-    updateTabBarVisibilityWorklet(y, scrollAnchor);
+    updateTabBarVisibilityWorklet(y, scrollAnchor, atEnd);
   };
 
   useFocusEffect(

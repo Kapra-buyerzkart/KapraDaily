@@ -1,4 +1,5 @@
 import CONFIG from '../globals/config';
+import { resolveHomeColorScheme } from '../styles/homeTheme';
 
 const SPECIFIC_PLACEMENT_KEYS = [
   'app_home_top_banner',
@@ -117,6 +118,7 @@ export const transformHomepageResponse = (response) => {
       secondProductBlock: null,
       thirdProductBlock: null,
       categoryDiscovery: null,
+      colorScheme: resolveHomeColorScheme(null),
     };
   }
 
@@ -173,5 +175,16 @@ export const transformHomepageResponse = (response) => {
     secondProductBlock: data.secondProductBlock || data.SecondProductBlock || null,
     thirdProductBlock: data.thirdProductBlock || data.ThirdProductBlock || null,
     categoryDiscovery: data.categoryDiscovery || data.CategoryDiscovery || null,
+    colorScheme: resolveHomeColorScheme(
+      data.colorScheme ||
+      data.color_scheme ||
+      data.theme ||
+      data.themeColors ||
+      data.theme_colors ||
+      response?.colorScheme ||
+      response?.color_scheme ||
+      response?.theme ||
+      null
+    ),
   };
 };

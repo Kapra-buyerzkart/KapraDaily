@@ -46,6 +46,8 @@ import {
 } from '@/styles/homeTheme';
 import { FONTS } from '../../../styles/typography';
 
+import getCategoryTabIcon from './modern/categoryTabIcons';
+
 const RULE = PixelRatio.roundToNearestPixel(1.5);
 const TAB_BLEED = PixelRatio.roundToNearestPixel(RULE + 1);
 const TAB_H = 34;
@@ -56,15 +58,15 @@ const TAB_GAP = 6;
 const TAB_OVERHANG = TAB_GAP / 2;
 const TAB_PEEK = 44;
 
-const TAB_LABEL_IDLE = INK.strong;
-const TAB_LABEL_ACTIVE = ACCENT.primary;
+const TAB_LABEL_IDLE = '#064E3B';
+const TAB_LABEL_ACTIVE = '#064E3B';
 
 const SWEEP_MS = 1150;
 const SWEEP_WIDTH_PCT = 0.34;
 const SWEEP_COLORS = [
-  'rgba(242,80,0,0)',
-  'rgba(242,80,0,0.85)',
-  'rgba(242,80,0,0)',
+  'rgba(6,78,59,0)',
+  'rgba(6,78,59,0.85)',
+  'rgba(6,78,59,0)',
 ];
 const SWEEP_START = { x: 0, y: 0 };
 const SWEEP_END = { x: 1, y: 0 };
@@ -101,8 +103,8 @@ const TabShapeSvg = React.memo(({ width, height }) => {
 
   return (
     <Svg width={canvasW} height={bleed} style={StyleSheet.absoluteFill}>
-      <Path d={body} fill={CANVAS} />
-      <Path d={outline} fill="none" stroke={ACCENT.primary} strokeWidth={sw} />
+      <Path d={body} fill="transparent" />
+      <Path d={outline} fill="none" stroke="#064E3B" strokeWidth={sw} />
     </Svg>
   );
 });
@@ -116,6 +118,7 @@ const DiscoveryTab = React.memo(function DiscoveryTab({
   const [tabSize, setTabSize] = React.useState({ w: 0, h: 0 });
 
   const label = item.catName || item.name;
+  const iconSource = getCategoryTabIcon(label, isActive);
 
   useEffect(() => {
     activeProgress.value = withTiming(isActive ? 1 : 0, { duration: 160 });
@@ -149,12 +152,20 @@ const DiscoveryTab = React.memo(function DiscoveryTab({
     <TouchableOpacity
       activeOpacity={0.85}
       onPress={handlePress}
-      onLayout={handleLayout}
       accessibilityRole="tab"
       accessibilityState={{ selected: isActive }}
       accessibilityLabel={label}
+      style={styles.tabButtonWrapper}
     >
-      <View style={styles.tab}>
+      <Image
+        source={iconSource}
+        style={[
+          styles.tabIcon,
+          isActive ? styles.activeTabIcon : styles.inactiveTabIcon,
+        ]}
+        resizeMode="contain"
+      />
+      <View style={styles.tab} onLayout={handleLayout}>
         <Animated.View
           style={[styles.tabDecoration, shapeAnimatedStyle]}
           pointerEvents="none"
@@ -448,7 +459,25 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: TAB_BLEED,
     height: RULE,
-    backgroundColor: ACCENT.primary,
+    backgroundColor: '#064E3B',
+  },
+  tabButtonWrapper: {
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+  },
+  tabIcon: {
+    width: 26,
+    height: 26,
+    marginBottom: 5,
+    tintColor: '#064E3B',
+  },
+  activeTabIcon: {
+    tintColor: '#064E3B',
+    opacity: 1,
+  },
+  inactiveTabIcon: {
+    tintColor: '#064E3B',
+    opacity: 0.8,
   },
   tab: {
     height: TAB_H,

@@ -2,11 +2,13 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   View,
   Text,
+  Image,
   ScrollView,
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
@@ -18,16 +20,21 @@ import CONFIG from '@/globals/config';
 import { getCategoriesApi } from '@/api/categoryService';
 import getCategoryPlaceholder from '../getCategoryPlaceholder';
 import CurvedFolderTab from './CurvedFolderTab';
+import { getCategoryTabIcon } from './categoryTabIcons';
 
-const TAB_HEIGHT = 40;
-const TAB_GAP = 14;
-const BRAND_GREEN = '#0D5335';
+const TAB_PILL_HEIGHT = 28;
+const TAB_ICON_SIZE = 26;
+const TAB_GAP = 16;
+const BRAND_GREEN = '#064E3B';
 
 const HomeCategoriesSection = ({
   categories = [],
   navigation,
   onSelectCategory,
+  colorScheme,
 }) => {
+  const brandActive = colorScheme?.tabActive || BRAND_GREEN;
+  const tabBgColors = colorScheme?.tabBackground || ['#E1E8CD', '#EFF4E3', '#FFFFFF'];
   const [activeTab, setActiveTab] = useState('all');
   const [subCats, setSubCats] = useState([]);
   const [loadingSubCats, setLoadingSubCats] = useState(false);
@@ -86,21 +93,32 @@ const HomeCategoriesSection = ({
   );
 
   const handleTabLayout = useCallback((catId, e) => {
-    const { width, x } = e.nativeEvent.layout;
+    const { width } = e.nativeEvent.layout;
     const w = Math.round(width);
     if (w > 0) {
-      setTabWidths(prev => (prev[catId] === w ? prev : { ...prev, [catId]: w }));
-      setTabPositions(prev => (prev[catId] === x ? prev : { ...prev, [catId]: x }));
+      setTabWidths(prev =>
+        prev[catId] === w ? prev : { ...prev, [catId]: w },
+      );
     }
+  }, []);
+
+  const handleButtonLayout = useCallback((catId, e) => {
+    const { x, width } = e.nativeEvent.layout;
+    setTabPositions(prev => {
+      const existing = prev[catId];
+      if (existing && existing.x === x && existing.width === width) return prev;
+      return { ...prev, [catId]: { x, width } };
+    });
   }, []);
 
   const handleTabPress = useCallback(
     catId => {
       setActiveTab(catId);
-      const posX = tabPositions[catId];
+      const pos = tabPositions[catId];
+      const posX = pos?.x ?? pos;
       if (posX !== undefined && scrollViewRef.current) {
         scrollViewRef.current.scrollTo({
-          x: Math.max(0, posX - wp('14%')),
+          x: Math.max(0, posX - wp('12%')),
           animated: true,
         });
       }
@@ -114,10 +132,19 @@ const HomeCategoriesSection = ({
         return tabWidths[catId];
       }
       const len = (catName || '').length;
-      return Math.max(54, Math.round(len * 8.6 + 32));
+      return Math.max(46, Math.round(len * 8.2 + 24));
     },
     [tabWidths],
   );
+
+  const BOTTOM_RADIUS = 9;
+  const activeTabInfo = tabPositions[activeTab];
+  const activeTabLeft = activeTabInfo
+    ? Math.max(0, activeTabInfo.x - BOTTOM_RADIUS)
+    : Math.max(0, Math.round(wp('4%') - BOTTOM_RADIUS));
+  const activeTabRight = activeTabInfo
+    ? activeTabInfo.x + activeTabInfo.width + BOTTOM_RADIUS
+    : Math.round(wp('4%') + 48 + BOTTOM_RADIUS);
 
   const displayCategories =
     activeTab !== 'all' && subCats.length > 0
@@ -125,21 +152,30 @@ const HomeCategoriesSection = ({
       : categories.slice(0, 4);
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
+    <LinearGradient
+      colors={tabBgColors}
+      locations={[0, 0.45, 1]}
+      style={styles.container}
+    >
+      {/* Header: Explore deals & Tap a category to see its deals */}
       <View style={styles.headerRow}>
-        <Text style={styles.headerTitle}>Categories</Text>
+        <View style={styles.headerTitles}>
+          <Text style={styles.headerTitle}>Explore deals</Text>
+          <Text style={styles.headerSubtitle}>
+            Tap a category to see its deals
+          </Text>
+        </View>
         <TouchableOpacity
           activeOpacity={0.7}
           onPress={handleHeaderPress}
           style={styles.seeAllButton}
         >
-          <Text style={styles.seeAllText}>See All</Text>
-          <Feather name="chevron-right" size={15} color={BRAND_GREEN} />
+          <Text style={[styles.seeAllText, { color: brandActive }]}>See All</Text>
+          <Feather name="chevron-right" size={15} color={brandActive} />
         </TouchableOpacity>
       </View>
 
-      {/* Zepto/Swiggy Curved Folder Tab Bar with Continuous Baseline */}
+      {/* Zepto/Swiggy Curved Folder Tab Bar with Continuous Baseline & Category Icons */}
       <View style={styles.tabBarWrapper}>
         <ScrollView
           ref={scrollViewRef}
@@ -148,44 +184,81 @@ const HomeCategoriesSection = ({
           style={styles.tabsScrollView}
           contentContainerStyle={styles.tabsScrollContent}
         >
-          {/* Continuous Baseline spanning the entire scroll width */}
-          <View style={styles.scrollBaseline} pointerEvents="none" />
+          {/* Continuous Baseline spanning the entire scroll width, strictly interrupted under the active tab */}
+          {activeTabLeft > 0 ? (
+            <View
+              style={[
+                styles.baselineSegment,
+                { left: 0, width: activeTabLeft, backgroundColor: brandActive },
+              ]}
+              pointerEvents="none"
+            />
+          ) : null}
+          <View
+            style={[
+              styles.baselineSegment,
+              { left: activeTabRight, width: 3000, backgroundColor: brandActive },
+            ]}
+            pointerEvents="none"
+          />
 
           {tabs.map(tab => {
             const isActive = activeTab === tab.catId;
-            const currentTabWidth = getEstimatedTabWidth(tab.catId, tab.catName);
+            const currentTabWidth = getEstimatedTabWidth(
+              tab.catId,
+              tab.catName,
+            );
+            const iconSource = getCategoryTabIcon(tab.catName, isActive);
 
             return (
               <TouchableOpacity
                 key={tab.catId}
                 activeOpacity={0.82}
                 onPress={() => handleTabPress(tab.catId)}
-                onLayout={e => handleTabLayout(tab.catId, e)}
-                style={[
-                  styles.tabButton,
-                  isActive && styles.activeTabButton,
-                ]}
+                onLayout={e => handleButtonLayout(tab.catId, e)}
+                style={styles.tabButton}
               >
-                {isActive && (
-                  <CurvedFolderTab
-                    width={currentTabWidth}
-                    height={TAB_HEIGHT}
-                    topRadius={10}
-                    bottomRadius={10}
-                    strokeColor={BRAND_GREEN}
-                    strokeWidth={1}
-                    fillColor="#FFFFFF"
-                  />
-                )}
-                <Text
+                {/* 1. Category Icon centered above the tab */}
+                <Image
+                  source={iconSource}
                   style={[
-                    styles.tabText,
-                    isActive && styles.activeTabText,
+                    styles.tabIcon,
+                    { tintColor: brandActive },
+                    isActive ? styles.activeTabIcon : styles.inactiveTabIcon,
                   ]}
-                  numberOfLines={1}
+                  resizeMode="contain"
+                />
+
+                {/* 2. Folder Tab Pill for Label (transparent background) */}
+                <View
+                  onLayout={e => handleTabLayout(tab.catId, e)}
+                  style={[
+                    styles.tabLabelContainer,
+                    isActive && styles.activeTabLabelContainer,
+                  ]}
                 >
-                  {tab.catName}
-                </Text>
+                  {isActive && (
+                    <CurvedFolderTab
+                      width={currentTabWidth}
+                      height={TAB_PILL_HEIGHT}
+                      topRadius={9}
+                      bottomRadius={9}
+                      strokeColor={brandActive}
+                      strokeWidth={1.2}
+                      fillColor="transparent"
+                    />
+                  )}
+                  <Text
+                    style={[
+                      styles.tabText,
+                      { color: brandActive },
+                      isActive && styles.activeTabText,
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {tab.catName}
+                  </Text>
+                </View>
               </TouchableOpacity>
             );
           })}
@@ -207,7 +280,7 @@ const HomeCategoriesSection = ({
 
           return (
             <TouchableOpacity
-              key={item.catId || index}
+              key={item.catId || item.id || index}
               activeOpacity={0.8}
               onPress={() => handleCategoryPress(item)}
               style={styles.categoryCard}
@@ -219,37 +292,49 @@ const HomeCategoriesSection = ({
                   resizeMode="contain"
                 />
               </View>
-              <Text style={styles.categoryLabel} numberOfLines={1}>
+              <Text style={styles.categoryLabel} numberOfLines={2}>
                 {label}
               </Text>
             </TouchableOpacity>
           );
         })}
       </View>
-    </View>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: hp('1.4%'),
-    backgroundColor: '#FFFFFF',
+    paddingTop: hp('1.8%'),
+    paddingBottom: hp('1.2%'),
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: wp('4%'),
-    marginBottom: hp('1.2%'),
+    marginBottom: hp('1.4%'),
+  },
+  headerTitles: {
+    flex: 1,
   },
   headerTitle: {
-    fontSize: wp('4.4%'),
+    fontSize: 20,
     fontFamily: FONTS.gilroy.bold,
     color: '#111827',
+    letterSpacing: -0.2,
+  },
+  headerSubtitle: {
+    fontSize: 12.5,
+    fontFamily: FONTS.gilroy.medium,
+    color: '#4B5563',
+    marginTop: 2,
   },
   seeAllButton: {
     flexDirection: 'row',
     alignItems: 'center',
+    paddingVertical: 4,
+    paddingLeft: 8,
   },
   seeAllText: {
     fontSize: wp('3.3%'),
@@ -259,7 +344,7 @@ const styles = StyleSheet.create({
   },
   tabBarWrapper: {
     position: 'relative',
-    height: TAB_HEIGHT,
+    height: 66,
     marginBottom: hp('1.6%'),
   },
   tabsScrollView: {
@@ -267,36 +352,54 @@ const styles = StyleSheet.create({
   },
   tabsScrollContent: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-end',
     paddingLeft: wp('4%'),
     paddingRight: wp('6%'),
     position: 'relative',
+    height: 66,
   },
-  scrollBaseline: {
+  baselineSegment: {
     position: 'absolute',
-    left: 0,
-    right: 0,
     bottom: 0,
-    minWidth: wp('100%'),
-    height: 1,
+    height: 1.2,
     backgroundColor: BRAND_GREEN,
   },
   tabButton: {
-    height: TAB_HEIGHT,
-    paddingHorizontal: 16,
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'flex-end',
     marginRight: TAB_GAP,
     position: 'relative',
+    height: 66,
   },
-  activeTabButton: {
+  tabIcon: {
+    width: TAB_ICON_SIZE,
+    height: TAB_ICON_SIZE,
+    marginBottom: 6,
+    tintColor: BRAND_GREEN,
+  },
+  activeTabIcon: {
+    tintColor: BRAND_GREEN,
+    opacity: 1,
+  },
+  inactiveTabIcon: {
+    tintColor: BRAND_GREEN,
+    opacity: 0.85,
+  },
+  tabLabelContainer: {
+    height: TAB_PILL_HEIGHT,
+    paddingHorizontal: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  activeTabLabelContainer: {
     zIndex: 5,
     elevation: 5,
   },
   tabText: {
-    fontSize: wp('3.5%'),
+    fontSize: 12.5,
     fontFamily: FONTS.gilroy.semiBold,
-    color: '#1E3A2F',
+    color: BRAND_GREEN,
     letterSpacing: 0.1,
     zIndex: 10,
     elevation: 10,
@@ -311,7 +414,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingHorizontal: wp('4%'),
-    marginTop: hp('0.4%'),
+    marginTop: hp('0.6%'),
   },
   categoryCard: {
     width: wp('21%'),
@@ -327,11 +430,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 7,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 5,
-    elevation: 2,
     marginBottom: 6,
   },
   categoryImage: {

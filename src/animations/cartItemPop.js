@@ -5,21 +5,18 @@ export function cartPillSlideIn() {
   return {
     initialValues: {
       opacity: 0,
-      transform: [{ translateY: 24 }, { scale: 0.85 }],
+      transform: [{ translateY: 40 }],
     },
     animations: {
-      opacity: withTiming(1, { duration: 260 }),
+      opacity: withTiming(1, {
+        duration: 240,
+        easing: Easing.out(Easing.cubic),
+      }),
       transform: [
         {
           translateY: withTiming(0, {
-            duration: 260,
-            easing: Easing.bezier(0.2, 0.8, 0.2, 1),
-          }),
-        },
-        {
-          scale: withTiming(1, {
-            duration: 260,
-            easing: Easing.bezier(0.2, 0.8, 0.2, 1),
+            duration: 240,
+            easing: Easing.out(Easing.cubic),
           }),
         },
       ],
@@ -30,13 +27,25 @@ export function cartPillSlideIn() {
 export function cartPillSlideOut() {
   'worklet';
   return {
-    initialValues: { opacity: 1, transform: [{ translateY: 0 }, { scale: 1 }] },
+    initialValues: {
+      opacity: 1,
+      transform: [{ translateY: 0 }],
+    },
     animations: {
-      opacity: withTiming(0, { duration: 200 }),
+      opacity: withTiming(0, {
+        duration: 180,
+        easing: Easing.in(Easing.quad),
+      }),
       transform: [
-        { translateY: withTiming(30, { duration: 200 }) },
-        { scale: withTiming(0.9, { duration: 200 }) },
+        {
+          translateY: withTiming(30, {
+            duration: 180,
+            easing: Easing.in(Easing.quad),
+          }),
+        },
       ],
     },
   };
 }
+
+

@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
     marginTop: SPACE.base,
     marginHorizontal: GUTTER,
     height: FIELD_HEIGHT,
-    borderRadius: SEARCH_FIELD.radius,
+    borderRadius: 10,
     backgroundColor: SURFACE.sunken,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: HAIRLINE,

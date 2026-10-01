@@ -55,6 +55,29 @@ const icons = {
   storeticketStore: require('./ticketStore 1.png'),
   claimtick: require('./claimtick.png'),
   arrowbg: require('./arrowbg.png'),
+
+  // Category Tab Icons (Idle / Outline)
+  tabBasket: require('./tab-basket.png'),
+  tabFruits: require('./tab-fruits.png'),
+  tabStaples: require('./tab-staples.png'),
+  tabCleaning: require('./tab-cleaning.png'),
+  tabSnacks: require('./potato-chips.png'),
+  tabBeverages: require('./beer.png'),
+  tabPersonalCare: require('./lotion.png'),
+  tabSchoolBag: require('./school-bag.png'),
+  tabHealthyFood: require('./healthy-food.png'),
+  tabCleaningProducts: require('./cleaning-products.png'),
+
+  // Category Tab Icons (Active / Filled Selection)
+  tabBasketFilled: require('./tab-basket-filled.png'),
+  tabFruitsFilled: require('./tab-fruits-filled.png'),
+  tabStaplesFilled: require('./tab-staples-filled.png'),
+  tabCleaningFilled: require('./tab-cleaning-filled.png'),
+  tabSnacksFilled: require('./tab-snacks-filled.png'),
+  tabBeveragesFilled: require('./tab-beverages-filled.png'),
+  tabPersonalCareFilled: require('./tab-personalcare-filled.png'),
+  tabSchoolBagFilled: require('./tab-schoolbag-filled.png'),
+  tabCleaningProductsFilled: require('./cleaning-products (1).png'),
 };
 
 export default icons;

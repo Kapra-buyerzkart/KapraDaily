@@ -8,17 +8,21 @@ import React, {
 } from 'react';
 import {
   View,
-  ScrollView,
   RefreshControl,
   StatusBar,
   AppState,
   StyleSheet,
 } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  interpolate,
+  Extrapolation,
+  clamp,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import {
-  widthPercentageToDP as wp,
-  heightPercentageToDP as hp,
-} from 'react-native-responsive-screen';
+import { heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 
 import LocationModal from '@/components/LocationModal';
@@ -36,9 +40,12 @@ import useDashboardQuery from '@/queries/useDashboardQuery';
 import useBuyAgainQuery from '@/queries/useBuyAgainQuery';
 import useCategoryDiscoveryProductsQuery from '@/queries/useCategoryDiscoveryProductsQuery';
 import { deriveStoreUnavailableState } from '@/queries/transformHomepageResponse';
+import { resolveHomeColorScheme } from '@/styles/homeTheme';
 
 import useHomePopup from './hooks/useHomePopup';
-import HomeHeaderGreen from './components/modern/HomeHeaderGreen';
+import HomeHeaderGreen, {
+  getExpandedHeaderHeight,
+} from './components/modern/HomeHeaderGreen';
 import PlacementBannerCarousel from './components/PlacementBannerCarousel';
 import HomeCategoriesSection from './components/modern/HomeCategoriesSection';
 import OfferSaleSection from './components/modern/OfferSaleSection';
@@ -49,9 +56,13 @@ import TopOffersSection from './components/modern/TopOffersSection';
 import RecommendedGridSection from './components/modern/RecommendedGridSection';
 import BuyItAgainModernSection from './components/modern/BuyItAgainModernSection';
 import FeaturedProductsModernSection from './components/modern/FeaturedProductsModernSection';
-import KapraFavoriteFooter from './components/modern/KapraFavoriteFooter';
 import HomeFloatingCart from './components/modern/HomeFloatingCart';
 import { CategoryGridSkeleton } from './components/shimmer';
+import useTabBarAnimation from '@/hooks/useTabBarAnimation';
+import {
+  tabBarVisibility,
+  getTabBarClearance,
+} from '@/animations/tabBarVisibility';
 
 const EMPTY_ARRAY = [];
 
@@ -59,6 +70,48 @@ const HomeScreen = () => {
   const { top, bottom } = useSafeAreaInsets();
   const navigation = useNavigation();
   const locationModalRef = useRef(null);
+  const scrollY = useSharedValue(0);
+  const { onScrollWorklet } = useTabBarAnimation();
+
+  const tabBarClearance = useMemo(
+    () => getTabBarClearance(bottom),
+    [bottom],
+  );
+  const floatingBottomOffset = bottom + hp('7.5%');
+
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: event => {
+      const y = event.contentOffset.y;
+      scrollY.value = y;
+      const atEnd =
+        event.contentSize &&
+        event.contentSize.height > 0 &&
+        event.layoutMeasurement.height + event.contentOffset.y >=
+          event.contentSize.height - 20;
+      onScrollWorklet(y, atEnd);
+    },
+  });
+
+  const cartAnimatedStyle = useAnimatedStyle(() => {
+    const progress = clamp(tabBarVisibility.value, 0, 1);
+    return {
+      transform: [
+        {
+          translateY: interpolate(
+            progress,
+            [0, 1],
+            [tabBarClearance, 0],
+            Extrapolation.CLAMP,
+          ),
+        },
+      ],
+    };
+  });
+
+  const expandedHeaderHeight = useMemo(
+    () => getExpandedHeaderHeight(top),
+    [top],
+  );
 
   const [isProfileLoaded, setIsProfileLoaded] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -109,6 +162,10 @@ const HomeScreen = () => {
   );
 
   const data = homepageQuery.data;
+  const colorScheme = useMemo(
+    () => data?.colorScheme || resolveHomeColorScheme(null),
+    [data?.colorScheme],
+  );
   const { isStoreUnavailable, storeUnavailableData } = useMemo(
     () =>
       deriveStoreUnavailableState({
@@ -209,7 +266,10 @@ const HomeScreen = () => {
     discoveryCategories[0]?.catId,
     areaId,
   );
-  const discoveryProducts = categoryProductsQuery.data || [];
+  const discoveryProducts = useMemo(
+    () => categoryProductsQuery.data || EMPTY_ARRAY,
+    [categoryProductsQuery.data],
+  );
 
   // Mapped Product Pools
   const offerSaleProducts = useMemo(() => {
@@ -278,7 +338,12 @@ const HomeScreen = () => {
     refreshing || (!noLocationSelected && homepageQuery.isLoading);
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: colorScheme.containerBackground },
+      ]}
+    >
       <StatusBar
         translucent
         backgroundColor="transparent"
@@ -292,26 +357,22 @@ const HomeScreen = () => {
         onPress={handlePopupPress}
       />
 
-      {/* Sticky Leaf-Green Header */}
-      <HomeHeaderGreen
-        topInset={top}
-        profile={profile}
-        dashboardData={dashboardQuery.data}
-        navigation={navigation}
-        onPressLocation={handleOpenLocationModal}
-        onSearchPress={() => navigation.navigate('SearchScreen')}
-      />
-
       {/* Scrollable Main Content */}
-      <ScrollView
+      <Animated.ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingTop: expandedHeaderHeight },
+        ]}
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor="#889C54"
-            colors={['#889C54']}
+            tintColor={colorScheme.primary}
+            colors={[colorScheme.primary]}
+            progressViewOffset={expandedHeaderHeight}
           />
         }
       >
@@ -350,6 +411,7 @@ const HomeScreen = () => {
                 <HomeCategoriesSection
                   categories={categories}
                   navigation={navigation}
+                  colorScheme={colorScheme}
                 />
               )
             )}
@@ -440,19 +502,34 @@ const HomeScreen = () => {
 
         {/* Extra clearance for floating cart and bottom tabs */}
         <View style={styles.bottomSpacer} />
-      </ScrollView>
+      </Animated.ScrollView>
+
+      {/* Sticky Leaf-Green Header (rendered on top of scroll content) */}
+      <HomeHeaderGreen
+        topInset={top}
+        profile={profile}
+        dashboardData={dashboardQuery.data}
+        navigation={navigation}
+        onPressLocation={handleOpenLocationModal}
+        onSearchPress={() => navigation.navigate('SearchScreen')}
+        onMicPress={() => navigation.navigate('SearchScreen', { openVoice: true })}
+        onCartPress={() => navigation.navigate('CartScreen')}
+        scrollY={scrollY}
+        colorScheme={colorScheme}
+      />
 
       {/* Floating Dark Green Bottom Cart Pill */}
       {!isStoreUnavailable && (
-        <View
+        <Animated.View
           style={[
             styles.floatingCartContainer,
-            { bottom: bottom + hp('7.5%') },
+            { bottom: floatingBottomOffset },
+            cartAnimatedStyle,
           ]}
           pointerEvents="box-none"
         >
-          <HomeFloatingCart />
-        </View>
+          <HomeFloatingCart colorScheme={colorScheme} />
+        </Animated.View>
       )}
     </View>
   );
