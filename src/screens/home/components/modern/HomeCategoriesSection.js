@@ -25,7 +25,7 @@ import { getCategoryTabIcon } from './categoryTabIcons';
 const TAB_PILL_HEIGHT = 28;
 const TAB_ICON_SIZE = 26;
 const TAB_GAP = 16;
-const BRAND_GREEN = '#064E3B';
+const BRAND_BLACK = '#000000';
 
 const HomeCategoriesSection = ({
   categories = [],
@@ -33,8 +33,12 @@ const HomeCategoriesSection = ({
   onSelectCategory,
   colorScheme,
 }) => {
-  const brandActive = colorScheme?.tabActive || BRAND_GREEN;
-  const tabBgColors = colorScheme?.tabBackground || ['#E1E8CD', '#EFF4E3', '#FFFFFF'];
+  const brandActive = colorScheme?.tabActive || BRAND_BLACK;
+  const tabBgColors = colorScheme?.tabBackground || [
+    '#E1E8CD',
+    '#EFF4E3',
+    '#FFFFFF',
+  ];
   const [activeTab, setActiveTab] = useState('all');
   const [subCats, setSubCats] = useState([]);
   const [loadingSubCats, setLoadingSubCats] = useState(false);
@@ -160,18 +164,15 @@ const HomeCategoriesSection = ({
       {/* Header: Explore deals & Tap a category to see its deals */}
       <View style={styles.headerRow}>
         <View style={styles.headerTitles}>
-          <Text style={styles.headerTitle}>Explore deals</Text>
-          <Text style={styles.headerSubtitle}>
-            Tap a category to see its deals
-          </Text>
+          <Text style={styles.headerTitle}>Shop by category</Text>
         </View>
         <TouchableOpacity
           activeOpacity={0.7}
           onPress={handleHeaderPress}
           style={styles.seeAllButton}
         >
-          <Text style={[styles.seeAllText, { color: brandActive }]}>See All</Text>
-          <Feather name="chevron-right" size={15} color={brandActive} />
+          <Text style={[styles.seeAllText, { color: '#F25000' }]}>View all hubs</Text>
+          <Feather name="chevron-right" size={15} color="#F25000" />
         </TouchableOpacity>
       </View>
 
@@ -197,7 +198,11 @@ const HomeCategoriesSection = ({
           <View
             style={[
               styles.baselineSegment,
-              { left: activeTabRight, width: 3000, backgroundColor: brandActive },
+              {
+                left: activeTabRight,
+                width: 3000,
+                backgroundColor: brandActive,
+              },
             ]}
             pointerEvents="none"
           />
@@ -319,16 +324,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontFamily: FONTS.gilroy.bold,
-    color: '#111827',
-    letterSpacing: -0.2,
-  },
-  headerSubtitle: {
-    fontSize: 12.5,
-    fontFamily: FONTS.gilroy.medium,
-    color: '#4B5563',
-    marginTop: 2,
+    color: '#F25000',
+    letterSpacing: 0,
   },
   seeAllButton: {
     flexDirection: 'row',
@@ -339,7 +338,7 @@ const styles = StyleSheet.create({
   seeAllText: {
     fontSize: wp('3.3%'),
     fontFamily: FONTS.gilroy.semiBold,
-    color: BRAND_GREEN,
+    color: BRAND_BLACK,
     marginRight: 2,
   },
   tabBarWrapper: {
@@ -362,7 +361,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 0,
     height: 1.2,
-    backgroundColor: BRAND_GREEN,
+    backgroundColor: BRAND_BLACK,
   },
   tabButton: {
     alignItems: 'center',
@@ -375,14 +374,14 @@ const styles = StyleSheet.create({
     width: TAB_ICON_SIZE,
     height: TAB_ICON_SIZE,
     marginBottom: 6,
-    tintColor: BRAND_GREEN,
+    tintColor: BRAND_BLACK,
   },
   activeTabIcon: {
-    tintColor: BRAND_GREEN,
+    tintColor: BRAND_BLACK,
     opacity: 1,
   },
   inactiveTabIcon: {
-    tintColor: BRAND_GREEN,
+    tintColor: BRAND_BLACK,
     opacity: 0.85,
   },
   tabLabelContainer: {
@@ -399,13 +398,13 @@ const styles = StyleSheet.create({
   tabText: {
     fontSize: 12.5,
     fontFamily: FONTS.gilroy.semiBold,
-    color: BRAND_GREEN,
+    color: BRAND_BLACK,
     letterSpacing: 0.1,
     zIndex: 10,
     elevation: 10,
   },
   activeTabText: {
-    color: BRAND_GREEN,
+    color: BRAND_BLACK,
     fontFamily: FONTS.gilroy.bold,
     zIndex: 10,
     elevation: 10,

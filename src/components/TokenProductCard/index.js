@@ -55,6 +55,7 @@ const TokenProductCard = ({
     weight,
     subtitle,
     isOutOfStock,
+    tokenValue,
   } = product;
 
   // Discount calculation
@@ -94,11 +95,11 @@ const TokenProductCard = ({
         {!hideToken ? (
           <View style={[styles.coinPill, isThreeColumn && styles.coinPillSmall]}>
             <Image
-              source={icons.udCoinNew || icons.udcoin}
+              source={icons.udCoinUpdated || icons.udcoin}
               style={[styles.coinIcon, isThreeColumn && styles.coinIconSmall]}
             />
             <Text style={[styles.coinText, isThreeColumn && styles.coinTextSmall]}>
-              UD Coins
+              {tokenValue ? `${tokenValue} tokens` : 'Tokens'}
             </Text>
           </View>
         ) : (
@@ -150,9 +151,21 @@ const TokenProductCard = ({
       {/* 5. Dashed / Dotted Divider Line */}
       <View style={styles.dashedDivider} />
 
-      {/* 6. Price & Discount Row */}
-      <View style={styles.priceRow}>
-        <View style={styles.priceValuesContainer}>
+      {/* 6. Price & Add To Cart Row */}
+      <View style={styles.bottomRow}>
+        <View style={styles.priceColumn}>
+          {hasMrp ? (
+            <Text
+              style={[styles.mrpText, isThreeColumn && styles.mrpTextSmall]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.8}
+            >
+              {`₹ ${mrpLabel}/-`}
+            </Text>
+          ) : (
+            <View style={styles.mrpSpacer} />
+          )}
           <Text
             style={[
               styles.sellingPriceText,
@@ -164,48 +177,42 @@ const TokenProductCard = ({
           >
             {`₹${priceLabel}/-`}
           </Text>
-          {hasMrp ? (
-            <Text
-              style={[styles.mrpText, isThreeColumn && styles.mrpTextSmall]}
-              numberOfLines={1}
-              adjustsFontSizeToFit
-              minimumFontScale={0.8}
-            >
-              {`₹ ${mrpLabel}/-`}
-            </Text>
-          ) : null}
         </View>
-        {discountLabel ? (
-          <View
-            style={[
-              styles.discountBadge,
-              isThreeColumn && styles.discountBadgeSmall,
-            ]}
-          >
-            <Text
-              style={[
-                styles.discountText,
-                isThreeColumn && styles.discountTextSmall,
-              ]}
-              numberOfLines={1}
-            >
-              {discountLabel}
-            </Text>
-          </View>
-        ) : null}
-      </View>
 
-      {/* 7. Bottom Full-Width Add To Cart / Counter */}
-      <QuantityControl
-        quantity={quantity}
-        isAtMaxQty={isAtMaxQty}
-        isOutOfStock={isOutOfStock}
-        isThreeColumn={isThreeColumn}
-        productName={name}
-        onIncrement={handleIncrement}
-        onDecrement={handleDecrement}
-        onAdd={handleAdd}
-      />
+        <View style={styles.actionColumn}>
+          {discountLabel ? (
+            <View
+              style={[
+                styles.discountBadge,
+                isThreeColumn && styles.discountBadgeSmall,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.discountText,
+                  isThreeColumn && styles.discountTextSmall,
+                ]}
+                numberOfLines={1}
+              >
+                {discountLabel}
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.discountSpacer} />
+          )}
+
+          <QuantityControl
+            quantity={quantity}
+            isAtMaxQty={isAtMaxQty}
+            isOutOfStock={isOutOfStock}
+            isThreeColumn={isThreeColumn}
+            productName={name}
+            onIncrement={handleIncrement}
+            onDecrement={handleDecrement}
+            onAdd={handleAdd}
+          />
+        </View>
+      </View>
     </AnimatedPressable>
   );
 };

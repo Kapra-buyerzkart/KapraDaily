@@ -277,18 +277,23 @@ const HomeFloatingCart = ({
 
             <Animated.View style={[styles.textColumn, countAnimatedStyle]}>
               <Text style={styles.mainTotalText} numberOfLines={1}>
-                {totalCount} {totalCount === 1 ? 'item' : 'items'} • ₹{grandTotal}
+                {totalCount} {totalCount === 1 ? 'item' : 'items'}
+                <Text style={styles.dotSeparator}> • </Text>
+                <Text style={styles.priceText}>₹{grandTotal}</Text>
               </Text>
-              <Text style={styles.savingsSubText} numberOfLines={1}>
-                {discount > 0 ? `₹${discount} saved on order` : 'Fast delivery in 30 mins'}
-              </Text>
+              <View style={styles.savingsRow}>
+                <Feather name="zap" size={wp('3%')} color="#6EE7B7" style={{ marginTop: 1 }} />
+                <Text style={styles.savingsSubText} numberOfLines={1}>
+                  {discount > 0 ? ` ₹${discount} saved on order` : ' Fast delivery in 30 mins'}
+                </Text>
+              </View>
             </Animated.View>
           </View>
 
           {/* Right Section: White View Basket Button */}
           <Animated.View style={[styles.viewBasketPill, buttonAnimatedStyle]}>
             <Text style={[styles.viewBasketText, { color: capsuleBg }]}>{buttonText}</Text>
-            <Feather name="chevron-right" size={16} color={capsuleBg} />
+            <Feather name="arrow-right" size={16} color={capsuleBg} />
           </Animated.View>
         </Animated.View>
       </TouchableOpacity>
@@ -328,47 +333,58 @@ const styles = StyleSheet.create({
     marginRight: wp('2.8%'),
   },
   thumbnailCard: {
-    width: 38,
-    height: 38,
-    borderRadius: 10,
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     backgroundColor: '#FFFFFF',
-    borderWidth: 1.5,
-    borderColor: '#FFFFFF',
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.8)',
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
   },
   thumbnailImage: {
-    width: '100%',
-    height: '100%',
+    width: '85%',
+    height: '85%',
   },
   textColumn: {
     justifyContent: 'center',
+    marginLeft: wp('1%'),
   },
   mainTotalText: {
-    fontSize: wp('3.8%'),
+    fontSize: wp('4%'),
     fontFamily: FONTS.gilroy.bold,
     color: '#FFFFFF',
   },
+  dotSeparator: {
+    color: '#9CA3AF',
+  },
+  priceText: {
+    color: '#F59E0B',
+    fontFamily: FONTS.gilroy.heavy,
+  },
+  savingsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 2,
+  },
   savingsSubText: {
-    fontSize: wp('2.8%'),
+    fontSize: wp('3%'),
     fontFamily: FONTS.gilroy.medium,
-    color: '#D1FAE5',
-    marginTop: 1,
+    color: '#6EE7B7',
   },
   viewBasketPill: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    paddingVertical: 7,
-    paddingHorizontal: 12,
-    borderRadius: 18,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 12,
   },
   viewBasketText: {
-    fontSize: wp('3.4%'),
+    fontSize: wp('3.6%'),
     fontFamily: FONTS.gilroy.bold,
-    color: CAPSULE_BG,
-    marginRight: 2,
+    marginRight: 6,
   },
 });
 

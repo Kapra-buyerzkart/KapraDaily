@@ -168,8 +168,8 @@ export const DEFAULT_HOME_COLOR_SCHEME = {
   accentSoft: '#FFF0EB',
   background: '#FFFFFF',
   containerBackground: '#889C54',
-  tabActive: '#064E3B',
-  tabStroke: '#064E3B',
+  tabActive: '#000000',
+  tabStroke: '#000000',
   tabBackground: ['#E1E8CD', '#EFF4E3', '#FFFFFF'],
   cartBackground: '#1E3A2F',
   searchIcon: '#889C54',
@@ -308,8 +308,8 @@ export const resolveHomeColorScheme = (rawScheme) => {
     scheme.activeTab ||
     scheme.tabColor;
   const tabActive = tabActiveRaw
-    ? normalizeHex(tabActiveRaw, adjustBrightness(primary, -35))
-    : adjustBrightness(primary, -35);
+    ? normalizeHex(tabActiveRaw, '#000000')
+    : '#000000';
 
   const tabBackgroundRaw =
     scheme.tabBackground ||

@@ -1,11 +1,9 @@
 import React, { useCallback } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-} from 'react-native';
-import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from 'react-native-responsive-screen';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Feather from 'react-native-vector-icons/Feather';
 import { FONTS } from '@/styles/typography';
@@ -20,10 +18,10 @@ const BuyItAgainModernSection = ({ products = [], navigation }) => {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
+      <Text style={styles.mainTitle}>FROM YOUR ORDERS</Text>
+
       <View style={styles.headerRow}>
         <View style={styles.titleWrap}>
-          <MaterialCommunityIcons name="history" size={20} color="#16A34A" style={styles.icon} />
           <Text style={styles.title}>Buy It Again</Text>
         </View>
         <TouchableOpacity
@@ -31,10 +29,11 @@ const BuyItAgainModernSection = ({ products = [], navigation }) => {
           onPress={handleViewHistory}
           style={styles.viewHistoryButton}
         >
-          <Text style={styles.viewHistoryText}>View History</Text>
-          <Feather name="chevron-right" size={14} color="#16A34A" />
+          <Text style={styles.viewHistoryText}>My Orders</Text>
+          <Feather name="chevron-right" size={14} color={'#F25000'} />
         </TouchableOpacity>
       </View>
+      <Text style={styles.subTitle}>Your regulars, one tap away</Text>
 
       {/* Rail */}
       <ProductRail
@@ -76,12 +75,23 @@ const styles = StyleSheet.create({
   viewHistoryText: {
     fontSize: wp('3.3%'),
     fontFamily: FONTS.gilroy.semiBold,
-    color: '#16A34A',
+    color: '#F25000',
     marginRight: 2,
   },
   railContent: {
     paddingLeft: wp('3.5%'),
     paddingRight: wp('2%'),
+  },
+  mainTitle: {
+    paddingHorizontal: wp('4%'),
+    paddingBottom: wp('2'),
+    letterSpacing: 4,
+    color: '#F25000',
+  },
+  subTitle: {
+    paddingHorizontal: wp('4%'),
+
+    fontFamily: FONTS.gilroy.light,
   },
 });
 

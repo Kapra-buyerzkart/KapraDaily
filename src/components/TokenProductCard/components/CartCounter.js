@@ -43,7 +43,7 @@ const CartCounter = ({
             : `Decrease ${productName} quantity`
         }
       >
-        <Entypo name="minus" size={iconSize} color="#FFFFFF" />
+        <Entypo name="minus" size={iconSize} color="#000000" />
       </AnimatedPressable>
 
       <Text
@@ -68,7 +68,7 @@ const CartCounter = ({
             : `Increase ${productName} quantity`
         }
       >
-        <Entypo name="plus" size={iconSize} color="#FFFFFF" />
+        <Entypo name="plus" size={iconSize} color="#000000" />
       </AnimatedPressable>
     </Animated.View>
   );

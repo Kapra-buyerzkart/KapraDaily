@@ -97,6 +97,7 @@ export const deriveProductFields = item => {
     token: `${derivedTokenValue} UD ${
       Number(derivedTokenValue) > 1 ? 'Tokens' : 'Token'
     }`,
+    tokenValue: derivedTokenValue,
     isOutOfStock:
       item?.stockQty === 0 ||
       item?.stockQty === '0' ||

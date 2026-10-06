@@ -52,6 +52,9 @@ import OfferSaleSection from './components/modern/OfferSaleSection';
 import ExploreCategoriesGrid from './components/modern/ExploreCategoriesGrid';
 import HomePromoBanner from './components/modern/HomePromoBanner';
 import FlashDealsSection from './components/modern/FlashDealsSection';
+import DealsAndOffersSection from './components/modern/DealsAndOffersSection';
+import TinderProductSwipe from './components/modern/TinderProductSwipe';
+import DynamicBannersSection from './components/modern/DynamicBannersSection';
 import TopOffersSection from './components/modern/TopOffersSection';
 import RecommendedGridSection from './components/modern/RecommendedGridSection';
 import BuyItAgainModernSection from './components/modern/BuyItAgainModernSection';
@@ -73,10 +76,7 @@ const HomeScreen = () => {
   const scrollY = useSharedValue(0);
   const { onScrollWorklet } = useTabBarAnimation();
 
-  const tabBarClearance = useMemo(
-    () => getTabBarClearance(bottom),
-    [bottom],
-  );
+  const tabBarClearance = useMemo(() => getTabBarClearance(bottom), [bottom]);
   const floatingBottomOffset = bottom + hp('7.5%');
 
   const scrollHandler = useAnimatedScrollHandler({
@@ -416,12 +416,12 @@ const HomeScreen = () => {
               )
             )}
             {/* 3. OFFER SALE Section */}
-            {offerSaleProducts.length > 0 && (
+            {/* {offerSaleProducts.length > 0 && (
               <OfferSaleSection
                 items={offerSaleProducts}
                 navigation={navigation}
               />
-            )}
+            )} */}
             {/* 4. Explore all items by Category (4x2 Grid) */}
             {categories.length > 0 && (
               <ExploreCategoriesGrid
@@ -437,6 +437,9 @@ const HomeScreen = () => {
               />
             )}
             <View style={{ marginBottom: hp('3.4%') }} />
+            <DealsAndOffersSection />
+            {/* <TinderProductSwipe /> */}
+
             {/* 6. ⚡ 50% OFF Flash Deals (2x2 Grid in Peach Container) */}
             {flashDealsProducts.length > 0 && (
               <FlashDealsSection
@@ -473,6 +476,9 @@ const HomeScreen = () => {
                 navigation={navigation}
               />
             )}
+
+            <DynamicBannersSection />
+
             {/* 10. Buy It Again */}
             {buyAgainProducts.length > 0 && (
               <BuyItAgainModernSection
@@ -512,7 +518,9 @@ const HomeScreen = () => {
         navigation={navigation}
         onPressLocation={handleOpenLocationModal}
         onSearchPress={() => navigation.navigate('SearchScreen')}
-        onMicPress={() => navigation.navigate('SearchScreen', { openVoice: true })}
+        onMicPress={() =>
+          navigation.navigate('SearchScreen', { openVoice: true })
+        }
         onCartPress={() => navigation.navigate('CartScreen')}
         scrollY={scrollY}
         colorScheme={colorScheme}

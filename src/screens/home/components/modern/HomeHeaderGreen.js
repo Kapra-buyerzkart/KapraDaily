@@ -24,6 +24,7 @@ import RotatingPlaceholder from '@/components/RotatingPlaceholder';
 const HEADER_GRADIENT = ['#97A965', '#91A45F', '#889C54'];
 
 const SEARCH_EXAMPLES = [
+  "'Coconut oil, Apple, Milma...'",
   "'Groceries & daily needs'",
   "'Milk, bread & butter'",
   "'Fresh vegetables & fruits'",
@@ -114,9 +115,11 @@ const HomeHeaderGreen = ({
       .trim();
     if (!city) city = 'Kochi';
 
-    const sub = detectedPincode ? `${city} • ${detectedPincode}` : city;
+    const finalTitle = detectedPincode
+      ? `${primaryTitle || 'Select Location'} • ${detectedPincode}`
+      : primaryTitle || 'Select Location';
 
-    return { title: primaryTitle || 'Select Location', subtitle: sub };
+    return { title: finalTitle, subtitle: city };
   }, [pinAddress, pincode, profile]);
 
   const coins = dashboardData?.wallet?.bCoins ?? 0;
@@ -225,17 +228,13 @@ const HomeHeaderGreen = ({
           accessibilityRole="button"
           accessibilityLabel={`Delivering to ${title}. Tap to change location`}
         >
-          {/* Main Title Row: e.g. "Chakkaraparambu ⌵" */}
+          {/* Main Title Row: e.g. "Chakkaraparambu" */}
           <View style={styles.titleRow}>
-            <Text style={styles.locationTitle} numberOfLines={1}>
-              {title}
-            </Text>
-            <Feather
-              name="chevron-down"
-              size={wp('5.2%')}
-              color="#FFFFFF"
-              style={styles.chevron}
-            />
+            <View style={{ borderBottomWidth: 2, borderBottomColor: '#38bdf8', alignSelf: 'flex-start', paddingBottom: 1 }}>
+              <Text style={styles.locationTitle} numberOfLines={1}>
+                {title}
+              </Text>
+            </View>
           </View>
 
           {/* Sub Row: [⏱ Express] Kochi • 682032 */}
@@ -277,7 +276,7 @@ const HomeHeaderGreen = ({
             <Text style={[styles.coinsText, { color: accentColor }]}>{coins} coins</Text>
           </TouchableOpacity>
 
-          {/* Profile Circle with orange/coral icon */}
+          {/* Profile Circle with white icon */}
           <TouchableOpacity
             activeOpacity={0.85}
             onPress={handleProfilePress}
@@ -285,7 +284,7 @@ const HomeHeaderGreen = ({
             accessibilityRole="button"
             accessibilityLabel="Your profile"
           >
-            <Feather name="user" size={wp('5.2%')} color={accentColor} />
+            <Feather name="user" size={wp('5.6%')} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
       </Animated.View>
@@ -302,7 +301,7 @@ const HomeHeaderGreen = ({
           <Feather
             name="search"
             size={wp('4.8%')}
-            color={searchIconColor}
+            color={accentColor}
             style={styles.searchIcon}
           />
           <View style={styles.placeholderContainer}>
@@ -322,7 +321,7 @@ const HomeHeaderGreen = ({
             accessibilityLabel="Voice search"
             hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
           >
-            <Feather name="mic" size={wp('4.6%')} color="#6B7280" />
+            <Feather name="mic" size={wp('4.6%')} color={accentColor} />
           </TouchableOpacity>
         </TouchableOpacity>
 
@@ -336,7 +335,7 @@ const HomeHeaderGreen = ({
             cartCount > 0 ? `, ${cartCount} items` : ''
           }`}
         >
-          <Feather name="shopping-bag" size={wp('5.4%')} color={accentColor} />
+          <Feather name="shopping-cart" size={wp('5.4%')} color={accentColor} />
           {cartCount > 0 && (
             <View style={[styles.cartBadge, { backgroundColor: accentColor }]}>
               <Text style={styles.cartBadgeText}>
@@ -451,14 +450,11 @@ const styles = StyleSheet.create({
     width: wp('9.6%'),
     height: wp('9.6%'),
     borderRadius: wp('4.8%'),
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'transparent',
+    borderWidth: 1.5,
+    borderColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 3,
-    elevation: 2,
   },
   searchRow: {
     flexDirection: 'row',
@@ -506,7 +502,7 @@ const styles = StyleSheet.create({
   cartActionButton: {
     width: SEARCH_BAR_HEIGHT,
     height: SEARCH_BAR_HEIGHT,
-    borderRadius: 999,
+    borderRadius: 12,
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',

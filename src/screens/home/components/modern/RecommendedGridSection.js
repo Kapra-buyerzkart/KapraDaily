@@ -1,24 +1,23 @@
 import React, { useCallback } from 'react';
+import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import {
-  View,
-  Text,
-  Image,
-  StyleSheet,
-} from 'react-native';
-import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from 'react-native-responsive-screen';
 import AntDesign from 'react-native-vector-icons/AntDesign';
+import Feather from 'react-native-vector-icons/Feather';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { FONTS } from '@/styles/typography';
-import TokenProductCard from '@/components/TokenProductCard';
+import CONFIG from '@/globals/config';
+import { useCart } from '@/context/CartContext';
 
-const GARDEN_TRIM_IMAGE = require('@/assets/images/garden_produce_trim.jpg');
+const GROCERY_BAG_ILLUSTRATION = require('@/assets/images/bottomtag 2.png');
 
-const RecommendedGridSection = ({
-  items = [],
-  title = 'Recommended For you',
-  navigation,
-}) => {
-  // Take 4 items for the 2x2 grid
-  const gridItems = items.slice(0, 4);
+const RecommendedGridSection = ({ items = [], title, navigation }) => {
+  const { cartItems, addToCart, removeFromCart } = useCart();
+  
+  // The design specifically shows a 3-column, 2-row grid (6 items max)
+  const gridItems = items.slice(0, 6);
 
   const handleProductPress = useCallback(
     item => {
@@ -34,32 +33,154 @@ const RecommendedGridSection = ({
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.headerRow}>
-        <Text style={styles.title}>{title}</Text>
-        <AntDesign name="hearto" size={18} color="#EA580C" style={styles.headerIcon} />
+      {/* Header Area (White Background) */}
+      <View style={styles.headerArea}>
+        <Text style={styles.kickerText}>BEFORE YOU GO</Text>
+        <Text style={styles.mainTitle}>Stock up your needs</Text>
+        <Text style={styles.subTitle}>Your regulars, one tap away</Text>
       </View>
 
-      {/* 2x2 Product Grid */}
-      <View style={styles.grid}>
-        {gridItems.map((item, index) => (
-          <TokenProductCard
-            key={item.productId || item.id || index}
-            item={item}
-            index={index}
-            onPress={() => handleProductPress(item)}
-            containerStyle={styles.cardContainer}
-          />
-        ))}
-      </View>
+      {/* Dark Green Area */}
+      <View style={styles.greenArea}>
+        <View style={styles.borderedContainer}>
+          {/* Products Grid */}
+          <View style={styles.grid}>
+            {gridItems.map((item, index) => {
+              // Extract pricing with fallbacks
+              const finalPrice =
+                item.sellingPrice ||
+                item.price ||
+                item.specialPrice ||
+                item.discountedPrice ||
+                100;
+              const mrp =
+                item.mrp || item.unitPrice || item.originalPrice || finalPrice;
+              const discount =
+                mrp > finalPrice
+                  ? Math.round(((mrp - finalPrice) / mrp) * 100)
+                  : 0;
 
-      {/* Vegetable Garden Illustration Trim along bottom */}
-      <View style={styles.trimContainer}>
-        <Image
-          source={GARDEN_TRIM_IMAGE}
-          style={styles.trimImage}
-          resizeMode="cover"
-        />
+              let rawImageUri =
+                item.featuredImage ||
+                item.productImage ||
+                item.image ||
+                item.img ||
+                item.imageUrl ||
+                item.thumbnail ||
+                '';
+              let imageUrl = 'https://via.placeholder.com/150';
+              if (rawImageUri) {
+                imageUrl = rawImageUri.startsWith('http')
+                  ? rawImageUri
+                  : `${CONFIG.image_base_url}${rawImageUri}`;
+              }
+
+              const productName =
+                item.prName || item.name || item.Name || 'Product Name';
+              const productDesc =
+                item.subtitle ||
+                item.subTitle ||
+                item.description ||
+                item.weight ||
+                'officia deserunt';
+              const tokens = item.bCoins || item.tokens || 10.6;
+              
+              const cartItem = cartItems?.find(ci => ci.productId === (item.productId || item.id));
+              const qty = cartItem ? cartItem.quantity : 0;
+
+              return (
+                <TouchableOpacity
+                  key={item.productId || item.id || index}
+                  style={styles.card}
+                  activeOpacity={0.9}
+                  onPress={() => handleProductPress(item)}
+                >
+                  {/* Top Badges */}
+                  <View style={styles.cardHeader}>
+                    <View style={styles.tokenBadge}>
+                      <MaterialCommunityIcons
+                        name="bitcoin"
+                        size={wp('2.5%')}
+                        color="#EAB308"
+                      />
+                      <Text style={styles.tokenText}>{tokens} tokens</Text>
+                    </View>
+                    <AntDesign
+                      name="hearto"
+                      size={wp('3.5%')}
+                      color="#6B7280"
+                    />
+                  </View>
+
+                  {/* Product Image */}
+                  <Image
+                    source={{ uri: imageUrl }}
+                    style={styles.productImage}
+                    resizeMode="contain"
+                  />
+
+                  {/* Texts */}
+                  <Text style={styles.productName} numberOfLines={1}>
+                    {productName}
+                  </Text>
+                  <Text style={styles.productDesc} numberOfLines={1}>
+                    {productDesc}
+                  </Text>
+
+                  {/* Divider */}
+                  <View style={styles.dashedDivider} />
+
+                  {/* Prices */}
+                  <View style={styles.priceRow}>
+                    <Text style={styles.mrpText}>₹ {mrp}/-</Text>
+                    {discount > 0 && (
+                      <View style={styles.discountBadge}>
+                        <Text style={styles.discountText}>{discount}% OFF</Text>
+                      </View>
+                    )}
+                  </View>
+
+                  <View style={styles.finalPriceRow}>
+                    <Text style={styles.finalPrice}>₹{finalPrice}/-</Text>
+                    {qty > 0 ? (
+                      <View style={styles.stepperContainer}>
+                        <TouchableOpacity
+                          style={styles.stepperBtn}
+                          onPress={() => removeFromCart(item)}
+                        >
+                          <Feather name="minus" size={14} color="#000000" />
+                        </TouchableOpacity>
+                        <Text style={styles.stepperText}>{qty}</Text>
+                        <TouchableOpacity
+                          style={styles.stepperBtn}
+                          onPress={() => addToCart(item)}
+                        >
+                          <Feather name="plus" size={14} color="#000000" />
+                        </TouchableOpacity>
+                      </View>
+                    ) : (
+                      <TouchableOpacity
+                        style={styles.addButton}
+                        onPress={() => addToCart(item)}
+                      >
+                        <Feather name="plus" size={wp('4%')} color="#000000" />
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          {/* Bottom Grocery Bag Illustration */}
+          <View style={styles.illustrationWrapper}>
+            <Image
+              source={GROCERY_BAG_ILLUSTRATION}
+              style={styles.illustration}
+              resizeMode="contain"
+            />
+          </View>
+        </View>
       </View>
     </View>
   );
@@ -67,65 +188,175 @@ const RecommendedGridSection = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginHorizontal: wp('3.5%'),
-    marginVertical: hp('1.5%'),
-    backgroundColor: '#FFF5EE',
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#FED7AA',
-    overflow: 'hidden',
-    shadowColor: '#F97316',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    width: '100%',
+    backgroundColor: '#FFFFFF',
   },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  headerArea: {
     paddingHorizontal: wp('4%'),
-    paddingTop: hp('1.8%'),
-    paddingBottom: hp('0.8%'),
+    paddingTop: hp('2.5%'),
+    paddingBottom: hp('1.5%'),
   },
-  title: {
-    fontSize: wp('4.4%'),
+  kickerText: {
+    fontSize: wp('3.2%'),
     fontFamily: FONTS.gilroy.bold,
-    color: '#111827',
+    color: '#EA580C',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    marginBottom: 4,
   },
-  headerIcon: {
-    marginLeft: 6,
+  mainTitle: {
+    fontSize: wp('5%'),
+    fontFamily: FONTS.gilroy.semiBold,
+    color: '#111827',
+    letterSpacing: -0.5,
+  },
+  subTitle: {
+    fontSize: wp('3.6%'),
+    fontFamily: FONTS.gilroy.medium,
+    color: '#6B7280',
+    marginTop: 4,
+  },
+  greenArea: {
+    backgroundColor: '#114B3B', // Dark green matching design
+    paddingHorizontal: wp('3%'),
+    paddingTop: hp('2%'),
+    paddingBottom: hp('3%'),
+  },
+  borderedContainer: {
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.25)',
+    borderRadius: 16,
+    padding: wp('2.5%'),
   },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    paddingHorizontal: wp('3%'),
-    paddingBottom: hp('1%'),
   },
-  cardContainer: {
-    width: wp('42%'),
-    marginHorizontal: 0,
-    marginVertical: hp('0.6%'),
+  card: {
+    width: '32%', // Fits 3 in a row
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#E8ECF2',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 3,
-    elevation: 1,
+    borderRadius: 12,
+    padding: wp('1.8%'),
+    marginBottom: hp('1.2%'),
   },
-  trimContainer: {
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: hp('0.5%'),
+  },
+  tokenBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  tokenText: {
+    fontSize: wp('1.9%'),
+    fontFamily: FONTS.gilroy.bold,
+    color: '#B45309',
+    marginLeft: 2,
+  },
+  productImage: {
     width: '100%',
-    height: hp('6%'),
-    overflow: 'hidden',
-    marginTop: hp('0.5%'),
+    height: hp('7.5%'),
+    alignSelf: 'center',
+    marginBottom: hp('0.5%'),
   },
-  trimImage: {
+  productName: {
+    fontSize: wp('2.7%'),
+    fontFamily: FONTS.gilroy.bold,
+    color: '#111827',
+  },
+  productDesc: {
+    fontSize: wp('2.2%'),
+    fontFamily: FONTS.gilroy.medium,
+    color: '#9CA3AF',
+    marginBottom: hp('0.5%'),
+  },
+  dashedDivider: {
+    borderBottomWidth: 1,
+    borderColor: '#E5E7EB',
+    borderStyle: 'dashed',
+    borderRadius: 1,
+    marginVertical: hp('0.6%'),
+  },
+  priceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  mrpText: {
+    fontSize: wp('2.2%'),
+    fontFamily: FONTS.gilroy.medium,
+    color: '#9CA3AF',
+    textDecorationLine: 'line-through',
+  },
+  discountBadge: {
+    backgroundColor: '#DCFCE7',
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  discountText: {
+    fontSize: wp('2%'),
+    fontFamily: FONTS.gilroy.bold,
+    color: '#16A34A',
+  },
+  finalPriceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  finalPrice: {
+    fontSize: wp('3.5%'),
+    fontFamily: FONTS.gilroy.bold,
+    color: '#991B1B', // Dark red
+  },
+  addButton: {
+    width: wp('6%'),
+    height: wp('6%'),
+    backgroundColor: '#FACC15',
+    borderRadius: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepperContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FACC15',
+    borderRadius: 6,
+    height: wp('6%'),
+    paddingHorizontal: 4,
+    justifyContent: 'space-between',
+    width: wp('14%'),
+  },
+  stepperBtn: {
+    paddingHorizontal: 2,
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepperText: {
+    fontSize: wp('3%'),
+    fontFamily: FONTS.gilroy.bold,
+    color: '#000000',
+  },
+  illustrationWrapper: {
+    width: '100%',
+    height: hp('28%'),
+    marginTop: hp('1%'),
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  illustration: {
     width: '100%',
     height: '100%',
   },
 });
 
-export default React.memo(RecommendedGridSection);
+export default RecommendedGridSection;
