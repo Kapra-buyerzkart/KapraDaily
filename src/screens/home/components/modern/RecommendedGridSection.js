@@ -1,5 +1,6 @@
 import React, { useCallback } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, Image, StyleSheet } from 'react-native';
+import AnimatedPressable from '@/components/AnimatedPressable';
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
@@ -89,10 +90,9 @@ const RecommendedGridSection = ({ items = [], title, navigation }) => {
               const qty = cartItem ? cartItem.quantity : 0;
 
               return (
-                <TouchableOpacity
+                <AnimatedPressable
                   key={item.productId || item.id || index}
                   style={styles.card}
-                  activeOpacity={0.9}
                   onPress={() => handleProductPress(item)}
                 >
                   {/* Top Badges */}
@@ -144,30 +144,30 @@ const RecommendedGridSection = ({ items = [], title, navigation }) => {
                     <Text style={styles.finalPrice}>₹{finalPrice}/-</Text>
                     {qty > 0 ? (
                       <View style={styles.stepperContainer}>
-                        <TouchableOpacity
+                        <AnimatedPressable
                           style={styles.stepperBtn}
                           onPress={() => removeFromCart(item)}
                         >
                           <Feather name="minus" size={14} color="#000000" />
-                        </TouchableOpacity>
+                        </AnimatedPressable>
                         <Text style={styles.stepperText}>{qty}</Text>
-                        <TouchableOpacity
+                        <AnimatedPressable
                           style={styles.stepperBtn}
                           onPress={() => addToCart(item)}
                         >
                           <Feather name="plus" size={14} color="#000000" />
-                        </TouchableOpacity>
+                        </AnimatedPressable>
                       </View>
                     ) : (
-                      <TouchableOpacity
+                      <AnimatedPressable
                         style={styles.addButton}
                         onPress={() => addToCart(item)}
                       >
                         <Feather name="plus" size={wp('4%')} color="#000000" />
-                      </TouchableOpacity>
+                      </AnimatedPressable>
                     )}
                   </View>
-                </TouchableOpacity>
+                </AnimatedPressable>
               );
             })}
           </View>

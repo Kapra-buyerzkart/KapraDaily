@@ -1,5 +1,6 @@
 import React, { useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import AnimatedPressable from '@/components/AnimatedPressable';
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
@@ -34,15 +35,27 @@ const ExploreCategoriesGrid = ({ categories = [], navigation }) => {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.headerRow}>
-        <Text style={styles.title}>Explore by Category</Text>
-        <TouchableOpacity
-          activeOpacity={0.7}
+        <View
+          style={{
+            width: 8,
+            height: 24,
+            backgroundColor: '#F25000',
+            borderRadius: 8,
+            marginRight: 8,
+          }}
+        />
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.title, { color: '#F25000' }]}>Shop by category</Text>
+        </View>
+        <AnimatedPressable
           onPress={handleViewAll}
           style={styles.viewAllButton}
         >
-          <Text style={styles.viewAllText}>View All</Text>
-          <Feather name="chevron-right" size={14} color="#16A34A" />
-        </TouchableOpacity>
+          <Text style={[styles.viewAllText, { color: '#F25000' }]}>
+            View all hubs
+          </Text>
+          <Feather name="chevron-right" size={15} color="#F25000" />
+        </AnimatedPressable>
       </View>
 
       {/* 4x2 Grid */}
@@ -59,9 +72,8 @@ const ExploreCategoriesGrid = ({ categories = [], navigation }) => {
           }
 
           return (
-            <TouchableOpacity
+            <AnimatedPressable
               key={item.catId || index}
-              activeOpacity={0.8}
               onPress={() => handleCategoryPress(item)}
               style={styles.cardItem}
             >
@@ -75,7 +87,7 @@ const ExploreCategoriesGrid = ({ categories = [], navigation }) => {
               <Text style={styles.label} numberOfLines={2}>
                 {label}
               </Text>
-            </TouchableOpacity>
+            </AnimatedPressable>
           );
         })}
       </View>

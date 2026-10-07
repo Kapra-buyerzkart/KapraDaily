@@ -1,5 +1,13 @@
 import React, { useRef, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, Animated, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, Image } from 'react-native';
+import AnimatedPressable from '@/components/AnimatedPressable';
+import Animated, {
+  useSharedValue,
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  interpolate,
+  Extrapolation,
+} from 'react-native-reanimated';
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
@@ -8,8 +16,8 @@ import Feather from 'react-native-vector-icons/Feather';
 import { FONTS } from '@/styles/typography';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const CARD_WIDTH = SCREEN_WIDTH * 0.82;
-const SPACING = wp('4%');
+const CARD_WIDTH = SCREEN_WIDTH * 0.78;
+const SPACING = wp('3.5%');
 const ITEM_SIZE = CARD_WIDTH + SPACING;
 
 const DUMMY_OFFERS = [
@@ -18,6 +26,7 @@ const DUMMY_OFFERS = [
     bgColor: '#3FA9F5',
     title: 'Daily Essentials\ndelivered fast!',
     subtitle: 'Get 10% off on daily needs',
+    image: require('@/assets/images/deals_essentials.png'),
     discountText: '10%\noff',
     dateRange: 'Aug 1 - Aug 15',
     quota: '0 of 100 QR',
@@ -27,6 +36,7 @@ const DUMMY_OFFERS = [
     bgColor: '#E66D00',
     title: 'Freshness\nat your door!',
     subtitle: 'Get 15% off on\nfresh fruits & vegetables',
+    image: require('@/assets/images/deals_fruits_veg.png'),
     discountText: '15%\noff',
     dateRange: 'Aug 4 - Aug 31',
     quota: '0 of 250 QR',
@@ -36,83 +46,119 @@ const DUMMY_OFFERS = [
     bgColor: '#5D2E8E',
     title: 'Mega Savings\non groceries',
     subtitle: 'Get 20% off on all items',
+    image: require('@/assets/images/deals_groceries.png'),
     discountText: '20%\noff',
     dateRange: 'Sep 1 - Sep 30',
     quota: '10 of 500 QR',
   },
 ];
 
-const DealsAndOffersSection = () => {
-  const flatListRef = useRef(null);
-  const scrollX = useRef(new Animated.Value(0)).current;
-  const [currentIndex, setCurrentIndex] = useState(1);
-
-  const handleScrollEnd = useCallback(event => {
-    const offsetX = event.nativeEvent.contentOffset.x;
-    const index = Math.round(offsetX / ITEM_SIZE);
-    setCurrentIndex(index);
-  }, []);
-
-  const renderItem = ({ item, index }) => {
+const OfferCard = ({ item, index, scrollX }) => {
+  const animatedStyle = useAnimatedStyle(() => {
     const inputRange = [
       (index - 1) * ITEM_SIZE,
       index * ITEM_SIZE,
       (index + 1) * ITEM_SIZE,
     ];
 
-    const rotate = scrollX.interpolate({
+    const rotate = interpolate(
+      scrollX.value,
       inputRange,
-      outputRange: ['-45deg', '0deg', '45deg'], // Rotates adjacent cards
-      extrapolate: 'clamp',
-    });
-
-    const scale = scrollX.interpolate({
-      inputRange,
-      outputRange: [0.85, 1, 0.85], // Shrink slightly to avoid overlapping corners during extreme tilt
-      extrapolate: 'clamp',
-    });
-
-    return (
-      <Animated.View
-        style={[
-          styles.cardContainer,
-          {
-            backgroundColor: item.bgColor,
-            transform: [{ rotate }, { scale }],
-          },
-        ]}
-      >
-        <View style={styles.cardContent}>
-          <Text style={styles.cardTitle}>{item.title}</Text>
-          <Text style={styles.cardSubtitle}>{item.subtitle}</Text>
-
-          {/* Dummy Placeholder for Image */}
-          <View style={styles.dummyImagePlaceholder}>
-            <Feather
-              name="shopping-bag"
-              size={wp('20%')}
-              color="rgba(255,255,255,0.2)"
-            />
-          </View>
-
-          {/* Discount Badge */}
-          <View style={styles.discountBadge}>
-            <Text style={styles.discountBadgeText}>{item.discountText}</Text>
-          </View>
-
-          {/* Bottom Pill */}
-          <View style={styles.bottomPill}>
-            <View style={styles.dateSection}>
-              <Feather name="calendar" size={wp('4%')} color="#FFFFFF" />
-              <Text style={styles.dateText}>{item.dateRange}</Text>
-            </View>
-            <View style={styles.pillDivider} />
-            <Text style={styles.quotaText}>{item.quota}</Text>
-          </View>
-        </View>
-      </Animated.View>
+      [-6, 0, 6], // Subtle 6-degree tilt matching design
+      Extrapolation.CLAMP
     );
-  };
+
+    const scale = interpolate(
+      scrollX.value,
+      inputRange,
+      [0.94, 1, 0.94],
+      Extrapolation.CLAMP
+    );
+
+    return {
+      transform: [{ rotate: `${rotate}deg` }, { scale }],
+    };
+  });
+
+  return (
+    <Animated.View
+      style={[
+        styles.cardContainer,
+        { backgroundColor: item.bgColor },
+        animatedStyle,
+      ]}
+    >
+      <View style={styles.cardContent}>
+        <Text style={styles.cardTitle}>{item.title}</Text>
+        <Text style={styles.cardSubtitle}>{item.subtitle}</Text>
+
+        {/* Product Illustration */}
+        <View style={styles.cardImageContainer} pointerEvents="none">
+          <Image
+            source={item.image}
+            style={styles.cardImage}
+            resizeMode="contain"
+          />
+        </View>
+
+        {/* Discount Badge */}
+        <View style={styles.discountBadge}>
+          <Text style={styles.discountBadgeText}>{item.discountText}</Text>
+        </View>
+
+        {/* Bottom Pill */}
+        <View style={styles.bottomPill}>
+          <View style={styles.dateSection}>
+            <Feather name="calendar" size={wp('4%')} color="#FFFFFF" />
+            <Text style={styles.dateText}>{item.dateRange}</Text>
+          </View>
+          <View style={styles.pillDivider} />
+          <Text style={styles.quotaText}>{item.quota}</Text>
+        </View>
+      </View>
+    </Animated.View>
+  );
+};
+
+const DealsAndOffersSection = () => {
+  const flatListRef = useRef(null);
+  const scrollX = useSharedValue(0);
+  const [currentIndex, setCurrentIndex] = useState(1);
+
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: event => {
+      scrollX.value = event.contentOffset.x;
+    },
+  });
+
+  const handleScrollEnd = useCallback(event => {
+    const offsetX = event.nativeEvent.contentOffset.x;
+    const index = Math.round(offsetX / ITEM_SIZE);
+    setCurrentIndex(Math.max(0, Math.min(DUMMY_OFFERS.length - 1, index)));
+  }, []);
+
+  const handlePrev = useCallback(() => {
+    if (currentIndex > 0) {
+      const nextIndex = currentIndex - 1;
+      flatListRef.current?.scrollToIndex({ index: nextIndex, animated: true });
+      setCurrentIndex(nextIndex);
+    }
+  }, [currentIndex]);
+
+  const handleNext = useCallback(() => {
+    if (currentIndex < DUMMY_OFFERS.length - 1) {
+      const nextIndex = currentIndex + 1;
+      flatListRef.current?.scrollToIndex({ index: nextIndex, animated: true });
+      setCurrentIndex(nextIndex);
+    }
+  }, [currentIndex]);
+
+  const renderItem = useCallback(
+    ({ item, index }) => {
+      return <OfferCard item={item} index={index} scrollX={scrollX} />;
+    },
+    [scrollX]
+  );
 
   return (
     <View style={styles.container}>
@@ -125,7 +171,7 @@ const DealsAndOffersSection = () => {
         </Text>
       </View>
 
-      {/* Carousel Only - Animated Tilt */}
+      {/* Carousel with Animated Tilt & Arrow Navigation */}
       <View style={styles.carouselWrapper}>
         <Animated.FlatList
           ref={flatListRef}
@@ -136,12 +182,10 @@ const DealsAndOffersSection = () => {
           snapToInterval={ITEM_SIZE}
           decelerationRate="fast"
           contentContainerStyle={styles.flatListContent}
-          onScroll={Animated.event(
-            [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-            { useNativeDriver: true }
-          )}
+          onScroll={scrollHandler}
           scrollEventThrottle={16}
           onMomentumScrollEnd={handleScrollEnd}
+          onScrollEndDrag={handleScrollEnd}
           renderItem={renderItem}
           initialScrollIndex={1}
           getItemLayout={(data, index) => ({
@@ -150,6 +194,28 @@ const DealsAndOffersSection = () => {
             index,
           })}
         />
+
+        {/* Left Arrow Navigation */}
+        {currentIndex > 0 && (
+          <AnimatedPressable
+            style={[styles.arrowButton, styles.leftArrow]}
+            onPress={handlePrev}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          >
+            <Feather name="chevron-left" size={wp('5.5%')} color="#FFFFFF" />
+          </AnimatedPressable>
+        )}
+
+        {/* Right Arrow Navigation */}
+        {currentIndex < DUMMY_OFFERS.length - 1 && (
+          <AnimatedPressable
+            style={[styles.arrowButton, styles.rightArrow]}
+            onPress={handleNext}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          >
+            <Feather name="chevron-right" size={wp('5.5%')} color="#FFFFFF" />
+          </AnimatedPressable>
+        )}
       </View>
     </View>
   );
@@ -188,11 +254,11 @@ const styles = StyleSheet.create({
   },
   flatListContent: {
     paddingHorizontal: (SCREEN_WIDTH - CARD_WIDTH) / 2,
-    paddingVertical: hp('5%'), // Add vertical padding to prevent rotated corners from being clipped by FlatList
+    paddingVertical: hp('2%'),
   },
   cardContainer: {
     width: CARD_WIDTH,
-    height: wp('85%'),
+    height: wp('92%'),
     borderRadius: 24,
     marginRight: SPACING,
     overflow: 'hidden',
@@ -218,17 +284,19 @@ const styles = StyleSheet.create({
     width: '60%',
     zIndex: 2,
   },
-  dummyImagePlaceholder: {
+  cardImageContainer: {
     position: 'absolute',
-    bottom: -wp('5%'),
-    right: -wp('5%'),
-    width: wp('55%'),
-    height: wp('55%'),
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: wp('27.5%'),
-    justifyContent: 'center',
+    bottom: wp('6%'),
+    right: -wp('3%'),
+    width: wp('56%'),
+    height: wp('56%'),
+    justifyContent: 'flex-end',
     alignItems: 'center',
-    zIndex: 1,
+    zIndex: 2,
+  },
+  cardImage: {
+    width: '100%',
+    height: '100%',
   },
   discountBadge: {
     position: 'absolute',
@@ -288,6 +356,29 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontFamily: FONTS.gilroy.bold,
     fontSize: wp('3.5%'),
+  },
+  arrowButton: {
+    position: 'absolute',
+    top: '50%',
+    width: wp('10.5%'),
+    height: wp('10.5%'),
+    borderRadius: wp('5.25%'),
+    backgroundColor: 'rgba(30, 30, 30, 0.65)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+    marginTop: -wp('5.25%'),
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  leftArrow: {
+    left: wp('3.5%'),
+  },
+  rightArrow: {
+    right: wp('3.5%'),
   },
 });
 

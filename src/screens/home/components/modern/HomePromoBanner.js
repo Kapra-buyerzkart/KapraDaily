@@ -1,17 +1,14 @@
 import React from 'react';
-import { TouchableOpacity, StyleSheet } from 'react-native';
-import {
-  widthPercentageToDP as wp,
-  heightPercentageToDP as hp,
-} from 'react-native-responsive-screen';
+import { StyleSheet } from 'react-native';
+import AnimatedPressable from '@/components/AnimatedPressable';
+import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import CachedImage from '@/components/CachedImage';
 
 const HomePromoBanner = ({ banner, onPress }) => {
   if (!banner || !banner.uri) return null;
 
   return (
-    <TouchableOpacity
-      activeOpacity={0.9}
+    <AnimatedPressable
       onPress={() => onPress && onPress(banner)}
       style={styles.bannerContainer}
       accessibilityRole="button"
@@ -22,7 +19,7 @@ const HomePromoBanner = ({ banner, onPress }) => {
         style={styles.bannerImage}
         resizeMode="cover"
       />
-    </TouchableOpacity>
+    </AnimatedPressable>
   );
 };
 

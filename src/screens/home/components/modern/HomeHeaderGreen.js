@@ -2,10 +2,10 @@ import React from 'react';
 import {
   View,
   Text,
-  TouchableOpacity,
   StyleSheet,
   Platform,
 } from 'react-native';
+import AnimatedPressable from '@/components/AnimatedPressable';
 import Animated, {
   useAnimatedStyle,
   interpolate,
@@ -21,7 +21,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import { FONTS } from '@/styles/typography';
 import RotatingPlaceholder from '@/components/RotatingPlaceholder';
 
-const HEADER_GRADIENT = ['#97A965', '#91A45F', '#889C54'];
+const HEADER_GRADIENT = ['#FF5F00', '#FF5500', '#FF4E00'];
 
 const SEARCH_EXAMPLES = [
   "'Coconut oil, Apple, Milma...'",
@@ -221,8 +221,7 @@ const HomeHeaderGreen = ({
         ]}
       >
         {/* Left: Location & Sub-row */}
-        <TouchableOpacity
-          activeOpacity={0.8}
+        <AnimatedPressable
           onPress={onPressLocation}
           style={styles.locationContainer}
           accessibilityRole="button"
@@ -230,11 +229,9 @@ const HomeHeaderGreen = ({
         >
           {/* Main Title Row: e.g. "Chakkaraparambu" */}
           <View style={styles.titleRow}>
-            <View style={{ borderBottomWidth: 2, borderBottomColor: '#38bdf8', alignSelf: 'flex-start', paddingBottom: 1 }}>
-              <Text style={styles.locationTitle} numberOfLines={1}>
-                {title}
-              </Text>
-            </View>
+            <Text style={styles.locationTitle} numberOfLines={1}>
+              {title}
+            </Text>
           </View>
 
           {/* Sub Row: [⏱ Express] Kochi • 682032 */}
@@ -246,7 +243,9 @@ const HomeHeaderGreen = ({
                 color={accentColor}
                 style={styles.expressIcon}
               />
-              <Text style={[styles.expressText, { color: accentColor }]}>Express</Text>
+              <Text style={[styles.expressText, { color: accentColor }]}>
+                Express
+              </Text>
             </View>
 
             {!!subtitle && (
@@ -255,13 +254,12 @@ const HomeHeaderGreen = ({
               </Text>
             )}
           </View>
-        </TouchableOpacity>
+        </AnimatedPressable>
 
         {/* Right: Coins Chip & Profile Avatar */}
         <View style={styles.rightGroup}>
           {/* 👛 8 coins pill */}
-          <TouchableOpacity
-            activeOpacity={0.85}
+          <AnimatedPressable
             onPress={handleCoinsPress}
             style={styles.coinsPill}
             accessibilityRole="button"
@@ -273,26 +271,26 @@ const HomeHeaderGreen = ({
               color={accentColor}
               style={styles.walletIcon}
             />
-            <Text style={[styles.coinsText, { color: accentColor }]}>{coins} coins</Text>
-          </TouchableOpacity>
+            <Text style={[styles.coinsText, { color: accentColor }]}>
+              {coins} coins
+            </Text>
+          </AnimatedPressable>
 
           {/* Profile Circle with white icon */}
-          <TouchableOpacity
-            activeOpacity={0.85}
+          <AnimatedPressable
             onPress={handleProfilePress}
             style={styles.profileCircle}
             accessibilityRole="button"
             accessibilityLabel="Your profile"
           >
             <Feather name="user" size={wp('5.6%')} color="#FFFFFF" />
-          </TouchableOpacity>
+          </AnimatedPressable>
         </View>
       </Animated.View>
 
       {/* Search Bar Row with Search Side Action Button */}
       <View style={styles.searchRow}>
-        <TouchableOpacity
-          activeOpacity={0.92}
+        <AnimatedPressable
           onPress={handleSearchPress}
           style={styles.searchBar}
           accessibilityRole="search"
@@ -313,8 +311,7 @@ const HomeHeaderGreen = ({
             />
           </View>
           <View style={styles.searchDivider} />
-          <TouchableOpacity
-            activeOpacity={0.7}
+          <AnimatedPressable
             onPress={handleMicPress}
             style={styles.micButton}
             accessibilityRole="button"
@@ -322,12 +319,11 @@ const HomeHeaderGreen = ({
             hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
           >
             <Feather name="mic" size={wp('4.6%')} color={accentColor} />
-          </TouchableOpacity>
-        </TouchableOpacity>
+          </AnimatedPressable>
+        </AnimatedPressable>
 
         {/* Right: Quick-Action Cart / Shopping Bag Button */}
-        <TouchableOpacity
-          activeOpacity={0.85}
+        <AnimatedPressable
           onPress={handleCartPress}
           style={styles.cartActionButton}
           accessibilityRole="button"
@@ -343,7 +339,7 @@ const HomeHeaderGreen = ({
               </Text>
             </View>
           )}
-        </TouchableOpacity>
+        </AnimatedPressable>
       </View>
     </Animated.View>
   );

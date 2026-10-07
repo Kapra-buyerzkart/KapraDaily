@@ -92,6 +92,7 @@ const images = {
   offerSale: require('./offerSale.png'),
   offerSaleHeader: require('./offerSale.png'),
   gardenProduceTrim: require('./garden_produce_trim.jpg'),
+  bottomtag: require('./bottomtag.png'),
 };
 
 export default images;

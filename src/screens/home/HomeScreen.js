@@ -46,7 +46,7 @@ import useHomePopup from './hooks/useHomePopup';
 import HomeHeaderGreen, {
   getExpandedHeaderHeight,
 } from './components/modern/HomeHeaderGreen';
-import PlacementBannerCarousel from './components/PlacementBannerCarousel';
+import HeroOffersSection from './components/modern/HeroOffersSection';
 import HomeCategoriesSection from './components/modern/HomeCategoriesSection';
 import OfferSaleSection from './components/modern/OfferSaleSection';
 import ExploreCategoriesGrid from './components/modern/ExploreCategoriesGrid';
@@ -61,6 +61,7 @@ import BuyItAgainModernSection from './components/modern/BuyItAgainModernSection
 import FeaturedProductsModernSection from './components/modern/FeaturedProductsModernSection';
 import HomeFloatingCart from './components/modern/HomeFloatingCart';
 import { CategoryGridSkeleton } from './components/shimmer';
+import HomeFooter from './components/modern/HomeFooter';
 import useTabBarAnimation from '@/hooks/useTabBarAnimation';
 import {
   tabBarVisibility,
@@ -391,18 +392,8 @@ const HomeScreen = () => {
           />
         ) : (
           <>
-            {/* 1. Hero Promo Banner Carousel */}
-            {topBanners.length > 0 && (
-              <View style={styles.heroCarouselWrap}>
-                <PlacementBannerCarousel
-                  banners={topBanners}
-                  onBannerPress={() => {}}
-                  style={styles.heroCarousel}
-                  fullWidth={false}
-                  infinite={topBanners.length > 1}
-                />
-              </View>
-            )}
+            {/* 1. Hero Offers Section with Orange Gradient Theme & Wire Carts */}
+            <HeroOffersSection navigation={navigation} />
             {/* 2. Categories with Filter Tabs & 4 Quick Cards */}
             {isHomeLoading && categories.length === 0 ? (
               <CategoryGridSkeleton />
@@ -503,6 +494,7 @@ const HomeScreen = () => {
             )}
             {/* 13. Empty Cart / Favorite Produce Basket Incentive */}
             {/* <KapraFavoriteFooter /> */}
+            <HomeFooter />
           </>
         )}
 
@@ -546,7 +538,7 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#889C54',
+    backgroundColor: '#FF5500',
   },
   scrollContent: {
     flexGrow: 1,

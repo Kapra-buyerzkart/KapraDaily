@@ -8,6 +8,7 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
+import AnimatedPressable from '@/components/AnimatedPressable';
 import LinearGradient from 'react-native-linear-gradient';
 import {
   widthPercentageToDP as wp,
@@ -156,25 +157,19 @@ const HomeCategoriesSection = ({
       : categories.slice(0, 4);
 
   return (
-    <LinearGradient
-      colors={tabBgColors}
-      locations={[0, 0.45, 1]}
-      style={styles.container}
-    >
+    <View style={styles.container}>
       {/* Header: Explore deals & Tap a category to see its deals */}
       <View style={styles.headerRow}>
-        <View style={styles.headerTitles}>
-          <Text style={styles.headerTitle}>Shop by category</Text>
-        </View>
-        <TouchableOpacity
-          activeOpacity={0.7}
+        <Text style={styles.headerTitle}>Explore deals</Text>
+        <AnimatedPressable
           onPress={handleHeaderPress}
           style={styles.seeAllButton}
         >
-          <Text style={[styles.seeAllText, { color: '#F25000' }]}>View all hubs</Text>
-          <Feather name="chevron-right" size={15} color="#F25000" />
-        </TouchableOpacity>
+          {/* <Text style={styles.seeAllText}>View All</Text> */}
+          {/* <Feather name="chevron-right" size={14} color="#16A34A" /> */}
+        </AnimatedPressable>
       </View>
+      <Text style={styles.categoryText}>Tap a category to see its deals</Text>
 
       {/* Zepto/Swiggy Curved Folder Tab Bar with Continuous Baseline & Category Icons */}
       <View style={styles.tabBarWrapper}>
@@ -284,9 +279,8 @@ const HomeCategoriesSection = ({
           }
 
           return (
-            <TouchableOpacity
+            <AnimatedPressable
               key={item.catId || item.id || index}
-              activeOpacity={0.8}
               onPress={() => handleCategoryPress(item)}
               style={styles.categoryCard}
             >
@@ -300,11 +294,11 @@ const HomeCategoriesSection = ({
               <Text style={styles.categoryLabel} numberOfLines={2}>
                 {label}
               </Text>
-            </TouchableOpacity>
+            </AnimatedPressable>
           );
         })}
       </View>
-    </LinearGradient>
+    </View>
   );
 };
 
@@ -318,15 +312,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: wp('4%'),
-    marginBottom: hp('1.4%'),
+    marginBottom: hp('1%'),
   },
   headerTitles: {
     flex: 1,
   },
   headerTitle: {
     fontSize: 18,
-    fontFamily: FONTS.gilroy.bold,
-    color: '#F25000',
+    fontFamily: FONTS.gilroy.semiBold,
+    color: '#000',
     letterSpacing: 0,
   },
   seeAllButton: {
@@ -440,6 +434,13 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.gilroy.semiBold,
     color: '#1F2937',
     textAlign: 'center',
+  },
+  categoryText: {
+    fontSize: 12,
+    paddingHorizontal: wp('4%'),
+    marginBottom: hp('2%'),
+    fontFamily: FONTS.gilroy.medium,
+    color: '#656565',
   },
 });
 

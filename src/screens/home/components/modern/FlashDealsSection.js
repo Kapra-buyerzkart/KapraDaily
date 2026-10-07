@@ -2,16 +2,15 @@ import React, { useCallback, useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
-  TouchableOpacity,
   StyleSheet,
   Image,
   ImageBackground,
 } from 'react-native';
+import AnimatedPressable from '@/components/AnimatedPressable';
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Feather from 'react-native-vector-icons/Feather';
 import { FONTS } from '@/styles/typography';
 import CONFIG from '@/globals/config';
@@ -123,9 +122,8 @@ const FlashDealsSection = ({ items = [], title = '50% OFF', navigation }) => {
             ' ';
 
           return (
-            <TouchableOpacity
+            <AnimatedPressable
               key={item.productId || item.id || index}
-              activeOpacity={0.9}
               onPress={() => handleProductPress(item)}
               style={styles.cardWrapper}
             >
@@ -163,7 +161,7 @@ const FlashDealsSection = ({ items = [], title = '50% OFF', navigation }) => {
               <Text numberOfLines={1} style={styles.productSubtitle}>
                 {productSubtitle}
               </Text>
-            </TouchableOpacity>
+            </AnimatedPressable>
           );
         })}
       </View>

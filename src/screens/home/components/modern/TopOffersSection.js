@@ -2,10 +2,9 @@ import React, { useCallback } from 'react';
 import {
   View,
   Text,
-  TouchableOpacity,
-  ScrollView,
   StyleSheet,
 } from 'react-native';
+import AnimatedPressable from '@/components/AnimatedPressable';
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
@@ -83,9 +82,8 @@ const TopOffersSection = ({ categories = [], sideBySide = [], navigation }) => {
       {/* 3 Offer Tiles */}
       <View style={styles.cardsRow}>
         {offers.map((offer, index) => (
-          <TouchableOpacity
+          <AnimatedPressable
             key={index}
-            activeOpacity={0.8}
             onPress={() => handleCardPress(offer)}
             style={styles.offerCard}
           >
@@ -107,7 +105,7 @@ const TopOffersSection = ({ categories = [], sideBySide = [], navigation }) => {
             <Text style={styles.label} numberOfLines={1}>
               {offer.label}
             </Text>
-          </TouchableOpacity>
+          </AnimatedPressable>
         ))}
       </View>
     </View>
