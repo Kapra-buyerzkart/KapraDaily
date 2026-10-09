@@ -4,10 +4,21 @@ import Animated from 'react-native-reanimated';
 import styles from '../styles';
 import { ADD_HIT_SLOP } from '../constants';
 
-/** The `Add to cart` button shown when the product is not yet in the cart. */
+/** The `+` add button shown when the product is not yet in the cart. */
 const AddButton = ({ isThreeColumn, productName, animatedStyle, onPress }) => (
-  <Animated.View style={[styles.addButtonWrapper, isThreeColumn && styles.addButtonWrapperSmall, animatedStyle]}>
-    <View style={[styles.addButtonContainer, isThreeColumn && styles.addButtonContainerSmall]}></View>
+  <Animated.View
+    style={[
+      styles.addButtonWrapper,
+      isThreeColumn && styles.addButtonWrapperSmall,
+      animatedStyle,
+    ]}
+  >
+    <View
+      style={[
+        styles.addButtonContainer,
+        isThreeColumn && styles.addButtonContainerSmall,
+      ]}
+    />
     <TouchableOpacity
       activeOpacity={0.85}
       onPress={onPress}
@@ -16,9 +27,25 @@ const AddButton = ({ isThreeColumn, productName, animatedStyle, onPress }) => (
       accessibilityRole="button"
       accessibilityLabel={`Add ${productName} to cart`}
     >
-      <Text style={[styles.addText, isThreeColumn && styles.addTextSmall]}>
-        ADD
-      </Text>
+      <View
+        style={[
+          styles.plusIconContainer,
+          isThreeColumn && styles.plusIconContainerSmall,
+        ]}
+      >
+        <View
+          style={[
+            styles.plusBarHorizontal,
+            isThreeColumn && styles.plusBarHorizontalSmall,
+          ]}
+        />
+        <View
+          style={[
+            styles.plusBarVertical,
+            isThreeColumn && styles.plusBarVerticalSmall,
+          ]}
+        />
+      </View>
     </TouchableOpacity>
   </Animated.View>
 );

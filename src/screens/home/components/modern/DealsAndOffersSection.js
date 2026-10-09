@@ -1,5 +1,11 @@
-import React, { useRef, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, Dimensions, Image } from 'react-native';
+import React, {
+  useRef,
+  useState,
+  useCallback,
+  useMemo,
+  useEffect,
+} from 'react';
+import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import Animated, {
   useSharedValue,
@@ -14,13 +20,15 @@ import {
 } from 'react-native-responsive-screen';
 import Feather from 'react-native-vector-icons/Feather';
 import { FONTS } from '@/styles/typography';
+import CONFIG from '@/globals/config';
+import CachedImage from '@/components/CachedImage';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_WIDTH = SCREEN_WIDTH * 0.78;
 const SPACING = wp('3.5%');
 const ITEM_SIZE = CARD_WIDTH + SPACING;
 
-const DUMMY_OFFERS = [
+export const DUMMY_OFFERS = [
   {
     id: '1',
     bgColor: '#3FA9F5',
@@ -30,6 +38,7 @@ const DUMMY_OFFERS = [
     discountText: '10%\noff',
     dateRange: 'Aug 1 - Aug 15',
     quota: '0 of 100 QR',
+    isDummy: true,
   },
   {
     id: '2',
@@ -40,6 +49,7 @@ const DUMMY_OFFERS = [
     discountText: '15%\noff',
     dateRange: 'Aug 4 - Aug 31',
     quota: '0 of 250 QR',
+    isDummy: true,
   },
   {
     id: '3',
@@ -50,10 +60,142 @@ const DUMMY_OFFERS = [
     discountText: '20%\noff',
     dateRange: 'Sep 1 - Sep 30',
     quota: '10 of 500 QR',
+    isDummy: true,
   },
 ];
 
-const OfferCard = ({ item, index, scrollX }) => {
+const BG_PALETTE = [
+  '#3FA9F5',
+  '#E66D00',
+  '#5D2E8E',
+  '#0D9488',
+  '#EA580C',
+  '#7C3AED',
+  '#2563EB',
+];
+
+export const resolveBannerImageSource = banner => {
+  if (!banner) return null;
+
+  if (banner.uri) {
+    if (typeof banner.uri === 'object' && banner.uri.uri) {
+      const uriStr = String(banner.uri.uri).trim();
+      if (uriStr.startsWith('http') || uriStr.startsWith('data:')) {
+        return banner.uri;
+      }
+      const base = (CONFIG.image_base_url || '').replace(/\/$/, '');
+      const suffix = uriStr.startsWith('/') ? uriStr : `/${uriStr}`;
+      return { uri: `${base}${suffix}` };
+    }
+    if (typeof banner.uri === 'string') {
+      const uriStr = banner.uri.trim();
+      if (uriStr.startsWith('http') || uriStr.startsWith('data:')) {
+        return { uri: uriStr };
+      }
+      const base = (CONFIG.image_base_url || '').replace(/\/$/, '');
+      const suffix = uriStr.startsWith('/') ? uriStr : `/${uriStr}`;
+      return { uri: `${base}${suffix}` };
+    }
+  }
+
+  if (banner.banner) {
+    const fromNested = resolveBannerImageSource(banner.banner);
+    if (fromNested) return fromNested;
+  }
+
+  const rawPath =
+    banner.imageUrl ||
+    banner.ImageUrl ||
+    banner.bannerImageUrl ||
+    banner.BannerImageUrl ||
+    banner.bannerImage ||
+    banner.BannerImage ||
+    banner.image ||
+    banner.Image ||
+    banner.backgroundImage ||
+    banner.BackgroundImage ||
+    banner.bgImage ||
+    banner.BgImage ||
+    banner.imagePath ||
+    banner.ImagePath ||
+    banner.featuredImage;
+
+  if (!rawPath) return null;
+  if (typeof rawPath === 'object' && rawPath.uri) return rawPath;
+  if (typeof rawPath === 'number') return rawPath;
+
+  if (typeof rawPath === 'string') {
+    const trimmed = rawPath.trim();
+    if (!trimmed) return null;
+    if (trimmed.startsWith('http') || trimmed.startsWith('data:')) {
+      return { uri: trimmed };
+    }
+    const base = (CONFIG.image_base_url || '').replace(/\/$/, '');
+    const suffix = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+    return { uri: `${base}${suffix}` };
+  }
+
+  return null;
+};
+
+const mapBannerToOffer = (banner, index) => {
+  if (!banner) return null;
+  const imageSource = resolveBannerImageSource(banner);
+  const rawTitle =
+    banner.title || banner.Title || banner.name || banner.bannerName || '';
+  const title = /^app_/i.test(String(rawTitle).trim()) ? '' : rawTitle;
+
+  const rawSubtitle =
+    banner.subTitle ||
+    banner.SubTitle ||
+    banner.subtitle ||
+    banner.description ||
+    '';
+  const subtitle = /^app_/i.test(String(rawSubtitle).trim()) ? '' : rawSubtitle;
+
+  const discountText =
+    banner.discountText ||
+    banner.discount ||
+    (banner.discountPercent ? `${banner.discountPercent}%\noff` : null) ||
+    (banner.badgeText ? banner.badgeText : null);
+  const dateRange = banner.dateRange || banner.validity || null;
+  const quota =
+    banner.quota ||
+    banner.offerCode ||
+    (banner.linkType ? 'Tap to view' : null);
+
+  let bgColor = banner.bgColor || banner.backgroundColor;
+  if (!bgColor && banner.linkValue && typeof banner.linkValue === 'string') {
+    const clean = banner.linkValue.trim();
+    if (/^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(clean)) {
+      bgColor = clean.startsWith('#') ? clean : `#${clean}`;
+    }
+  }
+  if (!bgColor) {
+    bgColor = BG_PALETTE[index % BG_PALETTE.length];
+  }
+
+  return {
+    id: String(
+      banner.bannerId ||
+        banner.BannerId ||
+        banner.id ||
+        banner.voucherId ||
+        `banner_${index}`,
+    ),
+    title,
+    subtitle,
+    image: imageSource,
+    bgColor,
+    discountText,
+    dateRange,
+    quota,
+    raw: banner,
+    isDummy: false,
+  };
+};
+
+const OfferCard = ({ item, index, scrollX, onPress }) => {
   const animatedStyle = useAnimatedStyle(() => {
     const inputRange = [
       (index - 1) * ITEM_SIZE,
@@ -65,14 +207,14 @@ const OfferCard = ({ item, index, scrollX }) => {
       scrollX.value,
       inputRange,
       [-6, 0, 6], // Subtle 6-degree tilt matching design
-      Extrapolation.CLAMP
+      Extrapolation.CLAMP,
     );
 
     const scale = interpolate(
       scrollX.value,
       inputRange,
       [0.94, 1, 0.94],
-      Extrapolation.CLAMP
+      Extrapolation.CLAMP,
     );
 
     return {
@@ -80,50 +222,137 @@ const OfferCard = ({ item, index, scrollX }) => {
     };
   });
 
+  const hasBackgroundImage = !item.isDummy && !!item.image;
+  const hasBadgeOrPill = !!(item.discountText || item.dateRange || item.quota);
+  const isPureImageBanner = hasBackgroundImage && !hasBadgeOrPill;
+
   return (
-    <Animated.View
+    <AnimatedPressable
+      activeOpacity={0.92}
+      onPress={() => onPress && onPress(item.raw || item)}
       style={[
         styles.cardContainer,
         { backgroundColor: item.bgColor },
         animatedStyle,
       ]}
+      accessibilityRole="button"
+      accessibilityLabel={item.title || 'Special Deal'}
     >
-      <View style={styles.cardContent}>
-        <Text style={styles.cardTitle}>{item.title}</Text>
-        <Text style={styles.cardSubtitle}>{item.subtitle}</Text>
+      {/* Background Image: fetched banner image renders full-bleed as the card's background */}
+      {hasBackgroundImage ? (
+        <CachedImage
+          source={item.image}
+          style={styles.cardBackgroundImage}
+          resizeMode="cover"
+        />
+      ) : null}
 
-        {/* Product Illustration */}
-        <View style={styles.cardImageContainer} pointerEvents="none">
-          <Image
-            source={item.image}
-            style={styles.cardImage}
-            resizeMode="contain"
-          />
-        </View>
+      {/* If it's a pure image banner with no text/pills, don't show overlay content */}
+      {!isPureImageBanner && (
+        <View style={styles.cardContent}>
+          {item.isDummy && item.title ? (
+            <Text style={styles.cardTitle} numberOfLines={2}>
+              {item.title}
+            </Text>
+          ) : null}
+          {item.isDummy && item.subtitle ? (
+            <Text style={styles.cardSubtitle} numberOfLines={2}>
+              {item.subtitle}
+            </Text>
+          ) : null}
 
-        {/* Discount Badge */}
-        <View style={styles.discountBadge}>
-          <Text style={styles.discountBadgeText}>{item.discountText}</Text>
-        </View>
+          {/* Product Illustration cutout (for dummy fallback offers only) */}
+          {item.isDummy && item.image ? (
+            <View style={styles.cardImageContainer} pointerEvents="none">
+              <CachedImage
+                source={item.image}
+                style={styles.cardImage}
+                resizeMode="contain"
+              />
+            </View>
+          ) : null}
 
-        {/* Bottom Pill */}
-        <View style={styles.bottomPill}>
-          <View style={styles.dateSection}>
-            <Feather name="calendar" size={wp('4%')} color="#FFFFFF" />
-            <Text style={styles.dateText}>{item.dateRange}</Text>
-          </View>
-          <View style={styles.pillDivider} />
-          <Text style={styles.quotaText}>{item.quota}</Text>
+          {/* Discount Badge */}
+          {item.discountText ? (
+            <View style={styles.discountBadge}>
+              <Text style={styles.discountBadgeText}>{item.discountText}</Text>
+            </View>
+          ) : null}
+
+          {/* Bottom Pill */}
+          {item.dateRange || item.quota ? (
+            <View style={styles.bottomPill}>
+              {item.dateRange ? (
+                <View style={styles.dateSection}>
+                  <Feather name="calendar" size={wp('4%')} color="#FFFFFF" />
+                  <Text style={styles.dateText}>{item.dateRange}</Text>
+                </View>
+              ) : null}
+              {item.dateRange && item.quota ? (
+                <View style={styles.pillDivider} />
+              ) : null}
+              {item.quota ? (
+                <Text style={styles.quotaText}>{item.quota}</Text>
+              ) : null}
+            </View>
+          ) : item.isDummy ? (
+            <View style={styles.bottomPill}>
+              <Text style={styles.quotaText}>Shop Now</Text>
+              <Feather name="arrow-right" size={wp('4%')} color="#FFFFFF" />
+            </View>
+          ) : null}
         </View>
-      </View>
-    </Animated.View>
+      )}
+    </AnimatedPressable>
   );
 };
 
-const DealsAndOffersSection = () => {
+const DealsAndOffersSection = ({
+  banners,
+  offers,
+  onPressBanner,
+  navigation,
+  title = 'Deals & Offers',
+  superTitle = 'SOMETHING SPECIAL',
+  subtitle = 'Fresh deals, exclusive savings & more',
+}) => {
   const flatListRef = useRef(null);
   const scrollX = useSharedValue(0);
-  const [currentIndex, setCurrentIndex] = useState(1);
+
+  const offerList = useMemo(() => {
+    const sourceList =
+      Array.isArray(banners) && banners.length > 0
+        ? banners
+        : Array.isArray(offers) && offers.length > 0
+        ? offers
+        : [];
+    if (sourceList.length > 0) {
+      // Prioritize items with placementKey === 'app_home_cardslider_section' at the top
+      const topItems = [];
+      const restItems = [];
+      sourceList.forEach(item => {
+        const key =
+          item?.placementKey || item?.PlacementKey || item?.placement_key;
+        if (key === 'app_home_cardslider_section') {
+          topItems.push(item);
+        } else {
+          restItems.push(item);
+        }
+      });
+      const prioritized =
+        topItems.length > 0 ? [...topItems, ...restItems] : sourceList;
+      return prioritized.map(mapBannerToOffer).filter(Boolean);
+    }
+    return DUMMY_OFFERS;
+  }, [banners, offers]);
+
+  const [currentIndex, setCurrentIndex] = useState(() =>
+    offerList.length > 1 ? 1 : 0,
+  );
+
+  useEffect(() => {
+    setCurrentIndex(offerList.length > 1 ? 1 : 0);
+  }, [offerList.length]);
 
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: event => {
@@ -131,11 +360,14 @@ const DealsAndOffersSection = () => {
     },
   });
 
-  const handleScrollEnd = useCallback(event => {
-    const offsetX = event.nativeEvent.contentOffset.x;
-    const index = Math.round(offsetX / ITEM_SIZE);
-    setCurrentIndex(Math.max(0, Math.min(DUMMY_OFFERS.length - 1, index)));
-  }, []);
+  const handleScrollEnd = useCallback(
+    event => {
+      const offsetX = event.nativeEvent.contentOffset.x;
+      const index = Math.round(offsetX / ITEM_SIZE);
+      setCurrentIndex(Math.max(0, Math.min(offerList.length - 1, index)));
+    },
+    [offerList.length],
+  );
 
   const handlePrev = useCallback(() => {
     if (currentIndex > 0) {
@@ -146,37 +378,66 @@ const DealsAndOffersSection = () => {
   }, [currentIndex]);
 
   const handleNext = useCallback(() => {
-    if (currentIndex < DUMMY_OFFERS.length - 1) {
+    if (currentIndex < offerList.length - 1) {
       const nextIndex = currentIndex + 1;
       flatListRef.current?.scrollToIndex({ index: nextIndex, animated: true });
       setCurrentIndex(nextIndex);
     }
-  }, [currentIndex]);
+  }, [currentIndex, offerList.length]);
+
+  const handlePress = useCallback(
+    item => {
+      const raw = item?.raw || item;
+      if (onPressBanner) {
+        onPressBanner(raw);
+        return;
+      }
+      if (!navigation || !raw) return;
+      const linkType = (raw.linkType || raw.LinkType || '').toLowerCase();
+      const linkValue = raw.linkValue || raw.LinkValue;
+      if (linkType === 'product' && linkValue) {
+        navigation.navigate('ProductDetailsScreen', { productId: linkValue });
+      } else if (linkType === 'category' && linkValue) {
+        navigation.navigate('SearchScreen', {
+          catId: linkValue,
+          catName: raw.title || 'Category',
+        });
+      }
+    },
+    [onPressBanner, navigation],
+  );
 
   const renderItem = useCallback(
     ({ item, index }) => {
-      return <OfferCard item={item} index={index} scrollX={scrollX} />;
+      return (
+        <OfferCard
+          item={item}
+          index={index}
+          scrollX={scrollX}
+          onPress={handlePress}
+        />
+      );
     },
-    [scrollX]
+    [scrollX, handlePress],
   );
+
+  if (offerList.length === 0) return null;
 
   return (
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.headerContainer}>
-        <Text style={styles.superTitle}>SOMETHING SPECIAL</Text>
-        <Text style={styles.mainTitle}>Deals & Offers</Text>
-        <Text style={styles.subTitle}>
-          Fresh deals, exclusive savings & more
-        </Text>
+        <Text style={styles.superTitle}>{superTitle}</Text>
+        <Text style={styles.mainTitle}>{title}</Text>
+        <Text style={styles.subTitle}>{subtitle}</Text>
       </View>
 
       {/* Carousel with Animated Tilt & Arrow Navigation */}
       <View style={styles.carouselWrapper}>
         <Animated.FlatList
           ref={flatListRef}
-          data={DUMMY_OFFERS}
-          keyExtractor={item => item.id}
+          data={offerList}
+          keyExtractor={(item, index) => item.id || `offer_${index}`}
           horizontal
           showsHorizontalScrollIndicator={false}
           snapToInterval={ITEM_SIZE}
@@ -187,7 +448,7 @@ const DealsAndOffersSection = () => {
           onMomentumScrollEnd={handleScrollEnd}
           onScrollEndDrag={handleScrollEnd}
           renderItem={renderItem}
-          initialScrollIndex={1}
+          initialScrollIndex={offerList.length > 1 ? 1 : 0}
           getItemLayout={(data, index) => ({
             length: ITEM_SIZE,
             offset: ITEM_SIZE * index,
@@ -207,7 +468,7 @@ const DealsAndOffersSection = () => {
         )}
 
         {/* Right Arrow Navigation */}
-        {currentIndex < DUMMY_OFFERS.length - 1 && (
+        {currentIndex < offerList.length - 1 && (
           <AnimatedPressable
             style={[styles.arrowButton, styles.rightArrow]}
             onPress={handleNext}
@@ -263,26 +524,44 @@ const styles = StyleSheet.create({
     marginRight: SPACING,
     overflow: 'hidden',
   },
+  cardBackgroundImage: {
+    ...StyleSheet.absoluteFillObject,
+    width: '100%',
+    height: '100%',
+    borderRadius: 24,
+  },
+  fullCardImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 24,
+  },
   cardContent: {
     flex: 1,
     padding: wp('6%'),
     position: 'relative',
+    zIndex: 2,
   },
   cardTitle: {
     color: '#FFFFFF',
     fontFamily: FONTS.gilroy.heavy,
-    fontSize: wp('8%'),
-    lineHeight: wp('9%'),
-    marginBottom: hp('1.5%'),
+    fontSize: wp('7.5%'),
+    lineHeight: wp('8.5%'),
+    marginBottom: hp('1%'),
     zIndex: 2,
+    textShadowColor: 'rgba(0, 0, 0, 0.45)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
   },
   cardSubtitle: {
     color: '#FFFFFF',
     fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('4.2%'),
-    lineHeight: wp('5.5%'),
-    width: '60%',
+    fontSize: wp('4%'),
+    lineHeight: wp('5.2%'),
+    width: '65%',
     zIndex: 2,
+    textShadowColor: 'rgba(0, 0, 0, 0.45)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
   cardImageContainer: {
     position: 'absolute',

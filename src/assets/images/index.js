@@ -101,6 +101,7 @@ const images = {
   categoryBannerGif: require('../gif/Your paragraph text (3).gif'),
   oreoBiscuit: require('./oreo_biscuit.png'),
   goodDayBiscuits: require('./good_day_biscuits.png'),
+  pantryDealsBanner: require('./pantry_deals_banner.png'),
 };
 
 export default images;

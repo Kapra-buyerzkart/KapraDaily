@@ -195,7 +195,33 @@ export const useHomeData = () => {
         return linked ? { ...tile, raw: { ...linked, ...cat } } : tile;
       });
 
-    const goatDeals = bannersFor(homeData, 'app_home_cat_top_sidebyside_four');
+    // Target banner IDs: 37 through 48
+    const targetBannerIds = [37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48];
+    const targetBannerIdSet = new Set(targetBannerIds.map(String));
+    const allBanners: any[] = Array.isArray(homeData?.banners)
+      ? homeData.banners
+      : Array.isArray(homeData?.Banners)
+      ? homeData.Banners
+      : Array.isArray(homeData?.data?.banners)
+      ? homeData.data.banners
+      : [];
+
+    const targetBanners = allBanners
+      .filter((b: any) =>
+        targetBannerIdSet.has(String(b?.bannerId ?? b?.BannerId ?? b?.id ?? '')),
+      )
+      .sort((a: any, b: any) => {
+        const aId = Number(a?.bannerId ?? a?.BannerId ?? a?.id ?? 0);
+        const bId = Number(b?.bannerId ?? b?.BannerId ?? b?.id ?? 0);
+        return targetBannerIds.indexOf(aId) - targetBannerIds.indexOf(bId);
+      });
+
+    console.log('Target Banners (IDs 37-48):', targetBanners);
+
+    const goatDeals =
+      targetBanners.length > 0
+        ? targetBanners
+        : bannersFor(homeData, 'app_home_cat_top_sidebyside_four');
     const thirdProducts = getProducts(thirdBlock);
 
     const productIndex = new Map<string, any>();
@@ -321,12 +347,14 @@ export const useHomeData = () => {
       thirdBlock,
       exploreRowOne: exploreTiles.slice(0, 5),
       exploreRowTwo: exploreTiles.slice(5, 10),
+      targetBanners,
       banners: {
         top: bannersFor(homeData, 'app_home_top_banner'),
         mid: bannersFor(homeData, 'app_home_mid_banner'),
         midBottom: bannersFor(homeData, 'app_home_mid_banner_bottom'),
         bottom: bannersFor(homeData, 'app_home_bottom'),
         topSection: bannersFor(homeData, 'app_home_top_banner_top_section'),
+        targetBanners,
       },
       recommendedTitleBlock: thirdBlock,
       recommendedFooterImage: resolveImageSource(
@@ -335,7 +363,7 @@ export const useHomeData = () => {
     };
   }, [homeData, profile, selectedAddress]);
 
-  return { homeData, loading, refreshing, onRefresh, sections };
+  return { homeData, loading, refreshing, onRefresh, sections, targetBanners: sections?.targetBanners };
 };
 
 export const bannerImage = (banner: any) =>

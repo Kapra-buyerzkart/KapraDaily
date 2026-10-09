@@ -1,4 +1,10 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, {
+  useState,
+  useCallback,
+  useEffect,
+  useRef,
+  useMemo,
+} from 'react';
 import {
   View,
   Text,
@@ -35,6 +41,10 @@ const HomeCategoriesSection = ({
   navigation,
   onSelectCategory,
   colorScheme,
+  banner,
+  banners,
+  gifBanner,
+  onPressBanner,
 }) => {
   const brandActive = colorScheme?.tabActive || BRAND_BLACK;
   const tabBgColors = colorScheme?.tabBackground || [
@@ -48,6 +58,53 @@ const HomeCategoriesSection = ({
   const [tabWidths, setTabWidths] = useState({});
   const [tabPositions, setTabPositions] = useState({});
   const scrollViewRef = useRef(null);
+
+  const gifItem = useMemo(() => {
+    const directBanner = banner || gifBanner;
+    if (directBanner && !Array.isArray(directBanner)) {
+      return directBanner;
+    }
+    const sourceList = Array.isArray(directBanner)
+      ? directBanner
+      : Array.isArray(banners)
+      ? banners
+      : Array.isArray(banners?.topGifSectionBanners)
+      ? banners.topGifSectionBanners
+      : banners?.topGifSection
+      ? [banners.topGifSection]
+      : [];
+
+    if (sourceList.length > 0) {
+      const matched = sourceList.find(item => {
+        const key =
+          item?.placementKey || item?.PlacementKey || item?.placement_key;
+        return key === 'app_home_top_gif_section';
+      });
+      if (matched) return matched;
+      return sourceList[0];
+    }
+    return null;
+  }, [banner, gifBanner, banners]);
+
+  const gifSource = useMemo(() => {
+    if (!gifItem) return null;
+    if (gifItem.uri) {
+      return typeof gifItem.uri === 'string'
+        ? { uri: gifItem.uri }
+        : gifItem.uri;
+    }
+    const rawUrl = gifItem.imageUrl || gifItem.ImageUrl || gifItem.image;
+    if (typeof rawUrl === 'string' && rawUrl.length > 0) {
+      return {
+        uri: rawUrl.startsWith('http')
+          ? rawUrl
+          : `${CONFIG.image_base_url}${
+              rawUrl.startsWith('/') ? rawUrl.slice(1) : rawUrl
+            }`,
+      };
+    }
+    return null;
+  }, [gifItem]);
 
   const handleHeaderPress = () => {
     navigation.navigate('Categories');
@@ -161,18 +218,28 @@ const HomeCategoriesSection = ({
   return (
     <View style={styles.container}>
       {/* Store Graphic above Explore Deals */}
-      <View style={styles.storeHeaderWrap}>
-        <Image
-          source={images.storeGif || require('@/assets/gif/download (2).gif')}
-          style={styles.storeGifImage}
-          resizeMode="contain"
-        />
-        <ImageBackground
-          source={images.store}
-          style={styles.storeHeaderImage}
-          resizeMode="cover"
-        />
-      </View>
+      {gifSource ? (
+        <View style={styles.storeHeaderWrap}>
+          {onPressBanner && gifItem ? (
+            <AnimatedPressable
+              onPress={() => onPressBanner(gifItem)}
+              activeOpacity={0.92}
+            >
+              <Image
+                source={gifSource}
+                style={styles.storeGifImage}
+                resizeMode="contain"
+              />
+            </AnimatedPressable>
+          ) : (
+            <Image
+              source={gifSource}
+              style={styles.storeGifImage}
+              resizeMode="contain"
+            />
+          )}
+        </View>
+      ) : null}
 
       {/* Header: Explore deals & Tap a category to see its deals */}
       <View style={styles.headerRow}>
@@ -324,7 +391,7 @@ const styles = StyleSheet.create({
     paddingBottom: hp('1.2%'),
   },
   storeHeaderWrap: {
-    paddingHorizontal: wp('4%'),
+    // paddingHorizontal: wp('4%'),
     marginBottom: hp('1.2%'),
     alignItems: 'center',
     width: '100%',

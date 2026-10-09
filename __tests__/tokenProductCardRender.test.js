@@ -73,6 +73,12 @@ jest.mock('react-native-vector-icons/MaterialIcons', () => 'MaterialIcons');
 jest.mock('react-native-vector-icons/Entypo', () => 'Entypo');
 
 describe('TokenProductCard Redesign', () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+  });
+  afterEach(() => {
+    jest.useRealTimers();
+  });
   const sampleProduct = {
     productId: 'prod-101',
     name: 'Lays chile lemon',
@@ -93,8 +99,12 @@ describe('TokenProductCard Redesign', () => {
 
     const root = tree.root;
 
-    // UD Coins text
-    const coinBadge = root.findAll(node => node.props?.children === 'UD Coins');
+    // UD Coins / tokens text
+    const coinBadge = root.findAll(
+      node =>
+        typeof node.props?.children === 'string' &&
+        node.props.children.toLowerCase().includes('token'),
+    );
     expect(coinBadge.length).toBeGreaterThan(0);
 
     // Title
@@ -120,9 +130,7 @@ describe('TokenProductCard Redesign', () => {
     // Add to cart button
     const addButton = root.findByProps({ accessibilityLabel: 'Add Lays chile lemon to cart' });
     expect(addButton).toBeDefined();
-
-    const addText = root.findAll(node => node.props?.children === 'Add to cart');
-    expect(addText.length).toBeGreaterThan(0);
+    expect(addButton.props.accessibilityRole).toBe('button');
   });
 
   it('renders correctly with long titles, decimal prices, and 3-column mode without crashing', () => {

@@ -32,6 +32,7 @@ import { openExternalUrl } from '@/utils/safeUrl';
 import { shuffle } from '@/utils/shuffle';
 import { AppContext } from '@/context/appContext';
 import images from '@/assets/images';
+import CONFIG from '@/globals/config';
 
 import useResolvedAreaId from '@/queries/useResolvedAreaId';
 import useHomepageDataQuery from '@/queries/useHomepageDataQuery';
@@ -46,18 +47,11 @@ import useHomePopup from './hooks/useHomePopup';
 import HomeHeaderGreen, {
   getExpandedHeaderHeight,
 } from './components/modern/HomeHeaderGreen';
-import HeroOffersSection from './components/modern/HeroOffersSection';
-import GenericBannerCarousel, {
-  DEFAULT_DUMMY_BANNERS,
-} from '@/components/GenericBannerCarousel';
 import HomeCategoriesSection from './components/modern/HomeCategoriesSection';
-import OfferSaleSection from './components/modern/OfferSaleSection';
 import ExploreCategoriesGrid from './components/modern/ExploreCategoriesGrid';
+import DealsAndOffersSection from './components/modern/DealsAndOffersSection';
 import HomePromoBanner from './components/modern/HomePromoBanner';
 import FlashDealsSection from './components/modern/FlashDealsSection';
-import DealsAndOffersSection from './components/modern/DealsAndOffersSection';
-import TinderProductSwipe from './components/modern/TinderProductSwipe';
-import DynamicBannersSection from './components/modern/DynamicBannersSection';
 import TopOffersSection from './components/modern/TopOffersSection';
 import RecommendedGridSection from './components/modern/RecommendedGridSection';
 import BuyItAgainModernSection from './components/modern/BuyItAgainModernSection';
@@ -70,6 +64,7 @@ import {
   tabBarVisibility,
   getTabBarClearance,
 } from '@/animations/tabBarVisibility';
+import { ADD_SIZE } from '@/components/TokenProductCard/constants';
 
 const EMPTY_ARRAY = [];
 
@@ -236,6 +231,245 @@ const HomeScreen = () => {
   const bottomBanner = data?.banners?.bottomBanner || EMPTY_ARRAY;
   const topSideBySide = data?.banners?.topSideBySide || EMPTY_ARRAY;
 
+  const targetBannerIds = useMemo(
+    () => [37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48],
+    [],
+  );
+
+  const targetBanners = useMemo(() => {
+    const rawList =
+      data?.homepageData?.data?.banners ||
+      data?.homepageData?.banners ||
+      (Array.isArray(data?.banners) ? data.banners : []) ||
+      EMPTY_ARRAY;
+    const targetSet = new Set(targetBannerIds.map(String));
+    const matched = rawList
+      .filter(b =>
+        targetSet.has(String(b?.bannerId ?? b?.BannerId ?? b?.id ?? '')),
+      )
+      .sort((a, b) => {
+        const aId = Number(a?.bannerId ?? a?.BannerId ?? a?.id ?? 0);
+        const bId = Number(b?.bannerId ?? b?.BannerId ?? b?.id ?? 0);
+        return targetBannerIds.indexOf(aId) - targetBannerIds.indexOf(bId);
+      });
+    console.log('Target Banners (IDs 37-48):', matched);
+    return matched;
+  }, [data, targetBannerIds]);
+
+  const dealsBanners = useMemo(() => {
+    // 1. Placement key: app_home_cardslider_section from transformed banners
+    if (
+      data?.banners?.cardSliderSection &&
+      data.banners.cardSliderSection.length > 0
+    ) {
+      return data.banners.cardSliderSection;
+    }
+
+    // 2. Search raw banners for placementKey === 'app_home_cardslider_section'
+    const rawList =
+      data?.homepageData?.data?.banners ||
+      data?.homepageData?.banners ||
+      (Array.isArray(data?.banners) ? data.banners : []) ||
+      (Array.isArray(data?.banners?.slider) ? data.banners.slider : []) ||
+      EMPTY_ARRAY;
+
+    const matchedCardSlider = rawList.filter(
+      b =>
+        (b?.placementKey || b?.PlacementKey || b?.placement_key) ===
+        'app_home_cardslider_section',
+    );
+    if (matchedCardSlider.length > 0) {
+      return matchedCardSlider;
+    }
+
+    // 3. Fallbacks: targetBanners (IDs 37-48), generic slider, midBanner, topBanners
+    if (targetBanners && targetBanners.length > 0) return targetBanners;
+    if (data?.banners?.slider && data?.banners?.slider.length > 0)
+      return data.banners.slider;
+    if (midBanner && midBanner.length > 0) return midBanner;
+    if (topBanners && topBanners.length > 0) return topBanners;
+    return EMPTY_ARRAY;
+  }, [data, targetBanners, midBanner, topBanners]);
+
+  const footerBanner = useMemo(() => {
+    // 1. Check transformed banners
+    if (data?.banners?.homeFooter) {
+      return data.banners.homeFooter;
+    }
+    if (
+      data?.banners?.homeFooterBanners &&
+      data.banners.homeFooterBanners.length > 0
+    ) {
+      return data.banners.homeFooterBanners[0];
+    }
+
+    // 2. Search raw banners for placementKey === 'app_home_footer'
+    const rawList =
+      data?.homepageData?.data?.banners ||
+      data?.homepageData?.banners ||
+      (Array.isArray(data?.banners) ? data.banners : []) ||
+      (Array.isArray(data?.banners?.slider) ? data.banners.slider : []) ||
+      EMPTY_ARRAY;
+
+    const matchedFooter = rawList.find(
+      b =>
+        (b?.placementKey || b?.PlacementKey || b?.placement_key) ===
+        'app_home_footer',
+    );
+    if (matchedFooter) {
+      const rawImg =
+        matchedFooter.imageUrl || matchedFooter.ImageUrl || matchedFooter.image;
+      return {
+        ...matchedFooter,
+        uri:
+          matchedFooter.uri ||
+          (rawImg
+            ? {
+                uri: rawImg.startsWith('http')
+                  ? rawImg
+                  : `${CONFIG.image_base_url}${rawImg}`,
+              }
+            : undefined),
+      };
+    }
+    return null;
+  }, [data]);
+
+  const categoryGifBanner = useMemo(() => {
+    // 1. Check transformed banners
+    if (data?.banners?.bottomGifSection) {
+      return data.banners.bottomGifSection;
+    }
+    if (
+      data?.banners?.bottomGifSectionBanners &&
+      data.banners.bottomGifSectionBanners.length > 0
+    ) {
+      return data.banners.bottomGifSectionBanners[0];
+    }
+
+    // 2. Search raw banners for placementKey === 'app_home_bottom_gif_section'
+    const rawList =
+      data?.homepageData?.data?.banners ||
+      data?.homepageData?.banners ||
+      (Array.isArray(data?.banners) ? data.banners : []) ||
+      (Array.isArray(data?.banners?.slider) ? data.banners.slider : []) ||
+      EMPTY_ARRAY;
+
+    const matchedGif = rawList.find(b => {
+      const k = b?.placementKey || b?.PlacementKey || b?.placement_key;
+      return k === 'app_home_bottom_gif_section';
+    });
+    if (matchedGif) {
+      const rawImg =
+        matchedGif.imageUrl || matchedGif.ImageUrl || matchedGif.image;
+      return {
+        ...matchedGif,
+        uri:
+          matchedGif.uri ||
+          (rawImg
+            ? {
+                uri: rawImg.startsWith('http')
+                  ? rawImg
+                  : `${CONFIG.image_base_url}${
+                      rawImg.startsWith('/') ? rawImg.slice(1) : rawImg
+                    }`,
+              }
+            : undefined),
+      };
+    }
+    return null;
+  }, [data]);
+
+  const topGifBanner = useMemo(() => {
+    // 1. Check transformed banners
+    if (data?.banners?.topGifSection) {
+      return data.banners.topGifSection;
+    }
+    if (
+      data?.banners?.topGifSectionBanners &&
+      data.banners.topGifSectionBanners.length > 0
+    ) {
+      return data.banners.topGifSectionBanners[0];
+    }
+
+    // 2. Search raw banners for placementKey === 'app_home_top_gif_section'
+    const rawList =
+      data?.homepageData?.data?.banners ||
+      data?.homepageData?.banners ||
+      (Array.isArray(data?.banners) ? data.banners : []) ||
+      (Array.isArray(data?.banners?.slider) ? data.banners.slider : []) ||
+      EMPTY_ARRAY;
+
+    const matchedGif = rawList.find(b => {
+      const k = b?.placementKey || b?.PlacementKey || b?.placement_key;
+      return k === 'app_home_top_gif_section';
+    });
+    if (matchedGif) {
+      const rawImg =
+        matchedGif.imageUrl || matchedGif.ImageUrl || matchedGif.image;
+      return {
+        ...matchedGif,
+        uri:
+          matchedGif.uri ||
+          (rawImg
+            ? {
+                uri: rawImg.startsWith('http')
+                  ? rawImg
+                  : `${CONFIG.image_base_url}${
+                      rawImg.startsWith('/') ? rawImg.slice(1) : rawImg
+                    }`,
+              }
+            : undefined),
+      };
+    }
+    return null;
+  }, [data]);
+
+  const bottomGifBannerSection = useMemo(() => {
+    // 1. Check transformed banners
+    if (data?.banners?.bottomGifBanner) {
+      return data.banners.bottomGifBanner;
+    }
+    if (
+      data?.banners?.bottomGifBanners &&
+      data.banners.bottomGifBanners.length > 0
+    ) {
+      return data.banners.bottomGifBanners[0];
+    }
+
+    // 2. Search raw banners for placementKey === 'app_home_bottom_gif_banner_section'
+    const rawList =
+      data?.homepageData?.data?.banners ||
+      data?.homepageData?.banners ||
+      (Array.isArray(data?.banners) ? data.banners : []) ||
+      (Array.isArray(data?.banners?.slider) ? data.banners.slider : []) ||
+      EMPTY_ARRAY;
+
+    const matchedGif = rawList.find(b => {
+      const k = b?.placementKey || b?.PlacementKey || b?.placement_key;
+      return k === 'app_home_bottom_gif_banner_section';
+    });
+    if (matchedGif) {
+      const rawImg =
+        matchedGif.imageUrl || matchedGif.ImageUrl || matchedGif.image;
+      return {
+        ...matchedGif,
+        uri:
+          matchedGif.uri ||
+          (rawImg
+            ? {
+                uri: rawImg.startsWith('http')
+                  ? rawImg
+                  : `${CONFIG.image_base_url}${
+                      rawImg.startsWith('/') ? rawImg.slice(1) : rawImg
+                    }`,
+              }
+            : undefined),
+      };
+    }
+    return null;
+  }, [data]);
+
   const firstBlockItems = useMemo(
     () =>
       shuffle(
@@ -395,8 +629,6 @@ const HomeScreen = () => {
           />
         ) : (
           <>
-            {/* 1. Generic Swipeable Carousel Banner (Groceries, Cleaning Accessories, Personal Care, Snacks) */}
-
             {/* 3. Categories with Filter Tabs & 4 Quick Cards */}
             {isHomeLoading && categories.length === 0 ? (
               <CategoryGridSkeleton />
@@ -406,33 +638,30 @@ const HomeScreen = () => {
                   categories={categories}
                   navigation={navigation}
                   colorScheme={colorScheme}
+                  banner={topGifBanner}
+                  banners={data?.banners}
+                  onPressBanner={handleBannerPress}
                 />
               )
             )}
-            {/* 3. OFFER SALE Section */}
-            {/* {offerSaleProducts.length > 0 && (
-              <OfferSaleSection
-                items={offerSaleProducts}
-                navigation={navigation}
-              />
-            )} */}
             {/* 4. Explore all items by Category (4x2 Grid) */}
             {categories.length > 0 && (
               <ExploreCategoriesGrid
                 categories={categories}
                 navigation={navigation}
+                banner={categoryGifBanner}
+                bottomGifBanner={bottomGifBannerSection}
+                banners={data?.banners}
+                onBannerPress={handleBannerPress}
               />
             )}
-            {/* 5. Mid Promo Banner 1 (e.g. Moringa) */}
-            {midBanner.length > 0 && (
-              <HomePromoBanner
-                banner={midBanner[0]}
-                onPress={handleBannerPress}
-              />
-            )}
-            <View style={{ marginBottom: hp('3.4%') }} />
-            <DealsAndOffersSection />
-            {/* <TinderProductSwipe /> */}
+
+            {/* 5. Deals & Offers Animated Slider Section */}
+            <DealsAndOffersSection
+              banners={dealsBanners}
+              onPressBanner={handleBannerPress}
+              navigation={navigation}
+            />
 
             {/* 6. ⚡ 50% OFF Flash Deals (2x2 Grid in Peach Container) */}
             {flashDealsProducts.length > 0 && (
@@ -443,25 +672,23 @@ const HomeScreen = () => {
               />
             )}
 
-            <GenericBannerCarousel
-              banners={DEFAULT_DUMMY_BANNERS}
-              onBannerPress={handleBannerPress}
-              navigation={navigation}
-            />
-            {/* 7. Mid Promo Banner 2 (e.g. Himalaya Neem) */}
-            {midBannerBottom.length > 0 ? (
-              <HomePromoBanner
-                banner={midBannerBottom[0]}
-                onPress={handleBannerPress}
-              />
-            ) : (
-              bottomBanner.length > 0 && (
+            <View style={{ marginTop: -40 }}>
+              {/* 7. Mid Promo Banner 2 */}
+              {midBannerBottom.length > 0 ? (
                 <HomePromoBanner
-                  banner={bottomBanner[0]}
+                  banners={midBannerBottom}
                   onPress={handleBannerPress}
                 />
-              )
-            )}
+              ) : (
+                bottomBanner.length > 0 && (
+                  <HomePromoBanner
+                    banners={bottomBanner}
+                    onPress={handleBannerPress}
+                  />
+                )
+              )}
+            </View>
+
             {/* 8. Top Offers For You (3 Discount Tiles) */}
             <TopOffersSection
               categories={categories}
@@ -476,11 +703,6 @@ const HomeScreen = () => {
                 navigation={navigation}
               />
             )}
-
-            <DynamicBannersSection
-              onBannerPress={handleBannerPress}
-              navigation={navigation}
-            />
 
             {/* 10. Buy It Again */}
             {buyAgainProducts.length > 0 && (
@@ -498,6 +720,7 @@ const HomeScreen = () => {
               />
             )}
             {/* 12. Bottom Banner */}
+
             {bottomBanner.length > 1 && (
               <HomePromoBanner
                 banner={bottomBanner[1]}
@@ -506,7 +729,11 @@ const HomeScreen = () => {
             )}
             {/* 13. Empty Cart / Favorite Produce Basket Incentive */}
             {/* <KapraFavoriteFooter /> */}
-            <HomeFooter />
+            <HomeFooter
+              banner={footerBanner}
+              banners={data?.banners}
+              onPress={handleBannerPress}
+            />
           </>
         )}
 
@@ -556,13 +783,6 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingBottom: hp('6%'),
     backgroundColor: '#FFFFFF',
-  },
-  heroCarouselWrap: {
-    marginTop: hp('1.2%'),
-    marginBottom: hp('0.8%'),
-  },
-  heroCarousel: {
-    height: hp('21%'),
   },
   bottomSpacer: {
     height: hp('20%'),

@@ -15,6 +15,11 @@ const SPECIFIC_PLACEMENT_KEYS = [
   'app_home_category_discovery_background_image',
   'app_home_bottom_showcase_banner_image',
   'app_home_bottom_showcase_product_image',
+  'app_home_cardslider_section',
+  'app_home_footer',
+  'app_home_bottom_gif_banner_section',
+  'app_home_bottom_gif_section',
+  'app_home_top_gif_section',
 ];
 
 const placementKeyOf = (banner) => banner.placementKey || banner.PlacementKey;
@@ -130,6 +135,7 @@ export const transformHomepageResponse = (response) => {
       .filter((b) => !SPECIFIC_PLACEMENT_KEYS.includes(placementKeyOf(b)))
       .sort(sortByOrder)
       .map(mapBanner),
+    cardSliderSection: getBannerSet(allBanners, 'app_home_cardslider_section'),
     topBanner: getBannerSet(allBanners, 'app_home_top_banner'),
     midBanner: getBannerSet(allBanners, 'app_home_mid_banner'),
     midBannerBottom: getBannerSet(allBanners, 'app_home_mid_banner_bottom'),
@@ -158,6 +164,26 @@ export const transformHomepageResponse = (response) => {
       return b ? mapBanner(b) : null;
     })(),
     bottomShowcaseProducts: getBannerSet(allBanners, 'app_home_bottom_showcase_product_image'),
+    homeFooter: (() => {
+      const b = findBanner(allBanners, 'app_home_footer');
+      return b ? mapBanner(b) : null;
+    })(),
+    homeFooterBanners: getBannerSet(allBanners, 'app_home_footer'),
+    bottomGifBanner: (() => {
+      const b = findBanner(allBanners, 'app_home_bottom_gif_banner_section');
+      return b ? mapBanner(b) : null;
+    })(),
+    bottomGifBanners: getBannerSet(allBanners, 'app_home_bottom_gif_banner_section'),
+    bottomGifSection: (() => {
+      const b = findBanner(allBanners, 'app_home_bottom_gif_section');
+      return b ? mapBanner(b) : null;
+    })(),
+    bottomGifSectionBanners: getBannerSet(allBanners, 'app_home_bottom_gif_section'),
+    topGifSection: (() => {
+      const b = findBanner(allBanners, 'app_home_top_gif_section');
+      return b ? mapBanner(b) : null;
+    })(),
+    topGifSectionBanners: getBannerSet(allBanners, 'app_home_top_gif_section'),
   };
 
   return {

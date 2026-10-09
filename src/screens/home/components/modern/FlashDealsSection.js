@@ -209,7 +209,7 @@ const styles = StyleSheet.create({
   },
   cardWrapper: {
     width: '31%',
-    marginBottom: hp('5%'),
+    // marginBottom: hp('5%'),
   },
   productTitle: {
     color: '#FFFFFF',

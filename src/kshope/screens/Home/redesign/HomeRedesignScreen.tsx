@@ -71,7 +71,9 @@ const HomeRedesignScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
   const { toggleWishlist, isInWishlist } = useWishlist();
-  const { loading, refreshing, onRefresh, sections } = useHomeData();
+  const { loading, refreshing, onRefresh, sections, targetBanners } = useHomeData();
+
+  console.log('Target Banners (IDs 37-48):', targetBanners);
 
   const [headerTabId, setHeaderTabId] = useState('all');
   const [headerHeight, setHeaderHeight] = useState(0);
@@ -236,6 +238,7 @@ const HomeRedesignScreen: React.FC = () => {
     [openBanner, openProduct, openSearch],
   );
 
+  console.log('sections.banners.top=============>', sections.banners.top);
   const topBanner = sections.banners.top?.[0];
   const topSectionBanner = sections.banners.topSection?.[0];
   const headerBg = bannerColor(topBanner) ?? HEADER_BG;

@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import {
@@ -12,7 +12,15 @@ import images from '@/assets/images';
 import CONFIG from '@/globals/config';
 import getCategoryPlaceholder from '../getCategoryPlaceholder';
 
-const ExploreCategoriesGrid = ({ categories = [], navigation }) => {
+const ExploreCategoriesGrid = ({
+  categories = [],
+  navigation,
+  banner,
+  banners,
+  bottomGifBanner,
+  onBannerPress,
+  onPressBanner,
+}) => {
   const handleViewAll = () => {
     navigation.navigate('Categories');
   };
@@ -30,21 +38,163 @@ const ExploreCategoriesGrid = ({ categories = [], navigation }) => {
   // Take up to 8 categories to make a clean 4x2 grid
   const gridCategories = categories.slice(0, 8);
 
+  const gifItem = useMemo(() => {
+    if (banner && !Array.isArray(banner)) {
+      return banner;
+    }
+    const sourceList = Array.isArray(banner)
+      ? banner
+      : Array.isArray(banners)
+      ? banners
+      : Array.isArray(banners?.bottomGifSectionBanners)
+      ? banners.bottomGifSectionBanners
+      : banners?.bottomGifSection
+      ? [banners.bottomGifSection]
+      : [];
+
+    if (sourceList.length > 0) {
+      const matched = sourceList.find(item => {
+        const key =
+          item?.placementKey || item?.PlacementKey || item?.placement_key;
+        return key === 'app_home_bottom_gif_section';
+      });
+      if (matched) return matched;
+      return sourceList[0];
+    }
+    return null;
+  }, [banner, banners]);
+
+  const gifSource = useMemo(() => {
+    if (!gifItem) return null;
+    if (gifItem.uri) {
+      return typeof gifItem.uri === 'string'
+        ? { uri: gifItem.uri }
+        : gifItem.uri;
+    }
+    const rawUrl = gifItem.imageUrl || gifItem.ImageUrl || gifItem.image;
+    if (typeof rawUrl === 'string' && rawUrl.length > 0) {
+      return {
+        uri: rawUrl.startsWith('http')
+          ? rawUrl
+          : `${CONFIG.image_base_url}${
+              rawUrl.startsWith('/') ? rawUrl.slice(1) : rawUrl
+            }`,
+      };
+    }
+    return null;
+  }, [gifItem]);
+
+  const bottomGifBannerItem = useMemo(() => {
+    if (bottomGifBanner && !Array.isArray(bottomGifBanner)) {
+      return bottomGifBanner;
+    }
+    const sourceList = Array.isArray(bottomGifBanner)
+      ? bottomGifBanner
+      : Array.isArray(banners)
+      ? banners
+      : Array.isArray(banners?.bottomGifBanners)
+      ? banners.bottomGifBanners
+      : banners?.bottomGifBanner
+      ? [banners.bottomGifBanner]
+      : Array.isArray(banner)
+      ? banner
+      : [];
+
+    if (sourceList.length > 0) {
+      const matched = sourceList.find(item => {
+        const key =
+          item?.placementKey || item?.PlacementKey || item?.placement_key;
+        return key === 'app_home_bottom_gif_banner_section';
+      });
+      if (matched) return matched;
+      return sourceList[0];
+    }
+    return null;
+  }, [bottomGifBanner, banner, banners]);
+
+  const bottomGifBannerSource = useMemo(() => {
+    if (!bottomGifBannerItem) return null;
+    if (bottomGifBannerItem.uri) {
+      return typeof bottomGifBannerItem.uri === 'string'
+        ? { uri: bottomGifBannerItem.uri }
+        : bottomGifBannerItem.uri;
+    }
+    const rawUrl =
+      bottomGifBannerItem.imageUrl ||
+      bottomGifBannerItem.ImageUrl ||
+      bottomGifBannerItem.image;
+    if (typeof rawUrl === 'string' && rawUrl.length > 0) {
+      return {
+        uri: rawUrl.startsWith('http')
+          ? rawUrl
+          : `${CONFIG.image_base_url}${
+              rawUrl.startsWith('/') ? rawUrl.slice(1) : rawUrl
+            }`,
+      };
+    }
+    return null;
+  }, [bottomGifBannerItem]);
+
   if (gridCategories.length === 0) return null;
 
   return (
     <View style={styles.container}>
+      {/* Bottom GIF Banner Section */}
+
       {/* Category Banner GIF */}
-      <View style={styles.bannerWrap}>
-        <Image
-          source={
-            images.categoryBannerGif ||
-            require('@/assets/gif/Your paragraph text (3).gif')
-          }
-          style={styles.bannerImage}
-          resizeMode="cover"
-        />
-      </View>
+      {gifSource ? (
+        <View style={styles.bannerWrap}>
+          {onBannerPress || onPressBanner ? (
+            <AnimatedPressable
+              disabled={!gifItem}
+              onPress={() => {
+                if (onBannerPress) onBannerPress(gifItem);
+                else if (onPressBanner) onPressBanner(gifItem);
+              }}
+              activeOpacity={0.92}
+            >
+              <Image
+                source={gifSource}
+                style={styles.bannerImage}
+                resizeMode="cover"
+              />
+            </AnimatedPressable>
+          ) : (
+            <Image
+              source={gifSource}
+              style={styles.bannerImage}
+              resizeMode="cover"
+            />
+          )}
+        </View>
+      ) : null}
+
+      {bottomGifBannerSource ? (
+        <View style={styles.bannerWrap}>
+          {onBannerPress || onPressBanner ? (
+            <AnimatedPressable
+              disabled={!bottomGifBannerItem}
+              onPress={() => {
+                if (onBannerPress) onBannerPress(bottomGifBannerItem);
+                else if (onPressBanner) onPressBanner(bottomGifBannerItem);
+              }}
+              activeOpacity={0.92}
+            >
+              <Image
+                source={bottomGifBannerSource}
+                style={styles.bannerImage}
+                resizeMode="cover"
+              />
+            </AnimatedPressable>
+          ) : (
+            <Image
+              source={bottomGifBannerSource}
+              style={styles.bannerImage}
+              resizeMode="cover"
+            />
+          )}
+        </View>
+      ) : null}
 
       <View style={styles.contentWrap}>
         {/* Header */}
@@ -63,7 +213,10 @@ const ExploreCategoriesGrid = ({ categories = [], navigation }) => {
               Shop by category
             </Text>
           </View>
-          <AnimatedPressable onPress={handleViewAll} style={styles.viewAllButton}>
+          <AnimatedPressable
+            onPress={handleViewAll}
+            style={styles.viewAllButton}
+          >
             <Text style={[styles.viewAllText, { color: '#F25000' }]}>
               View all hubs
             </Text>
@@ -111,10 +264,11 @@ const ExploreCategoriesGrid = ({ categories = [], navigation }) => {
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: hp('1.8%'),
+    marginVertical: hp('4.8%'),
   },
   bannerWrap: {
     width: '100%',
+    marginTop: -hp('3%'),
     marginBottom: hp('1.4%'),
     alignItems: 'center',
     overflow: 'hidden',
