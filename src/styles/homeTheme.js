@@ -161,18 +161,18 @@ export const HERO_LIFT = {
 // -------------------------------------------------------------
 
 export const DEFAULT_HOME_COLOR_SCHEME = {
-  primary: '#FF5500',
-  secondary: '#FF6200',
-  gradient: ['#FF5F00', '#FF5500', '#FF4E00'],
-  accent: '#FF5500',
+  primary: '#FF7300',
+  secondary: '#FF7300',
+  gradient: ['#FF7300', '#FF7300', '#FF7300'],
+  accent: '#FF7300',
   accentSoft: '#FFF0EB',
   background: '#FFFFFF',
-  containerBackground: '#FF5500',
+  containerBackground: '#FF7300',
   tabActive: '#000000',
   tabStroke: '#000000',
   tabBackground: ['#E1E8CD', '#EFF4E3', '#FFFFFF'],
   cartBackground: '#1E3A2F',
-  searchIcon: '#FF5500',
+  searchIcon: '#FF7300',
 };
 
 export const normalizeHex = (hex, fallback = '#889C54') => {

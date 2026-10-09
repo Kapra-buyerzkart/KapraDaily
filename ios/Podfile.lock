@@ -94,6 +94,35 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
+  - NitroModules (0.36.5):
+    - boost
+    - DoubleConversion
+    - fast_float
+    - fmt
+    - glog
+    - hermes-engine
+    - RCT-Folly
+    - RCT-Folly/Fabric
+    - RCTRequired
+    - RCTTypeSafety
+    - React-callinvoker
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - SocketRocket
+    - Yoga
   - OneSignalXCFramework (5.5.0):
     - OneSignalXCFramework/OneSignalComplete (= 5.5.0)
   - OneSignalXCFramework/OneSignal (5.5.0):
@@ -2951,6 +2980,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
+  - RiveRuntime (6.28.0)
   - RNCAsyncStorage (2.2.0):
     - boost
     - DoubleConversion
@@ -3244,6 +3274,36 @@ PODS:
     - RNWorklets
     - SocketRocket
     - Yoga
+  - RNRive (0.5.4):
+    - boost
+    - DoubleConversion
+    - fast_float
+    - fmt
+    - glog
+    - hermes-engine
+    - NitroModules
+    - RCT-Folly
+    - RCT-Folly/Fabric
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - RiveRuntime (= 6.28.0)
+    - SocketRocket
+    - Yoga
   - RNScreens (4.20.0):
     - boost
     - DoubleConversion
@@ -3499,6 +3559,7 @@ DEPENDENCIES:
   - hermes-engine (from `../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec`)
   - LoaderKit (from `../node_modules/react-native-loader-kit`)
   - lottie-react-native (from `../node_modules/lottie-react-native`)
+  - NitroModules (from `../node_modules/react-native-nitro-modules`)
   - RCT-Folly (from `../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec`)
   - RCTDeprecation (from `../node_modules/react-native/ReactApple/Libraries/RCTFoundation/RCTDeprecation`)
   - RCTRequired (from `../node_modules/react-native/Libraries/Required`)
@@ -3589,6 +3650,7 @@ DEPENDENCIES:
   - RNLocalize (from `../node_modules/react-native-localize`)
   - RNPermissions (from `../node_modules/react-native-permissions`)
   - RNReanimated (from `../node_modules/react-native-reanimated`)
+  - "RNRive (from `../node_modules/@rive-app/react-native`)"
   - RNScreens (from `../node_modules/react-native-screens`)
   - RNSVG (from `../node_modules/react-native-svg`)
   - RNVectorIcons (from `../node_modules/react-native-vector-icons`)
@@ -3604,6 +3666,7 @@ SPEC REPOS:
     - razorpay-core-pod
     - razorpay-pod
     - React-Codegen
+    - RiveRuntime
     - SocketRocket
     - Toast
 
@@ -3631,6 +3694,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-loader-kit"
   lottie-react-native:
     :path: "../node_modules/lottie-react-native"
+  NitroModules:
+    :path: "../node_modules/react-native-nitro-modules"
   RCT-Folly:
     :podspec: "../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec"
   RCTDeprecation:
@@ -3809,6 +3874,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-permissions"
   RNReanimated:
     :path: "../node_modules/react-native-reanimated"
+  RNRive:
+    :path: "../node_modules/@rive-app/react-native"
   RNScreens:
     :path: "../node_modules/react-native-screens"
   RNSVG:
@@ -3835,6 +3902,7 @@ SPEC CHECKSUMS:
   LoaderKit: 6da20065d82e0f2672bcf09609d1c78bd8c785d9
   lottie-ios: a881093fab623c467d3bce374367755c272bdd59
   lottie-react-native: b01c4b468aed88931afefbde03d790fc4f8b010a
+  NitroModules: d52aaa5db99af2be4c2b171460e3a7541d78fe4d
   OneSignalXCFramework: 943852e7d70d719f73e9669d48620aeec1b93022
   razorpay-core-pod: 6da5fb4ed280279d665507fdb50e213d793a5fe2
   razorpay-pod: f634f1b8397eb54d547f25d35291f679545ddf17
@@ -3918,6 +3986,7 @@ SPEC CHECKSUMS:
   ReactCodegen: 9854adc9dcbf46a17b86a3c48830b9738ae99e55
   ReactCommon: 801eff8cb9c940c04d3a89ce399c343ee3eff654
   ReactNativeBlur: 51a857a3eb484a716d78101a8a14407547217037
+  RiveRuntime: 05dc1f52be8e71528c429761a9b5a81197ea2049
   RNCAsyncStorage: fd44f4b03e007e642e98df6726737bc66e9ba609
   RNCClipboard: e560338bf6cc4656a09ff90610b62ddc0dbdad65
   RNDateTimePicker: ea25d20659754bfe1014e0d5905d21dbc18ff705
@@ -3928,6 +3997,7 @@ SPEC CHECKSUMS:
   RNLocalize: c46dd4008dc8990a098fcafd6ee051122a1ccfda
   RNPermissions: e0edbd6dce262d48b1b972c0cb9579f6db4a531e
   RNReanimated: ecf18b922b76ec41a859143671a7841f68f899fd
+  RNRive: d001bc9658963655b1d7f24e9dbae4eebb99e6bc
   RNScreens: 0811c38c9b11745e0bdb52157421c87a79e3d8b1
   RNSVG: 122ad5db3ef9be375bbf7f371e37306eeed7e4fa
   RNVectorIcons: 9338828aeddeb77277754730ec6b95f1cad6753a
@@ -3939,4 +4009,4 @@ SPEC CHECKSUMS:
 
 PODFILE CHECKSUM: b85a4cd38c8e6a77181f874f3c3b6b2545bb74d3
 
-COCOAPODS: 1.16.2
+COCOAPODS: 1.15.2

@@ -47,6 +47,9 @@ import HomeHeaderGreen, {
   getExpandedHeaderHeight,
 } from './components/modern/HomeHeaderGreen';
 import HeroOffersSection from './components/modern/HeroOffersSection';
+import GenericBannerCarousel, {
+  DEFAULT_DUMMY_BANNERS,
+} from '@/components/GenericBannerCarousel';
 import HomeCategoriesSection from './components/modern/HomeCategoriesSection';
 import OfferSaleSection from './components/modern/OfferSaleSection';
 import ExploreCategoriesGrid from './components/modern/ExploreCategoriesGrid';
@@ -392,9 +395,9 @@ const HomeScreen = () => {
           />
         ) : (
           <>
-            {/* 1. Hero Offers Section with Orange Gradient Theme & Wire Carts */}
-            <HeroOffersSection navigation={navigation} />
-            {/* 2. Categories with Filter Tabs & 4 Quick Cards */}
+            {/* 1. Generic Swipeable Carousel Banner (Groceries, Cleaning Accessories, Personal Care, Snacks) */}
+
+            {/* 3. Categories with Filter Tabs & 4 Quick Cards */}
             {isHomeLoading && categories.length === 0 ? (
               <CategoryGridSkeleton />
             ) : (
@@ -439,6 +442,12 @@ const HomeScreen = () => {
                 navigation={navigation}
               />
             )}
+
+            <GenericBannerCarousel
+              banners={DEFAULT_DUMMY_BANNERS}
+              onBannerPress={handleBannerPress}
+              navigation={navigation}
+            />
             {/* 7. Mid Promo Banner 2 (e.g. Himalaya Neem) */}
             {midBannerBottom.length > 0 ? (
               <HomePromoBanner
@@ -468,7 +477,10 @@ const HomeScreen = () => {
               />
             )}
 
-            <DynamicBannersSection />
+            <DynamicBannersSection
+              onBannerPress={handleBannerPress}
+              navigation={navigation}
+            />
 
             {/* 10. Buy It Again */}
             {buyAgainProducts.length > 0 && (
@@ -538,7 +550,7 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FF5500',
+    backgroundColor: '#FF7300',
   },
   scrollContent: {
     flexGrow: 1,

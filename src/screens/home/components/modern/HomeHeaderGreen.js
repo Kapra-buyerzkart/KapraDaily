@@ -21,7 +21,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import { FONTS } from '@/styles/typography';
 import RotatingPlaceholder from '@/components/RotatingPlaceholder';
 
-const HEADER_GRADIENT = ['#FF5F00', '#FF5500', '#FF4E00'];
+const HEADER_GRADIENT = ['#FF7300', '#FF7300', '#FF7300'];
 
 const SEARCH_EXAMPLES = [
   "'Coconut oil, Apple, Milma...'",
@@ -65,9 +65,9 @@ const HomeHeaderGreen = ({
   colorScheme,
 }) => {
   const headerGradient = colorScheme?.gradient || HEADER_GRADIENT;
-  const accentColor = colorScheme?.accent || '#FF5722';
+  const accentColor = colorScheme?.accent || '#FF7300';
   const searchIconColor =
-    colorScheme?.searchIcon || colorScheme?.primary || '#889C54';
+    colorScheme?.searchIcon || colorScheme?.primary || '#FF7300';
 
   // Parse area name (before first comma) and secondary location details (city/pincode)
   const pinAddress =
@@ -407,7 +407,7 @@ const styles = StyleSheet.create({
   expressText: {
     fontSize: wp('2.8%'),
     fontFamily: FONTS.gilroy.semiBold,
-    color: '#FF5722',
+    color: '#FF7300',
   },
   locationSubtitle: {
     fontSize: wp('3.3%'),
@@ -440,7 +440,7 @@ const styles = StyleSheet.create({
   coinsText: {
     fontSize: wp('3.2%'),
     fontFamily: FONTS.gilroy.bold,
-    color: '#E65100',
+    color: '#FF7300',
   },
   profileCircle: {
     width: wp('9.6%'),

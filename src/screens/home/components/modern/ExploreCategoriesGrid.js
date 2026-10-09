@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, Image, StyleSheet } from 'react-native';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import {
   widthPercentageToDP as wp,
@@ -8,6 +8,7 @@ import {
 import Feather from 'react-native-vector-icons/Feather';
 import { FONTS } from '@/styles/typography';
 import CachedImage from '@/components/CachedImage';
+import images from '@/assets/images';
 import CONFIG from '@/globals/config';
 import getCategoryPlaceholder from '../getCategoryPlaceholder';
 
@@ -33,63 +34,76 @@ const ExploreCategoriesGrid = ({ categories = [], navigation }) => {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.headerRow}>
-        <View
-          style={{
-            width: 8,
-            height: 24,
-            backgroundColor: '#F25000',
-            borderRadius: 8,
-            marginRight: 8,
-          }}
+      {/* Category Banner GIF */}
+      <View style={styles.bannerWrap}>
+        <Image
+          source={
+            images.categoryBannerGif ||
+            require('@/assets/gif/Your paragraph text (3).gif')
+          }
+          style={styles.bannerImage}
+          resizeMode="cover"
         />
-        <View style={{ flex: 1 }}>
-          <Text style={[styles.title, { color: '#F25000' }]}>Shop by category</Text>
-        </View>
-        <AnimatedPressable
-          onPress={handleViewAll}
-          style={styles.viewAllButton}
-        >
-          <Text style={[styles.viewAllText, { color: '#F25000' }]}>
-            View all hubs
-          </Text>
-          <Feather name="chevron-right" size={15} color="#F25000" />
-        </AnimatedPressable>
       </View>
 
-      {/* 4x2 Grid */}
-      <View style={styles.grid}>
-        {gridCategories.map((item, index) => {
-          const label = item.catName || item.name || '';
-          let imageSource;
-          if (item.image) {
-            imageSource = item.image;
-          } else if (item.imageUrl) {
-            imageSource = { uri: `${CONFIG.image_base_url}${item.imageUrl}` };
-          } else {
-            imageSource = getCategoryPlaceholder(label);
-          }
+      <View style={styles.contentWrap}>
+        {/* Header */}
+        <View style={styles.headerRow}>
+          <View
+            style={{
+              width: 8,
+              height: 24,
+              backgroundColor: '#F25000',
+              borderRadius: 8,
+              marginRight: 8,
+            }}
+          />
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.title, { color: '#F25000' }]}>
+              Shop by category
+            </Text>
+          </View>
+          <AnimatedPressable onPress={handleViewAll} style={styles.viewAllButton}>
+            <Text style={[styles.viewAllText, { color: '#F25000' }]}>
+              View all hubs
+            </Text>
+            <Feather name="chevron-right" size={15} color="#F25000" />
+          </AnimatedPressable>
+        </View>
 
-          return (
-            <AnimatedPressable
-              key={item.catId || index}
-              onPress={() => handleCategoryPress(item)}
-              style={styles.cardItem}
-            >
-              <View style={styles.cardImageContainer}>
-                <CachedImage
-                  source={imageSource}
-                  style={styles.image}
-                  resizeMode="contain"
-                />
-              </View>
-              <Text style={styles.label} numberOfLines={2}>
-                {label}
-              </Text>
-            </AnimatedPressable>
-          );
-        })}
+        {/* 4x2 Grid */}
+        <View style={styles.grid}>
+          {gridCategories.map((item, index) => {
+            const label = item.catName || item.name || '';
+            let imageSource;
+            if (item.image) {
+              imageSource = item.image;
+            } else if (item.imageUrl) {
+              imageSource = { uri: `${CONFIG.image_base_url}${item.imageUrl}` };
+            } else {
+              imageSource = getCategoryPlaceholder(label);
+            }
+
+            return (
+              <AnimatedPressable
+                key={item.catId || index}
+                onPress={() => handleCategoryPress(item)}
+                style={styles.cardItem}
+              >
+                <View style={styles.cardImageContainer}>
+                  <CachedImage
+                    source={imageSource}
+                    style={styles.image}
+                    resizeMode="contain"
+                  />
+                </View>
+                <Text style={styles.label} numberOfLines={2}>
+                  {label}
+                </Text>
+              </AnimatedPressable>
+            );
+          })}
+        </View>
       </View>
     </View>
   );
@@ -98,6 +112,18 @@ const ExploreCategoriesGrid = ({ categories = [], navigation }) => {
 const styles = StyleSheet.create({
   container: {
     marginVertical: hp('1.8%'),
+  },
+  bannerWrap: {
+    width: '100%',
+    marginBottom: hp('1.4%'),
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  bannerImage: {
+    width: '100%',
+    aspectRatio: 440 / 100,
+  },
+  contentWrap: {
     paddingHorizontal: wp('4%'),
   },
   headerRow: {

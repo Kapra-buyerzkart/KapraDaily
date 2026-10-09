@@ -93,6 +93,14 @@ const images = {
   offerSaleHeader: require('./offerSale.png'),
   gardenProduceTrim: require('./garden_produce_trim.jpg'),
   bottomtag: require('./bottomtag.png'),
+  dealsGroceries: require('./deals_groceries.png'),
+  dealsEssentials: require('./deals_essentials.png'),
+  dealsFruitsVeg: require('./deals_fruits_veg.png'),
+  store: require('./store.png'),
+  storeGif: require('../gif/download (2).gif'),
+  categoryBannerGif: require('../gif/Your paragraph text (3).gif'),
+  oreoBiscuit: require('./oreo_biscuit.png'),
+  goodDayBiscuits: require('./good_day_biscuits.png'),
 };
 
 export default images;

@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
+  ImageBackground,
 } from 'react-native';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import LinearGradient from 'react-native-linear-gradient';
@@ -17,6 +18,7 @@ import {
 import Feather from 'react-native-vector-icons/Feather';
 import { FONTS } from '@/styles/typography';
 import CachedImage from '@/components/CachedImage';
+import images from '@/assets/images';
 import CONFIG from '@/globals/config';
 import { getCategoriesApi } from '@/api/categoryService';
 import getCategoryPlaceholder from '../getCategoryPlaceholder';
@@ -158,6 +160,20 @@ const HomeCategoriesSection = ({
 
   return (
     <View style={styles.container}>
+      {/* Store Graphic above Explore Deals */}
+      <View style={styles.storeHeaderWrap}>
+        <Image
+          source={images.storeGif || require('@/assets/gif/download (2).gif')}
+          style={styles.storeGifImage}
+          resizeMode="contain"
+        />
+        <ImageBackground
+          source={images.store}
+          style={styles.storeHeaderImage}
+          resizeMode="cover"
+        />
+      </View>
+
       {/* Header: Explore deals & Tap a category to see its deals */}
       <View style={styles.headerRow}>
         <Text style={styles.headerTitle}>Explore deals</Text>
@@ -307,9 +323,28 @@ const styles = StyleSheet.create({
     paddingTop: hp('1.8%'),
     paddingBottom: hp('1.2%'),
   },
+  storeHeaderWrap: {
+    paddingHorizontal: wp('4%'),
+    marginBottom: hp('1.2%'),
+    alignItems: 'center',
+    width: '100%',
+  },
+  storeGifImage: {
+    width: '100%',
+    aspectRatio: 440 / 200,
+    marginTop: -20,
+    zIndex: 9999,
+  },
+  storeHeaderImage: {
+    width: '100%',
+    aspectRatio: 440 / 179,
+    marginTop: 10,
+    resizeMode: 'contain',
+  },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    paddingTop: '4.5%',
     justifyContent: 'space-between',
     paddingHorizontal: wp('4%'),
     marginBottom: hp('1%'),

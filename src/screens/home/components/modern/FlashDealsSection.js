@@ -1,11 +1,5 @@
 import React, { useCallback, useState, useEffect, useMemo } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Image,
-  ImageBackground,
-} from 'react-native';
+import { View, Text, StyleSheet, Image, ImageBackground } from 'react-native';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import {
   widthPercentageToDP as wp,
@@ -167,10 +161,6 @@ const FlashDealsSection = ({ items = [], title = '50% OFF', navigation }) => {
       </View>
 
       {/* Footer Timer */}
-      <View style={styles.timerPill}>
-        <Feather name="clock" size={wp('4%')} color="#0050CD" />
-        <Text style={styles.timerText}>{timeLeft}</Text>
-      </View>
     </View>
   );
 };
