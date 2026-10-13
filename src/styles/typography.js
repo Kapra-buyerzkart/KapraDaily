@@ -18,6 +18,11 @@ export const FONTS = {
   lexend: {
     medium: 'Lexend-Medium',
     semiBold: 'Lexend-SemiBold',
+    bold: Platform.select({
+      ios: 'Lexend-SemiBold',
+      android: 'Lexend-Bold',
+      default: 'Lexend-Bold',
+    }),
   },
 
   roboto: {

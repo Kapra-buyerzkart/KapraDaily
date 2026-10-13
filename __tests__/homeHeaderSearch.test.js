@@ -155,4 +155,47 @@ describe('HomeHeaderGreen Search Side Redesign', () => {
     });
     expect(mockOnCartPress).toHaveBeenCalledTimes(1);
   });
+
+  it('shows change location toast and prevents navigation when isSearchDisabled is true', () => {
+    let tree;
+    act(() => {
+      tree = renderer.create(
+        <HomeHeaderGreen
+          navigation={mockNavigation}
+          onSearchPress={mockOnSearchPress}
+          onMicPress={mockOnMicPress}
+          isSearchDisabled={true}
+        />
+      );
+    });
+
+    const searchButton = tree.root.findByProps({ accessibilityRole: 'search' });
+    act(() => {
+      searchButton.props.onPress();
+    });
+    expect(mockOnSearchPress).not.toHaveBeenCalled();
+    expect(mockNavigation.navigate).not.toHaveBeenCalled();
+
+    const micButton = tree.root.findByProps({ accessibilityLabel: 'Voice search' });
+    act(() => {
+      micButton.props.onPress();
+    });
+    expect(mockOnMicPress).not.toHaveBeenCalled();
+    expect(mockNavigation.navigate).not.toHaveBeenCalled();
+  });
+
+  it('applies custom backgroundColor dynamically to the header gradient', () => {
+    let tree;
+    act(() => {
+      tree = renderer.create(
+        <HomeHeaderGreen
+          navigation={mockNavigation}
+          backgroundColor="#0A803D"
+        />
+      );
+    });
+
+    const linearGradient = tree.root.findByType('LinearGradient');
+    expect(linearGradient.props.colors).toEqual(['#0A803D', '#0A803D', '#0A803D']);
+  });
 });

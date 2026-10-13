@@ -1,12 +1,11 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import Surface from './atoms/Surface';
-import Divider from './atoms/Divider';
-import CartText from './atoms/CartText';
+import { View, Text, StyleSheet } from 'react-native';
 import CouponCard from './CouponCard';
 import RewardsCard from './RewardsCard';
 import CoinCard from './CoinCard';
-import { CART_SPACING, hp } from '../../../styles/cartTheme';
+import DottedDivider from './atoms/DottedDivider';
+import { FONTS } from '@/styles/typography';
+import { wp, hp } from '../../../styles/cartTheme';
 
 const SavingsSection = ({
   appliedCouponCode,
@@ -21,36 +20,33 @@ const SavingsSection = ({
   return (
     <View style={styles.container}>
       <View style={styles.headingRow}>
-        <CartText variant="heading">Save money</CartText>
-        <CartText variant="micro" tone="muted">
-          Coupons, points & coins
-        </CartText>
+        <Text style={styles.title}>Save money</Text>
+        <Text style={styles.subtitle}>Coupons, points & coins</Text>
       </View>
 
-      <Surface>
-        <View style={styles.body}>
-          <CouponCard
-            appliedCouponCode={appliedCouponCode}
-            isApplied={isCouponApplied}
-            onApply={() => onApplyOffer('2')}
-            onRemove={() => onRejectOffer('2')}
-          />
-          <Divider inset={CART_SPACING.lg} />
-          <RewardsCard
-            appliedGiftCardCode={appliedGiftCardCode}
-            isApplied={isGiftCardApplied}
-            onApply={() => onApplyOffer('4')}
-            onRemove={() => onRejectOffer('4')}
-          />
-          <Divider inset={CART_SPACING.lg} />
-          <CoinCard
-            bcoinsApplied={bcoinsAppliedValue}
-            availableBCoins={availableBCoins}
-            onApply={() => onApplyOffer('3')}
-            onRemove={() => onRejectOffer('3')}
-          />
-        </View>
-      </Surface>
+      <View style={styles.body}>
+        <CouponCard
+          appliedCouponCode={appliedCouponCode}
+          isApplied={isCouponApplied}
+          onApply={() => onApplyOffer('2')}
+          onRemove={() => onRejectOffer('2')}
+        />
+        <RewardsCard
+          appliedGiftCardCode={appliedGiftCardCode}
+          isApplied={isGiftCardApplied}
+          onApply={() => onApplyOffer('4')}
+          onRemove={() => onRejectOffer('4')}
+        />
+        <CoinCard
+          bcoinsApplied={bcoinsAppliedValue}
+          availableBCoins={availableBCoins}
+          onApply={() => onApplyOffer('3')}
+          onRemove={() => onRejectOffer('3')}
+        />
+      </View>
+
+      {/* Dotted border separator */}
+      <DottedDivider style={styles.dottedDivider} />
     </View>
   );
 };
@@ -59,14 +55,30 @@ export default React.memo(SavingsSection);
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: hp('2.2%'),
+    backgroundColor: '#FFFFFF',
+    marginTop: hp('1.8%'),
+    width: '100%',
   },
   headingRow: {
-    paddingHorizontal: CART_SPACING.lg,
-    marginBottom: CART_SPACING.sm,
-    gap: 1,
+    paddingHorizontal: wp('4%'),
+    marginBottom: hp('0.6%'),
+    gap: 2,
+  },
+  title: {
+    fontFamily: FONTS.gilroy.bold,
+    fontSize: wp('4.4%'),
+    color: '#000000',
+  },
+  subtitle: {
+    fontFamily: FONTS.gilroy.regular,
+    fontSize: wp('3.1%'),
+    color: '#71717A',
   },
   body: {
-    paddingVertical: CART_SPACING.xs,
+    backgroundColor: '#FFFFFF',
+  },
+  dottedDivider: {
+    marginTop: hp('1.5%'),
+    marginBottom: hp('1%'),
   },
 });

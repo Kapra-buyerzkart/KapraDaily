@@ -28,6 +28,7 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import LocationModal from '@/components/LocationModal';
 import StoreUnavailable from '@/components/StoreUnavailable';
 import HomePopupModal from '@/components/HomePopupModal';
+import Toast from 'react-native-simple-toast';
 import { openExternalUrl } from '@/utils/safeUrl';
 import { shuffle } from '@/utils/shuffle';
 import { AppContext } from '@/context/appContext';
@@ -41,7 +42,7 @@ import useDashboardQuery from '@/queries/useDashboardQuery';
 import useBuyAgainQuery from '@/queries/useBuyAgainQuery';
 import useCategoryDiscoveryProductsQuery from '@/queries/useCategoryDiscoveryProductsQuery';
 import { deriveStoreUnavailableState } from '@/queries/transformHomepageResponse';
-import { resolveHomeColorScheme } from '@/styles/homeTheme';
+import { resolveHomeColorScheme, normalizeHex } from '@/styles/homeTheme';
 
 import useHomePopup from './hooks/useHomePopup';
 import HomeHeaderGreen, {
@@ -67,6 +68,49 @@ import {
 import { ADD_SIZE } from '@/components/TokenProductCard/constants';
 
 const EMPTY_ARRAY = [];
+
+export const getTopGifBanner = data => {
+  if (data?.banners?.topGifSection) {
+    return data.banners.topGifSection;
+  }
+  if (
+    data?.banners?.topGifSectionBanners &&
+    data.banners.topGifSectionBanners.length > 0
+  ) {
+    return data.banners.topGifSectionBanners[0];
+  }
+
+  const rawList =
+    data?.homepageData?.data?.banners ||
+    data?.homepageData?.banners ||
+    (Array.isArray(data?.banners) ? data.banners : []) ||
+    (Array.isArray(data?.banners?.slider) ? data.banners.slider : []) ||
+    EMPTY_ARRAY;
+
+  const matchedGif = rawList.find(b => {
+    const k = b?.placementKey || b?.PlacementKey || b?.placement_key;
+    return k === 'app_home_top_gif_section';
+  });
+  if (matchedGif) {
+    const rawImg =
+      matchedGif.imageUrl || matchedGif.ImageUrl || matchedGif.image;
+    return {
+      ...matchedGif,
+      uri:
+        matchedGif.uri ||
+        (rawImg
+          ? {
+              uri: rawImg.startsWith('http')
+                ? rawImg
+                : `${CONFIG.image_base_url}${
+                    rawImg.startsWith('/') ? rawImg.slice(1) : rawImg
+                  }`,
+            }
+          : undefined),
+    };
+  }
+  return null;
+};
 
 const HomeScreen = () => {
   const { top, bottom } = useSafeAreaInsets();
@@ -161,10 +205,37 @@ const HomeScreen = () => {
   );
 
   const data = homepageQuery.data;
-  const colorScheme = useMemo(
-    () => data?.colorScheme || resolveHomeColorScheme(null),
-    [data?.colorScheme],
-  );
+  const topGifBanner = useMemo(() => getTopGifBanner(data), [data]);
+
+  const topGifHeaderColor = useMemo(() => {
+    const rawVal =
+      topGifBanner?.linkValue ||
+      topGifBanner?.LinkValue ||
+      topGifBanner?.link_value;
+    if (
+      typeof rawVal === 'string' &&
+      /^#?(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(
+        rawVal.trim(),
+      )
+    ) {
+      return normalizeHex(rawVal.trim());
+    }
+    return null;
+  }, [topGifBanner]);
+
+  const colorScheme = useMemo(() => {
+    if (topGifHeaderColor) {
+      return resolveHomeColorScheme({
+        ...(data?.colorScheme || {}),
+        primary: topGifHeaderColor,
+        gradient: [topGifHeaderColor, topGifHeaderColor, topGifHeaderColor],
+        accent: topGifHeaderColor,
+        searchIcon: topGifHeaderColor,
+        containerBackground: topGifHeaderColor,
+      });
+    }
+    return data?.colorScheme || resolveHomeColorScheme(null);
+  }, [data?.colorScheme, topGifHeaderColor]);
   const { isStoreUnavailable, storeUnavailableData } = useMemo(
     () =>
       deriveStoreUnavailableState({
@@ -380,51 +451,6 @@ const HomeScreen = () => {
     return null;
   }, [data]);
 
-  const topGifBanner = useMemo(() => {
-    // 1. Check transformed banners
-    if (data?.banners?.topGifSection) {
-      return data.banners.topGifSection;
-    }
-    if (
-      data?.banners?.topGifSectionBanners &&
-      data.banners.topGifSectionBanners.length > 0
-    ) {
-      return data.banners.topGifSectionBanners[0];
-    }
-
-    // 2. Search raw banners for placementKey === 'app_home_top_gif_section'
-    const rawList =
-      data?.homepageData?.data?.banners ||
-      data?.homepageData?.banners ||
-      (Array.isArray(data?.banners) ? data.banners : []) ||
-      (Array.isArray(data?.banners?.slider) ? data.banners.slider : []) ||
-      EMPTY_ARRAY;
-
-    const matchedGif = rawList.find(b => {
-      const k = b?.placementKey || b?.PlacementKey || b?.placement_key;
-      return k === 'app_home_top_gif_section';
-    });
-    if (matchedGif) {
-      const rawImg =
-        matchedGif.imageUrl || matchedGif.ImageUrl || matchedGif.image;
-      return {
-        ...matchedGif,
-        uri:
-          matchedGif.uri ||
-          (rawImg
-            ? {
-                uri: rawImg.startsWith('http')
-                  ? rawImg
-                  : `${CONFIG.image_base_url}${
-                      rawImg.startsWith('/') ? rawImg.slice(1) : rawImg
-                    }`,
-              }
-            : undefined),
-      };
-    }
-    return null;
-  }, [data]);
-
   const bottomGifBannerSection = useMemo(() => {
     // 1. Check transformed banners
     if (data?.banners?.bottomGifBanner) {
@@ -549,6 +575,19 @@ const HomeScreen = () => {
       if (linkType === 'product') {
         navigation.navigate('ProductDetailsScreen', { productId: linkValue });
       } else if (linkType === 'category') {
+        if (noLocationSelected || isStoreUnavailable) {
+          Toast.show('Please change location to search products', Toast.SHORT);
+          return;
+        }
+        if (
+          typeof linkValue === 'string' &&
+          /^#?(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(
+            linkValue.trim(),
+          )
+        ) {
+          // Hex color configured on banner (e.g. for header background styling), do not navigate
+          return;
+        }
         let actualCatName = '';
         if (categories.length > 0) {
           const foundCat = categories.find(
@@ -565,8 +604,26 @@ const HomeScreen = () => {
         openExternalUrl(linkValue);
       }
     },
-    [navigation, categories],
+    [navigation, categories, noLocationSelected, isStoreUnavailable],
   );
+
+  const isSearchDisabled = noLocationSelected || isStoreUnavailable;
+
+  const handleSearchPress = useCallback(() => {
+    if (isSearchDisabled) {
+      Toast.show('Please change location to search products', Toast.SHORT);
+      return;
+    }
+    navigation.navigate('SearchScreen');
+  }, [isSearchDisabled, navigation]);
+
+  const handleMicPress = useCallback(() => {
+    if (isSearchDisabled) {
+      Toast.show('Please change location to search products', Toast.SHORT);
+      return;
+    }
+    navigation.navigate('SearchScreen', { openVoice: true });
+  }, [isSearchDisabled, navigation]);
 
   const handleOpenLocationModal = useCallback(() => {
     locationModalRef.current?.open();
@@ -672,22 +729,34 @@ const HomeScreen = () => {
               />
             )}
 
-            <View style={{ marginTop: -40 }}>
+            <View
+              style={flashDealsProducts.length > 0 ? { marginTop: -24 } : null}
+            >
               {/* 7. Mid Promo Banner 2 */}
               {midBannerBottom.length > 0 ? (
                 <HomePromoBanner
                   banners={midBannerBottom}
                   onPress={handleBannerPress}
+                  autoPlay={false}
                 />
               ) : (
                 bottomBanner.length > 0 && (
                   <HomePromoBanner
                     banners={bottomBanner}
                     onPress={handleBannerPress}
+                    autoPlay={false}
                   />
                 )
               )}
             </View>
+
+            {/* 10. Buy It Again */}
+            {buyAgainProducts.length > 0 && (
+              <BuyItAgainModernSection
+                products={buyAgainProducts}
+                navigation={navigation}
+              />
+            )}
 
             {/* 8. Top Offers For You (3 Discount Tiles) */}
             <TopOffersSection
@@ -695,6 +764,15 @@ const HomeScreen = () => {
               sideBySide={topSideBySide}
               navigation={navigation}
             />
+
+            {/* 11. Featured Products */}
+            {featuredProducts.length > 0 && (
+              <FeaturedProductsModernSection
+                items={featuredProducts}
+                title="Featured Products"
+                navigation={navigation}
+              />
+            )}
             {/* 9. Recommended For You (2x3 Grid with Garden Trim Footer) */}
             {recommendedProducts.length > 0 && (
               <RecommendedGridSection
@@ -704,29 +782,14 @@ const HomeScreen = () => {
               />
             )}
 
-            {/* 10. Buy It Again */}
-            {buyAgainProducts.length > 0 && (
-              <BuyItAgainModernSection
-                products={buyAgainProducts}
-                navigation={navigation}
-              />
-            )}
-            {/* 11. Featured Products */}
-            {featuredProducts.length > 0 && (
-              <FeaturedProductsModernSection
-                items={featuredProducts}
-                title="Featured Products"
-                navigation={navigation}
-              />
-            )}
             {/* 12. Bottom Banner */}
 
-            {bottomBanner.length > 1 && (
+            {/* {bottomBanner.length > 1 && (
               <HomePromoBanner
                 banner={bottomBanner[1]}
                 onPress={handleBannerPress}
               />
-            )}
+            )} */}
             {/* 13. Empty Cart / Favorite Produce Basket Incentive */}
             {/* <KapraFavoriteFooter /> */}
             <HomeFooter
@@ -748,13 +811,13 @@ const HomeScreen = () => {
         dashboardData={dashboardQuery.data}
         navigation={navigation}
         onPressLocation={handleOpenLocationModal}
-        onSearchPress={() => navigation.navigate('SearchScreen')}
-        onMicPress={() =>
-          navigation.navigate('SearchScreen', { openVoice: true })
-        }
+        isSearchDisabled={isSearchDisabled}
+        onSearchPress={handleSearchPress}
+        onMicPress={handleMicPress}
         onCartPress={() => navigation.navigate('CartScreen')}
         scrollY={scrollY}
         colorScheme={colorScheme}
+        backgroundColor={topGifHeaderColor}
       />
 
       {/* Floating Dark Green Bottom Cart Pill */}
@@ -777,7 +840,6 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FF7300',
   },
   scrollContent: {
     flexGrow: 1,

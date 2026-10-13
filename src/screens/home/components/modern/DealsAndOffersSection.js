@@ -492,12 +492,12 @@ const styles = StyleSheet.create({
     marginBottom: hp('2%'),
   },
   superTitle: {
-    color: '#FF6B00',
-    fontFamily: FONTS.gilroy.bold,
-    fontSize: wp('3%'),
-    letterSpacing: 1.5,
-    marginBottom: 4,
-    textTransform: 'uppercase',
+    fontFamily: FONTS.gilroy.regular,
+    fontSize: 11,
+    // paddingHorizontal: wp('4%'),
+    paddingBottom: wp('2'),
+    letterSpacing: 2,
+    color: '#F25000',
   },
   mainTitle: {
     color: '#111827',

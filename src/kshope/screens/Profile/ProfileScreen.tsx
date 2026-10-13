@@ -256,6 +256,18 @@ const ProfileScreen: React.FC = () => {
 
   const offersItems: MenuItem[] = [
     {
+      key: 'spin-wheel',
+      label: 'Spin Wheel Rewards',
+      icon: (
+        <MaterialCommunityIcons
+          name="ferris-wheel"
+          color={INK}
+          size={ICON_SIZE}
+        />
+      ),
+      onPress: () => navigation.navigate('SpinWheelRewardsScreen'),
+    },
+    {
       key: 'smart-point',
       label: 'Gift Cards',
       icon: <Ionicons name="wallet-outline" color={INK} size={ICON_SIZE} />,

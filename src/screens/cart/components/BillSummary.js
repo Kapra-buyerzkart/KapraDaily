@@ -1,35 +1,27 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Image } from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import CartText from './atoms/CartText';
-import Surface from './atoms/Surface';
-import Divider from './atoms/Divider';
-import SectionHeading from './atoms/SectionHeading';
-import {
-  CART_COLORS,
-  CART_RADIUS,
-  CART_SPACING,
-  wp,
-  hp,
-} from '../../../styles/cartTheme';
 import icons from '../../../assets/icons';
+import { FONTS } from '@/styles/typography';
+import { wp, hp } from '../../../styles/cartTheme';
 
 const money = amount => `₹${Number(amount || 0).toFixed(2)}`;
 
 const BillRow = ({ label, value, tone = 'primary', strike }) => (
   <View style={styles.row}>
-    <CartText variant="label" tone="muted" style={styles.rowLabel}>
-      {label}
-    </CartText>
+    <Text style={styles.rowLabel}>{label}</Text>
     <View style={styles.valueWrap}>
-      {strike ? (
-        <CartText variant="caption" tone="faint" style={styles.strike}>
-          {strike}
-        </CartText>
-      ) : null}
-      <CartText variant="labelStrong" tone={tone}>
+      {strike ? <Text style={styles.strike}>{strike}</Text> : null}
+      <Text
+        style={[
+          styles.rowValue,
+          tone === 'success' && styles.successValue,
+          tone === 'muted' && styles.mutedValue,
+        ]}
+      >
         {value}
-      </CartText>
+      </Text>
     </View>
   </View>
 );
@@ -55,92 +47,72 @@ const BillSummary = ({ billCalculations }) => {
   ].filter(entry => entry.amount > 0);
 
   const isDeliveryFree = deliveryCharge === 0;
-  const hasSavings = totalSavings > 0;
-  const hasTokens = totalBtokens > 0;
+  const displaySavings = totalSavings > 0 ? totalSavings : savings;
+  const tokensEarned = totalBtokens > 0 ? totalBtokens : '10.6';
 
   return (
     <View style={styles.container}>
-      <Surface>
-        <View style={styles.card}>
-          <SectionHeading
-            title="Bill summary"
-            icon={icons.billSummary}
-            right={
-              <CartText variant="micro" tone="faint">
-                Incl. all taxes
-              </CartText>
-            }
-          />
-
-          <View style={styles.group}>
-            <BillRow label="Item total" value={money(itemTotal)} />
-            <BillRow
-              label="Delivery charge"
-              value={isDeliveryFree ? 'FREE' : money(deliveryCharge)}
-              tone={isDeliveryFree ? 'success' : 'primary'}
+      <View style={styles.content}>
+        {/* Header */}
+        <View style={styles.headerRow}>
+          <View style={styles.titleWrap}>
+            <Image
+              source={icons.summaryBill || icons.billSummary}
+              style={styles.billIcon}
             />
+            <Text style={styles.title}>Bill summary</Text>
           </View>
-
-          {discounts.length > 0 && (
-            <>
-              <Divider style={styles.rule} />
-              <View style={styles.group}>
-                {discounts.map(entry => (
-                  <BillRow
-                    key={entry.key}
-                    label={entry.label}
-                    value={`− ${money(entry.amount)}`}
-                    tone="success"
-                  />
-                ))}
-              </View>
-            </>
-          )}
-
-          <Divider dashed style={styles.dashedRule} />
-
-          <View style={styles.toPayRow}>
-            <View style={styles.toPayLabel}>
-              <CartText variant="bodyStrong">To pay</CartText>
-            </View>
-            <CartText variant="priceLarge">₹{toPay.toFixed()}</CartText>
-          </View>
+          <Text style={styles.taxesText}>Incl. all taxes</Text>
         </View>
 
-        {(hasSavings || hasTokens) && (
-          <View style={styles.footerStrip}>
-            {hasSavings && (
-              <View style={styles.footerItem}>
-                <MaterialCommunityIcons
-                  name="check-decagram"
-                  size={wp('4%')}
-                  color={CART_COLORS.successDeep}
-                />
-                <CartText variant="captionStrong" tone="success">
-                  Saved ₹{totalSavings.toFixed(0)}
-                </CartText>
-              </View>
-            )}
+        {/* Bill Rows */}
+        <View style={styles.group}>
+          <BillRow label="Item total" value={money(itemTotal)} />
+          <BillRow
+            label="Delivery charge"
+            value={isDeliveryFree ? 'FREE' : money(deliveryCharge)}
+            tone={isDeliveryFree ? 'success' : 'primary'}
+          />
+          {discounts.map(entry => (
+            <BillRow
+              key={entry.key}
+              label={entry.label}
+              value={`- ${money(entry.amount)}`}
+              tone="success"
+            />
+          ))}
+        </View>
 
-            {hasSavings && hasTokens ? (
-              <View style={styles.footerSplit} />
-            ) : null}
+        {/* Divider */}
+        <View style={styles.divider} />
 
-            {hasTokens && (
-              <View style={styles.footerItem}>
-                <MaterialCommunityIcons
-                  name="star-four-points"
-                  size={wp('4%')}
-                  color={CART_COLORS.token}
-                />
-                <CartText variant="captionStrong" tone="token">
-                  Earn {totalBtokens} UD Tokens
-                </CartText>
-              </View>
-            )}
-          </View>
-        )}
-      </Surface>
+        {/* To pay row */}
+        <View style={styles.toPayRow}>
+          <Text style={styles.toPayLabel}>To pay</Text>
+          <Text style={styles.toPayValue}>₹{Math.round(toPay)}</Text>
+        </View>
+      </View>
+
+      {/* Savings & Earnings Banner */}
+      <View style={styles.bottomBanner}>
+        <View style={styles.bannerLeft}>
+          <Ionicons name="checkmark-circle" size={18} color="#15803D" />
+          <Text style={styles.savedText}>
+            Saved ₹{Math.round(displaySavings)}
+          </Text>
+        </View>
+
+        <View style={styles.bannerRight}>
+          <MaterialCommunityIcons
+            name="star-four-points"
+            size={14}
+            color="#4F46E5"
+          />
+          <Text style={styles.tokenEarnText}>
+            Earn {tokensEarned} UD Tokens
+          </Text>
+        </View>
+      </View>
     </View>
   );
 };
@@ -149,68 +121,126 @@ export default React.memo(BillSummary);
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: hp('2.2%'),
+    backgroundColor: '#FFFFFF',
+    marginTop: hp('1.5%'),
+    width: '100%',
   },
-  card: {
-    padding: CART_SPACING.lg,
+  content: {
+    paddingHorizontal: wp('4%'),
+    paddingTop: hp('1%'),
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: hp('1.5%'),
+  },
+  titleWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  billIcon: {
+    width: 20,
+    height: 20,
+    resizeMode: 'contain',
+  },
+  title: {
+    fontFamily: FONTS.gilroy.bold,
+    fontSize: wp('4.3%'),
+    color: '#000000',
+  },
+  taxesText: {
+    fontFamily: FONTS.gilroy.regular,
+    fontSize: wp('3.1%'),
+    color: '#9CA3AF',
   },
   group: {
-    marginTop: CART_SPACING.md,
-    gap: hp('1%'),
+    gap: hp('1.2%'),
   },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    gap: CART_SPACING.md,
   },
   rowLabel: {
-    flex: 1,
+    fontFamily: FONTS.gilroy.medium,
+    fontSize: wp('3.4%'),
+    color: '#4B5563',
   },
   valueWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: CART_SPACING.xs,
+    gap: 6,
   },
   strike: {
+    fontFamily: FONTS.gilroy.regular,
+    fontSize: wp('3%'),
+    color: '#9CA3AF',
     textDecorationLine: 'line-through',
   },
-  rule: {
-    marginTop: CART_SPACING.md,
+  rowValue: {
+    fontFamily: FONTS.gilroy.bold,
+    fontSize: wp('3.6%'),
+    color: '#000000',
   },
-  dashedRule: {
-    marginTop: CART_SPACING.md,
-    marginBottom: 0,
+  successValue: {
+    color: '#15803D',
+  },
+  mutedValue: {
+    color: '#6B7280',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#E5E7EB',
+    width: '100%',
+    marginTop: hp('2%'),
+    marginBottom: hp('1.5%'),
   },
   toPayRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    gap: CART_SPACING.md,
-    marginTop: CART_SPACING.md,
   },
   toPayLabel: {
-    flex: 1,
-    gap: 1,
+    fontFamily: FONTS.gilroy.bold,
+    fontSize: wp('4%'),
+    color: '#000000',
   },
-  footerStrip: {
+  toPayValue: {
+    fontFamily: FONTS.gilroy.bold,
+    fontSize: wp('4.5%'),
+    color: '#000000',
+  },
+  bottomBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: CART_COLORS.successTint,
-    paddingHorizontal: CART_SPACING.lg,
-    paddingVertical: hp('1.1%'),
-    gap: CART_SPACING.md,
-    borderBottomLeftRadius: CART_RADIUS.card,
-    borderBottomRightRadius: CART_RADIUS.card,
+    justifyContent: 'space-between',
+    backgroundColor: '#ECFDF5',
+    marginHorizontal: wp('4%'),
+    marginTop: hp('2%'),
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
   },
-  footerItem: {
+  bannerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: CART_SPACING.xs + 2,
+    gap: 6,
   },
-  footerSplit: {
-    width: StyleSheet.hairlineWidth,
-    alignSelf: 'stretch',
-    backgroundColor: 'rgba(11,122,61,0.28)',
+  savedText: {
+    fontFamily: FONTS.gilroy.bold,
+    fontSize: wp('3.3%'),
+    color: '#15803D',
+  },
+  bannerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  tokenEarnText: {
+    fontFamily: FONTS.gilroy.semiBold,
+    fontSize: wp('3.2%'),
+    color: '#4F46E5',
   },
 });

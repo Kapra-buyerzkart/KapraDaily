@@ -75,10 +75,7 @@ const OrderSuccessScreen = () => {
   const fetchOrderDetails = async () => {
     try {
       const response = await getOrderDetailsApi(orderId);
-      logger.log(
-        '📦 [ORDER SUCCESS] Details:',
-        response,
-      );
+      logger.log('📦 [ORDER SUCCESS] Details:', response);
       if (response?.success && response?.data) {
         setOrderDetails(response.data);
       }
@@ -235,9 +232,7 @@ const OrderSuccessScreen = () => {
                   color="#F25000"
                 />
                 <Text style={styles.deliveryBadgeText}>
-                  {displayDeliveryMode === 'express'
-                    ? 'Express'
-                    : 'Slotted'}
+                  {displayDeliveryMode === 'express' ? 'Express' : 'Slotted'}
                 </Text>
               </View>
             </View>

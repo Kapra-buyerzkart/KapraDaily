@@ -1,53 +1,49 @@
 import React from 'react';
-import { View, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
-import icons from '@/assets/icons';
-import CartText from './atoms/CartText';
-import {
-  CART_COLORS,
-  CART_RADIUS,
-  CART_SPACING,
-  hitSlopTo,
-  wp,
-  hp,
-} from '../../../styles/cartTheme';
+import DottedDivider from './atoms/DottedDivider';
+import { FONTS } from '@/styles/typography';
+import { wp, hp } from '../../../styles/cartTheme';
 
 const CartHeader = ({ onBack, onClearAll, itemCount }) => {
   return (
-    <View style={styles.header}>
-      <TouchableOpacity
-        onPress={onBack}
-        style={styles.backBtn}
-        hitSlop={hitSlopTo(24)}
-        activeOpacity={0.7}
-      >
-        <Image source={icons.backArrowNew} style={styles.backIcon} />
-      </TouchableOpacity>
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity
+          onPress={onBack}
+          style={styles.backBtn}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          activeOpacity={0.7}
+        >
+          <Feather name="chevron-left" size={28} color="#000000" />
+        </TouchableOpacity>
 
-      <View style={styles.titleBlock}>
-        <CartText variant="title">Cart</CartText>
-        {itemCount > 0 ? (
-          <CartText variant="caption" tone="muted">
-            {itemCount} {itemCount === 1 ? 'item' : 'items'}
-          </CartText>
-        ) : null}
+        <View style={styles.titleBlock}>
+          <Text style={styles.title}>My cart</Text>
+          <Text style={styles.subtitle}>
+            {itemCount > 0
+              ? `${itemCount} item${
+                  itemCount === 1 ? '' : 's'
+                } added to your cart`
+              : 'Your cart is empty'}
+          </Text>
+        </View>
+
+        {itemCount > 0 && (
+          <TouchableOpacity
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            onPress={onClearAll}
+            activeOpacity={0.7}
+            style={styles.clearAllBtn}
+          >
+            <Feather name="trash-2" size={14} color="#3F3F46" />
+            <Text style={styles.clearAllText}>Clear all</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
-      <TouchableOpacity
-        hitSlop={hitSlopTo(28)}
-        onPress={onClearAll}
-        activeOpacity={0.7}
-        style={styles.clearAllBtn}
-      >
-        <Feather
-          name="trash-2"
-          size={wp('3.6%')}
-          color={CART_COLORS.textMuted}
-        />
-        <CartText variant="micro" tone="muted">
-          Clear all
-        </CartText>
-      </TouchableOpacity>
+      {/* Dotted border separator */}
+      <DottedDivider style={styles.dottedDivider} />
     </View>
   );
 };
@@ -55,32 +51,52 @@ const CartHeader = ({ onBack, onClearAll, itemCount }) => {
 export default React.memo(CartHeader);
 
 const styles = StyleSheet.create({
+  container: {
+    backgroundColor: '#FFFFFF',
+    width: '100%',
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: CART_SPACING.lg,
-    paddingVertical: hp('1.2%'),
-    backgroundColor: CART_COLORS.card,
-    gap: CART_SPACING.sm,
+    paddingHorizontal: wp('4%'),
+    paddingVertical: hp('1%'),
+    backgroundColor: '#FFFFFF',
   },
   backBtn: {
-    padding: CART_SPACING.xs,
-  },
-  backIcon: {
-    resizeMode: 'contain',
-    tintColor: CART_COLORS.textPrimary,
+    paddingRight: wp('2%'),
+    paddingVertical: 4,
   },
   titleBlock: {
     flex: 1,
-    marginLeft: CART_SPACING.xs,
+    marginLeft: 2,
+  },
+  title: {
+    fontFamily: FONTS.gilroy.bold,
+    fontSize: wp('5.2%'),
+    color: '#000000',
+    letterSpacing: -0.3,
+  },
+  subtitle: {
+    fontFamily: FONTS.gilroy.regular,
+    fontSize: wp('3.3%'),
+    color: '#71717A',
+    marginTop: 2,
   },
   clearAllBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: CART_COLORS.well,
-    borderRadius: CART_RADIUS.pill,
-    paddingHorizontal: CART_SPACING.md,
-    paddingVertical: hp('0.7%'),
-    gap: CART_SPACING.xs,
+    backgroundColor: '#F4F4F5',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    gap: 6,
+  },
+  clearAllText: {
+    fontFamily: FONTS.gilroy.medium,
+    fontSize: wp('3.2%'),
+    color: '#3F3F46',
+  },
+  dottedDivider: {
+    marginVertical: hp('0.5%'),
   },
 });

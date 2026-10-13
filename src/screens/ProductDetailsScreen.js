@@ -62,7 +62,7 @@ import {
   BackArrowIcon,
 } from './product/components/ProductDetailIcons';
 
-const HERO_BG = '#DEF7E5'; // Soft pastel mint green background matching the mockup
+const HERO_BG = '#ffffffff'; // Soft pastel mint green background matching the mockup
 const ACCENT_ORANGE = '#F25C05'; // Vibrant orange for CTA button
 const ACCENT_GREEN = '#16A34A'; // Pill discount & savings green
 const PRICE_GREEN = '#006837'; // Deep emerald green for product price
@@ -702,7 +702,7 @@ const ProductDetailsScreen = () => {
               </View>
 
               {/* 7. SOMETHING SPECIAL Deals & Offers Banner */}
-              <View style={styles.dealsSection}>
+              {/* <View style={styles.dealsSection}>
                 <Text style={styles.dealsKicker}>SOMETHING SPECIAL</Text>
                 <Text style={styles.sectionHeading}>The Pantry Collection</Text>
                 <Text style={styles.sectionSubtitle}>
@@ -725,7 +725,7 @@ const ProductDetailsScreen = () => {
                     resizeMode="cover"
                   />
                 </TouchableOpacity>
-              </View>
+              </View> */}
             </View>
           </ScrollView>
         </>

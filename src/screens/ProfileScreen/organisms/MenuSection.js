@@ -18,6 +18,7 @@ const MenuSection = ({ title, items }) => (
             icon={item.icon}
             tone={item.tone}
             textColor={item.textColor}
+            badge={item.badge}
             onPress={item.onPress}
           />
           {index < items.length - 1 && !item.hideDividerAfter && (

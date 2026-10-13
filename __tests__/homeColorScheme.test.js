@@ -128,5 +128,28 @@ describe('Home Color Scheme & Dynamic Theming', () => {
       expect(transformed.storeStatus).toBe('CLOSED');
       expect(transformed.colorScheme).toEqual(DEFAULT_HOME_COLOR_SCHEME);
     });
+
+    it('derives colorScheme from app_home_top_gif_section linkValue when no explicit colorScheme exists', () => {
+      const apiResponse = {
+        status: 'OK',
+        data: {
+          banners: [
+            {
+              placementKey: 'app_home_top_gif_section',
+              bannerName: 'Mobile App Top Gif section 1',
+              imageUrl: 'assets/images/app/202610090118_aaa194603d_Untitleddesign80.gif',
+              linkType: 'Category',
+              linkValue: '#FF7300',
+            },
+          ],
+        },
+      };
+      const transformed = transformHomepageResponse(apiResponse);
+      expect(transformed.colorScheme.primary).toBe('#FF7300');
+      expect(transformed.colorScheme.containerBackground).toBe('#FF7300');
+      expect(transformed.colorScheme.gradient).toEqual(['#FF7300', '#FF7300', '#FF7300']);
+      expect(transformed.colorScheme.searchIcon).toBe('#FF7300');
+    });
   });
 });
+

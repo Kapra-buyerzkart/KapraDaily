@@ -170,7 +170,8 @@ export default StyleSheet.create({
     width: '100%',
     height: 1,
     borderWidth: 0.6,
-    borderColor: '#E8DED5',
+
+    borderColor: '#b4988cff',
     borderStyle: 'dashed',
     marginVertical: 6,
   },
@@ -196,7 +197,7 @@ export default StyleSheet.create({
   sellingPriceText: {
     fontSize: 16,
     fontFamily: FONTS.gilroy.bold,
-    color: '#111827',
+    color: '#942D04',
     letterSpacing: -0.3,
     marginTop: 2,
   },

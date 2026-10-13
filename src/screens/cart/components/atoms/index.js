@@ -6,3 +6,4 @@ export { default as IconDisc } from './IconDisc';
 export { default as SectionHeading } from './SectionHeading';
 export { default as QtyStepper } from './QtyStepper';
 export { default as PriceBlock } from './PriceBlock';
+export { default as DottedDivider } from './DottedDivider';

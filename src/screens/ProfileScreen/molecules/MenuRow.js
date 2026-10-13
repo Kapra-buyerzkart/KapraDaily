@@ -3,7 +3,14 @@ import { View, Pressable, StyleSheet } from 'react-native';
 import { ProfileText, IconDisc, RowChevron } from '../atoms';
 import { CART_COLORS, CART_SPACING, hp, wp } from '@/styles/cartTheme';
 
-const MenuRow = ({ label, icon, tone = 'neutral', textColor, onPress }) => (
+const MenuRow = ({
+  label,
+  icon,
+  tone = 'neutral',
+  textColor,
+  badge,
+  onPress,
+}) => (
   <Pressable
     onPress={onPress}
     style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
@@ -24,6 +31,7 @@ const MenuRow = ({ label, icon, tone = 'neutral', textColor, onPress }) => (
       </ProfileText>
     </View>
 
+    {badge}
     <RowChevron color={textColor || CART_COLORS.textFaint} />
   </Pressable>
 );

@@ -1,15 +1,33 @@
 import React from 'react';
-import { Image, Linking } from 'react-native';
+import { Linking } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import CONFIG from '../../globals/config';
-import icons from '@/assets/icons';
 import { INK, RED } from './styles';
+import { Badge } from './atoms';
 
 const ICON_SIZE = wp('4%');
 
-export const buildOffersItems = ({ onBCoin, onSmartPoint, onCoupons }) => [
+export const buildOffersItems = ({
+  onBCoin,
+  onSmartPoint,
+  onCoupons,
+  onSpinWheel,
+}) => [
+  {
+    key: 'spin-wheel',
+    label: 'Spin Wheel Rewards',
+    icon: (
+      <MaterialCommunityIcons
+        name="ferris-wheel"
+        color={INK}
+        size={ICON_SIZE}
+      />
+    ),
+    badge: <Badge label="WIN PRIZES" tone="brand" />,
+    onPress: onSpinWheel,
+  },
   {
     key: 'smart-point',
     label: 'Smart point',

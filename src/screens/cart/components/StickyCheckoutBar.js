@@ -1,18 +1,16 @@
 import React from 'react';
-import { View, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Platform,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AntDesign from 'react-native-vector-icons/AntDesign';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import CartText from './atoms/CartText';
-import IconDisc from './atoms/IconDisc';
-import {
-  CART_COLORS,
-  CART_ELEVATION,
-  CART_RADIUS,
-  CART_SPACING,
-  wp,
-  hp,
-} from '../../../styles/cartTheme';
+import Feather from 'react-native-vector-icons/Feather';
+import { FONTS } from '@/styles/typography';
+import { wp, hp } from '../../../styles/cartTheme';
 import { getPaymentMeta } from '../paymentMeta';
 
 const StickyCheckoutBar = ({
@@ -25,79 +23,57 @@ const StickyCheckoutBar = ({
   onCheckout,
   onLayout,
 }) => {
-  const { label, icon } = getPaymentMeta(paymentMethod);
+  const { label } = getPaymentMeta(paymentMethod);
 
   return (
     <SafeAreaView edges={['bottom']} style={styles.footer} onLayout={onLayout}>
+      {/* Payment Selection Row */}
       <TouchableOpacity
         activeOpacity={0.75}
         style={styles.paymentStrip}
         onPress={onPaymentChipPress}
       >
-        <IconDisc size={wp('7.5%')} tone="neutral">
-          <MaterialCommunityIcons
-            name={icon}
-            size={wp('4%')}
-            color={CART_COLORS.textSecondary}
-          />
-        </IconDisc>
+        <Feather name="credit-card" size={18} color="#374151" />
 
         <View style={styles.paymentCopy}>
-          <CartText variant="micro" tone="muted">
-            PAY USING
-          </CartText>
-          <CartText variant="labelStrong" numberOfLines={1}>
-            {label}
-          </CartText>
+          <Text style={styles.payUsingLabel}>PAY USING</Text>
+          <Text style={styles.paymentMethodText} numberOfLines={1}>
+            {label || 'Online payment'}
+          </Text>
         </View>
 
-        <View style={styles.changeChip}>
-          <CartText variant="micro" tone="muted">
-            Change
-          </CartText>
-          <AntDesign
-            name="up"
-            size={wp('2.4%')}
-            color={CART_COLORS.textMuted}
-          />
+        <View style={styles.changeBtn}>
+          <Text style={styles.changeText}>Change</Text>
+          <Feather name="chevron-right" size={16} color="#6B7280" />
         </View>
       </TouchableOpacity>
 
+      {/* Action Row: Total & Pay Button */}
       <View style={styles.actionRow}>
-        {ctaShowPrice && !ctaDisabled ? (
-          <View style={styles.totalBlock}>
-            <CartText variant="micro" tone="muted">
-              TOTAL
-            </CartText>
-            <CartText variant="priceLarge">₹{totalToPay?.toFixed()}</CartText>
-          </View>
-        ) : null}
+        <View style={styles.totalBlock}>
+          <Text style={styles.totalLabel}>TOTAL</Text>
+          <Text style={styles.totalAmount}>₹{Math.round(totalToPay || 0)}</Text>
+        </View>
 
-        <TouchableOpacity
-          activeOpacity={0.9}
-          style={[
-            styles.payBtn,
-            !ctaShowPrice || ctaDisabled ? styles.payBtnWide : null,
-            ctaDisabled && styles.payBtnDisabled,
-          ]}
-          onPress={onCheckout}
-          disabled={ctaDisabled}
-        >
-          <CartText
-            variant="cta"
-            tone={ctaDisabled ? 'faint' : 'onDark'}
-            numberOfLines={1}
+        <View style={styles.payBtnWrapper}>
+          <View
+            style={[
+              styles.payBtnShadow,
+              ctaDisabled && styles.payBtnShadowDisabled,
+            ]}
+          />
+          <TouchableOpacity
+            activeOpacity={0.85}
+            style={[styles.payBtn, ctaDisabled && styles.payBtnDisabled]}
+            onPress={onCheckout}
+            disabled={ctaDisabled}
           >
-            {ctaLabel}
-          </CartText>
-          {!ctaDisabled && (
-            <AntDesign
-              name="arrowright"
-              size={wp('4%')}
-              color={CART_COLORS.onPrimary}
-            />
-          )}
-        </TouchableOpacity>
+            <Text style={styles.payBtnText}>
+              {ctaLabel?.startsWith('Pay') ? ctaLabel : 'Pay'}
+            </Text>
+            <AntDesign name="arrowright" size={18} color="#FFFFFF" />
+          </TouchableOpacity>
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -111,70 +87,112 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: CART_COLORS.card,
-    paddingHorizontal: CART_SPACING.lg,
-    paddingTop: CART_SPACING.sm,
-    borderTopLeftRadius: CART_RADIUS.card,
-    borderTopRightRadius: CART_RADIUS.card,
-    ...CART_ELEVATION.bar,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: wp('4%'),
+    paddingTop: hp('1%'),
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000000',
+        shadowOffset: { width: 0, height: -2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 6,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
   },
   paymentStrip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: CART_SPACING.sm,
-    backgroundColor: CART_COLORS.well,
-    borderRadius: CART_RADIUS.button,
-    paddingHorizontal: CART_SPACING.md,
-    paddingVertical: hp('0.9%'),
+    gap: wp('3%'),
+    paddingVertical: hp('0.8%'),
   },
   paymentCopy: {
     flex: 1,
     gap: 1,
   },
-  changeChip: {
+  payUsingLabel: {
+    fontFamily: FONTS.gilroy.medium,
+    fontSize: wp('2.6%'),
+    color: '#9CA3AF',
+    letterSpacing: 0.3,
+  },
+  paymentMethodText: {
+    fontFamily: FONTS.gilroy.bold,
+    fontSize: wp('3.6%'),
+    color: '#000000',
+  },
+  changeBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 3,
-    paddingHorizontal: CART_SPACING.sm,
-    paddingVertical: hp('0.35%'),
-    borderRadius: CART_RADIUS.pill,
-    backgroundColor: CART_COLORS.card,
+    gap: 2,
+  },
+  changeText: {
+    fontFamily: FONTS.gilroy.medium,
+    fontSize: wp('3.3%'),
+    color: '#6B7280',
   },
   actionRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: CART_SPACING.md,
-    paddingVertical: CART_SPACING.md,
+    justifyContent: 'space-between',
+    paddingVertical: hp('1.2%'),
+    gap: wp('4%'),
   },
   totalBlock: {
     gap: 1,
+    minWidth: wp('20%'),
+  },
+  totalLabel: {
+    fontFamily: FONTS.gilroy.medium,
+    fontSize: wp('2.6%'),
+    color: '#9CA3AF',
+    letterSpacing: 0.3,
+  },
+  totalAmount: {
+    fontFamily: FONTS.gilroy.bold,
+    fontSize: wp('5.8%'),
+    color: '#000000',
+    letterSpacing: -0.3,
+  },
+  payBtnWrapper: {
+    flex: 1,
+    position: 'relative',
+    height: 48,
+  },
+  payBtnShadow: {
+    position: 'absolute',
+    top: 3,
+    left: 2.5,
+    right: -1.5,
+    bottom: -3,
+    backgroundColor: '#000000',
+    borderRadius: 10,
+  },
+  payBtnShadowDisabled: {
+    backgroundColor: '#9CA3AF',
   },
   payBtn: {
-    flex: 1,
-    backgroundColor: CART_COLORS.primary,
+    width: '100%',
+    height: 48,
+    backgroundColor: '#FD7301',
+    borderColor: '#000000',
+    borderRadius: 10,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: CART_SPACING.sm,
-    paddingHorizontal: CART_SPACING.lg,
-    paddingVertical: hp('1.6%'),
-    borderRadius: CART_RADIUS.button,
-    ...Platform.select({
-      ios: {
-        shadowColor: CART_COLORS.primary,
-        shadowOpacity: 0.28,
-        shadowOffset: { width: 0, height: 6 },
-        shadowRadius: 12,
-      },
-      android: { elevation: 1 },
-    }),
+    gap: 8,
   },
-  payBtnWide: {
-    flex: 1,
+  payBtnText: {
+    fontFamily: FONTS.gilroy.bold,
+    fontSize: wp('4.4%'),
+    color: '#FFFFFF',
   },
   payBtnDisabled: {
-    backgroundColor: CART_COLORS.well,
-    shadowOpacity: 0,
-    elevation: 0,
+    backgroundColor: '#D1D5DB',
+    borderColor: '#9CA3AF',
   },
 });

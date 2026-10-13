@@ -75,6 +75,11 @@ const TokenProductCard = ({
   const priceLabel = formatAmount(amount) || amount;
   const hasMrp = !!mrp && Number(mrp) > Number(price);
   const mrpLabel = formatAmount(mrp) || mrp;
+  const subtitleLabel =
+    (typeof subtitle === 'string' && subtitle.trim()) ||
+    (typeof weight === 'string' && weight.trim()) ||
+    (typeof weight === 'number' && String(weight)) ||
+    null;
 
   return (
     <AnimatedPressable
@@ -93,12 +98,16 @@ const TokenProductCard = ({
       {/* 1. Top Header Row: UD Coins Pill (Left) + Wishlist Heart (Right) */}
       <View style={styles.topRow}>
         {!hideToken ? (
-          <View style={[styles.coinPill, isThreeColumn && styles.coinPillSmall]}>
+          <View
+            style={[styles.coinPill, isThreeColumn && styles.coinPillSmall]}
+          >
             <Image
               source={icons.udCoinUpdated || icons.udcoin}
               style={[styles.coinIcon, isThreeColumn && styles.coinIconSmall]}
             />
-            <Text style={[styles.coinText, isThreeColumn && styles.coinTextSmall]}>
+            <Text
+              style={[styles.coinText, isThreeColumn && styles.coinTextSmall]}
+            >
               {tokenValue ? `${tokenValue} tokens` : 'Tokens'}
             </Text>
           </View>
@@ -141,12 +150,17 @@ const TokenProductCard = ({
       </Text>
 
       {/* 4. Subtitle / Details / Weight */}
-      <Text
-        style={[styles.subtitleText, isThreeColumn && styles.subtitleTextSmall]}
-        numberOfLines={1}
-      >
-        {subtitle || weight || ' '}
-      </Text>
+      {subtitleLabel ? (
+        <Text
+          style={[
+            styles.subtitleText,
+            isThreeColumn && styles.subtitleTextSmall,
+          ]}
+          numberOfLines={1}
+        >
+          {subtitleLabel}
+        </Text>
+      ) : null}
 
       {/* 5. Dashed / Dotted Divider Line */}
       <View style={styles.dashedDivider} />

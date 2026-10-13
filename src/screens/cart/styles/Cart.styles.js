@@ -1,35 +1,28 @@
 import { StyleSheet } from 'react-native';
-import {
-  CART_COLORS,
-  CART_GUTTER,
-  CART_SPACING,
-  hp,
-} from '../../../styles/cartTheme';
+import { hp } from '../../../styles/cartTheme';
 
 export const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
-    backgroundColor: CART_COLORS.canvas,
+    backgroundColor: '#FFFFFF',
   },
   emptyContainer: {
-    backgroundColor: CART_COLORS.card,
+    backgroundColor: '#FFFFFF',
   },
   topBar: {
-    backgroundColor: CART_COLORS.card,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: CART_COLORS.border,
+    backgroundColor: '#FFFFFF',
     zIndex: 5,
   },
   listContent: {
+    backgroundColor: '#FFFFFF',
     paddingBottom: hp('2%'),
   },
   itemCardWrap: {
-    marginHorizontal: CART_GUTTER,
-    paddingHorizontal: CART_SPACING.lg,
-    backgroundColor: CART_COLORS.card,
+    paddingHorizontal: 0,
+    backgroundColor: '#FFFFFF',
   },
   itemSeparator: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: CART_COLORS.border,
+    height: 8,
+    backgroundColor: 'transparent',
   },
 });

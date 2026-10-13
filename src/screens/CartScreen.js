@@ -29,8 +29,6 @@ import CartModals from './cart/components/CartModals';
 import StickyCheckoutBar from './cart/components/StickyCheckoutBar';
 import PaymentBottomSheet from './cart/components/PaymentBottomSheet';
 import { styles } from './cart/styles/Cart.styles';
-import images from '@/assets/images';
-import icons from '@/assets/icons';
 
 const CartScreen = () => {
   const navigation = useNavigation();

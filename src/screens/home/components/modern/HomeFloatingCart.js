@@ -1,11 +1,5 @@
 import React, { useEffect, useMemo, useRef } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Image,
-  StyleSheet,
-} from 'react-native';
+import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -15,7 +9,10 @@ import Animated, {
   withDelay,
   Easing,
 } from 'react-native-reanimated';
-import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from 'react-native-responsive-screen';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Feather from 'react-native-vector-icons/Feather';
@@ -65,12 +62,18 @@ const HomeFloatingCart = ({
       : contextCartItems;
 
   const totalCount = useMemo(
-    () => (cartItems || []).reduce((acc, item) => acc + (item.quantity || 1), 0),
+    () =>
+      (cartItems || []).reduce((acc, item) => acc + (item.quantity || 1), 0),
     [cartItems],
   );
 
   const grandTotal = useMemo(() => {
-    if (cartSummary && cartSummary.grandTotal !== undefined && cartSummary.grandTotal !== null && Number(cartSummary.grandTotal) > 0) {
+    if (
+      cartSummary &&
+      cartSummary.grandTotal !== undefined &&
+      cartSummary.grandTotal !== null &&
+      Number(cartSummary.grandTotal) > 0
+    ) {
       return Math.round(cartSummary.grandTotal);
     }
     const sum = (cartItems || []).reduce((acc, item) => {
@@ -81,7 +84,9 @@ const HomeFloatingCart = ({
   }, [cartSummary, cartItems]);
 
   const discount = Math.round(
-    (cartSummary && (cartSummary.totalDiscount || cartSummary.productDiscount)) || 0,
+    (cartSummary &&
+      (cartSummary.totalDiscount || cartSummary.productDiscount)) ||
+      0,
   );
 
   const safeBottomMargin =
@@ -184,21 +189,24 @@ const HomeFloatingCart = ({
     if (!raw) return require('@/assets/images/udenDealNotfound.png');
 
     if (raw.featuredImage) {
-      return typeof raw.featuredImage === 'string' && !raw.featuredImage.startsWith('http')
+      return typeof raw.featuredImage === 'string' &&
+        !raw.featuredImage.startsWith('http')
         ? { uri: `${CONFIG.image_base_url}${raw.featuredImage}` }
         : typeof raw.featuredImage === 'string'
         ? { uri: raw.featuredImage }
         : raw.featuredImage;
     }
     if (raw.productImage) {
-      return typeof raw.productImage === 'string' && !raw.productImage.startsWith('http')
+      return typeof raw.productImage === 'string' &&
+        !raw.productImage.startsWith('http')
         ? { uri: `${CONFIG.image_base_url}${raw.productImage}` }
         : typeof raw.productImage === 'string'
         ? { uri: raw.productImage }
         : raw.productImage;
     }
     if (raw.imageUrl) {
-      return typeof raw.imageUrl === 'string' && !raw.imageUrl.startsWith('http')
+      return typeof raw.imageUrl === 'string' &&
+        !raw.imageUrl.startsWith('http')
         ? { uri: `${CONFIG.image_base_url}${raw.imageUrl}` }
         : typeof raw.imageUrl === 'string'
         ? { uri: raw.imageUrl }
@@ -206,7 +214,10 @@ const HomeFloatingCart = ({
     }
     if (Array.isArray(raw.images) && raw.images.length > 0) {
       const first = raw.images[0];
-      const imgPath = typeof first === 'string' ? first : (first && (first.image || first.url)) || '';
+      const imgPath =
+        typeof first === 'string'
+          ? first
+          : (first && (first.image || first.url)) || '';
       if (imgPath) {
         return imgPath.startsWith('http')
           ? { uri: imgPath }
@@ -244,10 +255,7 @@ const HomeFloatingCart = ({
         style,
       ]}
     >
-      <TouchableOpacity
-        activeOpacity={0.92}
-        onPress={handlePress}
-      >
+      <TouchableOpacity activeOpacity={0.92} onPress={handlePress}>
         <Animated.View
           style={[
             styles.capsule,
@@ -257,7 +265,9 @@ const HomeFloatingCart = ({
         >
           {/* Left Section: Thumbnails + Count + Total */}
           <View style={styles.leftSection}>
-            <Animated.View style={[styles.thumbnailsContainer, stackAnimatedStyle]}>
+            <Animated.View
+              style={[styles.thumbnailsContainer, stackAnimatedStyle]}
+            >
               {previewItems.map((item, index) => (
                 <View
                   key={item.productId || item.id || item.cartItemId || index}
@@ -282,9 +292,16 @@ const HomeFloatingCart = ({
                 <Text style={styles.priceText}>₹{grandTotal}</Text>
               </Text>
               <View style={styles.savingsRow}>
-                <Feather name="zap" size={wp('3%')} color="#6EE7B7" style={{ marginTop: 1 }} />
+                <Feather
+                  name="zap"
+                  size={wp('3%')}
+                  color="#6EE7B7"
+                  style={{ marginTop: 1 }}
+                />
                 <Text style={styles.savingsSubText} numberOfLines={1}>
-                  {discount > 0 ? ` ₹${discount} saved on order` : ' Fast delivery in 30 mins'}
+                  {discount > 0
+                    ? ` ₹${discount} saved on order`
+                    : ' Fast delivery in 30 mins'}
                 </Text>
               </View>
             </Animated.View>
@@ -292,7 +309,9 @@ const HomeFloatingCart = ({
 
           {/* Right Section: White View Basket Button */}
           <Animated.View style={[styles.viewBasketPill, buttonAnimatedStyle]}>
-            <Text style={[styles.viewBasketText, { color: capsuleBg }]}>{buttonText}</Text>
+            <Text style={[styles.viewBasketText, { color: capsuleBg }]}>
+              {buttonText}
+            </Text>
             <Feather name="arrow-right" size={16} color={capsuleBg} />
           </Animated.View>
         </Animated.View>
@@ -369,7 +388,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   savingsSubText: {
-    fontSize: wp('3%'),
+    fontSize: wp('2.5%'),
     fontFamily: FONTS.gilroy.medium,
     color: '#6EE7B7',
   },

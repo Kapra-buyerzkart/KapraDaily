@@ -138,6 +138,7 @@ export default function ProfileScreen() {
     onBCoin: () => navigation.navigate('BCoinScreen'),
     onSmartPoint: () => openOffersModal('Gift Cards'),
     onCoupons: () => openOffersModal('Coupons'),
+    onSpinWheel: () => navigation.navigate('SpinWheelRewardsScreen'),
   });
   const myAccountItems = buildMyAccountItems({
     navigation,

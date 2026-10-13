@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, Platform } from 'react-native';
+import { View, Text, StyleSheet, Platform, Image } from 'react-native';
 import React, {
   useState,
   useMemo,
@@ -13,7 +13,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import Toast from 'react-native-simple-toast';
 import AntDesign from 'react-native-vector-icons/AntDesign';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import icons from '../assets/icons';
 import { useCart } from '../context/CartContext';
 import CONFIG from '../globals/config';
 import ConfirmationModal from './ConfirmationModal';
@@ -24,20 +24,10 @@ import {
   resolveQuantityCeiling,
 } from '../utils/cartQuantityLimits';
 import AnimatedPressable from './AnimatedPressable';
-import CartText from '../screens/cart/components/atoms/CartText';
 import QtyStepper from '../screens/cart/components/atoms/QtyStepper';
-import {
-  CART_COLORS,
-  CART_RADIUS,
-  CART_SPACING,
-  wp,
-  hp,
-} from '../styles/cartTheme';
-import { TOKEN, RADIUS, TYPE, MAX_FONT_SCALE } from '../styles/homeTheme';
+import { wp, hp } from '../styles/cartTheme';
 
 const SOLD_OUT_IMAGE_OPACITY = 0.4;
-const UD_TOKEN_ICON = 'ticket-confirmation-outline';
-const UD_TOKEN_ICON_SIZE = 12;
 
 const CartProductCard = props => {
   const { changeCartItemQuantity, removeFromCart, updatingItems } = useCart();
@@ -133,6 +123,16 @@ const CartProductCard = props => {
 
   return (
     <View style={styles.card}>
+      {/* Top-left round close button */}
+      <AnimatedPressable
+        style={styles.removeBtn}
+        onPress={handleDelete}
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+      >
+        <AntDesign name="close" size={10} color="#6B7280" />
+      </AnimatedPressable>
+
+      {/* Product Image Well */}
       <View style={styles.imageWell}>
         <Animated.Image
           style={[styles.image, imageAnimatedStyle]}
@@ -145,14 +145,6 @@ const CartProductCard = props => {
             imageOpacity.value = withTiming(1, { duration: 220 });
           }}
         />
-
-        {hasDiscount && !isSoldOut && discountPercent > 0 && (
-          <View style={styles.discountFlag}>
-            <CartText variant="micro" tone="onDark" numberOfLines={1}>
-              {discountPercent}% OFF
-            </CartText>
-          </View>
-        )}
 
         {isSoldOut && (
           <View style={styles.soldOutOverlay}>
@@ -167,62 +159,47 @@ const CartProductCard = props => {
             </View>
           </View>
         )}
-
-        <AnimatedPressable
-          style={styles.removeBtn}
-          onPress={handleDelete}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
-          <AntDesign
-            name="close"
-            size={wp('3%')}
-            color={CART_COLORS.textMuted}
-          />
-        </AnimatedPressable>
       </View>
 
+      {/* Product Info & Controls */}
       <View style={styles.info}>
-        <View style={styles.copy}>
-          <CartText
-            variant="label"
-            tone={isSoldOut ? 'muted' : 'primary'}
+        <View style={styles.topRow}>
+          <Text
+            style={[styles.productTitle, isSoldOut && styles.mutedText]}
             numberOfLines={2}
             ellipsizeMode="tail"
           >
             {productName}
-          </CartText>
+          </Text>
 
-          {isSoldOut ? (
-            <CartText variant="micro" tone="danger">
-              Remove to place order
-            </CartText>
-          ) : btokens > 0 ? (
-            <View style={styles.tokenRow}>
-              <MaterialCommunityIcons
-                name={UD_TOKEN_ICON}
-                size={UD_TOKEN_ICON_SIZE}
-                color={TOKEN.ink}
-              />
-              <Text
-                style={styles.tokenText}
-                numberOfLines={1}
-                maxFontSizeMultiplier={MAX_FONT_SCALE}
-              >
-                {`${btokens} UD ${Number(btokens) > 1 ? 'Tokens' : 'Token'}`}
+          {hasDiscount && !isSoldOut && discountPercent > 0 && (
+            <View style={styles.discountBadge}>
+              <Text style={styles.discountBadgeText}>
+                {discountPercent}% OFF
               </Text>
             </View>
-          ) : null}
+          )}
         </View>
+
+        {isSoldOut ? (
+          <Text style={styles.soldOutHelpText}>Remove to place order</Text>
+        ) : btokens > 0 ? (
+          <View style={styles.tokenPill}>
+            <Image
+              source={icons.udCoinUpdated || icons.udcoin}
+              style={styles.coinIcon}
+            />
+            <Text style={styles.tokenText}>{`${btokens} tokens`}</Text>
+          </View>
+        ) : null}
 
         <View style={styles.footerRow}>
           <View style={styles.priceBlock}>
-            <CartText variant="price" tone={isSoldOut ? 'muted' : 'primary'}>
-              ₹{specialPrice}
-            </CartText>
+            <Text style={[styles.specialPrice, isSoldOut && styles.mutedText]}>
+              ₹{specialPrice}/-
+            </Text>
             {hasDiscount && (
-              <CartText variant="micro" tone="faint" style={styles.strike}>
-                ₹{unitPrice}
-              </CartText>
+              <Text style={styles.strikePrice}>₹ {unitPrice}/-</Text>
             )}
           </View>
 
@@ -254,118 +231,153 @@ const CartProductCard = props => {
 const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
-    alignItems: 'stretch',
-    paddingVertical: hp('1.4%'),
-    gap: CART_SPACING.md,
-  },
-  imageWell: {
-    width: wp('20%'),
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(208, 207, 207, 0.32)',
-    height: wp('20%'),
-    backgroundColor: CART_COLORS.card,
-    borderRadius: CART_RADIUS.productCard,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  image: {
-    width: '76%',
-    height: '76%',
-    resizeMode: 'contain',
-  },
-  discountFlag: {
-    position: 'absolute',
-    bottom: -CART_SPACING.xs,
-    alignSelf: 'center',
-    backgroundColor: CART_COLORS.success,
-    paddingHorizontal: CART_SPACING.sm,
-    paddingVertical: 1,
-    borderRadius: CART_RADIUS.pill,
-  },
-  soldOutOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    borderRadius: CART_RADIUS.productCard,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.66)',
-  },
-  soldOutPill: {
-    backgroundColor: CART_COLORS.textPrimary,
-    maxWidth: '92%',
-    paddingHorizontal: CART_SPACING.sm,
-    paddingVertical: 3,
-    borderRadius: CART_RADIUS.pill,
-  },
-  soldOutText: {
-    fontSize: wp('2.6%'),
-    color: CART_COLORS.onPrimary,
-    fontFamily: FONTS.gilroy.bold,
+    borderColor: '#E8ECF2',
+    padding: 12,
+    marginHorizontal: wp('4%'),
+    marginVertical: hp('0.5%'),
+    position: 'relative',
+
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+
+    elevation: 5,
   },
   removeBtn: {
     position: 'absolute',
-    top: -CART_SPACING.xs,
-    left: -CART_SPACING.xs,
-    width: wp('5.5%'),
-    height: wp('5.5%'),
-    borderRadius: wp('2.75%'),
-    backgroundColor: CART_COLORS.card,
+    top: 6,
+    left: 6,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10,
+  },
+  imageWell: {
+    width: wp('22%'),
+    height: wp('20%'),
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingRight: wp('2%'),
+    borderRightWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: '#E5E7EB',
+  },
+  image: {
+    width: '90%',
+    height: '90%',
+    resizeMode: 'contain',
+  },
+  soldOutOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#0B1020',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.15,
-        shadowRadius: 3,
-      },
-      android: {
-        elevation: 1,
-        borderWidth: StyleSheet.hairlineWidth,
-        borderColor: CART_COLORS.border,
-      },
-    }),
-    zIndex: 11,
+    backgroundColor: 'rgba(255,255,255,0.7)',
+  },
+  soldOutPill: {
+    backgroundColor: '#12131A',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  soldOutText: {
+    fontSize: wp('2.4%'),
+    color: '#FFFFFF',
+    fontFamily: FONTS.gilroy.bold,
   },
   info: {
     flex: 1,
+    paddingLeft: wp('3%'),
     justifyContent: 'space-between',
-    minHeight: wp('20%'),
-    gap: CART_SPACING.sm,
+    gap: 4,
   },
-  copy: {
-    gap: CART_SPACING.xs,
+  topRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 6,
   },
-  tokenRow: {
+  productTitle: {
+    flex: 1,
+    fontFamily: FONTS.gilroy.bold,
+    fontSize: wp('3.7%'),
+    color: '#000000',
+    lineHeight: wp('4.6%'),
+  },
+  discountBadge: {
+    backgroundColor: '#DCFCE7',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    alignSelf: 'flex-start',
+  },
+  discountBadgeText: {
+    fontFamily: FONTS.gilroy.bold,
+    fontSize: wp('2.7%'),
+    color: '#16A34A',
+  },
+  soldOutHelpText: {
+    fontFamily: FONTS.gilroy.medium,
+    fontSize: wp('2.8%'),
+    color: '#D93025',
+  },
+  tokenPill: {
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
-    maxWidth: '100%',
-    minHeight: TYPE.micro.lineHeight,
-    backgroundColor: TOKEN.tint,
-    borderRadius: RADIUS.xs,
-    paddingHorizontal: 5,
-    paddingVertical: 1,
-    gap: 3,
+    backgroundColor: '#FFF2E5',
+    borderRadius: 8,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    gap: 4,
+  },
+  coinIcon: {
+    width: 12,
+    height: 12,
+    resizeMode: 'contain',
   },
   tokenText: {
-    ...TYPE.micro,
-    color: TOKEN.ink,
     fontFamily: FONTS.gilroy.bold,
-    flexShrink: 1,
+    fontSize: wp('2.7%'),
+    color: '#8D5200',
   },
   footerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: CART_SPACING.sm,
+    marginTop: 2,
   },
   priceBlock: {
     flexDirection: 'row',
     alignItems: 'baseline',
-    gap: CART_SPACING.xs,
+    gap: 6,
   },
-  strike: {
+  specialPrice: {
+    fontFamily: FONTS.gilroy.bold,
+    fontSize: wp('4.1%'),
+    color: '#942D04',
+  },
+  strikePrice: {
+    fontFamily: FONTS.gilroy.regular,
+    fontSize: wp('3%'),
+    color: '#9CA3AF',
     textDecorationLine: 'line-through',
+  },
+  mutedText: {
+    color: '#9CA3AF',
   },
 });
 

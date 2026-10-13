@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState, useEffect } from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import {
@@ -81,6 +81,9 @@ const ExploreCategoriesGrid = ({
             }`,
       };
     }
+    if (typeof rawUrl === 'number') {
+      return rawUrl;
+    }
     return null;
   }, [gifItem]);
 
@@ -132,8 +135,91 @@ const ExploreCategoriesGrid = ({
             }`,
       };
     }
+    if (typeof rawUrl === 'number') {
+      return rawUrl;
+    }
     return null;
   }, [bottomGifBannerItem]);
+
+  const [bottomBannerAspectRatio, setBottomBannerAspectRatio] = useState(null);
+  const [gifAspectRatio, setGifAspectRatio] = useState(null);
+
+  useEffect(() => {
+    if (!bottomGifBannerSource) {
+      setBottomBannerAspectRatio(null);
+      return;
+    }
+
+    const uriStr =
+      typeof bottomGifBannerSource === 'string'
+        ? bottomGifBannerSource
+        : bottomGifBannerSource?.uri;
+
+    if (typeof uriStr === 'string' && uriStr.length > 0) {
+      Image.getSize(
+        uriStr,
+        (width, height) => {
+          if (width > 0 && height > 0) {
+            setBottomBannerAspectRatio(width / height);
+          }
+        },
+        () => {},
+      );
+    } else {
+      try {
+        const resolved = Image.resolveAssetSource(bottomGifBannerSource);
+        if (resolved?.width && resolved?.height) {
+          setBottomBannerAspectRatio(resolved.width / resolved.height);
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+  }, [bottomGifBannerSource]);
+
+  useEffect(() => {
+    if (!gifSource) {
+      setGifAspectRatio(null);
+      return;
+    }
+
+    const uriStr = typeof gifSource === 'string' ? gifSource : gifSource?.uri;
+
+    if (typeof uriStr === 'string' && uriStr.length > 0) {
+      Image.getSize(
+        uriStr,
+        (width, height) => {
+          if (width > 0 && height > 0) {
+            setGifAspectRatio(width / height);
+          }
+        },
+        () => {},
+      );
+    } else {
+      try {
+        const resolved = Image.resolveAssetSource(gifSource);
+        if (resolved?.width && resolved?.height) {
+          setGifAspectRatio(resolved.width / resolved.height);
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+  }, [gifSource]);
+
+  const handleBottomBannerLoad = useCallback(event => {
+    const { width, height } = event?.nativeEvent?.source || {};
+    if (width > 0 && height > 0) {
+      setBottomBannerAspectRatio(width / height);
+    }
+  }, []);
+
+  const handleGifLoad = useCallback(event => {
+    const { width, height } = event?.nativeEvent?.source || {};
+    if (width > 0 && height > 0) {
+      setGifAspectRatio(width / height);
+    }
+  }, []);
 
   if (gridCategories.length === 0) return null;
 
@@ -152,18 +238,27 @@ const ExploreCategoriesGrid = ({
                 else if (onPressBanner) onPressBanner(gifItem);
               }}
               activeOpacity={0.92}
+              style={styles.bannerPressable}
             >
               <Image
                 source={gifSource}
-                style={styles.bannerImage}
-                resizeMode="cover"
+                style={[
+                  styles.bannerImage,
+                  gifAspectRatio ? { aspectRatio: gifAspectRatio } : null,
+                ]}
+                resizeMode="contain"
+                onLoad={handleGifLoad}
               />
             </AnimatedPressable>
           ) : (
             <Image
               source={gifSource}
-              style={styles.bannerImage}
-              resizeMode="cover"
+              style={[
+                styles.bannerImage,
+                gifAspectRatio ? { aspectRatio: gifAspectRatio } : null,
+              ]}
+              resizeMode="contain"
+              onLoad={handleGifLoad}
             />
           )}
         </View>
@@ -179,18 +274,31 @@ const ExploreCategoriesGrid = ({
                 else if (onPressBanner) onPressBanner(bottomGifBannerItem);
               }}
               activeOpacity={0.92}
+              style={styles.bannerPressable}
             >
               <Image
                 source={bottomGifBannerSource}
-                style={styles.bannerImage}
-                resizeMode="cover"
+                style={[
+                  styles.bannerImage,
+                  bottomBannerAspectRatio
+                    ? { aspectRatio: bottomBannerAspectRatio }
+                    : null,
+                ]}
+                resizeMode="contain"
+                onLoad={handleBottomBannerLoad}
               />
             </AnimatedPressable>
           ) : (
             <Image
               source={bottomGifBannerSource}
-              style={styles.bannerImage}
-              resizeMode="cover"
+              style={[
+                styles.bannerImage,
+                bottomBannerAspectRatio
+                  ? { aspectRatio: bottomBannerAspectRatio }
+                  : null,
+              ]}
+              resizeMode="contain"
+              onLoad={handleBottomBannerLoad}
             />
           )}
         </View>
@@ -264,18 +372,24 @@ const ExploreCategoriesGrid = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: hp('4.8%'),
+    marginTop: hp('4%'),
+    marginBottom: hp('4.8%'),
   },
   bannerWrap: {
+    marginTop: -hp('2%'),
     width: '100%',
-    marginTop: -hp('3%'),
     marginBottom: hp('1.4%'),
     alignItems: 'center',
     overflow: 'hidden',
   },
+  bannerPressable: {
+    width: '100%',
+    alignItems: 'center',
+  },
   bannerImage: {
     width: '100%',
     aspectRatio: 440 / 100,
+    resizeMode: 'contain',
   },
   contentWrap: {
     paddingHorizontal: wp('4%'),
@@ -288,8 +402,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: wp('4.4%'),
-    fontFamily: FONTS.gilroy.bold,
-    color: '#111827',
+    fontFamily: FONTS.gilroy.semiBold,
   },
   viewAllButton: {
     flexDirection: 'row',

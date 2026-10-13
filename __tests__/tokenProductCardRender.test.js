@@ -178,4 +178,33 @@ describe('TokenProductCard Redesign', () => {
     );
     expect(discountText.length).toBeGreaterThan(0);
   });
+
+  it('does not render subtitle text when subtitle and weight are not provided', () => {
+    const productWithoutSubtitle = {
+      productId: 'prod-103',
+      name: 'Product Without Subtitle',
+      price: 50,
+      mrp: 100,
+    };
+
+    let tree;
+    act(() => {
+      tree = renderer.create(
+        <TokenProductCard item={productWithoutSubtitle} />
+      );
+    });
+
+    const root = tree.root;
+    // Subtitle text component shouldn't be rendered
+    const subtitleMatches = root.findAll(
+      node =>
+        node.type === 'Text' &&
+        Array.isArray(node.props?.style) &&
+        node.props.style.some(
+          s => s && s.color === '#8E949E' && s.minHeight === 15,
+        ),
+    );
+    expect(subtitleMatches.length).toBe(0);
+  });
 });
+

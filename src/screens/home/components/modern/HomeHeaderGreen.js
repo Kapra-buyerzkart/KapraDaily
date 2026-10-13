@@ -18,10 +18,9 @@ import {
 } from 'react-native-responsive-screen';
 import Feather from 'react-native-vector-icons/Feather';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import Toast from 'react-native-simple-toast';
 import { FONTS } from '@/styles/typography';
 import RotatingPlaceholder from '@/components/RotatingPlaceholder';
-
-const HEADER_GRADIENT = ['#FF7300', '#FF7300', '#FF7300'];
 
 const SEARCH_EXAMPLES = [
   "'Coconut oil, Apple, Milma...'",
@@ -57,17 +56,30 @@ const HomeHeaderGreen = ({
   dashboardData,
   navigation,
   onPressLocation,
+  isSearchDisabled = false,
   onSearchPress,
   onMicPress,
   onCartPress,
   cartCount = 0,
   scrollY,
   colorScheme,
+  backgroundColor,
 }) => {
-  const headerGradient = colorScheme?.gradient || HEADER_GRADIENT;
-  const accentColor = colorScheme?.accent || '#FF7300';
+  const effectiveBgColor =
+    backgroundColor ||
+    colorScheme?.containerBackground ||
+    colorScheme?.primary ||
+    '#FF7300';
+  const headerGradient = backgroundColor
+    ? [backgroundColor, backgroundColor, backgroundColor]
+    : colorScheme?.gradient || [
+        effectiveBgColor,
+        effectiveBgColor,
+        effectiveBgColor,
+      ];
+  const accentColor = colorScheme?.accent || effectiveBgColor;
   const searchIconColor =
-    colorScheme?.searchIcon || colorScheme?.primary || '#FF7300';
+    colorScheme?.searchIcon || colorScheme?.primary || effectiveBgColor;
 
   // Parse area name (before first comma) and secondary location details (city/pincode)
   const pinAddress =
@@ -133,6 +145,10 @@ const HomeHeaderGreen = ({
   };
 
   const handleSearchPress = () => {
+    if (isSearchDisabled) {
+      Toast.show('Please change location to search products', Toast.SHORT);
+      return;
+    }
     if (onSearchPress) {
       onSearchPress();
     } else {
@@ -141,6 +157,10 @@ const HomeHeaderGreen = ({
   };
 
   const handleMicPress = () => {
+    if (isSearchDisabled) {
+      Toast.show('Please change location to search products', Toast.SHORT);
+      return;
+    }
     if (onMicPress) {
       onMicPress();
     } else {
@@ -299,7 +319,7 @@ const HomeHeaderGreen = ({
           <Feather
             name="search"
             size={wp('4.8%')}
-            color={accentColor}
+            color={searchIconColor}
             style={styles.searchIcon}
           />
           <View style={styles.placeholderContainer}>

@@ -83,9 +83,11 @@ const styles = StyleSheet.create({
     paddingRight: wp('2%'),
   },
   mainTitle: {
+    fontFamily: FONTS.gilroy.regular,
+    fontSize: 11,
     paddingHorizontal: wp('4%'),
     paddingBottom: wp('2'),
-    letterSpacing: 4,
+    letterSpacing: 2,
     color: '#F25000',
   },
   subTitle: {

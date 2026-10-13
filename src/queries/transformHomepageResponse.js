@@ -1,5 +1,5 @@
 import CONFIG from '../globals/config';
-import { resolveHomeColorScheme } from '../styles/homeTheme';
+import { resolveHomeColorScheme, normalizeHex } from '../styles/homeTheme';
 
 const SPECIFIC_PLACEMENT_KEYS = [
   'app_home_top_banner',
@@ -201,16 +201,52 @@ export const transformHomepageResponse = (response) => {
     secondProductBlock: data.secondProductBlock || data.SecondProductBlock || null,
     thirdProductBlock: data.thirdProductBlock || data.ThirdProductBlock || null,
     categoryDiscovery: data.categoryDiscovery || data.CategoryDiscovery || null,
-    colorScheme: resolveHomeColorScheme(
-      data.colorScheme ||
-      data.color_scheme ||
-      data.theme ||
-      data.themeColors ||
-      data.theme_colors ||
-      response?.colorScheme ||
-      response?.color_scheme ||
-      response?.theme ||
-      null
-    ),
+    colorScheme: (() => {
+      const topGifBanner = findBanner(allBanners, 'app_home_top_gif_section');
+      const topGifLinkValue =
+        topGifBanner?.linkValue ||
+        topGifBanner?.LinkValue ||
+        topGifBanner?.link_value;
+      const validTopGifColor =
+        typeof topGifLinkValue === 'string' &&
+        /^#?(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(
+          topGifLinkValue.trim(),
+        )
+          ? normalizeHex(topGifLinkValue.trim())
+          : null;
+
+      const rawScheme =
+        data.colorScheme ||
+        data.color_scheme ||
+        data.theme ||
+        data.themeColors ||
+        data.theme_colors ||
+        response?.colorScheme ||
+        response?.color_scheme ||
+        response?.theme ||
+        null;
+
+      if (validTopGifColor) {
+        if (!rawScheme) {
+          return resolveHomeColorScheme({
+            primary: validTopGifColor,
+            gradient: [validTopGifColor, validTopGifColor, validTopGifColor],
+            accent: validTopGifColor,
+            searchIcon: validTopGifColor,
+            containerBackground: validTopGifColor,
+          });
+        }
+        if (typeof rawScheme === 'object') {
+          return resolveHomeColorScheme({
+            primary: validTopGifColor,
+            gradient: [validTopGifColor, validTopGifColor, validTopGifColor],
+            containerBackground: validTopGifColor,
+            ...rawScheme,
+          });
+        }
+      }
+
+      return resolveHomeColorScheme(rawScheme);
+    })(),
   };
 };

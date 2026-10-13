@@ -1,43 +1,33 @@
 import React from 'react';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import CartText from './atoms/CartText';
-import IconDisc from './atoms/IconDisc';
-import Divider from './atoms/Divider';
-import {
-  CART_COLORS,
-  CART_RADIUS,
-  CART_SPACING,
-  wp,
-  hp,
-} from '../../../styles/cartTheme';
+import { FONTS } from '@/styles/typography';
+import { wp, hp } from '../../../styles/cartTheme';
 
 const WishlistCTA = ({ onPress }) => {
   return (
-    <View>
-      <Divider inset={CART_SPACING.lg} />
+    <View style={styles.container}>
       <View style={styles.row}>
-        <IconDisc size={wp('8.5%')} tone="pink">
-          <Ionicons name="heart" size={wp('4.2%')} color={CART_COLORS.pink} />
-        </IconDisc>
+        <View style={styles.iconCircle}>
+          <Ionicons name="heart" size={wp('5%')} color="#EF4444" />
+        </View>
 
         <View style={styles.copy}>
-          <CartText variant="labelStrong">Add from your wishlist</CartText>
-          <CartText variant="micro" tone="muted">
-            Saved items you may still want
-          </CartText>
+          <Text style={styles.title}>Add from your wishlist</Text>
+          <Text style={styles.subtitle}>Saved items you may still want</Text>
         </View>
 
         <TouchableOpacity
-          activeOpacity={0.8}
+          activeOpacity={0.75}
           style={styles.addBtn}
           onPress={onPress}
         >
-          <CartText variant="micro" tone="pink">
-            + Add
-          </CartText>
+          <Text style={styles.addBtnText}>+ Add</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Solid orange accent divider line */}
+      <View style={styles.orangeDivider} />
     </View>
   );
 };
@@ -45,23 +35,57 @@ const WishlistCTA = ({ onPress }) => {
 export default React.memo(WishlistCTA);
 
 const styles = StyleSheet.create({
+  container: {
+    backgroundColor: '#FFFFFF',
+    width: '100%',
+    marginTop: hp('1%'),
+  },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: CART_SPACING.md,
-    paddingHorizontal: CART_SPACING.lg,
-    paddingVertical: CART_SPACING.md,
+    paddingHorizontal: wp('4%'),
+    paddingVertical: hp('1.5%'),
+    gap: wp('3.5%'),
+  },
+  iconCircle: {
+    width: wp('9.5%'),
+    height: wp('9.5%'),
+    borderRadius: wp('4.75%'),
+    backgroundColor: '#FFE4E6',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   copy: {
     flex: 1,
-    gap: 1,
+    gap: 2,
+  },
+  title: {
+    fontFamily: FONTS.gilroy.bold,
+    fontSize: wp('3.7%'),
+    color: '#000000',
+  },
+  subtitle: {
+    fontFamily: FONTS.gilroy.regular,
+    fontSize: wp('3%'),
+    color: '#71717A',
   },
   addBtn: {
-    borderWidth: 1,
-    borderColor: CART_COLORS.pink,
-    backgroundColor: CART_COLORS.pinkTint,
-    borderRadius: CART_RADIUS.pill,
-    paddingHorizontal: CART_SPACING.md,
-    paddingVertical: hp('0.6%'),
+    borderWidth: 1.2,
+    borderColor: '#EF4444',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 5,
+  },
+  addBtnText: {
+    fontFamily: FONTS.gilroy.bold,
+    fontSize: wp('3.4%'),
+    color: '#EF4444',
+  },
+  orangeDivider: {
+    height: 1.5,
+    backgroundColor: '#FF6200',
+    width: '100%',
+    marginTop: hp('0.5%'),
   },
 });

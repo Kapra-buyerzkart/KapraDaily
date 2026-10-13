@@ -1,28 +1,13 @@
 import React from 'react';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import AntDesign from 'react-native-vector-icons/AntDesign';
-import CartText from './atoms/CartText';
-import Badge from './atoms/Badge';
-import IconDisc from './atoms/IconDisc';
-import {
-  CART_COLORS,
-  CART_RADIUS,
-  CART_SPACING,
-  wp,
-  hp,
-  hitSlopTo,
-} from '../../../styles/cartTheme';
-
-const ICON_TONES = {
-  brand: { disc: 'brand', color: CART_COLORS.primary },
-  pink: { disc: 'pink', color: CART_COLORS.pink },
-  success: { disc: 'success', color: CART_COLORS.successDeep },
-};
+import Feather from 'react-native-vector-icons/Feather';
+import { FONTS } from '@/styles/typography';
+import { wp, hp } from '../../../styles/cartTheme';
 
 const OfferRow = ({
   iconName,
-  iconTone = 'brand',
+  imageSource,
   title,
   appliedLabel,
   appliedSubtitle,
@@ -32,7 +17,6 @@ const OfferRow = ({
   onRemove,
   removeLabel = 'Remove',
 }) => {
-  const tone = ICON_TONES[iconTone] || ICON_TONES.brand;
   const Wrapper = isApplied ? View : TouchableOpacity;
   const wrapperProps = isApplied
     ? {}
@@ -40,40 +24,37 @@ const OfferRow = ({
 
   return (
     <Wrapper style={styles.row} {...wrapperProps}>
-      <IconDisc
-        size={wp('9.5%')}
-        tone={isApplied ? 'success' : tone.disc}
-      >
-        <MaterialCommunityIcons
-          name={iconName}
-          size={wp('5%')}
-          color={isApplied ? CART_COLORS.successDeep : tone.color}
-        />
-      </IconDisc>
+      <View style={styles.iconWrap}>
+        {imageSource ? (
+          <Image source={imageSource} style={styles.iconImage} />
+        ) : (
+          <MaterialCommunityIcons
+            name={iconName || 'ticket-percent-outline'}
+            size={wp('6%')}
+            color="#FF6200"
+          />
+        )}
+      </View>
 
       <View style={styles.details}>
-        <CartText variant="labelStrong">{title}</CartText>
+        <Text style={styles.title}>{title}</Text>
         {isApplied ? (
           <View style={styles.appliedRow}>
             {appliedLabel ? (
-              <Badge tone="neutral" label={appliedLabel} />
+              <View style={styles.labelBadge}>
+                <Text style={styles.labelBadgeText}>{appliedLabel}</Text>
+              </View>
             ) : null}
-            <Badge
-              tone="success"
-              label={appliedSubtitle || 'Applied'}
-              icon={
-                <MaterialCommunityIcons
-                  name="check-circle"
-                  size={wp('3%')}
-                  color={CART_COLORS.successDeep}
-                />
-              }
-            />
+            <View style={styles.appliedBadge}>
+              <Text style={styles.appliedBadgeText}>
+                {appliedSubtitle || 'Applied'}
+              </Text>
+            </View>
           </View>
         ) : (
-          <CartText variant="micro" tone="muted" numberOfLines={1}>
+          <Text style={styles.subtitle} numberOfLines={1}>
             {subtitle}
-          </CartText>
+          </Text>
         )}
       </View>
 
@@ -82,25 +63,13 @@ const OfferRow = ({
           activeOpacity={0.75}
           style={styles.removeButton}
           onPress={onRemove}
-          hitSlop={hitSlopTo(hp('3.2%'))}
-          accessibilityRole="button"
-          accessibilityLabel={`${removeLabel} ${title}`}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
-          <MaterialCommunityIcons
-            name="close"
-            size={wp('3.2%')}
-            color={CART_COLORS.danger}
-          />
-          <CartText variant="micro" tone="danger">
-            {removeLabel}
-          </CartText>
+          <MaterialCommunityIcons name="close" size={14} color="#EF4444" />
+          <Text style={styles.removeText}>{removeLabel}</Text>
         </TouchableOpacity>
       ) : (
-        <AntDesign
-          name="right"
-          size={wp('3.4%')}
-          color={CART_COLORS.textFaint}
-        />
+        <Feather name="chevron-right" size={18} color="#9CA3AF" />
       )}
     </Wrapper>
   );
@@ -112,29 +81,79 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: CART_SPACING.md,
-    paddingVertical: hp('1.2%'),
-    paddingHorizontal: CART_SPACING.lg,
+    gap: wp('3.5%'),
+    paddingVertical: hp('1.4%'),
+    paddingHorizontal: wp('4%'),
+    backgroundColor: '#FFFFFF',
+  },
+  iconWrap: {
+    width: wp('10%'),
+    height: wp('10%'),
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconImage: {
+    width: wp('8%'),
+    height: wp('8%'),
+    resizeMode: 'contain',
   },
   details: {
     flex: 1,
     gap: 2,
   },
+  title: {
+    fontFamily: FONTS.gilroy.bold,
+    fontSize: wp('3.7%'),
+    color: '#000000',
+  },
+  subtitle: {
+    fontFamily: FONTS.gilroy.regular,
+    fontSize: wp('3%'),
+    color: '#71717A',
+  },
   appliedRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: CART_SPACING.sm,
+    gap: 6,
     flexWrap: 'wrap',
+    marginTop: 2,
+  },
+  labelBadge: {
+    backgroundColor: '#F3F4F6',
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  labelBadgeText: {
+    fontFamily: FONTS.gilroy.semiBold,
+    fontSize: wp('2.8%'),
+    color: '#374151',
+  },
+  appliedBadge: {
+    backgroundColor: '#DCFCE7',
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  appliedBadgeText: {
+    fontFamily: FONTS.gilroy.bold,
+    fontSize: wp('2.8%'),
+    color: '#16A34A',
   },
   removeButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: CART_SPACING.xs / 2,
-    paddingHorizontal: CART_SPACING.sm,
-    paddingVertical: CART_SPACING.xs,
-    borderRadius: CART_RADIUS.pill,
+    gap: 3,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: CART_COLORS.danger,
-    backgroundColor: CART_COLORS.dangerTint,
+    borderColor: '#FCA5A5',
+    backgroundColor: '#FEF2F2',
+  },
+  removeText: {
+    fontFamily: FONTS.gilroy.semiBold,
+    fontSize: wp('2.8%'),
+    color: '#EF4444',
   },
 });

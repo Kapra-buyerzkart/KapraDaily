@@ -11,12 +11,7 @@ import CachedImage from '@/components/CachedImage';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import CONFIG from '@/globals/config';
 
-const HomeFooter = ({
-  banner,
-  banners,
-  onPress,
-  onPressBanner,
-}) => {
+const HomeFooter = ({ banner, banners, onPress, onPressBanner }) => {
   const bannerItem = useMemo(() => {
     if (banner && !Array.isArray(banner)) {
       return banner;
@@ -73,7 +68,8 @@ const HomeFooter = ({
   };
 
   const hasPressHandler = Boolean(
-    bannerItem && (typeof onPress === 'function' || typeof onPressBanner === 'function'),
+    bannerItem &&
+      (typeof onPress === 'function' || typeof onPressBanner === 'function'),
   );
 
   return (
@@ -118,8 +114,8 @@ const styles = StyleSheet.create({
     marginBottom: hp('2%'),
   },
   image: {
-    width: wp('60%'),
-    height: wp('35%'),
+    width: wp('65%'),
+    height: wp('65%'),
     marginBottom: hp('2%'),
   },
   title: {

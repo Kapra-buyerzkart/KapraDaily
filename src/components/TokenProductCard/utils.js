@@ -82,8 +82,16 @@ export const deriveProductFields = item => {
   return {
     productId: derivedProductId,
     name: item?.prName || item?.name || '',
-    mrp: firstPresent([item?.mrp, item?.unitPrice], ''),
-    price: firstPresent([item?.price, item?.specialPrice], 0),
+    mrp: firstPresent([item?.mrp, item?.unitPrice, item?.originalPrice], ''),
+    price: firstPresent(
+      [
+        item?.price,
+        item?.specialPrice,
+        item?.sellingPrice,
+        item?.discountedPrice,
+      ],
+      0,
+    ),
     offer: derivedOffer,
     weight: item?.weight,
     subtitle:

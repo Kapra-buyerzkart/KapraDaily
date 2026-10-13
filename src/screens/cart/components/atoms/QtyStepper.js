@@ -7,15 +7,9 @@ import Animated, {
   withSequence,
   withSpring,
 } from 'react-native-reanimated';
-import Entypo from 'react-native-vector-icons/Entypo';
 import AnimatedPressable from '../../../../components/AnimatedPressable';
-import {
-  CART_COLORS,
-  CART_RADIUS,
-  CART_TYPE,
-  MAX_FONT_SCALE,
-  wp,
-} from '../../../../styles/cartTheme';
+import { FONTS } from '@/styles/typography';
+import { CART_COLORS, MAX_FONT_SCALE } from '../../../../styles/cartTheme';
 
 const BUMP_SPRING = { damping: 8, stiffness: 260, mass: 0.4 };
 
@@ -41,53 +35,66 @@ const QtyStepper = ({
     transform: [{ scale: bump.value }],
   }));
 
-  const iconColor = disabled
-    ? CART_COLORS.textFaint
-    : CART_COLORS.textSecondary;
+  const iconColor = disabled ? CART_COLORS.textFaint : '#3B1011';
 
   return (
-    <View
-      style={[
-        styles.shell,
-        disabled && styles.shellDisabled,
-        updating && styles.shellUpdating,
-      ]}
-    >
-      <AnimatedPressable
-        style={styles.btn}
-        onPress={onDecrease}
-        hitSlop={{ top: 8, bottom: 8, left: 8, right: 4 }}
-        accessibilityRole="button"
-        accessibilityLabel={
-          quantity === 1
-            ? `Remove ${productName} from cart`
-            : `Decrease ${productName} quantity`
-        }
-      >
-        <Entypo name="minus" size={wp('4%')} color={iconColor} />
-      </AnimatedPressable>
+    <View style={styles.wrapper}>
+      {/* Black 3D offset shadow layer */}
+      <View
+        style={[styles.shadowLayer, disabled && styles.shadowDisabled]}
+      />
 
-      <Animated.Text
-        maxFontSizeMultiplier={MAX_FONT_SCALE}
-        style={[styles.count, disabled && styles.countDisabled, bumpStyle]}
+      {/* Main yellow pill */}
+      <View
+        style={[
+          styles.shell,
+          disabled && styles.shellDisabled,
+          updating && styles.shellUpdating,
+        ]}
       >
-        {quantity}
-      </Animated.Text>
+        <AnimatedPressable
+          style={styles.btn}
+          onPress={onDecrease}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 6 }}
+          accessibilityRole="button"
+          accessibilityLabel={
+            quantity === 1
+              ? `Remove ${productName} from cart`
+              : `Decrease ${productName} quantity`
+          }
+        >
+          <View style={[styles.minusBar, { backgroundColor: iconColor }]} />
+        </AnimatedPressable>
 
-      <AnimatedPressable
-        style={[styles.btn, atMaxQty && styles.btnCapped]}
-        onPress={onIncrease}
-        disabled={disabled}
-        hitSlop={{ top: 8, bottom: 8, left: 4, right: 8 }}
-        accessibilityRole="button"
-        accessibilityLabel={
-          atMaxQty
-            ? `Maximum quantity reached for ${productName}`
-            : `Increase ${productName} quantity`
-        }
-      >
-        <Entypo name="plus" size={wp('4%')} color={iconColor} />
-      </AnimatedPressable>
+        <Animated.Text
+          maxFontSizeMultiplier={MAX_FONT_SCALE}
+          style={[styles.count, disabled && styles.countDisabled, bumpStyle]}
+        >
+          {quantity}
+        </Animated.Text>
+
+        <AnimatedPressable
+          style={[styles.btn, atMaxQty && styles.btnCapped]}
+          onPress={onIncrease}
+          disabled={disabled}
+          hitSlop={{ top: 8, bottom: 8, left: 6, right: 8 }}
+          accessibilityRole="button"
+          accessibilityLabel={
+            atMaxQty
+              ? `Maximum quantity reached for ${productName}`
+              : `Increase ${productName} quantity`
+          }
+        >
+          <View style={styles.plusContainer}>
+            <View
+              style={[styles.plusHorizontal, { backgroundColor: iconColor }]}
+            />
+            <View
+              style={[styles.plusVertical, { backgroundColor: iconColor }]}
+            />
+          </View>
+        </AnimatedPressable>
+      </View>
     </View>
   );
 };
@@ -95,38 +102,78 @@ const QtyStepper = ({
 export default React.memo(QtyStepper);
 
 const styles = StyleSheet.create({
+  wrapper: {
+    position: 'relative',
+    height: 30,
+    width: 86,
+  },
+  shadowLayer: {
+    position: 'absolute',
+    top: 2.5,
+    left: 2.5,
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#000000',
+    borderRadius: 999,
+  },
+  shadowDisabled: {
+    backgroundColor: '#9CA3AF',
+  },
   shell: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: CART_COLORS.card,
-    borderWidth: 1,
-    borderColor: CART_COLORS.borderStrong,
-    borderRadius: CART_RADIUS.stepper,
-    paddingHorizontal: 2,
-    minWidth: wp('24%'),
+    backgroundColor: '#FFDD04',
+    borderRadius: 999,
+    height: 30,
+    width: '100%',
     justifyContent: 'space-between',
+    paddingHorizontal: 2,
   },
   shellDisabled: {
-    backgroundColor: CART_COLORS.well,
-    borderColor: CART_COLORS.border,
+    backgroundColor: '#F3F4F6',
   },
   shellUpdating: {
     opacity: 0.5,
   },
   btn: {
-    width: wp('8%'),
-    height: wp('8%'),
+    width: 28,
+    height: 30,
     alignItems: 'center',
     justifyContent: 'center',
   },
   btnCapped: {
-    opacity: 0.4,
+    opacity: 0.35,
+  },
+  minusBar: {
+    width: 10,
+    height: 2.4,
+    borderRadius: 0.5,
+  },
+  plusContainer: {
+    width: 11,
+    height: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  plusHorizontal: {
+    position: 'absolute',
+    width: 11,
+    height: 2.4,
+    borderRadius: 0.5,
+  },
+  plusVertical: {
+    position: 'absolute',
+    width: 2.4,
+    height: 11,
+    borderRadius: 0.5,
   },
   count: {
-    ...CART_TYPE.labelStrong,
-    color: CART_COLORS.textPrimary,
-    minWidth: wp('5%'),
+    fontFamily: FONTS.lexend.bold,
+    fontSize: 15,
+    color: '#101827',
+    minWidth: 20,
     textAlign: 'center',
+    includeFontPadding: false,
   },
   countDisabled: {
     color: CART_COLORS.textFaint,

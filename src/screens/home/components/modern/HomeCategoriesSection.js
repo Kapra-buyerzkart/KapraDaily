@@ -224,19 +224,44 @@ const HomeCategoriesSection = ({
             <AnimatedPressable
               onPress={() => onPressBanner(gifItem)}
               activeOpacity={0.92}
+              style={styles.gifContainer}
             >
               <Image
                 source={gifSource}
                 style={styles.storeGifImage}
                 resizeMode="contain"
               />
+              <LinearGradient
+                colors={[
+                  'rgba(255, 255, 255, 0)',
+                  'rgba(255, 255, 255, 0.35)',
+                  'rgba(255, 255, 255, 0.85)',
+                  '#FFFFFF',
+                ]}
+                locations={[0, 0.4, 0.75, 1]}
+                style={styles.bottomGradientBlend}
+                pointerEvents="none"
+              />
             </AnimatedPressable>
           ) : (
-            <Image
-              source={gifSource}
-              style={styles.storeGifImage}
-              resizeMode="contain"
-            />
+            <View style={styles.gifContainer}>
+              <Image
+                source={gifSource}
+                style={styles.storeGifImage}
+                resizeMode="contain"
+              />
+              <LinearGradient
+                colors={[
+                  'rgba(255, 255, 255, 0)',
+                  'rgba(255, 255, 255, 0.35)',
+                  'rgba(255, 255, 255, 0.85)',
+                  '#FFFFFF',
+                ]}
+                locations={[0, 0.4, 0.75, 1]}
+                style={styles.bottomGradientBlend}
+                pointerEvents="none"
+              />
+            </View>
           )}
         </View>
       ) : null}
@@ -387,7 +412,7 @@ const HomeCategoriesSection = ({
 
 const styles = StyleSheet.create({
   container: {
-    paddingTop: hp('1.8%'),
+    paddingTop: -hp('1.8%'),
     paddingBottom: hp('1.2%'),
   },
   storeHeaderWrap: {
@@ -396,11 +421,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width: '100%',
   },
+  gifContainer: {
+    width: '100%',
+    position: 'relative',
+    overflow: 'hidden',
+  },
   storeGifImage: {
     width: '100%',
     aspectRatio: 440 / 200,
     marginTop: -20,
-    zIndex: 9999,
+  },
+  bottomGradientBlend: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: hp('6%'),
   },
   storeHeaderImage: {
     width: '100%',
@@ -411,7 +447,7 @@ const styles = StyleSheet.create({
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: '4.5%',
+    paddingTop: '-4.5%',
     justifyContent: 'space-between',
     paddingHorizontal: wp('4%'),
     marginBottom: hp('1%'),

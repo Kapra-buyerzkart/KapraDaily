@@ -1,6 +1,9 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from 'react-native-responsive-screen';
 import { FONTS } from '@/styles/typography';
 import ProductRail from '../ProductRail';
 
@@ -28,11 +31,11 @@ const FeaturedProductsModernSection = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: hp('1.5%'),
+    marginVertical: hp('2.5%'),
   },
   headerRow: {
     paddingHorizontal: wp('4%'),
-    marginBottom: hp('1%'),
+    // marginBottom: hp('1%'),
   },
   title: {
     fontSize: wp('4.4%'),
