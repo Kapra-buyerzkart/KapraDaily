@@ -1,6 +1,7 @@
 import React, {
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -21,6 +22,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { LoaderContext } from '../../../context/loaderContext';
 import { getMyOrdersApi } from '../../../api/services/orderService';
+import kshopeSignalRService from '../../../api/services/kshopeSignalRService';
 import { HOME_FONTS } from '../../Home/redesign/theme';
 import type { OrderListItem } from '../../../types/order';
 import { bucketOrders, detailParams, type OrderBucket } from './data/selectors';
@@ -106,6 +108,20 @@ const MyOrdersRedesignScreen: React.FC = () => {
       fetchMyOrderFunction(hasLoadedOnce.current);
     }, [fetchMyOrderFunction]),
   );
+
+  useEffect(() => {
+    kshopeSignalRService.startConnection().catch(() => {});
+
+    const unsubscribe = kshopeSignalRService.onEvent((type) => {
+      if (type === 'orderUpdate') {
+        fetchMyOrderFunction(true);
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [fetchMyOrderFunction]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);

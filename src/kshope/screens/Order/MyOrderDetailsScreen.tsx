@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -39,6 +39,7 @@ import StatusModal from '../../components/StatusModal';
 import FallbackImage from '../../components/FallbackImage';
 import { OrderDetails, OrderLineItem } from '../../types/order';
 import { isCashOnDelivery } from './status/paymentMeta';
+import { useKshopeOrderTracking } from '../../hooks/useKshopeOrderTracking';
 
 const STEPPER_STAGES = [
   { label: 'Confirmed', keys: ['pending', 'placed', 'accepted'] },
@@ -146,17 +147,62 @@ const RatingBlock = ({
 const MyOrderDetailsScreen = () => {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
-  const [isTrackOpen, setIsTrackOpen] = useState(false);
   const { profile } = useUser();
 
   const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const { showLoader } = useContext(LoaderContext) || { showLoader: () => {} };
 
+  const order: any =
+    route.params?.order ||
+    orderDetails?.header || { orderId: route.params?.orderId };
+
+  const targetOrderId =
+    route.params?.orderId || route.params?.order?.orderId || order?.orderId;
+
+  const fetchMyOrderDetailsFunction = useCallback(
+    async (silent = false) => {
+      try {
+        if (!silent) {
+          showLoader(true);
+        }
+        const activeId =
+          route.params?.orderId ||
+          route.params?.order?.orderId ||
+          order?.orderId;
+        if (!activeId) {
+          setOrderDetails(null);
+          return;
+        }
+        const response = await getOrderDetailsApi(activeId);
+        console.log(
+          'KSHOPE ORDER DETAILS',
+          activeId,
+          JSON.stringify(response, null, 2),
+        );
+        if (response && response.success && response.data) {
+          setOrderDetails(response.data);
+        } else if (!silent) {
+          setOrderDetails(null);
+        }
+      } catch (error) {
+        console.error('Error fetching order details:', error);
+        if (!silent) {
+          setOrderDetails(null);
+        }
+      } finally {
+        if (!silent) {
+          showLoader(false);
+        }
+      }
+    },
+    [route.params?.orderId, route.params?.order?.orderId, order?.orderId, showLoader],
+  );
+
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
     fetchMyOrderDetailsFunction().finally(() => setRefreshing(false));
-  }, []);
+  }, [fetchMyOrderDetailsFunction]);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -183,8 +229,6 @@ const MyOrderDetailsScreen = () => {
     }, [navigation]),
   );
 
-  const order: any = route.params?.order ||
-    orderDetails?.header || { orderId: route.params?.orderId };
   const [selectedItem, setSelectedItem] = useState<OrderLineItem>(
     route.params?.selectedItem || {},
   );
@@ -197,7 +241,7 @@ const MyOrderDetailsScreen = () => {
     ) {
       setSelectedItem(orderDetails.items[0]);
     }
-  }, [orderDetails]);
+  }, [orderDetails, selectedItem?.productName]);
 
   useEffect(() => {
     const head = orderDetails?.header;
@@ -262,34 +306,15 @@ const MyOrderDetailsScreen = () => {
 
   useEffect(() => {
     fetchMyOrderDetailsFunction();
-  }, []);
+  }, [fetchMyOrderDetailsFunction]);
 
-  const fetchMyOrderDetailsFunction = async () => {
-    try {
-      showLoader(true);
-      const orderId = route.params?.orderId || route.params?.order?.orderId;
-      if (!orderId) {
-        setOrderDetails(null);
-        return;
-      }
-      const response = await getOrderDetailsApi(orderId);
-      console.log(
-        'KSHOPE ORDER DETAILS',
-        orderId,
-        JSON.stringify(response, null, 2),
-      );
-      if (response && response.success && response.data) {
-        setOrderDetails(response.data);
-      } else {
-        setOrderDetails(null);
-      }
-    } catch (error) {
-      console.error('Error fetching order details:', error);
-      setOrderDetails(null);
-    } finally {
-      showLoader(false);
-    }
-  };
+  useKshopeOrderTracking(
+    targetOrderId,
+    useCallback(() => {
+      console.log('📡 [Kshope Screen] Order status updated live via SignalR');
+      fetchMyOrderDetailsFunction(true);
+    }, [fetchMyOrderDetailsFunction]),
+  );
 
   const resolveOrderId = () =>
     order?.orderId ||
