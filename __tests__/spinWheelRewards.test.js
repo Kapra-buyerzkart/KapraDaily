@@ -12,7 +12,7 @@ describe('Spin Wheel Rewards in Profile Screen', () => {
 
     const spinItem = items.find(item => item.key === 'spin-wheel');
     expect(spinItem).toBeDefined();
-    expect(spinItem.label).toBe('Spin Wheel Rewards');
+    expect(spinItem.label).toBe('Spin & Win Assured Gifts');
     expect(spinItem.badge).toBeDefined();
 
     spinItem.onPress();

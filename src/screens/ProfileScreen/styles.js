@@ -27,4 +27,7 @@ export const styles = StyleSheet.create({
     paddingTop: CART_SPACING.xs,
     gap: CART_SPACING.md,
   },
+  menuWrap: {
+    paddingVertical: 14,
+  },
 });

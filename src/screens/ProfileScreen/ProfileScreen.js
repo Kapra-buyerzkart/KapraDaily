@@ -27,6 +27,7 @@ import QuickActionsGrid from './organisms/QuickActionsGrid';
 import MenuSection from './organisms/MenuSection';
 import LogoutRow from './molecules/LogoutRow';
 import AppVersion from './molecules/AppVersion';
+import SpinWheelBanner from './molecules/SpinWheelBanner';
 import SuggestProductsModal from './components/SuggestProductsModal';
 import {
   BAR_SOLID_AT,
@@ -199,7 +200,10 @@ export default function ProfileScreen() {
           </Animated.View>
         </View>
 
-        <Animated.View entering={entrance(2)}>
+        <Animated.View entering={entrance(2)} style={styles.menuWrap}>
+          <SpinWheelBanner
+            onPress={() => navigation.navigate('SpinWheelRewardsScreen')}
+          />
           <MenuSection title="Offers" items={offersItems} />
           <MenuSection title="My Account" items={myAccountItems} />
           <MenuSection title="Information" items={informationItems} />

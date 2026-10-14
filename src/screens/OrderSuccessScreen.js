@@ -25,6 +25,7 @@ import {
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { getOrderDetailsApi } from '../api/orderService';
+import OrderSpinBanner from '../components/OrderSpinBanner';
 
 const OrderSuccessScreen = () => {
   const navigation = useNavigation();
@@ -143,6 +144,14 @@ const OrderSuccessScreen = () => {
     );
   };
 
+  const handleOpenSpinWheel = () => {
+    navigation.navigate('SpinWheelRewardsScreen', {
+      orderId: orderId || orderDetails?._id,
+      orderNumber: displayOrderNumber,
+      source: 'ORDER_SUCCESS',
+    });
+  };
+
   return (
     <SafeAreaView style={styles.mainContainer}>
       <StatusBar barStyle="dark-content" backgroundColor="#DFFFD9" />
@@ -169,6 +178,13 @@ const OrderSuccessScreen = () => {
               </Text>
             </View>
           </View>
+
+          {/* Gamified Motion Graphics Spin Wheel Banner */}
+          <OrderSpinBanner
+            orderId={orderId || orderDetails?._id}
+            orderNumber={displayOrderNumber}
+            onPressSpin={handleOpenSpinWheel}
+          />
 
           {}
           <View style={styles.orderCard}>

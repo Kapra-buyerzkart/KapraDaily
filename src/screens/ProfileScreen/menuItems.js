@@ -17,7 +17,7 @@ export const buildOffersItems = ({
 }) => [
   {
     key: 'spin-wheel',
-    label: 'Spin Wheel Rewards',
+    label: 'Spin & Win Assured Gifts',
     icon: (
       <MaterialCommunityIcons
         name="ferris-wheel"
@@ -25,7 +25,7 @@ export const buildOffersItems = ({
         size={ICON_SIZE}
       />
     ),
-    badge: <Badge label="WIN PRIZES" tone="brand" />,
+    badge: <Badge label="ASSURED GIFT" tone="success" />,
     onPress: onSpinWheel,
   },
   {
