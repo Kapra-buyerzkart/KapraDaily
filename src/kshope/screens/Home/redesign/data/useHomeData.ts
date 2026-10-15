@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { useUser } from '../../../../context/UserContext';
 import { useCart } from '../../../../context/CartContext';
@@ -6,18 +6,12 @@ import { getHomepageData } from '../../../../api/services/homeService';
 import { getKshopeAreaId } from '../../../../globals/storage';
 import { logApi, logApiBlocks } from '../../../../utils/apiLog';
 import type { HeaderItem } from '../../../../components/HomeHeader';
-import {
-  BEST_SELLING,
-  BRANDS,
-  CATEGORY_CARDS,
-  CATEGORY_CHIPS,
-  CATEGORY_TABS,
-  FEATURED_PRODUCTS,
-  HEADER_CIRCLES,
-  HEADER_CONTENT,
-  RECOMMENDED,
-} from '../content';
+import { HEADER_CONTENT } from '../content';
 import type { Tile } from '../content';
+import {
+  checkInternetConnectivity,
+  isNetworkInterruption,
+} from '../network/networkCheck';
 import {
   bannersFor,
   blockTitle,
@@ -37,7 +31,6 @@ import {
   mapGoatDealCard,
   mapRecCard,
   mapTabChip,
-  orFallback,
   resolveImageSource,
 } from './mappers';
 
@@ -48,13 +41,6 @@ const HEADER_PLACEHOLDERS = [
   require('../../../../assets/images/home/items/shoes_02.png'),
 ];
 
-const FALLBACK_HEADER_ITEMS: HeaderItem[] = HEADER_CIRCLES.map(tile => ({
-  id: tile.id,
-  name: tile.label,
-  image: tile.image,
-  raw: tile.raw,
-}));
-
 export const useHomeData = () => {
   const { profile } = useUser();
   const { fetchAddresses, selectedAddress: activeAddress } = useCart();
@@ -62,6 +48,10 @@ export const useHomeData = () => {
   const [homeData, setHomeData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [networkError, setNetworkError] = useState(false);
+  const [isRetrying, setIsRetrying] = useState(false);
+  const [retryErrorMessage, setRetryErrorMessage] = useState<string | null>(null);
+  const isRetryingRef = useRef(false);
 
   const fetchData = useCallback(
     async (isRefresh = false) => {
@@ -78,14 +68,61 @@ export const useHomeData = () => {
         logApi('home/homepage · payload', payload);
         logApiBlocks('home/homepage', payload);
         setHomeData(payload);
-      } catch (e) {
+        setNetworkError(false);
+        setRetryErrorMessage(null);
+      } catch (e: any) {
         console.error('Error fetching home data for K-shope', e);
+        if (isNetworkInterruption(e)) {
+          setNetworkError(true);
+        }
       } finally {
         setLoading(false);
       }
     },
     [profile?.pincode],
   );
+
+  const retry = useCallback(async () => {
+    if (isRetryingRef.current) {
+      return;
+    }
+    isRetryingRef.current = true;
+    setIsRetrying(true);
+    setRetryErrorMessage(null);
+
+    try {
+      const isConnected = await checkInternetConnectivity();
+      if (!isConnected) {
+        setRetryErrorMessage(
+          "We're having trouble connecting. Please check your internet connection and try again.",
+        );
+        return;
+      }
+
+      const storedAreaId = await getKshopeAreaId();
+      const areaId = storedAreaId ?? profile?.pincode ?? null;
+      const data = await getHomepageData(areaId, 100);
+      const payload = data?.data || data;
+
+      setHomeData(payload);
+      setNetworkError(false);
+      setRetryErrorMessage(null);
+
+      fetchAddresses();
+    } catch (e: any) {
+      console.error('Error during Home Screen retry:', e);
+      if (isNetworkInterruption(e)) {
+        setRetryErrorMessage(
+          "We're having trouble connecting. Please check your internet connection and try again.",
+        );
+      } else {
+        setRetryErrorMessage('Unable to complete request. Please try again.');
+      }
+    } finally {
+      setIsRetrying(false);
+      isRetryingRef.current = false;
+    }
+  }, [profile?.pincode, fetchAddresses]);
 
   useEffect(() => {
     fetchData();
@@ -106,9 +143,23 @@ export const useHomeData = () => {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await fetchData(true);
-    setRefreshing(false);
-  }, [fetchData]);
+    try {
+      const storedAreaId = await getKshopeAreaId();
+      const areaId = storedAreaId ?? profile?.pincode ?? null;
+      const data = await getHomepageData(areaId, 100);
+      const payload = data?.data || data;
+      setHomeData(payload);
+      setNetworkError(false);
+      setRetryErrorMessage(null);
+    } catch (e: any) {
+      console.error('Error refreshing home data for K-shope', e);
+      if (isNetworkInterruption(e)) {
+        setNetworkError(true);
+      }
+    } finally {
+      setRefreshing(false);
+    }
+  }, [profile?.pincode]);
 
   const sections = useMemo(() => {
     const categories =
@@ -216,12 +267,7 @@ export const useHomeData = () => {
         return targetBannerIds.indexOf(aId) - targetBannerIds.indexOf(bId);
       });
 
-    console.log('Target Banners (IDs 37-48):', targetBanners);
-
-    const goatDeals =
-      targetBanners.length > 0
-        ? targetBanners
-        : bannersFor(homeData, 'app_home_cat_top_sidebyside_four');
+    const goatDeals = bannersFor(homeData, 'app_home_cat_top_sidebyside_four');
     const thirdProducts = getProducts(thirdBlock);
 
     const productIndex = new Map<string, any>();
@@ -232,7 +278,7 @@ export const useHomeData = () => {
       }
     });
 
-    const recommendedCards = orFallback(
+    const recommendedCards =
       goatDeals.length > 0
         ? goatDeals
             .slice(0, 6)
@@ -244,14 +290,12 @@ export const useHomeData = () => {
               ),
             )
             .filter(card => card.image)
-        : thirdProducts.slice(0, 6).map(mapRecCard).filter(card => card.image),
-      RECOMMENDED,
-    );
+        : thirdProducts.slice(0, 6).map(mapRecCard).filter(card => card.image);
 
     logApi('home/recommended · source', {
       goatDealsCount: goatDeals.length,
       thirdProductsCount: thirdProducts.length,
-      usingFallback: recommendedCards === RECOMMENDED,
+      usingFallback: false,
       titleBlock: thirdBlock,
       goatDeals,
       thirdProducts,
@@ -259,10 +303,7 @@ export const useHomeData = () => {
     logApi('home/recommended · cards', recommendedCards);
 
     const bestSellingRaw = (homeData?.showcaseSlider || []).slice(0, 6);
-    const bestSellingTiles = orFallback(
-      bestSellingRaw.map(mapCategoryTile),
-      BEST_SELLING,
-    );
+    const bestSellingTiles = bestSellingRaw.map(mapCategoryTile);
 
     logApi('home/bestSelling · raw', bestSellingRaw);
     logApi(
@@ -281,22 +322,25 @@ export const useHomeData = () => {
         address: selectedAddress,
         searchPlaceholder: HEADER_CONTENT.searchPlaceholder,
       },
-      headerTabs: [
-        { id: 'all', name: 'All' },
-        ...tabs.map((tab: any, i: number) => ({
-          id: String(
-            tab.tabId ?? tab.TabId ?? resolveCatId(tab) ?? i,
-          ),
-          name:
-            tab.tabName || tab.TabName || resolveCatName(tab, '') || 'Tab',
-          image: resolveImageSource(
-            tab.toptabimgurl ??
-              tab.topTabImgUrl ??
-              tab.TopTabImgUrl ??
-              tab.TopTabImgURL,
-          ),
-        })),
-      ],
+      headerTabs:
+        tabs.length > 0
+          ? [
+              { id: 'all', name: 'All' },
+              ...tabs.map((tab: any, i: number) => ({
+                id: String(
+                  tab.tabId ?? tab.TabId ?? resolveCatId(tab) ?? i,
+                ),
+                name:
+                  tab.tabName || tab.TabName || resolveCatName(tab, '') || 'Tab',
+                image: resolveImageSource(
+                  tab.toptabimgurl ??
+                    tab.topTabImgUrl ??
+                    tab.TopTabImgUrl ??
+                    tab.TopTabImgURL,
+                ),
+              })),
+            ]
+          : [],
       headerItemsFor: (tabId: string): HeaderItem[] => {
         const source =
           tabId === 'all'
@@ -309,7 +353,7 @@ export const useHomeData = () => {
                 return tab?.items || tab?.Items || [];
               })();
 
-        const mapped: HeaderItem[] = source.map((item: any, index: number) => ({
+        return source.map((item: any, index: number) => ({
           id: String(resolveCatId(item) ?? index),
           name: resolveCatName(item, ''),
           image:
@@ -317,27 +361,22 @@ export const useHomeData = () => {
             HEADER_PLACEHOLDERS[index % HEADER_PLACEHOLDERS.length],
           raw: item,
         }));
-
-        return orFallback(mapped, FALLBACK_HEADER_ITEMS);
       },
-      searchTabs: orFallback(
-        tabs.map((t: any) => resolveCatName(t, '')).filter(Boolean),
-        CATEGORY_TABS,
-      ),
-      featured: orFallback(firstProducts.map(mapProductTile), FEATURED_PRODUCTS),
+      searchTabs: tabs.map((t: any) => resolveCatName(t, '')).filter(Boolean),
+      featured: firstProducts.map(mapProductTile),
       featuredTitle: splitTitle('Top Deals'),
       featuredBlock: firstBlock,
-      categoryChips: orFallback(tabs.map(mapTabChip), CATEGORY_CHIPS),
+      categoryChips: tabs.map(mapTabChip),
       categoryCardsFor: (chipId: string): Tile[] => {
         const tab = tabs.find(
           (t: any, i: number) =>
             String(mapTabChip(t, i).id) === String(chipId),
         );
         const items = tab?.items || tab?.Items || [];
-        return orFallback(items.map(mapCategoryTile), CATEGORY_CARDS);
+        return items.map(mapCategoryTile);
       },
       bestSelling: bestSellingTiles,
-      brands: orFallback(rawBrands.map(mapBrandTile), BRANDS),
+      brands: rawBrands.map(mapBrandTile),
       recommended: recommendedCards,
       secondStrip: secondProducts.map(mapProductTile),
       secondTitle: splitTitle(blockTitle(secondBlock, 'Recently Viewed')),
@@ -361,9 +400,20 @@ export const useHomeData = () => {
         bannersFor(homeData, 'app_flahs_sale')[0]?.imageUrl,
       ),
     };
-  }, [homeData, profile, selectedAddress]);
+  }, [homeData, selectedAddress]);
 
-  return { homeData, loading, refreshing, onRefresh, sections, targetBanners: sections?.targetBanners };
+  return {
+    homeData,
+    loading,
+    refreshing,
+    onRefresh,
+    sections,
+    targetBanners: sections?.targetBanners,
+    networkError,
+    retry,
+    isRetrying,
+    retryErrorMessage,
+  };
 };
 
 export const bannerImage = (banner: any) =>

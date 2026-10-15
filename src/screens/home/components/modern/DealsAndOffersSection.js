@@ -5,7 +5,7 @@ import React, {
   useMemo,
   useEffect,
 } from 'react';
-import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, Platform } from 'react-native';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import Animated, {
   useSharedValue,
@@ -22,6 +22,7 @@ import Feather from 'react-native-vector-icons/Feather';
 import { FONTS } from '@/styles/typography';
 import CONFIG from '@/globals/config';
 import CachedImage from '@/components/CachedImage';
+import { prefetch } from '@candlefinance/faster-image';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_WIDTH = SCREEN_WIDTH * 0.78;
@@ -195,7 +196,15 @@ const mapBannerToOffer = (banner, index) => {
   };
 };
 
-const OfferCard = ({ item, index, scrollX, onPress }) => {
+const getItemLayout = (_data, index) => ({
+  length: ITEM_SIZE,
+  offset: ITEM_SIZE * index,
+  index,
+});
+
+const keyExtractor = (item, index) => item.id || `offer_${index}`;
+
+const OfferCard = React.memo(({ item, index, scrollX, onPress }) => {
   const animatedStyle = useAnimatedStyle(() => {
     const inputRange = [
       (index - 1) * ITEM_SIZE,
@@ -206,7 +215,7 @@ const OfferCard = ({ item, index, scrollX, onPress }) => {
     const rotate = interpolate(
       scrollX.value,
       inputRange,
-      [-6, 0, 6], // Subtle 6-degree tilt matching design
+      [-6, 0, 6],
       Extrapolation.CLAMP,
     );
 
@@ -226,13 +235,17 @@ const OfferCard = ({ item, index, scrollX, onPress }) => {
   const hasBadgeOrPill = !!(item.discountText || item.dateRange || item.quota);
   const isPureImageBanner = hasBackgroundImage && !hasBadgeOrPill;
 
+  const handleCardPress = useCallback(() => {
+    onPress?.(item.raw || item);
+  }, [item, onPress]);
+
   return (
     <AnimatedPressable
       activeOpacity={0.92}
-      onPress={() => onPress && onPress(item.raw || item)}
+      onPress={handleCardPress}
       style={[
         styles.cardContainer,
-        { backgroundColor: item.bgColor },
+        !hasBackgroundImage && { backgroundColor: item.bgColor },
         animatedStyle,
       ]}
       accessibilityRole="button"
@@ -305,7 +318,7 @@ const OfferCard = ({ item, index, scrollX, onPress }) => {
       )}
     </AnimatedPressable>
   );
-};
+});
 
 const DealsAndOffersSection = ({
   banners,
@@ -346,6 +359,21 @@ const DealsAndOffersSection = ({
     return DUMMY_OFFERS;
   }, [banners, offers]);
 
+  // Prefetch first few deals images to eliminate swipe decode stutter
+  useEffect(() => {
+    const urls = offerList
+      .slice(0, 3)
+      .map(o => (typeof o.image?.uri === 'string' ? o.image.uri : null))
+      .filter(Boolean);
+    if (urls.length > 0) {
+      try {
+        prefetch(urls);
+      } catch {
+        // Native module may not be present in test or non-native environment
+      }
+    }
+  }, [offerList]);
+
   const [currentIndex, setCurrentIndex] = useState(() =>
     offerList.length > 1 ? 1 : 0,
   );
@@ -364,7 +392,10 @@ const DealsAndOffersSection = ({
     event => {
       const offsetX = event.nativeEvent.contentOffset.x;
       const index = Math.round(offsetX / ITEM_SIZE);
-      setCurrentIndex(Math.max(0, Math.min(offerList.length - 1, index)));
+      setCurrentIndex(prev => {
+        const next = Math.max(0, Math.min(offerList.length - 1, index));
+        return prev === next ? prev : next;
+      });
     },
     [offerList.length],
   );
@@ -437,7 +468,7 @@ const DealsAndOffersSection = ({
         <Animated.FlatList
           ref={flatListRef}
           data={offerList}
-          keyExtractor={(item, index) => item.id || `offer_${index}`}
+          keyExtractor={keyExtractor}
           horizontal
           showsHorizontalScrollIndicator={false}
           snapToInterval={ITEM_SIZE}
@@ -449,11 +480,11 @@ const DealsAndOffersSection = ({
           onScrollEndDrag={handleScrollEnd}
           renderItem={renderItem}
           initialScrollIndex={offerList.length > 1 ? 1 : 0}
-          getItemLayout={(data, index) => ({
-            length: ITEM_SIZE,
-            offset: ITEM_SIZE * index,
-            index,
-          })}
+          getItemLayout={getItemLayout}
+          initialNumToRender={2}
+          maxToRenderPerBatch={2}
+          windowSize={3}
+          removeClippedSubviews={Platform.OS === 'android'}
         />
 
         {/* Left Arrow Navigation */}

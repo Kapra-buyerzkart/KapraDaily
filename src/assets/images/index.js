@@ -74,6 +74,8 @@ const images = {
   noCouponCode: require('./noimages/noCouponCode.png'),
   noCoupons: require('./noimages/noCoupons.png'),
   noWishlist: require('./noimages/noWishlist.png'),
+  noCart: require('./noimages/no_CART.png'),
+  no_CART: require('./noimages/no_CART.png'),
   referBg: require('./referbg.png'),
   referIcon: require('./referImage.png'),
   shareNearn: require('../sharenearn.png'),

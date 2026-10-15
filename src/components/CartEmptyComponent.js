@@ -6,37 +6,70 @@ import {
 } from 'react-native-responsive-screen';
 import { FONTS } from '../styles/typography';
 import { useNavigation } from '@react-navigation/native';
-import icons from '@/assets/icons';
+import images from '../assets/images';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import CartHeader from '../screens/cart/components/CartHeader';
 
-const CartEmptyComponent = () => {
+const CartEmptyComponent = ({
+  showHeader = true,
+  itemCount = 0,
+  onBack,
+  onClearAll,
+  showShopNow = false,
+  onShopNow,
+}) => {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
 
+  const handleBack = () => {
+    if (onBack) {
+      onBack();
+    } else if (navigation?.canGoBack && navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      navigation.navigate('MainTabs', { screen: 'Home' });
+    }
+  };
+
+  const handleShopNow = () => {
+    if (onShopNow) {
+      onShopNow();
+    } else {
+      navigation.navigate('MainTabs', { screen: 'Home' });
+    }
+  };
+
   return (
-    <View
-      style={{ flex: 1, marginTop: insets.top, paddingHorizontal: hp('2%') }}
-    >
-      <TouchableOpacity hitSlop={40} onPress={() => navigation.goBack()}>
-        <Image source={icons.backArrowNew} />
-      </TouchableOpacity>
+    <View style={styles.screenContainer}>
+      {showHeader && (
+        <View style={{ paddingTop: insets.top, backgroundColor: '#FFFFFF' }}>
+          <CartHeader
+            onBack={handleBack}
+            onClearAll={onClearAll}
+            itemCount={itemCount}
+          />
+        </View>
+      )}
 
       <View style={styles.mainContainer}>
         <Image
           style={styles.imageStyle}
-          source={require('../assets/icons/emptyCart.png')}
+          source={images.no_CART}
+          resizeMode="contain"
         />
         <Text style={styles.titleText}>Your cart is empty</Text>
         <Text style={styles.subtitleText}>
-          Looks like you haven't added anything to your cart yet.
+          Add groceries and essentials to get them delivered fast
         </Text>
 
-        <TouchableOpacity
-          style={styles.shopNowButton}
-          onPress={() => navigation.navigate('MainTabs', { screen: 'Home' })}
-        >
-          <Text style={styles.shopNowText}>Shop Now</Text>
-        </TouchableOpacity>
+        {showShopNow && (
+          <TouchableOpacity
+            style={styles.shopNowButton}
+            onPress={handleShopNow}
+          >
+            <Text style={styles.shopNowText}>Shop Now</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );
@@ -45,32 +78,40 @@ const CartEmptyComponent = () => {
 export default CartEmptyComponent;
 
 const styles = StyleSheet.create({
+  screenContainer: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
   mainContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: wp('10%'),
+    paddingHorizontal: wp('8%'),
+    marginTop: -hp('4%'),
   },
   imageStyle: {
-    width: wp('60%'),
-    height: hp('30%'),
-    resizeMode: 'contain',
+    width: wp('78%'),
+    aspectRatio: 353 / 267,
     marginBottom: hp('3%'),
   },
   titleText: {
     fontFamily: FONTS.gilroy.bold,
-    fontSize: wp('6%'),
+    fontSize: wp('5.8%'),
     color: '#000000',
+    textAlign: 'center',
     marginBottom: hp('1%'),
+    letterSpacing: -0.2,
   },
   subtitleText: {
     fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3.8%'),
-    color: '#777777',
+    color: '#71717A',
     textAlign: 'center',
-    marginBottom: hp('4%'),
+    lineHeight: wp('5.4%'),
+    paddingHorizontal: wp('4%'),
   },
   shopNowButton: {
+    marginTop: hp('3.5%'),
     backgroundColor: '#F25000',
     paddingHorizontal: wp('10%'),
     paddingVertical: hp('1.5%'),
@@ -84,6 +125,6 @@ const styles = StyleSheet.create({
   shopNowText: {
     color: '#FFFFFF',
     fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('4.5%'),
+    fontSize: wp('4.2%'),
   },
 });

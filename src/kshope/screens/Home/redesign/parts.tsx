@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Image,
   ImageResizeMode,
@@ -37,6 +37,11 @@ export const ProductImage: React.FC<ProductImageProps> = ({
   const [loaded, setLoaded] = useState(false);
   const [failed, setFailed] = useState(false);
   const usable = hasRemoteSource(source) && !failed;
+
+  useEffect(() => {
+    setLoaded(false);
+    setFailed(false);
+  }, [source?.uri]);
 
   return (
     <View style={[styles.productImageWrap, style]}>

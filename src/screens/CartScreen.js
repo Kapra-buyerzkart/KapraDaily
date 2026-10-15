@@ -244,7 +244,15 @@ const CartScreen = () => {
   if (cartItems.length === 0 && !isFinalizingOrder) {
     return (
       <View style={[styles.mainContainer, styles.emptyContainer]}>
-        <CartEmptyComponent />
+        <StatusBar
+          translucent
+          backgroundColor={'transparent'}
+          barStyle={'dark-content'}
+        />
+        <CartEmptyComponent
+          itemCount={0}
+          onBack={() => navigation.goBack()}
+        />
       </View>
     );
   }

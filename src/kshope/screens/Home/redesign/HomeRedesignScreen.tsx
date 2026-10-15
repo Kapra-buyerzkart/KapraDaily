@@ -2,11 +2,9 @@ import React, { useCallback, useMemo, useState } from 'react';
 import {
   Dimensions,
   Image,
-  ImageBackground,
   RefreshControl,
   StatusBar,
   StyleSheet,
-  Text,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -37,6 +35,7 @@ import Recommended from './sections/Recommended';
 import MoreToExplore from './sections/MoreToExplore';
 import BannerCarousel from './sections/BannerCarousel';
 import VideoBanner from './sections/VideoBanner';
+import NetworkInterruptionSheet from './network/NetworkInterruptionSheet';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -51,7 +50,9 @@ const bannerColor = (banner: any) => {
 
 type Linkable = { raw?: any };
 
-const HomeStatusBar: React.FC = () => {
+const HomeStatusBar: React.FC<{ hasHeader?: boolean }> = ({
+  hasHeader = true,
+}) => {
   const isFocused = useIsFocused();
 
   if (!isFocused) {
@@ -62,7 +63,7 @@ const HomeStatusBar: React.FC = () => {
     <StatusBar
       translucent
       backgroundColor="transparent"
-      barStyle="light-content"
+      barStyle={hasHeader ? 'light-content' : 'dark-content'}
     />
   );
 };
@@ -71,7 +72,18 @@ const HomeRedesignScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
   const { toggleWishlist, isInWishlist } = useWishlist();
-  const { loading, refreshing, onRefresh, sections, targetBanners } = useHomeData();
+  const {
+    homeData,
+    loading,
+    refreshing,
+    onRefresh,
+    sections,
+    targetBanners,
+    networkError,
+    retry,
+    isRetrying,
+    retryErrorMessage,
+  } = useHomeData();
 
   console.log('Target Banners (IDs 37-48):', targetBanners);
 
@@ -241,7 +253,8 @@ const HomeRedesignScreen: React.FC = () => {
   console.log('sections.banners.top=============>', sections.banners.top);
   const topBanner = sections.banners.top?.[0];
   const topSectionBanner = sections.banners.topSection?.[0];
-  const headerBg = bannerColor(topBanner) ?? HEADER_BG;
+  const headerBg =
+    bannerColor(topBanner) ?? (homeData ? HEADER_BG : 'transparent');
   const featuredBlend = headerBg;
 
   const openRecommendedAll = useCallback(() => {
@@ -261,24 +274,30 @@ const HomeRedesignScreen: React.FC = () => {
     [toggleWishlist],
   );
 
-  if (loading) {
+  if (loading && !homeData && !networkError) {
     return <HomeSkeleton />;
   }
   console.log(sections.thirdStrip.length, 'sections.thirdStrip.length====>');
   console.log(sections.secondStrip.length, 'sections.secondStrip.length====>');
 
+  const effectiveHeaderHeight = homeData ? headerHeight : 0;
+
   return (
     <View style={styles.root}>
-      <HomeStatusBar />
+      <HomeStatusBar hasHeader={Boolean(homeData)} />
       <Animated.ScrollView
-        style={headerHeight ? styles.scrollReady : styles.scrollMeasuring}
+        style={
+          homeData && !headerHeight
+            ? styles.scrollMeasuring
+            : styles.scrollReady
+        }
         showsVerticalScrollIndicator={false}
         onScroll={onScroll}
         scrollEventThrottle={1}
         contentContainerStyle={[
           styles.content,
           {
-            paddingTop: headerHeight,
+            paddingTop: effectiveHeaderHeight,
             paddingBottom: getTabBarClearance(insets.bottom),
           },
         ]}
@@ -292,83 +311,68 @@ const HomeRedesignScreen: React.FC = () => {
           />
         }
       >
-        {/* Hero banner — banners.top[0], placement `app_home_top_banner`.
-            Its linkValue hex also tints the header; falls back to onam.gif. */}
-        <TouchableOpacity
-          activeOpacity={topBanner ? 0.9 : 1}
-          disabled={!topBanner}
-          onPress={() => topBanner && openBanner(topBanner)}
-          style={styles.featuredBannerContainer}
-        >
-          <Image
-            source={
-              topBanner
-                ? bannerImage(topBanner)
-                : require('../../../assets/images/gifs/onam.gif')
-            }
-            style={styles.featuredBannerImage}
-            resizeMode="contain"
-          />
-          <LinearGradient
-            pointerEvents="none"
-            colors={[featuredBlend, `${featuredBlend}00`]}
-            style={styles.featuredBannerBlend}
-          />
-        </TouchableOpacity>
-
-        {/* <ImageBackground
-          source={require('../../../assets/images/gifs/offer_flowers.gif')}
-          style={styles.offerBannerImage}
-          imageStyle={styles.offerBannerBackdrop}
-          resizeMode="cover"
-        >
-          <Image
-            source={require('../../../assets/images/home/offer_onam.png')}
-            style={styles.offerBannerForeground}
-            resizeMode="contain"
-          />
-        </ImageBackground> */}
+        {/* Hero banner — banners.top[0], placement `app_home_top_banner`. */}
+        {topBanner ? (
+          <TouchableOpacity
+            activeOpacity={0.9}
+            onPress={() => openBanner(topBanner)}
+            style={styles.featuredBannerContainer}
+          >
+            <Image
+              source={bannerImage(topBanner)}
+              style={styles.featuredBannerImage}
+              resizeMode="contain"
+            />
+            <LinearGradient
+              pointerEvents="none"
+              colors={[featuredBlend, `${featuredBlend}00`]}
+              style={styles.featuredBannerBlend}
+            />
+          </TouchableOpacity>
+        ) : null}
 
         <VideoBanner banner={topSectionBanner} onPressBanner={openBanner} />
 
         {/* Products strip 1 — homeData.firstProductBlock.
             Title is pinned to "Top Deals"; the block's own title is ignored. */}
-        <FeaturedRow
-          items={sections.featured}
-          title={sections.featuredTitle.text}
-          accent={sections.featuredTitle.accent}
-          wishlisted={wishlisted}
-          onToggleWishlist={onToggleWishlist}
-          onPressProduct={openProduct}
-        />
+        {sections.featured.length > 0 ? (
+          <FeaturedRow
+            items={sections.featured}
+            title={sections.featuredTitle.text}
+            accent={sections.featuredTitle.accent}
+            wishlisted={wishlisted}
+            onToggleWishlist={onToggleWishlist}
+            onPressProduct={openProduct}
+          />
+        ) : null}
 
         {/* Shop by category — homeData.categoryTabShowcase.
             Each tab is a chip; the selected tab's items are the cards. */}
-        <ShopByCategory
-          chips={sections.categoryChips}
-          cards={categoryCards}
-          activeChip={selectedChip}
-          onChipPress={setActiveChip}
-          onCardPress={openCategory}
-        />
+        {sections.categoryChips.length > 0 ? (
+          <ShopByCategory
+            chips={sections.categoryChips}
+            cards={categoryCards}
+            activeChip={selectedChip}
+            onChipPress={setActiveChip}
+            onCardPress={openCategory}
+          />
+        ) : null}
 
         {/* Best selling — homeData.showcaseSlider, first 6 as category tiles. */}
-        <BestSelling
-          items={sections.bestSelling}
-          onPressTile={openBestSelling}
-        />
-        {/* <BestForYou
-          onShopNow={() => openSearch()}
-          onViewAll={() => openSearch()}
-        /> */}
+        {sections.bestSelling.length > 0 ? (
+          <BestSelling
+            items={sections.bestSelling}
+            onPressTile={openBestSelling}
+          />
+        ) : null}
 
         {/* Brands — homeData.brands, else topBrands, else `app_top_brands` banners. */}
-        <BrandsSpotlight
-          brands={sections.brands}
-          onPressBrandItem={openBrand}
-        />
-
-        {/* <MoreDeals /> */}
+        {sections.brands.length > 0 ? (
+          <BrandsSpotlight
+            brands={sections.brands}
+            onPressBrandItem={openBrand}
+          />
+        ) : null}
 
         {/* Mid banners — placement `app_home_mid_banner`. */}
         <BannerCarousel
@@ -403,7 +407,6 @@ const HomeRedesignScreen: React.FC = () => {
 
         {/* Products strip 3 — homeData.secondProductBlock, title from the block
             (fallback "Recently Viewed"). */}
-
         {sections.secondStrip.length > 0 ? (
           <FeaturedRow
             items={sections.secondStrip}
@@ -431,41 +434,53 @@ const HomeRedesignScreen: React.FC = () => {
 
         {/* More to explore — the first 10 categories carrying an svgurl,
             split into two rows of 5. */}
-        <MoreToExplore
-          rowOne={sections.exploreRowOne}
-          rowTwo={sections.exploreRowTwo}
-          onPressTile={openCategory}
-        />
+        {sections.exploreRowOne.length > 0 || sections.exploreRowTwo.length > 0 ? (
+          <MoreToExplore
+            rowOne={sections.exploreRowOne}
+            rowTwo={sections.exploreRowTwo}
+            onPressTile={openCategory}
+          />
+        ) : null}
       </Animated.ScrollView>
 
       {/* Floating header — collapses on scroll. Tabs come from
-          categoryTabShowcase; the "All" tab shows featuredCategories. */}
-      <View style={styles.headerOverlay}>
-        <HomeHeader
-          address={sections.header.address}
-          tabs={sections.headerTabs}
-          selectedTabId={headerTabId}
-          items={headerItems}
-          onSelectTab={setHeaderTabId}
-          onItemPress={(item: HeaderItem) =>
-            openCategory({
-              id: item.id,
-              label: item.name,
-              image: item.image,
-              raw: item.raw,
-            })
-          }
-          onSearchPress={() => openSearch()}
-          onAvatarPress={openProfile}
-          onNotificationsPress={() => navigation.navigate('KshopeProfile')}
-          onWishlistPress={() => navigation.navigate('WishlistScreen')}
-          onProfilePress={openProfile}
-          onAddressPress={() => navigation.navigate('KshopeSavedAddress')}
-          scrollY={scrollY}
-          onHeightChange={setHeaderHeight}
-          backgroundColor={headerBg}
-        />
-      </View>
+          categoryTabShowcase; the "All" tab shows featuredCategories.
+          Only rendered when homeData is loaded (no fallback header on failure). */}
+      {homeData ? (
+        <View style={styles.headerOverlay}>
+          <HomeHeader
+            address={sections.header.address}
+            tabs={sections.headerTabs}
+            selectedTabId={headerTabId}
+            items={headerItems}
+            onSelectTab={setHeaderTabId}
+            onItemPress={(item: HeaderItem) =>
+              openCategory({
+                id: item.id,
+                label: item.name,
+                image: item.image,
+                raw: item.raw,
+              })
+            }
+            onSearchPress={() => openSearch()}
+            onAvatarPress={openProfile}
+            onNotificationsPress={() => navigation.navigate('KshopeProfile')}
+            onWishlistPress={() => navigation.navigate('WishlistScreen')}
+            onProfilePress={openProfile}
+            onAddressPress={() => navigation.navigate('KshopeSavedAddress')}
+            scrollY={scrollY}
+            onHeightChange={setHeaderHeight}
+            backgroundColor={headerBg}
+          />
+        </View>
+      ) : null}
+
+      <NetworkInterruptionSheet
+        visible={networkError}
+        onRetry={retry}
+        isRetrying={isRetrying}
+        errorMessage={retryErrorMessage}
+      />
     </View>
   );
 };

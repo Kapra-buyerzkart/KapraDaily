@@ -21,15 +21,13 @@ const CartHeader = ({ onBack, onClearAll, itemCount }) => {
         <View style={styles.titleBlock}>
           <Text style={styles.title}>My cart</Text>
           <Text style={styles.subtitle}>
-            {itemCount > 0
-              ? `${itemCount} item${
-                  itemCount === 1 ? '' : 's'
-                } added to your cart`
-              : 'Your cart is empty'}
+            {`${itemCount || 0} item${
+              itemCount === 1 ? '' : 's'
+            } added to your cart`}
           </Text>
         </View>
 
-        {itemCount > 0 && (
+        {Boolean(itemCount && itemCount > 0) && (
           <TouchableOpacity
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             onPress={onClearAll}

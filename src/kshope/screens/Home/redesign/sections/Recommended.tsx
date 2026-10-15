@@ -26,7 +26,7 @@ const Recommended: React.FC<Props> = ({
   items,
   footerImage,
   onPressCard,
-  onSeeAll,
+  onSeeAll: _onSeeAll,
 }) => (
   <View style={styles.wrap}>
     <SectionTitle text="Recommended" accent="For you" style={styles.title} />

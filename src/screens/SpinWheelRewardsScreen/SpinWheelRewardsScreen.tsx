@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useMemo } from 'react';
 import {
   Dimensions,
   Modal,
@@ -42,7 +42,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Clipboard from '@react-native-clipboard/clipboard';
 import Toast from 'react-native-simple-toast';
-import { impactTick, successTick } from '@/utils/haptics';
+import { selectionTick, impactTick, successTick } from '@/utils/haptics';
 import { FONTS } from '@/styles/typography';
 import {
   isOrderSpinClaimed,
@@ -169,25 +169,13 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 // iOS-optimized responsive wheel sizing: avoids notch & tab bar vertical clipping
 const WHEEL_SIZE = Math.min(Math.round(SCREEN_WIDTH * 0.76), 288);
 const RADIUS = WHEEL_SIZE / 2;
-const SLICE_ANGLE = 360 / ASSURED_PRIZES.length; // 45 degrees
-const SPIN_DURATION_MS = 4200;
+// Overall spin duration (7.6s) calibrated for a smooth, readable speed and suspenseful deceleration
+const SPIN_DURATION_MS = 7600;
 
-// Pre-compute 16 outer perimeter bulb coordinates
-const BULBS = Array.from({ length: 16 }).map((_, i) => {
-  const angle = (i * 360) / 16;
-  const rad = (angle * Math.PI) / 180;
-  const dist = RADIUS - 7;
-  return {
-    x: RADIUS + dist * Math.sin(rad),
-    y: RADIUS - dist * Math.cos(rad),
-    isGold: i % 2 === 0,
-  };
-});
-
-// Calculate slice wedge path (from 12 o'clock measured clockwise)
-const getSlicePath = (index: number) => {
-  const startAngle = index * SLICE_ANGLE;
-  const endAngle = (index + 1) * SLICE_ANGLE;
+// Dynamic slice wedge path generator (from 12 o'clock measured clockwise)
+const getSlicePath = (index: number, angle: number) => {
+  const startAngle = index * angle;
+  const endAngle = (index + 1) * angle;
   const startRad = (startAngle * Math.PI) / 180;
   const endRad = (endAngle * Math.PI) / 180;
 
@@ -308,8 +296,45 @@ export default function SpinWheelRewardsScreen() {
   const route = useRoute<any>();
   const insets = useSafeAreaInsets();
 
-  const { orderId, orderNumber, source } = route.params || {};
+  const { orderId, orderNumber, source, theme, prizes: customPrizes } =
+    route.params || {};
   const isOrderReward = source === 'ORDER_SUCCESS' && !!orderId;
+  const is48hr = theme === '48hr' || source === 'KSHOPE_PROFILE';
+
+  // Dynamically adapt to custom prizes (e.g. 4 or 5 items) or fallback to default 8 assured prizes
+  const prizes: AssuredPrize[] =
+    customPrizes && Array.isArray(customPrizes) && customPrizes.length >= 3
+      ? customPrizes
+      : ASSURED_PRIZES;
+
+  const itemCount = prizes.length;
+  const sliceAngle = 360 / itemCount;
+
+  // Responsive typography & badge dimensions: auto-scales bigger for 4 or 5 items!
+  const isFourItems = itemCount === 4;
+  const isFiveItems = itemCount === 5;
+
+  const titleFontSize = isFourItems ? 13.5 : isFiveItems ? 12 : 10.5;
+  const sublabelFontSize = isFourItems ? 8.5 : isFiveItems ? 8 : 7;
+  const badgeWidth = isFourItems ? 60 : isFiveItems ? 52 : 46;
+  const badgeHeight = isFourItems ? 16 : isFiveItems ? 14.5 : 13;
+  const badgeY = RADIUS - RADIUS * (isFourItems ? 0.81 : 0.82);
+  const titleY = RADIUS - RADIUS * (isFourItems ? 0.49 : isFiveItems ? 0.50 : 0.52);
+
+  // Outer perimeter bulbs: evenly distributed based on segment count
+  const bulbCount = itemCount === 5 ? 20 : 16;
+  const bulbs = useMemo(() => {
+    return Array.from({ length: bulbCount }).map((_, i) => {
+      const angle = (i * 360) / bulbCount;
+      const rad = (angle * Math.PI) / 180;
+      const dist = RADIUS - 7;
+      return {
+        x: RADIUS + dist * Math.sin(rad),
+        y: RADIUS - dist * Math.cos(rad),
+        isGold: i % 2 === 0,
+      };
+    });
+  }, [bulbCount]);
 
   const rotation = useSharedValue(0);
   const pointerAngle = useSharedValue(0);
@@ -324,6 +349,19 @@ export default function SpinWheelRewardsScreen() {
   const [wonPrize, setWonPrize] = useState<AssuredPrize | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [spinsCount, setSpinsCount] = useState(isOrderReward ? 1 : 3);
+
+  const hapticTimeouts = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  const clearHapticTimeouts = () => {
+    hapticTimeouts.current.forEach(t => clearTimeout(t));
+    hapticTimeouts.current = [];
+  };
+
+  useEffect(() => {
+    return () => {
+      clearHapticTimeouts();
+    };
+  }, []);
 
   // Check if this order was already claimed in past session
   useEffect(() => {
@@ -374,6 +412,7 @@ export default function SpinWheelRewardsScreen() {
   }, [showModal, trophyScale, trophyGlow]);
 
   const handleSpinEnd = (prize: AssuredPrize, winningIndex: number) => {
+    clearHapticTimeouts();
     setIsSpinning(false);
     setWonPrize(prize);
     setShowModal(true);
@@ -395,25 +434,27 @@ export default function SpinWheelRewardsScreen() {
   const spin = () => {
     if (isSpinning || spinsCount <= 0) return;
 
+    clearHapticTimeouts();
     impactTick();
 
-    // Pick a winning prize slice (all slices are high-value assured gifts!)
-    const winningIndex = Math.floor(Math.random() * ASSURED_PRIZES.length);
-    const targetPrize = ASSURED_PRIZES[winningIndex];
+    // Pick a winning prize slice from active prizes
+    const winningIndex = Math.floor(Math.random() * prizes.length);
+    const targetPrize = prizes[winningIndex];
 
     // Math:
-    // Slice center is at: winningIndex * 45° + 22.5° clockwise from 12 o'clock.
+    // Slice center is at: winningIndex * sliceAngle + sliceAngle / 2 clockwise from 12 o'clock.
     // Pointer is stationary at 12 o'clock (0°).
     // Target angle in cycle:
-    const sliceCenter = winningIndex * SLICE_ANGLE + SLICE_ANGLE / 2;
+    const sliceCenter = winningIndex * sliceAngle + sliceAngle / 2;
     const targetAngleInCycle = (360 - (sliceCenter % 360)) % 360;
 
     const currentRot = accumulatedRotation.current;
     const currentTurns = Math.floor(currentRot / 360);
-    const fullSpins = 6;
+    // 5 full turns keeps rotation speed readable, smooth, and natural
+    const fullSpins = 5;
     let nextTarget = (currentTurns + fullSpins) * 360 + targetAngleInCycle;
 
-    while (nextTarget <= currentRot + 4 * 360) {
+    while (nextTarget <= currentRot + 3 * 360) {
       nextTarget += 360;
     }
 
@@ -421,23 +462,60 @@ export default function SpinWheelRewardsScreen() {
     setWonPrize(null);
     setIsSpinning(true);
 
-    // Needle flutter animation as slices pass by
-    const flutterCount = Math.floor(SPIN_DURATION_MS / 100);
-    pointerAngle.value = withRepeat(
-      withSequence(
-        withTiming(-12, { duration: 50, easing: Easing.linear }),
-        withTiming(4, { duration: 50, easing: Easing.linear }),
+    // Schedule progressive haptic feedback ticks during deceleration phase (~3.4s to 7.6s)
+    const SLOWDOWN_HAPTIC_CLICKS: { delay: number; type: 'light' | 'medium' }[] = [
+      { delay: 3400, type: 'light' },
+      { delay: 3820, type: 'light' },
+      { delay: 4260, type: 'light' },
+      { delay: 4720, type: 'light' },
+      { delay: 5200, type: 'light' },
+      { delay: 5700, type: 'light' },
+      { delay: 6220, type: 'medium' },
+      { delay: 6760, type: 'medium' },
+      { delay: 7280, type: 'medium' },
+    ];
+
+    SLOWDOWN_HAPTIC_CLICKS.forEach(({ delay, type }) => {
+      const timer = setTimeout(() => {
+        if (type === 'medium') {
+          impactTick();
+        } else {
+          selectionTick();
+        }
+      }, delay);
+      hapticTimeouts.current.push(timer);
+    });
+
+    // Multi-stage needle flutter: steady flutter during cruise, then slower suspense ticks as it decelerates
+    const fastTicks = Math.floor(3400 / 90); // ~37 flutters during cruise speed
+    const slowTicks = Math.floor(4100 / 220); // ~18 slower ticks during deceleration
+    pointerAngle.value = withSequence(
+      withRepeat(
+        withSequence(
+          withTiming(-12, { duration: 45, easing: Easing.linear }),
+          withTiming(2, { duration: 45, easing: Easing.linear }),
+        ),
+        fastTicks,
+        true,
       ),
-      flutterCount,
-      true,
+      withRepeat(
+        withSequence(
+          withTiming(-7, { duration: 110, easing: Easing.out(Easing.quad) }),
+          withTiming(2, { duration: 110, easing: Easing.in(Easing.quad) }),
+        ),
+        slowTicks,
+        true,
+      ),
+      withSpring(0, { damping: 14, stiffness: 220 }),
     );
 
-    // Smooth physics deceleration curve
+    // Smooth progressive deceleration curve:
+    // Calm, readable initial speed that suspensefully bleeds momentum over 7.6 seconds
     rotation.value = withTiming(
       nextTarget,
       {
         duration: SPIN_DURATION_MS,
-        easing: Easing.bezier(0.12, 0.85, 0.22, 1),
+        easing: Easing.bezier(0.16, 0.88, 0.26, 1),
       },
       finished => {
         if (finished) {
@@ -455,7 +533,11 @@ export default function SpinWheelRewardsScreen() {
 
   const handleClaimAndShop = () => {
     setShowModal(false);
-    navigation.navigate('MainTabs');
+    if (is48hr) {
+      navigation.navigate('KshopeHome');
+    } else {
+      navigation.navigate('MainTabs');
+    }
   };
 
   const handleTrackOrder = () => {
@@ -499,7 +581,11 @@ export default function SpinWheelRewardsScreen() {
 
       {/* Bulletproof iOS Absolute Background Gradient */}
       <LinearGradient
-        colors={['#FFFFFF', '#F0FDF4', '#FEFCE8']}
+        colors={
+          is48hr
+            ? ['#FFFFFF', '#FFF7ED', '#FFF3E0']
+            : ['#FFFFFF', '#F0FDF4', '#FEFCE8']
+        }
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
         style={StyleSheet.absoluteFillObject}
@@ -532,6 +618,8 @@ export default function SpinWheelRewardsScreen() {
           <Text style={styles.headerSubtitle}>
             {isOrderReward
               ? `Order #${orderNumber || orderId} Reward`
+              : is48hr
+              ? '48hrs Deals Assured Rewards'
               : 'Daily Assured Rewards'}
           </Text>
         </View>
@@ -556,37 +644,75 @@ export default function SpinWheelRewardsScreen() {
         ]}
       >
         {/* Assured Guarantee Ribbon Card (iOS Bulletproof Gradient) */}
-        <View style={styles.guaranteeCard}>
+        <View
+          style={[
+            styles.guaranteeCard,
+            is48hr && styles.guaranteeCard48hr,
+          ]}
+        >
           <LinearGradient
-            colors={['#ECFDF5', '#F0FDF4']}
+            colors={is48hr ? ['#FFF7ED', '#FFEDD5'] : ['#ECFDF5', '#F0FDF4']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={StyleSheet.absoluteFillObject}
           />
           <View style={styles.guaranteeInner}>
-            <View style={styles.shieldIconWrapper}>
+            <View
+              style={[
+                styles.shieldIconWrapper,
+                is48hr && styles.shieldIconWrapper48hr,
+              ]}
+            >
               <MaterialCommunityIcons
-                name="shield-check"
+                name={is48hr ? 'lightning-bolt' : 'shield-check'}
                 size={20}
-                color="#059669"
+                color={is48hr ? '#F25000' : '#059669'}
               />
             </View>
             <View style={styles.guaranteeCopy}>
               <View style={styles.guaranteeHeaderRow}>
-                <Text style={styles.guaranteeHeading}>
+                <Text
+                  style={[
+                    styles.guaranteeHeading,
+                    is48hr && styles.guaranteeHeading48hr,
+                  ]}
+                >
                   {isOrderReward
                     ? 'Order Bonus: 1 Assured Gift'
+                    : is48hr
+                    ? '48hrs Deals 100% Assured Prize'
                     : '100% Assured Gift Guarantee'}
                 </Text>
-                <View style={styles.guaranteePill}>
-                  <Text style={styles.guaranteePillText}>
-                    {isOrderReward ? 'ORDER REWARD' : 'NO EMPTY SPINS'}
+                <View
+                  style={[
+                    styles.guaranteePill,
+                    is48hr && styles.guaranteePill48hr,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.guaranteePillText,
+                      is48hr && styles.guaranteePillText48hr,
+                    ]}
+                  >
+                    {isOrderReward
+                      ? 'ORDER REWARD'
+                      : is48hr
+                      ? '48HR DEAL'
+                      : 'NO EMPTY SPINS'}
                   </Text>
                 </View>
               </View>
-              <Text style={styles.guaranteeSubtitle}>
+              <Text
+                style={[
+                  styles.guaranteeSubtitle,
+                  is48hr && styles.guaranteeSubtitle48hr,
+                ]}
+              >
                 {isOrderReward
                   ? 'Congratulations on your order! Spin now to claim your assured gift.'
+                  : is48hr
+                  ? 'Exclusive flash rewards and coupons unlocked with every single spin!'
                   : 'Every spin guarantees a real coupon, cashback, or free delivery!'}
               </Text>
             </View>
@@ -630,7 +756,7 @@ export default function SpinWheelRewardsScreen() {
             <Animated.View style={[styles.wheelContainer, wheelStyle]}>
               <Svg width={WHEEL_SIZE} height={WHEEL_SIZE}>
                 <Defs>
-                  {ASSURED_PRIZES.map(prize => (
+                  {prizes.map(prize => (
                     <SvgGradient
                       key={`grad-${prize.id}`}
                       id={`grad-${prize.id}`}
@@ -675,17 +801,17 @@ export default function SpinWheelRewardsScreen() {
                   fill="#FFFFFF"
                 />
 
-                {/* 8 Segments */}
-                {ASSURED_PRIZES.map((prize, index) => {
+                {/* Slices: responsive width and typography */}
+                {prizes.map((prize, index) => {
                   const sliceCenterAngle =
-                    index * SLICE_ANGLE + SLICE_ANGLE / 2;
+                    index * sliceAngle + sliceAngle / 2;
                   return (
                     <G key={prize.id}>
                       <Path
-                        d={getSlicePath(index)}
+                        d={getSlicePath(index, sliceAngle)}
                         fill={`url(#grad-${prize.id})`}
                         stroke="#FFFFFF"
-                        strokeWidth={1.5}
+                        strokeWidth={isFourItems ? 2 : 1.5}
                       />
 
                       {/* Rotated text and sublabel */}
@@ -693,18 +819,18 @@ export default function SpinWheelRewardsScreen() {
                         transform={`rotate(${sliceCenterAngle}, ${RADIUS}, ${RADIUS})`}
                       >
                         <Rect
-                          x={RADIUS - 23}
-                          y={RADIUS - RADIUS * 0.82}
-                          width={46}
-                          height={13}
-                          rx={6.5}
+                          x={RADIUS - badgeWidth / 2}
+                          y={badgeY}
+                          width={badgeWidth}
+                          height={badgeHeight}
+                          rx={badgeHeight / 2}
                           fill="rgba(0, 0, 0, 0.22)"
                         />
                         <SvgText
                           x={RADIUS}
-                          y={RADIUS - RADIUS * 0.82 + 9.5}
+                          y={badgeY + badgeHeight * 0.72}
                           fill="#FFE082"
-                          fontSize="7"
+                          fontSize={sublabelFontSize}
                           fontWeight="800"
                           textAnchor="middle"
                           letterSpacing="0.3"
@@ -714,9 +840,9 @@ export default function SpinWheelRewardsScreen() {
 
                         <SvgText
                           x={RADIUS}
-                          y={RADIUS - RADIUS * 0.52}
+                          y={titleY}
                           fill={prize.textColor}
-                          fontSize="10.5"
+                          fontSize={titleFontSize}
                           fontWeight="900"
                           textAnchor="middle"
                           letterSpacing="0.2"
@@ -728,8 +854,8 @@ export default function SpinWheelRewardsScreen() {
                   );
                 })}
 
-                {/* 16 Perimeter Bulb Pins */}
-                {BULBS.map((bulb, idx) => (
+                {/* Perimeter Bulb Pins */}
+                {bulbs.map((bulb, idx) => (
                   <Circle
                     key={`bulb-${idx}`}
                     cx={bulb.x}
@@ -767,6 +893,8 @@ export default function SpinWheelRewardsScreen() {
                       colors={
                         spinsCount <= 0
                           ? ['#94A3B8', '#64748B']
+                          : is48hr
+                          ? ['#FF5722', '#F25000']
                           : ['#0CA201', '#057A20']
                       }
                       start={{ x: 0, y: 0 }}
@@ -805,6 +933,8 @@ export default function SpinWheelRewardsScreen() {
               colors={
                 spinsCount <= 0
                   ? ['#94A3B8', '#64748B']
+                  : is48hr
+                  ? ['#FF5722', '#F25000', '#B72C00']
                   : ['#0CA201', '#057A20', '#035815']
               }
               start={{ x: 0, y: 0 }}
@@ -836,18 +966,20 @@ export default function SpinWheelRewardsScreen() {
         <View style={styles.prizesSection}>
           <View style={styles.sectionHeaderRow}>
             <MaterialCommunityIcons
-              name="gift-open-outline"
+              name={is48hr ? 'lightning-bolt' : 'gift-open-outline'}
               size={17}
-              color="#059669"
+              color={is48hr ? '#F25000' : '#059669'}
             />
-            <Text style={styles.sectionTitle}>Today’s 8 Assured Gifts</Text>
+            <Text style={styles.sectionTitle}>
+              Today’s {prizes.length} Assured Gifts
+            </Text>
           </View>
           <Text style={styles.sectionSubtitle}>
             Every single turn gives you one of these valuable coupons:
           </Text>
 
           <View style={styles.prizesGrid}>
-            {ASSURED_PRIZES.map(prize => (
+            {prizes.map(prize => (
               <View key={prize.id} style={styles.prizeMiniCard}>
                 <View
                   style={[
@@ -889,7 +1021,11 @@ export default function SpinWheelRewardsScreen() {
                 {/* Modal Header with Absolute Gradient */}
                 <View style={styles.modalHeaderWrapper}>
                   <LinearGradient
-                    colors={['#0CA201', '#067A20', '#035815']}
+                    colors={
+                      is48hr
+                        ? ['#FF5722', '#F25000', '#B72C00']
+                        : ['#0CA201', '#067A20', '#035815']
+                    }
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                     style={StyleSheet.absoluteFillObject}
@@ -1030,7 +1166,11 @@ export default function SpinWheelRewardsScreen() {
                         activeOpacity={0.85}
                       >
                         <LinearGradient
-                          colors={['#0CA201', '#057A20']}
+                          colors={
+                            is48hr
+                              ? ['#FF5722', '#F25000']
+                              : ['#0CA201', '#057A20']
+                          }
                           start={{ x: 0, y: 0 }}
                           end={{ x: 1, y: 0 }}
                           style={StyleSheet.absoluteFillObject}
@@ -1179,6 +1319,11 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     position: 'relative',
   },
+  guaranteeCard48hr: {
+    borderColor: '#FFD79E',
+    backgroundColor: '#FFF7ED',
+    shadowColor: '#F25000',
+  },
   guaranteeInner: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1195,6 +1340,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  shieldIconWrapper48hr: {
+    backgroundColor: '#FFEDD5',
+  },
   guaranteeCopy: {
     flex: 1,
   },
@@ -1209,11 +1357,17 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#065F46',
   },
+  guaranteeHeading48hr: {
+    color: '#C2410C',
+  },
   guaranteePill: {
     backgroundColor: '#059669',
     paddingHorizontal: 6,
     paddingVertical: 1.5,
     borderRadius: 6,
+  },
+  guaranteePill48hr: {
+    backgroundColor: '#FFD79E',
   },
   guaranteePillText: {
     color: '#FFFFFF',
@@ -1221,11 +1375,17 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     letterSpacing: 0.3,
   },
+  guaranteePillText48hr: {
+    color: '#9A3412',
+  },
   guaranteeSubtitle: {
     fontSize: 10.5,
     color: '#047857',
     marginTop: 2,
     lineHeight: 14,
+  },
+  guaranteeSubtitle48hr: {
+    color: '#9A3412',
   },
   wheelStage: {
     alignItems: 'center',

@@ -115,37 +115,21 @@ describe('home redesign screen', () => {
     expect(tree.toJSON()).toBeTruthy();
   });
 
-  it('renders every section heading from the design fallback', async () => {
+  it('does not render the fallback header or fabricated products on network failure', async () => {
     const text = flatten((await renderScreen()).toJSON()).join('\n');
-
-    [
-      'Shop By',
-      'Category',
-      'Best Selling',
-      'Brands In',
-      'Spotlight',
-      'Top',
-      'Deals',
-      'Recommended',
-      'For you',
-      'Thank You For Exploring 48 Hrs Deal',
-    ].forEach(heading => expect(text).toContain(heading));
+    // Fallback header should NOT be rendered when homeData is not loaded
+    expect(text).not.toContain('Select delivery address');
+    expect(text).not.toContain('All');
+    // Must NOT contain fabricated products
+    expect(text).not.toContain('900 w Iron Box');
+    expect(text).not.toContain('$1,500/-');
   });
 
-  it('renders the reused header with its address and tabs', async () => {
+  it('renders the network interruption sheet with retry action when request fails', async () => {
     const text = flatten((await renderScreen()).toJSON()).join('\n');
-    expect(text).toContain('Select delivery address');
-    expect(text).toContain('All');
-  });
-
-  it('renders the featured products with prices and discounts', async () => {
-    const text = flatten((await renderScreen()).toJSON()).join('\n');
-    expect(text).toContain('Impex');
-    expect(text).toContain('900 w Iron Box');
-    expect(text).toContain('$1,500/-');
-    expect(text).toContain('30% OFF');
-    expect(text).toContain('Apple');
-    expect(text).toContain('Samsung');
+    expect(text).toContain('Internet connection interrupted');
+    expect(text).toContain("We're having trouble connecting");
+    expect(text).toContain('Retry');
   });
 
   it('uses Lexend throughout', () => {

@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useEffect, useMemo } from 'react';
+import React, { useCallback, useMemo, useEffect } from 'react';
 import { View, Text, StyleSheet, Image, ImageBackground } from 'react-native';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import {
@@ -8,48 +8,129 @@ import {
 import Feather from 'react-native-vector-icons/Feather';
 import { FONTS } from '@/styles/typography';
 import CONFIG from '@/globals/config';
+import CachedImage from '@/components/CachedImage';
+import { prefetch } from '@candlefinance/faster-image';
+import { DealCountdownText } from '@/utils/dealCountdown';
 
 const glossyCardImg = require('@/assets/images/Glossy Blank Promotional Card with Burst Badge 2.png');
 
+const FlashDealCard = React.memo(({ item, onPress }) => {
+  const sellingPrice =
+    item.sellingPrice ||
+    item.price ||
+    item.specialPrice ||
+    item.discountedPrice ||
+    '99';
+  const mrp = item.mrp || item.unitPrice || item.originalPrice || '110';
+  const rawImageUri =
+    item.featuredImage ||
+    item.productImage ||
+    item.image ||
+    item.img ||
+    item.imageUrl ||
+    item.thumbnail ||
+    '';
+  let imageUri = '';
+  if (rawImageUri) {
+    imageUri = rawImageUri.startsWith('http')
+      ? rawImageUri
+      : `${CONFIG.image_base_url}${rawImageUri}`;
+  }
+
+  const productName =
+    item.prName || item.name || item.Name || 'Product Title';
+  const productSubtitle =
+    item.subtitle ||
+    item.subTitle ||
+    item.description ||
+    item.categoryName ||
+    item.catName ||
+    item.weight ||
+    ' ';
+
+  const handlePress = useCallback(() => {
+    onPress(item);
+  }, [item, onPress]);
+
+  return (
+    <AnimatedPressable
+      onPress={handlePress}
+      style={styles.cardWrapper}
+    >
+      <ImageBackground
+        source={glossyCardImg}
+        style={styles.cardContainer}
+        imageStyle={styles.cardBackgroundImage}
+      >
+        <View style={styles.cardInner}>
+          {imageUri ? (
+            <CachedImage
+              source={{ uri: imageUri }}
+              style={styles.productImage}
+              resizeMode="contain"
+            />
+          ) : (
+            <View style={styles.productImagePlaceholder} />
+          )}
+
+          {/* MRP Box */}
+          <View style={styles.mrpBox}>
+            <Text style={styles.mrpText}>₹ {mrp}/-</Text>
+          </View>
+        </View>
+
+        {/* Starburst Price Text */}
+        <View style={styles.starburstWrapper}>
+          <Text style={styles.starburstText}>₹ {sellingPrice}</Text>
+        </View>
+      </ImageBackground>
+
+      <Text numberOfLines={2} style={styles.productTitle}>
+        {productName}
+      </Text>
+      <Text numberOfLines={1} style={styles.productSubtitle}>
+        {productSubtitle}
+      </Text>
+    </AnimatedPressable>
+  );
+});
+
 const FlashDealsSection = ({ items = [], title = '50% OFF', navigation }) => {
   // Use 6 items for a 3x2 grid
-  const gridItems = items.slice(0, 6);
+  const gridItems = useMemo(() => items.slice(0, 6), [items]);
 
   const targetDate = useMemo(() => {
     const d = new Date();
     d.setDate(d.getDate() + 3);
-    d.setHours(10, 3, 0, 0); // ~3days 10hrs 3mins equivalent setup
+    d.setHours(10, 3, 0, 0);
     return d.getTime();
   }, []);
 
-  const [timeLeft, setTimeLeft] = useState('');
-
+  // Prefetch card images on mount to avoid load jank
   useEffect(() => {
-    const updateTimer = () => {
-      const now = new Date().getTime();
-      const distance = targetDate - now;
+    const urls = gridItems
+      .map(item => {
+        const raw =
+          item.featuredImage ||
+          item.productImage ||
+          item.image ||
+          item.img ||
+          item.imageUrl ||
+          item.thumbnail ||
+          '';
+        if (!raw) return null;
+        return raw.startsWith('http') ? raw : `${CONFIG.image_base_url}${raw}`;
+      })
+      .filter(Boolean);
 
-      if (distance < 0) {
-        setTimeLeft('Offer ended');
-        return;
+    if (urls.length > 0) {
+      try {
+        prefetch(urls);
+      } catch {
+        // Native module may not be present in test or non-native environment
       }
-
-      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-      const hours = Math.floor(
-        (distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60),
-      );
-      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-      setTimeLeft(
-        `Offer ends in ${days}days ${hours}hrs ${minutes}mins ${seconds}secs`,
-      );
-    };
-
-    updateTimer();
-    const interval = setInterval(updateTimer, 1000);
-    return () => clearInterval(interval);
-  }, [targetDate]);
+    }
+  }, [gridItems]);
 
   const handleProductPress = useCallback(
     item => {
@@ -69,7 +150,7 @@ const FlashDealsSection = ({ items = [], title = '50% OFF', navigation }) => {
       <View style={styles.headerRow}>
         <Image
           source={require('@/assets/icons/flash.png')}
-          style={{ width: wp('10x%'), height: wp('10x%') }}
+          style={styles.flashIcon}
           resizeMode="contain"
         />
         <View style={styles.headerTextContainer}>
@@ -81,86 +162,23 @@ const FlashDealsSection = ({ items = [], title = '50% OFF', navigation }) => {
 
       {/* Grid */}
       <View style={styles.grid}>
-        {gridItems.map((item, index) => {
-          const sellingPrice =
-            item.sellingPrice ||
-            item.price ||
-            item.specialPrice ||
-            item.discountedPrice ||
-            '99';
-          const mrp = item.mrp || item.unitPrice || item.originalPrice || '110';
-          let rawImageUri =
-            item.featuredImage ||
-            item.productImage ||
-            item.image ||
-            item.img ||
-            item.imageUrl ||
-            item.thumbnail ||
-            '';
-          let imageUri = '';
-          if (rawImageUri) {
-            imageUri = rawImageUri.startsWith('http')
-              ? rawImageUri
-              : `${CONFIG.image_base_url}${rawImageUri}`;
-          }
-
-          const productName =
-            item.prName || item.name || item.Name || 'Product Title';
-          const productSubtitle =
-            item.subtitle ||
-            item.subTitle ||
-            item.description ||
-            item.categoryName ||
-            item.catName ||
-            item.weight ||
-            ' ';
-
-          return (
-            <AnimatedPressable
-              key={item.productId || item.id || index}
-              onPress={() => handleProductPress(item)}
-              style={styles.cardWrapper}
-            >
-              <ImageBackground
-                source={glossyCardImg}
-                style={styles.cardContainer}
-                imageStyle={{ resizeMode: 'stretch' }}
-              >
-                <View style={styles.cardInner}>
-                  {imageUri ? (
-                    <Image
-                      source={{ uri: imageUri }}
-                      style={styles.productImage}
-                      resizeMode="contain"
-                    />
-                  ) : (
-                    <View style={styles.productImagePlaceholder} />
-                  )}
-
-                  {/* MRP Box */}
-                  <View style={styles.mrpBox}>
-                    <Text style={styles.mrpText}>₹ {mrp}/-</Text>
-                  </View>
-                </View>
-
-                {/* Starburst Price Text */}
-                <View style={styles.starburstWrapper}>
-                  <Text style={styles.starburstText}>₹ {sellingPrice}</Text>
-                </View>
-              </ImageBackground>
-
-              <Text numberOfLines={2} style={styles.productTitle}>
-                {productName}
-              </Text>
-              <Text numberOfLines={1} style={styles.productSubtitle}>
-                {productSubtitle}
-              </Text>
-            </AnimatedPressable>
-          );
-        })}
+        {gridItems.map((item, index) => (
+          <FlashDealCard
+            key={item.productId || item.id || `flash_${index}`}
+            item={item}
+            onPress={handleProductPress}
+          />
+        ))}
       </View>
 
-      {/* Footer Timer */}
+      {/* Isolated Footer Countdown Timer: only text re-renders on ticks */}
+      <View style={styles.timerPill}>
+        <Feather name="clock" size={wp('4%')} color="#0050CD" />
+        <DealCountdownText
+          targetTimestamp={targetDate}
+          style={styles.timerText}
+        />
+      </View>
     </View>
   );
 };
@@ -180,6 +198,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: wp('1%'),
+  },
+  flashIcon: {
+    width: wp('10%'),
+    height: wp('10%'),
+  },
+  cardBackgroundImage: {
+    resizeMode: 'stretch',
   },
   headerTextContainer: {
     marginLeft: wp('2%'),

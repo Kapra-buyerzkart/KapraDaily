@@ -13,30 +13,47 @@ import { Fonts } from '../theme/fonts';
 
 const { width } = Dimensions.get('window');
 
-const CartEmptyComponent = () => {
+interface CartEmptyComponentProps {
+    showShopNow?: boolean;
+    onShopNow?: () => void;
+}
+
+const CartEmptyComponent: React.FC<CartEmptyComponentProps> = ({
+    showShopNow = false,
+    onShopNow,
+}) => {
     const navigation = useNavigation<any>();
+
+    const handleShopNow = () => {
+        if (onShopNow) {
+            onShopNow();
+        } else {
+            navigation.goBack();
+        }
+    };
 
     return (
         <View style={styles.container}>
             <View style={styles.imageContainer}>
                 <Image
-                    source={require('../assets/images/productcart.png')}
+                    source={require('../../assets/images/noimages/no_CART.png')}
                     style={styles.image}
                     resizeMode="contain"
                 />
             </View>
-            <Text style={styles.title}>Oops!</Text>
-            <Text style={styles.subtitle}>Your cart is empty</Text>
+            <Text style={styles.title}>Your cart is empty</Text>
             <Text style={styles.description}>
-                Looks like you haven't added anything to your cart yet.
+                Add groceries and essentials to get them delivered fast
             </Text>
 
-            <TouchableOpacity
-                style={styles.button}
-                onPress={() => navigation.goBack()}
-            >
-                <Text style={styles.buttonText}>Shop Now</Text>
-            </TouchableOpacity>
+            {showShopNow && (
+                <TouchableOpacity
+                    style={styles.button}
+                    onPress={handleShopNow}
+                >
+                    <Text style={styles.buttonText}>Shop Now</Text>
+                </TouchableOpacity>
+            )}
         </View>
     );
 };
@@ -46,13 +63,13 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        paddingHorizontal: 40,
+        paddingHorizontal: 32,
         backgroundColor: colors.white,
     },
     imageContainer: {
-        width: width * 0.6,
-        height: width * 0.6,
-        marginBottom: 20,
+        width: width * 0.78,
+        aspectRatio: 353 / 267,
+        marginBottom: 24,
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -61,30 +78,27 @@ const styles = StyleSheet.create({
         height: '100%',
     },
     title: {
-        fontSize: 28,
+        fontSize: 22,
         fontFamily: Fonts.gilroyBold,
         color: colors.black,
+        textAlign: 'center',
         marginBottom: 8,
-    },
-    subtitle: {
-        fontSize: 18,
-        fontFamily: Fonts.gilroySemiBold,
-        color: '#666',
-        marginBottom: 12,
+        letterSpacing: -0.2,
     },
     description: {
         fontSize: 14,
         fontFamily: Fonts.gilroyMedium,
-        color: '#999',
+        color: '#71717A',
         textAlign: 'center',
-        marginBottom: 30,
         lineHeight: 20,
+        paddingHorizontal: 16,
     },
     button: {
+        marginTop: 24,
         backgroundColor: colors.themeTeal,
         paddingHorizontal: 40,
-        paddingVertical: 15,
-        borderRadius: 15,
+        paddingVertical: 14,
+        borderRadius: 12,
         shadowColor: colors.themeTeal,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,

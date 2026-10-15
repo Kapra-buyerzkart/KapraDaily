@@ -31,8 +31,7 @@ class KshopeSignalRService {
   public async startConnection(customHubUrl?: string): Promise<void> {
     if (
       this.connection &&
-      (this.connection.state === signalR.HubConnectionState.Connected ||
-        this.connection.state === signalR.HubConnectionState.Connecting)
+      this.connection.state === signalR.HubConnectionState.Connected
     ) {
       return;
     }

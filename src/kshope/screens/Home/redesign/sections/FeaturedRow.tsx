@@ -1,9 +1,10 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState, useEffect } from 'react';
 import {
   FlatList,
   LayoutChangeEvent,
   NativeScrollEvent,
   NativeSyntheticEvent,
+  Platform,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -30,8 +31,21 @@ import {
   fs,
   s,
 } from '../theme';
+import { prefetch } from '@candlefinance/faster-image';
 
-const HeartOutline: React.FC<{ active?: boolean }> = ({ active }) => (
+const CARD_W = colWidth(3, CARD_GAP);
+const ITEM_TOTAL_W = CARD_W + CARD_GAP;
+const HIT_SLOP_10 = { top: 10, bottom: 10, left: 10, right: 10 };
+
+const getItemLayout = (_: any, index: number) => ({
+  length: ITEM_TOTAL_W,
+  offset: ITEM_TOTAL_W * index,
+  index,
+});
+
+const keyExtractor = (item: ProductTile) => item.id;
+
+const HeartOutline: React.FC<{ active?: boolean }> = React.memo(({ active }) => (
   <Svg width={s(14)} height={s(12)} viewBox="-0.8 -0.8 15.6 13.6" fill="none">
     <Path
       d="M13.6613 2.45916C13.4441 1.97793 13.1309 1.54184 12.7392 1.17532C12.3472 0.807695 11.8851 0.51555 11.3779 0.31477C10.852 0.105731 10.288 -0.0012594 9.71847 1.11852e-05C8.91954 1.11852e-05 8.14005 0.209334 7.46266 0.60472C7.3006 0.699 7.14666 0.802563 7.00082 0.914939C6.85498 0.802563 6.70104 0.699 6.53898 0.60472C5.86159 0.209334 5.0821 1.11852e-05 4.28317 1.11852e-05C3.71362 -0.0012594 3.14965 0.105731 2.62371 0.31477C2.11491 0.51555 1.65442 0.807695 1.2624 1.17532C0.870729 1.54184 0.557527 1.97793 0.340362 2.45916C0.114559 2.95949 0 3.49103 0 4.03789C0 4.55354 0.111323 5.09084 0.332273 5.63855C0.517301 6.09646 0.782452 6.57139 1.12129 7.05064C1.65792 7.80891 2.39605 8.59972 3.3129 9.40095C4.83184 10.7284 6.33594 11.6449 6.39975 11.6821L6.7873 11.9167C6.91427 11.9932 7.08574 11.9932 7.21271 11.9167L7.60026 11.6821C7.66407 11.6438 9.16709 10.7284 10.6871 9.40095C11.604 8.59972 12.3421 7.80891 12.8787 7.05064C13.2176 6.57139 13.4838 6.09646 13.6677 5.63855C13.8887 5.09084 14 4.55354 14 4.03789C14 3.49103 13.8854 2.95949 13.6613 2.45916Z"
@@ -40,9 +54,9 @@ const HeartOutline: React.FC<{ active?: boolean }> = ({ active }) => (
       strokeWidth={0.9}
     />
   </Svg>
-);
+));
 
-const ChevronRight: React.FC = () => (
+const ChevronRight: React.FC = React.memo(() => (
   <Svg width={s(8)} height={s(13)} viewBox="0 0 8 14" fill="none">
     <Path
       d="M1.25 1L6.75 7L1.25 13"
@@ -52,6 +66,63 @@ const ChevronRight: React.FC = () => (
       strokeLinejoin="round"
     />
   </Svg>
+));
+
+type CardProps = {
+  item: ProductTile;
+  isWishlisted: boolean;
+  onPressProduct?: (item: ProductTile) => void;
+  onToggleWishlist?: (item: ProductTile) => void;
+};
+
+const FeaturedProductCard: React.FC<CardProps> = React.memo(
+  ({ item, isWishlisted, onPressProduct, onToggleWishlist }) => {
+    const handlePress = useCallback(() => {
+      onPressProduct?.(item);
+    }, [item, onPressProduct]);
+
+    const handleWishlist = useCallback(() => {
+      onToggleWishlist?.(item);
+    }, [item, onToggleWishlist]);
+
+    return (
+      <TouchableOpacity
+        activeOpacity={0.9}
+        onPress={handlePress}
+        style={styles.card}
+      >
+        <View style={styles.cardTop}>
+          <DiscountBadge label={item.discount} style={styles.badge} />
+          <TouchableOpacity
+            activeOpacity={0.7}
+            hitSlop={HIT_SLOP_10}
+            onPress={handleWishlist}
+            style={styles.heart}
+          >
+            <HeartOutline active={isWishlisted} />
+          </TouchableOpacity>
+          <ProductImage
+            source={item.image}
+            resizeMode="cover"
+            style={styles.productImage}
+          />
+        </View>
+
+        <View style={styles.cardBody}>
+          <Text style={styles.brand} numberOfLines={1}>
+            {item.brand}
+          </Text>
+          <Text style={styles.name} numberOfLines={1}>
+            {item.name}
+          </Text>
+          <Text style={styles.price} numberOfLines={1}>
+            {item.price}
+          </Text>
+          <StrikePrice value={item.mrp} size={8} />
+        </View>
+      </TouchableOpacity>
+    );
+  },
 );
 
 type Props = {
@@ -77,52 +148,79 @@ const FeaturedRow: React.FC<Props> = ({
   const contentWidth = useRef(0);
   const [hasMore, setHasMore] = useState(false);
 
-  const sync = () => {
-    setHasMore(
-      contentWidth.current - viewportWidth.current - offset.current > 8,
-    );
-  };
+  const wishlistSet = useMemo(() => new Set(wishlisted), [wishlisted]);
 
+  // Prefetch first 3 deals on mount to eliminate image decode stutter
+  useEffect(() => {
+    const urls = items
+      .slice(0, 3)
+      .map(it => (typeof it.image?.uri === 'string' ? it.image.uri : null))
+      .filter(Boolean);
+    if (urls.length > 0) {
+      try {
+        prefetch(urls as string[]);
+      } catch {
+        // Native module may not be present in test or non-native environment
+      }
+    }
+  }, [items]);
+
+  const sync = useCallback(() => {
+    const nextHasMore =
+      contentWidth.current - viewportWidth.current - offset.current > 8;
+    setHasMore(prev => (prev === nextHasMore ? prev : nextHasMore));
+  }, []);
+
+  // Update offset during scroll without triggering setState on every frame
   const onScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
-    offset.current = contentOffset.x;
-    contentWidth.current = contentSize.width;
-    viewportWidth.current = layoutMeasurement.width;
-    sync();
+    offset.current = e.nativeEvent.contentOffset.x;
   }, []);
 
-  const onContentSizeChange = useCallback((width: number) => {
-    contentWidth.current = width;
-    sync();
-  }, []);
+  // Sync scroll indicator only when scroll ends or settles
+  const onScrollEnd = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
+      offset.current = contentOffset.x;
+      contentWidth.current = contentSize.width;
+      viewportWidth.current = layoutMeasurement.width;
+      sync();
+    },
+    [sync],
+  );
 
-  const onLayout = useCallback((e: LayoutChangeEvent) => {
-    viewportWidth.current = e.nativeEvent.layout.width;
-    sync();
-  }, []);
+  const onContentSizeChange = useCallback(
+    (width: number) => {
+      contentWidth.current = width;
+      sync();
+    },
+    [sync],
+  );
 
-  const scrollForward = useCallback(() => {
-    listRef.current?.scrollToOffset({
-      offset: offset.current + (CARD_W + CARD_GAP) * 2,
-      animated: true,
-    });
-  }, []);
+  const onLayout = useCallback(
+    (e: LayoutChangeEvent) => {
+      viewportWidth.current = e.nativeEvent.layout.width;
+      sync();
+    },
+    [sync],
+  );
+
+  const renderItem = useCallback(
+    ({ item }: { item: ProductTile }) => (
+      <FeaturedProductCard
+        item={item}
+        isWishlisted={wishlistSet.has(item.id)}
+        onPressProduct={onPressProduct}
+        onToggleWishlist={onToggleWishlist}
+      />
+    ),
+    [wishlistSet, onPressProduct, onToggleWishlist],
+  );
 
   return (
     <View style={styles.wrap}>
       {title ? (
         <View style={styles.titleRow}>
           <SectionTitle text={title} accent={accent} />
-          {/* {hasMore ? (
-            <TouchableOpacity
-              activeOpacity={0.85}
-              onPress={scrollForward}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              style={styles.arrowButton}
-            >
-              <ChevronRight />
-            </TouchableOpacity>
-          ) : null} */}
         </View>
       ) : null}
 
@@ -132,48 +230,19 @@ const FeaturedRow: React.FC<Props> = ({
           data={items}
           horizontal
           showsHorizontalScrollIndicator={false}
-          keyExtractor={item => item.id}
+          keyExtractor={keyExtractor}
+          getItemLayout={getItemLayout}
           contentContainerStyle={styles.row}
           onScroll={onScroll}
           scrollEventThrottle={16}
+          onMomentumScrollEnd={onScrollEnd}
+          onScrollEndDrag={onScrollEnd}
           onContentSizeChange={onContentSizeChange}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              activeOpacity={0.9}
-              onPress={() => onPressProduct?.(item)}
-              style={styles.card}
-            >
-              <View style={styles.cardTop}>
-                <DiscountBadge label={item.discount} style={styles.badge} />
-                <TouchableOpacity
-                  activeOpacity={0.7}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                  onPress={() => onToggleWishlist?.(item)}
-                  style={styles.heart}
-                >
-                  <HeartOutline active={wishlisted.includes(item.id)} />
-                </TouchableOpacity>
-                <ProductImage
-                  source={item.image}
-                  resizeMode="cover"
-                  style={styles.productImage}
-                />
-              </View>
-
-              <View style={styles.cardBody}>
-                <Text style={styles.brand} numberOfLines={1}>
-                  {item.brand}
-                </Text>
-                <Text style={styles.name} numberOfLines={1}>
-                  {item.name}
-                </Text>
-                <Text style={styles.price} numberOfLines={1}>
-                  {item.price}
-                </Text>
-                <StrikePrice value={item.mrp} size={8} />
-              </View>
-            </TouchableOpacity>
-          )}
+          initialNumToRender={3}
+          maxToRenderPerBatch={3}
+          windowSize={3}
+          removeClippedSubviews={Platform.OS === 'android'}
+          renderItem={renderItem}
         />
 
         {hasMore ? (
@@ -195,8 +264,6 @@ const FeaturedRow: React.FC<Props> = ({
     </View>
   );
 };
-
-const CARD_W = colWidth(3, CARD_GAP);
 
 const styles = StyleSheet.create({
   wrap: {

@@ -39,6 +39,7 @@ import ProfileHeaderBar from './redesign/sections/ProfileHeaderBar';
 import ProfileHeroCard from './redesign/sections/ProfileHeroCard';
 import QuickActionsGrid from './redesign/sections/QuickActionsGrid';
 import MenuSection, { MenuItem } from './redesign/sections/MenuSection';
+import SpinWheelBanner from './redesign/sections/SpinWheelBanner';
 import {
   BAR_SOLID_AT,
   BORDER_FADE_RANGE,
@@ -49,7 +50,6 @@ import {
 } from './redesign/motion';
 
 const INK = UI_COLORS.textSecondary;
-const RED = UI_COLORS.danger;
 const ICON_SIZE = wp('4%');
 
 const ProfileScreen: React.FC = () => {
@@ -75,6 +75,7 @@ const ProfileScreen: React.FC = () => {
     loadProfile();
     fetchWalletData();
     fetchOffersData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchWalletData = async () => {
@@ -256,6 +257,22 @@ const ProfileScreen: React.FC = () => {
 
   const offersItems: MenuItem[] = [
     {
+      key: 'spin-wheel',
+      label: 'Spin Wheel Rewards',
+      icon: (
+        <MaterialCommunityIcons
+          name="ferris-wheel"
+          color={INK}
+          size={ICON_SIZE}
+        />
+      ),
+      onPress: () =>
+        navigation.navigate('SpinWheelRewardsScreen', {
+          theme: '48hr',
+          source: 'KSHOPE_PROFILE',
+        }),
+    },
+    {
       key: 'smart-point',
       label: 'Gift Cards',
       icon: <Ionicons name="wallet-outline" color={INK} size={ICON_SIZE} />,
@@ -400,6 +417,14 @@ const ProfileScreen: React.FC = () => {
         </View>
 
         <Animated.View entering={entrance(2)}>
+          <SpinWheelBanner
+            onPress={() =>
+              navigation.navigate('SpinWheelRewardsScreen', {
+                theme: '48hr',
+                source: 'KSHOPE_PROFILE',
+              })
+            }
+          />
           <MenuSection title="Account Security" items={accountItems} />
           <MenuSection title="Offers" items={offersItems} />
           <MenuSection title="Informations" items={informationItems} />
