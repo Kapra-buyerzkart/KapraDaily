@@ -29,7 +29,13 @@ import {
 
 import { FONTS } from '../styles/typography';
 import { impactTick, successTick } from '../utils/haptics';
-import { isOrderSpinClaimed, getOrderSpinReward } from '../api/spinWheelService';
+import {
+  isOrderSpinClaimed,
+  getOrderSpinReward,
+  playSpinWin,
+  markOrderSpinClaimed,
+  mapBackendRewardToPrize,
+} from '../api/spinWheelService';
 
 const MINI_WHEEL_SIZE = wp('15%');
 const MINI_RADIUS = MINI_WHEEL_SIZE / 2;
@@ -136,10 +142,34 @@ const OrderSpinBanner = ({ orderId, orderNumber, onPressSpin }) => {
     Toast.show(`Coupon "${code}" copied to clipboard!`, Toast.SHORT);
   };
 
-  const handlePressCard = () => {
+  const handlePressCard = async () => {
     if (isClaimed) return;
     impactTick();
-    onPressSpin();
+    if (typeof onPressSpin === 'function') {
+      onPressSpin();
+    } else {
+      try {
+        const targetOrderId = orderId
+          ? isNaN(Number(orderId))
+            ? orderId
+            : Number(orderId)
+          : undefined;
+        const response = await playSpinWin({
+          orderId: targetOrderId,
+        });
+        const respData = response?.data !== undefined ? response.data : response;
+        const rewardObj = respData?.prize || respData?.reward || respData;
+        const mappedPrize = mapBackendRewardToPrize(rewardObj, 0);
+        if (targetOrderId) {
+          await markOrderSpinClaimed(targetOrderId, mappedPrize);
+        }
+        setClaimedReward(mappedPrize);
+        setIsClaimed(true);
+        successTick();
+      } catch (err) {
+        console.log('OrderSpinBanner playSpinWin error:', err);
+      }
+    }
   };
 
   // Reanimated Animated Styles
@@ -186,7 +216,7 @@ const OrderSpinBanner = ({ orderId, orderNumber, onPressSpin }) => {
       <Animated.View style={[styles.wrapper, containerAnimStyle]}>
         <View style={styles.claimedCard}>
           <LinearGradient
-            colors={['#ECFDF5', '#F0FDF4', '#DCFCE7']}
+            colors={['#FFF5F0', '#FFF1E9', '#FFE6D9']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={StyleSheet.absoluteFillObject}
@@ -196,7 +226,7 @@ const OrderSpinBanner = ({ orderId, orderNumber, onPressSpin }) => {
               <MaterialCommunityIcons
                 name="gift-open"
                 size={22}
-                color="#059669"
+                color="#F25000"
               />
             </View>
             <View style={styles.claimedInfo}>
@@ -218,7 +248,7 @@ const OrderSpinBanner = ({ orderId, orderNumber, onPressSpin }) => {
                 activeOpacity={0.75}
               >
                 <Text style={styles.copyPillText}>{claimedReward.code}</Text>
-                <Ionicons name="copy-outline" size={13} color="#059669" />
+                <Ionicons name="copy-outline" size={13} color="#F25000" />
               </TouchableOpacity>
             ) : null}
           </View>
@@ -238,17 +268,17 @@ const OrderSpinBanner = ({ orderId, orderNumber, onPressSpin }) => {
         activeOpacity={0.92}
         style={styles.cardContainer}
       >
-        {/* Dynamic Metallic Gradient Background */}
+        {/* Dynamic Metallic Gradient Background in Deep Ember/Primary Tones */}
         <LinearGradient
-          colors={['#0F172A', '#1E293B', '#064E3B']}
+          colors={['#180F0A', '#261208', '#451703']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={StyleSheet.absoluteFillObject}
         />
 
-        {/* Decorative Top Accent Light Line */}
+        {/* Decorative Top Accent Light Line in Warm Primary Shimmer */}
         <LinearGradient
-          colors={['transparent', '#10B981', '#F59E0B', 'transparent']}
+          colors={['transparent', '#FF7A00', '#F59E0B', 'transparent']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={styles.topAccentBar}
@@ -270,7 +300,7 @@ const OrderSpinBanner = ({ orderId, orderNumber, onPressSpin }) => {
                   cy={MINI_RADIUS}
                   r={MINI_RADIUS * 0.3}
                   fill="#FFFFFF"
-                  stroke="#F59E0B"
+                  stroke="#FF6200"
                   strokeWidth={2}
                 />
               </Svg>
@@ -289,12 +319,7 @@ const OrderSpinBanner = ({ orderId, orderNumber, onPressSpin }) => {
           {/* Center: Exciting Typography & Badge */}
           <View style={styles.textColumn}>
             <View style={styles.badgeRow}>
-              <LinearGradient
-                colors={['#F59E0B', '#D97706']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.badgeGradient}
-              >
+              <View style={styles.badgeGradient}>
                 <Animated.View style={starAnimStyle}>
                   <MaterialCommunityIcons
                     name="star-four-points"
@@ -302,21 +327,27 @@ const OrderSpinBanner = ({ orderId, orderNumber, onPressSpin }) => {
                     color="#FFFFFF"
                   />
                 </Animated.View>
-                <Text style={styles.badgeText}>1 ASSURED SPIN</Text>
-              </LinearGradient>
-              <Text style={styles.orderTag}>Order Reward</Text>
+                <Text style={styles.badgeText} numberOfLines={1}>
+                  1 ASSURED GIFT
+                </Text>
+              </View>
+              <Text style={styles.orderTag} numberOfLines={1}>
+                Order Reward
+              </Text>
             </View>
 
-            <Text style={styles.titleText}>Spin & Win Assured Gift!</Text>
-            <Text style={styles.subtitleText}>
+            <Text style={styles.titleText} numberOfLines={1}>
+              Spin & Win Assured Gift!
+            </Text>
+            <Text style={styles.subtitleText} numberOfLines={2}>
               Free delivery, pantry cash & coupons unlocked for this order.
             </Text>
           </View>
 
-          {/* Right: Motion Nudge Action Arrow Button */}
+          {/* Right: Motion Nudge Action Arrow Button in Primary Orange */}
           <View style={styles.actionColumn}>
             <LinearGradient
-              colors={['#10B981', '#059669']}
+              colors={['#FF6200', '#F25000', '#D83E00']}
               start={{ x: 0, y: 0 }}
               end={{ x: 0, y: 1 }}
               style={styles.actionCircle}
@@ -346,14 +377,14 @@ const styles = StyleSheet.create({
     left: 4,
     right: 4,
     bottom: -4,
-    backgroundColor: '#059669',
+    backgroundColor: '#F25000',
     borderRadius: 20,
     opacity: 0.35,
     ...Platform.select({
       ios: {
-        shadowColor: '#059669',
+        shadowColor: '#F25000',
         shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.5,
+        shadowOpacity: 0.45,
         shadowRadius: 12,
       },
       android: {
@@ -365,13 +396,13 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     overflow: 'hidden',
     borderWidth: 1.5,
-    borderColor: 'rgba(255, 255, 255, 0.16)',
-    backgroundColor: '#0F172A',
+    borderColor: 'rgba(242, 80, 0, 0.35)',
+    backgroundColor: '#180F0A',
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
+        shadowColor: '#F25000',
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.25,
+        shadowOpacity: 0.2,
         shadowRadius: 8,
       },
       android: {
@@ -403,7 +434,7 @@ const styles = StyleSheet.create({
     borderRadius: MINI_RADIUS,
     overflow: 'hidden',
     borderWidth: 1.5,
-    borderColor: '#F59E0B',
+    borderColor: '#FF7A00',
   },
   miniPointer: {
     position: 'absolute',
@@ -414,32 +445,38 @@ const styles = StyleSheet.create({
   textColumn: {
     flex: 1,
     justifyContent: 'center',
+    minWidth: 0,
   },
   badgeRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: hp('0.4%'),
+    flexWrap: 'nowrap',
   },
   badgeGradient: {
+    backgroundColor: '#F59E0B',
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 7,
-    paddingVertical: 2,
+    paddingHorizontal: 8,
+    paddingVertical: 2.5,
     borderRadius: 6,
     marginRight: 6,
+    alignSelf: 'flex-start',
   },
   badgeText: {
     fontFamily: FONTS.gilroy.bold,
-    fontSize: wp('2.6%'),
+    fontSize: 9.5,
     color: '#FFFFFF',
     marginLeft: 3,
-    letterSpacing: 0.4,
+    paddingRight: 2,
+    includeFontPadding: false,
   },
   orderTag: {
     fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('2.6%'),
-    color: '#34D399',
-    letterSpacing: 0.3,
+    fontSize: 9.5,
+    color: '#FDBA74',
+    letterSpacing: 0.1,
+    flexShrink: 1,
   },
   titleText: {
     fontFamily: FONTS.gilroy.bold,
@@ -450,7 +487,7 @@ const styles = StyleSheet.create({
   subtitleText: {
     fontFamily: FONTS.gilroy.regular,
     fontSize: wp('2.9%'),
-    color: '#CBD5E1',
+    color: '#FED7AA',
     marginTop: 2,
     lineHeight: 15,
   },
@@ -467,10 +504,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     ...Platform.select({
       ios: {
-        shadowColor: '#10B981',
+        shadowColor: '#F25000',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.4,
-        shadowRadius: 4,
+        shadowOpacity: 0.45,
+        shadowRadius: 5,
       },
       android: {
         elevation: 4,
@@ -480,7 +517,7 @@ const styles = StyleSheet.create({
   actionPrompt: {
     fontFamily: FONTS.gilroy.bold,
     fontSize: wp('2.4%'),
-    color: '#34D399',
+    color: '#FFA767',
     marginTop: 3,
     letterSpacing: 0.6,
   },
@@ -489,9 +526,9 @@ const styles = StyleSheet.create({
   claimedCard: {
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#A7F3D0',
+    borderColor: '#FFC4A8',
     overflow: 'hidden',
-    backgroundColor: '#F0FDF4',
+    backgroundColor: '#FFF5F0',
   },
   claimedInner: {
     flexDirection: 'row',
@@ -503,7 +540,7 @@ const styles = StyleSheet.create({
     width: wp('10%'),
     height: wp('10%'),
     borderRadius: wp('5%'),
-    backgroundColor: '#D1FAE5',
+    backgroundColor: '#FFE3D4',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: wp('3%'),
@@ -518,19 +555,19 @@ const styles = StyleSheet.create({
   claimedTag: {
     fontFamily: FONTS.gilroy.bold,
     fontSize: wp('2.5%'),
-    color: '#059669',
+    color: '#F25000',
     letterSpacing: 0.4,
   },
   claimedPrizeName: {
     fontFamily: FONTS.gilroy.bold,
     fontSize: wp('3.6%'),
-    color: '#064E3B',
+    color: '#431407',
     marginTop: 1,
   },
   claimedCodeDesc: {
     fontFamily: FONTS.gilroy.regular,
     fontSize: wp('2.8%'),
-    color: '#047857',
+    color: '#7C2D12',
   },
   copyPill: {
     flexDirection: 'row',
@@ -540,13 +577,13 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#059669',
+    borderColor: '#F25000',
     marginLeft: 6,
   },
   copyPillText: {
     fontFamily: FONTS.gilroy.bold,
     fontSize: wp('2.8%'),
-    color: '#059669',
+    color: '#F25000',
     marginRight: 4,
   },
 });

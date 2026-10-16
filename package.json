@@ -1,6 +1,6 @@
 {
   "name": "KapraDaily",
-  "version": "0.0.1",
+  "version": "5.3.3",
   "private": true,
   "scripts": {
     "android": "react-native run-android",

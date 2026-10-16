@@ -13,20 +13,20 @@ export const buildOffersItems = ({
   onBCoin,
   onSmartPoint,
   onCoupons,
-  onSpinWheel,
+  onMyRewards,
 }) => [
   {
-    key: 'spin-wheel',
-    label: 'Spin & Win Assured Gifts',
+    key: 'my-rewards',
+    label: 'My Rewards',
     icon: (
       <MaterialCommunityIcons
-        name="ferris-wheel"
+        name="gift-outline"
         color={INK}
         size={ICON_SIZE}
       />
     ),
-    badge: <Badge label="ASSURED GIFT" tone="success" />,
-    onPress: onSpinWheel,
+    badge: <Badge label="SPIN & WIN" tone="success" />,
+    onPress: onMyRewards,
   },
   {
     key: 'smart-point',

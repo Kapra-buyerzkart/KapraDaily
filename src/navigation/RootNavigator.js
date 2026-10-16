@@ -57,6 +57,9 @@ const EditProfileScreen = lazyScreen(() =>
 const SpinWheelRewardsScreen = lazyScreen(() =>
   require('../screens/SpinWheelRewardsScreen'),
 );
+const MyRewardsScreen = lazyScreen(() =>
+  require('../screens/MyRewardsScreen'),
+);
 const ChangePasswordScreen = lazyScreen(() =>
   require('../screens/ChangePasswordScreen'),
 );
@@ -208,6 +211,10 @@ export default function RootNavigator() {
         <Stack.Screen
           name="SpinWheelRewardsScreen"
           component={SpinWheelRewardsScreen}
+        />
+        <Stack.Screen
+          name="MyRewardsScreen"
+          component={MyRewardsScreen}
         />
         <Stack.Screen
           name="ChangePasswordScreen"

@@ -1,5 +1,6 @@
-import React, { useRef, useState, useEffect, useMemo } from 'react';
+import React, { useRef, useState, useEffect, useMemo, useCallback } from 'react';
 import {
+  ActivityIndicator,
   Dimensions,
   Modal,
   Platform,
@@ -47,123 +48,16 @@ import { FONTS } from '@/styles/typography';
 import {
   isOrderSpinClaimed,
   getOrderSpinReward,
-  executeSpinWheelApi,
+  markOrderSpinClaimed,
+  checkSpinWinEligibility,
+  playSpinWin,
+  mapBackendRewardToPrize,
+  extractCampaignAndRewards,
+  selectWeightedRewardIndex,
+  AssuredPrize,
 } from '@/api/spinWheelService';
 
-export type AssuredPrize = {
-  id: string;
-  label: string;
-  sublabel: string;
-  badge: string;
-  code: string;
-  description: string;
-  color1: string;
-  color2: string;
-  textColor: string;
-  iconName: string;
-};
-
-const ASSURED_PRIZES: AssuredPrize[] = [
-  {
-    id: 'p1',
-    label: 'Free Delivery',
-    sublabel: 'ZERO FEE',
-    badge: 'POPULAR',
-    code: 'FREEDEL',
-    description: 'Enjoy 100% Free Express Delivery on your next grocery order.',
-    color1: '#059669',
-    color2: '#047857',
-    textColor: '#FFFFFF',
-    iconName: 'truck-fast',
-  },
-  {
-    id: 'p2',
-    label: '₹50 Off Pantry',
-    sublabel: 'FLAT OFF',
-    badge: 'SUPER DEAL',
-    code: 'PANTRY50',
-    description:
-      'Flat ₹50 OFF on orders above ₹299 across all pantry essentials.',
-    color1: '#EA580C',
-    color2: '#C2410C',
-    textColor: '#FFFFFF',
-    iconName: 'tag-heart',
-  },
-  {
-    id: 'p3',
-    label: '50 UD Coins',
-    sublabel: 'WALLET CASH',
-    badge: 'INSTANT',
-    code: 'UDCOIN50',
-    description: '50 UD Coins credited directly to your wallet. 1 Coin = ₹1.',
-    color1: '#7C3AED',
-    color2: '#6D28D9',
-    textColor: '#FFFFFF',
-    iconName: 'wallet-giftcard',
-  },
-  {
-    id: 'p4',
-    label: '10% Extra Off',
-    sublabel: 'FRESH VEG',
-    badge: 'SAVINGS',
-    code: 'FRESH10',
-    description: 'Extra 10% discount on all fresh farm vegetables and fruits.',
-    color1: '#D97706',
-    color2: '#B45309',
-    textColor: '#FFFFFF',
-    iconName: 'percent',
-  },
-  {
-    id: 'p5',
-    label: 'Surprise Gift',
-    sublabel: 'DAILY ITEM',
-    badge: 'ASSURED',
-    code: 'DAILYGIFT',
-    description:
-      'Get an authentic bakery or pantry treat added to your delivery!',
-    color1: '#0D9488',
-    color2: '#0F766E',
-    textColor: '#FFFFFF',
-    iconName: 'gift',
-  },
-  {
-    id: 'p6',
-    label: '₹25 Cashback',
-    sublabel: 'DIRECT CASH',
-    badge: 'CASH REWARD',
-    code: 'CASH25',
-    description: 'Instant ₹25 cashback credited after your next checkout.',
-    color1: '#E11D48',
-    color2: '#BE123C',
-    textColor: '#FFFFFF',
-    iconName: 'cash-multiple',
-  },
-  {
-    id: 'p7',
-    label: '₹100 Mega Save',
-    sublabel: 'MEGA WIN',
-    badge: 'BUMPER',
-    code: 'MEGA100',
-    description: 'Flat ₹100 discount on monthly grocery basket above ₹799.',
-    color1: '#0284C7',
-    color2: '#0369A1',
-    textColor: '#FFFFFF',
-    iconName: 'ticket-percent',
-  },
-  {
-    id: 'p8',
-    label: '2x Points Boost',
-    sublabel: 'REWARDS',
-    badge: 'BONUS',
-    code: 'BOOST2X',
-    description:
-      'Double your smart reward points on every item in your next cart.',
-    color1: '#16A34A',
-    color2: '#15803D',
-    textColor: '#FFFFFF',
-    iconName: 'star-circle',
-  },
-];
+export type { AssuredPrize };
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 // iOS-optimized responsive wheel sizing: avoids notch & tab bar vertical clipping
@@ -235,9 +129,22 @@ const CONFETTI_PIECES = Array.from({ length: CONFETTI_COUNT }).map((_, i) => {
   };
 });
 
+type ConfettiItem = {
+  id: number;
+  startX: number;
+  startY: number;
+  size: number;
+  aspect: number;
+  isCircle: boolean;
+  color: string;
+  rotateZStart: number;
+  sway: number;
+  swayDir: number;
+};
+
 interface ConfettiPieceProps {
   key?: React.Key;
-  piece: (typeof CONFETTI_PIECES)[0];
+  piece: ConfettiItem;
   active: boolean;
 }
 
@@ -296,34 +203,77 @@ export default function SpinWheelRewardsScreen() {
   const route = useRoute<any>();
   const insets = useSafeAreaInsets();
 
-  const { orderId, orderNumber, source, theme, prizes: customPrizes } =
-    route.params || {};
+  const {
+    orderId,
+    orderNumber,
+    source,
+    theme,
+    prizes: customPrizes,
+  } = route.params || {};
   const isOrderReward = source === 'ORDER_SUCCESS' && !!orderId;
   const is48hr = theme === '48hr' || source === 'KSHOPE_PROFILE';
 
-  // Dynamically adapt to custom prizes (e.g. 4 or 5 items) or fallback to default 8 assured prizes
-  const prizes: AssuredPrize[] =
-    customPrizes && Array.isArray(customPrizes) && customPrizes.length >= 3
-      ? customPrizes
-      : ASSURED_PRIZES;
+  const [prizes, setPrizes] = useState<AssuredPrize[]>(() => {
+    if (
+      customPrizes &&
+      Array.isArray(customPrizes) &&
+      customPrizes.length >= 2
+    ) {
+      return customPrizes;
+    }
+    return [];
+  });
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [emptyMessage, setEmptyMessage] = useState<string | null>(null);
+  const [campaignId, setCampaignId] = useState<number | undefined>(undefined);
+  const [campaignName, setCampaignName] = useState<string>('');
 
   const itemCount = prizes.length;
-  const sliceAngle = 360 / itemCount;
+  const sliceAngle = itemCount > 0 ? 360 / itemCount : 45;
 
-  // Responsive typography & badge dimensions: auto-scales bigger for 4 or 5 items!
-  const isFourItems = itemCount === 4;
-  const isFiveItems = itemCount === 5;
+  const titleFontSize =
+    itemCount <= 4
+      ? 13.5
+      : itemCount === 5
+      ? 12
+      : itemCount === 6
+      ? 10.5
+      : itemCount === 7
+      ? 9.5
+      : itemCount === 8
+      ? 8.8
+      : 7.8;
+  const sublabelFontSize =
+    itemCount <= 4 ? 8.5 : itemCount === 5 ? 8 : itemCount <= 7 ? 6.5 : 5.8;
+  const badgeWidth =
+    itemCount <= 4
+      ? 60
+      : itemCount === 5
+      ? 52
+      : itemCount === 6
+      ? 48
+      : itemCount === 7
+      ? 44
+      : 38;
+  const badgeHeight = itemCount <= 4 ? 16 : itemCount === 5 ? 14.5 : 12;
+  const badgeY = RADIUS - RADIUS * (itemCount <= 4 ? 0.81 : 0.82);
+  const titleY =
+    RADIUS - RADIUS * (itemCount <= 4 ? 0.49 : itemCount === 5 ? 0.5 : 0.52);
 
-  const titleFontSize = isFourItems ? 13.5 : isFiveItems ? 12 : 10.5;
-  const sublabelFontSize = isFourItems ? 8.5 : isFiveItems ? 8 : 7;
-  const badgeWidth = isFourItems ? 60 : isFiveItems ? 52 : 46;
-  const badgeHeight = isFourItems ? 16 : isFiveItems ? 14.5 : 13;
-  const badgeY = RADIUS - RADIUS * (isFourItems ? 0.81 : 0.82);
-  const titleY = RADIUS - RADIUS * (isFourItems ? 0.49 : isFiveItems ? 0.50 : 0.52);
-
-  // Outer perimeter bulbs: evenly distributed based on segment count
-  const bulbCount = itemCount === 5 ? 20 : 16;
+  const bulbCount =
+    itemCount === 7
+      ? 21
+      : itemCount === 5
+      ? 20
+      : itemCount === 6
+      ? 18
+      : itemCount === 8
+      ? 24
+      : itemCount > 0
+      ? itemCount * 3
+      : 16;
   const bulbs = useMemo(() => {
+    if (itemCount === 0) return [];
     return Array.from({ length: bulbCount }).map((_, i) => {
       const angle = (i * 360) / bulbCount;
       const rad = (angle * Math.PI) / 180;
@@ -334,13 +284,12 @@ export default function SpinWheelRewardsScreen() {
         isGold: i % 2 === 0,
       };
     });
-  }, [bulbCount]);
+  }, [bulbCount, itemCount]);
 
   const rotation = useSharedValue(0);
   const pointerAngle = useSharedValue(0);
   const hubScale = useSharedValue(1);
 
-  // Motion Graphics celebration values
   const trophyScale = useSharedValue(0.5);
   const trophyGlow = useSharedValue(0.4);
 
@@ -363,24 +312,96 @@ export default function SpinWheelRewardsScreen() {
     };
   }, []);
 
-  // Check if this order was already claimed in past session
+  const isMountedRef = useRef<boolean>(true);
   useEffect(() => {
-    if (isOrderReward && orderId) {
-      isOrderSpinClaimed(orderId).then((claimed: boolean) => {
-        if (claimed) {
-          setSpinsCount(0);
-          getOrderSpinReward(orderId).then((data: any) => {
-            if (data?.prize) {
-              setWonPrize(data.prize);
-              setShowModal(true);
-            }
-          });
-        } else {
-          setSpinsCount(1);
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  const fetchEligibility = useCallback(async () => {
+    setIsLoading(true);
+    setEmptyMessage(null);
+
+    const targetId = orderId || orderNumber;
+
+    if (targetId) {
+      const claimed = await isOrderSpinClaimed(targetId);
+      if (claimed && isMountedRef.current) {
+        setSpinsCount(0);
+        const reward = await getOrderSpinReward(targetId);
+        if (reward?.prize && isMountedRef.current) {
+          setWonPrize(reward.prize);
+          setShowModal(true);
         }
-      });
+      }
     }
-  }, [orderId, isOrderReward]);
+
+    try {
+      const response: any = await checkSpinWinEligibility(targetId);
+      if (!isMountedRef.current) return;
+
+      const campaignInfo = extractCampaignAndRewards(response);
+
+      if (
+        Array.isArray(campaignInfo.rewards) &&
+        campaignInfo.rewards.length > 0
+      ) {
+        const mapped = campaignInfo.rewards.map((item: any, idx: number) =>
+          mapBackendRewardToPrize(item, idx),
+        );
+        setPrizes(mapped);
+        setEmptyMessage(null);
+        setCampaignId(campaignInfo.campaignId);
+        if (campaignInfo.campaignName) {
+          setCampaignName(campaignInfo.campaignName);
+        }
+
+        const data = response?.data !== undefined ? response.data : response;
+        const spins =
+          typeof data?.spinsAvailable === 'number'
+            ? data.spinsAvailable
+            : typeof data?.spinsCount === 'number'
+            ? data.spinsCount
+            : 1;
+        setSpinsCount(spins);
+      } else {
+        setPrizes([]);
+        setSpinsCount(0);
+        const data = response?.data !== undefined ? response.data : response;
+        const msg =
+          data?.message ||
+          data?.error ||
+          response?.message ||
+          (isOrderReward
+            ? `No spin & win rewards available for order #${
+                orderNumber || orderId
+              }.`
+            : 'No spin rewards available right now.');
+        setEmptyMessage(msg);
+      }
+    } catch (err: any) {
+      if (!isMountedRef.current) return;
+      const errResp = err?.response?.data;
+      const msg =
+        errResp?.data?.error ||
+        errResp?.message ||
+        err?.message ||
+        'Something went wrong. Please try again.';
+      setPrizes([]);
+      setSpinsCount(0);
+      setEmptyMessage(msg);
+    } finally {
+      if (isMountedRef.current) {
+        setIsLoading(false);
+      }
+    }
+  }, [orderId, isOrderReward, orderNumber]);
+
+  useEffect(() => {
+    fetchEligibility();
+  }, [fetchEligibility]);
 
   // Gentle idle pulsing on center hub
   useEffect(() => {
@@ -420,37 +441,180 @@ export default function SpinWheelRewardsScreen() {
     pointerAngle.value = withSpring(0, { damping: 14, stiffness: 220 });
     successTick();
 
-    // Persist to backend and local storage for this order
-    if (isOrderReward && orderId) {
-      executeSpinWheelApi({
-        orderId,
-        source: 'ORDER_SUCCESS',
-        winningIndex,
-        prize,
-      });
+    const targetOrderId =
+      orderId !== undefined && orderId !== null
+        ? isNaN(Number(orderId))
+          ? orderId
+          : Number(orderId)
+        : undefined;
+
+    if (targetOrderId && prize) {
+      markOrderSpinClaimed(targetOrderId, prize);
     }
   };
 
-  const spin = () => {
-    if (isSpinning || spinsCount <= 0) return;
+  const spin = async () => {
+    if (isSpinning || spinsCount <= 0 || prizes.length === 0) return;
 
     clearHapticTimeouts();
     impactTick();
+    setWonPrize(null);
+    setIsSpinning(true);
 
-    // Pick a winning prize slice from active prizes
-    const winningIndex = Math.floor(Math.random() * prizes.length);
-    const targetPrize = prizes[winningIndex];
+    const targetOrderId =
+      orderId !== undefined && orderId !== null
+        ? isNaN(Number(orderId))
+          ? orderId
+          : Number(orderId)
+        : undefined;
+    const targetCampaignId =
+      campaignId !== undefined && campaignId !== null
+        ? Number(campaignId)
+        : undefined;
 
-    // Math:
-    // Slice center is at: winningIndex * sliceAngle + sliceAngle / 2 clockwise from 12 o'clock.
-    // Pointer is stationary at 12 o'clock (0°).
-    // Target angle in cycle:
+    let playResponse: any = null;
+    try {
+      playResponse = await playSpinWin({
+        orderId: targetOrderId,
+        campaignId: targetCampaignId,
+      });
+      console.log('rewards/spin-win/play response:', playResponse);
+    } catch (err: any) {
+      const errResponse =
+        err?.response?.data || err?.data || err?.message || err;
+      console.log('rewards/spin-win/play response error:', errResponse);
+    }
+
+    let winningIndex = -1;
+    let targetPrize: AssuredPrize | null = null;
+    const responseData =
+      playResponse?.data !== undefined ? playResponse.data : playResponse;
+
+    if (responseData) {
+      if (
+        typeof responseData.winningIndex === 'number' &&
+        responseData.winningIndex >= 0 &&
+        responseData.winningIndex < prizes.length
+      ) {
+        winningIndex = responseData.winningIndex;
+      } else if (
+        typeof responseData.index === 'number' &&
+        responseData.index >= 0 &&
+        responseData.index < prizes.length
+      ) {
+        winningIndex = responseData.index;
+      }
+
+      const rewardObj =
+        responseData.prize ||
+        responseData.reward ||
+        responseData.winningReward ||
+        responseData.rewardSegment ||
+        responseData.item ||
+        (responseData.id ||
+        responseData.code ||
+        responseData.label ||
+        responseData.title ||
+        responseData.rewardName
+          ? responseData
+          : null);
+
+      if (rewardObj) {
+        const rCampaignItemId = String(rewardObj.campaignItemId ?? '').trim();
+        const rId = String(
+          rewardObj.id ??
+            rewardObj.rewardId ??
+            rewardObj.prizeId ??
+            responseData.rewardId ??
+            responseData.prizeId ??
+            '',
+        ).trim();
+        const rCode = String(
+          rewardObj.code ??
+            rewardObj.couponCode ??
+            rewardObj.promoCode ??
+            responseData.code ??
+            '',
+        )
+          .trim()
+          .toLowerCase();
+        const rTitle = String(
+          rewardObj.rewardName ??
+            rewardObj.label ??
+            rewardObj.title ??
+            rewardObj.name ??
+            '',
+        )
+          .trim()
+          .toLowerCase();
+        const rDisplay = String(
+          rewardObj.displayText ??
+            rewardObj.sublabel ??
+            rewardObj.discount ??
+            '',
+        )
+          .trim()
+          .toLowerCase();
+
+        if (winningIndex === -1) {
+          winningIndex = prizes.findIndex(p => {
+            if (
+              rCampaignItemId &&
+              String(p.campaignItemId).trim() === rCampaignItemId
+            )
+              return true;
+            if (
+              rId &&
+              (String(p.id).trim() === rId || String(p.rewardId).trim() === rId)
+            )
+              return true;
+            if (
+              rCode &&
+              p.code &&
+              String(p.code).trim().toLowerCase() === rCode
+            )
+              return true;
+            if (
+              rTitle &&
+              ((p.rewardName &&
+                String(p.rewardName).trim().toLowerCase() === rTitle) ||
+                (p.label && String(p.label).trim().toLowerCase() === rTitle))
+            )
+              return true;
+            if (
+              rDisplay &&
+              ((p.displayText &&
+                String(p.displayText).trim().toLowerCase() === rDisplay) ||
+                (p.sublabel &&
+                  String(p.sublabel).trim().toLowerCase() === rDisplay))
+            )
+              return true;
+            return false;
+          });
+        }
+
+        if (winningIndex !== -1) {
+          targetPrize = {
+            ...prizes[winningIndex],
+            ...mapBackendRewardToPrize(rewardObj, winningIndex),
+          };
+        } else {
+          winningIndex = selectWeightedRewardIndex(prizes);
+          targetPrize = mapBackendRewardToPrize(rewardObj, winningIndex);
+        }
+      }
+    }
+
+    if (winningIndex === -1 || !targetPrize) {
+      winningIndex = selectWeightedRewardIndex(prizes);
+      targetPrize = prizes[winningIndex];
+    }
+
     const sliceCenter = winningIndex * sliceAngle + sliceAngle / 2;
     const targetAngleInCycle = (360 - (sliceCenter % 360)) % 360;
 
     const currentRot = accumulatedRotation.current;
     const currentTurns = Math.floor(currentRot / 360);
-    // 5 full turns keeps rotation speed readable, smooth, and natural
     const fullSpins = 5;
     let nextTarget = (currentTurns + fullSpins) * 360 + targetAngleInCycle;
 
@@ -459,11 +623,11 @@ export default function SpinWheelRewardsScreen() {
     }
 
     accumulatedRotation.current = nextTarget;
-    setWonPrize(null);
-    setIsSpinning(true);
 
-    // Schedule progressive haptic feedback ticks during deceleration phase (~3.4s to 7.6s)
-    const SLOWDOWN_HAPTIC_CLICKS: { delay: number; type: 'light' | 'medium' }[] = [
+    const SLOWDOWN_HAPTIC_CLICKS: {
+      delay: number;
+      type: 'light' | 'medium';
+    }[] = [
       { delay: 3400, type: 'light' },
       { delay: 3820, type: 'light' },
       { delay: 4260, type: 'light' },
@@ -486,9 +650,8 @@ export default function SpinWheelRewardsScreen() {
       hapticTimeouts.current.push(timer);
     });
 
-    // Multi-stage needle flutter: steady flutter during cruise, then slower suspense ticks as it decelerates
-    const fastTicks = Math.floor(3400 / 90); // ~37 flutters during cruise speed
-    const slowTicks = Math.floor(4100 / 220); // ~18 slower ticks during deceleration
+    const fastTicks = Math.floor(3400 / 90);
+    const slowTicks = Math.floor(4100 / 220);
     pointerAngle.value = withSequence(
       withRepeat(
         withSequence(
@@ -509,8 +672,6 @@ export default function SpinWheelRewardsScreen() {
       withSpring(0, { damping: 14, stiffness: 220 }),
     );
 
-    // Smooth progressive deceleration curve:
-    // Calm, readable initial speed that suspensefully bleeds momentum over 7.6 seconds
     rotation.value = withTiming(
       nextTarget,
       {
@@ -575,17 +736,23 @@ export default function SpinWheelRewardsScreen() {
     transform: [{ scale: trophyScale.value }],
   }));
 
+  const isNoPrize =
+    Boolean(wonPrize?.isNoPrize) ||
+    String(wonPrize?.rewardType || '').toLowerCase() === 'noprize' ||
+    String(wonPrize?.rewardName || wonPrize?.label || '')
+      .toLowerCase()
+      .includes('no prize') ||
+    String(wonPrize?.rewardName || wonPrize?.label || '')
+      .toLowerCase()
+      .includes('better luck');
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
       {/* Bulletproof iOS Absolute Background Gradient */}
       <LinearGradient
-        colors={
-          is48hr
-            ? ['#FFFFFF', '#FFF7ED', '#FFF3E0']
-            : ['#FFFFFF', '#F0FDF4', '#FEFCE8']
-        }
+        colors={['#FFFFFF', '#FFF7ED', '#FFF3E0']}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
         style={StyleSheet.absoluteFillObject}
@@ -614,7 +781,9 @@ export default function SpinWheelRewardsScreen() {
         </TouchableOpacity>
 
         <View style={styles.headerTitleBlock}>
-          <Text style={styles.headerTitle}>Spin & Win</Text>
+          <Text style={styles.headerTitle} numberOfLines={1}>
+            {campaignName || 'Spin & Win'}
+          </Text>
           <Text style={styles.headerSubtitle}>
             {isOrderReward
               ? `Order #${orderNumber || orderId} Reward`
@@ -624,14 +793,34 @@ export default function SpinWheelRewardsScreen() {
           </Text>
         </View>
 
-        <View style={styles.spinsBadge}>
-          <MaterialCommunityIcons
-            name="star-four-points"
-            size={12}
-            color="#D97706"
-          />
-          <Text style={styles.spinsBadgeText}>
-            {spinsCount} {spinsCount === 1 ? 'Spin' : 'Spins'}
+        <View
+          style={[
+            styles.spinsBadge,
+            !isLoading && prizes.length === 0 && styles.spinsBadgeEmpty,
+          ]}
+        >
+          {!isLoading && prizes.length === 0 ? (
+            <MaterialCommunityIcons
+              name="close-circle-outline"
+              size={12}
+              color="#94A3B8"
+            />
+          ) : (
+            <MaterialCommunityIcons
+              name="star-four-points"
+              size={12}
+              color="#D97706"
+            />
+          )}
+          <Text
+            style={[
+              styles.spinsBadgeText,
+              !isLoading && prizes.length === 0 && styles.spinsBadgeTextEmpty,
+            ]}
+          >
+            {!isLoading && prizes.length === 0
+              ? '0 Spins'
+              : `${spinsCount} ${spinsCount === 1 ? 'Spin' : 'Spins'}`}
           </Text>
         </View>
       </View>
@@ -643,368 +832,548 @@ export default function SpinWheelRewardsScreen() {
           { paddingBottom: insets.bottom + 24 },
         ]}
       >
-        {/* Assured Guarantee Ribbon Card (iOS Bulletproof Gradient) */}
-        <View
-          style={[
-            styles.guaranteeCard,
-            is48hr && styles.guaranteeCard48hr,
-          ]}
-        >
-          <LinearGradient
-            colors={is48hr ? ['#FFF7ED', '#FFEDD5'] : ['#ECFDF5', '#F0FDF4']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={StyleSheet.absoluteFillObject}
-          />
-          <View style={styles.guaranteeInner}>
+        {isLoading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#F25000" />
+            <Text style={styles.loadingText}>
+              Checking reward eligibility...
+            </Text>
+          </View>
+        ) : prizes.length === 0 ? (
+          <View style={styles.emptyContainer}>
             <View
               style={[
-                styles.shieldIconWrapper,
-                is48hr && styles.shieldIconWrapper48hr,
+                styles.emptyIconCircle,
+                is48hr && styles.emptyIconCircle48hr,
               ]}
             >
               <MaterialCommunityIcons
-                name={is48hr ? 'lightning-bolt' : 'shield-check'}
-                size={20}
-                color={is48hr ? '#F25000' : '#059669'}
+                name="gift-off-outline"
+                size={44}
+                color="#F25000"
               />
             </View>
-            <View style={styles.guaranteeCopy}>
-              <View style={styles.guaranteeHeaderRow}>
-                <Text
-                  style={[
-                    styles.guaranteeHeading,
-                    is48hr && styles.guaranteeHeading48hr,
-                  ]}
-                >
-                  {isOrderReward
-                    ? 'Order Bonus: 1 Assured Gift'
-                    : is48hr
-                    ? '48hrs Deals 100% Assured Prize'
-                    : '100% Assured Gift Guarantee'}
-                </Text>
-                <View
-                  style={[
-                    styles.guaranteePill,
-                    is48hr && styles.guaranteePill48hr,
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.guaranteePillText,
-                      is48hr && styles.guaranteePillText48hr,
-                    ]}
-                  >
-                    {isOrderReward
-                      ? 'ORDER REWARD'
-                      : is48hr
-                      ? '48HR DEAL'
-                      : 'NO EMPTY SPINS'}
+            <Text style={styles.emptyTitle}>
+              {emptyMessage ? 'Something Went Wrong' : 'No Rewards Available'}
+            </Text>
+            <Text style={styles.emptyDescription}>
+              {emptyMessage ||
+                'There are no spin & win rewards available at this time.'}
+            </Text>
+            <View style={styles.emptyButtonRow}>
+              <TouchableOpacity
+                style={styles.emptyRetryButton}
+                onPress={() => fetchEligibility()}
+                activeOpacity={0.85}
+              >
+                <Ionicons name="refresh" size={16} color="#F25000" />
+                <Text style={styles.emptyRetryText}>Try Again</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.emptyActionButton}
+                onPress={() => navigation.goBack()}
+                activeOpacity={0.85}
+              >
+                <LinearGradient
+                  colors={['#FF6200', '#F25000']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={StyleSheet.absoluteFillObject}
+                />
+                <View style={styles.emptyActionContent}>
+                  <Ionicons
+                    name={isOrderReward ? 'receipt-outline' : 'arrow-back'}
+                    size={16}
+                    color="#FFFFFF"
+                  />
+                  <Text style={styles.emptyActionText} numberOfLines={1}>
+                    {isOrderReward ? 'Back to Order' : 'Go Back'}
                   </Text>
                 </View>
-              </View>
-              <Text
-                style={[
-                  styles.guaranteeSubtitle,
-                  is48hr && styles.guaranteeSubtitle48hr,
-                ]}
-              >
-                {isOrderReward
-                  ? 'Congratulations on your order! Spin now to claim your assured gift.'
-                  : is48hr
-                  ? 'Exclusive flash rewards and coupons unlocked with every single spin!'
-                  : 'Every spin guarantees a real coupon, cashback, or free delivery!'}
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        {/* The Wheel Stage */}
-        <View style={styles.wheelStage}>
-          {/* Outer Ambient Wheel Halo */}
-          <View style={styles.outerWheelHalo} />
-
-          {/* Pointer Flapper Needle (Fixed at 12 o'clock pointing down) */}
-          <Animated.View style={[styles.pointerWrapper, pointerStyle]}>
-            <Svg width={32} height={40} viewBox="0 0 36 44">
-              <Defs>
-                <SvgGradient id="needleGold" x1="0" y1="0" x2="1" y2="1">
-                  <Stop offset="0" stopColor="#F59E0B" />
-                  <Stop offset="0.6" stopColor="#D97706" />
-                  <Stop offset="1" stopColor="#B45309" />
-                </SvgGradient>
-              </Defs>
-              <Path
-                d="M18 42 L6 14 C4 9 8 2 18 2 C28 2 32 9 30 14 Z"
-                fill="url(#needleGold)"
-                stroke="#FFFFFF"
-                strokeWidth={2}
-              />
-              <Circle
-                cx={18}
-                cy={14}
-                r={5}
-                fill="#EF4444"
-                stroke="#FFE4E6"
-                strokeWidth={1.5}
-              />
-            </Svg>
-          </Animated.View>
-
-          {/* Rotating Wheel Container */}
-          <View style={styles.wheelWrapper}>
-            <Animated.View style={[styles.wheelContainer, wheelStyle]}>
-              <Svg width={WHEEL_SIZE} height={WHEEL_SIZE}>
-                <Defs>
-                  {prizes.map(prize => (
-                    <SvgGradient
-                      key={`grad-${prize.id}`}
-                      id={`grad-${prize.id}`}
-                      x1="0"
-                      y1="0"
-                      x2="1"
-                      y2="1"
-                    >
-                      <Stop offset="0" stopColor={prize.color1} />
-                      <Stop offset="1" stopColor={prize.color2} />
-                    </SvgGradient>
-                  ))}
-
-                  <SvgGradient id="rimGold" x1="0" y1="0" x2="1" y2="1">
-                    <Stop offset="0" stopColor="#FBBF24" />
-                    <Stop offset="0.5" stopColor="#F59E0B" />
-                    <Stop offset="1" stopColor="#D97706" />
-                  </SvgGradient>
-                  <SvgGradient id="rimEmerald" x1="0" y1="0" x2="1" y2="1">
-                    <Stop offset="0" stopColor="#10B981" />
-                    <Stop offset="1" stopColor="#047857" />
-                  </SvgGradient>
-                </Defs>
-
-                {/* Outer Ring Border */}
-                <Circle
-                  cx={RADIUS}
-                  cy={RADIUS}
-                  r={RADIUS - 2}
-                  fill="url(#rimGold)"
-                />
-                <Circle
-                  cx={RADIUS}
-                  cy={RADIUS}
-                  r={RADIUS - 6}
-                  fill="url(#rimEmerald)"
-                />
-                <Circle
-                  cx={RADIUS}
-                  cy={RADIUS}
-                  r={RADIUS - 12}
-                  fill="#FFFFFF"
-                />
-
-                {/* Slices: responsive width and typography */}
-                {prizes.map((prize, index) => {
-                  const sliceCenterAngle =
-                    index * sliceAngle + sliceAngle / 2;
-                  return (
-                    <G key={prize.id}>
-                      <Path
-                        d={getSlicePath(index, sliceAngle)}
-                        fill={`url(#grad-${prize.id})`}
-                        stroke="#FFFFFF"
-                        strokeWidth={isFourItems ? 2 : 1.5}
-                      />
-
-                      {/* Rotated text and sublabel */}
-                      <G
-                        transform={`rotate(${sliceCenterAngle}, ${RADIUS}, ${RADIUS})`}
-                      >
-                        <Rect
-                          x={RADIUS - badgeWidth / 2}
-                          y={badgeY}
-                          width={badgeWidth}
-                          height={badgeHeight}
-                          rx={badgeHeight / 2}
-                          fill="rgba(0, 0, 0, 0.22)"
-                        />
-                        <SvgText
-                          x={RADIUS}
-                          y={badgeY + badgeHeight * 0.72}
-                          fill="#FFE082"
-                          fontSize={sublabelFontSize}
-                          fontWeight="800"
-                          textAnchor="middle"
-                          letterSpacing="0.3"
-                        >
-                          {prize.sublabel}
-                        </SvgText>
-
-                        <SvgText
-                          x={RADIUS}
-                          y={titleY}
-                          fill={prize.textColor}
-                          fontSize={titleFontSize}
-                          fontWeight="900"
-                          textAnchor="middle"
-                          letterSpacing="0.2"
-                        >
-                          {prize.label}
-                        </SvgText>
-                      </G>
-                    </G>
-                  );
-                })}
-
-                {/* Perimeter Bulb Pins */}
-                {bulbs.map((bulb, idx) => (
-                  <Circle
-                    key={`bulb-${idx}`}
-                    cx={bulb.x}
-                    cy={bulb.y}
-                    r={3}
-                    fill={bulb.isGold ? '#FDE68A' : '#A7F3D0'}
-                    stroke={bulb.isGold ? '#D97706' : '#047857'}
-                    strokeWidth={0.8}
-                  />
-                ))}
-              </Svg>
-            </Animated.View>
-
-            {/* Center Elevated Hub "SPIN" Button (iOS Bulletproof) */}
-            <Animated.View
-              style={[styles.centerHubContainer, hubAnimatedStyle]}
-            >
-              <TouchableOpacity
-                onPress={spin}
-                disabled={isSpinning || spinsCount <= 0}
-                activeOpacity={0.85}
-                style={styles.hubTouchable}
-                accessibilityRole="button"
-                accessibilityLabel="Spin the wheel"
-              >
-                <View style={styles.hubBezel}>
-                  <LinearGradient
-                    colors={['#FFFBEB', '#FDE68A', '#F59E0B']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={StyleSheet.absoluteFillObject}
-                  />
-                  <View style={styles.hubCore}>
-                    <LinearGradient
-                      colors={
-                        spinsCount <= 0
-                          ? ['#94A3B8', '#64748B']
-                          : is48hr
-                          ? ['#FF5722', '#F25000']
-                          : ['#0CA201', '#057A20']
-                      }
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                      style={StyleSheet.absoluteFillObject}
-                    />
-                    <View style={styles.hubCoreContent}>
-                      <MaterialCommunityIcons
-                        name={isSpinning ? 'sync' : 'auto-fix'}
-                        size={14}
-                        color="#FFE082"
-                      />
-                      <Text style={styles.hubSpinnerText}>
-                        {isSpinning ? '...' : 'SPIN'}
-                      </Text>
-                    </View>
-                  </View>
-                </View>
               </TouchableOpacity>
-            </Animated.View>
-          </View>
-        </View>
-
-        {/* Primary Action Button (iOS Bulletproof Absolute Gradient) */}
-        <View style={styles.ctaWrapper}>
-          <TouchableOpacity
-            onPress={spin}
-            disabled={isSpinning || spinsCount <= 0}
-            activeOpacity={0.88}
-            style={[
-              styles.spinCtaButton,
-              (isSpinning || spinsCount <= 0) && styles.spinCtaDisabled,
-            ]}
-          >
-            <LinearGradient
-              colors={
-                spinsCount <= 0
-                  ? ['#94A3B8', '#64748B']
-                  : is48hr
-                  ? ['#FF5722', '#F25000', '#B72C00']
-                  : ['#0CA201', '#057A20', '#035815']
-              }
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={StyleSheet.absoluteFillObject}
-            />
-            <View style={styles.spinCtaContent}>
-              <MaterialCommunityIcons
-                name={isSpinning ? 'rotate-right' : 'gift-outline'}
-                size={20}
-                color="#FFFFFF"
-              />
-              <Text style={styles.spinCtaText}>
-                {isSpinning
-                  ? 'FINDING YOUR ASSURED GIFT...'
-                  : spinsCount <= 0
-                  ? 'NO SPINS LEFT TODAY'
-                  : 'SPIN THE LUCKY WHEEL'}
-              </Text>
             </View>
-          </TouchableOpacity>
-
-          <Text style={styles.turnsNotice}>
-            🎯 100% Guaranteed reward credited straight to your account
-          </Text>
-        </View>
-
-        {/* Assured Gifts Showcase Section */}
-        <View style={styles.prizesSection}>
-          <View style={styles.sectionHeaderRow}>
-            <MaterialCommunityIcons
-              name={is48hr ? 'lightning-bolt' : 'gift-open-outline'}
-              size={17}
-              color={is48hr ? '#F25000' : '#059669'}
-            />
-            <Text style={styles.sectionTitle}>
-              Today’s {prizes.length} Assured Gifts
-            </Text>
           </View>
-          <Text style={styles.sectionSubtitle}>
-            Every single turn gives you one of these valuable coupons:
-          </Text>
-
-          <View style={styles.prizesGrid}>
-            {prizes.map(prize => (
-              <View key={prize.id} style={styles.prizeMiniCard}>
+        ) : (
+          <>
+            <View
+              style={[styles.guaranteeCard, is48hr && styles.guaranteeCard48hr]}
+            >
+              <LinearGradient
+                colors={['#FFF7ED', '#FFEDD5']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={StyleSheet.absoluteFillObject}
+              />
+              <View style={styles.guaranteeInner}>
                 <View
                   style={[
-                    styles.miniCardIconCircle,
-                    { backgroundColor: `${prize.color1}18` },
+                    styles.shieldIconWrapper,
+                    is48hr && styles.shieldIconWrapper48hr,
                   ]}
                 >
                   <MaterialCommunityIcons
-                    name={prize.iconName}
-                    size={15}
-                    color={prize.color1}
+                    name={is48hr ? 'lightning-bolt' : 'shield-check'}
+                    size={20}
+                    color="#F25000"
                   />
                 </View>
-                <View style={styles.miniCardInfo}>
-                  <Text style={styles.miniCardTitle} numberOfLines={1}>
-                    {prize.label}
-                  </Text>
-                  <Text style={styles.miniCardBadge} numberOfLines={1}>
-                    {prize.sublabel}
+                <View style={styles.guaranteeCopy}>
+                  <View style={styles.guaranteeHeaderRow}>
+                    <Text
+                      style={[
+                        styles.guaranteeHeading,
+                        is48hr && styles.guaranteeHeading48hr,
+                      ]}
+                    >
+                      {isOrderReward
+                        ? 'Order Bonus: 1 Assured Gift'
+                        : is48hr
+                        ? '48hrs Deals 100% Assured Prize'
+                        : '100% Assured Gift Guarantee'}
+                    </Text>
+                    <View
+                      style={[
+                        styles.guaranteePill,
+                        is48hr && styles.guaranteePill48hr,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.guaranteePillText,
+                          is48hr && styles.guaranteePillText48hr,
+                        ]}
+                      >
+                        {isOrderReward
+                          ? 'ORDER REWARD'
+                          : is48hr
+                          ? '48HR DEAL'
+                          : 'NO EMPTY SPINS'}
+                      </Text>
+                    </View>
+                  </View>
+                  <Text
+                    style={[
+                      styles.guaranteeSubtitle,
+                      is48hr && styles.guaranteeSubtitle48hr,
+                    ]}
+                  >
+                    {isOrderReward
+                      ? 'Congratulations on your order! Spin now to claim your assured gift.'
+                      : is48hr
+                      ? 'Exclusive flash rewards and coupons unlocked with every single spin!'
+                      : 'Every spin guarantees a real coupon, cashback, or free delivery!'}
                   </Text>
                 </View>
               </View>
-            ))}
-          </View>
-        </View>
+            </View>
+
+            {/* The Wheel Stage */}
+            <View style={styles.wheelStage}>
+              {/* Outer Ambient Wheel Halo */}
+              <View style={styles.outerWheelHalo} />
+
+              {/* Pointer Flapper Needle (Fixed at 12 o'clock pointing down) */}
+              <Animated.View style={[styles.pointerWrapper, pointerStyle]}>
+                <Svg width={32} height={40} viewBox="0 0 36 44">
+                  <Defs>
+                    <SvgGradient id="needleGold" x1="0" y1="0" x2="1" y2="1">
+                      <Stop offset="0" stopColor="#F59E0B" />
+                      <Stop offset="0.6" stopColor="#D97706" />
+                      <Stop offset="1" stopColor="#B45309" />
+                    </SvgGradient>
+                  </Defs>
+                  <Path
+                    d="M18 42 L6 14 C4 9 8 2 18 2 C28 2 32 9 30 14 Z"
+                    fill="url(#needleGold)"
+                    stroke="#FFFFFF"
+                    strokeWidth={2}
+                  />
+                  <Circle
+                    cx={18}
+                    cy={14}
+                    r={5}
+                    fill="#EF4444"
+                    stroke="#FFE4E6"
+                    strokeWidth={1.5}
+                  />
+                </Svg>
+              </Animated.View>
+
+              {/* Rotating Wheel Container */}
+              <View style={styles.wheelWrapper}>
+                <Animated.View style={[styles.wheelContainer, wheelStyle]}>
+                  <Svg width={WHEEL_SIZE} height={WHEEL_SIZE}>
+                    <Defs>
+                      {prizes.map(prize => (
+                        <SvgGradient
+                          key={`grad-${prize.id}`}
+                          id={`grad-${prize.id}`}
+                          x1="0"
+                          y1="0"
+                          x2="1"
+                          y2="1"
+                        >
+                          <Stop offset="0" stopColor={prize.color1} />
+                          <Stop offset="1" stopColor={prize.color2} />
+                        </SvgGradient>
+                      ))}
+
+                      <SvgGradient id="rimGold" x1="0" y1="0" x2="1" y2="1">
+                        <Stop offset="0" stopColor="#FBBF24" />
+                        <Stop offset="0.5" stopColor="#F59E0B" />
+                        <Stop offset="1" stopColor="#D97706" />
+                      </SvgGradient>
+                      <SvgGradient id="rimOrange" x1="0" y1="0" x2="1" y2="1">
+                        <Stop offset="0" stopColor="#FF7A28" />
+                        <Stop offset="0.5" stopColor="#F25000" />
+                        <Stop offset="1" stopColor="#C2410C" />
+                      </SvgGradient>
+                    </Defs>
+
+                    {/* Outer Ring Border */}
+                    <Circle
+                      cx={RADIUS}
+                      cy={RADIUS}
+                      r={RADIUS - 2}
+                      fill="url(#rimGold)"
+                    />
+                    <Circle
+                      cx={RADIUS}
+                      cy={RADIUS}
+                      r={RADIUS - 6}
+                      fill="url(#rimOrange)"
+                    />
+                    <Circle
+                      cx={RADIUS}
+                      cy={RADIUS}
+                      r={RADIUS - 12}
+                      fill="#FFFFFF"
+                    />
+
+                    {/* Slices: responsive width and typography */}
+                    {prizes.map((prize, index) => {
+                      const sliceCenterAngle =
+                        index * sliceAngle + sliceAngle / 2;
+                      return (
+                        <G key={prize.id}>
+                          <Path
+                            d={getSlicePath(index, sliceAngle)}
+                            fill={`url(#grad-${prize.id})`}
+                            stroke="#FFFFFF"
+                            strokeWidth={itemCount <= 4 ? 2 : 1.5}
+                          />
+
+                          {/* Rotated text and sublabel */}
+                          <G
+                            transform={`rotate(${sliceCenterAngle}, ${RADIUS}, ${RADIUS})`}
+                          >
+                            <Rect
+                              x={RADIUS - badgeWidth / 2}
+                              y={badgeY}
+                              width={badgeWidth}
+                              height={badgeHeight}
+                              rx={badgeHeight / 2}
+                              fill="rgba(0, 0, 0, 0.22)"
+                            />
+                            <SvgText
+                              x={RADIUS}
+                              y={badgeY + badgeHeight * 0.72}
+                              fill="#FFE082"
+                              fontSize={sublabelFontSize}
+                              fontWeight="800"
+                              textAnchor="middle"
+                              letterSpacing="0.3"
+                            >
+                              {prize.sublabel}
+                            </SvgText>
+
+                            {prize.titleLine2 ? (
+                              <>
+                                <SvgText
+                                  x={RADIUS}
+                                  y={titleY - 4.5}
+                                  fill={prize.textColor}
+                                  fontSize={titleFontSize}
+                                  fontWeight="900"
+                                  textAnchor="middle"
+                                  letterSpacing="0.2"
+                                >
+                                  {prize.titleLine1}
+                                </SvgText>
+                                <SvgText
+                                  x={RADIUS}
+                                  y={titleY + titleFontSize - 1.5}
+                                  fill={prize.textColor}
+                                  fontSize={titleFontSize}
+                                  fontWeight="900"
+                                  textAnchor="middle"
+                                  letterSpacing="0.2"
+                                >
+                                  {prize.titleLine2}
+                                </SvgText>
+                              </>
+                            ) : (
+                              <SvgText
+                                x={RADIUS}
+                                y={titleY}
+                                fill={prize.textColor}
+                                fontSize={titleFontSize}
+                                fontWeight="900"
+                                textAnchor="middle"
+                                letterSpacing="0.2"
+                              >
+                                {prize.titleLine1 ||
+                                  prize.wheelLabel ||
+                                  prize.label}
+                              </SvgText>
+                            )}
+                          </G>
+                        </G>
+                      );
+                    })}
+
+                    {/* Perimeter Bulb Pins */}
+                    {bulbs.map((bulb, idx) => (
+                      <Circle
+                        key={`bulb-${idx}`}
+                        cx={bulb.x}
+                        cy={bulb.y}
+                        r={3}
+                        fill={bulb.isGold ? '#FDE68A' : '#FFD8A8'}
+                        stroke={bulb.isGold ? '#D97706' : '#EA580C'}
+                        strokeWidth={0.8}
+                      />
+                    ))}
+                  </Svg>
+                </Animated.View>
+
+                {/* Center Elevated Hub "SPIN" Button (iOS Bulletproof) */}
+                <Animated.View
+                  style={[styles.centerHubContainer, hubAnimatedStyle]}
+                >
+                  <TouchableOpacity
+                    onPress={spin}
+                    disabled={isSpinning || spinsCount <= 0}
+                    activeOpacity={0.85}
+                    style={styles.hubTouchable}
+                    accessibilityRole="button"
+                    accessibilityLabel="Spin the wheel"
+                  >
+                    <View style={styles.hubBezel}>
+                      <LinearGradient
+                        colors={['#FFFBEB', '#FDE68A', '#F59E0B']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={StyleSheet.absoluteFillObject}
+                      />
+                      <View style={styles.hubCore}>
+                        <LinearGradient
+                          colors={
+                            spinsCount <= 0
+                              ? ['#94A3B8', '#64748B']
+                              : ['#FF6200', '#F25000']
+                          }
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 1 }}
+                          style={StyleSheet.absoluteFillObject}
+                        />
+                        <View style={styles.hubCoreContent}>
+                          <MaterialCommunityIcons
+                            name={isSpinning ? 'sync' : 'auto-fix'}
+                            size={14}
+                            color="#FFE082"
+                          />
+                          <Text style={styles.hubSpinnerText}>
+                            {isSpinning ? '...' : 'SPIN'}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                </Animated.View>
+              </View>
+            </View>
+
+            {/* Primary Action Button (iOS Bulletproof Absolute Gradient) */}
+            <View style={styles.ctaWrapper}>
+              <TouchableOpacity
+                onPress={spin}
+                disabled={isSpinning || spinsCount <= 0}
+                activeOpacity={0.88}
+                style={[
+                  styles.spinCtaButton,
+                  (isSpinning || spinsCount <= 0) && styles.spinCtaDisabled,
+                ]}
+              >
+                <LinearGradient
+                  colors={
+                    spinsCount <= 0
+                      ? ['#94A3B8', '#64748B']
+                      : ['#FF6200', '#F25000', '#D83E00']
+                  }
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={StyleSheet.absoluteFillObject}
+                />
+                <View style={styles.spinCtaContent}>
+                  <MaterialCommunityIcons
+                    name={isSpinning ? 'rotate-right' : 'gift-outline'}
+                    size={20}
+                    color="#FFFFFF"
+                  />
+                  <Text style={styles.spinCtaText}>
+                    {isSpinning
+                      ? 'FINDING YOUR ASSURED GIFT...'
+                      : spinsCount <= 0
+                      ? 'NO SPINS LEFT TODAY'
+                      : 'SPIN THE LUCKY WHEEL'}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+
+              <Text style={styles.turnsNotice}>
+                🎯 100% Guaranteed reward credited straight to your account
+              </Text>
+            </View>
+
+            {/* Won Prize Result Card (shown once data is fetched from rewards/spin-win/play) */}
+            {wonPrize ? (
+              <View
+                style={[
+                  styles.wonCardScreenWrapper,
+                  wonPrize.isNoPrize
+                    ? styles.wonCardNoPrize
+                    : styles.wonCardPrize,
+                ]}
+              >
+                <LinearGradient
+                  colors={
+                    wonPrize.isNoPrize
+                      ? ['#F8FAFC', '#F1F5F9', '#E2E8F0']
+                      : ['#FFF8F5', '#FFF1EB', '#FFE4D6']
+                  }
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={StyleSheet.absoluteFillObject}
+                />
+                <View style={styles.wonCardInner}>
+                  <View style={styles.wonCardTopRow}>
+                    <View
+                      style={[
+                        styles.wonCardIconBox,
+                        {
+                          backgroundColor: `${wonPrize.color1 || '#F25000'}22`,
+                        },
+                      ]}
+                    >
+                      <MaterialCommunityIcons
+                        name={wonPrize.iconName || 'gift'}
+                        size={24}
+                        color={wonPrize.color1 || '#F25000'}
+                      />
+                    </View>
+                    <View style={styles.wonCardContentCol}>
+                      <View style={styles.wonCardBadgeRow}>
+                        <View
+                          style={[
+                            styles.wonCardBadgePill,
+                            { backgroundColor: wonPrize.color1 || '#F25000' },
+                          ]}
+                        >
+                          <Text style={styles.wonCardBadgeText}>
+                            {wonPrize.badge ||
+                              (wonPrize.isNoPrize
+                                ? 'TRY AGAIN'
+                                : 'UNLOCKED REWARD')}
+                          </Text>
+                        </View>
+                        {wonPrize.validityDays ? (
+                          <Text style={styles.wonCardValidityText}>
+                            Valid {wonPrize.validityDays} days
+                          </Text>
+                        ) : null}
+                      </View>
+                      <Text style={styles.wonCardPrizeName} numberOfLines={1}>
+                        {wonPrize.rewardName || wonPrize.label}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <Text style={styles.wonCardDesc} numberOfLines={2}>
+                    {wonPrize.description}
+                  </Text>
+
+                  {!wonPrize.isNoPrize && wonPrize.code ? (
+                    <View style={styles.wonCardCodeRow}>
+                      <View style={styles.wonCardCodeBox}>
+                        <Text style={styles.wonCardCodeLabel}>COUPON CODE</Text>
+                        <Text style={styles.wonCardCodeVal}>
+                          {wonPrize.code}
+                        </Text>
+                      </View>
+                      <TouchableOpacity
+                        onPress={() => copyCouponCode(wonPrize.code)}
+                        style={styles.wonCardCopyBtn}
+                        activeOpacity={0.75}
+                      >
+                        <Ionicons
+                          name="copy-outline"
+                          size={13}
+                          color="#F25000"
+                        />
+                        <Text style={styles.wonCardCopyBtnText}>COPY CODE</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ) : null}
+                </View>
+              </View>
+            ) : null}
+
+            {/* Assured Gifts Showcase Section */}
+            <View style={styles.prizesSection}>
+              <View style={styles.sectionHeaderRow}>
+                <MaterialCommunityIcons
+                  name={is48hr ? 'lightning-bolt' : 'gift-open-outline'}
+                  size={17}
+                  color="#F25000"
+                />
+                <Text style={styles.sectionTitle}>
+                  Today’s {prizes.length} Assured Gifts
+                </Text>
+              </View>
+              <Text style={styles.sectionSubtitle}>
+                Every single turn gives you one of these valuable coupons:
+              </Text>
+
+              <View style={styles.prizesGrid}>
+                {prizes.map(prize => (
+                  <View key={prize.id} style={styles.prizeMiniCard}>
+                    <View
+                      style={[
+                        styles.miniCardIconCircle,
+                        { backgroundColor: `${prize.color1}18` },
+                      ]}
+                    >
+                      <MaterialCommunityIcons
+                        name={prize.iconName}
+                        size={15}
+                        color={prize.color1}
+                      />
+                    </View>
+                    <View style={styles.miniCardInfo}>
+                      <Text style={styles.miniCardTitle} numberOfLines={1}>
+                        {prize.label}
+                      </Text>
+                      <Text style={styles.miniCardBadge} numberOfLines={1}>
+                        {prize.sublabel}
+                      </Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            </View>
+          </>
+        )}
       </ScrollView>
 
       {/* Celebratory Winner Modal (iOS Bulletproof Design with 60FPS Confetti Motion) */}
@@ -1022,9 +1391,9 @@ export default function SpinWheelRewardsScreen() {
                 <View style={styles.modalHeaderWrapper}>
                   <LinearGradient
                     colors={
-                      is48hr
-                        ? ['#FF5722', '#F25000', '#B72C00']
-                        : ['#0CA201', '#067A20', '#035815']
+                      isNoPrize
+                        ? ['#475569', '#334155', '#1E293B']
+                        : ['#FF6200', '#F25000', '#B72C00']
                     }
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
@@ -1042,27 +1411,45 @@ export default function SpinWheelRewardsScreen() {
                   <View style={styles.modalHeaderContent}>
                     {/* Animated Trophy Ring Motion Graphic */}
                     <Animated.View
-                      style={[styles.modalTrophyRing, trophyStyle]}
+                      style={[
+                        styles.modalTrophyRing,
+                        isNoPrize && styles.modalTrophyRingNoPrize,
+                        trophyStyle,
+                      ]}
                     >
                       <MaterialCommunityIcons
-                        name="gift-open"
+                        name={isNoPrize ? 'clover' : 'gift-open'}
                         size={32}
-                        color="#FFE082"
+                        color={isNoPrize ? '#E2E8F0' : '#FFE082'}
                       />
                     </Animated.View>
                     <Text style={styles.modalCongratsTitle}>
-                      {isOrderReward
+                      {isNoPrize
+                        ? 'BETTER LUCK NEXT TIME!'
+                        : isOrderReward
                         ? 'ORDER GIFT UNLOCKED!'
                         : 'CONGRATULATIONS!'}
                     </Text>
-                    <View style={styles.assuredBadgePill}>
+                    <View
+                      style={[
+                        styles.assuredBadgePill,
+                        isNoPrize && styles.assuredBadgePillNoPrize,
+                      ]}
+                    >
                       <MaterialCommunityIcons
-                        name="shield-check"
+                        name={isNoPrize ? 'refresh-circle' : 'shield-check'}
                         size={12}
-                        color="#065F46"
+                        color={isNoPrize ? '#475569' : '#C2410C'}
                       />
-                      <Text style={styles.assuredBadgeText}>
-                        {isOrderReward
+                      <Text
+                        style={[
+                          styles.assuredBadgeText,
+                          isNoPrize && styles.assuredBadgeTextNoPrize,
+                        ]}
+                      >
+                        {isNoPrize
+                          ? 'HARD LUCK THIS TURN'
+                          : isOrderReward
                           ? 'ASSURED ORDER REWARD'
                           : '100% ASSURED GIFT WON'}
                       </Text>
@@ -1073,48 +1460,117 @@ export default function SpinWheelRewardsScreen() {
                 {/* Modal Body with Voucher Layout */}
                 <View style={styles.modalBody}>
                   {/* Voucher Ticket Box */}
-                  <View style={styles.voucherCard}>
+                  <View
+                    style={[
+                      styles.voucherCard,
+                      isNoPrize && styles.voucherCardNoPrize,
+                    ]}
+                  >
                     <View style={styles.voucherHeaderRow}>
-                      <View style={styles.voucherBadge}>
+                      <View
+                        style={[
+                          styles.voucherBadge,
+                          isNoPrize && styles.voucherBadgeNoPrize,
+                        ]}
+                      >
                         <Text style={styles.voucherBadgeText}>
-                          {wonPrize?.badge || 'ASSURED REWARD'}
+                          {isNoPrize
+                            ? 'NO PRIZE'
+                            : wonPrize?.badge || 'ASSURED REWARD'}
                         </Text>
                       </View>
-                      <Text style={styles.voucherExpiryText}>
-                        Valid for 7 days
-                      </Text>
+                      {!isNoPrize ? (
+                        <Text style={styles.voucherExpiryText}>
+                          Valid for 7 days
+                        </Text>
+                      ) : null}
                     </View>
 
-                    <Text style={styles.voucherPrizeTitle}>
-                      {wonPrize?.label}
+                    <Text
+                      style={[
+                        styles.voucherPrizeTitle,
+                        isNoPrize && styles.voucherPrizeTitleNoPrize,
+                      ]}
+                    >
+                      {wonPrize?.rewardName ||
+                        wonPrize?.label ||
+                        'Better Luck Next Time'}
                     </Text>
+
+                    {wonPrize?.value && !isNoPrize ? (
+                      <View style={styles.voucherValueBadge}>
+                        <MaterialCommunityIcons
+                          name="tag-outline"
+                          size={12}
+                          color="#C2410C"
+                        />
+                        <Text style={styles.voucherValueText}>
+                          Value: {String(wonPrize.value)}
+                        </Text>
+                      </View>
+                    ) : null}
+
                     <Text style={styles.voucherPrizeDesc}>
-                      {wonPrize?.description}
+                      {wonPrize?.description ||
+                        (isNoPrize
+                          ? "Don't worry! Keep shopping and earn more lucky spins on your next orders."
+                          : '')}
                     </Text>
+
+                    {isNoPrize ? (
+                      <View style={styles.noPrizeModalTip}>
+                        <MaterialCommunityIcons
+                          name="refresh"
+                          size={15}
+                          color="#475569"
+                        />
+                        <Text style={styles.noPrizeModalTipText}>
+                          Every eligible order earns you another lucky spin!
+                        </Text>
+                      </View>
+                    ) : null}
+
+                    {wonPrize?.redemptionInstructions &&
+                    !isNoPrize &&
+                    wonPrize?.redemptionInstructions !==
+                      wonPrize?.description ? (
+                      <View style={styles.redemptionBox}>
+                        <Text style={styles.redemptionTitle}>
+                          Redemption Instructions
+                        </Text>
+                        <Text style={styles.redemptionText}>
+                          {wonPrize.redemptionInstructions}
+                        </Text>
+                      </View>
+                    ) : null}
 
                     {/* Coupon Code Strip */}
-                    <View style={styles.couponStrip}>
-                      <View style={styles.couponCodeCol}>
-                        <Text style={styles.couponCodeLabel}>COUPON CODE</Text>
-                        <Text style={styles.couponCodeText}>
-                          {wonPrize?.code}
-                        </Text>
+                    {!isNoPrize && wonPrize?.code ? (
+                      <View style={styles.couponStrip}>
+                        <View style={styles.couponCodeCol}>
+                          <Text style={styles.couponCodeLabel}>
+                            COUPON CODE
+                          </Text>
+                          <Text style={styles.couponCodeText}>
+                            {wonPrize?.code}
+                          </Text>
+                        </View>
+                        <TouchableOpacity
+                          onPress={() =>
+                            wonPrize && copyCouponCode(wonPrize.code)
+                          }
+                          style={styles.copyCodeButton}
+                          activeOpacity={0.75}
+                        >
+                          <Ionicons
+                            name="copy-outline"
+                            size={13}
+                            color="#F25000"
+                          />
+                          <Text style={styles.copyCodeText}>COPY</Text>
+                        </TouchableOpacity>
                       </View>
-                      <TouchableOpacity
-                        onPress={() =>
-                          wonPrize && copyCouponCode(wonPrize.code)
-                        }
-                        style={styles.copyCodeButton}
-                        activeOpacity={0.75}
-                      >
-                        <Ionicons
-                          name="copy-outline"
-                          size={13}
-                          color="#0B7A3D"
-                        />
-                        <Text style={styles.copyCodeText}>COPY</Text>
-                      </TouchableOpacity>
-                    </View>
+                    ) : null}
                   </View>
 
                   {/* Action Buttons */}
@@ -1126,7 +1582,7 @@ export default function SpinWheelRewardsScreen() {
                         activeOpacity={0.85}
                       >
                         <LinearGradient
-                          colors={['#0CA201', '#057A20']}
+                          colors={['#FF6200', '#F25000']}
                           start={{ x: 0, y: 0 }}
                           end={{ x: 1, y: 0 }}
                           style={StyleSheet.absoluteFillObject}
@@ -1151,7 +1607,7 @@ export default function SpinWheelRewardsScreen() {
                         <Ionicons
                           name="home-outline"
                           size={15}
-                          color="#057A20"
+                          color="#F25000"
                         />
                         <Text style={styles.homeResetBtnText}>
                           Back to Home
@@ -1166,11 +1622,7 @@ export default function SpinWheelRewardsScreen() {
                         activeOpacity={0.85}
                       >
                         <LinearGradient
-                          colors={
-                            is48hr
-                              ? ['#FF5722', '#F25000']
-                              : ['#0CA201', '#057A20']
-                          }
+                          colors={['#FF6200', '#F25000']}
                           start={{ x: 0, y: 0 }}
                           end={{ x: 1, y: 0 }}
                           style={StyleSheet.absoluteFillObject}
@@ -1209,7 +1661,7 @@ export default function SpinWheelRewardsScreen() {
             </TouchableWithoutFeedback>
 
             {/* Motion Graphics Full-Screen Confetti Shower */}
-            {showModal ? (
+            {showModal && !isNoPrize ? (
               <View style={styles.confettiOverlay} pointerEvents="none">
                 {CONFETTI_PIECES.map(p => (
                   <ConfettiPiece key={p.id} piece={p} active={showModal} />
@@ -1277,7 +1729,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
   headerSubtitle: {
-    color: '#059669',
+    color: '#F25000',
     fontSize: 11,
     fontFamily: FONTS.gilroy?.medium || 'System',
     marginTop: 1,
@@ -1309,11 +1761,11 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#A7F3D0',
-    backgroundColor: '#ECFDF5',
-    shadowColor: '#059669',
+    borderColor: '#FED7AA',
+    backgroundColor: '#FFF7ED',
+    shadowColor: '#F25000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.1,
     shadowRadius: 5,
     elevation: 2,
     marginBottom: 12,
@@ -1336,7 +1788,7 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: '#D1FAE5',
+    backgroundColor: '#FFEDD5',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1355,13 +1807,13 @@ const styles = StyleSheet.create({
   guaranteeHeading: {
     fontSize: 12.5,
     fontWeight: '800',
-    color: '#065F46',
+    color: '#9A3412',
   },
   guaranteeHeading48hr: {
     color: '#C2410C',
   },
   guaranteePill: {
-    backgroundColor: '#059669',
+    backgroundColor: '#F25000',
     paddingHorizontal: 6,
     paddingVertical: 1.5,
     borderRadius: 6,
@@ -1380,7 +1832,7 @@ const styles = StyleSheet.create({
   },
   guaranteeSubtitle: {
     fontSize: 10.5,
-    color: '#047857',
+    color: '#C2410C',
     marginTop: 2,
     lineHeight: 14,
   },
@@ -1398,7 +1850,7 @@ const styles = StyleSheet.create({
     width: WHEEL_SIZE + 24,
     height: WHEEL_SIZE + 24,
     borderRadius: (WHEEL_SIZE + 24) / 2,
-    backgroundColor: 'rgba(12, 162, 1, 0.08)',
+    backgroundColor: 'rgba(242, 80, 0, 0.08)',
   },
   wheelWrapper: {
     width: WHEEL_SIZE,
@@ -1452,7 +1904,7 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     overflow: 'hidden',
     position: 'relative',
-    backgroundColor: '#0CA201',
+    backgroundColor: '#F25000',
   },
   hubCoreContent: {
     flex: 1,
@@ -1478,8 +1930,8 @@ const styles = StyleSheet.create({
     height: 50,
     borderRadius: 25,
     overflow: 'hidden',
-    backgroundColor: '#0CA201',
-    shadowColor: '#0CA201',
+    backgroundColor: '#F25000',
+    shadowColor: '#F25000',
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.32,
     shadowRadius: 8,
@@ -1607,7 +2059,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
-    backgroundColor: '#0CA201',
+    backgroundColor: '#F25000',
   },
   modalHeaderContent: {
     alignItems: 'center',
@@ -1637,6 +2089,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 6,
   },
+  modalTrophyRingNoPrize: {
+    borderColor: '#94A3B8',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  },
   modalCongratsTitle: {
     fontSize: 16,
     fontWeight: '900',
@@ -1653,11 +2109,17 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginTop: 5,
   },
+  assuredBadgePillNoPrize: {
+    backgroundColor: '#F1F5F9',
+  },
   assuredBadgeText: {
-    color: '#065F46',
+    color: '#9A3412',
     fontSize: 9,
     fontWeight: '900',
     letterSpacing: 0.4,
+  },
+  assuredBadgeTextNoPrize: {
+    color: '#475569',
   },
   modalBody: {
     padding: 16,
@@ -1666,12 +2128,16 @@ const styles = StyleSheet.create({
   },
   voucherCard: {
     width: '100%',
-    backgroundColor: '#F0FDF4',
+    backgroundColor: '#FFF7ED',
     borderWidth: 1.5,
-    borderColor: '#86EFAC',
+    borderColor: '#FED7AA',
     borderRadius: 14,
     padding: 12,
     marginBottom: 14,
+  },
+  voucherCardNoPrize: {
+    backgroundColor: '#F8FAFC',
+    borderColor: '#CBD5E1',
   },
   voucherHeaderRow: {
     flexDirection: 'row',
@@ -1680,10 +2146,13 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   voucherBadge: {
-    backgroundColor: '#059669',
+    backgroundColor: '#F25000',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 6,
+  },
+  voucherBadgeNoPrize: {
+    backgroundColor: '#64748B',
   },
   voucherBadgeText: {
     color: '#FFFFFF',
@@ -1693,20 +2162,75 @@ const styles = StyleSheet.create({
   },
   voucherExpiryText: {
     fontSize: 9.5,
-    color: '#047857',
+    color: '#C2410C',
     fontWeight: '700',
   },
   voucherPrizeTitle: {
     fontSize: 19,
     fontWeight: '900',
-    color: '#065F46',
+    color: '#9A3412',
     marginTop: 2,
+  },
+  voucherPrizeTitleNoPrize: {
+    color: '#1E293B',
+  },
+  noPrizeModalTip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#F1F5F9',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    marginTop: 10,
+  },
+  noPrizeModalTipText: {
+    flex: 1,
+    fontSize: 11,
+    color: '#475569',
+    lineHeight: 15,
+  },
+  voucherValueBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#FFEDD5',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    alignSelf: 'flex-start',
+    marginTop: 4,
+  },
+  voucherValueText: {
+    fontSize: 10.5,
+    fontWeight: '800',
+    color: '#C2410C',
   },
   voucherPrizeDesc: {
     fontSize: 11,
     color: '#475569',
-    marginTop: 3,
+    marginTop: 4,
     lineHeight: 15,
+  },
+  redemptionBox: {
+    width: '100%',
+    backgroundColor: '#FEFCE8',
+    borderWidth: 1,
+    borderColor: '#FEF08A',
+    borderRadius: 8,
+    padding: 8,
+    marginTop: 8,
+  },
+  redemptionTitle: {
+    fontSize: 9.5,
+    fontWeight: '800',
+    color: '#854D0E',
+    marginBottom: 2,
+  },
+  redemptionText: {
+    fontSize: 10,
+    color: '#713F12',
+    lineHeight: 14,
   },
   couponStrip: {
     flexDirection: 'row',
@@ -1714,7 +2238,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#BBF7D0',
+    borderColor: '#FED7AA',
     borderRadius: 9,
     paddingVertical: 7,
     paddingHorizontal: 10,
@@ -1740,13 +2264,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
-    backgroundColor: '#DCFCE7',
+    backgroundColor: '#FFEDD5',
     paddingHorizontal: 9,
     paddingVertical: 4.5,
     borderRadius: 7,
   },
   copyCodeText: {
-    color: '#0B7A3D',
+    color: '#F25000',
     fontSize: 10.5,
     fontWeight: '900',
   },
@@ -1755,8 +2279,8 @@ const styles = StyleSheet.create({
     height: 46,
     borderRadius: 13,
     overflow: 'hidden',
-    backgroundColor: '#0CA201',
-    shadowColor: '#0CA201',
+    backgroundColor: '#F25000',
+    shadowColor: '#F25000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.28,
     shadowRadius: 7,
@@ -1808,16 +2332,258 @@ const styles = StyleSheet.create({
     height: 42,
     borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: '#057A20',
-    backgroundColor: '#F0FDF4',
+    borderColor: '#F25000',
+    backgroundColor: '#FFF7ED',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
   },
   homeResetBtnText: {
-    color: '#057A20',
+    color: '#F25000',
     fontSize: 13.5,
     fontWeight: '800',
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 80,
+    gap: 12,
+  },
+  loadingText: {
+    fontSize: 13.5,
+    fontWeight: '700',
+    color: '#64748B',
+    fontFamily: FONTS.gilroy?.medium || 'System',
+  },
+  emptyContainer: {
+    width: '100%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    paddingVertical: 36,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    marginTop: 20,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 3,
+  },
+  emptyIconCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#FFF7ED',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  emptyIconCircle48hr: {
+    backgroundColor: '#FFF7ED',
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#1E293B',
+    marginBottom: 8,
+    textAlign: 'center',
+    fontFamily: FONTS.gilroy?.bold || 'System',
+  },
+  emptyDescription: {
+    fontSize: 13.5,
+    fontWeight: '500',
+    color: '#64748B',
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 24,
+    paddingHorizontal: 12,
+    fontFamily: FONTS.gilroy?.regular || 'System',
+  },
+  emptyActionButton: {
+    minWidth: 170,
+    height: 46,
+    borderRadius: 12,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
+    shadowColor: '#F25000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  emptyActionContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingHorizontal: 20,
+    zIndex: 2,
+  },
+  emptyActionText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '800',
+    fontFamily: FONTS.gilroy?.bold || 'System',
+    textAlign: 'center',
+    includeFontPadding: false,
+  },
+  emptyButtonRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+  },
+  emptyRetryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    height: 46,
+    paddingHorizontal: 18,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#F25000',
+    backgroundColor: '#FFF7ED',
+  },
+  emptyRetryText: {
+    color: '#F25000',
+    fontSize: 14,
+    fontWeight: '800',
+    fontFamily: FONTS.gilroy?.bold || 'System',
+  },
+  spinsBadgeEmpty: {
+    backgroundColor: '#F1F5F9',
+    borderColor: '#CBD5E1',
+  },
+  spinsBadgeTextEmpty: {
+    color: '#64748B',
+  },
+  wonCardScreenWrapper: {
+    width: '100%',
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 1.5,
+    marginTop: 14,
+    marginBottom: 6,
+    position: 'relative',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  wonCardPrize: {
+    borderColor: '#FFD3BE',
+    backgroundColor: '#FFF8F5',
+  },
+  wonCardNoPrize: {
+    borderColor: '#CBD5E1',
+    backgroundColor: '#F8FAFC',
+  },
+  wonCardInner: {
+    padding: 14,
+    width: '100%',
+  },
+  wonCardTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  wonCardIconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  wonCardContentCol: {
+    flex: 1,
+  },
+  wonCardBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 3,
+  },
+  wonCardBadgePill: {
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 5,
+  },
+  wonCardBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 9.5,
+    fontWeight: '800',
+    fontFamily: FONTS.gilroy?.bold || 'System',
+    includeFontPadding: false,
+  },
+  wonCardValidityText: {
+    fontSize: 10,
+    color: '#C2410C',
+    fontWeight: '700',
+  },
+  wonCardPrizeName: {
+    fontSize: 15,
+    fontWeight: '900',
+    color: '#1E293B',
+    fontFamily: FONTS.gilroy?.bold || 'System',
+  },
+  wonCardDesc: {
+    fontSize: 11.5,
+    color: '#475569',
+    lineHeight: 16,
+    marginBottom: 10,
+    fontFamily: FONTS.gilroy?.regular || 'System',
+  },
+  wonCardCodeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: '#FED7AA',
+    borderStyle: 'dashed',
+  },
+  wonCardCodeBox: {
+    flex: 1,
+  },
+  wonCardCodeLabel: {
+    fontSize: 8.5,
+    color: '#94A3B8',
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  wonCardCodeVal: {
+    fontSize: 14,
+    color: '#F25000',
+    fontWeight: '900',
+    fontFamily: FONTS.gilroy?.bold || 'System',
+    letterSpacing: 0.8,
+  },
+  wonCardCopyBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    backgroundColor: '#FFF7ED',
+    borderRadius: 7,
+    borderWidth: 1,
+    borderColor: '#F25000',
+  },
+  wonCardCopyBtnText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#F25000',
+    fontFamily: FONTS.gilroy?.bold || 'System',
   },
 });

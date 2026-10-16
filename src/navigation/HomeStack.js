@@ -11,6 +11,9 @@ const MyOrdersScreen = lazyScreen(() => require('../screens/MyOrdersScreen'));
 const SpinWheelRewardsScreen = lazyScreen(() =>
   require('../screens/SpinWheelRewardsScreen'),
 );
+const MyRewardsScreen = lazyScreen(() =>
+  require('../screens/MyRewardsScreen'),
+);
 
 const Stack = createNativeStackNavigator();
 
@@ -34,6 +37,11 @@ export default function HomeStack() {
       <Stack.Screen
         name="SpinWheelRewardsScreen"
         component={SpinWheelRewardsScreen}
+        options={PROFILE_OPTIONS}
+      />
+      <Stack.Screen
+        name="MyRewardsScreen"
+        component={MyRewardsScreen}
         options={PROFILE_OPTIONS}
       />
     </Stack.Navigator>

@@ -146,3 +146,16 @@ export const checkPhone = async phoneNo => {
   };
   return post(`auth/checkphone`, payload);
 };
+
+export {
+  checkSpinWinEligibility,
+  playSpinWin,
+  getSpinWinHistory,
+  getSpinWheelStatusApi,
+  executeSpinWheelApi,
+  isOrderSpinClaimed,
+  getOrderSpinReward,
+  markOrderSpinClaimed,
+} from './spinWheelService';
+
+

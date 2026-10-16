@@ -139,7 +139,7 @@ export default function ProfileScreen() {
     onBCoin: () => navigation.navigate('BCoinScreen'),
     onSmartPoint: () => openOffersModal('Gift Cards'),
     onCoupons: () => openOffersModal('Coupons'),
-    onSpinWheel: () => navigation.navigate('SpinWheelRewardsScreen'),
+    onMyRewards: () => navigation.navigate('MyRewardsScreen'),
   });
   const myAccountItems = buildMyAccountItems({
     navigation,
@@ -201,9 +201,9 @@ export default function ProfileScreen() {
         </View>
 
         <Animated.View entering={entrance(2)} style={styles.menuWrap}>
-          <SpinWheelBanner
+          {/* <SpinWheelBanner
             onPress={() => navigation.navigate('SpinWheelRewardsScreen')}
-          />
+          /> */}
           <MenuSection title="Offers" items={offersItems} />
           <MenuSection title="My Account" items={myAccountItems} />
           <MenuSection title="Information" items={informationItems} />

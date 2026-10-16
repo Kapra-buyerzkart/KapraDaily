@@ -1,21 +1,20 @@
 import { buildOffersItems } from '../src/screens/ProfileScreen/menuItems';
 
 describe('Spin Wheel Rewards in Profile Screen', () => {
-  it('buildOffersItems includes Spin Wheel Rewards item with onSpinWheel handler', () => {
-    const onSpinWheel = jest.fn();
+  it('buildOffersItems does not include spin-wheel item and includes My Rewards item', () => {
+    const onMyRewards = jest.fn();
     const items = buildOffersItems({
       onBCoin: jest.fn(),
       onSmartPoint: jest.fn(),
       onCoupons: jest.fn(),
-      onSpinWheel,
+      onMyRewards,
     });
 
     const spinItem = items.find(item => item.key === 'spin-wheel');
-    expect(spinItem).toBeDefined();
-    expect(spinItem.label).toBe('Spin & Win Assured Gifts');
-    expect(spinItem.badge).toBeDefined();
+    expect(spinItem).toBeUndefined();
 
-    spinItem.onPress();
-    expect(onSpinWheel).toHaveBeenCalledTimes(1);
+    const myRewardsItem = items.find(item => item.key === 'my-rewards');
+    expect(myRewardsItem).toBeDefined();
+    expect(myRewardsItem?.label).toBe('My Rewards');
   });
 });

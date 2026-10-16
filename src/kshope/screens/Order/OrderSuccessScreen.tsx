@@ -1,13 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ScrollView, StatusBar, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import AppText from '../../components/atoms/AppText';
 import Surface from '../../components/atoms/Surface';
 import Divider from '../../components/atoms/Divider';
 import SectionHeading from '../../components/atoms/SectionHeading';
 import { UI_COLORS } from '../../theme/tokens';
 import { getOrderDetailsApi } from '../../api/services/orderService';
+import OrderRewardCornerPopup from '../../../components/OrderRewardCornerPopup';
 import {
   BulletCard,
   CopyChip,
@@ -28,6 +29,7 @@ import {
 import { styles } from './status/styles';
 
 const OrderSuccessScreen: React.FC = () => {
+  const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const {
     orderId,
@@ -207,6 +209,19 @@ const OrderSuccessScreen: React.FC = () => {
         ghostLabel={SUCCESS_COPY.homeCta}
         onPrimary={handleTrackOrder}
         onGhost={handleBackToHome}
+      />
+
+      <OrderRewardCornerPopup
+        orderId={orderId || orderDetails?._id}
+        orderNumber={displayOrderNumber}
+        bottomOffset={88}
+        onPress={() => {
+          navigation.navigate('SpinWheelRewardsScreen', {
+            orderId: orderId || orderDetails?._id,
+            orderNumber: displayOrderNumber,
+            source: 'ORDER_SUCCESS',
+          });
+        }}
       />
     </View>
   );

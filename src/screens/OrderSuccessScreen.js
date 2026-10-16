@@ -26,6 +26,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { getOrderDetailsApi } from '../api/orderService';
 import OrderSpinBanner from '../components/OrderSpinBanner';
+import OrderRewardCornerPopup from '../components/OrderRewardCornerPopup';
 
 const OrderSuccessScreen = () => {
   const navigation = useNavigation();
@@ -154,9 +155,9 @@ const OrderSuccessScreen = () => {
 
   return (
     <SafeAreaView style={styles.mainContainer}>
-      <StatusBar barStyle="dark-content" backgroundColor="#DFFFD9" />
+      <StatusBar barStyle="dark-content" backgroundColor="#FFF5F0" />
       <LinearGradient
-        colors={['#DFFFD9', '#F0FFF0', '#FFFFFF']}
+        colors={['#FFEFE7', '#FFF5F0', '#FFFFFF']}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 0.6 }}
         style={styles.gradientContainer}
@@ -167,10 +168,16 @@ const OrderSuccessScreen = () => {
         >
           {}
           <View style={styles.successSection}>
-            <Image
-              style={styles.successImage}
-              source={require('../assets/images/success-two.png')}
-            />
+            <View style={styles.successCircleWrapper}>
+              <LinearGradient
+                colors={['#FF7A28', '#F25000', '#D84315']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.successCircle}
+              >
+                <Ionicons name="checkmark" size={wp('13%')} color="#FFFFFF" />
+              </LinearGradient>
+            </View>
             <View style={styles.thankYouContainer}>
               <Text style={styles.thankYouText}>Thank You!</Text>
               <Text style={styles.thankYouTextTwo}>
@@ -216,7 +223,7 @@ const OrderSuccessScreen = () => {
                   size={wp('3.5%')}
                   color={
                     displayPayment?.toUpperCase() === 'COD'
-                      ? '#0CA201'
+                      ? '#F25000'
                       : '#1A73E8'
                   }
                 />
@@ -321,6 +328,13 @@ const OrderSuccessScreen = () => {
           {}
         </ScrollView>
       </LinearGradient>
+
+      {/* Floating Corner Popup Reward Card */}
+      <OrderRewardCornerPopup
+        orderId={orderId || orderDetails?._id}
+        orderNumber={displayOrderNumber}
+        onPress={handleOpenSpinWheel}
+      />
     </SafeAreaView>
   );
 };
@@ -330,7 +344,7 @@ export default OrderSuccessScreen;
 const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
-    backgroundColor: '#DFFFD9',
+    backgroundColor: '#FFEFE7',
   },
   gradientContainer: {
     flex: 1,
@@ -341,19 +355,40 @@ const styles = StyleSheet.create({
   },
   successSection: {
     alignItems: 'center',
-    marginTop: hp('6%'),
+    marginTop: hp('5%'),
   },
-  successImage: {
-    width: wp('30%'),
-    height: wp('30%'),
-    resizeMode: 'contain',
+  successCircleWrapper: {
+    width: wp('22%'),
+    height: wp('22%'),
+    borderRadius: wp('11%'),
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: hp('1.5%'),
+    ...Platform.select({
+      ios: {
+        shadowColor: '#F25000',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.35,
+        shadowRadius: 10,
+      },
+      android: {
+        elevation: 6,
+      },
+    }),
+  },
+  successCircle: {
+    width: '100%',
+    height: '100%',
+    borderRadius: wp('11%'),
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   thankYouContainer: {
     alignItems: 'center',
-    marginTop: hp('1%'),
+    marginTop: hp('0.5%'),
   },
   thankYouText: {
-    color: '#0CA201',
+    color: '#F25000',
     fontFamily: FONTS.gilroy.bold,
     fontSize: wp('6%'),
   },
@@ -411,7 +446,7 @@ const styles = StyleSheet.create({
   detailBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F0FFF0',
+    backgroundColor: '#FFF5F0',
     paddingHorizontal: wp('2.5%'),
     paddingVertical: hp('0.4%'),
     borderRadius: 20,
@@ -457,7 +492,7 @@ const styles = StyleSheet.create({
   totalAmount: {
     fontFamily: FONTS.gilroy.bold,
     fontSize: wp('5.5%'),
-    color: '#0CA201',
+    color: '#F25000',
   },
   buttonsContainer: {
     flexDirection: 'row',
