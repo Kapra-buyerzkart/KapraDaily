@@ -199,20 +199,42 @@ describe('Spin & Win API Endpoints (using base_url)', () => {
       },
     };
 
-    it('extractCampaignAndRewards extracts campaign and 7 rewards properly', () => {
+    it('extractCampaignAndRewards extracts campaign and rewards properly preserving all items', () => {
       const extracted = extractCampaignAndRewards(rawApiPayload);
       expect(extracted.campaignId).toBe(1);
       expect(extracted.campaignName).toBe('October Spin & Win 2026');
-      expect(extracted.rewards).toHaveLength(7);
+      expect(extracted.rewards).toHaveLength(8);
       expect(extracted.minOrderAmount).toBe(16);
       expect(extracted.eligibleOrderAmount).toBe(1694);
+
+      // Verify that rewards list from payload is extracted completely without dropping items
+      const payloadWithAll = {
+        data: {
+          items: [
+            {
+              ...DEFAULT_OCTOBER_CAMPAIGN,
+              rewards: [
+                ...DEFAULT_OCTOBER_CAMPAIGN.rewards,
+                {
+                  campaignItemId: 99,
+                  rewardName: 'Better Luck Next Time',
+                  rewardType: 'NoPrize',
+                  displayText: 'BETTER LUCK NEXT TIME',
+                },
+              ],
+            },
+          ],
+        },
+      };
+      const result = extractCampaignAndRewards(payloadWithAll);
+      expect(result.rewards).toHaveLength(9);
     });
 
-    it('maps all 7 October rewards with correct attributes, palettes, and badges', () => {
+    it('maps all 8 October rewards with correct attributes, palettes, and badges', () => {
       const rewards = DEFAULT_OCTOBER_CAMPAIGN.rewards;
       const mapped = rewards.map((r, i) => mapBackendRewardToPrize(r, i));
 
-      expect(mapped).toHaveLength(7);
+      expect(mapped).toHaveLength(8);
 
       // 1. ₹50 Off Coupon
       expect(mapped[0].label).toBe('₹50 Off Coupon');
@@ -221,7 +243,7 @@ describe('Spin & Win API Endpoints (using base_url)', () => {
       expect(mapped[0].titleLine2).toBe('Off');
       expect(mapped[0].sublabel).toBe('COUPON');
       expect(mapped[0].badge).toBe('FLAT ₹50');
-      expect(mapped[0].code).toBe('FLAT50');
+      expect(mapped[0].code).toBe('');
       expect(mapped[0].iconName).toBe('ticket-percent');
       expect(mapped[0].isNoPrize).toBe(false);
 
@@ -229,7 +251,7 @@ describe('Spin & Win API Endpoints (using base_url)', () => {
       expect(mapped[1].label).toBe('Partner Voucher ₹200');
       expect(mapped[1].sublabel).toBe('PARTNER');
       expect(mapped[1].badge).toBe('₹200 OFF');
-      expect(mapped[1].code).toBe('PV200');
+      expect(mapped[1].code).toBe('');
       expect(mapped[1].iconName).toBe('gift');
       expect(mapped[1].isNoPrize).toBe(false);
 
@@ -237,7 +259,7 @@ describe('Spin & Win API Endpoints (using base_url)', () => {
       expect(mapped[2].label).toBe('100% Cashback');
       expect(mapped[2].sublabel).toBe('CASHBACK');
       expect(mapped[2].badge).toBe('UP TO ₹100');
-      expect(mapped[2].code).toBe('CASH100');
+      expect(mapped[2].code).toBe('');
       expect(mapped[2].iconName).toBe('wallet-giftcard');
       expect(mapped[2].isNoPrize).toBe(false);
 
@@ -245,7 +267,7 @@ describe('Spin & Win API Endpoints (using base_url)', () => {
       expect(mapped[3].label).toBe('100 BCoins');
       expect(mapped[3].sublabel).toBe('BCOINS');
       expect(mapped[3].badge).toBe('COINS');
-      expect(mapped[3].code).toBe('BCOIN100');
+      expect(mapped[3].code).toBe('');
       expect(mapped[3].iconName).toBe('cash-multiple');
       expect(mapped[3].isNoPrize).toBe(false);
 
@@ -253,7 +275,7 @@ describe('Spin & Win API Endpoints (using base_url)', () => {
       expect(mapped[4].label).toBe('₹100 Gift Card');
       expect(mapped[4].sublabel).toBe('GIFT CARD');
       expect(mapped[4].badge).toBe('SPECIAL');
-      expect(mapped[4].code).toBe('GIFT100');
+      expect(mapped[4].code).toBe('');
       expect(mapped[4].iconName).toBe('gift');
       expect(mapped[4].isNoPrize).toBe(false);
 
@@ -261,28 +283,31 @@ describe('Spin & Win API Endpoints (using base_url)', () => {
       expect(mapped[5].label).toBe('Free Delivery');
       expect(mapped[5].sublabel).toBe('ZERO FEE');
       expect(mapped[5].badge).toBe('FREE DEL');
-      expect(mapped[5].code).toBe('FREEDEL');
+      expect(mapped[5].code).toBe('');
       expect(mapped[5].iconName).toBe('truck-fast');
       expect(mapped[5].isNoPrize).toBe(false);
 
-      // 7. Better Luck Next Time
-      expect(mapped[6].label).toBe('Better Luck Next Time');
-      expect(mapped[6].wheelLabel).toBe('Better Luck');
-      expect(mapped[6].sublabel).toBe('NEXT TIME');
-      expect(mapped[6].badge).toBe('TRY AGAIN');
-      expect(mapped[6].iconName).toBe('clover');
-      expect(mapped[6].isNoPrize).toBe(true);
-      expect(mapped[6].color1).toBe('#64748B');
+      // 7. Flat ₹25 OFF
+      expect(mapped[6].label).toBe('Flat ₹25 OFF');
+      expect(mapped[6].sublabel).toBe('COUPON');
+      expect(mapped[6].badge).toBe('FLAT ₹25');
+      expect(mapped[6].isNoPrize).toBe(false);
+
+      // 8. 50 Bonus Coins
+      expect(mapped[7].label).toBe('50 Bonus Coins');
+      expect(mapped[7].sublabel).toBe('BCOINS');
+      expect(mapped[7].badge).toBe('COINS');
+      expect(mapped[7].isNoPrize).toBe(false);
     });
 
-    it('selectWeightedRewardIndex selects an index between 0 and 6', () => {
+    it('selectWeightedRewardIndex selects an index between 0 and 7', () => {
       const rewards = DEFAULT_OCTOBER_CAMPAIGN.rewards.map((r, i) =>
         mapBackendRewardToPrize(r, i),
       );
       for (let i = 0; i < 20; i++) {
         const idx = selectWeightedRewardIndex(rewards);
         expect(idx).toBeGreaterThanOrEqual(0);
-        expect(idx).toBeLessThan(7);
+        expect(idx).toBeLessThan(8);
       }
     });
   });

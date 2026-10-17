@@ -2,7 +2,6 @@ import React from 'react';
 import renderer from 'react-test-renderer';
 import DealsAndOffersSection, {
   resolveBannerImageSource,
-  DUMMY_OFFERS,
 } from '../src/screens/home/components/modern/DealsAndOffersSection';
 
 jest.mock('react-native-reanimated', () => {
@@ -40,8 +39,12 @@ describe('DealsAndOffersSection', () => {
     });
   });
 
-  it('renders dummy offers with isDummy true', () => {
-    expect(DUMMY_OFFERS[0].isDummy).toBe(true);
+  it('returns null when no banners or offers are provided from backend', () => {
+    let tree;
+    renderer.act(() => {
+      tree = renderer.create(<DealsAndOffersSection banners={[]} />);
+    });
+    expect(tree.toJSON()).toBeNull();
   });
 
   it('renders correctly when banners are provided and puts background image', () => {

@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect, useMemo, useCallback } from 'react';
 import {
   ActivityIndicator,
+  BackHandler,
   Dimensions,
   Modal,
   Platform,
@@ -41,8 +42,6 @@ import {
   CommonActions,
 } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Clipboard from '@react-native-clipboard/clipboard';
-import Toast from 'react-native-simple-toast';
 import { selectionTick, impactTick, successTick } from '@/utils/haptics';
 import { FONTS } from '@/styles/typography';
 import {
@@ -131,10 +130,11 @@ const CONFETTI_PIECES = Array.from({ length: CONFETTI_COUNT }).map((_, i) => {
 
 type ConfettiItem = {
   id: number;
-  startX: number;
-  startY: number;
-  size: number;
-  aspect: number;
+  x: number;
+  delay: number;
+  duration: number;
+  width: number;
+  height: number;
   isCircle: boolean;
   color: string;
   rotateZStart: number;
@@ -358,6 +358,30 @@ export default function SpinWheelRewardsScreen() {
           setCampaignName(campaignInfo.campaignName);
         }
 
+        // If previously claimed prize exists, align the wheel pointer to it
+        if (targetId) {
+          getOrderSpinReward(targetId).then(reward => {
+            if (reward?.prize && isMountedRef.current) {
+              const pItem = reward.prize;
+              const matchIdx = mapped.findIndex(
+                p =>
+                  (pItem.campaignItemId && p.campaignItemId === pItem.campaignItemId) ||
+                  (pItem.id && p.id === pItem.id) ||
+                  (pItem.code && p.code === pItem.code) ||
+                  (pItem.isNoPrize && p.isNoPrize) ||
+                  (p.label && pItem.label && p.label.toLowerCase() === pItem.label.toLowerCase()),
+              );
+              if (matchIdx !== -1) {
+                const sAngle = 360 / mapped.length;
+                const sliceCenter = matchIdx * sAngle + sAngle / 2;
+                const targetAngle = (360 - (sliceCenter % 360)) % 360;
+                rotation.value = targetAngle;
+                accumulatedRotation.current = targetAngle;
+              }
+            }
+          });
+        }
+
         const data = response?.data !== undefined ? response.data : response;
         const spins =
           typeof data?.spinsAvailable === 'number'
@@ -490,7 +514,134 @@ export default function SpinWheelRewardsScreen() {
     const responseData =
       playResponse?.data !== undefined ? playResponse.data : playResponse;
 
-    if (responseData) {
+    const rewardObj = responseData
+      ? responseData.prize ||
+        responseData.reward ||
+        responseData.winningReward ||
+        responseData.rewardSegment ||
+        responseData.item ||
+        (responseData.id ||
+        responseData.code ||
+        responseData.label ||
+        responseData.title ||
+        responseData.rewardName ||
+        responseData.campaignItemId
+          ? responseData
+          : null)
+      : null;
+
+    if (rewardObj) {
+      const rCampaignItemId = String(rewardObj.campaignItemId ?? '').trim();
+      const rId = String(
+        rewardObj.id ??
+          rewardObj.rewardId ??
+          rewardObj.prizeId ??
+          responseData?.rewardId ??
+          responseData?.prizeId ??
+          '',
+      ).trim();
+      const rCode = String(
+        rewardObj.code ??
+          rewardObj.couponCode ??
+          rewardObj.promoCode ??
+          responseData?.code ??
+          '',
+      )
+        .trim()
+        .toLowerCase();
+      const rTitle = String(
+        rewardObj.rewardName ??
+          rewardObj.label ??
+          rewardObj.title ??
+          rewardObj.name ??
+          '',
+      )
+        .trim()
+        .toLowerCase();
+      const rDisplay = String(
+        rewardObj.displayText ??
+          rewardObj.sublabel ??
+          rewardObj.discount ??
+          '',
+      )
+        .trim()
+        .toLowerCase();
+      const isBackendNoPrize =
+        Boolean(rewardObj.isNoPrize) ||
+        String(rewardObj.rewardType || rewardObj.type || '').toLowerCase() ===
+          'noprize' ||
+        rTitle.includes('better luck') ||
+        rTitle.includes('no prize') ||
+        rDisplay.includes('better luck') ||
+        rDisplay.includes('no prize');
+
+      // 1. Try matching by exact campaignItemId
+      if (winningIndex === -1 && rCampaignItemId) {
+        winningIndex = prizes.findIndex(
+          p =>
+            p.campaignItemId !== undefined &&
+            p.campaignItemId !== null &&
+            String(p.campaignItemId).trim() === rCampaignItemId,
+        );
+      }
+
+      // 2. Try matching by rewardId or id
+      if (winningIndex === -1 && rId) {
+        winningIndex = prizes.findIndex(
+          p =>
+            (p.rewardId && String(p.rewardId).trim() === rId) ||
+            (p.id && String(p.id).trim() === rId),
+        );
+      }
+
+      // 3. Try matching by isNoPrize ("Better Luck Next Time")
+      if (winningIndex === -1 && isBackendNoPrize) {
+        winningIndex = prizes.findIndex(
+          p =>
+            Boolean(p.isNoPrize) ||
+            String(p.rewardType || '').toLowerCase() === 'noprize' ||
+            String(p.rewardName || p.label || '')
+              .toLowerCase()
+              .includes('better luck') ||
+            String(p.rewardName || p.label || '')
+              .toLowerCase()
+              .includes('no prize'),
+        );
+      }
+
+      // 4. Try matching by coupon/promo code
+      if (winningIndex === -1 && rCode) {
+        winningIndex = prizes.findIndex(
+          p =>
+            p.code &&
+            String(p.code).trim().toLowerCase() === rCode,
+        );
+      }
+
+      // 5. Try matching by rewardName / label / title
+      if (winningIndex === -1 && rTitle) {
+        winningIndex = prizes.findIndex(
+          p =>
+            (p.rewardName &&
+              String(p.rewardName).trim().toLowerCase() === rTitle) ||
+            (p.label && String(p.label).trim().toLowerCase() === rTitle),
+        );
+      }
+
+      // 6. Try matching by displayText / sublabel
+      if (winningIndex === -1 && rDisplay) {
+        winningIndex = prizes.findIndex(
+          p =>
+            (p.displayText &&
+              String(p.displayText).trim().toLowerCase() === rDisplay) ||
+            (p.sublabel &&
+              String(p.sublabel).trim().toLowerCase() === rDisplay),
+        );
+      }
+    }
+
+    // If rewardObj matching didn't yield an index, check backend explicit winningIndex / index
+    if (winningIndex === -1 && responseData) {
       if (
         typeof responseData.winningIndex === 'number' &&
         responseData.winningIndex >= 0 &&
@@ -504,109 +655,39 @@ export default function SpinWheelRewardsScreen() {
       ) {
         winningIndex = responseData.index;
       }
-
-      const rewardObj =
-        responseData.prize ||
-        responseData.reward ||
-        responseData.winningReward ||
-        responseData.rewardSegment ||
-        responseData.item ||
-        (responseData.id ||
-        responseData.code ||
-        responseData.label ||
-        responseData.title ||
-        responseData.rewardName
-          ? responseData
-          : null);
-
-      if (rewardObj) {
-        const rCampaignItemId = String(rewardObj.campaignItemId ?? '').trim();
-        const rId = String(
-          rewardObj.id ??
-            rewardObj.rewardId ??
-            rewardObj.prizeId ??
-            responseData.rewardId ??
-            responseData.prizeId ??
-            '',
-        ).trim();
-        const rCode = String(
-          rewardObj.code ??
-            rewardObj.couponCode ??
-            rewardObj.promoCode ??
-            responseData.code ??
-            '',
-        )
-          .trim()
-          .toLowerCase();
-        const rTitle = String(
-          rewardObj.rewardName ??
-            rewardObj.label ??
-            rewardObj.title ??
-            rewardObj.name ??
-            '',
-        )
-          .trim()
-          .toLowerCase();
-        const rDisplay = String(
-          rewardObj.displayText ??
-            rewardObj.sublabel ??
-            rewardObj.discount ??
-            '',
-        )
-          .trim()
-          .toLowerCase();
-
-        if (winningIndex === -1) {
-          winningIndex = prizes.findIndex(p => {
-            if (
-              rCampaignItemId &&
-              String(p.campaignItemId).trim() === rCampaignItemId
-            )
-              return true;
-            if (
-              rId &&
-              (String(p.id).trim() === rId || String(p.rewardId).trim() === rId)
-            )
-              return true;
-            if (
-              rCode &&
-              p.code &&
-              String(p.code).trim().toLowerCase() === rCode
-            )
-              return true;
-            if (
-              rTitle &&
-              ((p.rewardName &&
-                String(p.rewardName).trim().toLowerCase() === rTitle) ||
-                (p.label && String(p.label).trim().toLowerCase() === rTitle))
-            )
-              return true;
-            if (
-              rDisplay &&
-              ((p.displayText &&
-                String(p.displayText).trim().toLowerCase() === rDisplay) ||
-                (p.sublabel &&
-                  String(p.sublabel).trim().toLowerCase() === rDisplay))
-            )
-              return true;
-            return false;
-          });
-        }
-
-        if (winningIndex !== -1) {
-          targetPrize = {
-            ...prizes[winningIndex],
-            ...mapBackendRewardToPrize(rewardObj, winningIndex),
-          };
-        } else {
-          winningIndex = selectWeightedRewardIndex(prizes);
-          targetPrize = mapBackendRewardToPrize(rewardObj, winningIndex);
-        }
-      }
     }
 
-    if (winningIndex === -1 || !targetPrize) {
+    if (winningIndex === -1) {
       winningIndex = selectWeightedRewardIndex(prizes);
+    }
+
+    if (rewardObj) {
+      const backendPrize = mapBackendRewardToPrize(rewardObj, winningIndex);
+      targetPrize = {
+        ...prizes[winningIndex],
+        ...backendPrize,
+      };
+
+      // Guarantee visual parity: if the slice currently at winningIndex differs from targetPrize,
+      // update prizes[winningIndex] so the wheel slice directly under the needle strictly matches the prize
+      const currentSlice = prizes[winningIndex];
+      if (
+        currentSlice &&
+        (currentSlice.label !== targetPrize.label ||
+          Boolean(currentSlice.isNoPrize) !== Boolean(targetPrize.isNoPrize) ||
+          currentSlice.titleLine1 !== targetPrize.titleLine1 ||
+          currentSlice.titleLine2 !== targetPrize.titleLine2)
+      ) {
+        setPrizes(prev => {
+          const next = [...prev];
+          next[winningIndex] = {
+            ...next[winningIndex],
+            ...targetPrize,
+          };
+          return next;
+        });
+      }
+    } else {
       targetPrize = prizes[winningIndex];
     }
 
@@ -686,39 +767,51 @@ export default function SpinWheelRewardsScreen() {
     );
   };
 
-  const copyCouponCode = (code: string) => {
-    Clipboard.setString(code);
-    impactTick();
-    Toast.show(`Coupon code "${code}" copied!`, Toast.SHORT);
-  };
-
-  const handleClaimAndShop = () => {
-    setShowModal(false);
-    if (is48hr) {
-      navigation.navigate('KshopeHome');
-    } else {
-      navigation.navigate('MainTabs');
-    }
-  };
-
-  const handleTrackOrder = () => {
-    setShowModal(false);
-    if (orderId) {
-      navigation.navigate('OrderTrackingScreen', { orderId });
-    } else {
-      navigation.navigate('MainTabs');
-    }
-  };
 
   const handleBackToHome = () => {
     setShowModal(false);
-    navigation.dispatch(
-      CommonActions.reset({
-        index: 0,
-        routes: [{ name: 'MainTabs' }],
-      }),
-    );
+    if (is48hr) {
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{ name: 'KshopeHome' }],
+        }),
+      );
+    } else {
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{ name: 'MainTabs' }],
+        }),
+      );
+    }
   };
+
+  const handleBack = () => {
+    // Once spin is done and reward is given, never go back to OrderSuccessScreen; go to Home only
+    if (wonPrize || spinsCount <= 0 || (isOrderReward && wonPrize)) {
+      handleBackToHome();
+    } else {
+      navigation.goBack();
+    }
+  };
+
+  // Android hardware back button handler
+  useEffect(() => {
+    const onBackPress = () => {
+      if (wonPrize || spinsCount <= 0 || (isOrderReward && wonPrize)) {
+        handleBackToHome();
+        return true;
+      }
+      return false;
+    };
+
+    const subscription = BackHandler.addEventListener(
+      'hardwareBackPress',
+      onBackPress,
+    );
+    return () => subscription.remove();
+  }, [wonPrize, spinsCount, isOrderReward, is48hr]);
 
   const wheelStyle = useAnimatedStyle(() => ({
     transform: [{ rotate: `${rotation.value}deg` }],
@@ -746,6 +839,47 @@ export default function SpinWheelRewardsScreen() {
       .toLowerCase()
       .includes('better luck');
 
+  const [showPoppers, setShowPoppers] = useState(false);
+  const poppersOpacity = useSharedValue(0);
+  const poppersTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (showModal && !isNoPrize) {
+      setShowPoppers(true);
+      poppersOpacity.value = 1;
+
+      if (poppersTimerRef.current) {
+        clearTimeout(poppersTimerRef.current);
+      }
+
+      poppersTimerRef.current = setTimeout(() => {
+        poppersOpacity.value = withTiming(0, { duration: 400 }, finished => {
+          if (finished) {
+            runOnJS(setShowPoppers)(false);
+          }
+        });
+      }, 2000);
+    } else {
+      if (poppersTimerRef.current) {
+        clearTimeout(poppersTimerRef.current);
+        poppersTimerRef.current = null;
+      }
+      poppersOpacity.value = 0;
+      setShowPoppers(false);
+    }
+
+    return () => {
+      if (poppersTimerRef.current) {
+        clearTimeout(poppersTimerRef.current);
+        poppersTimerRef.current = null;
+      }
+    };
+  }, [showModal, isNoPrize, poppersOpacity]);
+
+  const poppersAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: poppersOpacity.value,
+  }));
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
@@ -770,7 +904,7 @@ export default function SpinWheelRewardsScreen() {
         ]}
       >
         <TouchableOpacity
-          onPress={() => navigation.goBack()}
+          onPress={handleBack}
           style={styles.backBtn}
           activeOpacity={0.7}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -871,7 +1005,7 @@ export default function SpinWheelRewardsScreen() {
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.emptyActionButton}
-                onPress={() => navigation.goBack()}
+                onPress={handleBack}
                 activeOpacity={0.85}
               >
                 <LinearGradient
@@ -1302,29 +1436,6 @@ export default function SpinWheelRewardsScreen() {
                   <Text style={styles.wonCardDesc} numberOfLines={2}>
                     {wonPrize.description}
                   </Text>
-
-                  {!wonPrize.isNoPrize && wonPrize.code ? (
-                    <View style={styles.wonCardCodeRow}>
-                      <View style={styles.wonCardCodeBox}>
-                        <Text style={styles.wonCardCodeLabel}>COUPON CODE</Text>
-                        <Text style={styles.wonCardCodeVal}>
-                          {wonPrize.code}
-                        </Text>
-                      </View>
-                      <TouchableOpacity
-                        onPress={() => copyCouponCode(wonPrize.code)}
-                        style={styles.wonCardCopyBtn}
-                        activeOpacity={0.75}
-                      >
-                        <Ionicons
-                          name="copy-outline"
-                          size={13}
-                          color="#F25000"
-                        />
-                        <Text style={styles.wonCardCopyBtnText}>COPY CODE</Text>
-                      </TouchableOpacity>
-                    </View>
-                  ) : null}
                 </View>
               </View>
             ) : null}
@@ -1381,9 +1492,9 @@ export default function SpinWheelRewardsScreen() {
         visible={showModal}
         transparent
         animationType="fade"
-        onRequestClose={() => setShowModal(false)}
+        onRequestClose={handleBackToHome}
       >
-        <TouchableWithoutFeedback onPress={() => setShowModal(false)}>
+        <TouchableWithoutFeedback onPress={handleBackToHome}>
           <View style={styles.modalOverlay}>
             <TouchableWithoutFeedback>
               <View style={styles.modalCard}>
@@ -1400,7 +1511,7 @@ export default function SpinWheelRewardsScreen() {
                     style={StyleSheet.absoluteFillObject}
                   />
                   <TouchableOpacity
-                    onPress={() => setShowModal(false)}
+                    onPress={handleBackToHome}
                     style={styles.modalCloseBtn}
                     activeOpacity={0.7}
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -1474,9 +1585,7 @@ export default function SpinWheelRewardsScreen() {
                         ]}
                       >
                         <Text style={styles.voucherBadgeText}>
-                          {isNoPrize
-                            ? 'NO PRIZE'
-                            : wonPrize?.badge || 'ASSURED REWARD'}
+                          {wonPrize?.badge || 'ASSURED REWARD'}
                         </Text>
                       </View>
                       {!isNoPrize ? (
@@ -1494,7 +1603,7 @@ export default function SpinWheelRewardsScreen() {
                     >
                       {wonPrize?.rewardName ||
                         wonPrize?.label ||
-                        'Better Luck Next Time'}
+                        'Assured Gift'}
                     </Text>
 
                     {wonPrize?.value && !isNoPrize ? (
@@ -1543,130 +1652,63 @@ export default function SpinWheelRewardsScreen() {
                         </Text>
                       </View>
                     ) : null}
-
-                    {/* Coupon Code Strip */}
-                    {!isNoPrize && wonPrize?.code ? (
-                      <View style={styles.couponStrip}>
-                        <View style={styles.couponCodeCol}>
-                          <Text style={styles.couponCodeLabel}>
-                            COUPON CODE
-                          </Text>
-                          <Text style={styles.couponCodeText}>
-                            {wonPrize?.code}
-                          </Text>
-                        </View>
-                        <TouchableOpacity
-                          onPress={() =>
-                            wonPrize && copyCouponCode(wonPrize.code)
-                          }
-                          style={styles.copyCodeButton}
-                          activeOpacity={0.75}
-                        >
-                          <Ionicons
-                            name="copy-outline"
-                            size={13}
-                            color="#F25000"
-                          />
-                          <Text style={styles.copyCodeText}>COPY</Text>
-                        </TouchableOpacity>
-                      </View>
-                    ) : null}
                   </View>
 
-                  {/* Action Buttons */}
-                  {isOrderReward ? (
-                    <View style={styles.orderActionsCol}>
-                      <TouchableOpacity
-                        onPress={handleTrackOrder}
-                        style={styles.claimButton}
-                        activeOpacity={0.85}
-                      >
-                        <LinearGradient
-                          colors={['#FF6200', '#F25000']}
-                          start={{ x: 0, y: 0 }}
-                          end={{ x: 1, y: 0 }}
-                          style={StyleSheet.absoluteFillObject}
-                        />
-                        <View style={styles.claimButtonContent}>
-                          <Ionicons
-                            name="location-outline"
-                            size={16}
-                            color="#FFFFFF"
-                          />
-                          <Text style={styles.claimButtonText}>
-                            Track Order
-                          </Text>
-                        </View>
-                      </TouchableOpacity>
-
-                      <TouchableOpacity
-                        onPress={handleBackToHome}
-                        style={styles.homeResetBtn}
-                        activeOpacity={0.75}
-                      >
+                  {/* Action Buttons: option to go to Home only */}
+                  <View style={styles.orderActionsCol}>
+                    <TouchableOpacity
+                      onPress={handleBackToHome}
+                      style={styles.claimButton}
+                      activeOpacity={0.85}
+                    >
+                      <LinearGradient
+                        colors={['#FF6200', '#F25000']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={StyleSheet.absoluteFillObject}
+                      />
+                      <View style={styles.claimButtonContent}>
                         <Ionicons
                           name="home-outline"
-                          size={15}
-                          color="#F25000"
+                          size={16}
+                          color="#FFFFFF"
                         />
-                        <Text style={styles.homeResetBtnText}>
-                          Back to Home
+                        <Text style={styles.claimButtonText}>
+                          Go to Home
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+
+                    {!isOrderReward && spinsCount > 0 ? (
+                      <TouchableOpacity
+                        onPress={() => {
+                          setShowModal(false);
+                          setTimeout(() => spin(), 350);
+                        }}
+                        style={styles.spinAgainBtn}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={styles.spinAgainText}>
+                          Spin Again ({spinsCount}{' '}
+                          {spinsCount === 1 ? 'spin' : 'spins'} left)
                         </Text>
                       </TouchableOpacity>
-                    </View>
-                  ) : (
-                    <>
-                      <TouchableOpacity
-                        onPress={handleClaimAndShop}
-                        style={styles.claimButton}
-                        activeOpacity={0.85}
-                      >
-                        <LinearGradient
-                          colors={['#FF6200', '#F25000']}
-                          start={{ x: 0, y: 0 }}
-                          end={{ x: 1, y: 0 }}
-                          style={StyleSheet.absoluteFillObject}
-                        />
-                        <View style={styles.claimButtonContent}>
-                          <Text style={styles.claimButtonText}>
-                            Claim & Shop Now
-                          </Text>
-                          <Ionicons
-                            name="arrow-forward"
-                            size={15}
-                            color="#FFFFFF"
-                          />
-                        </View>
-                      </TouchableOpacity>
-
-                      {spinsCount > 0 ? (
-                        <TouchableOpacity
-                          onPress={() => {
-                            setShowModal(false);
-                            setTimeout(() => spin(), 350);
-                          }}
-                          style={styles.spinAgainBtn}
-                          activeOpacity={0.7}
-                        >
-                          <Text style={styles.spinAgainText}>
-                            Spin Again ({spinsCount}{' '}
-                            {spinsCount === 1 ? 'spin' : 'spins'} left)
-                          </Text>
-                        </TouchableOpacity>
-                      ) : null}
-                    </>
-                  )}
+                    ) : null}
+                  </View>
                 </View>
               </View>
             </TouchableWithoutFeedback>
 
             {/* Motion Graphics Full-Screen Confetti Shower */}
-            {showModal && !isNoPrize ? (
-              <View style={styles.confettiOverlay} pointerEvents="none">
+            {showPoppers && !isNoPrize ? (
+              <Animated.View
+                style={[styles.confettiOverlay, poppersAnimatedStyle]}
+                pointerEvents="none"
+              >
                 {CONFETTI_PIECES.map(p => (
-                  <ConfettiPiece key={p.id} piece={p} active={showModal} />
+                  <ConfettiPiece key={p.id} piece={p} active={showPoppers} />
                 ))}
-              </View>
+              </Animated.View>
             ) : null}
           </View>
         </TouchableWithoutFeedback>

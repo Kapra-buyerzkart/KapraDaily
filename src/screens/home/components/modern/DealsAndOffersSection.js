@@ -29,41 +29,6 @@ const CARD_WIDTH = SCREEN_WIDTH * 0.78;
 const SPACING = wp('3.5%');
 const ITEM_SIZE = CARD_WIDTH + SPACING;
 
-export const DUMMY_OFFERS = [
-  {
-    id: '1',
-    bgColor: '#3FA9F5',
-    title: 'Daily Essentials\ndelivered fast!',
-    subtitle: 'Get 10% off on daily needs',
-    image: require('@/assets/images/deals_essentials.png'),
-    discountText: '10%\noff',
-    dateRange: 'Aug 1 - Aug 15',
-    quota: '0 of 100 QR',
-    isDummy: true,
-  },
-  {
-    id: '2',
-    bgColor: '#E66D00',
-    title: 'Freshness\nat your door!',
-    subtitle: 'Get 15% off on\nfresh fruits & vegetables',
-    image: require('@/assets/images/deals_fruits_veg.png'),
-    discountText: '15%\noff',
-    dateRange: 'Aug 4 - Aug 31',
-    quota: '0 of 250 QR',
-    isDummy: true,
-  },
-  {
-    id: '3',
-    bgColor: '#5D2E8E',
-    title: 'Mega Savings\non groceries',
-    subtitle: 'Get 20% off on all items',
-    image: require('@/assets/images/deals_groceries.png'),
-    discountText: '20%\noff',
-    dateRange: 'Sep 1 - Sep 30',
-    quota: '10 of 500 QR',
-    isDummy: true,
-  },
-];
 
 const BG_PALETTE = [
   '#3FA9F5',
@@ -176,6 +141,19 @@ const mapBannerToOffer = (banner, index) => {
     bgColor = BG_PALETTE[index % BG_PALETTE.length];
   }
 
+  const linkValue =
+    banner.linkValue ||
+    banner.LinkValue ||
+    banner.link ||
+    banner.Link ||
+    title ||
+    'Deals';
+  const linkType = (
+    banner.linkType ||
+    banner.LinkType ||
+    'category'
+  ).toLowerCase();
+
   return {
     id: String(
       banner.bannerId ||
@@ -191,8 +169,13 @@ const mapBannerToOffer = (banner, index) => {
     discountText,
     dateRange,
     quota,
-    raw: banner,
-    isDummy: false,
+    linkValue,
+    linkType,
+    raw: {
+      ...banner,
+      linkValue,
+      linkType,
+    },
   };
 };
 
@@ -231,7 +214,7 @@ const OfferCard = React.memo(({ item, index, scrollX, onPress }) => {
     };
   });
 
-  const hasBackgroundImage = !item.isDummy && !!item.image;
+  const hasBackgroundImage = !!item.image;
   const hasBadgeOrPill = !!(item.discountText || item.dateRange || item.quota);
   const isPureImageBanner = hasBackgroundImage && !hasBadgeOrPill;
 
@@ -263,28 +246,6 @@ const OfferCard = React.memo(({ item, index, scrollX, onPress }) => {
       {/* If it's a pure image banner with no text/pills, don't show overlay content */}
       {!isPureImageBanner && (
         <View style={styles.cardContent}>
-          {item.isDummy && item.title ? (
-            <Text style={styles.cardTitle} numberOfLines={2}>
-              {item.title}
-            </Text>
-          ) : null}
-          {item.isDummy && item.subtitle ? (
-            <Text style={styles.cardSubtitle} numberOfLines={2}>
-              {item.subtitle}
-            </Text>
-          ) : null}
-
-          {/* Product Illustration cutout (for dummy fallback offers only) */}
-          {item.isDummy && item.image ? (
-            <View style={styles.cardImageContainer} pointerEvents="none">
-              <CachedImage
-                source={item.image}
-                style={styles.cardImage}
-                resizeMode="contain"
-              />
-            </View>
-          ) : null}
-
           {/* Discount Badge */}
           {item.discountText ? (
             <View style={styles.discountBadge}>
@@ -307,11 +268,6 @@ const OfferCard = React.memo(({ item, index, scrollX, onPress }) => {
               {item.quota ? (
                 <Text style={styles.quotaText}>{item.quota}</Text>
               ) : null}
-            </View>
-          ) : item.isDummy ? (
-            <View style={styles.bottomPill}>
-              <Text style={styles.quotaText}>Shop Now</Text>
-              <Feather name="arrow-right" size={wp('4%')} color="#FFFFFF" />
             </View>
           ) : null}
         </View>
@@ -356,7 +312,7 @@ const DealsAndOffersSection = ({
         topItems.length > 0 ? [...topItems, ...restItems] : sourceList;
       return prioritized.map(mapBannerToOffer).filter(Boolean);
     }
-    return DUMMY_OFFERS;
+    return [];
   }, [banners, offers]);
 
   // Prefetch first few deals images to eliminate swipe decode stutter
@@ -425,13 +381,16 @@ const DealsAndOffersSection = ({
       }
       if (!navigation || !raw) return;
       const linkType = (raw.linkType || raw.LinkType || '').toLowerCase();
-      const linkValue = raw.linkValue || raw.LinkValue;
+      const linkValue =
+        raw.linkValue || raw.LinkValue || raw.link || raw.Link;
       if (linkType === 'product' && linkValue) {
         navigation.navigate('ProductDetailsScreen', { productId: linkValue });
-      } else if (linkType === 'category' && linkValue) {
+      } else if (linkValue) {
         navigation.navigate('SearchScreen', {
           catId: linkValue,
           catName: raw.title || 'Category',
+          linkValue,
+          link: linkValue,
         });
       }
     },

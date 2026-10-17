@@ -185,28 +185,97 @@ const ProductDetailsScreen = () => {
 
   const outOfStock = !isAvailable || stockQty === 0;
 
-  // Dynamic feature badges extraction
+  // Dynamic feature badges extraction (strictly from backend, null if missing/empty/placeholder)
   const brandValue = useMemo(() => {
+    const direct =
+      product?.brandName ||
+      product?.brand ||
+      initialProduct?.brandName ||
+      initialProduct?.brand;
+    if (
+      typeof direct === 'string' &&
+      direct.trim().length > 0 &&
+      !/^brand$/i.test(direct.trim()) &&
+      direct.trim() !== '-'
+    ) {
+      return direct.trim();
+    }
+
     const match = attributes?.find(a =>
       /brand/i.test(a?.attrName || a?.name || a?.code || ''),
     );
-    return match?.attrValue || match?.value || 'Brand';
-  }, [attributes]);
+    const val = (match?.attrValue ?? match?.value ?? '').toString().trim();
+    if (val.length > 0 && !/^brand$/i.test(val) && val !== '-') {
+      return val;
+    }
+    return null;
+  }, [product, initialProduct, attributes]);
 
   const manufacturerValue = useMemo(() => {
+    const direct =
+      product?.manufacturer ||
+      product?.manufacturerName ||
+      product?.mfg ||
+      initialProduct?.manufacturer ||
+      initialProduct?.manufacturerName;
+    if (
+      typeof direct === 'string' &&
+      direct.trim().length > 0 &&
+      !/^manufacturer$/i.test(direct.trim()) &&
+      direct.trim() !== '-'
+    ) {
+      return direct.trim();
+    }
+
     const match = attributes?.find(a =>
       /manufacturer|mfg|producer|maker|packed by/i.test(
         a?.attrName || a?.name || a?.code || '',
       ),
     );
-    return match?.attrValue || match?.value || 'Manufacturer';
-  }, [attributes]);
+    const val = (match?.attrValue ?? match?.value ?? '').toString().trim();
+    if (val.length > 0 && !/^manufacturer$/i.test(val) && val !== '-') {
+      return val;
+    }
+    return null;
+  }, [product, initialProduct, attributes]);
 
   const countryValue = useMemo(() => {
+    const direct =
+      product?.countryOfOrigin ||
+      product?.country ||
+      product?.origin ||
+      initialProduct?.countryOfOrigin ||
+      initialProduct?.country;
+    if (
+      typeof direct === 'string' &&
+      direct.trim().length > 0 &&
+      !/^(country of origin|country)$/i.test(direct.trim()) &&
+      direct.trim() !== '-'
+    ) {
+      return direct.trim();
+    }
+
     const match = attributes?.find(a =>
       /country|origin/i.test(a?.attrName || a?.name || a?.code || ''),
     );
-    return match?.attrValue || match?.value || 'country of origin';
+    const val = (match?.attrValue ?? match?.value ?? '').toString().trim();
+    if (
+      val.length > 0 &&
+      !/^(country of origin|country)$/i.test(val) &&
+      val !== '-'
+    ) {
+      return val;
+    }
+    return null;
+  }, [product, initialProduct, attributes]);
+
+  const displayAttributes = useMemo(() => {
+    if (!Array.isArray(attributes)) return [];
+    return attributes.filter(a => {
+      const label = (a?.attrName || a?.name || '').toString().trim();
+      const val = (a?.attrValue ?? a?.value ?? '').toString().trim();
+      return label.length > 0 && val.length > 0 && val !== '-';
+    });
   }, [attributes]);
 
   // Clean description text
@@ -501,32 +570,48 @@ const ProductDetailsScreen = () => {
                 <View style={styles.dottedDivider} />
               </View>
 
-              {/* 3. Three Specification / Feature Badges */}
-              <View style={styles.specBadgesRow}>
-                {/* Brand */}
-                <View style={styles.specBadgeItem}>
-                  <BrandIcon size={38} color="#111827" />
-                  <Text style={styles.specBadgeLabel} numberOfLines={1}>
-                    {brandValue}
-                  </Text>
-                </View>
+              {/* 3. Specification / Feature Badges (only rendered when backend data is available) */}
+              {(brandValue || manufacturerValue || countryValue) ? (
+                <View
+                  style={[
+                    styles.specBadgesRow,
+                    [brandValue, manufacturerValue, countryValue].filter(Boolean)
+                      .length === 1 && { justifyContent: 'center' },
+                    [brandValue, manufacturerValue, countryValue].filter(Boolean)
+                      .length === 2 && { justifyContent: 'space-around' },
+                  ]}
+                >
+                  {/* Brand */}
+                  {brandValue ? (
+                    <View style={styles.specBadgeItem}>
+                      <BrandIcon size={38} color="#111827" />
+                      <Text style={styles.specBadgeLabel} numberOfLines={1}>
+                        {brandValue}
+                      </Text>
+                    </View>
+                  ) : null}
 
-                {/* Manufacturer */}
-                <View style={styles.specBadgeItem}>
-                  <ManufacturerIcon size={38} color="#111827" />
-                  <Text style={styles.specBadgeLabel} numberOfLines={1}>
-                    {manufacturerValue}
-                  </Text>
-                </View>
+                  {/* Manufacturer */}
+                  {manufacturerValue ? (
+                    <View style={styles.specBadgeItem}>
+                      <ManufacturerIcon size={38} color="#111827" />
+                      <Text style={styles.specBadgeLabel} numberOfLines={1}>
+                        {manufacturerValue}
+                      </Text>
+                    </View>
+                  ) : null}
 
-                {/* Country of origin */}
-                <View style={styles.specBadgeItem}>
-                  <CountryOriginIcon size={38} color="#111827" />
-                  <Text style={styles.specBadgeLabel} numberOfLines={1}>
-                    {countryValue}
-                  </Text>
+                  {/* Country of origin */}
+                  {countryValue ? (
+                    <View style={styles.specBadgeItem}>
+                      <CountryOriginIcon size={38} color="#111827" />
+                      <Text style={styles.specBadgeLabel} numberOfLines={1}>
+                        {countryValue}
+                      </Text>
+                    </View>
+                  ) : null}
                 </View>
-              </View>
+              ) : null}
 
               {/* 4. Primary "Add to Cart" Action CTA */}
               <View style={styles.actionSection}>
@@ -638,22 +723,22 @@ const ProductDetailsScreen = () => {
                 <Text style={styles.detailsBodyText}>{cleanDescription}</Text>
 
                 {/* Additional Highlights Table if attributes are available */}
-                {attributes && attributes.length > 0 && (
+                {displayAttributes.length > 0 && (
                   <View style={styles.attributesTable}>
-                    {attributes.map((attr, idx) => (
+                    {displayAttributes.map((attr, idx) => (
                       <View
                         key={idx}
                         style={[
                           styles.attributeRow,
-                          idx === attributes.length - 1 &&
+                          idx === displayAttributes.length - 1 &&
                             styles.attributeRowLast,
                         ]}
                       >
                         <Text style={styles.attributeLabel}>
-                          {attr.attrName || attr.name || 'Detail'}
+                          {attr.attrName || attr.name}
                         </Text>
                         <Text style={styles.attributeValue}>
-                          {attr.attrValue || attr.value || '-'}
+                          {attr.attrValue || attr.value}
                         </Text>
                       </View>
                     ))}
@@ -964,6 +1049,7 @@ const styles = StyleSheet.create({
   },
   specBadgeItem: {
     flex: 1,
+    maxWidth: 140,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 4,

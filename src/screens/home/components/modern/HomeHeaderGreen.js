@@ -330,16 +330,6 @@ const HomeHeaderGreen = ({
               numberOfLines={1}
             />
           </View>
-          <View style={styles.searchDivider} />
-          <AnimatedPressable
-            onPress={handleMicPress}
-            style={styles.micButton}
-            accessibilityRole="button"
-            accessibilityLabel="Voice search"
-            hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
-          >
-            <Feather name="mic" size={wp('4.6%')} color={accentColor} />
-          </AnimatedPressable>
         </AnimatedPressable>
 
         {/* Right: Quick-Action Cart / Shopping Bag Button */}
@@ -484,7 +474,7 @@ const styles = StyleSheet.create({
     height: SEARCH_BAR_HEIGHT,
     borderRadius: 10,
     paddingLeft: wp('3.6%'),
-    paddingRight: wp('2.8%'),
+    paddingRight: wp('3.6%'),
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.07,
@@ -503,17 +493,6 @@ const styles = StyleSheet.create({
     fontSize: wp('3.4%'),
     fontFamily: FONTS.gilroy.medium,
     color: '#8E949E',
-  },
-  searchDivider: {
-    width: 1,
-    height: 18,
-    backgroundColor: '#E5E7EB',
-    marginHorizontal: wp('2%'),
-  },
-  micButton: {
-    padding: 3,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   cartActionButton: {
     width: SEARCH_BAR_HEIGHT,

@@ -112,11 +112,21 @@ const Sparkle: React.FC<{
 export interface KshopeSpinWheelBannerProps {
   onPress: () => void;
   spinsCount?: number;
+  title?: string;
+  subtitle?: string;
+  badgeText?: string;
+  badgeIcon?: string;
+  style?: any;
 }
 
 const SpinWheelBanner: React.FC<KshopeSpinWheelBannerProps> = ({
   onPress,
   spinsCount = 3,
+  title = 'Lucky Deal Spin & Win',
+  subtitle = 'Win Extra Discounts, UD Coins & Free Delivery',
+  badgeText = '48HR DEAL GIFT',
+  badgeIcon = 'lightning-bolt',
+  style,
 }) => {
   // Motion Graphics: Wheel Rotation
   const wheelRotation = useSharedValue(0);
@@ -303,9 +313,9 @@ const SpinWheelBanner: React.FC<KshopeSpinWheelBannerProps> = ({
   return (
     <Pressable
       onPress={handlePress}
-      style={({ pressed }) => [styles.wrapper, pressed && styles.pressed]}
+      style={({ pressed }) => [styles.wrapper, style, pressed && styles.pressed]}
       accessibilityRole="button"
-      accessibilityLabel="48hr Deals Lucky Spin and Win Assured Gift"
+      accessibilityLabel={`${title} Assured Gift`}
     >
       <View style={styles.cardContainer}>
         {/* 48hrs Deals Fiery Sunset/Crimson LinearGradient Background */}
@@ -470,11 +480,11 @@ const SpinWheelBanner: React.FC<KshopeSpinWheelBannerProps> = ({
             <View style={styles.badgeRow}>
               <View style={styles.guaranteeBadge}>
                 <MaterialCommunityIcons
-                  name="lightning-bolt"
+                  name={badgeIcon}
                   size={11}
                   color="#D84315"
                 />
-                <Text style={styles.guaranteeText}>48HR DEAL GIFT</Text>
+                <Text style={styles.guaranteeText}>{badgeText}</Text>
               </View>
               <View style={styles.spinsBadge}>
                 <Text style={styles.spinsBadgeText}>
@@ -484,10 +494,10 @@ const SpinWheelBanner: React.FC<KshopeSpinWheelBannerProps> = ({
             </View>
 
             <Text style={styles.title} numberOfLines={1}>
-              Lucky Deal Spin & Win
+              {title}
             </Text>
             <Text style={styles.subtitle} numberOfLines={1}>
-              Win Extra Discounts, UD Coins & Free Delivery
+              {subtitle}
             </Text>
           </View>
 

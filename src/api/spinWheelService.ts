@@ -189,17 +189,33 @@ export const DEFAULT_OCTOBER_CAMPAIGN = {
       campaignItemId: 7,
       campaignId: 1,
       rewardId: 7,
-      rewardName: 'Better Luck Next Time',
-      rewardType: 'NoPrize',
-      rewardValue: 0,
-      rewardValueType: 'NotApplicable',
-      validityDays: null,
+      rewardName: 'Flat ₹25 OFF',
+      rewardType: 'Coupon',
+      rewardValue: 25,
+      rewardValueType: 'Fixed',
+      validityDays: 15,
       couponMaxDiscountAmount: null,
       couponMinOrderAmount: null,
       couponUsageLimitPerUser: null,
-      winWeight: 3390,
-      displayText: 'BETTER LUCK NEXT TIME',
-      icon: 'sparkles',
+      winWeight: 2000,
+      displayText: 'FLAT ₹25 OFF',
+      icon: 'ticket',
+    },
+    {
+      campaignItemId: 8,
+      campaignId: 1,
+      rewardId: 8,
+      rewardName: '50 Bonus Coins',
+      rewardType: 'BCoin',
+      rewardValue: 50,
+      rewardValueType: 'Fixed',
+      validityDays: 60,
+      couponMaxDiscountAmount: null,
+      couponMinOrderAmount: null,
+      couponUsageLimitPerUser: null,
+      winWeight: 1390,
+      displayText: '50 BCOINS',
+      icon: 'coins',
     },
   ],
 };
@@ -211,7 +227,7 @@ export const REWARD_PALETTES = [
   { color1: '#D97706', color2: '#B45309', textColor: '#FFFFFF', iconName: 'cash-multiple', badge: 'BCOINS' },
   { color1: '#E11D48', color2: '#BE123C', textColor: '#FFFFFF', iconName: 'gift', badge: 'GIFT CARD' },
   { color1: '#0284C7', color2: '#0369A1', textColor: '#FFFFFF', iconName: 'truck-fast', badge: 'FREE DEL' },
-  { color1: '#64748B', color2: '#475569', textColor: '#FFFFFF', iconName: 'clover', badge: 'TRY AGAIN' },
+  { color1: '#8B5CF6', color2: '#7C3AED', textColor: '#FFFFFF', iconName: 'ticket-percent', badge: 'COUPON' },
   { color1: '#0D9488', color2: '#0F766E', textColor: '#FFFFFF', iconName: 'star-circle', badge: 'SAVINGS' },
 ];
 
@@ -376,16 +392,8 @@ export const mapBackendRewardToPrize = (item: any, index: number): AssuredPrize 
     badge = String(item.badge);
   }
 
-  // Promo / Coupon Code: prioritize backend code
-  let code = String(item.code || item.couponCode || item.promoCode || '').trim();
-  if (!code && !isNoPrize) {
-    if (rType.toLowerCase() === 'coupon') code = `FLAT${rValue || 50}`;
-    else if (rType.toLowerCase() === 'partnervoucher') code = `PV${rValue || 200}`;
-    else if (rType.toLowerCase() === 'cashback') code = `CASH${rValue || 100}`;
-    else if (rType.toLowerCase() === 'bcoin') code = `BCOIN${rValue || 100}`;
-    else if (rType.toLowerCase() === 'giftcard') code = `GIFT${rValue || 100}`;
-    else if (rType.toLowerCase() === 'freedelivery') code = 'FREEDEL';
-  }
+  // Promo / Coupon Code: strictly from backend only
+  const code = String(item.code || item.couponCode || item.promoCode || '').trim();
 
   // Description / Redemption Instructions: strictly from backend
   const rInstructions = String(
@@ -503,6 +511,11 @@ export const extractCampaignAndRewards = (responseOrData: any): ExtractedCampaig
   const storeId = campaignObj?.storeId ?? data?.storeId;
   const eligibleOrderAmount = campaignObj?.eligibleOrderAmount ?? data?.eligibleOrderAmount;
 
+  const finalRewards =
+    Array.isArray(rewardsList) && rewardsList.length > 0
+      ? rewardsList
+      : DEFAULT_OCTOBER_CAMPAIGN.rewards;
+
   return {
     campaignId,
     campaignName,
@@ -511,8 +524,23 @@ export const extractCampaignAndRewards = (responseOrData: any): ExtractedCampaig
     maxBudgetAmount,
     storeId,
     eligibleOrderAmount,
-    rewards: rewardsList,
+    rewards: finalRewards,
   };
+};
+
+export const isRewardValidGift = (item: any): boolean => {
+  if (!item) return false;
+  const type = String(item?.rewardType || item?.type || '').toLowerCase().trim();
+  const name = String(item?.rewardName || item?.name || item?.label || item?.title || '').toLowerCase().trim();
+  const dText = String(item?.displayText || item?.sublabel || '').toLowerCase().trim();
+  return (
+    type !== 'noprize' &&
+    !name.includes('better luck') &&
+    !name.includes('no prize') &&
+    !dText.includes('better luck') &&
+    !dText.includes('no prize') &&
+    !item?.isNoPrize
+  );
 };
 
 export const selectWeightedRewardIndex = (rewards: AssuredPrize[]): number => {

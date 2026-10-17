@@ -58,8 +58,15 @@ const Sparkle = ({ style, delay = 0, size = 11 }) => {
   }));
 
   return (
-    <Animated.View style={[styles.sparkleWrap, style, animStyle]} pointerEvents="none">
-      <MaterialCommunityIcons name="star-four-points" size={size} color="#FFE082" />
+    <Animated.View
+      style={[styles.sparkleWrap, style, animStyle]}
+      pointerEvents="none"
+    >
+      <MaterialCommunityIcons
+        name="star-four-points"
+        size={size}
+        color="#FFE082"
+      />
     </Animated.View>
   );
 };
@@ -181,7 +188,7 @@ const SpinWheelBanner = ({ onPress, spinsCount = 3 }) => {
       onPress={onPress}
       style={({ pressed }) => [styles.wrapper, pressed && styles.pressed]}
       accessibilityRole="button"
-      accessibilityLabel="Daily Spin and Win Assured Gift"
+      accessibilityLabel="Daily Spin and Win Gifts"
     >
       <View style={styles.cardContainer}>
         {/* iOS & Android Rich LinearGradient Background */}
@@ -453,4 +460,3 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
 });
-

@@ -27,7 +27,7 @@ import { FONTS } from '../styles/typography';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import CustomBottomModal from './CustomBottomModal';
 import BallPulse from './BallPulse';
-const SEARCH_DEBOUNCE_MS = 1200;
+const SEARCH_DEBOUNCE_MS = 400;
 const MIN_SEARCH_LENGTH = 3;
 
 const LocationModal = forwardRef(({ onClose }, ref) => {
@@ -168,8 +168,9 @@ const LocationModal = forwardRef(({ onClose }, ref) => {
         ) : (
           <BottomSheetFlatList
             data={areas.data}
-            keyExtractor={(_, i) => i.toString()}
+            keyExtractor={item => item?.pincodeAreaId?.toString() || Math.random().toString()}
             keyboardShouldPersistTaps="handled"
+            style={styles.list}
             renderItem={({ item }) => {
               const isSelecting = selectingItem === item;
               return (
@@ -237,7 +238,7 @@ const LocationModal = forwardRef(({ onClose }, ref) => {
   return (
     <CustomBottomModal
       ref={sheetRef}
-      snapPoints={['50%', '50%']}
+      snapPoints={['65%', '90%']}
       onClose={handleSheetClose}
       onChange={handleSheetSettle}
       renderContent={renderContent}
@@ -251,6 +252,9 @@ export default LocationModal;
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+  },
+  list: {
     flex: 1,
   },
   header: {

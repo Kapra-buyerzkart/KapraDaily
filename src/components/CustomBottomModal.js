@@ -6,7 +6,7 @@ import React, {
   useRef,
   useEffect,
 } from 'react';
-import { StyleSheet, BackHandler, Platform } from 'react-native';
+import { StyleSheet, BackHandler, Platform, View } from 'react-native';
 import {
   BottomSheetModal,
   BottomSheetView,
@@ -30,6 +30,7 @@ const CustomBottomModal = forwardRef((props, ref) => {
     keyboardBehavior = 'interactive',
     keyboardBlurBehavior = 'restore',
     bottomInset = 0,
+    enableDynamicSizing = false,
   } = props;
 
   const sheetRef = useRef(null);
@@ -124,14 +125,16 @@ const CustomBottomModal = forwardRef((props, ref) => {
     return () => subscription.remove();
   }, [handleClose]);
 
+  const ContentWrapper = enableDynamicSizing ? BottomSheetView : View;
+
   return (
     <BottomSheetModal
       ref={sheetRef}
       index={0}
-      snapPoints={resolvedSnapPoints}
+      snapPoints={enableDynamicSizing ? undefined : resolvedSnapPoints}
       bottomInset={bottomInset}
       enablePanDownToClose={enablePanDownToClose}
-      enableDynamicSizing={false}
+      enableDynamicSizing={enableDynamicSizing}
       onChange={handleSheetChange}
       backdropComponent={renderBackdrop}
       keyboardBehavior={keyboardBehavior}
@@ -140,11 +143,11 @@ const CustomBottomModal = forwardRef((props, ref) => {
       handleIndicatorStyle={[styles.handleIndicator, handleIndicatorStyle]}
       style={styles.shadow}
     >
-      <BottomSheetView
+      <ContentWrapper
         style={[styles.content, { paddingBottom: insets.bottom }]}
       >
         {renderSheetContent()}
-      </BottomSheetView>
+      </ContentWrapper>
     </BottomSheetModal>
   );
 });

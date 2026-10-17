@@ -37,8 +37,7 @@ const FlashDealCard = React.memo(({ item, onPress }) => {
       : `${CONFIG.image_base_url}${rawImageUri}`;
   }
 
-  const productName =
-    item.prName || item.name || item.Name || 'Product Title';
+  const productName = item.prName || item.name || item.Name || 'Product Title';
   const productSubtitle =
     item.subtitle ||
     item.subTitle ||
@@ -53,10 +52,7 @@ const FlashDealCard = React.memo(({ item, onPress }) => {
   }, [item, onPress]);
 
   return (
-    <AnimatedPressable
-      onPress={handlePress}
-      style={styles.cardWrapper}
-    >
+    <AnimatedPressable onPress={handlePress} style={styles.cardWrapper}>
       <ImageBackground
         source={glossyCardImg}
         style={styles.cardContainer}
@@ -172,13 +168,13 @@ const FlashDealsSection = ({ items = [], title = '50% OFF', navigation }) => {
       </View>
 
       {/* Isolated Footer Countdown Timer: only text re-renders on ticks */}
-      <View style={styles.timerPill}>
+      {/* <View style={styles.timerPill}>
         <Feather name="clock" size={wp('4%')} color="#0050CD" />
         <DealCountdownText
           targetTimestamp={targetDate}
           style={styles.timerText}
         />
-      </View>
+      </View> */}
     </View>
   );
 };

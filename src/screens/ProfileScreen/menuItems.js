@@ -25,7 +25,7 @@ export const buildOffersItems = ({
         size={ICON_SIZE}
       />
     ),
-    badge: <Badge label="SPIN & WIN" tone="success" />,
+    // badge: <Badge label="SPIN & WIN" tone="success" />,
     onPress: onMyRewards,
   },
   {

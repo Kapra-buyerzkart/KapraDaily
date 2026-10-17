@@ -118,62 +118,59 @@ export default function MyRewardsScreen() {
   const [isFetchingMore, setIsFetchingMore] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const fetchHistory = useCallback(
-    async (page = 1, isRefresh = false) => {
+  const fetchHistory = useCallback(async (page = 1, isRefresh = false) => {
+    if (page === 1) {
+      if (!isRefresh) setIsLoading(true);
+      setErrorMessage(null);
+    } else {
+      setIsFetchingMore(true);
+    }
+
+    try {
+      const response: any = await getSpinWinHistory({
+        pageNumber: page,
+        pageSize: PAGE_SIZE,
+      });
+
+      const data = response?.data !== undefined ? response.data : response;
+      const rawItems =
+        data?.items ||
+        data?.rewards ||
+        data?.history ||
+        response?.items ||
+        response?.rewards ||
+        (Array.isArray(data) ? data : null) ||
+        [];
+
+      const parsedItems: RewardItem[] = Array.isArray(rawItems) ? rawItems : [];
+
       if (page === 1) {
-        if (!isRefresh) setIsLoading(true);
-        setErrorMessage(null);
+        setRewards(parsedItems);
       } else {
-        setIsFetchingMore(true);
+        setRewards(prev => [...prev, ...parsedItems]);
       }
 
-      try {
-        const response: any = await getSpinWinHistory({
-          pageNumber: page,
-          pageSize: PAGE_SIZE,
-        });
-
-        const data = response?.data !== undefined ? response.data : response;
-        const rawItems =
-          data?.items ||
-          data?.rewards ||
-          data?.history ||
-          response?.items ||
-          response?.rewards ||
-          (Array.isArray(data) ? data : null) ||
-          [];
-
-        const parsedItems: RewardItem[] = Array.isArray(rawItems) ? rawItems : [];
-
-        if (page === 1) {
-          setRewards(parsedItems);
-        } else {
-          setRewards(prev => [...prev, ...parsedItems]);
-        }
-
-        setPageNumber(page);
-        if (parsedItems.length < PAGE_SIZE) {
-          setHasMoreData(false);
-        } else {
-          setHasMoreData(true);
-        }
-      } catch (err: any) {
-        const msg =
-          err?.response?.data?.message ||
-          err?.response?.data?.error ||
-          err?.message ||
-          'Failed to load rewards. Please pull to refresh.';
-        if (page === 1) {
-          setErrorMessage(msg);
-        }
-      } finally {
-        setIsLoading(false);
-        setIsRefreshing(false);
-        setIsFetchingMore(false);
+      setPageNumber(page);
+      if (parsedItems.length < PAGE_SIZE) {
+        setHasMoreData(false);
+      } else {
+        setHasMoreData(true);
       }
-    },
-    [],
-  );
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        err?.message ||
+        'Failed to load rewards. Please pull to refresh.';
+      if (page === 1) {
+        setErrorMessage(msg);
+      }
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+      setIsFetchingMore(false);
+    }
+  }, []);
 
   // Auto-refresh when screen gains focus (e.g. after a spin completion)
   useEffect(() => {
@@ -205,7 +202,9 @@ export default function MyRewardsScreen() {
       item.rewardTitle ||
       item.title ||
       item.label ||
-      (typeof item.prize === 'string' ? item.prize : item.prize?.rewardName || item.prize?.label) ||
+      (typeof item.prize === 'string'
+        ? item.prize
+        : item.prize?.rewardName || item.prize?.label) ||
       'Assured Reward';
 
     const code =
@@ -225,10 +224,7 @@ export default function MyRewardsScreen() {
 
     return (
       <View
-        style={[
-          styles.cardContainer,
-          isNoPrize && styles.cardContainerNoPrize,
-        ]}
+        style={[styles.cardContainer, isNoPrize && styles.cardContainerNoPrize]}
       >
         {/* Card Header */}
         <View style={styles.cardHeader}>
@@ -430,7 +426,7 @@ export default function MyRewardsScreen() {
             Your Spin & Win coupons and vouchers
           </Text>
         </View>
-        <TouchableOpacity
+        {/* <TouchableOpacity
           style={styles.spinShortcutBtn}
           onPress={() => navigation.navigate('SpinWheelRewardsScreen')}
           activeOpacity={0.75}
@@ -440,7 +436,7 @@ export default function MyRewardsScreen() {
             size={18}
             color="#059669"
           />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
 
       {/* Main Content */}

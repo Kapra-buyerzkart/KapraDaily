@@ -115,6 +115,26 @@ const ExploreCategoriesGrid = ({
     return null;
   }, [bottomGifBanner, banner, banners]);
 
+  const resolvedBottomGifBannerItem = useMemo(() => {
+    if (!bottomGifBannerItem) return null;
+    const linkValue =
+      bottomGifBannerItem.linkValue ||
+      bottomGifBannerItem.LinkValue ||
+      bottomGifBannerItem.link ||
+      bottomGifBannerItem.Link ||
+      'Offers For You';
+    const linkType = (
+      bottomGifBannerItem.linkType ||
+      bottomGifBannerItem.LinkType ||
+      'category'
+    ).toLowerCase();
+    return {
+      ...bottomGifBannerItem,
+      linkValue,
+      linkType,
+    };
+  }, [bottomGifBannerItem]);
+
   const bottomGifBannerSource = useMemo(() => {
     if (!bottomGifBannerItem) return null;
     if (bottomGifBannerItem.uri) {
@@ -230,37 +250,15 @@ const ExploreCategoriesGrid = ({
       {/* Category Banner GIF */}
       {gifSource ? (
         <View style={styles.bannerWrap}>
-          {onBannerPress || onPressBanner ? (
-            <AnimatedPressable
-              disabled={!gifItem}
-              onPress={() => {
-                if (onBannerPress) onBannerPress(gifItem);
-                else if (onPressBanner) onPressBanner(gifItem);
-              }}
-              activeOpacity={0.92}
-              style={styles.bannerPressable}
-            >
-              <Image
-                source={gifSource}
-                style={[
-                  styles.bannerImage,
-                  gifAspectRatio ? { aspectRatio: gifAspectRatio } : null,
-                ]}
-                resizeMode="contain"
-                onLoad={handleGifLoad}
-              />
-            </AnimatedPressable>
-          ) : (
-            <Image
-              source={gifSource}
-              style={[
-                styles.bannerImage,
-                gifAspectRatio ? { aspectRatio: gifAspectRatio } : null,
-              ]}
-              resizeMode="contain"
-              onLoad={handleGifLoad}
-            />
-          )}
+          <Image
+            source={gifSource}
+            style={[
+              styles.bannerImage,
+              gifAspectRatio ? { aspectRatio: gifAspectRatio } : null,
+            ]}
+            resizeMode="contain"
+            onLoad={handleGifLoad}
+          />
         </View>
       ) : null}
 
@@ -268,10 +266,10 @@ const ExploreCategoriesGrid = ({
         <View style={styles.bannerWrap}>
           {onBannerPress || onPressBanner ? (
             <AnimatedPressable
-              disabled={!bottomGifBannerItem}
+              disabled={!resolvedBottomGifBannerItem}
               onPress={() => {
-                if (onBannerPress) onBannerPress(bottomGifBannerItem);
-                else if (onPressBanner) onPressBanner(bottomGifBannerItem);
+                if (onBannerPress) onBannerPress(resolvedBottomGifBannerItem);
+                else if (onPressBanner) onPressBanner(resolvedBottomGifBannerItem);
               }}
               activeOpacity={0.92}
               style={styles.bannerPressable}

@@ -112,38 +112,52 @@ jest.mock('../src/context/CartContext', () => ({
   useCartEntry: () => ({ quantity: 0, cartItemId: null }),
 }));
 
-jest.mock('../src/hooks/useProductDetails', () => ({
-  useProductDetails: () => ({
-    loading: false,
-    product: mockProduct,
-    images: [{ uri: 'https://example.com/lays.png' }],
-    attributes: [
-      { attrName: 'Brand', attrValue: "Lay's" },
-      { attrName: 'Manufacturer', attrValue: 'PepsiCo' },
-      { attrName: 'Country of Origin', attrValue: 'India' },
-    ],
-    productImage: { uri: 'https://example.com/lays.png' },
-    productName: 'Lays chile lemon flavor',
-    productDescription: 'Crispy potato chips with zesty chile and lemon seasoning.',
-    shortDescription: 'Crispy potato chips with zesty chile and lemon seasoning.',
+jest.mock('../src/hooks/useProductDetails', () => {
+  const mockProductData = {
+    productId: 101,
+    prName: 'Lays chile lemon flavor',
     unitPrice: 35000,
     specialPrice: 10020,
     discountPercentage: 20,
     stockQty: 50,
     isAvailable: true,
     bTokenValue: 10.6,
-    productId: 101,
-    relatedProducts: [
-      {
-        productId: 201,
-        name: 'Sprite 12 FL OZ (355ml)',
-        price: 100,
-        mrp: 350,
-      },
-    ],
-    relatedLoading: false,
-  }),
-}));
+    shortDescription: 'Crispy potato chips with zesty chile and lemon seasoning.',
+    description: 'Full product details text for Lays chile lemon flavor.',
+  };
+  return {
+    useProductDetails: jest.fn(() => ({
+      loading: false,
+      product: mockProductData,
+      images: [{ uri: 'https://example.com/lays.png' }],
+      attributes: [
+        { attrName: 'Brand', attrValue: "Lay's" },
+        { attrName: 'Manufacturer', attrValue: 'PepsiCo' },
+        { attrName: 'Country of Origin', attrValue: 'India' },
+      ],
+      productImage: { uri: 'https://example.com/lays.png' },
+      productName: 'Lays chile lemon flavor',
+      productDescription: 'Crispy potato chips with zesty chile and lemon seasoning.',
+      shortDescription: 'Crispy potato chips with zesty chile and lemon seasoning.',
+      unitPrice: 35000,
+      specialPrice: 10020,
+      discountPercentage: 20,
+      stockQty: 50,
+      isAvailable: true,
+      bTokenValue: 10.6,
+      productId: 101,
+      relatedProducts: [
+        {
+          productId: 201,
+          name: 'Sprite 12 FL OZ (355ml)',
+          price: 100,
+          mrp: 350,
+        },
+      ],
+      relatedLoading: false,
+    })),
+  };
+});
 
 const ProductDetailsScreen = require('../src/screens/ProductDetailsScreen').default;
 
@@ -185,10 +199,6 @@ describe('ProductDetailsScreen Redesign', () => {
     // 6. Similar Products Section
     expect(allText).toContain('Similar Products');
     expect(allText).toContain('Fresh deals, exclusive savings & more');
-
-    // 7. SOMETHING SPECIAL Deals & Offers Section
-    expect(allText).toContain('SOMETHING SPECIAL');
-    expect(allText).toContain('The Pantry Collection');
   });
 
   it('renders BrandIcon, ManufacturerIcon, and CountryOriginIcon using the imported SVGs', () => {
@@ -211,6 +221,40 @@ describe('ProductDetailsScreen Redesign', () => {
     expect(brandTree.toJSON()).toBeTruthy();
     expect(boxTree.toJSON()).toBeTruthy();
     expect(countriesTree.toJSON()).toBeTruthy();
+  });
+
+  it('avoids rendering brand, manufacturer, or country of origin when backend data is missing', async () => {
+    const { useProductDetails } = require('../src/hooks/useProductDetails');
+    useProductDetails.mockReturnValue({
+      loading: false,
+      product: mockProduct,
+      images: [{ uri: 'https://example.com/lays.png' }],
+      attributes: [],
+      productImage: { uri: 'https://example.com/lays.png' },
+      productName: 'Lays chile lemon flavor',
+      productDescription: 'Crispy potato chips.',
+      shortDescription: 'Crispy potato chips.',
+      unitPrice: 35000,
+      specialPrice: 10020,
+      discountPercentage: 20,
+      stockQty: 50,
+      isAvailable: true,
+      bTokenValue: 10.6,
+      productId: 101,
+      relatedProducts: [],
+      relatedLoading: false,
+    });
+
+    let tree;
+    await act(async () => {
+      tree = renderer.create(React.createElement(ProductDetailsScreen));
+    });
+
+    const allText = extractText(tree.toJSON()).join(' ');
+
+    // Should NOT contain default placeholder texts
+    expect(allText).not.toContain('Manufacturer');
+    expect(allText).not.toContain('country of origin');
   });
 });
 

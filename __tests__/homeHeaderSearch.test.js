@@ -64,7 +64,7 @@ describe('HomeHeaderGreen Search Side Redesign', () => {
     jest.clearAllMocks();
   });
 
-  it('renders search bar, rotating placeholder, microphone icon, and cart action button', () => {
+  it('renders search bar, rotating placeholder, and cart action button without microphone icon', () => {
     let tree;
     act(() => {
       tree = renderer.create(
@@ -79,8 +79,8 @@ describe('HomeHeaderGreen Search Side Redesign', () => {
     const searchButton = root.findByProps({ accessibilityRole: 'search' });
     expect(searchButton).toBeDefined();
 
-    const voiceButton = root.findByProps({ accessibilityLabel: 'Voice search' });
-    expect(voiceButton).toBeDefined();
+    const voiceButtons = root.findAllByProps({ accessibilityLabel: 'Voice search' });
+    expect(voiceButtons.length).toBe(0);
 
     const cartButton = root.findByProps({ accessibilityLabel: 'Shopping cart, 3 items' });
     expect(cartButton).toBeDefined();
@@ -120,24 +120,6 @@ describe('HomeHeaderGreen Search Side Redesign', () => {
     expect(mockOnSearchPress).toHaveBeenCalledTimes(1);
   });
 
-  it('navigates to voice search on mic press', () => {
-    let tree;
-    act(() => {
-      tree = renderer.create(
-        <HomeHeaderGreen
-          navigation={mockNavigation}
-          onMicPress={mockOnMicPress}
-        />
-      );
-    });
-
-    const micButton = tree.root.findByProps({ accessibilityLabel: 'Voice search' });
-    act(() => {
-      micButton.props.onPress();
-    });
-    expect(mockOnMicPress).toHaveBeenCalledTimes(1);
-  });
-
   it('navigates to CartScreen on cart button press', () => {
     let tree;
     act(() => {
@@ -163,7 +145,6 @@ describe('HomeHeaderGreen Search Side Redesign', () => {
         <HomeHeaderGreen
           navigation={mockNavigation}
           onSearchPress={mockOnSearchPress}
-          onMicPress={mockOnMicPress}
           isSearchDisabled={true}
         />
       );
@@ -174,13 +155,6 @@ describe('HomeHeaderGreen Search Side Redesign', () => {
       searchButton.props.onPress();
     });
     expect(mockOnSearchPress).not.toHaveBeenCalled();
-    expect(mockNavigation.navigate).not.toHaveBeenCalled();
-
-    const micButton = tree.root.findByProps({ accessibilityLabel: 'Voice search' });
-    act(() => {
-      micButton.props.onPress();
-    });
-    expect(mockOnMicPress).not.toHaveBeenCalled();
     expect(mockNavigation.navigate).not.toHaveBeenCalled();
   });
 

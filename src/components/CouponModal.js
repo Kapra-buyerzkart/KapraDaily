@@ -218,6 +218,7 @@ const CouponModal = ({
               variant="cta"
               tone={canApply ? 'onDark' : 'faint'}
               style={styles.applyBtnText}
+              numberOfLines={1}
             >
               Apply
             </CartText>
@@ -302,6 +303,7 @@ const styles = StyleSheet.create({
   },
   inputCard: {
     flex: 1,
+    minWidth: 0,
     flexDirection: 'row',
     alignItems: 'center',
     gap: CART_SPACING.sm,
@@ -314,13 +316,16 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
+    minWidth: 0,
     ...CART_TYPE.body,
     color: CART_COLORS.textPrimary,
     padding: 0,
   },
   applyBtn: {
-    paddingHorizontal: CART_SPACING.xl,
-    paddingVertical: hp('1.6%'),
+    flexShrink: 0,
+    minWidth: 72,
+    paddingHorizontal: CART_SPACING.md,
+    paddingVertical: hp('1.3%'),
     borderRadius: CART_RADIUS.button,
     backgroundColor: CART_COLORS.primary,
     alignItems: 'center',
@@ -331,6 +336,8 @@ const styles = StyleSheet.create({
   },
   applyBtnText: {
     letterSpacing: 0.2,
+    textAlign: 'center',
+    includeFontPadding: false,
   },
   sectionLabel: {
     marginTop: CART_SPACING.xl,

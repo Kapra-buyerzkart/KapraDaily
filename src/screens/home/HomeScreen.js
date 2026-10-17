@@ -480,6 +480,17 @@ const HomeScreen = () => {
         matchedGif.imageUrl || matchedGif.ImageUrl || matchedGif.image;
       return {
         ...matchedGif,
+        linkValue:
+          matchedGif.linkValue ||
+          matchedGif.LinkValue ||
+          matchedGif.link ||
+          matchedGif.Link ||
+          'Offers For You',
+        linkType: (
+          matchedGif.linkType ||
+          matchedGif.LinkType ||
+          'category'
+        ).toLowerCase(),
         uri:
           matchedGif.uri ||
           (rawImg
@@ -570,11 +581,12 @@ const HomeScreen = () => {
     banner => {
       if (!banner) return;
       const linkType = (banner.linkType || banner.LinkType || '').toLowerCase();
-      const linkValue = banner.linkValue || banner.LinkValue;
+      const linkValue =
+        banner.linkValue || banner.LinkValue || banner.link || banner.Link;
 
       if (linkType === 'product') {
         navigation.navigate('ProductDetailsScreen', { productId: linkValue });
-      } else if (linkType === 'category') {
+      } else if (linkType === 'category' || linkValue) {
         if (noLocationSelected || isStoreUnavailable) {
           Toast.show('Please change location to search products', Toast.SHORT);
           return;
@@ -599,6 +611,8 @@ const HomeScreen = () => {
         navigation.navigate('SearchScreen', {
           catId: linkValue,
           catName: actualCatName || bannerTitle || 'Category',
+          linkValue,
+          link: linkValue,
         });
       } else if ((linkType === 'external' || linkType === 'url') && linkValue) {
         openExternalUrl(linkValue);

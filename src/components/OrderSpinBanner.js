@@ -18,9 +18,6 @@ import Animated, {
 import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Circle, G, Path } from 'react-native-svg';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import Ionicons from 'react-native-vector-icons/Ionicons';
-import Clipboard from '@react-native-clipboard/clipboard';
-import Toast from 'react-native-simple-toast';
 import { useIsFocused } from '@react-navigation/native';
 import {
   widthPercentageToDP as wp,
@@ -36,6 +33,7 @@ import {
   markOrderSpinClaimed,
   mapBackendRewardToPrize,
 } from '../api/spinWheelService';
+import SpinWheelBanner from './SpinWheelBanner';
 
 const MINI_WHEEL_SIZE = wp('15%');
 const MINI_RADIUS = MINI_WHEEL_SIZE / 2;
@@ -135,12 +133,6 @@ const OrderSpinBanner = ({ orderId, orderNumber, onPressSpin }) => {
     }
   };
 
-  const handleCopyCode = code => {
-    if (!code) return;
-    Clipboard.setString(code);
-    successTick();
-    Toast.show(`Coupon "${code}" copied to clipboard!`, Toast.SHORT);
-  };
 
   const handlePressCard = async () => {
     if (isClaimed) return;
@@ -157,7 +149,8 @@ const OrderSpinBanner = ({ orderId, orderNumber, onPressSpin }) => {
         const response = await playSpinWin({
           orderId: targetOrderId,
         });
-        const respData = response?.data !== undefined ? response.data : response;
+        const respData =
+          response?.data !== undefined ? response.data : response;
         const rewardObj = respData?.prize || respData?.reward || respData;
         const mappedPrize = mapBackendRewardToPrize(rewardObj, 0);
         if (targetOrderId) {
@@ -240,126 +233,24 @@ const OrderSpinBanner = ({ orderId, orderNumber, onPressSpin }) => {
                 {claimedReward.description || 'Valid on your next checkout'}
               </Text>
             </View>
-
-            {claimedReward.code ? (
-              <TouchableOpacity
-                onPress={() => handleCopyCode(claimedReward.code)}
-                style={styles.copyPill}
-                activeOpacity={0.75}
-              >
-                <Text style={styles.copyPillText}>{claimedReward.code}</Text>
-                <Ionicons name="copy-outline" size={13} color="#F25000" />
-              </TouchableOpacity>
-            ) : null}
           </View>
         </View>
       </Animated.View>
     );
   }
 
-  // Active / Unclaimed State with Full Motion Graphics
+  // Active / Unclaimed State using identical SpinWheelBanner design
   return (
     <Animated.View style={[styles.wrapper, containerAnimStyle]}>
-      {/* 1. Ambient Motion Glow behind Card */}
-      <Animated.View style={[styles.ambientGlow, glowAnimStyle]} />
-
-      <TouchableOpacity
+      <SpinWheelBanner
+        title="Try your luck!"
+        subtitle="Win Extra Discounts, UD Coins"
+        badgeText="ORDER GIFT"
+        badgeIcon="gift"
+        spinsCount={1}
+        style={{ marginHorizontal: 0, marginTop: 4, marginBottom: 8 }}
         onPress={handlePressCard}
-        activeOpacity={0.92}
-        style={styles.cardContainer}
-      >
-        {/* Dynamic Metallic Gradient Background in Deep Ember/Primary Tones */}
-        <LinearGradient
-          colors={['#180F0A', '#261208', '#451703']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={StyleSheet.absoluteFillObject}
-        />
-
-        {/* Decorative Top Accent Light Line in Warm Primary Shimmer */}
-        <LinearGradient
-          colors={['transparent', '#FF7A00', '#F59E0B', 'transparent']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.topAccentBar}
-        />
-
-        <View style={styles.cardContent}>
-          {/* Left: Motion Mini Rotating Spin Wheel */}
-          <View style={styles.miniWheelContainer}>
-            <Animated.View style={[styles.miniWheelWrapper, wheelAnimStyle]}>
-              <Svg
-                width={MINI_WHEEL_SIZE}
-                height={MINI_WHEEL_SIZE}
-                viewBox={`0 0 ${MINI_WHEEL_SIZE} ${MINI_WHEEL_SIZE}`}
-              >
-                <G>{renderMiniWheelSlices()}</G>
-                {/* Center Hub */}
-                <Circle
-                  cx={MINI_RADIUS}
-                  cy={MINI_RADIUS}
-                  r={MINI_RADIUS * 0.3}
-                  fill="#FFFFFF"
-                  stroke="#FF6200"
-                  strokeWidth={2}
-                />
-              </Svg>
-            </Animated.View>
-
-            {/* Stationary Top Needle Pointer */}
-            <View style={styles.miniPointer}>
-              <MaterialCommunityIcons
-                name="triangle-down"
-                size={16}
-                color="#FBBF24"
-              />
-            </View>
-          </View>
-
-          {/* Center: Exciting Typography & Badge */}
-          <View style={styles.textColumn}>
-            <View style={styles.badgeRow}>
-              <View style={styles.badgeGradient}>
-                <Animated.View style={starAnimStyle}>
-                  <MaterialCommunityIcons
-                    name="star-four-points"
-                    size={11}
-                    color="#FFFFFF"
-                  />
-                </Animated.View>
-                <Text style={styles.badgeText} numberOfLines={1}>
-                  1 ASSURED GIFT
-                </Text>
-              </View>
-              <Text style={styles.orderTag} numberOfLines={1}>
-                Order Reward
-              </Text>
-            </View>
-
-            <Text style={styles.titleText} numberOfLines={1}>
-              Spin & Win Assured Gift!
-            </Text>
-            <Text style={styles.subtitleText} numberOfLines={2}>
-              Free delivery, pantry cash & coupons unlocked for this order.
-            </Text>
-          </View>
-
-          {/* Right: Motion Nudge Action Arrow Button in Primary Orange */}
-          <View style={styles.actionColumn}>
-            <LinearGradient
-              colors={['#FF6200', '#F25000', '#D83E00']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 0, y: 1 }}
-              style={styles.actionCircle}
-            >
-              <Animated.View style={arrowAnimStyle}>
-                <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
-              </Animated.View>
-            </LinearGradient>
-            <Text style={styles.actionPrompt}>SPIN</Text>
-          </View>
-        </View>
-      </TouchableOpacity>
+      />
     </Animated.View>
   );
 };

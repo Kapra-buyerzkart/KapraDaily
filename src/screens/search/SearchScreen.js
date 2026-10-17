@@ -36,11 +36,29 @@ const SearchScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const {
-    catId,
-    catName,
+    catId: paramCatId,
+    catName: paramCatName,
     products: staticProducts,
     title: staticTitle,
+    linkValue: paramLinkValue,
+    link: paramLink,
   } = route.params || {};
+
+  const effectiveLinkValue = paramLinkValue || paramLink;
+  const isNumericCat =
+    paramCatId ||
+    (typeof effectiveLinkValue === 'number' ||
+    (typeof effectiveLinkValue === 'string' &&
+      /^\d+$/.test(effectiveLinkValue.trim()))
+      ? effectiveLinkValue
+      : null);
+  const catId = isNumericCat;
+  const catName =
+    paramCatName ||
+    (typeof effectiveLinkValue === 'string' &&
+    !/^\d+$/.test(effectiveLinkValue.trim())
+      ? effectiveLinkValue
+      : undefined);
   const { profile, isStoreUnavailable, storeUnavailableData } =
     useContext(AppContext);
   const [isLocationModalVisible, setIsLocationModalVisible] = useState(false);
@@ -84,6 +102,20 @@ const SearchScreen = () => {
     );
     console.log('🔎 [SearchScreen] staticProducts:', staticProducts);
   }, [route.params, staticTitle, staticProducts]);
+
+  useEffect(() => {
+    if (
+      !catId &&
+      !hasStaticProducts &&
+      effectiveLinkValue &&
+      typeof effectiveLinkValue === 'string' &&
+      effectiveLinkValue.trim().length >= 3 &&
+      !/^\d+$/.test(effectiveLinkValue.trim())
+    ) {
+      setSearchTerm(effectiveLinkValue.trim());
+      submitSearch(effectiveLinkValue.trim());
+    }
+  }, [catId, hasStaticProducts, effectiveLinkValue, setSearchTerm, submitSearch]);
 
   useEffect(() => {
     console.log(

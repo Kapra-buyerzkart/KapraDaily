@@ -235,6 +235,7 @@ const CouponModal: React.FC<CouponModalProps> = ({
                   variant="cta"
                   tone={canApply ? 'onDark' : 'faint'}
                   style={styles.applyBtnText}
+                  numberOfLines={1}
                 >
                   Apply
                 </AppText>
@@ -342,6 +343,7 @@ const styles = StyleSheet.create({
   },
   inputCard: {
     flex: 1,
+    minWidth: 0,
     flexDirection: 'row',
     alignItems: 'center',
     gap: UI_SPACING.sm,
@@ -354,13 +356,16 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
+    minWidth: 0,
     ...UI_TYPE.body,
     color: UI_COLORS.textPrimary,
     padding: 0,
   },
   applyBtn: {
-    paddingHorizontal: UI_SPACING.xl,
-    paddingVertical: hp('1.6%'),
+    flexShrink: 0,
+    minWidth: 72,
+    paddingHorizontal: UI_SPACING.md,
+    paddingVertical: hp('1.3%'),
     borderRadius: UI_RADIUS.button,
     backgroundColor: UI_COLORS.primary,
     alignItems: 'center',
@@ -371,6 +376,8 @@ const styles = StyleSheet.create({
   },
   applyBtnText: {
     letterSpacing: 0.2,
+    textAlign: 'center',
+    includeFontPadding: false,
   },
   sectionLabel: {
     marginTop: UI_SPACING.xl,

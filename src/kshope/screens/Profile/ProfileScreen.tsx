@@ -417,14 +417,14 @@ const ProfileScreen: React.FC = () => {
         </View>
 
         <Animated.View entering={entrance(2)}>
-          <SpinWheelBanner
+          {/* <SpinWheelBanner
             onPress={() =>
               navigation.navigate('SpinWheelRewardsScreen', {
                 theme: '48hr',
                 source: 'KSHOPE_PROFILE',
               })
             }
-          />
+          /> */}
           <MenuSection title="Account Security" items={accountItems} />
           <MenuSection title="Offers" items={offersItems} />
           <MenuSection title="Informations" items={informationItems} />

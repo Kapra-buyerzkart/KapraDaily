@@ -15,61 +15,47 @@ import CachedImage from '@/components/CachedImage';
 import CONFIG from '@/globals/config';
 import getCategoryPlaceholder from '../getCategoryPlaceholder';
 
-const DEFAULT_OFFERS = [
-  {
-    discount: '30% OFF',
-    label: 'Vegetables',
-    catName: 'Fruits & Vegetables',
-  },
-  {
-    discount: '50% OFF',
-    label: 'Snacks',
-    catName: 'Snacks & Breakfast',
-  },
-  {
-    discount: '10% OFF',
-    label: 'Stationery',
-    catName: 'School Essentials',
-  },
-];
-
 const TopOffersSection = ({ categories = [], sideBySide = [], navigation }) => {
   const handleCardPress = useCallback(
     item => {
+      const linkValue = item.linkValue || item.catId || item.id || item.label;
       navigation.navigate('SearchScreen', {
         catId: item.catId || item.id,
         catName: item.catName || item.label || 'Deals',
+        linkValue,
+        link: linkValue,
       });
     },
     [navigation],
   );
 
-  const offers = DEFAULT_OFFERS.map((def, index) => {
-    const match =
-      categories.find(
-        c =>
-          (c.catName || '').toLowerCase().includes(def.label.toLowerCase()) ||
-          (c.catName || '')
-            .toLowerCase()
-            .includes((def.catName || '').toLowerCase()),
-      ) || categories[index];
+  const offers = React.useMemo(() => {
+    if (!Array.isArray(categories) || categories.length === 0) return [];
+    return categories.slice(0, 3).map(cat => {
+      let imageSource;
+      if (cat.image) {
+        imageSource = cat.image;
+      } else if (cat.imageUrl) {
+        imageSource = { uri: `${CONFIG.image_base_url}${cat.imageUrl}` };
+      } else {
+        imageSource = getCategoryPlaceholder(cat.catName || cat.name || '');
+      }
 
-    let imageSource;
-    if (match?.image) {
-      imageSource = match.image;
-    } else if (match?.imageUrl) {
-      imageSource = { uri: `${CONFIG.image_base_url}${match.imageUrl}` };
-    } else {
-      imageSource = getCategoryPlaceholder(def.label);
-    }
+      const discount = cat.discountText || cat.discount || cat.badge || null;
+      const label = cat.catName || cat.name || '';
 
-    return {
-      ...def,
-      catId: match?.catId || match?.id,
-      catName: match?.catName || def.catName,
-      imageSource,
-    };
-  });
+      return {
+        discount,
+        label,
+        catId: cat.catId || cat.id,
+        catName: label,
+        linkValue: cat.linkValue || cat.catId || cat.id || label,
+        imageSource,
+      };
+    });
+  }, [categories]);
+
+  if (offers.length === 0) return null;
 
   return (
     <View style={styles.container}>
@@ -87,10 +73,12 @@ const TopOffersSection = ({ categories = [], sideBySide = [], navigation }) => {
             onPress={() => handleCardPress(offer)}
             style={styles.offerCard}
           >
-            {/* Discount Badge */}
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{offer.discount}</Text>
-            </View>
+            {/* Discount Badge (only if provided by backend data) */}
+            {offer.discount ? (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{offer.discount}</Text>
+              </View>
+            ) : null}
 
             {/* Product/Category Image */}
             <View style={styles.imageWrap}>
