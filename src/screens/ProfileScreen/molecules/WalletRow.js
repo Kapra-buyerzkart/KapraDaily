@@ -1,60 +1,48 @@
 import React from 'react';
-import { View, Image, StyleSheet } from 'react-native';
-import icons from '@/assets/icons';
-import { useCountUp } from '@/hooks/useCountUp';
-import { ProfileText, PressableScale, IconDisc, RowChevron } from '../atoms';
-import { BALANCE_COUNT_UP } from '../motion';
-import { CART_SPACING, wp } from '@/styles/cartTheme';
+import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { FONTS } from '@/styles/typography';
+
+const UD_COIN_ICON = require('../../../assets/icons/udcoinUpdated.png');
 
 const formatCoins = coins => Number(coins || 0).toFixed(2);
 
 const coinRate = wallet => {
   const rate = Number(wallet?.bCoinValue);
-  return !rate || Number.isNaN(rate) ? null : rate;
+  return !rate || Number.isNaN(rate) ? 1 : rate;
 };
 
 const WalletRow = ({ walletData, onPress }) => {
   const wallet = walletData?.wallet;
   const coins = Number(wallet?.bCoins || 0);
   const rate = coinRate(wallet);
-
-  const counted = useCountUp(coins, BALANCE_COUNT_UP);
-  const balance = formatCoins(counted);
-  const worth = rate === null ? null : `₹${(counted * rate).toFixed(2)}`;
+  const balance = formatCoins(coins);
+  const worth = (coins * rate).toFixed(2);
 
   return (
-    <PressableScale
-      to={0.99}
-      contentStyle={styles.row}
+    <TouchableOpacity
+      style={styles.row}
       onPress={onPress}
+      activeOpacity={0.7}
       accessibilityRole="button"
-      accessibilityLabel={`UD Wallet, ${formatCoins(coins)} UD Coins`}
+      accessibilityLabel={`UD Wallet, ${balance} UD coins`}
     >
-      <IconDisc size={wp('9.5%')} tone="neutral">
-        <Image source={icons.udCoinUpdated} style={styles.coin} />
-      </IconDisc>
+      <Image source={UD_COIN_ICON} style={styles.coinIcon} />
 
-      <View style={styles.copy}>
-        <ProfileText variant="micro" tone="muted" style={styles.label}>
-          UD WALLET
-        </ProfileText>
-        <View style={styles.balanceRow}>
-          <ProfileText variant="priceLarge" numberOfLines={1}>
-            {balance}
-          </ProfileText>
-          <ProfileText variant="micro" tone="muted">
-            UD Coins
-          </ProfileText>
-          {!!worth && (
-            <ProfileText variant="micro" tone="faint" numberOfLines={1}>
-              · {worth}
-            </ProfileText>
-          )}
+      <View style={styles.content}>
+        <Text style={styles.title}>UD Wallet</Text>
+        <View style={styles.valueRow}>
+          <Text style={styles.coinsValue}>{balance}</Text>
+          <Text style={styles.worthText}>{` UD coins : ₹ ${worth}/-`}</Text>
         </View>
       </View>
 
-      <RowChevron />
-    </PressableScale>
+      <MaterialCommunityIcons
+        name="chevron-right"
+        size={22}
+        color="#CCCCCC"
+      />
+    </TouchableOpacity>
   );
 };
 
@@ -64,25 +52,39 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: CART_SPACING.md,
-    paddingHorizontal: CART_SPACING.lg,
-    paddingVertical: CART_SPACING.md + 2,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    backgroundColor: '#FFFFFF',
   },
-  coin: {
-    width: wp('6%'),
-    height: wp('6%'),
+  coinIcon: {
+    width: 26,
+    height: 26,
     resizeMode: 'contain',
   },
-  copy: {
+  content: {
     flex: 1,
-    gap: 1,
+    marginLeft: 14,
   },
-  label: {
-    letterSpacing: 0.6,
+  title: {
+    fontSize: 14.5,
+    fontFamily: FONTS.gilroy.semiBold,
+    color: '#111111',
   },
-  balanceRow: {
+  valueRow: {
     flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: CART_SPACING.xs,
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  coinsValue: {
+    fontSize: 16,
+    fontFamily: FONTS.gilroy.bold,
+    color: '#F25000',
+    includeFontPadding: false,
+  },
+  worthText: {
+    fontSize: 13,
+    fontFamily: FONTS.gilroy.regular,
+    color: '#666666',
+    includeFontPadding: false,
   },
 });

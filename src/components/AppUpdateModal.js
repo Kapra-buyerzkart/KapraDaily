@@ -1,24 +1,28 @@
-import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Modal,
-  TouchableOpacity,
-  Image,
-} from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
-import { FONTS } from '../styles/typography';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import { FONTS } from '../styles/typography';
 import { openExternalUrl } from '../utils/safeUrl';
+import CustomModal, { MODAL_POSITION } from './modal/CustomModal';
 
 const AppUpdateModal = ({ visible, updateInfo, onLater }) => {
+  const modalRef = useRef(null);
+
+  useEffect(() => {
+    if (visible && updateInfo) {
+      modalRef.current?.open();
+    } else {
+      modalRef.current?.close();
+    }
+  }, [visible, updateInfo]);
+
   if (!updateInfo) return null;
 
-  const { versionCode, redirectUrl, isCompulsory, releaseDate } = updateInfo;
+  const { versionCode, redirectUrl, isCompulsory } = updateInfo;
 
   const handleUpdate = () => {
     if (redirectUrl) {
@@ -27,131 +31,144 @@ const AppUpdateModal = ({ visible, updateInfo, onLater }) => {
   };
 
   return (
-    <Modal
-      transparent={true}
-      visible={visible}
-      animationType="slide"
-      onRequestClose={isCompulsory ? () => {} : onLater}
+    <CustomModal
+      ref={modalRef}
+      position={MODAL_POSITION.CENTER}
+      width={wp('86%')}
+      closeOnBackdropPress={!isCompulsory}
+      closeOnBackPress={!isCompulsory}
+      onClose={isCompulsory ? () => {} : onLater}
+      contentStyle={styles.content}
     >
-      <View style={styles.overlay}>
-        <View style={styles.modalContainer}>
-          <View style={styles.header}>
-            <View style={styles.iconCircle}>
-              <MaterialIcons
-                name="system-update"
-                size={wp('10%')}
-                color="#F25000"
-              />
-            </View>
-          </View>
-
-          <Text style={styles.title}>New Update Available!</Text>
-          <Text style={styles.versionText}>Version {versionCode}</Text>
-
-          <Text style={styles.message}>
-            {isCompulsory
-              ? 'A critical update is available. Please update the app to continue using Uden Deal'
-              : "We've added new features and performance improvements. Update now for the best experience!"}
-          </Text>
-
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={styles.updateButton}
-              onPress={handleUpdate}
-            >
-              <Text style={styles.updateButtonText}>Update Now</Text>
-            </TouchableOpacity>
-
-            {!isCompulsory && (
-              <TouchableOpacity style={styles.laterButton} onPress={onLater}>
-                <Text style={styles.laterButtonText}>Later</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        </View>
+      <View style={styles.iconCircle}>
+        <MaterialIcons
+          name="system-update"
+          size={wp('9%')}
+          color="#F25000"
+        />
       </View>
-    </Modal>
+
+      <Text style={styles.title}>Update Available</Text>
+
+      <View style={styles.versionPill}>
+        <Text style={styles.versionText}>v{versionCode}</Text>
+      </View>
+
+      <Text style={styles.message}>
+        {isCompulsory
+          ? 'A critical update is available. Please update the app to continue enjoying uninterrupted grocery shopping.'
+          : 'A new version of Uden Deal is available with enhanced performance and latest features.'}
+      </Text>
+
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity
+          style={styles.updateButton}
+          activeOpacity={0.85}
+          onPress={handleUpdate}
+          accessibilityRole="button"
+          accessibilityLabel="Update Now"
+        >
+          <Text style={styles.updateButtonText}>Update Now</Text>
+        </TouchableOpacity>
+
+        {!isCompulsory && (
+          <TouchableOpacity
+            style={styles.laterButton}
+            activeOpacity={0.7}
+            onPress={onLater}
+            accessibilityRole="button"
+            accessibilityLabel="Maybe Later"
+          >
+            <Text style={styles.laterButtonText}>Maybe Later</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    </CustomModal>
   );
 };
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    justifyContent: 'center',
+  content: {
+    paddingHorizontal: wp('6%'),
+    paddingTop: hp('3%'),
+    paddingBottom: hp('2.8%'),
     alignItems: 'center',
-  },
-  modalContainer: {
-    width: wp('85%'),
     backgroundColor: '#FFFFFF',
-    borderRadius: wp('6%'),
-    padding: wp('6%'),
-    alignItems: 'center',
-    elevation: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-  },
-  header: {
-    marginBottom: hp('2%'),
   },
   iconCircle: {
-    width: wp('20%'),
-    height: wp('20%'),
-    borderRadius: wp('10%'),
-    backgroundColor: '#FFF5F0',
+    width: wp('16%'),
+    height: wp('16%'),
+    borderRadius: wp('8%'),
+    backgroundColor: '#FFF1EB',
+    borderWidth: 1,
+    borderColor: 'rgba(242, 80, 0, 0.15)',
     justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: hp('1.8%'),
   },
   title: {
     fontFamily: FONTS.gilroy.bold,
-    fontSize: wp('5%'),
-    color: '#000000',
+    fontSize: wp('4.8%'),
+    color: '#12131A',
+    marginBottom: hp('0.6%'),
     textAlign: 'center',
+    letterSpacing: -0.2,
+  },
+  versionPill: {
+    backgroundColor: '#FFF1EB',
+    paddingHorizontal: wp('2.8%'),
+    paddingVertical: hp('0.3%'),
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: 'rgba(242, 80, 0, 0.15)',
+    marginBottom: hp('1.5%'),
   },
   versionText: {
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('3.5%'),
+    fontFamily: FONTS.gilroy.bold,
+    fontSize: wp('2.8%'),
     color: '#F25000',
-    marginBottom: hp('1.5%'),
   },
   message: {
     fontFamily: FONTS.gilroy.regular,
-    fontSize: wp('3.8%'),
-    color: '#616161',
+    fontSize: wp('3.5%'),
+    color: '#6B7280',
     textAlign: 'center',
-    marginBottom: hp('4%'),
-    lineHeight: wp('5.5%'),
+    marginBottom: hp('2.8%'),
+    lineHeight: wp('5.2%'),
+    paddingHorizontal: wp('2%'),
   },
   buttonContainer: {
     width: '100%',
     gap: hp('1%'),
   },
   updateButton: {
+    width: '100%',
+    height: 48,
+    borderRadius: 999,
     backgroundColor: '#F25000',
-    paddingVertical: hp('1.8%'),
-    borderRadius: wp('3%'),
     alignItems: 'center',
+    justifyContent: 'center',
     shadowColor: '#F25000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 4,
   },
   updateButtonText: {
-    fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('4%'),
+    fontFamily: FONTS.gilroy.bold,
+    fontSize: wp('3.8%'),
     color: '#FFFFFF',
+    letterSpacing: 0.2,
   },
   laterButton: {
-    paddingVertical: hp('1.5%'),
+    height: 42,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   laterButtonText: {
-    fontFamily: FONTS.gilroy.medium,
+    fontFamily: FONTS.gilroy.semiBold,
     fontSize: wp('3.5%'),
-    color: '#9E9E9E',
+    color: '#6B7280',
   },
 });
 

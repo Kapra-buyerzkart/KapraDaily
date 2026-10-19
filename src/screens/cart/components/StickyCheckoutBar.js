@@ -69,7 +69,7 @@ const StickyCheckoutBar = ({
             disabled={ctaDisabled}
           >
             <Text style={styles.payBtnText}>
-              {ctaLabel?.startsWith('Pay') ? ctaLabel : 'Pay'}
+              {ctaLabel || 'Pay'}
             </Text>
             <AntDesign name="arrowright" size={18} color="#FFFFFF" />
           </TouchableOpacity>

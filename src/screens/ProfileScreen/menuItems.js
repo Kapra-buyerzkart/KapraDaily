@@ -1,13 +1,11 @@
 import React from 'react';
 import { Linking } from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import CONFIG from '../../globals/config';
 import { INK, RED } from './styles';
 import { Badge } from './atoms';
 
-const ICON_SIZE = wp('4%');
+const ICON_SIZE = 20;
 
 export const buildOffersItems = ({
   onBCoin,
@@ -25,19 +23,31 @@ export const buildOffersItems = ({
         size={ICON_SIZE}
       />
     ),
-    // badge: <Badge label="SPIN & WIN" tone="success" />,
+    badge: <Badge label="SPIN & WIN" tone="success" />,
     onPress: onMyRewards,
   },
   {
     key: 'smart-point',
-    label: 'Smart point',
-    icon: <Ionicons name="wallet-outline" color={INK} size={ICON_SIZE} />,
+    label: 'Smart Point',
+    icon: (
+      <MaterialCommunityIcons
+        name="star-circle-outline"
+        color={INK}
+        size={ICON_SIZE}
+      />
+    ),
     onPress: onSmartPoint,
   },
   {
     key: 'coupon',
     label: 'Coupon',
-    icon: <Ionicons name="pricetag-outline" color={INK} size={ICON_SIZE} />,
+    icon: (
+      <MaterialCommunityIcons
+        name="ticket-percent-outline"
+        color={INK}
+        size={ICON_SIZE}
+      />
+    ),
     onPress: onCoupons,
   },
 ];
@@ -49,7 +59,7 @@ export const buildMyAccountItems = ({
 }) => [
   {
     key: 'update-phone',
-    label: 'Update Phone Number',
+    label: 'Updated Phone Number',
     icon: (
       <MaterialCommunityIcons
         name="phone-outline"
@@ -62,7 +72,7 @@ export const buildMyAccountItems = ({
   },
   {
     key: 'update-email',
-    label: 'Update Email ID',
+    label: 'Updated Email ID',
     icon: (
       <MaterialCommunityIcons
         name="email-outline"
@@ -75,7 +85,7 @@ export const buildMyAccountItems = ({
   },
   {
     key: 'update-password',
-    label: 'Update Password',
+    label: 'Updated Passwords',
     icon: (
       <MaterialCommunityIcons
         name="lock-outline"
@@ -90,7 +100,7 @@ export const buildMyAccountItems = ({
     label: 'My Affiliates',
     icon: (
       <MaterialCommunityIcons
-        name="account-group-outline"
+        name="account-network-outline"
         color={INK}
         size={ICON_SIZE}
       />
@@ -100,13 +110,25 @@ export const buildMyAccountItems = ({
   {
     key: 'wishlist',
     label: 'My Wishlist',
-    icon: <Ionicons name="heart-outline" color={INK} size={ICON_SIZE} />,
+    icon: (
+      <MaterialCommunityIcons
+        name="heart-outline"
+        color={INK}
+        size={ICON_SIZE}
+      />
+    ),
     onPress: () => navigation.navigate('MainTabs', { screen: 'Wishlist' }),
   },
   {
     key: 'my-cart',
     label: 'My Cart',
-    icon: <Ionicons name="cart-outline" color={INK} size={ICON_SIZE} />,
+    icon: (
+      <MaterialCommunityIcons
+        name="cart-outline"
+        color={INK}
+        size={ICON_SIZE}
+      />
+    ),
     onPress: () => navigation.navigate('CartScreen'),
   },
   ...(Number(isTicketValidationVisible) === 1
@@ -132,10 +154,11 @@ export const buildInformationItems = ({
   helpSheetRef,
   suggestProductsSheetRef,
   setIsDeleteAccountModalVisible,
+  setIsLogoutModalVisible,
 }) => [
   {
     key: 'suggest-products',
-    label: 'Suggest Products',
+    label: 'Suggested Products',
     icon: (
       <MaterialCommunityIcons
         name="lightbulb-on-outline"
@@ -148,7 +171,13 @@ export const buildInformationItems = ({
   {
     key: 'customer-support',
     label: 'Customer Support',
-    icon: <Ionicons name="headset-outline" color={INK} size={ICON_SIZE} />,
+    icon: (
+      <MaterialCommunityIcons
+        name="face-agent"
+        color={INK}
+        size={ICON_SIZE}
+      />
+    ),
     onPress: () => helpSheetRef.current?.open(),
   },
   {
@@ -169,7 +198,7 @@ export const buildInformationItems = ({
   },
   {
     key: 'terms-of-use',
-    label: 'Terms Of Use',
+    label: 'Terms and conditions',
     icon: (
       <MaterialCommunityIcons
         name="file-document-outline"
@@ -186,13 +215,25 @@ export const buildInformationItems = ({
   {
     key: 'support-tickets',
     label: 'Support Tickets',
-    icon: <Ionicons name="help-circle-outline" color={INK} size={ICON_SIZE} />,
+    icon: (
+      <MaterialCommunityIcons
+        name="ticket-confirmation-outline"
+        color={INK}
+        size={ICON_SIZE}
+      />
+    ),
     onPress: () => navigation.navigate('SupportTicketsListScreen'),
   },
   {
     key: 'kpc-login',
     label: 'UDC Login',
-    icon: <Ionicons name="globe-outline" color={INK} size={ICON_SIZE} />,
+    icon: (
+      <MaterialCommunityIcons
+        name="web"
+        color={INK}
+        size={ICON_SIZE}
+      />
+    ),
     onPress: () => Linking.openURL(CONFIG.image_base_url),
   },
   {
@@ -208,5 +249,19 @@ export const buildInformationItems = ({
       />
     ),
     onPress: () => setIsDeleteAccountModalVisible(true),
+  },
+  {
+    key: 'log-out',
+    label: 'Log Out',
+    textColor: RED,
+    tone: 'danger',
+    icon: (
+      <MaterialCommunityIcons
+        name="logout"
+        color={RED}
+        size={ICON_SIZE}
+      />
+    ),
+    onPress: () => setIsLogoutModalVisible(true),
   },
 ];

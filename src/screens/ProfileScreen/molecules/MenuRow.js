@@ -1,40 +1,50 @@
 import React from 'react';
-import { View, Pressable, StyleSheet } from 'react-native';
-import { ProfileText, IconDisc, RowChevron } from '../atoms';
-import { CART_COLORS, CART_SPACING, hp, wp } from '@/styles/cartTheme';
+import { TouchableOpacity, View, Text, StyleSheet } from 'react-native';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { FONTS } from '@/styles/typography';
 
 const MenuRow = ({
   label,
   icon,
+  badge,
   tone = 'neutral',
   textColor,
-  badge,
   onPress,
-}) => (
-  <Pressable
-    onPress={onPress}
-    style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
-    accessibilityRole="button"
-    accessibilityLabel={label}
-  >
-    <IconDisc size={wp('9%')} tone={tone}>
-      {icon}
-    </IconDisc>
+}) => {
+  const isDanger =
+    tone === 'danger' ||
+    textColor === '#FF3B30' ||
+    textColor === '#E53935' ||
+    textColor === '#D32F2F';
+  const labelColor = isDanger ? '#FF3B30' : '#222222';
+  const chevronColor = isDanger ? '#FF3B30' : '#CCCCCC';
 
-    <View style={styles.copy}>
-      <ProfileText
-        variant="label"
-        tone={textColor || 'secondary'}
-        numberOfLines={1}
-      >
-        {label}
-      </ProfileText>
-    </View>
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      style={styles.row}
+      activeOpacity={0.6}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+    >
+      <View style={styles.left}>
+        {icon ? <View style={styles.iconWrap}>{icon}</View> : null}
+        <Text style={[styles.label, { color: labelColor }]} numberOfLines={1}>
+          {label}
+        </Text>
+      </View>
 
-    {badge}
-    <RowChevron color={textColor || CART_COLORS.textFaint} />
-  </Pressable>
-);
+      <View style={styles.right}>
+        {badge || null}
+        <MaterialCommunityIcons
+          name="chevron-right"
+          size={20}
+          color={chevronColor}
+        />
+      </View>
+    </TouchableOpacity>
+  );
+};
 
 export default React.memo(MenuRow);
 
@@ -42,14 +52,32 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: CART_SPACING.md,
-    paddingHorizontal: CART_SPACING.lg,
-    paddingVertical: hp('1.1%'),
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 12.5,
+    backgroundColor: '#FFFFFF',
   },
-  rowPressed: {
-    backgroundColor: CART_COLORS.well,
-  },
-  copy: {
+  left: {
+    flexDirection: 'row',
+    alignItems: 'center',
     flex: 1,
   },
+  iconWrap: {
+    width: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  label: {
+    fontSize: 14.5,
+    fontFamily: FONTS.gilroy.regular,
+    includeFontPadding: false,
+    flex: 1,
+  },
+  right: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
 });
+

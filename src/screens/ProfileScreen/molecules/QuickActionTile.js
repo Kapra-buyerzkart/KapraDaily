@@ -1,52 +1,50 @@
 import React from 'react';
-import { Image, StyleSheet } from 'react-native';
-import { ProfileText, PressableScale, IconDisc } from '../atoms';
-import { CART_RADIUS, CART_SPACING, CART_TYPE, wp } from '@/styles/cartTheme';
+import { Text, TouchableOpacity, StyleSheet } from 'react-native';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { FONTS } from '@/styles/typography';
 
-const WELL = wp('12.2%');
-
-const QuickActionTile = ({ icon, label, a11y, onPress }) => (
-  <PressableScale
-    to={0.94}
-    style={styles.item}
-    contentStyle={styles.itemContent}
+const QuickActionTile = ({ iconName, label, a11y, onPress }) => (
+  <TouchableOpacity
+    style={styles.card}
     onPress={onPress}
+    activeOpacity={0.75}
     accessibilityRole="button"
     accessibilityLabel={a11y}
   >
-    <IconDisc size={WELL} tone="neutral" radius={CART_RADIUS.sm}>
-      <Image source={icon} style={styles.icon} />
-    </IconDisc>
-    <ProfileText
-      variant="micro"
-      tone="secondary"
-      numberOfLines={2}
-      style={styles.label}
-    >
+    <MaterialCommunityIcons name={iconName} size={26} color="#F25000" />
+    <Text style={styles.label} numberOfLines={2}>
       {label}
-    </ProfileText>
-  </PressableScale>
+    </Text>
+  </TouchableOpacity>
 );
 
 export default React.memo(QuickActionTile);
 
 const styles = StyleSheet.create({
-  item: {
+  card: {
     flex: 1,
-  },
-  itemContent: {
+    height: 84,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#ECECEC',
     alignItems: 'center',
-    gap: CART_SPACING.sm,
-  },
-  icon: {
-    width: WELL * 0.54,
-    height: WELL * 0.54,
-    resizeMode: 'contain',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+    paddingVertical: 8,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 1.5 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 2,
   },
   label: {
-    height: CART_TYPE.micro.lineHeight * 2,
+    fontSize: 11,
+    lineHeight: 14,
+    fontFamily: FONTS.gilroy.medium,
+    color: '#333333',
     textAlign: 'center',
-    textAlignVertical: 'center',
+    marginTop: 6,
     includeFontPadding: false,
   },
 });

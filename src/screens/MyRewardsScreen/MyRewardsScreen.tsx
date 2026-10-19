@@ -205,7 +205,7 @@ export default function MyRewardsScreen() {
       (typeof item.prize === 'string'
         ? item.prize
         : item.prize?.rewardName || item.prize?.label) ||
-      'Assured Reward';
+      'Lucky Reward';
 
     const code =
       item.code ||
@@ -386,7 +386,7 @@ export default function MyRewardsScreen() {
         <Text style={styles.emptyTitle}>No Rewards Yet</Text>
         <Text style={styles.emptySubtitle}>
           You haven’t spun the wheel yet! Place an order or play Spin & Win to
-          unlock guaranteed coupons & prizes.
+          unlock lucky coupons & prizes.
         </Text>
         <TouchableOpacity
           style={styles.playSpinButton}

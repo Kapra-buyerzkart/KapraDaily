@@ -40,6 +40,7 @@ import StatusModal from '../components/StatusModal';
 import DeliverySlotModal from '../components/DeliverySlotModal';
 import LinearGradient from 'react-native-linear-gradient';
 import logger from '../utils/logger';
+import { isCashOnDelivery } from './cart/paymentMeta';
 
 const CheckoutScreen = () => {
   const navigation = useNavigation();
@@ -886,6 +887,7 @@ const CheckoutScreen = () => {
           const isSlotted = deliveryType === 'slot';
           const hasSlot = chosenSlot || (selectedDate && selectedSlot);
           const isButtonDisabled = !!cartError || (isSlotted && !hasSlot);
+          const isCOD = isCashOnDelivery(paymentMethod);
 
           return (
             <LinearGradient
@@ -902,7 +904,9 @@ const CheckoutScreen = () => {
                 style={styles.confirmButton}
                 disabled={isButtonDisabled}
               >
-                <Text style={styles.confirmButtonText}>Confirm Order</Text>
+                <Text style={styles.confirmButtonText}>
+                  {isCOD ? 'Place Order' : 'Confirm Order'}
+                </Text>
               </TouchableOpacity>
             </LinearGradient>
           );

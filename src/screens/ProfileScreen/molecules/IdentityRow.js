@@ -1,58 +1,45 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import ProfileAvatarBadge from '@/components/ProfileAvatarBadge';
-import { ProfileText, PressableScale } from '../atoms';
-import { PRIVILEGE_INK, PRIVILEGE_SOFT } from '../styles';
-import {
-  CART_COLORS,
-  CART_RADIUS,
-  CART_SPACING,
-  wp,
-} from '@/styles/cartTheme';
+import { FONTS } from '@/styles/typography';
 
-const IdentityRow = ({ profile, isPrivileged, onEditProfile }) => (
+const formatPhone = phone => {
+  if (!phone) return '';
+  const clean = String(phone).replace(/\D/g, '');
+  if (clean.length === 10) {
+    return `+91 ${clean.slice(0, 4)} ${clean.slice(4, 7)} ${clean.slice(7)}`;
+  }
+  if (clean.length === 12 && clean.startsWith('91')) {
+    const num = clean.slice(2);
+    return `+91 ${num.slice(0, 4)} ${num.slice(4, 7)} ${num.slice(7)}`;
+  }
+  return String(phone);
+};
+
+const IdentityRow = ({ profile, onEditProfile }) => (
   <View style={styles.row}>
-    <ProfileAvatarBadge size={wp('13.5%')} isPrivileged={isPrivileged} />
-
-    <View style={styles.copy}>
-      <ProfileText variant="heading" numberOfLines={1}>
-        {profile?.custName}
-      </ProfileText>
-      <ProfileText variant="caption" tone="muted" numberOfLines={1}>
-        {profile?.phoneNo}
-      </ProfileText>
-
-      {!!isPrivileged && (
-        <View style={styles.privilegeChip}>
-          <MaterialCommunityIcons
-            name="crown"
-            size={wp('2.7%')}
-            color={PRIVILEGE_INK}
-          />
-          <ProfileText variant="micro" tone={PRIVILEGE_INK}>
-            Privilege Member
-          </ProfileText>
-        </View>
-      )}
+    <View style={styles.avatarBorder}>
+      <MaterialCommunityIcons name="account" size={30} color="#F25000" />
     </View>
 
-    <PressableScale
-      to={0.94}
-      contentStyle={styles.editChip}
+    <View style={styles.copy}>
+      <Text style={styles.name} numberOfLines={1}>
+        {profile?.custName || 'User'}
+      </Text>
+      <Text style={styles.phone} numberOfLines={1}>
+        {formatPhone(profile?.phoneNo)}
+      </Text>
+    </View>
+
+    <TouchableOpacity
       onPress={onEditProfile}
+      activeOpacity={0.7}
+      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
       accessibilityRole="button"
       accessibilityLabel="Edit profile"
     >
-      <MaterialCommunityIcons
-        name="pencil-outline"
-        size={wp('3.2%')}
-        color={CART_COLORS.textSecondary}
-      />
-      <ProfileText variant="micro" tone="secondary">
-        Edit
-      </ProfileText>
-    </PressableScale>
+      <Text style={styles.editText}>Edit</Text>
+    </TouchableOpacity>
   </View>
 );
 
@@ -62,34 +49,38 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: CART_SPACING.md,
-    paddingHorizontal: CART_SPACING.lg,
-    paddingVertical: CART_SPACING.lg - 2,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    backgroundColor: '#FFFFFF',
+  },
+  avatarBorder: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 1.5,
+    borderColor: '#F25000',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
   },
   copy: {
     flex: 1,
-    gap: 1,
+    marginLeft: 14,
   },
-  privilegeChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    gap: 3,
-    marginTop: CART_SPACING.xs + 1,
-    paddingHorizontal: CART_SPACING.sm,
-    paddingVertical: 2,
-    borderRadius: CART_RADIUS.pill,
-    backgroundColor: PRIVILEGE_SOFT,
+  name: {
+    fontSize: 18,
+    fontFamily: FONTS.gilroy.bold,
+    color: '#F25000',
   },
-  editChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: CART_SPACING.xs,
-    paddingHorizontal: CART_SPACING.md,
-    paddingVertical: CART_SPACING.xs + 2,
-    borderRadius: CART_RADIUS.pill,
-    backgroundColor: CART_COLORS.well,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: CART_COLORS.border,
+  phone: {
+    fontSize: 12.5,
+    fontFamily: FONTS.gilroy.medium,
+    color: '#777777',
+    marginTop: 2,
+  },
+  editText: {
+    fontSize: 13.5,
+    fontFamily: FONTS.gilroy.medium,
+    color: '#F25000',
   },
 });

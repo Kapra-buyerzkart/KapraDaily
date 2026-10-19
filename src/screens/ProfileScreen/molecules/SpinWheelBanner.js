@@ -252,7 +252,7 @@ const SpinWheelBanner = ({ onPress, spinsCount = 3 }) => {
                   size={11}
                   color="#065F46"
                 />
-                <Text style={styles.guaranteeText}>100% ASSURED GIFT</Text>
+                <Text style={styles.guaranteeText}>LUCKY GIFT</Text>
               </View>
               <View style={styles.spinsBadge}>
                 <Text style={styles.spinsBadgeText}>

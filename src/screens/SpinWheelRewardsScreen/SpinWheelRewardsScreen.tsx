@@ -1,4 +1,10 @@
-import React, { useRef, useState, useEffect, useMemo, useCallback } from 'react';
+import React, {
+  useRef,
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+} from 'react';
 import {
   ActivityIndicator,
   BackHandler,
@@ -223,6 +229,25 @@ export default function SpinWheelRewardsScreen() {
     }
     return [];
   });
+
+  const showcaseGifts = useMemo(
+    () =>
+      prizes.filter(p => {
+        if (p.isNoPrize) return false;
+        const name = (p.label || p.rewardName || '').toLowerCase();
+        const sub = (p.sublabel || p.displayText || '').toLowerCase();
+        const type = (p.rewardType || '').toLowerCase();
+        return (
+          type !== 'noprize' &&
+          !name.includes('better luck') &&
+          !name.includes('no prize') &&
+          !sub.includes('better luck') &&
+          !sub.includes('next time')
+        );
+      }),
+    [prizes],
+  );
+
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [emptyMessage, setEmptyMessage] = useState<string | null>(null);
   const [campaignId, setCampaignId] = useState<number | undefined>(undefined);
@@ -365,11 +390,14 @@ export default function SpinWheelRewardsScreen() {
               const pItem = reward.prize;
               const matchIdx = mapped.findIndex(
                 p =>
-                  (pItem.campaignItemId && p.campaignItemId === pItem.campaignItemId) ||
+                  (pItem.campaignItemId &&
+                    p.campaignItemId === pItem.campaignItemId) ||
                   (pItem.id && p.id === pItem.id) ||
                   (pItem.code && p.code === pItem.code) ||
                   (pItem.isNoPrize && p.isNoPrize) ||
-                  (p.label && pItem.label && p.label.toLowerCase() === pItem.label.toLowerCase()),
+                  (p.label &&
+                    pItem.label &&
+                    p.label.toLowerCase() === pItem.label.toLowerCase()),
               );
               if (matchIdx !== -1) {
                 const sAngle = 360 / mapped.length;
@@ -559,10 +587,7 @@ export default function SpinWheelRewardsScreen() {
         .trim()
         .toLowerCase();
       const rDisplay = String(
-        rewardObj.displayText ??
-          rewardObj.sublabel ??
-          rewardObj.discount ??
-          '',
+        rewardObj.displayText ?? rewardObj.sublabel ?? rewardObj.discount ?? '',
       )
         .trim()
         .toLowerCase();
@@ -612,9 +637,7 @@ export default function SpinWheelRewardsScreen() {
       // 4. Try matching by coupon/promo code
       if (winningIndex === -1 && rCode) {
         winningIndex = prizes.findIndex(
-          p =>
-            p.code &&
-            String(p.code).trim().toLowerCase() === rCode,
+          p => p.code && String(p.code).trim().toLowerCase() === rCode,
         );
       }
 
@@ -766,7 +789,6 @@ export default function SpinWheelRewardsScreen() {
       },
     );
   };
-
 
   const handleBackToHome = () => {
     setShowModal(false);
@@ -922,8 +944,8 @@ export default function SpinWheelRewardsScreen() {
             {isOrderReward
               ? `Order #${orderNumber || orderId} Reward`
               : is48hr
-              ? '48hrs Deals Assured Rewards'
-              : 'Daily Assured Rewards'}
+              ? '48hrs Deals Lucky Rewards'
+              : 'Daily Lucky Rewards'}
           </Text>
         </View>
 
@@ -1060,10 +1082,10 @@ export default function SpinWheelRewardsScreen() {
                       ]}
                     >
                       {isOrderReward
-                        ? 'Order Bonus: 1 Assured Gift'
+                        ? 'Order Bonus: 1 Lucky Gift'
                         : is48hr
-                        ? '48hrs Deals 100% Assured Prize'
-                        : '100% Assured Gift Guarantee'}
+                        ? '48hrs Deals Lucky Prize'
+                        : 'Lucky Gift Chance'}
                     </Text>
                     <View
                       style={[
@@ -1081,7 +1103,7 @@ export default function SpinWheelRewardsScreen() {
                           ? 'ORDER REWARD'
                           : is48hr
                           ? '48HR DEAL'
-                          : 'NO EMPTY SPINS'}
+                          : 'LUCKY SPINS'}
                       </Text>
                     </View>
                   </View>
@@ -1092,10 +1114,10 @@ export default function SpinWheelRewardsScreen() {
                     ]}
                   >
                     {isOrderReward
-                      ? 'Congratulations on your order! Spin now to claim your assured gift.'
+                      ? 'Congratulations on your order! Spin now to claim your lucky gift.'
                       : is48hr
-                      ? 'Exclusive flash rewards and coupons unlocked with every single spin!'
-                      : 'Every spin guarantees a real coupon, cashback, or free delivery!'}
+                      ? 'Exclusive flash rewards and coupons with your lucky spin!'
+                      : 'Spin to win exciting coupons, cashbacks, or free delivery!'}
                   </Text>
                 </View>
               </View>
@@ -1357,7 +1379,7 @@ export default function SpinWheelRewardsScreen() {
                   />
                   <Text style={styles.spinCtaText}>
                     {isSpinning
-                      ? 'FINDING YOUR ASSURED GIFT...'
+                      ? 'FINDING YOUR LUCKY GIFT...'
                       : spinsCount <= 0
                       ? 'NO SPINS LEFT TODAY'
                       : 'SPIN THE LUCKY WHEEL'}
@@ -1366,7 +1388,7 @@ export default function SpinWheelRewardsScreen() {
               </TouchableOpacity>
 
               <Text style={styles.turnsNotice}>
-                🎯 100% Guaranteed reward credited straight to your account
+                🎯 Lucky rewards credited straight to your account
               </Text>
             </View>
 
@@ -1440,49 +1462,50 @@ export default function SpinWheelRewardsScreen() {
               </View>
             ) : null}
 
-            {/* Assured Gifts Showcase Section */}
-            <View style={styles.prizesSection}>
-              <View style={styles.sectionHeaderRow}>
-                <MaterialCommunityIcons
-                  name={is48hr ? 'lightning-bolt' : 'gift-open-outline'}
-                  size={17}
-                  color="#F25000"
-                />
-                <Text style={styles.sectionTitle}>
-                  Today’s {prizes.length} Assured Gifts
+            {showcaseGifts.length > 0 && (
+              <View style={styles.prizesSection}>
+                <View style={styles.sectionHeaderRow}>
+                  <MaterialCommunityIcons
+                    name={is48hr ? 'lightning-bolt' : 'gift-open-outline'}
+                    size={17}
+                    color="#F25000"
+                  />
+                  <Text style={styles.sectionTitle}>
+                    Today’s {showcaseGifts.length} Lucky Gifts
+                  </Text>
+                </View>
+                <Text style={styles.sectionSubtitle}>
+                  Spin the wheel to win one of these exciting rewards:
                 </Text>
-              </View>
-              <Text style={styles.sectionSubtitle}>
-                Every single turn gives you one of these valuable coupons:
-              </Text>
 
-              <View style={styles.prizesGrid}>
-                {prizes.map(prize => (
-                  <View key={prize.id} style={styles.prizeMiniCard}>
-                    <View
-                      style={[
-                        styles.miniCardIconCircle,
-                        { backgroundColor: `${prize.color1}18` },
-                      ]}
-                    >
-                      <MaterialCommunityIcons
-                        name={prize.iconName}
-                        size={15}
-                        color={prize.color1}
-                      />
+                <View style={styles.prizesGrid}>
+                  {showcaseGifts.map(prize => (
+                    <View key={prize.id} style={styles.prizeMiniCard}>
+                      <View
+                        style={[
+                          styles.miniCardIconCircle,
+                          { backgroundColor: `${prize.color1}18` },
+                        ]}
+                      >
+                        <MaterialCommunityIcons
+                          name={prize.iconName}
+                          size={15}
+                          color={prize.color1}
+                        />
+                      </View>
+                      <View style={styles.miniCardInfo}>
+                        <Text style={styles.miniCardTitle} numberOfLines={1}>
+                          {prize.label}
+                        </Text>
+                        <Text style={styles.miniCardBadge} numberOfLines={1}>
+                          {prize.sublabel}
+                        </Text>
+                      </View>
                     </View>
-                    <View style={styles.miniCardInfo}>
-                      <Text style={styles.miniCardTitle} numberOfLines={1}>
-                        {prize.label}
-                      </Text>
-                      <Text style={styles.miniCardBadge} numberOfLines={1}>
-                        {prize.sublabel}
-                      </Text>
-                    </View>
-                  </View>
-                ))}
+                  ))}
+                </View>
               </View>
-            </View>
+            )}
           </>
         )}
       </ScrollView>
@@ -1561,8 +1584,8 @@ export default function SpinWheelRewardsScreen() {
                         {isNoPrize
                           ? 'HARD LUCK THIS TURN'
                           : isOrderReward
-                          ? 'ASSURED ORDER REWARD'
-                          : '100% ASSURED GIFT WON'}
+                          ? 'LUCKY ORDER REWARD'
+                          : 'LUCKY GIFT WON'}
                       </Text>
                     </View>
                   </View>
@@ -1585,7 +1608,7 @@ export default function SpinWheelRewardsScreen() {
                         ]}
                       >
                         <Text style={styles.voucherBadgeText}>
-                          {wonPrize?.badge || 'ASSURED REWARD'}
+                          {wonPrize?.badge || 'LUCKY REWARD'}
                         </Text>
                       </View>
                       {!isNoPrize ? (
@@ -1601,9 +1624,7 @@ export default function SpinWheelRewardsScreen() {
                         isNoPrize && styles.voucherPrizeTitleNoPrize,
                       ]}
                     >
-                      {wonPrize?.rewardName ||
-                        wonPrize?.label ||
-                        'Assured Gift'}
+                      {wonPrize?.rewardName || wonPrize?.label || 'Lucky Gift'}
                     </Text>
 
                     {wonPrize?.value && !isNoPrize ? (
@@ -1673,9 +1694,7 @@ export default function SpinWheelRewardsScreen() {
                           size={16}
                           color="#FFFFFF"
                         />
-                        <Text style={styles.claimButtonText}>
-                          Go to Home
-                        </Text>
+                        <Text style={styles.claimButtonText}>Go to Home</Text>
                       </View>
                     </TouchableOpacity>
 

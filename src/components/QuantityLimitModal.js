@@ -25,7 +25,7 @@ const QuantityLimitModal = ({ visible, message, maxQuantity, onClose }) => {
     <CustomModal
       ref={modalRef}
       position={MODAL_POSITION.CENTER}
-      width={wp('85%')}
+      width={wp('86%')}
       onClose={onClose}
       contentStyle={styles.content}
     >
@@ -33,20 +33,20 @@ const QuantityLimitModal = ({ visible, message, maxQuantity, onClose }) => {
         <MaterialCommunityIcons
           name="basket-remove-outline"
           size={wp('9%')}
-          color={CART_COLORS.primary}
+          color="#F25000"
         />
       </View>
 
       <Text style={styles.title}>Quantity limit reached</Text>
 
       <Text style={styles.message}>
-        {message || 'Maximum quantity allowed for this product is exceeded.'}
+        {message || 'Maximum quantity allowed for this product has been reached.'}
       </Text>
 
       {maxQuantity ? (
         <View style={styles.limitPill}>
           <Text style={styles.limitPillText}>
-            Limit: {maxQuantity} per order
+            Maximum {maxQuantity} units per order
           </Text>
         </View>
       ) : null}
@@ -56,8 +56,9 @@ const QuantityLimitModal = ({ visible, message, maxQuantity, onClose }) => {
         onPress={onClose}
         activeOpacity={0.85}
         accessibilityRole="button"
+        accessibilityLabel="Got it"
       >
-        <Text style={styles.buttonText}>Got it</Text>
+        <Text style={styles.buttonText}>Got It</Text>
       </TouchableOpacity>
     </CustomModal>
   );
@@ -65,58 +66,72 @@ const QuantityLimitModal = ({ visible, message, maxQuantity, onClose }) => {
 
 const styles = StyleSheet.create({
   content: {
-    paddingHorizontal: wp('5%'),
-    paddingVertical: hp('3%'),
+    paddingHorizontal: wp('6%'),
+    paddingTop: hp('3%'),
+    paddingBottom: hp('2.8%'),
     alignItems: 'center',
+    backgroundColor: '#FFFFFF',
   },
   iconCircle: {
     width: wp('16%'),
     height: wp('16%'),
     borderRadius: wp('8%'),
-    backgroundColor: CART_COLORS.primaryTint,
+    backgroundColor: '#FFF1EB',
+    borderWidth: 1,
+    borderColor: 'rgba(242, 80, 0, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: hp('2%'),
+    marginBottom: hp('1.8%'),
   },
   title: {
-    fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('4.5%'),
-    color: CART_COLORS.textPrimary,
+    fontFamily: FONTS.gilroy.bold,
+    fontSize: wp('4.8%'),
+    color: '#12131A',
     textAlign: 'center',
-    marginBottom: hp('1%'),
+    marginBottom: hp('0.8%'),
+    letterSpacing: -0.2,
   },
   message: {
     fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3.5%'),
-    color: CART_COLORS.textMuted,
+    color: '#6B7280',
     textAlign: 'center',
-    lineHeight: wp('5%'),
+    lineHeight: wp('5.2%'),
+    paddingHorizontal: wp('2%'),
   },
   limitPill: {
-    marginTop: hp('1.5%'),
+    marginTop: hp('1.6%'),
     paddingHorizontal: wp('3.5%'),
-    paddingVertical: hp('0.7%'),
-    borderRadius: CART_RADIUS.sm,
-    backgroundColor: CART_COLORS.primaryTint,
+    paddingVertical: hp('0.6%'),
+    borderRadius: 999,
+    backgroundColor: '#FFF1EB',
+    borderWidth: 1,
+    borderColor: 'rgba(242, 80, 0, 0.18)',
   },
   limitPillText: {
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('3.2%'),
-    color: CART_COLORS.primary,
+    fontFamily: FONTS.gilroy.semiBold,
+    fontSize: wp('3%'),
+    color: '#F25000',
   },
   button: {
     width: '100%',
-    marginTop: hp('3%'),
-    paddingVertical: hp('1.6%'),
-    borderRadius: CART_RADIUS.button,
-    backgroundColor: CART_COLORS.primary,
+    height: 48,
+    marginTop: hp('2.8%'),
+    borderRadius: 999,
+    backgroundColor: '#F25000',
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#F25000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 4,
   },
   buttonText: {
-    fontFamily: FONTS.gilroy.medium,
+    fontFamily: FONTS.gilroy.bold,
     fontSize: wp('3.8%'),
     color: '#FFFFFF',
+    letterSpacing: 0.2,
   },
 });
 

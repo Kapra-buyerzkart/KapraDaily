@@ -1,40 +1,37 @@
 import React from 'react';
-import Animated from 'react-native-reanimated';
-import { Surface, Divider } from '../atoms';
+import { View, StyleSheet } from 'react-native';
 import IdentityRow from '../molecules/IdentityRow';
 import WalletRow from '../molecules/WalletRow';
-import { CART_SPACING } from '@/styles/cartTheme';
 
 const ProfileHeroCard = ({
   profile,
-  isPrivileged,
   walletData,
   onEditProfile,
   onWallet,
-  onMeasure,
-  entering,
 }) => {
-  const handleLayout = React.useCallback(
-    event => {
-      const { y, height } = event.nativeEvent.layout;
-      onMeasure?.(y + height);
-    },
-    [onMeasure],
-  );
-
   return (
-    <Animated.View onLayout={handleLayout} entering={entering}>
-      <Surface>
-        <IdentityRow
-          profile={profile}
-          isPrivileged={isPrivileged}
-          onEditProfile={onEditProfile}
-        />
-        <Divider inset={CART_SPACING.lg} />
-        <WalletRow walletData={walletData} onPress={onWallet} />
-      </Surface>
-    </Animated.View>
+    <View style={styles.container}>
+      <IdentityRow
+        profile={profile}
+        onEditProfile={onEditProfile}
+      />
+      <View style={styles.dashedDivider} />
+      <WalletRow walletData={walletData} onPress={onWallet} />
+    </View>
   );
 };
 
 export default React.memo(ProfileHeroCard);
+
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: '#FFFFFF',
+  },
+  dashedDivider: {
+    borderWidth: 0.75,
+    borderColor: '#E2E2E2',
+    borderStyle: 'dashed',
+    marginHorizontal: 16,
+    marginVertical: 4,
+  },
+});

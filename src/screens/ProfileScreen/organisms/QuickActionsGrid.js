@@ -1,32 +1,29 @@
 import React from 'react';
-import { StyleSheet } from 'react-native';
-import icons from '@/assets/icons';
-import { Surface } from '../atoms';
+import { View, StyleSheet } from 'react-native';
 import QuickActionTile from '../molecules/QuickActionTile';
-import { CART_SPACING } from '@/styles/cartTheme';
 
 const ACTIONS = [
   {
     key: 'orders',
-    icon: icons.myorder,
+    iconName: 'shopping-outline',
     label: 'My\nOrders',
     a11y: 'My Orders',
   },
   {
     key: 'address',
-    icon: icons.savedAddress,
+    iconName: 'map-marker-outline',
     label: 'Saved\nAddress',
     a11y: 'Saved Address',
   },
   {
     key: 'co-partner',
-    icon: icons.coPartnerdashboard,
+    iconName: 'account-group-outline',
     label: 'Co-Partner\nDashboard',
     a11y: 'Co-Partner Dashboard',
   },
   {
     key: 'refer',
-    icon: icons.referNearn,
+    iconName: 'account-multiple-outline',
     label: 'Refer &\nEarn',
     a11y: 'Refer and Earn',
   },
@@ -46,28 +43,29 @@ const QuickActionsGrid = ({
   };
 
   return (
-    <Surface style={styles.card}>
+    <View style={styles.container}>
       {ACTIONS.map(action => (
         <QuickActionTile
           key={action.key}
-          icon={action.icon}
+          iconName={action.iconName}
           label={action.label}
           a11y={action.a11y}
           onPress={handlers[action.key]}
         />
       ))}
-    </Surface>
+    </View>
   );
 };
 
 export default React.memo(QuickActionsGrid);
 
 const styles = StyleSheet.create({
-  card: {
+  container: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: CART_SPACING.sm,
-    paddingVertical: CART_SPACING.lg - 2,
-    paddingHorizontal: CART_SPACING.md,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    marginTop: 14,
+    gap: 10,
   },
 });

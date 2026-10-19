@@ -74,7 +74,8 @@ const OrderSuccessScreen: React.FC = () => {
   const displayOrderNumber =
     orderDetails?.orderNumber || orderNumber || orderId || '--';
   const paymentLabel = useMemo(
-    () => getPaymentLabel(orderDetails?.paymentMethod || paymentMethod || 'cod'),
+    () =>
+      getPaymentLabel(orderDetails?.paymentMethod || paymentMethod || 'cod'),
     [orderDetails, paymentMethod],
   );
   const displayItems =
@@ -136,7 +137,7 @@ const OrderSuccessScreen: React.FC = () => {
         </Surface>
 
         <SpinWheelBanner
-          title="Spin & Win Assured Gift!"
+          title="Spin & Win a lucky Gift!"
           subtitle="Win Extra Discounts, UD Coins & Free Delivery"
           badgeText="ORDER GIFT"
           badgeIcon="gift"

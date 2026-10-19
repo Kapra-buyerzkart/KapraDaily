@@ -301,7 +301,7 @@ const HomeFloatingCart = ({
                 <Text style={styles.savingsSubText} numberOfLines={1}>
                   {discount > 0
                     ? ` ₹${discount} saved on order`
-                    : ' Fast delivery in 30 mins'}
+                    : 'Express delivery'}
                 </Text>
               </View>
             </Animated.View>

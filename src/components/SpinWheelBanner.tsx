@@ -309,7 +309,7 @@ const SpinWheelBanner: React.FC<SpinWheelBannerProps> = ({
       onPress={handlePress}
       style={({ pressed }) => [styles.wrapper, style, pressed && styles.pressed]}
       accessibilityRole="button"
-      accessibilityLabel={`${title} Assured Gift`}
+      accessibilityLabel={`${title} Lucky Gift`}
     >
       <View style={styles.cardContainer}>
         {/* 48hrs Deals Fiery Sunset/Crimson LinearGradient Background */}

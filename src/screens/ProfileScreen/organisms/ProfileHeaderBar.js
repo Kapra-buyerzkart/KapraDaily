@@ -1,69 +1,28 @@
 import React from 'react';
-import { View, TouchableOpacity, Image, StyleSheet } from 'react-native';
-import Animated from 'react-native-reanimated';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import icons from '@/assets/icons';
-import {
-  CART_COLORS,
-  CART_SPACING,
-  CART_TYPE,
-  MAX_FONT_SCALE,
-  hitSlopTo,
-  hp,
-  wp,
-} from '@/styles/cartTheme';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { FONTS } from '@/styles/typography';
 
-const ProfileHeaderBar = ({
-  name,
-  onBack,
-  backgroundStyle,
-  borderStyle,
-  titleStyle,
-  nameStyle,
-}) => {
+const ProfileHeaderBar = ({ onBack }) => {
   const insets = useSafeAreaInsets();
 
   return (
-    <Animated.View
-      style={[
-        styles.header,
-        backgroundStyle,
-        { paddingTop: insets.top + CART_SPACING.sm },
-      ]}
-    >
+    <View style={[styles.header, { paddingTop: insets.top + 6 }]}>
       <TouchableOpacity
         onPress={onBack}
         style={styles.backBtn}
-        hitSlop={hitSlopTo(wp('6%'))}
+        hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
         activeOpacity={0.7}
         accessibilityRole="button"
         accessibilityLabel="Go back"
       >
-        <Image source={icons.backArrowNew} style={styles.backIcon} />
+        <MaterialCommunityIcons name="chevron-left" size={32} color="#111111" />
       </TouchableOpacity>
 
-      <View style={styles.titleBlock}>
-        <Animated.Text
-          style={[styles.title, titleStyle]}
-          numberOfLines={1}
-          maxFontSizeMultiplier={MAX_FONT_SCALE}
-          accessibilityRole="header"
-        >
-          Profile
-        </Animated.Text>
-        <Animated.Text
-          style={[styles.title, styles.swapName, nameStyle]}
-          numberOfLines={1}
-          maxFontSizeMultiplier={MAX_FONT_SCALE}
-          accessibilityElementsHidden
-          importantForAccessibility="no-hide-descendants"
-        >
-          {name}
-        </Animated.Text>
-      </View>
-
-      <Animated.View style={[styles.border, borderStyle]} />
-    </Animated.View>
+      <Text style={styles.title}>Profile</Text>
+      <Text style={styles.subtitle}>Your Account, Your Way</Text>
+    </View>
   );
 };
 
@@ -71,40 +30,26 @@ export default React.memo(ProfileHeaderBar);
 
 const styles = StyleSheet.create({
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: CART_SPACING.sm,
-    paddingHorizontal: CART_SPACING.lg,
-    paddingBottom: hp('1.2%'),
+    paddingHorizontal: 20,
+    paddingBottom: 16,
+    backgroundColor: '#FFFFFF',
   },
   backBtn: {
-    padding: CART_SPACING.xs,
-  },
-  backIcon: {
-    resizeMode: 'contain',
-    tintColor: CART_COLORS.textPrimary,
-  },
-  titleBlock: {
-    flex: 1,
-    marginLeft: CART_SPACING.xs,
-    justifyContent: 'center',
+    alignSelf: 'flex-start',
+    marginBottom: 8,
+    marginLeft: -10,
+    padding: 2,
   },
   title: {
-    ...CART_TYPE.title,
-    color: CART_COLORS.textPrimary,
+    fontSize: 22,
+    fontFamily: FONTS.gilroy.bold,
+    color: '#111111',
     letterSpacing: -0.3,
   },
-  swapName: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-  },
-  border: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: CART_COLORS.border,
+  subtitle: {
+    fontSize: 13,
+    fontFamily: FONTS.gilroy.medium,
+    color: '#8E8E93',
+    marginTop: 3,
   },
 });

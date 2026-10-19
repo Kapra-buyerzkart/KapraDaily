@@ -53,10 +53,10 @@ const CustomModal = forwardRef((props, ref) => {
     onClose,
     closeOnBackdropPress = true,
     closeOnBackPress = true,
-    animationDuration = 300,
+    animationDuration = 280,
     position = MODAL_POSITION.CENTER,
     animationPreset,
-    backdropOpacity = 0.5,
+    backdropOpacity = 0.55,
     blurBackdrop = false,
     blurAmount = 10,
     gestureEnabled = true,
@@ -244,7 +244,7 @@ const CustomModal = forwardRef((props, ref) => {
       const scale = interpolate(
         progress.value,
         [0, 1],
-        [0.85, 1],
+        [0.92, 1],
         Extrapolation.CLAMP,
       );
       transform.push({ scale });
@@ -267,9 +267,9 @@ const CustomModal = forwardRef((props, ref) => {
   const radiusStyle = useMemo(() => {
     switch (position) {
       case MODAL_POSITION.BOTTOM:
-        return { borderTopLeftRadius: 24, borderTopRightRadius: 24 };
+        return { borderTopLeftRadius: 28, borderTopRightRadius: 28 };
       case MODAL_POSITION.TOP:
-        return { borderBottomLeftRadius: 24, borderBottomRightRadius: 24 };
+        return { borderBottomLeftRadius: 28, borderBottomRightRadius: 28 };
       default:
         return { borderRadius: 24 };
     }
@@ -438,14 +438,14 @@ const styles = StyleSheet.create({
   },
   handleHitArea: {
     width: '100%',
-    paddingVertical: 10,
+    paddingVertical: 12,
     alignItems: 'center',
   },
   handle: {
-    width: 40,
+    width: 38,
     height: 4,
     borderRadius: 2,
-    backgroundColor: '#DADADA',
+    backgroundColor: 'rgba(18, 19, 26, 0.15)',
   },
 });
 

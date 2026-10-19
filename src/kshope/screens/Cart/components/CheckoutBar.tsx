@@ -10,6 +10,7 @@ import {
   hp,
   wp,
 } from '../../../theme/tokens';
+import { isCashOnDelivery } from '../../Order/status/paymentMeta';
 
 interface CheckoutBarProps {
   totalSavings?: number;
@@ -26,7 +27,7 @@ const CheckoutBar: React.FC<CheckoutBarProps> = ({
   onSelectPayment,
   onPay,
 }) => {
-  const isCod = paymentMethod?.toUpperCase() === 'COD';
+  const isCod = isCashOnDelivery(paymentMethod);
 
   return (
     <View style={styles.bar}>
@@ -78,10 +79,10 @@ const CheckoutBar: React.FC<CheckoutBarProps> = ({
           onPress={onPay}
           style={styles.payButton}
           accessibilityRole="button"
-          accessibilityLabel={`Pay ₹${toPay.toFixed(2)}`}
+          accessibilityLabel={isCod ? 'Place Order' : `Pay ₹${toPay.toFixed(2)}`}
         >
           <AppText variant="cta" tone="onDark">
-            Pay ₹{toPay.toFixed(2)}
+            {isCod ? 'Place Order' : `Pay ₹${toPay.toFixed(2)}`}
           </AppText>
           <MaterialCommunityIcons
             name="chevron-right"

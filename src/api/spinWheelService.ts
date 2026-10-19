@@ -331,7 +331,7 @@ export const mapBackendRewardToPrize = (item: any, index: number): AssuredPrize 
       item.discount ||
       item.tag ||
       rName ||
-      'ASSURED',
+      'LUCKY',
   );
   const rType = String(item.rewardType || item.type || item.badge || palette.badge);
   const rawIcon = String(item.icon || item.iconName || palette.iconName);
@@ -351,7 +351,7 @@ export const mapBackendRewardToPrize = (item: any, index: number): AssuredPrize 
   const { wheelLabel, line1, line2 } = formatWheelTitle(rName, rType, rValue);
 
   // Sublabel (shown in badge pill on wheel slice)
-  let sublabel = 'ASSURED';
+  let sublabel = 'LUCKY';
   if (isNoPrize) {
     sublabel = 'NEXT TIME';
   } else if (rType.toLowerCase() === 'coupon') {

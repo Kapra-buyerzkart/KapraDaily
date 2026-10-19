@@ -227,7 +227,7 @@ const OrderSpinBanner = ({ orderId, orderNumber, onPressSpin }) => {
                 <Text style={styles.claimedTag}>ORDER GIFT CLAIMED</Text>
               </View>
               <Text style={styles.claimedPrizeName}>
-                {claimedReward.label || 'Assured Reward'}
+                {claimedReward.label || 'Lucky Reward'}
               </Text>
               <Text style={styles.claimedCodeDesc}>
                 {claimedReward.description || 'Valid on your next checkout'}

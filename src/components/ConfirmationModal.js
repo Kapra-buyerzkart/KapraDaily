@@ -4,8 +4,8 @@ import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { FONTS } from '../styles/typography';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import CustomModal, { MODAL_POSITION } from './modal/CustomModal';
 
 const ConfirmationModal = ({
@@ -32,26 +32,29 @@ const ConfirmationModal = ({
     <CustomModal
       ref={modalRef}
       position={MODAL_POSITION.CENTER}
-      width={wp('85%')}
+      width={wp('86%')}
       onClose={onClose}
       closeOnBackdropPress={dismissible}
       closeOnBackPress={dismissible}
       contentStyle={styles.content}
     >
       <View style={styles.iconContainer}>
-        <MaterialIcons name="warning" size={wp('12%')} color="#F04B1B" />
+        <Ionicons name="alert-circle-outline" size={wp('9%')} color="#F25000" />
       </View>
 
       <Text style={styles.title}>{title}</Text>
-      <Text style={styles.message}>{message}</Text>
+      {message ? <Text style={styles.message}>{message}</Text> : null}
 
       <View style={styles.buttonContainer}>
         <TouchableOpacity
           style={[styles.button, styles.cancelButton]}
+          activeOpacity={0.8}
           onPress={() => {
             onClose();
             onCancel?.();
           }}
+          accessibilityRole="button"
+          accessibilityLabel={cancelText}
         >
           <Text
             style={styles.cancelButtonText}
@@ -64,10 +67,13 @@ const ConfirmationModal = ({
 
         <TouchableOpacity
           style={[styles.button, styles.confirmButton]}
+          activeOpacity={0.85}
           onPress={() => {
             onClose();
             onConfirm();
           }}
+          accessibilityRole="button"
+          accessibilityLabel={confirmText}
         >
           <Text
             style={styles.confirmButtonText}
@@ -84,26 +90,39 @@ const ConfirmationModal = ({
 
 const styles = StyleSheet.create({
   content: {
-    padding: wp('5%'),
+    paddingHorizontal: wp('6%'),
+    paddingTop: hp('3%'),
+    paddingBottom: hp('2.8%'),
     alignItems: 'center',
+    backgroundColor: '#FFFFFF',
   },
   iconContainer: {
-    marginBottom: hp('2%'),
+    width: wp('16%'),
+    height: wp('16%'),
+    borderRadius: wp('8%'),
+    backgroundColor: '#FFF1EB',
+    borderWidth: 1,
+    borderColor: 'rgba(242, 80, 0, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: hp('1.8%'),
   },
   title: {
-    fontFamily: FONTS.gilroy.semiBold,
-    fontSize: wp('4.5%'),
-    color: '#000000',
-    marginBottom: hp('1%'),
+    fontFamily: FONTS.gilroy.bold,
+    fontSize: wp('4.8%'),
+    color: '#12131A',
+    marginBottom: hp('0.8%'),
     textAlign: 'center',
+    letterSpacing: -0.2,
   },
   message: {
     fontFamily: FONTS.gilroy.regular,
     fontSize: wp('3.5%'),
-    color: '#666666',
+    color: '#6B7280',
     textAlign: 'center',
-    marginBottom: hp('3%'),
-    lineHeight: wp('5%'),
+    marginBottom: hp('2.8%'),
+    lineHeight: wp('5.2%'),
+    paddingHorizontal: wp('2%'),
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -113,27 +132,33 @@ const styles = StyleSheet.create({
   },
   button: {
     flex: 1,
-    paddingVertical: hp('1.5%'),
-    borderRadius: wp('2.5%'),
+    height: 46,
+    borderRadius: 999,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: wp('3%'),
   },
   cancelButton: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F5F6F8',
     borderWidth: 1,
-    borderColor: '#DADADA',
+    borderColor: '#ECEEF2',
   },
   confirmButton: {
-    backgroundColor: '#F04B1B',
+    backgroundColor: '#F25000',
+    shadowColor: '#F25000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.22,
+    shadowRadius: 6,
+    elevation: 3,
   },
   cancelButtonText: {
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('3.7%'),
-    color: '#666666',
+    fontFamily: FONTS.gilroy.semiBold,
+    fontSize: wp('3.6%'),
+    color: '#2B2D36',
   },
   confirmButtonText: {
-    fontFamily: FONTS.gilroy.medium,
-    fontSize: wp('3.7%'),
+    fontFamily: FONTS.gilroy.bold,
+    fontSize: wp('3.6%'),
     color: '#FFFFFF',
   },
 });

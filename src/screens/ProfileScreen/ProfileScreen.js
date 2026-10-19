@@ -1,13 +1,5 @@
-import { View, StatusBar } from 'react-native';
+import { View, StatusBar, ScrollView } from 'react-native';
 import React from 'react';
-import Animated, {
-  Extrapolation,
-  interpolate,
-  interpolateColor,
-  useAnimatedScrollHandler,
-  useAnimatedStyle,
-  useSharedValue,
-} from 'react-native-reanimated';
 import CouponModal from '../../components/CouponModal';
 import LocationModal from '../../components/LocationModal';
 import ConfirmationModal from '../../components/ConfirmationModal';
@@ -15,7 +7,7 @@ import StatusModal from '../../components/StatusModal';
 import HelpSupportModal from '../../components/HelpSupportModal';
 import LanguageSwitcherModal from '../../components/LanguageSwitcherModal';
 import { useProfileScreen } from './useProfileScreen';
-import { styles, BAR_REST, BAR_SOLID } from './styles';
+import { styles } from './styles';
 import {
   buildOffersItems,
   buildMyAccountItems,
@@ -25,18 +17,7 @@ import ProfileHeaderBar from './organisms/ProfileHeaderBar';
 import ProfileHeroCard from './organisms/ProfileHeroCard';
 import QuickActionsGrid from './organisms/QuickActionsGrid';
 import MenuSection from './organisms/MenuSection';
-import LogoutRow from './molecules/LogoutRow';
-import AppVersion from './molecules/AppVersion';
-import SpinWheelBanner from './molecules/SpinWheelBanner';
 import SuggestProductsModal from './components/SuggestProductsModal';
-import {
-  BAR_SOLID_AT,
-  BORDER_FADE_RANGE,
-  NAME_FADE_IN,
-  NAME_TRAVEL,
-  TITLE_FADE_OUT,
-  entrance,
-} from './motion';
 
 export default function ProfileScreen() {
   const {
@@ -72,85 +53,25 @@ export default function ProfileScreen() {
     handleApplyCoupon,
   } = useProfileScreen();
 
-  const scrollY = useSharedValue(0);
-  const swapAnchor = useSharedValue(0);
-  const scrollHandler = useAnimatedScrollHandler({
-    onScroll: event => {
-      scrollY.value = event.contentOffset.y;
-    },
-  });
-  const onHeroMeasure = React.useCallback(
-    bottom => {
-      swapAnchor.value = bottom;
-    },
-    [swapAnchor],
-  );
-
-  const topBarBorderStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(
-      scrollY.value,
-      BORDER_FADE_RANGE,
-      [0, 1],
-      Extrapolation.CLAMP,
-    ),
-  }));
-
-  const barTitleStyle = useAnimatedStyle(() => {
-    const a = swapAnchor.value;
-    if (a <= 0) return { opacity: 1 };
-    return {
-      opacity: interpolate(
-        scrollY.value,
-        TITLE_FADE_OUT.map(f => f * a),
-        [1, 0],
-        Extrapolation.CLAMP,
-      ),
-    };
-  });
-
-  const barNameStyle = useAnimatedStyle(() => {
-    const a = swapAnchor.value;
-    if (a <= 0) return { opacity: 0 };
-    const progress = interpolate(
-      scrollY.value,
-      NAME_FADE_IN.map(f => f * a),
-      [0, 1],
-      Extrapolation.CLAMP,
-    );
-    return {
-      opacity: progress,
-      transform: [{ translateY: (1 - progress) * NAME_TRAVEL }],
-    };
-  });
-
-  const topBarBackgroundStyle = useAnimatedStyle(() => {
-    const a = swapAnchor.value;
-    if (a <= 0) return { backgroundColor: BAR_REST };
-    return {
-      backgroundColor: interpolateColor(
-        scrollY.value,
-        [0, a * BAR_SOLID_AT],
-        [BAR_REST, BAR_SOLID],
-      ),
-    };
-  });
-
   const offersItems = buildOffersItems({
     onBCoin: () => navigation.navigate('BCoinScreen'),
     onSmartPoint: () => openOffersModal('Gift Cards'),
     onCoupons: () => openOffersModal('Coupons'),
     onMyRewards: () => navigation.navigate('MyRewardsScreen'),
-  });
+  }).filter(item => item.key !== 'my-rewards');
+
   const myAccountItems = buildMyAccountItems({
     navigation,
     onLanguage: () => setIsLanguageModalVisible(true),
     isTicketValidationVisible: profile?.isTicketValidationVisible,
   });
+
   const informationItems = buildInformationItems({
     navigation,
     helpSheetRef,
     suggestProductsSheetRef,
     setIsDeleteAccountModalVisible,
+    setIsLogoutModalVisible,
   });
 
   return (
@@ -160,60 +81,37 @@ export default function ProfileScreen() {
         backgroundColor="transparent"
         barStyle="dark-content"
       />
-      <Animated.ScrollView
+      <ScrollView
         showsVerticalScrollIndicator={false}
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
-        onScroll={scrollHandler}
-        scrollEventThrottle={16}
-        stickyHeaderIndices={[0]}
       >
-        <ProfileHeaderBar
-          name={profile?.custName}
-          onBack={() => navigation.goBack()}
-          backgroundStyle={topBarBackgroundStyle}
-          borderStyle={topBarBorderStyle}
-          titleStyle={barTitleStyle}
-          nameStyle={barNameStyle}
-        />
+        <ProfileHeaderBar onBack={() => navigation.goBack()} />
 
         <View style={styles.heroBlock}>
           <ProfileHeroCard
             profile={profile}
-            isPrivileged={profile?.isPrivileged}
             walletData={walletData}
             onEditProfile={() => navigation.navigate('EditProfileScreen')}
             onWallet={() => navigation.navigate('BCoinScreen')}
-            onMeasure={onHeroMeasure}
-            entering={entrance(0)}
           />
 
-          <Animated.View entering={entrance(1)}>
-            <QuickActionsGrid
-              onMyOrders={() => navigation.navigate('MyOrdersScreen')}
-              onSavedAddress={() => navigation.navigate('SavedAddressScreen')}
-              onCoPartnerDashboard={() =>
-                navigation.navigate('CoPartnerDashboardScreen')
-              }
-              onRefer={() => navigation.navigate('ReferralScreen')}
-            />
-          </Animated.View>
+          <QuickActionsGrid
+            onMyOrders={() => navigation.navigate('MyOrdersScreen')}
+            onSavedAddress={() => navigation.navigate('SavedAddressScreen')}
+            onCoPartnerDashboard={() =>
+              navigation.navigate('CoPartnerDashboardScreen')
+            }
+            onRefer={() => navigation.navigate('ReferralScreen')}
+          />
         </View>
 
-        <Animated.View entering={entrance(2)} style={styles.menuWrap}>
-          {/* <SpinWheelBanner
-            onPress={() => navigation.navigate('SpinWheelRewardsScreen')}
-          /> */}
+        <View style={styles.menuWrap}>
           <MenuSection title="Offers" items={offersItems} />
           <MenuSection title="My Account" items={myAccountItems} />
-          <MenuSection title="Information" items={informationItems} />
-        </Animated.View>
-
-        <Animated.View entering={entrance(3)}>
-          <LogoutRow onPress={() => setIsLogoutModalVisible(true)} />
-          <AppVersion />
-        </Animated.View>
-      </Animated.ScrollView>
+          <MenuSection title="My Information" items={informationItems} />
+        </View>
+      </ScrollView>
 
       <CouponModal
         visible={offersModalVisible}
