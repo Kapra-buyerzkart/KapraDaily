@@ -2,7 +2,14 @@ import React from 'react';
 import icons from '@/assets/icons';
 import OfferRow from './OfferRow';
 
-const CoinCard = ({ bcoinsApplied, availableBCoins, onApply, onRemove }) => (
+const CoinCard = ({
+  bcoinsApplied,
+  availableBCoins,
+  onApply,
+  onRemove,
+  tinted,
+  style,
+}) => (
   <OfferRow
     imageSource={icons.udCoinUpdated || icons.udcoin}
     title="UD Coin"
@@ -13,6 +20,8 @@ const CoinCard = ({ bcoinsApplied, availableBCoins, onApply, onRemove }) => (
     isApplied={bcoinsApplied > 0}
     onPress={onApply}
     onRemove={onRemove}
+    tinted={tinted}
+    style={style}
   />
 );
 

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useContext, useRef } from 'react';
+import { useState, useEffect, useCallback, useContext, useRef, useMemo } from 'react';
 import Toast from 'react-native-simple-toast';
 import { useCart } from '../context/CartContext';
 import {
@@ -7,6 +7,7 @@ import {
 } from '../api/cartService';
 import { getDashboardDataApi } from '../api/userService';
 import { LoaderContext } from '../context/loaderContext';
+import { getCouponRecommendations } from '../utils/couponRecommendation';
 
 const DEFAULT_OFFERS = [
   {
@@ -32,14 +33,11 @@ const DEFAULT_OFFERS = [
   },
 ];
 
-const DEFAULT_GIFT_CARDS = [
-  { id: '1', code: 'GIFT500', description: 'Gift Card worth ₹500' },
-  { id: '2', code: 'BDAY1000', description: 'Birthday Gift Card worth ₹1000' },
-];
-
 export const useOffers = (deliveryHook, addressHook) => {
   const {
     cartSummary,
+    cartTotal,
+    cartItems,
     applyCoupon,
     removeCoupon,
     applyGiftCard,
@@ -58,13 +56,20 @@ export const useOffers = (deliveryHook, addressHook) => {
   const [availableGiftCards, setAvailableGiftCards] = useState([]);
   const [appliedCouponCode, setAppliedCouponCode] = useState(null);
   const [appliedGiftCardCode, setAppliedGiftCardCode] = useState(null);
+  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
   const isApplyingRef = useRef(false);
+
+  const selectedAddress = addressHook?.addresses?.find(a => a.selected);
+  const selectedPincodeAreaId = selectedAddress?.pincodeAreaId;
+  const lastFetchedPincodeRef = useRef(null);
 
   const fetchRewards = useCallback(async () => {
     try {
+      const addr = addressHook?.addresses?.find(a => a.selected);
+      const pincodeAreaId = addr?.pincodeAreaId;
       const [couponsRes, giftCardsRes] = await Promise.all([
-        getAvailableCouponsApi(),
-        getAvailableGiftCardsApi(),
+        getAvailableCouponsApi(pincodeAreaId),
+        getAvailableGiftCardsApi(pincodeAreaId),
       ]);
 
       if (couponsRes?.data) {
@@ -82,11 +87,22 @@ export const useOffers = (deliveryHook, addressHook) => {
     } catch (error) {
       console.error('Error fetching available rewards:', error);
     }
-  }, []);
+  }, [addressHook?.addresses]);
 
   useEffect(() => {
     fetchRewards();
   }, [fetchRewards]);
+
+  // Re-fetch rewards when delivery location/pincodeAreaId changes
+  useEffect(() => {
+    if (
+      selectedPincodeAreaId &&
+      selectedPincodeAreaId !== lastFetchedPincodeRef.current
+    ) {
+      lastFetchedPincodeRef.current = selectedPincodeAreaId;
+      fetchRewards();
+    }
+  }, [selectedPincodeAreaId, fetchRewards]);
 
   useEffect(() => {
     const fetchWalletData = async () => {
@@ -113,7 +129,7 @@ export const useOffers = (deliveryHook, addressHook) => {
       }
     };
     fetchWalletData();
-  }, []);
+  }, [cartSummary?.bcoinsAppliedValue]);
 
   useEffect(() => {
     if (cartSummary) {
@@ -125,12 +141,28 @@ export const useOffers = (deliveryHook, addressHook) => {
         ),
       );
     }
-  }, [cartSummary]);
+  }, [cartSummary, cartSummary?.bcoinsAppliedValue]);
 
   const couponCodeFromSummary =
     cartSummary?.couponCode || cartSummary?.appliedCouponCode || null;
   const giftCardCodeFromSummary =
     cartSummary?.giftCode || cartSummary?.giftCardCode || null;
+
+  // Auto-sync coupon state with backend cartSummary (e.g. if cart items changed and coupon was invalidated)
+  useEffect(() => {
+    if (cartSummary) {
+      const summaryCode =
+        cartSummary.couponCode || cartSummary.appliedCouponCode || null;
+      const summaryAmount = Number(cartSummary.couponAmount || 0);
+
+      if (summaryAmount === 0 && !summaryCode && appliedCouponCode) {
+        // Backend dropped the coupon due to cart changes
+        setAppliedCouponCode(null);
+      } else if (summaryCode && summaryCode !== appliedCouponCode) {
+        setAppliedCouponCode(summaryCode);
+      }
+    }
+  }, [cartSummary, appliedCouponCode]);
 
   const isCouponApplied =
     !!appliedCouponCode ||
@@ -141,6 +173,34 @@ export const useOffers = (deliveryHook, addressHook) => {
     !!appliedGiftCardCode ||
     !!giftCardCodeFromSummary ||
     (cartSummary?.giftCardAmount ?? 0) > 0;
+
+  // Compute live cart value for recommendation calculations
+  const cartValue = useMemo(() => {
+    if (cartSummary?.subTotal != null) return Number(cartSummary.subTotal);
+    if (cartTotal != null) return Number(cartTotal);
+    return (cartItems || []).reduce((sum, item) => {
+      const price = item.specialPrice || item.unitPrice || item.price || 0;
+      return sum + price * (item.quantity || 1);
+    }, 0);
+  }, [cartSummary?.subTotal, cartTotal, cartItems]);
+
+  const activeCouponCode = appliedCouponCode || couponCodeFromSummary;
+  const activeCouponDiscount = cartSummary?.couponAmount || 0;
+
+  // Smart coupon recommendation engine evaluation
+  const recommendations = useMemo(() => {
+    return getCouponRecommendations({
+      coupons: availableCoupons,
+      cartValue,
+      appliedCouponCode: activeCouponCode,
+      appliedDiscountAmount: activeCouponDiscount,
+    });
+  }, [
+    availableCoupons,
+    cartValue,
+    activeCouponCode,
+    activeCouponDiscount,
+  ]);
 
   const updateOfferState = useCallback((offerId, applied) => {
     setOffers(prev =>
@@ -207,7 +267,17 @@ export const useOffers = (deliveryHook, addressHook) => {
 
       updateOfferState(offerId, true);
     },
-    [offers, applyBCoins, showLoader, updateOfferState, fetchRewards],
+    [
+      offers,
+      applyBCoins,
+      showLoader,
+      updateOfferState,
+      fetchRewards,
+      addressHook?.addresses,
+      deliveryHook?.deliveryMode,
+      deliveryHook?.selectedSlot,
+      getCartSummary,
+    ],
   );
 
   const onRejectOffer = useCallback(
@@ -291,7 +361,188 @@ export const useOffers = (deliveryHook, addressHook) => {
 
       updateOfferState(offerId, false);
     },
-    [removeCoupon, removeGiftCard, removeBCoins, showLoader, updateOfferState],
+    [
+      removeCoupon,
+      removeGiftCard,
+      removeBCoins,
+      showLoader,
+      updateOfferState,
+      addressHook?.addresses,
+      deliveryHook?.deliveryMode,
+      deliveryHook?.selectedSlot,
+      getCartSummary,
+    ],
+  );
+
+  /**
+   * One-Tap Apply Interaction:
+   * Direct inline coupon application without opening separate screens or typing codes.
+   */
+  const handleOneTapApply = useCallback(
+    async codeToApply => {
+      const code = String(codeToApply || '').trim();
+      if (!code) return { success: false, message: 'Invalid coupon code' };
+
+      if (isApplyingRef.current) {
+        return { success: false, message: 'Application in progress' };
+      }
+      isApplyingRef.current = true;
+      setIsApplyingCoupon(true);
+
+      try {
+        const result = await applyCoupon(code);
+        if (result && result.success) {
+          updateOfferState('2', true);
+          setAppliedCouponCode(code);
+          const selectedAddr = addressHook?.addresses?.find(a => a.selected);
+          const summaryRes = await getCartSummary(
+            deliveryHook?.deliveryMode,
+            deliveryHook?.selectedSlot,
+            null,
+            selectedAddr?.pincodeAreaId,
+          );
+          const saved =
+            summaryRes?.data?.couponAmount ||
+            cartSummary?.couponAmount ||
+            result?.data?.couponAmount ||
+            0;
+          const msg =
+            saved > 0
+              ? `Coupon applied! You saved ₹${Math.round(saved)}.`
+              : 'Coupon applied successfully!';
+          Toast.show(msg, Toast.SHORT);
+          return { success: true, savedAmount: saved };
+        } else {
+          const errMsg = result?.message || 'Failed to apply coupon';
+          if (!errMsg.toLowerCase().includes('modified')) {
+            Toast.show(errMsg, Toast.LONG);
+          }
+          return { success: false, message: errMsg };
+        }
+      } catch (err) {
+        const errMsg = err?.message || 'Failed to apply coupon';
+        Toast.show(errMsg, Toast.LONG);
+        return { success: false, message: errMsg };
+      } finally {
+        isApplyingRef.current = false;
+        setIsApplyingCoupon(false);
+      }
+    },
+    [
+      applyCoupon,
+      updateOfferState,
+      addressHook?.addresses,
+      deliveryHook?.deliveryMode,
+      deliveryHook?.selectedSlot,
+      getCartSummary,
+      cartSummary?.couponAmount,
+    ],
+  );
+
+  /**
+   * One-Tap Remove:
+   * Removes currently applied coupon and restores totals.
+   */
+  const handleRemoveCoupon = useCallback(async () => {
+    if (isApplyingRef.current) return { success: false };
+    isApplyingRef.current = true;
+    setIsApplyingCoupon(true);
+    try {
+      const res = await removeCoupon();
+      if (res && res.success) {
+        updateOfferState('2', false);
+        setAppliedCouponCode(null);
+        const selectedAddr = addressHook?.addresses?.find(a => a.selected);
+        await getCartSummary(
+          deliveryHook?.deliveryMode,
+          deliveryHook?.selectedSlot,
+          null,
+          selectedAddr?.pincodeAreaId,
+        );
+        Toast.show('Coupon removed', Toast.SHORT);
+        return { success: true };
+      } else {
+        Toast.show(res?.message || 'Failed to remove coupon', Toast.LONG);
+        return { success: false, message: res?.message };
+      }
+    } catch (err) {
+      Toast.show('Failed to remove coupon', Toast.SHORT);
+      return { success: false, message: err?.message };
+    } finally {
+      isApplyingRef.current = false;
+      setIsApplyingCoupon(false);
+    }
+  }, [
+    removeCoupon,
+    updateOfferState,
+    addressHook?.addresses,
+    deliveryHook?.deliveryMode,
+    deliveryHook?.selectedSlot,
+    getCartSummary,
+  ]);
+
+  /**
+   * One-Tap Switch:
+   * Smoothly replaces currently applied coupon with a better unlocked offer.
+   */
+  const handleSwitchCoupon = useCallback(
+    async newCode => {
+      const code = String(newCode || '').trim();
+      if (!code) return { success: false };
+
+      if (isApplyingRef.current) return { success: false };
+      isApplyingRef.current = true;
+      setIsApplyingCoupon(true);
+      try {
+        let res = await applyCoupon(code);
+        if (!res || !res.success) {
+          // If server requires explicitly removing the previous coupon first
+          await removeCoupon();
+          res = await applyCoupon(code);
+        }
+
+        if (res && res.success) {
+          updateOfferState('2', true);
+          setAppliedCouponCode(code);
+          const selectedAddr = addressHook?.addresses?.find(a => a.selected);
+          const summaryRes = await getCartSummary(
+            deliveryHook?.deliveryMode,
+            deliveryHook?.selectedSlot,
+            null,
+            selectedAddr?.pincodeAreaId,
+          );
+          const saved =
+            summaryRes?.data?.couponAmount ||
+            cartSummary?.couponAmount ||
+            0;
+          const msg =
+            saved > 0
+              ? `Coupon switched! You saved ₹${Math.round(saved)}.`
+              : 'Coupon switched successfully!';
+          Toast.show(msg, Toast.SHORT);
+          return { success: true, savedAmount: saved };
+        } else {
+          Toast.show(res?.message || 'Failed to switch coupon', Toast.LONG);
+          return { success: false, message: res?.message };
+        }
+      } catch (err) {
+        Toast.show(err?.message || 'Failed to switch coupon', Toast.LONG);
+        return { success: false, message: err?.message };
+      } finally {
+        isApplyingRef.current = false;
+        setIsApplyingCoupon(false);
+      }
+    },
+    [
+      applyCoupon,
+      removeCoupon,
+      updateOfferState,
+      addressHook?.addresses,
+      deliveryHook?.deliveryMode,
+      deliveryHook?.selectedSlot,
+      getCartSummary,
+      cartSummary?.couponAmount,
+    ],
   );
 
   const handleApplyCoupon = useCallback(
@@ -406,5 +657,21 @@ export const useOffers = (deliveryHook, addressHook) => {
     appliedGiftCardCode: appliedGiftCardCode || giftCardCodeFromSummary,
     isCouponApplied,
     isGiftCardApplied,
+
+    // Smart coupon recommendation values and actions:
+    bestCoupon: recommendations.bestCoupon,
+    betterCoupon: recommendations.betterCoupon,
+    extraSavings: recommendations.extraSavings,
+    unlockableCoupon: recommendations.unlockableCoupon,
+    eligibleCoupons: recommendations.eligibleCoupons,
+    allValidCoupons: recommendations.allValidCoupons,
+    totalCouponsCount: recommendations.totalCount,
+    isApplyingCoupon,
+    handleOneTapApply,
+    handleRemoveCoupon,
+    handleSwitchCoupon,
+    fetchRewards,
+    cartValue,
   };
 };
+

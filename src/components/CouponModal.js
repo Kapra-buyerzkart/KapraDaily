@@ -21,6 +21,7 @@ import {
 } from '../styles/cartTheme';
 import { CartText, IconDisc } from '../screens/cart/components/atoms';
 import CustomModal, { MODAL_POSITION } from './modal/CustomModal';
+import { FONTS } from '../styles/typography';
 
 const formatExpiry = validTo =>
   validTo
@@ -42,51 +43,129 @@ const describeOffer = item => {
   return 'Offer available on this order';
 };
 
-const MetaChip = ({ icon, label }) => (
+import { evaluateCoupon } from '../utils/couponRecommendation';
+
+const MetaChip = ({ icon, label, tone = 'muted' }) => (
   <View style={styles.metaChip}>
     <MaterialCommunityIcons
       name={icon}
       size={wp('3.4%')}
-      color={CART_COLORS.textMuted}
+      color={
+        tone === 'brand'
+          ? CART_COLORS.primary
+          : tone === 'warning'
+          ? '#D97706'
+          : CART_COLORS.textMuted
+      }
     />
-    <CartText variant="micro" tone="muted">
+    <CartText
+      variant="micro"
+      tone={tone === 'warning' ? 'secondary' : tone}
+      style={tone === 'warning' ? styles.warningText : undefined}
+    >
       {label}
     </CartText>
   </View>
 );
 
-const OfferCard = ({ item, actionLabel, onPress }) => {
+const OfferCard = ({
+  item,
+  actionLabel,
+  onPress,
+  cartValue = 0,
+  isApplied = false,
+  onRemove,
+}) => {
   const code = item.couponCode || item.giftCode || item.code;
   const expiry = formatExpiry(item.validTo);
 
+  const evaluation = React.useMemo(() => {
+    return evaluateCoupon(item, cartValue);
+  }, [item, cartValue]);
+
+  const shortfall = evaluation?.shortfall || 0;
+  const isEligible = evaluation?.isEligible ?? true;
+  const estimatedDiscount = evaluation?.estimatedDiscount || 0;
+
   return (
-    <TouchableOpacity
-      activeOpacity={0.85}
-      onPress={() => onPress(code)}
-      style={styles.card}
-    >
+    <View style={[styles.card, isApplied && styles.appliedCardBorder]}>
       <View style={styles.cardTopRow}>
-        <View style={styles.codeChip}>
+        <View style={[styles.codeChip, isApplied && styles.appliedCodeChip]}>
           <MaterialCommunityIcons
-            name="tag-outline"
+            name={isApplied ? 'check-circle' : 'tag-outline'}
             size={wp('3.6%')}
-            color={CART_COLORS.primary}
+            color={isApplied ? '#16A34A' : CART_COLORS.primary}
           />
-          <CartText variant="captionStrong" tone="brand">
+          <CartText
+            variant="captionStrong"
+            tone={isApplied ? 'success' : 'brand'}
+          >
             {code}
           </CartText>
         </View>
 
-        <View style={styles.actionPill}>
-          <CartText variant="micro" tone="brand" style={styles.actionText}>
-            {actionLabel}
-          </CartText>
-        </View>
+        {isApplied ? (
+          <TouchableOpacity
+            activeOpacity={0.75}
+            onPress={onRemove}
+            style={styles.appliedActionPill}
+          >
+            <CartText variant="micro" tone="danger" style={styles.actionText}>
+              REMOVE
+            </CartText>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            activeOpacity={0.85}
+            disabled={!isEligible}
+            onPress={() => onPress(code)}
+            style={[
+              styles.actionPill,
+              !isEligible && styles.actionPillDisabled,
+            ]}
+          >
+            <CartText
+              variant="micro"
+              tone={isEligible ? 'brand' : 'faint'}
+              style={styles.actionText}
+            >
+              {!isEligible && shortfall > 0 ? 'LOCKED' : actionLabel}
+            </CartText>
+          </TouchableOpacity>
+        )}
       </View>
 
       <CartText variant="bodyStrong" style={styles.cardTitle}>
         {describeOffer(item)}
       </CartText>
+
+      {/* Savings indicator if eligible */}
+      {isEligible && estimatedDiscount > 0 && !isApplied && (
+        <View style={styles.savingsRow}>
+          <MaterialCommunityIcons
+            name="check-circle-outline"
+            size={14}
+            color="#16A34A"
+          />
+          <CartText variant="micro" tone="success">
+            Save ₹{Math.round(estimatedDiscount)} on this order
+          </CartText>
+        </View>
+      )}
+
+      {/* Shortfall requirement if ineligible */}
+      {!isEligible && shortfall > 0 && (
+        <View style={styles.shortfallRow}>
+          <MaterialCommunityIcons
+            name="basket-outline"
+            size={14}
+            color="#D97706"
+          />
+          <CartText variant="micro" style={styles.shortfallText}>
+            Add ₹{Math.ceil(shortfall)} more to unlock this offer
+          </CartText>
+        </View>
+      )}
 
       {item.minOrderAmount > 0 || expiry ? (
         <>
@@ -104,7 +183,7 @@ const OfferCard = ({ item, actionLabel, onPress }) => {
           </View>
         </>
       ) : null}
-    </TouchableOpacity>
+    </View>
   );
 };
 
@@ -119,6 +198,9 @@ const CouponModal = ({
   availableGiftCards,
   onCouponClick,
   isCopyOnly = false,
+  cartValue = 0,
+  appliedCouponCode = null,
+  onRemoveCoupon,
 }) => {
   const modalRef = useRef(null);
 
@@ -237,13 +319,28 @@ const CouponModal = ({
           (item.couponId || item.giftCardId || index).toString()
         }
         showsVerticalScrollIndicator={false}
-        renderItem={({ item }) => (
-          <OfferCard
-            item={item}
-            actionLabel={isCopyOnly ? 'COPY' : 'APPLY'}
-            onPress={onCouponClick}
-          />
-        )}
+        renderItem={({ item }) => {
+          const code = item.couponCode || item.code || item.giftCode;
+          const isApplied =
+            !isGiftCard &&
+            appliedCouponCode &&
+            code &&
+            code.trim().toUpperCase() === appliedCouponCode.trim().toUpperCase();
+
+          return (
+            <OfferCard
+              item={item}
+              actionLabel={isCopyOnly ? 'COPY' : 'APPLY'}
+              onPress={codeToApply => {
+                onCouponClick(codeToApply);
+                onClose?.();
+              }}
+              cartValue={cartValue}
+              isApplied={isApplied}
+              onRemove={onRemoveCoupon}
+            />
+          );
+        }}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Image
@@ -418,5 +515,42 @@ const styles = StyleSheet.create({
   },
   emptyNote: {
     textAlign: 'center',
+  },
+  appliedCardBorder: {
+    borderColor: '#86EFAC',
+    borderWidth: 1.2,
+    backgroundColor: '#F0FDF4',
+  },
+  appliedCodeChip: {
+    borderColor: '#86EFAC',
+    backgroundColor: '#DCFCE7',
+  },
+  appliedActionPill: {
+    borderRadius: CART_RADIUS.pill,
+    backgroundColor: '#FEE2E2',
+    paddingHorizontal: CART_SPACING.md,
+    paddingVertical: hp('0.6%'),
+  },
+  actionPillDisabled: {
+    backgroundColor: CART_COLORS.well,
+  },
+  savingsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 6,
+  },
+  shortfallRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 6,
+  },
+  shortfallText: {
+    fontFamily: FONTS.gilroy.medium,
+    color: '#B45309',
+  },
+  warningText: {
+    color: '#B45309',
   },
 });

@@ -2,7 +2,14 @@ import React from 'react';
 import icons from '@/assets/icons';
 import OfferRow from './OfferRow';
 
-const RewardsCard = ({ appliedGiftCardCode, isApplied, onApply, onRemove }) => (
+const RewardsCard = ({
+  appliedGiftCardCode,
+  isApplied,
+  onApply,
+  onRemove,
+  tinted,
+  style,
+}) => (
   <OfferRow
     imageSource={icons.smartPoint}
     title="Smart point"
@@ -11,6 +18,8 @@ const RewardsCard = ({ appliedGiftCardCode, isApplied, onApply, onRemove }) => (
     isApplied={isApplied ?? !!appliedGiftCardCode}
     onPress={onApply}
     onRemove={onRemove}
+    tinted={tinted}
+    style={style}
   />
 );
 

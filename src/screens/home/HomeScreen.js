@@ -214,9 +214,7 @@ const HomeScreen = () => {
       topGifBanner?.link_value;
     if (
       typeof rawVal === 'string' &&
-      /^#?(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(
-        rawVal.trim(),
-      )
+      /^#?(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(rawVal.trim())
     ) {
       return normalizeHex(rawVal.trim());
     }

@@ -1,10 +1,5 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Platform,
-} from 'react-native';
+import { View, Text, StyleSheet, Platform } from 'react-native';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import Animated, {
   useAnimatedStyle,
@@ -271,11 +266,11 @@ const HomeHeaderGreen = ({
               </Text>
             </View>
 
-            {!!subtitle && (
+            {/* {!!subtitle && (
               <Text style={styles.locationSubtitle} numberOfLines={1}>
                 {subtitle}
               </Text>
-            )}
+            )} */}
           </View>
         </AnimatedPressable>
 

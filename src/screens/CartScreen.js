@@ -53,6 +53,18 @@ const CartScreen = () => {
     handleApplyCoupon,
     handleCouponClick,
 
+    // Smart coupon recommendation and one-tap apply
+    bestCoupon,
+    betterCoupon,
+    extraSavings,
+    unlockableCoupon,
+    totalCouponsCount,
+    isApplyingCoupon,
+    handleOneTapApply,
+    handleRemoveCoupon,
+    handleSwitchCoupon,
+    cartValue,
+
     selectedDeliveryType,
     setSelectedDeliveryType,
 
@@ -222,6 +234,15 @@ const CartScreen = () => {
         firstProductId={firstProductId}
         pincodeAreaId={selectedAddress?.pincodeAreaId}
         bottomSpacerHeight={hp('14%') + insets.bottom}
+        bestCoupon={bestCoupon}
+        betterCoupon={betterCoupon}
+        extraSavings={extraSavings}
+        unlockableCoupon={unlockableCoupon}
+        totalCouponsCount={totalCouponsCount}
+        isApplyingCoupon={isApplyingCoupon}
+        onOneTapApply={handleOneTapApply}
+        onRemoveCoupon={handleRemoveCoupon}
+        onSwitchCoupon={handleSwitchCoupon}
       />
     ),
     [
@@ -238,6 +259,15 @@ const CartScreen = () => {
       firstProductId,
       selectedAddress?.pincodeAreaId,
       insets.bottom,
+      bestCoupon,
+      betterCoupon,
+      extraSavings,
+      unlockableCoupon,
+      totalCouponsCount,
+      isApplyingCoupon,
+      handleOneTapApply,
+      handleRemoveCoupon,
+      handleSwitchCoupon,
     ],
   );
 
@@ -338,6 +368,9 @@ const CartScreen = () => {
         availableCoupons={availableCoupons}
         availableGiftCards={availableGiftCards}
         handleCouponClick={handleCouponClick}
+        cartValue={cartValue}
+        appliedCouponCode={appliedCouponCode}
+        onRemoveCoupon={handleRemoveCoupon}
         isClearCartModalVisible={isClearCartModalVisible}
         setIsClearCartModalVisible={setIsClearCartModalVisible}
         clearCart={clearCart}

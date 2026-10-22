@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import CouponCard from './CouponCard';
+import OneTapCouponCard from './OneTapCouponCard';
 import RewardsCard from './RewardsCard';
 import CoinCard from './CoinCard';
 import DottedDivider from './atoms/DottedDivider';
@@ -16,6 +16,17 @@ const SavingsSection = ({
   availableBCoins,
   onApplyOffer,
   onRejectOffer,
+  // One-tap coupon props
+  bestCoupon,
+  betterCoupon,
+  extraSavings = 0,
+  unlockableCoupon,
+  totalCouponsCount = 0,
+  couponSavingsAmount = 0,
+  isApplyingCoupon = false,
+  onOneTapApply,
+  onRemoveCoupon,
+  onSwitchCoupon,
 }) => {
   return (
     <View style={styles.container}>
@@ -25,18 +36,30 @@ const SavingsSection = ({
       </View>
 
       <View style={styles.body}>
-        <CouponCard
+        {/* Highlighted Hero Offer Card */}
+        <OneTapCouponCard
           appliedCouponCode={appliedCouponCode}
-          isApplied={isCouponApplied}
-          onApply={() => onApplyOffer('2')}
-          onRemove={() => onRejectOffer('2')}
+          isCouponApplied={isCouponApplied}
+          couponSavingsAmount={couponSavingsAmount}
+          bestCoupon={bestCoupon}
+          betterCoupon={betterCoupon}
+          extraSavings={extraSavings}
+          unlockableCoupon={unlockableCoupon}
+          totalCouponsCount={totalCouponsCount}
+          isApplyingCoupon={isApplyingCoupon}
+          onOneTapApply={onOneTapApply}
+          onRemoveCoupon={onRemoveCoupon || (() => onRejectOffer('2'))}
+          onSwitchCoupon={onSwitchCoupon}
+          onViewAllCoupons={() => onApplyOffer('2')}
         />
+
         <RewardsCard
           appliedGiftCardCode={appliedGiftCardCode}
           isApplied={isGiftCardApplied}
           onApply={() => onApplyOffer('4')}
           onRemove={() => onRejectOffer('4')}
         />
+
         <CoinCard
           bcoinsApplied={bcoinsAppliedValue}
           availableBCoins={availableBCoins}

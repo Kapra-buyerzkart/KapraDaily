@@ -16,6 +16,16 @@ const CartFooterSection = ({
   onRejectOffer,
   billCalculations,
   bottomSpacerHeight,
+  // One-tap coupon properties
+  bestCoupon,
+  betterCoupon,
+  extraSavings,
+  unlockableCoupon,
+  totalCouponsCount,
+  isApplyingCoupon,
+  onOneTapApply,
+  onRemoveCoupon,
+  onSwitchCoupon,
 }) => (
   <View style={styles.container}>
     <WishlistCTA onPress={onWishlistPress} />
@@ -29,6 +39,16 @@ const CartFooterSection = ({
       availableBCoins={availableBCoins}
       onApplyOffer={onApplyOffer}
       onRejectOffer={onRejectOffer}
+      bestCoupon={bestCoupon}
+      betterCoupon={betterCoupon}
+      extraSavings={extraSavings}
+      unlockableCoupon={unlockableCoupon}
+      totalCouponsCount={totalCouponsCount}
+      couponSavingsAmount={billCalculations?.couponDiscount || 0}
+      isApplyingCoupon={isApplyingCoupon}
+      onOneTapApply={onOneTapApply}
+      onRemoveCoupon={onRemoveCoupon}
+      onSwitchCoupon={onSwitchCoupon}
     />
 
     <BillSummary billCalculations={billCalculations} />

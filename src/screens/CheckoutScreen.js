@@ -41,6 +41,10 @@ import DeliverySlotModal from '../components/DeliverySlotModal';
 import LinearGradient from 'react-native-linear-gradient';
 import logger from '../utils/logger';
 import { isCashOnDelivery } from './cart/paymentMeta';
+import OneTapCouponCard from './cart/components/OneTapCouponCard';
+import CouponModal from '../components/CouponModal';
+import { getAvailableCouponsApi } from '../api/cartService';
+import { getCouponRecommendations } from '../utils/couponRecommendation';
 
 const CheckoutScreen = () => {
   const navigation = useNavigation();
@@ -68,6 +72,8 @@ const CheckoutScreen = () => {
     refreshCart,
     error: cartError,
     addresses,
+    applyCoupon,
+    removeCoupon,
   } = useContext(CartContext);
   const { showLoader } = useContext(LoaderContext);
   const { profile } = useContext(AppContext);
@@ -89,8 +95,46 @@ const CheckoutScreen = () => {
   const [chosenSlot, setChosenSlot] = useState(null);
   const scrollViewRef = React.useRef(null);
 
+  // Coupon state in checkout
+  const [availableCoupons, setAvailableCoupons] = useState([]);
+  const [showCouponModal, setShowCouponModal] = useState(false);
+  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
+  const [appliedCouponCode, setAppliedCouponCode] = useState(
+    cartSummary?.couponCode || cartSummary?.appliedCouponCode || null,
+  );
+
   const currentSelectedAddress =
     addresses.find(a => a.selected) || selectedAddress;
+
+  useEffect(() => {
+    const fetchCheckoutCoupons = async () => {
+      try {
+        const areaId =
+          pincodeAreaId || currentSelectedAddress?.pincodeAreaId;
+        const res = await getAvailableCouponsApi(areaId);
+        if (res?.data) {
+          const list =
+            res.data.items || (Array.isArray(res.data) ? res.data : []);
+          setAvailableCoupons(list);
+        }
+      } catch (err) {
+        logger.error('Error fetching checkout coupons:', err);
+      }
+    };
+    fetchCheckoutCoupons();
+  }, [pincodeAreaId, currentSelectedAddress?.pincodeAreaId]);
+
+  useEffect(() => {
+    if (cartSummary) {
+      const code = cartSummary.couponCode || cartSummary.appliedCouponCode;
+      const amt = Number(cartSummary.couponAmount || 0);
+      if (amt === 0 && !code) {
+        setAppliedCouponCode(null);
+      } else if (code) {
+        setAppliedCouponCode(code);
+      }
+    }
+  }, [cartSummary]);
 
   useEffect(() => {
     const currentPincodeAreaId =
@@ -106,7 +150,14 @@ const CheckoutScreen = () => {
       );
       getCartSummary(apiDeliveryMode, selectedSlot, null, currentPincodeAreaId);
     }
-  }, [currentSelectedAddress?.id, deliveryType, selectedSlot, pincodeAreaId]);
+  }, [
+    currentSelectedAddress?.id,
+    currentSelectedAddress?.pincodeAreaId,
+    deliveryType,
+    selectedSlot,
+    pincodeAreaId,
+    getCartSummary,
+  ]);
 
   const frontendBillCalculations = React.useMemo(() => {
     let mrpTotal = 0;
@@ -136,10 +187,6 @@ const CheckoutScreen = () => {
   }, [cartItems]);
 
   const billCalculations = React.useMemo(() => {
-    if (preloadedBillCalculations) {
-      return preloadedBillCalculations;
-    }
-
     const summary = cartSummary || preloadedCartSummary;
 
     if (summary) {
@@ -157,6 +204,11 @@ const CheckoutScreen = () => {
         toPay: summary.grandTotal ?? frontendBillCalculations.toPay,
       };
     }
+
+    if (preloadedBillCalculations) {
+      return preloadedBillCalculations;
+    }
+
     return frontendBillCalculations;
   }, [
     cartSummary,
@@ -164,6 +216,100 @@ const CheckoutScreen = () => {
     preloadedBillCalculations,
     preloadedCartSummary,
   ]);
+
+  const checkoutCartValue =
+    cartSummary?.subTotal ?? frontendBillCalculations.itemTotal ?? 0;
+
+  const couponRecommendations = React.useMemo(() => {
+    return getCouponRecommendations({
+      coupons: availableCoupons,
+      cartValue: checkoutCartValue,
+      appliedCouponCode:
+        appliedCouponCode ||
+        cartSummary?.couponCode ||
+        cartSummary?.appliedCouponCode,
+      appliedDiscountAmount: billCalculations.couponDiscount || 0,
+    });
+  }, [
+    availableCoupons,
+    checkoutCartValue,
+    appliedCouponCode,
+    cartSummary?.couponCode,
+    cartSummary?.appliedCouponCode,
+    billCalculations.couponDiscount,
+  ]);
+
+  const handleCheckoutOneTapApply = async code => {
+    if (isApplyingCoupon || !code) return;
+    setIsApplyingCoupon(true);
+    try {
+      const res = await applyCoupon(code);
+      if (res && res.success) {
+        setAppliedCouponCode(code);
+        const areaId =
+          pincodeAreaId || currentSelectedAddress?.pincodeAreaId;
+        await getCartSummary(
+          deliveryType === 'slot' ? 'slotted' : 'express',
+          chosenSlot?.id,
+          null,
+          areaId,
+        );
+      } else {
+        Alert.alert('Coupon Failed', res?.message || 'Unable to apply coupon');
+      }
+    } catch (err) {
+      Alert.alert('Error', err?.message || 'Failed to apply coupon');
+    } finally {
+      setIsApplyingCoupon(false);
+    }
+  };
+
+  const handleCheckoutRemoveCoupon = async () => {
+    if (isApplyingCoupon) return;
+    setIsApplyingCoupon(true);
+    try {
+      const res = await removeCoupon();
+      if (res && res.success) {
+        setAppliedCouponCode(null);
+        const areaId =
+          pincodeAreaId || currentSelectedAddress?.pincodeAreaId;
+        await getCartSummary(
+          deliveryType === 'slot' ? 'slotted' : 'express',
+          chosenSlot?.id,
+          null,
+          areaId,
+        );
+      }
+    } catch (err) {
+      logger.error('Error removing coupon in checkout:', err);
+    } finally {
+      setIsApplyingCoupon(false);
+    }
+  };
+
+  const handleCheckoutSwitchCoupon = async newCode => {
+    if (isApplyingCoupon || !newCode) return;
+    setIsApplyingCoupon(true);
+    try {
+      await removeCoupon();
+      const res = await applyCoupon(newCode);
+      if (res && res.success) {
+        setAppliedCouponCode(newCode);
+        const areaId =
+          pincodeAreaId || currentSelectedAddress?.pincodeAreaId;
+        await getCartSummary(
+          deliveryType === 'slot' ? 'slotted' : 'express',
+          chosenSlot?.id,
+          null,
+          areaId,
+        );
+      }
+    } catch (err) {
+      logger.error('Error switching coupon in checkout:', err);
+    } finally {
+      setIsApplyingCoupon(false);
+    }
+  };
 
   useEffect(() => {
     const fetchPaymentModes = async () => {
@@ -855,9 +1001,37 @@ const CheckoutScreen = () => {
         )}
 
         {!cartError && (
-          <View style={styles.billContainer}>
-            <BillSection billCalculations={billCalculations} />
-          </View>
+          <>
+            <View style={{ marginBottom: 12 }}>
+              <OneTapCouponCard
+                appliedCouponCode={
+                  appliedCouponCode ||
+                  cartSummary?.couponCode ||
+                  cartSummary?.appliedCouponCode
+                }
+                isCouponApplied={
+                  !!appliedCouponCode ||
+                  !!cartSummary?.couponCode ||
+                  billCalculations.couponDiscount > 0
+                }
+                couponSavingsAmount={billCalculations.couponDiscount || 0}
+                bestCoupon={couponRecommendations.bestCoupon}
+                betterCoupon={couponRecommendations.betterCoupon}
+                extraSavings={couponRecommendations.extraSavings}
+                unlockableCoupon={couponRecommendations.unlockableCoupon}
+                totalCouponsCount={couponRecommendations.totalCount}
+                isApplyingCoupon={isApplyingCoupon}
+                onOneTapApply={handleCheckoutOneTapApply}
+                onRemoveCoupon={handleCheckoutRemoveCoupon}
+                onSwitchCoupon={handleCheckoutSwitchCoupon}
+                onViewAllCoupons={() => setShowCouponModal(true)}
+              />
+            </View>
+
+            <View style={styles.billContainer}>
+              <BillSection billCalculations={billCalculations} />
+            </View>
+          </>
         )}
       </ScrollView>
 
@@ -930,6 +1104,23 @@ const CheckoutScreen = () => {
           selectedAddress?.pincodeAreaId
         }
         onSelectSlot={slot => setChosenSlot(slot)}
+      />
+
+      <CouponModal
+        visible={showCouponModal}
+        onClose={() => setShowCouponModal(false)}
+        availableCoupons={availableCoupons}
+        onCouponClick={code => {
+          handleCheckoutOneTapApply(code);
+          setShowCouponModal(false);
+        }}
+        cartValue={checkoutCartValue}
+        appliedCouponCode={
+          appliedCouponCode ||
+          cartSummary?.couponCode ||
+          cartSummary?.appliedCouponCode
+        }
+        onRemoveCoupon={handleCheckoutRemoveCoupon}
       />
     </SafeAreaView>
   );

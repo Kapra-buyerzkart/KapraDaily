@@ -35,6 +35,9 @@ const CartModals = ({
   availableCoupons,
   availableGiftCards,
   handleCouponClick,
+  cartValue,
+  appliedCouponCode,
+  onRemoveCoupon,
   isClearCartModalVisible,
   setIsClearCartModalVisible,
   clearCart,
@@ -89,6 +92,9 @@ const CartModals = ({
       availableCoupons={availableCoupons}
       availableGiftCards={availableGiftCards}
       onCouponClick={handleCouponClick}
+      cartValue={cartValue}
+      appliedCouponCode={appliedCouponCode}
+      onRemoveCoupon={onRemoveCoupon}
     />
     <ConfirmationModal
       visible={isClearCartModalVisible}

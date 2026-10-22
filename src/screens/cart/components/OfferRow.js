@@ -16,6 +16,8 @@ const OfferRow = ({
   onPress,
   onRemove,
   removeLabel = 'Remove',
+  style,
+  tinted = false,
 }) => {
   const Wrapper = isApplied ? View : TouchableOpacity;
   const wrapperProps = isApplied
@@ -23,8 +25,11 @@ const OfferRow = ({
     : { activeOpacity: 0.75, onPress, accessibilityRole: 'button' };
 
   return (
-    <Wrapper style={styles.row} {...wrapperProps}>
-      <View style={styles.iconWrap}>
+    <Wrapper
+      style={[styles.row, tinted && styles.tintedRow, style]}
+      {...wrapperProps}
+    >
+      <View style={[styles.iconWrap, tinted && styles.tintedIconWrap]}>
         {imageSource ? (
           <Image source={imageSource} style={styles.iconImage} />
         ) : (
@@ -86,11 +91,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: wp('4%'),
     backgroundColor: '#FFFFFF',
   },
+  tintedRow: {
+    backgroundColor: 'transparent',
+    paddingVertical: hp('1.1%'),
+    paddingHorizontal: wp('3.5%'),
+  },
   iconWrap: {
     width: wp('10%'),
     height: wp('10%'),
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  tintedIconWrap: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: wp('5%'),
+    borderWidth: 0.5,
+    borderColor: '#E5E7EB',
   },
   iconImage: {
     width: wp('8%'),

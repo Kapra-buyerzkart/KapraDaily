@@ -158,11 +158,17 @@ const getSliceVisuals = (prize: AssuredPrize) => {
   const isNoPrize =
     Boolean(prize.isNoPrize) ||
     String(prize.rewardType || '').toLowerCase() === 'noprize' ||
-    String(prize.rewardName || prize.label || '').toLowerCase().includes('better luck') ||
-    String(prize.rewardName || prize.label || '').toLowerCase().includes('no prize');
+    String(prize.rewardName || prize.label || '')
+      .toLowerCase()
+      .includes('better luck') ||
+    String(prize.rewardName || prize.label || '')
+      .toLowerCase()
+      .includes('no prize');
 
   const rType = String(prize.rewardType || prize.type || '').toLowerCase();
-  const rawText = String(prize.displayText || prize.label || prize.rewardName || '').trim();
+  const rawText = String(
+    prize.displayText || prize.label || prize.rewardName || '',
+  ).trim();
 
   let iconType: 'coin' | 'gift' | 'coupon' | 'truck' | 'clover' = 'gift';
   if (isNoPrize) {
@@ -1546,6 +1552,8 @@ export default function SpinWheelRewardsScreen() {
           <Text style={styles.headerTitle} numberOfLines={1}>
             {campaignName || 'Spin & Win'}
           </Text>
+
+          <View style={{ paddingTop: 10 }} />
           <Text style={styles.headerSubtitle}>
             {isOnboarding
               ? 'New User Welcome Bonus'
@@ -1759,17 +1767,10 @@ export default function SpinWheelRewardsScreen() {
                 </Animated.View>
 
                 {/* 2. Breathing Radial Fiery/Amber Halo Corona */}
-                <Animated.View
-                  style={[styles.ambientCorona, ambientHaloStyle]}
-                >
+                <Animated.View style={[styles.ambientCorona, ambientHaloStyle]}>
                   <Svg width={400} height={400} viewBox="0 0 400 400">
                     <Defs>
-                      <RadialGradient
-                        id="screenHalo"
-                        cx="50%"
-                        cy="50%"
-                        r="50%"
-                      >
+                      <RadialGradient id="screenHalo" cx="50%" cy="50%" r="50%">
                         <Stop
                           offset="0%"
                           stopColor="#FF6D00"
@@ -1797,10 +1798,30 @@ export default function SpinWheelRewardsScreen() {
                 </Animated.View>
 
                 {/* 3. Ambient Diamond Sparkles */}
-                <Sparkle style={styles.sparkleTL} delay={0} size={12} color="#FFE082" />
-                <Sparkle style={styles.sparkleTR} delay={800} size={10} color="#FFFFFF" />
-                <Sparkle style={styles.sparkleBL} delay={1600} size={11} color="#FFD54F" />
-                <Sparkle style={styles.sparkleBR} delay={1200} size={9} color="#FFE082" />
+                <Sparkle
+                  style={styles.sparkleTL}
+                  delay={0}
+                  size={12}
+                  color="#FFE082"
+                />
+                <Sparkle
+                  style={styles.sparkleTR}
+                  delay={800}
+                  size={10}
+                  color="#FFFFFF"
+                />
+                <Sparkle
+                  style={styles.sparkleBL}
+                  delay={1600}
+                  size={11}
+                  color="#FFD54F"
+                />
+                <Sparkle
+                  style={styles.sparkleBR}
+                  delay={1200}
+                  size={9}
+                  color="#FFE082"
+                />
               </View>
 
               {/* Sculpted 3D Golden Pointer Flapper Needle (Fixed at 12 o'clock pointing down) */}
@@ -1920,9 +1941,21 @@ export default function SpinWheelRewardsScreen() {
 
                       {/* Radial Wedge Specular Overlay */}
                       <RadialGradient id="wedgeSheen" cx="50%" cy="50%" r="50%">
-                        <Stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.24" />
-                        <Stop offset="60%" stopColor="#FFFFFF" stopOpacity="0.08" />
-                        <Stop offset="100%" stopColor="#000000" stopOpacity="0.32" />
+                        <Stop
+                          offset="0%"
+                          stopColor="#FFFFFF"
+                          stopOpacity="0.24"
+                        />
+                        <Stop
+                          offset="60%"
+                          stopColor="#FFFFFF"
+                          stopOpacity="0.08"
+                        />
+                        <Stop
+                          offset="100%"
+                          stopColor="#000000"
+                          stopOpacity="0.32"
+                        />
                       </RadialGradient>
 
                       {/* Dynamic Slice Gradient Definitions with rich dual tones */}
@@ -1949,12 +1982,7 @@ export default function SpinWheelRewardsScreen() {
                     </Defs>
 
                     {/* 1. Outer Dark Shadow Backing */}
-                    <Circle
-                      cx={RADIUS}
-                      cy={RADIUS}
-                      r={RADIUS}
-                      fill="#140601"
-                    />
+                    <Circle cx={RADIUS} cy={RADIUS} r={RADIUS} fill="#140601" />
 
                     {/* 2. Heavy Brushed Gold Outer Rim Bezel (15px thick) */}
                     <Circle
@@ -1998,15 +2026,19 @@ export default function SpinWheelRewardsScreen() {
                     {prizes.map((prize, index) => {
                       const visuals = getSliceVisuals(prize);
                       const iconY =
-                        RADIUS * (itemCount <= 4 ? 0.255 : itemCount <= 6 ? 0.23 : 0.21);
+                        RADIUS *
+                        (itemCount <= 4 ? 0.255 : itemCount <= 6 ? 0.23 : 0.21);
                       const iconR =
                         itemCount <= 4 ? 12 : itemCount <= 6 ? 10.5 : 9;
                       const heroY =
-                        iconY + iconR + (itemCount <= 4 ? 13 : itemCount <= 6 ? 11 : 9.5);
+                        iconY +
+                        iconR +
+                        (itemCount <= 4 ? 13 : itemCount <= 6 ? 11 : 9.5);
                       const heroSize =
                         itemCount <= 4 ? 13 : itemCount <= 6 ? 11 : 9.5;
                       const subY =
-                        heroY + (itemCount <= 4 ? 13 : itemCount <= 6 ? 11 : 9.5);
+                        heroY +
+                        (itemCount <= 4 ? 13 : itemCount <= 6 ? 11 : 9.5);
                       const subSize =
                         itemCount <= 4 ? 9 : itemCount <= 6 ? 8 : 7;
                       const badgeY = subY + (itemCount <= 4 ? 6.5 : 5);
@@ -2046,7 +2078,12 @@ export default function SpinWheelRewardsScreen() {
                           />
 
                           {/* 3. Wedge Icon Badge */}
-                          {renderSliceIcon(visuals.iconType, RADIUS, iconY, iconR)}
+                          {renderSliceIcon(
+                            visuals.iconType,
+                            RADIUS,
+                            iconY,
+                            iconR,
+                          )}
 
                           {/* 4. Hero Bold Value */}
                           <SvgText
@@ -2799,7 +2836,7 @@ const styles = StyleSheet.create({
     color: '#FF7A28',
     fontSize: 11,
     fontFamily: FONTS.gilroy?.medium || 'System',
-    marginTop: 1,
+    marginTop: 5,
   },
   spinsBadge: {
     flexDirection: 'row',
