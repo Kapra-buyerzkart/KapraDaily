@@ -257,6 +257,18 @@ const ProfileScreen: React.FC = () => {
 
   const offersItems: MenuItem[] = [
     {
+      key: 'my-rewards',
+      label: 'My Rewards',
+      icon: (
+        <MaterialCommunityIcons
+          name="gift-outline"
+          color={INK}
+          size={ICON_SIZE}
+        />
+      ),
+      onPress: () => navigation.navigate('MyRewardsScreen'),
+    },
+    {
       key: 'spin-wheel',
       label: 'Spin Wheel Rewards',
       icon: (

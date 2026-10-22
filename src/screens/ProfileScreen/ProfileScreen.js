@@ -58,7 +58,7 @@ export default function ProfileScreen() {
     onSmartPoint: () => openOffersModal('Gift Cards'),
     onCoupons: () => openOffersModal('Coupons'),
     onMyRewards: () => navigation.navigate('MyRewardsScreen'),
-  }).filter(item => item.key !== 'my-rewards');
+  });
 
   const myAccountItems = buildMyAccountItems({
     navigation,

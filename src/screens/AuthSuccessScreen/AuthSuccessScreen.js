@@ -2,7 +2,10 @@ import React from 'react';
 import { ScrollView, StatusBar, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useNavigation, useRoute } from '@react-navigation/native';
+
 import ComingSoonModal from '@/components/ComingSoonModal';
+import OrderGiftCartCelebration from '@/components/OrderGiftCartCelebration';
 
 import { BrandMark } from './molecules';
 import { LandingBackdrop, ServiceGrid } from './organisms';
@@ -11,6 +14,8 @@ import useAuthSuccess from './useAuthSuccess';
 
 const AuthSuccessScreen = () => {
   const insets = useSafeAreaInsets();
+  const navigation = useNavigation();
+  const route = useRoute();
   const { tiles, handleSelect, isComingSoonVisible, closeComingSoon } =
     useAuthSuccess();
 
@@ -37,6 +42,24 @@ const AuthSuccessScreen = () => {
         <BrandMark />
         <ServiceGrid tiles={tiles} onSelect={handleSelect} />
       </ScrollView>
+
+      {/* Onboarding Welcome Spin & Celebration */}
+      <OrderGiftCartCelebration
+        mode="onboarding"
+        isNewRegistration={Boolean(route?.params?.isNewRegistration)}
+        onComplete={() => {
+          navigation.navigate('SpinWheelRewardsScreen', {
+            source: 'ONBOARDING',
+            theme: 'welcome',
+          });
+        }}
+        onTrackOrder={() => {
+          // Secondary button in onboarding mode dismisses celebration
+        }}
+        onSkip={() => {
+          // Secondary button in onboarding mode dismisses celebration
+        }}
+      />
 
       <ComingSoonModal
         visible={isComingSoonVisible}

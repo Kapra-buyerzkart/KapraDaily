@@ -23,7 +23,7 @@ export const buildOffersItems = ({
         size={ICON_SIZE}
       />
     ),
-    badge: <Badge label="SPIN & WIN" tone="success" />,
+    // badge: <Badge label="SPIN & WIN" tone="success" />,
     onPress: onMyRewards,
   },
   {
@@ -172,11 +172,7 @@ export const buildInformationItems = ({
     key: 'customer-support',
     label: 'Customer Support',
     icon: (
-      <MaterialCommunityIcons
-        name="face-agent"
-        color={INK}
-        size={ICON_SIZE}
-      />
+      <MaterialCommunityIcons name="face-agent" color={INK} size={ICON_SIZE} />
     ),
     onPress: () => helpSheetRef.current?.open(),
   },
@@ -227,13 +223,7 @@ export const buildInformationItems = ({
   {
     key: 'kpc-login',
     label: 'UDC Login',
-    icon: (
-      <MaterialCommunityIcons
-        name="web"
-        color={INK}
-        size={ICON_SIZE}
-      />
-    ),
+    icon: <MaterialCommunityIcons name="web" color={INK} size={ICON_SIZE} />,
     onPress: () => Linking.openURL(CONFIG.image_base_url),
   },
   {
@@ -255,13 +245,7 @@ export const buildInformationItems = ({
     label: 'Log Out',
     textColor: RED,
     tone: 'danger',
-    icon: (
-      <MaterialCommunityIcons
-        name="logout"
-        color={RED}
-        size={ICON_SIZE}
-      />
-    ),
+    icon: <MaterialCommunityIcons name="logout" color={RED} size={ICON_SIZE} />,
     onPress: () => setIsLogoutModalVisible(true),
   },
 ];

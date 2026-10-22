@@ -25,8 +25,7 @@ import {
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { getOrderDetailsApi } from '../api/orderService';
-import OrderSpinBanner from '../components/OrderSpinBanner';
-import OrderRewardCornerPopup from '../components/OrderRewardCornerPopup';
+import OrderGiftCartCelebration from '../components/OrderGiftCartCelebration';
 
 const OrderSuccessScreen = () => {
   const navigation = useNavigation();
@@ -122,7 +121,7 @@ const OrderSuccessScreen = () => {
   };
 
   const handleTrackOrder = () => {
-    navigation.navigate('OrderTrackingScreen', {
+    navigation.replace('OrderTrackingScreen', {
       orderId: orderId || orderDetails?._id,
     });
   };
@@ -185,13 +184,6 @@ const OrderSuccessScreen = () => {
               </Text>
             </View>
           </View>
-
-          {/* Gamified Motion Graphics Spin Wheel Banner */}
-          <OrderSpinBanner
-            orderId={orderId || orderDetails?._id}
-            orderNumber={displayOrderNumber}
-            onPressSpin={handleOpenSpinWheel}
-          />
 
           {}
           <View style={styles.orderCard}>
@@ -329,11 +321,12 @@ const OrderSuccessScreen = () => {
         </ScrollView>
       </LinearGradient>
 
-      {/* Floating Corner Popup Reward Card */}
-      <OrderRewardCornerPopup
+      {/* Dynamic Slide-in Cart & Dummy Spin Wheel Celebration */}
+      <OrderGiftCartCelebration
         orderId={orderId || orderDetails?._id}
         orderNumber={displayOrderNumber}
-        onPress={handleOpenSpinWheel}
+        onComplete={handleOpenSpinWheel}
+        onTrackOrder={handleTrackOrder}
       />
     </SafeAreaView>
   );

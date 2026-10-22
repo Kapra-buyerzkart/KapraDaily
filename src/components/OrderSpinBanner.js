@@ -133,7 +133,6 @@ const OrderSpinBanner = ({ orderId, orderNumber, onPressSpin }) => {
     }
   };
 
-
   const handlePressCard = async () => {
     if (isClaimed) return;
     impactTick();

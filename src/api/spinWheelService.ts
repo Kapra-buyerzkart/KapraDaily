@@ -3,6 +3,7 @@ import { get, post } from './networkUtils';
 import logger from '../utils/logger';
 
 const ORDER_SPIN_PREFIX = '@kapra_spin_order_';
+const ONBOARDING_SPIN_KEY = '@kapra_spin_onboarding_welcome';
 
 export interface OrderSpinRewardData {
   orderId: string;
@@ -77,6 +78,126 @@ export interface AssuredPrize {
   isNoPrize?: boolean;
   [key: string]: any;
 }
+
+export const DUMMY_ONBOARDING_CAMPAIGN = {
+  campaignId: 9999,
+  campaignName: 'New User Welcome Rewards',
+  description: 'Welcome bonus spin for newly registered KapraDaily users.',
+  rewards: [
+    {
+      campaignItemId: 901,
+      rewardId: 901,
+      rewardName: '₹100 Off Welcome Gift',
+      rewardType: 'Coupon',
+      rewardValue: 100,
+      rewardValueType: 'Fixed',
+      validityDays: 14,
+      displayText: '₹100 OFF',
+      icon: 'ticket',
+      code: 'WELCOME100',
+      description: 'Flat ₹100 off on your first order above ₹299.',
+      winWeight: 3000,
+    },
+    {
+      campaignItemId: 902,
+      rewardId: 902,
+      rewardName: 'Free Delivery',
+      rewardType: 'FreeDelivery',
+      rewardValue: 0,
+      rewardValueType: 'NotApplicable',
+      validityDays: 30,
+      displayText: 'FREE DEL',
+      icon: 'truck-fast',
+      code: 'FREEDEL3',
+      description: 'Zero delivery fee on your first 3 grocery orders.',
+      winWeight: 2500,
+    },
+    {
+      campaignItemId: 903,
+      rewardId: 903,
+      rewardName: '50 UD Coins Welcome Bonus',
+      rewardType: 'BCoin',
+      rewardValue: 50,
+      rewardValueType: 'Fixed',
+      validityDays: 60,
+      displayText: '50 COINS',
+      icon: 'coins',
+      code: 'COINS50',
+      description: '50 UD Coins credited to your wallet for instant savings.',
+      winWeight: 2000,
+    },
+    {
+      campaignItemId: 904,
+      rewardId: 904,
+      rewardName: '₹50 Off Fresh Fruits & Veggies',
+      rewardType: 'Coupon',
+      rewardValue: 50,
+      rewardValueType: 'Fixed',
+      validityDays: 14,
+      displayText: '₹50 OFF',
+      icon: 'tag',
+      code: 'FRESH50',
+      description: '₹50 off on farm fresh vegetables & fruits.',
+      winWeight: 2000,
+    },
+    {
+      campaignItemId: 905,
+      rewardId: 905,
+      rewardName: 'Flat 20% Off Essentials',
+      rewardType: 'Coupon',
+      rewardValue: 20,
+      rewardValueType: 'Percentage',
+      validityDays: 14,
+      displayText: '20% OFF',
+      icon: 'percent',
+      code: 'SAVE20',
+      description: 'Flat 20% discount on daily essentials and groceries.',
+      winWeight: 1500,
+    },
+    {
+      campaignItemId: 906,
+      rewardId: 906,
+      rewardName: '₹75 Off Super Saver',
+      rewardType: 'Coupon',
+      rewardValue: 75,
+      rewardValueType: 'Fixed',
+      validityDays: 14,
+      displayText: '₹75 OFF',
+      icon: 'gift',
+      code: 'SAVER75',
+      description: 'Save ₹75 on order value of ₹399 and above.',
+      winWeight: 1500,
+    },
+    {
+      campaignItemId: 907,
+      rewardId: 907,
+      rewardName: 'Double Coins (2X) on First Order',
+      rewardType: 'BCoin',
+      rewardValue: 2,
+      rewardValueType: 'Multiplier',
+      validityDays: 30,
+      displayText: '2X COINS',
+      icon: 'lightning-bolt',
+      code: '2XCOINS',
+      description: 'Earn 2X UD coins on your entire first order purchase.',
+      winWeight: 1000,
+    },
+    {
+      campaignItemId: 908,
+      rewardId: 908,
+      rewardName: 'Jackpot Mystery Gift Box',
+      rewardType: 'GiftCard',
+      rewardValue: 150,
+      rewardValueType: 'Fixed',
+      validityDays: 14,
+      displayText: 'JACKPOT',
+      icon: 'crown',
+      code: 'MEGA150',
+      description: 'Mega ₹150 off on orders above ₹599.',
+      winWeight: 800,
+    },
+  ],
+};
 
 export const DEFAULT_OCTOBER_CAMPAIGN = {
   campaignId: 1,
@@ -221,14 +342,14 @@ export const DEFAULT_OCTOBER_CAMPAIGN = {
 };
 
 export const REWARD_PALETTES = [
-  { color1: '#059669', color2: '#047857', textColor: '#FFFFFF', iconName: 'ticket-percent', badge: 'COUPON' },
-  { color1: '#7C3AED', color2: '#6D28D9', textColor: '#FFFFFF', iconName: 'gift', badge: 'VOUCHER' },
-  { color1: '#EA580C', color2: '#C2410C', textColor: '#FFFFFF', iconName: 'wallet-giftcard', badge: 'CASHBACK' },
-  { color1: '#D97706', color2: '#B45309', textColor: '#FFFFFF', iconName: 'cash-multiple', badge: 'BCOINS' },
-  { color1: '#E11D48', color2: '#BE123C', textColor: '#FFFFFF', iconName: 'gift', badge: 'GIFT CARD' },
-  { color1: '#0284C7', color2: '#0369A1', textColor: '#FFFFFF', iconName: 'truck-fast', badge: 'FREE DEL' },
-  { color1: '#8B5CF6', color2: '#7C3AED', textColor: '#FFFFFF', iconName: 'ticket-percent', badge: 'COUPON' },
-  { color1: '#0D9488', color2: '#0F766E', textColor: '#FFFFFF', iconName: 'star-circle', badge: 'SAVINGS' },
+  { color1: '#FF5722', color2: '#D84315', textColor: '#FFFFFF', iconName: 'ticket-percent', badge: 'COUPON' },
+  { color1: '#10B981', color2: '#059669', textColor: '#FFFFFF', iconName: 'truck-fast', badge: 'FREE DEL' },
+  { color1: '#F59E0B', color2: '#D97706', textColor: '#FFFFFF', iconName: 'cash-multiple', badge: 'BCOINS' },
+  { color1: '#06B6D4', color2: '#0891B2', textColor: '#FFFFFF', iconName: 'ticket-percent', badge: 'COUPON' },
+  { color1: '#8B5CF6', color2: '#6D28D9', textColor: '#FFFFFF', iconName: 'percent', badge: 'OFFER' },
+  { color1: '#EC4899', color2: '#DB2777', textColor: '#FFFFFF', iconName: 'gift', badge: 'VOUCHER' },
+  { color1: '#FBBF24', color2: '#D97706', textColor: '#FFFFFF', iconName: 'star-four-points', badge: 'BONUS' },
+  { color1: '#EF4444', color2: '#DC2626', textColor: '#FFFFFF', iconName: 'wallet-giftcard', badge: 'GIFT' },
 ];
 
 export const mapIconNameToMaterialIcon = (rawIcon?: string, rewardType?: string): string => {
@@ -600,6 +721,46 @@ export const markOrderSpinClaimed = async (
     );
   } catch (error) {
     logger.error('Error saving claimed order spin:', error);
+  }
+};
+
+export const isOnboardingSpinClaimed = async (): Promise<boolean> => {
+  try {
+    const val = await AsyncStorage.getItem(ONBOARDING_SPIN_KEY);
+    return val !== null;
+  } catch (error) {
+    return false;
+  }
+};
+
+export const getOnboardingSpinReward = async (): Promise<any | null> => {
+  try {
+    const raw = await AsyncStorage.getItem(ONBOARDING_SPIN_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (error) {
+    return null;
+  }
+};
+
+export const markOnboardingSpinClaimed = async (
+  prizeData: any,
+): Promise<void> => {
+  try {
+    const payload = {
+      claimedAt: new Date().toISOString(),
+      prize: prizeData,
+    };
+    await AsyncStorage.setItem(ONBOARDING_SPIN_KEY, JSON.stringify(payload));
+  } catch (error) {
+    logger.error('Error saving claimed onboarding spin:', error);
+  }
+};
+
+export const resetOnboardingSpinClaim = async (): Promise<void> => {
+  try {
+    await AsyncStorage.removeItem(ONBOARDING_SPIN_KEY);
+  } catch (error) {
+    logger.error('Error resetting claimed onboarding spin:', error);
   }
 };
 

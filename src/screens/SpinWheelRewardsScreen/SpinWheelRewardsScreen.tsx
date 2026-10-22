@@ -33,8 +33,11 @@ import Svg, {
   Circle,
   Defs,
   G,
+  Line,
   LinearGradient as SvgGradient,
   Path,
+  Polygon,
+  RadialGradient,
   Rect,
   Stop,
   Text as SvgText,
@@ -54,6 +57,10 @@ import {
   isOrderSpinClaimed,
   getOrderSpinReward,
   markOrderSpinClaimed,
+  isOnboardingSpinClaimed,
+  getOnboardingSpinReward,
+  markOnboardingSpinClaimed,
+  DUMMY_ONBOARDING_CAMPAIGN,
   checkSpinWinEligibility,
   playSpinWin,
   mapBackendRewardToPrize,
@@ -65,27 +72,369 @@ import {
 export type { AssuredPrize };
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-// iOS-optimized responsive wheel sizing: avoids notch & tab bar vertical clipping
-const WHEEL_SIZE = Math.min(Math.round(SCREEN_WIDTH * 0.76), 288);
+// Elevated responsive wheel sizing: optimal grand presence and tap comfort
+const WHEEL_SIZE = Math.min(Math.round(SCREEN_WIDTH * 0.82), 316);
 const RADIUS = WHEEL_SIZE / 2;
 // Overall spin duration (7.6s) calibrated for a smooth, readable speed and suspenseful deceleration
 const SPIN_DURATION_MS = 7600;
 
-// Dynamic slice wedge path generator (from 12 o'clock measured clockwise)
-const getSlicePath = (index: number, angle: number) => {
-  const startAngle = index * angle;
-  const endAngle = (index + 1) * angle;
-  const startRad = (startAngle * Math.PI) / 180;
-  const endRad = (endAngle * Math.PI) / 180;
+// Dynamic symmetric wedge path generator centered at 12 o'clock (-angle/2 to +angle/2)
+const getCenteredWedgePath = (angle: number) => {
+  const halfAngleRad = ((angle / 2) * Math.PI) / 180;
+  const wedgeRadius = RADIUS - 14.5;
+  const startX = RADIUS + wedgeRadius * Math.sin(-halfAngleRad);
+  const startY = RADIUS - wedgeRadius * Math.cos(-halfAngleRad);
+  const endX = RADIUS + wedgeRadius * Math.sin(halfAngleRad);
+  const endY = RADIUS - wedgeRadius * Math.cos(halfAngleRad);
 
-  const startX = RADIUS + (RADIUS - 13) * Math.sin(startRad);
-  const startY = RADIUS - (RADIUS - 13) * Math.cos(startRad);
-  const endX = RADIUS + (RADIUS - 13) * Math.sin(endRad);
-  const endY = RADIUS - (RADIUS - 13) * Math.cos(endRad);
+  return `M${RADIUS},${RADIUS} L${startX.toFixed(2)},${startY.toFixed(
+    2,
+  )} A${wedgeRadius},${wedgeRadius} 0 0 1 ${endX.toFixed(2)},${endY.toFixed(
+    2,
+  )} Z`;
+};
 
-  return `M${RADIUS},${RADIUS} L${startX.toFixed(2)},${startY.toFixed(2)} A${
-    RADIUS - 13
-  },${RADIUS - 13} 0 0 1 ${endX.toFixed(2)},${endY.toFixed(2)} Z`;
+// Micro sparkle component for motion graphics ambient glints
+const Sparkle: React.FC<{
+  style?: any;
+  delay?: number;
+  size?: number;
+  color?: string;
+}> = ({ style, delay = 0, size = 11, color = '#FFE082' }) => {
+  const scale = useSharedValue(0.4);
+  const opacity = useSharedValue(0.2);
+
+  useEffect(() => {
+    scale.value = withRepeat(
+      withSequence(
+        withTiming(0.4, { duration: delay }),
+        withTiming(1.2, {
+          duration: 900,
+          easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+        }),
+        withTiming(0.4, {
+          duration: 900,
+          easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+        }),
+        withTiming(0.4, { duration: 1200 }),
+      ),
+      -1,
+      false,
+    );
+
+    opacity.value = withRepeat(
+      withSequence(
+        withTiming(0.2, { duration: delay }),
+        withTiming(1, { duration: 900 }),
+        withTiming(0.15, { duration: 900 }),
+        withTiming(0.15, { duration: 1200 }),
+      ),
+      -1,
+      false,
+    );
+  }, [delay, opacity, scale]);
+
+  const animStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+    opacity: opacity.value,
+  }));
+
+  return (
+    <Animated.View
+      style={[styles.sparkleWrap, style, animStyle]}
+      pointerEvents="none"
+    >
+      <MaterialCommunityIcons
+        name="star-four-points"
+        size={size}
+        color={color}
+      />
+    </Animated.View>
+  );
+};
+
+// Helper: parse slice typography and emblem type cleanly
+const getSliceVisuals = (prize: AssuredPrize) => {
+  const isNoPrize =
+    Boolean(prize.isNoPrize) ||
+    String(prize.rewardType || '').toLowerCase() === 'noprize' ||
+    String(prize.rewardName || prize.label || '').toLowerCase().includes('better luck') ||
+    String(prize.rewardName || prize.label || '').toLowerCase().includes('no prize');
+
+  const rType = String(prize.rewardType || prize.type || '').toLowerCase();
+  const rawText = String(prize.displayText || prize.label || prize.rewardName || '').trim();
+
+  let iconType: 'coin' | 'gift' | 'coupon' | 'truck' | 'clover' = 'gift';
+  if (isNoPrize) {
+    iconType = 'clover';
+  } else if (
+    rType === 'bcoin' ||
+    rawText.toLowerCase().includes('coin') ||
+    rawText.toLowerCase().includes('token')
+  ) {
+    iconType = 'coin';
+  } else if (
+    rType === 'freedelivery' ||
+    rawText.toLowerCase().includes('delivery')
+  ) {
+    iconType = 'truck';
+  } else if (
+    rType === 'coupon' ||
+    rawText.toLowerCase().includes('coupon') ||
+    rawText.toLowerCase().includes('%') ||
+    rawText.toLowerCase().includes('off')
+  ) {
+    iconType = 'coupon';
+  } else if (
+    rType === 'giftcard' ||
+    rType === 'partnervoucher' ||
+    rawText.toLowerCase().includes('gift') ||
+    rawText.toLowerCase().includes('voucher')
+  ) {
+    iconType = 'gift';
+  }
+
+  if (isNoPrize) {
+    return {
+      iconType,
+      hero: 'TRY AGAIN',
+      sub: 'Next Order',
+      badge: 'NO PRIZE',
+    };
+  }
+
+  if (prize.titleLine1 && prize.titleLine2) {
+    return {
+      iconType,
+      hero: prize.titleLine1.toUpperCase(),
+      sub: prize.titleLine2.toUpperCase(),
+      badge: (prize.badge || 'GIFT').toUpperCase(),
+    };
+  }
+
+  const words = rawText.split(' ');
+  if (words.length >= 2) {
+    return {
+      iconType,
+      hero: words[0].toUpperCase(),
+      sub: words.slice(1).join(' ').toUpperCase(),
+      badge: (prize.badge || 'REWARD').toUpperCase(),
+    };
+  }
+
+  return {
+    iconType,
+    hero: rawText.toUpperCase(),
+    sub: (prize.badge || '').toUpperCase(),
+    badge: (prize.badge || 'GIFT').toUpperCase(),
+  };
+};
+
+const renderSliceIcon = (
+  iconType: string,
+  cx: number,
+  cy: number,
+  r: number,
+) => {
+  switch (iconType) {
+    case 'coin':
+      return (
+        <G>
+          <Circle
+            cx={cx}
+            cy={cy}
+            r={r}
+            fill="rgba(0, 0, 0, 0.42)"
+            stroke="rgba(255, 235, 59, 0.65)"
+            strokeWidth={1}
+          />
+          <Circle
+            cx={cx}
+            cy={cy}
+            r={r * 0.72}
+            fill="#FFD54F"
+            stroke="#B45309"
+            strokeWidth={0.8}
+          />
+          <Circle
+            cx={cx}
+            cy={cy}
+            r={r * 0.52}
+            fill="#F59E0B"
+            stroke="#D97706"
+            strokeWidth={0.5}
+          />
+          <SvgText
+            x={cx}
+            y={cy + r * 0.26}
+            fill="#78350F"
+            fontSize={r * 0.72}
+            fontWeight="900"
+            textAnchor="middle"
+          >
+            ₹
+          </SvgText>
+        </G>
+      );
+    case 'gift':
+      return (
+        <G>
+          <Circle
+            cx={cx}
+            cy={cy}
+            r={r}
+            fill="rgba(0, 0, 0, 0.42)"
+            stroke="rgba(255, 255, 255, 0.5)"
+            strokeWidth={1}
+          />
+          <Rect
+            x={cx - r * 0.55}
+            y={cy - r * 0.42}
+            width={r * 1.1}
+            height={r * 0.84}
+            rx={2}
+            fill="#EC4899"
+            stroke="#BE185D"
+            strokeWidth={0.7}
+          />
+          <Line
+            x1={cx}
+            y1={cy - r * 0.42}
+            x2={cx}
+            y2={cy + r * 0.42}
+            stroke="#FFF8E7"
+            strokeWidth={1.2}
+          />
+          <Line
+            x1={cx - r * 0.55}
+            y1={cy}
+            x2={cx + r * 0.55}
+            y2={cy}
+            stroke="#FFF8E7"
+            strokeWidth={1.2}
+          />
+          <Circle
+            cx={cx}
+            cy={cy - r * 0.42}
+            r={1.8}
+            fill="#FDE047"
+            stroke="#CA8A04"
+            strokeWidth={0.5}
+          />
+        </G>
+      );
+    case 'coupon':
+      return (
+        <G>
+          <Circle
+            cx={cx}
+            cy={cy}
+            r={r}
+            fill="rgba(0, 0, 0, 0.42)"
+            stroke="rgba(255, 255, 255, 0.5)"
+            strokeWidth={1}
+          />
+          <Rect
+            x={cx - r * 0.6}
+            y={cy - r * 0.42}
+            width={r * 1.2}
+            height={r * 0.84}
+            rx={2.5}
+            fill="#06B6D4"
+            stroke="#0891B2"
+            strokeWidth={0.7}
+          />
+          <SvgText
+            x={cx}
+            y={cy + r * 0.25}
+            fill="#FFFFFF"
+            fontSize={r * 0.72}
+            fontWeight="900"
+            textAnchor="middle"
+          >
+            %
+          </SvgText>
+        </G>
+      );
+    case 'truck':
+      return (
+        <G>
+          <Circle
+            cx={cx}
+            cy={cy}
+            r={r}
+            fill="rgba(0, 0, 0, 0.42)"
+            stroke="rgba(255, 255, 255, 0.5)"
+            strokeWidth={1}
+          />
+          <Rect
+            x={cx - r * 0.6}
+            y={cy - r * 0.3}
+            width={r * 0.9}
+            height={r * 0.55}
+            rx={1.5}
+            fill="#10B981"
+            stroke="#047857"
+            strokeWidth={0.6}
+          />
+          <Circle
+            cx={cx - r * 0.3}
+            cy={cy + r * 0.28}
+            r={r * 0.18}
+            fill="#064E3B"
+            stroke="#A7F3D0"
+            strokeWidth={0.5}
+          />
+          <Circle
+            cx={cx + r * 0.3}
+            cy={cy + r * 0.28}
+            r={r * 0.18}
+            fill="#064E3B"
+            stroke="#A7F3D0"
+            strokeWidth={0.5}
+          />
+        </G>
+      );
+    case 'clover':
+    default:
+      return (
+        <G>
+          <Circle
+            cx={cx}
+            cy={cy}
+            r={r}
+            fill="rgba(0, 0, 0, 0.42)"
+            stroke="rgba(255, 255, 255, 0.4)"
+            strokeWidth={1}
+          />
+          <Circle
+            cx={cx - r * 0.22}
+            cy={cy - r * 0.22}
+            r={r * 0.25}
+            fill="#94A3B8"
+          />
+          <Circle
+            cx={cx + r * 0.22}
+            cy={cy - r * 0.22}
+            r={r * 0.25}
+            fill="#94A3B8"
+          />
+          <Circle
+            cx={cx - r * 0.22}
+            cy={cy + r * 0.22}
+            r={r * 0.25}
+            fill="#94A3B8"
+          />
+          <Circle
+            cx={cx + r * 0.22}
+            cy={cy + r * 0.22}
+            r={r * 0.25}
+            fill="#94A3B8"
+          />
+          <Circle cx={cx} cy={cy} r={r * 0.14} fill="#F8FAFC" />
+        </G>
+      );
+  }
 };
 
 // 64 Confetti & Glitter Motion Graphics Particles for Full-Screen Winner Celebration
@@ -218,6 +567,7 @@ export default function SpinWheelRewardsScreen() {
   } = route.params || {};
   const isOrderReward = source === 'ORDER_SUCCESS' && !!orderId;
   const is48hr = theme === '48hr' || source === 'KSHOPE_PROFILE';
+  const isOnboarding = source === 'ONBOARDING' || theme === 'welcome';
 
   const [prizes, setPrizes] = useState<AssuredPrize[]>(() => {
     if (
@@ -285,24 +635,13 @@ export default function SpinWheelRewardsScreen() {
   const titleY =
     RADIUS - RADIUS * (itemCount <= 4 ? 0.49 : itemCount === 5 ? 0.5 : 0.52);
 
-  const bulbCount =
-    itemCount === 7
-      ? 21
-      : itemCount === 5
-      ? 20
-      : itemCount === 6
-      ? 18
-      : itemCount === 8
-      ? 24
-      : itemCount > 0
-      ? itemCount * 3
-      : 16;
+  const bulbCount = 28;
   const bulbs = useMemo(() => {
     if (itemCount === 0) return [];
     return Array.from({ length: bulbCount }).map((_, i) => {
       const angle = (i * 360) / bulbCount;
       const rad = (angle * Math.PI) / 180;
-      const dist = RADIUS - 7;
+      const dist = RADIUS - 7.5;
       return {
         x: RADIUS + dist * Math.sin(rad),
         y: RADIUS - dist * Math.cos(rad),
@@ -311,9 +650,59 @@ export default function SpinWheelRewardsScreen() {
     });
   }, [bulbCount, itemCount]);
 
+  const sunburstRays = useMemo(() => {
+    const rayLength = 195;
+    const count = 16;
+    return Array.from({ length: count }).map((_, i) => {
+      const centerAngle = (i * 360) / count;
+      const halfWidth = 5.2;
+      const a1 = ((centerAngle - halfWidth) * Math.PI) / 180;
+      const a2 = ((centerAngle + halfWidth) * Math.PI) / 180;
+      const x1 = 200 + rayLength * Math.sin(a1);
+      const y1 = 200 - rayLength * Math.cos(a1);
+      const x2 = 200 + rayLength * Math.sin(a2);
+      const y2 = 200 - rayLength * Math.cos(a2);
+      return {
+        points: `200,200 ${x1},${y1} ${x2},${y2}`,
+        key: `sunburst-ray-${i}`,
+      };
+    });
+  }, []);
+
+  const singleWedgePath = useMemo(
+    () => getCenteredWedgePath(sliceAngle),
+    [sliceAngle],
+  );
+
   const rotation = useSharedValue(0);
   const pointerAngle = useSharedValue(0);
   const hubScale = useSharedValue(1);
+  const sunburstRotation = useSharedValue(0);
+  const ambientHaloScale = useSharedValue(1);
+
+  useEffect(() => {
+    sunburstRotation.value = withRepeat(
+      withTiming(360, { duration: 26000, easing: Easing.linear }),
+      -1,
+      false,
+    );
+    ambientHaloScale.value = withRepeat(
+      withSequence(
+        withTiming(1.08, { duration: 2200, easing: Easing.inOut(Easing.ease) }),
+        withTiming(1.0, { duration: 2200, easing: Easing.inOut(Easing.ease) }),
+      ),
+      -1,
+      true,
+    );
+    hubScale.value = withRepeat(
+      withSequence(
+        withTiming(1.05, { duration: 1100, easing: Easing.inOut(Easing.ease) }),
+        withTiming(1.0, { duration: 1100, easing: Easing.inOut(Easing.ease) }),
+      ),
+      -1,
+      true,
+    );
+  }, [ambientHaloScale, hubScale, sunburstRotation]);
 
   const trophyScale = useSharedValue(0.5);
   const trophyGlow = useSharedValue(0.4);
@@ -322,13 +711,23 @@ export default function SpinWheelRewardsScreen() {
   const [isSpinning, setIsSpinning] = useState(false);
   const [wonPrize, setWonPrize] = useState<AssuredPrize | null>(null);
   const [showModal, setShowModal] = useState(false);
-  const [spinsCount, setSpinsCount] = useState(isOrderReward ? 1 : 3);
+  const [spinsCount, setSpinsCount] = useState(
+    isOrderReward || isOnboarding ? 1 : 3,
+  );
 
   const hapticTimeouts = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const spinEndedRef = useRef<boolean>(false);
+  const spinFallbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
 
   const clearHapticTimeouts = () => {
     hapticTimeouts.current.forEach(t => clearTimeout(t));
     hapticTimeouts.current = [];
+    if (spinFallbackTimerRef.current) {
+      clearTimeout(spinFallbackTimerRef.current);
+      spinFallbackTimerRef.current = null;
+    }
   };
 
   useEffect(() => {
@@ -348,6 +747,51 @@ export default function SpinWheelRewardsScreen() {
   const fetchEligibility = useCallback(async () => {
     setIsLoading(true);
     setEmptyMessage(null);
+
+    if (isOnboarding) {
+      const dummyPrizes = DUMMY_ONBOARDING_CAMPAIGN.rewards.map(
+        (item: any, idx: number) => mapBackendRewardToPrize(item, idx),
+      );
+      setPrizes(dummyPrizes);
+      setCampaignName('Welcome Bonus');
+      setEmptyMessage(null);
+
+      const claimed = await isOnboardingSpinClaimed();
+      if (claimed && isMountedRef.current) {
+        setSpinsCount(0);
+        const reward = await getOnboardingSpinReward();
+        if (reward?.prize && isMountedRef.current) {
+          setWonPrize(reward.prize);
+          setShowModal(true);
+
+          const pItem = reward.prize;
+          const matchIdx = dummyPrizes.findIndex(
+            p =>
+              (pItem.campaignItemId &&
+                p.campaignItemId === pItem.campaignItemId) ||
+              (pItem.id && p.id === pItem.id) ||
+              (pItem.code && p.code === pItem.code) ||
+              (p.label &&
+                pItem.label &&
+                p.label.toLowerCase() === pItem.label.toLowerCase()),
+          );
+          if (matchIdx !== -1) {
+            const sAngle = 360 / dummyPrizes.length;
+            const sliceCenter = matchIdx * sAngle;
+            const targetAngle = (360 - (sliceCenter % 360)) % 360;
+            rotation.value = targetAngle;
+            accumulatedRotation.current = targetAngle;
+          }
+        }
+      } else {
+        setSpinsCount(1);
+      }
+
+      if (isMountedRef.current) {
+        setIsLoading(false);
+      }
+      return;
+    }
 
     const targetId = orderId || orderNumber;
 
@@ -401,7 +845,7 @@ export default function SpinWheelRewardsScreen() {
               );
               if (matchIdx !== -1) {
                 const sAngle = 360 / mapped.length;
-                const sliceCenter = matchIdx * sAngle + sAngle / 2;
+                const sliceCenter = matchIdx * sAngle;
                 const targetAngle = (360 - (sliceCenter % 360)) % 360;
                 rotation.value = targetAngle;
                 accumulatedRotation.current = targetAngle;
@@ -449,7 +893,7 @@ export default function SpinWheelRewardsScreen() {
         setIsLoading(false);
       }
     }
-  }, [orderId, isOrderReward, orderNumber]);
+  }, [orderId, isOrderReward, orderNumber, isOnboarding]);
 
   useEffect(() => {
     fetchEligibility();
@@ -500,18 +944,104 @@ export default function SpinWheelRewardsScreen() {
           : Number(orderId)
         : undefined;
 
-    if (targetOrderId && prize) {
+    if (isOnboarding && prize) {
+      markOnboardingSpinClaimed(prize);
+    } else if (targetOrderId && prize) {
       markOrderSpinClaimed(targetOrderId, prize);
     }
+  };
+
+  const safeSpinEnd = (prize: AssuredPrize, winningIndex: number) => {
+    if (spinEndedRef.current) return;
+    spinEndedRef.current = true;
+    if (spinFallbackTimerRef.current) {
+      clearTimeout(spinFallbackTimerRef.current);
+      spinFallbackTimerRef.current = null;
+    }
+    handleSpinEnd(prize, winningIndex);
   };
 
   const spin = async () => {
     if (isSpinning || spinsCount <= 0 || prizes.length === 0) return;
 
     clearHapticTimeouts();
+    spinEndedRef.current = false;
     impactTick();
     setWonPrize(null);
     setIsSpinning(true);
+
+    if (isOnboarding) {
+      const winningIndex = selectWeightedRewardIndex(prizes);
+      const targetPrize = prizes[winningIndex] || prizes[0];
+
+      const sliceCenter = winningIndex * sliceAngle;
+      const targetAngleInCycle = (360 - (sliceCenter % 360)) % 360;
+
+      const currentRot = accumulatedRotation.current;
+      const currentTurns = Math.floor(currentRot / 360);
+      const fullSpins = 5;
+      let nextTarget = (currentTurns + fullSpins) * 360 + targetAngleInCycle;
+
+      while (nextTarget <= currentRot + 3 * 360) {
+        nextTarget += 360;
+      }
+
+      accumulatedRotation.current = nextTarget;
+
+      const SLOWDOWN_HAPTIC_CLICKS: {
+        delay: number;
+        type: 'light' | 'medium';
+      }[] = [
+        { delay: 3400, type: 'light' },
+        { delay: 3820, type: 'light' },
+        { delay: 4260, type: 'light' },
+        { delay: 4720, type: 'light' },
+        { delay: 5200, type: 'light' },
+        { delay: 5700, type: 'light' },
+        { delay: 6220, type: 'medium' },
+        { delay: 6760, type: 'medium' },
+        { delay: 7280, type: 'medium' },
+      ];
+
+      SLOWDOWN_HAPTIC_CLICKS.forEach(({ delay, type }) => {
+        const timer = setTimeout(() => {
+          if (type === 'medium') {
+            impactTick();
+          } else {
+            selectionTick();
+          }
+        }, delay);
+        hapticTimeouts.current.push(timer);
+      });
+
+      // Pointer animation: lightweight repeating oscillation without overloading Android bridge
+      pointerAngle.value = withRepeat(
+        withSequence(
+          withTiming(-12, { duration: 60, easing: Easing.linear }),
+          withTiming(2, { duration: 60, easing: Easing.linear }),
+        ),
+        Math.floor(SPIN_DURATION_MS / 120),
+        true,
+      );
+
+      rotation.value = withTiming(
+        nextTarget,
+        {
+          duration: SPIN_DURATION_MS,
+          easing: Easing.bezier(0.16, 0.88, 0.26, 1),
+        },
+        () => {
+          'worklet';
+          runOnJS(safeSpinEnd)(targetPrize, winningIndex);
+        },
+      );
+
+      // Bulletproof Android fallback timer
+      spinFallbackTimerRef.current = setTimeout(() => {
+        safeSpinEnd(targetPrize, winningIndex);
+      }, SPIN_DURATION_MS + 250);
+      return;
+    }
 
     const targetOrderId =
       orderId !== undefined && orderId !== null
@@ -714,7 +1244,7 @@ export default function SpinWheelRewardsScreen() {
       targetPrize = prizes[winningIndex];
     }
 
-    const sliceCenter = winningIndex * sliceAngle + sliceAngle / 2;
+    const sliceCenter = winningIndex * sliceAngle;
     const targetAngleInCycle = (360 - (sliceCenter % 360)) % 360;
 
     const currentRot = accumulatedRotation.current;
@@ -754,26 +1284,14 @@ export default function SpinWheelRewardsScreen() {
       hapticTimeouts.current.push(timer);
     });
 
-    const fastTicks = Math.floor(3400 / 90);
-    const slowTicks = Math.floor(4100 / 220);
-    pointerAngle.value = withSequence(
-      withRepeat(
-        withSequence(
-          withTiming(-12, { duration: 45, easing: Easing.linear }),
-          withTiming(2, { duration: 45, easing: Easing.linear }),
-        ),
-        fastTicks,
-        true,
+    // Pointer animation: lightweight repeating oscillation without overloading Android bridge
+    pointerAngle.value = withRepeat(
+      withSequence(
+        withTiming(-12, { duration: 60, easing: Easing.linear }),
+        withTiming(2, { duration: 60, easing: Easing.linear }),
       ),
-      withRepeat(
-        withSequence(
-          withTiming(-7, { duration: 110, easing: Easing.out(Easing.quad) }),
-          withTiming(2, { duration: 110, easing: Easing.in(Easing.quad) }),
-        ),
-        slowTicks,
-        true,
-      ),
-      withSpring(0, { damping: 14, stiffness: 220 }),
+      Math.floor(SPIN_DURATION_MS / 120),
+      true,
     );
 
     rotation.value = withTiming(
@@ -782,12 +1300,16 @@ export default function SpinWheelRewardsScreen() {
         duration: SPIN_DURATION_MS,
         easing: Easing.bezier(0.16, 0.88, 0.26, 1),
       },
-      finished => {
-        if (finished) {
-          runOnJS(handleSpinEnd)(targetPrize, winningIndex);
-        }
+      () => {
+        'worklet';
+        runOnJS(safeSpinEnd)(targetPrize, winningIndex);
       },
     );
+
+    // Bulletproof Android fallback timer
+    spinFallbackTimerRef.current = setTimeout(() => {
+      safeSpinEnd(targetPrize, winningIndex);
+    }, SPIN_DURATION_MS + 250);
   };
 
   const handleBackToHome = () => {
@@ -809,9 +1331,84 @@ export default function SpinWheelRewardsScreen() {
     }
   };
 
+  const handleExploreServices = () => {
+    setShowModal(false);
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: 'AuthSuccessScreen' }],
+      }),
+    );
+  };
+
+  const handleGoToOrderTracking = () => {
+    setShowModal(false);
+    const targetOrderId = orderId || orderNumber;
+
+    if (is48hr || source === 'KSHOPE_PROFILE') {
+      if (targetOrderId) {
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 2,
+            routes: [
+              { name: 'KshopeHome' },
+              { name: 'KshopeMyOrders' },
+              {
+                name: 'KshopeMyOrderDetails',
+                params: { orderId: targetOrderId },
+              },
+            ],
+          }),
+        );
+      } else {
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 1,
+            routes: [{ name: 'KshopeHome' }, { name: 'KshopeMyOrders' }],
+          }),
+        );
+      }
+    } else {
+      if (targetOrderId) {
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 1,
+            routes: [
+              { name: 'MainTabs' },
+              {
+                name: 'OrderTrackingScreen',
+                params: { orderId: targetOrderId },
+              },
+            ],
+          }),
+        );
+      } else {
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [
+              {
+                name: 'MainTabs',
+                params: {
+                  screen: 'Home',
+                  params: { screen: 'MyOrdersScreen' },
+                },
+              },
+            ],
+          }),
+        );
+      }
+    }
+  };
+
   const handleBack = () => {
-    // Once spin is done and reward is given, never go back to OrderSuccessScreen; go to Home only
-    if (wonPrize || spinsCount <= 0 || (isOrderReward && wonPrize)) {
+    // Once spin is done and reward is given, never go back; go to Home only
+    if (
+      wonPrize ||
+      spinsCount <= 0 ||
+      (isOrderReward && wonPrize) ||
+      (isOnboarding && wonPrize)
+    ) {
       handleBackToHome();
     } else {
       navigation.goBack();
@@ -821,7 +1418,12 @@ export default function SpinWheelRewardsScreen() {
   // Android hardware back button handler
   useEffect(() => {
     const onBackPress = () => {
-      if (wonPrize || spinsCount <= 0 || (isOrderReward && wonPrize)) {
+      if (
+        wonPrize ||
+        spinsCount <= 0 ||
+        (isOrderReward && wonPrize) ||
+        (isOnboarding && wonPrize)
+      ) {
         handleBackToHome();
         return true;
       }
@@ -833,7 +1435,7 @@ export default function SpinWheelRewardsScreen() {
       onBackPress,
     );
     return () => subscription.remove();
-  }, [wonPrize, spinsCount, isOrderReward, is48hr]);
+  }, [wonPrize, spinsCount, isOrderReward, is48hr, isOnboarding]);
 
   const wheelStyle = useAnimatedStyle(() => ({
     transform: [{ rotate: `${rotation.value}deg` }],
@@ -845,6 +1447,14 @@ export default function SpinWheelRewardsScreen() {
 
   const hubAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: isSpinning ? 0.96 : hubScale.value }],
+  }));
+
+  const sunburstAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${sunburstRotation.value}deg` }],
+  }));
+
+  const ambientHaloStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: ambientHaloScale.value }],
   }));
 
   const trophyStyle = useAnimatedStyle(() => ({
@@ -904,19 +1514,15 @@ export default function SpinWheelRewardsScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      <StatusBar barStyle="light-content" backgroundColor="#0A0C10" />
 
-      {/* Bulletproof iOS Absolute Background Gradient */}
+      {/* Luxury Dark Pitch Black Accent Gradient */}
       <LinearGradient
-        colors={['#FFFFFF', '#FFF7ED', '#FFF3E0']}
+        colors={['#0A0C10', '#12151C', '#07080A']}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
         style={StyleSheet.absoluteFillObject}
       />
-
-      {/* Ambient background glows */}
-      <View style={styles.ambientGlowTop} />
-      <View style={styles.ambientGlowCenter} />
 
       {/* Top Header with SafeArea Inset */}
       <View
@@ -933,7 +1539,7 @@ export default function SpinWheelRewardsScreen() {
           accessibilityRole="button"
           accessibilityLabel="Go back"
         >
-          <Ionicons name="arrow-back" size={20} color="#1E293B" />
+          <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
         </TouchableOpacity>
 
         <View style={styles.headerTitleBlock}>
@@ -941,7 +1547,9 @@ export default function SpinWheelRewardsScreen() {
             {campaignName || 'Spin & Win'}
           </Text>
           <Text style={styles.headerSubtitle}>
-            {isOrderReward
+            {isOnboarding
+              ? 'New User Welcome Bonus'
+              : isOrderReward
               ? `Order #${orderNumber || orderId} Reward`
               : is48hr
               ? '48hrs Deals Lucky Rewards'
@@ -965,7 +1573,7 @@ export default function SpinWheelRewardsScreen() {
             <MaterialCommunityIcons
               name="star-four-points"
               size={12}
-              color="#D97706"
+              color="#FBBF24"
             />
           )}
           <Text
@@ -1043,7 +1651,11 @@ export default function SpinWheelRewardsScreen() {
                     color="#FFFFFF"
                   />
                   <Text style={styles.emptyActionText} numberOfLines={1}>
-                    {isOrderReward ? 'Back to Order' : 'Go Back'}
+                    {isOnboarding
+                      ? 'Explore Services'
+                      : isOrderReward
+                      ? 'Back to Order'
+                      : 'Go Back'}
                   </Text>
                 </View>
               </TouchableOpacity>
@@ -1051,15 +1663,15 @@ export default function SpinWheelRewardsScreen() {
           </View>
         ) : (
           <>
-            <View
+            <LinearGradient
+              colors={[
+                'rgba(255, 255, 255, 0.06)',
+                'rgba(255, 255, 255, 0.02)',
+              ]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
               style={[styles.guaranteeCard, is48hr && styles.guaranteeCard48hr]}
             >
-              <LinearGradient
-                colors={['#FFF7ED', '#FFEDD5']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={StyleSheet.absoluteFillObject}
-              />
               <View style={styles.guaranteeInner}>
                 <View
                   style={[
@@ -1070,7 +1682,7 @@ export default function SpinWheelRewardsScreen() {
                   <MaterialCommunityIcons
                     name={is48hr ? 'lightning-bolt' : 'shield-check'}
                     size={20}
-                    color="#F25000"
+                    color="#FF7A28"
                   />
                 </View>
                 <View style={styles.guaranteeCopy}>
@@ -1081,7 +1693,9 @@ export default function SpinWheelRewardsScreen() {
                         is48hr && styles.guaranteeHeading48hr,
                       ]}
                     >
-                      {isOrderReward
+                      {isOnboarding
+                        ? 'Welcome Bonus: 1 Free Gift'
+                        : isOrderReward
                         ? 'Order Bonus: 1 Lucky Gift'
                         : is48hr
                         ? '48hrs Deals Lucky Prize'
@@ -1099,7 +1713,9 @@ export default function SpinWheelRewardsScreen() {
                           is48hr && styles.guaranteePillText48hr,
                         ]}
                       >
-                        {isOrderReward
+                        {isOnboarding
+                          ? 'WELCOME GIFT'
+                          : isOrderReward
                           ? 'ORDER REWARD'
                           : is48hr
                           ? '48HR DEAL'
@@ -1113,7 +1729,9 @@ export default function SpinWheelRewardsScreen() {
                       is48hr && styles.guaranteeSubtitle48hr,
                     ]}
                   >
-                    {isOrderReward
+                    {isOnboarding
+                      ? 'Welcome to KapraDaily! Spin now to unlock your new user reward.'
+                      : isOrderReward
                       ? 'Congratulations on your order! Spin now to claim your lucky gift.'
                       : is48hr
                       ? 'Exclusive flash rewards and coupons with your lucky spin!'
@@ -1121,37 +1739,141 @@ export default function SpinWheelRewardsScreen() {
                   </Text>
                 </View>
               </View>
-            </View>
+            </LinearGradient>
 
             {/* The Wheel Stage */}
             <View style={styles.wheelStage}>
-              {/* Outer Ambient Wheel Halo */}
-              <View style={styles.outerWheelHalo} />
+              {/* Outer Ambient Wheel Atmosphere (Rotating Sunburst + Breathing Radial Halo + Floating Sparkles) */}
+              <View style={styles.ambientHaloWrapper} pointerEvents="none">
+                {/* 1. Rotating 16-Ray Sunburst Ambient Pattern */}
+                <Animated.View
+                  style={[styles.sunburstWrapper, sunburstAnimStyle]}
+                >
+                  <Svg width={400} height={400} viewBox="0 0 400 400">
+                    <G fill="rgba(255, 224, 130, 0.08)">
+                      {sunburstRays.map(ray => (
+                        <Polygon key={ray.key} points={ray.points} />
+                      ))}
+                    </G>
+                  </Svg>
+                </Animated.View>
 
-              {/* Pointer Flapper Needle (Fixed at 12 o'clock pointing down) */}
+                {/* 2. Breathing Radial Fiery/Amber Halo Corona */}
+                <Animated.View
+                  style={[styles.ambientCorona, ambientHaloStyle]}
+                >
+                  <Svg width={400} height={400} viewBox="0 0 400 400">
+                    <Defs>
+                      <RadialGradient
+                        id="screenHalo"
+                        cx="50%"
+                        cy="50%"
+                        r="50%"
+                      >
+                        <Stop
+                          offset="0%"
+                          stopColor="#FF6D00"
+                          stopOpacity="0.38"
+                        />
+                        <Stop
+                          offset="45%"
+                          stopColor="#FFA000"
+                          stopOpacity="0.18"
+                        />
+                        <Stop
+                          offset="75%"
+                          stopColor="#FFD54F"
+                          stopOpacity="0.06"
+                        />
+                        <Stop
+                          offset="100%"
+                          stopColor="#0A0C10"
+                          stopOpacity="0"
+                        />
+                      </RadialGradient>
+                    </Defs>
+                    <Circle cx="200" cy="200" r="195" fill="url(#screenHalo)" />
+                  </Svg>
+                </Animated.View>
+
+                {/* 3. Ambient Diamond Sparkles */}
+                <Sparkle style={styles.sparkleTL} delay={0} size={12} color="#FFE082" />
+                <Sparkle style={styles.sparkleTR} delay={800} size={10} color="#FFFFFF" />
+                <Sparkle style={styles.sparkleBL} delay={1600} size={11} color="#FFD54F" />
+                <Sparkle style={styles.sparkleBR} delay={1200} size={9} color="#FFE082" />
+              </View>
+
+              {/* Sculpted 3D Golden Pointer Flapper Needle (Fixed at 12 o'clock pointing down) */}
               <Animated.View style={[styles.pointerWrapper, pointerStyle]}>
-                <Svg width={32} height={40} viewBox="0 0 36 44">
+                <Svg width={38} height={48} viewBox="0 0 38 48">
                   <Defs>
-                    <SvgGradient id="needleGold" x1="0" y1="0" x2="1" y2="1">
-                      <Stop offset="0" stopColor="#F59E0B" />
-                      <Stop offset="0.6" stopColor="#D97706" />
-                      <Stop offset="1" stopColor="#B45309" />
+                    <SvgGradient id="needleLight" x1="0" y1="0" x2="1" y2="1">
+                      <Stop offset="0%" stopColor="#FFFDE7" />
+                      <Stop offset="50%" stopColor="#FFD54F" />
+                      <Stop offset="100%" stopColor="#FFA000" />
                     </SvgGradient>
+                    <SvgGradient id="needleDark" x1="0" y1="0" x2="1" y2="1">
+                      <Stop offset="0%" stopColor="#F59E0B" />
+                      <Stop offset="50%" stopColor="#D97706" />
+                      <Stop offset="100%" stopColor="#78350F" />
+                    </SvgGradient>
+                    <RadialGradient id="rubyJewel" cx="40%" cy="35%" r="65%">
+                      <Stop offset="0%" stopColor="#FDA4AF" />
+                      <Stop offset="45%" stopColor="#E11D48" />
+                      <Stop offset="80%" stopColor="#9F1239" />
+                      <Stop offset="100%" stopColor="#4C0519" />
+                    </RadialGradient>
                   </Defs>
+                  {/* Drop shadow backing contour */}
                   <Path
-                    d="M18 42 L6 14 C4 9 8 2 18 2 C28 2 32 9 30 14 Z"
-                    fill="url(#needleGold)"
+                    d="M19 47 L4 17 C2 10 9 2 19 2 C29 2 36 10 34 17 Z"
+                    fill="#1A0A02"
+                    opacity={0.45}
+                  />
+                  {/* Left facet (light gold highlight) */}
+                  <Path
+                    d="M19 46 L5 17 C3.5 11 10 3 19 3 Z"
+                    fill="url(#needleLight)"
+                    stroke="#FFE58F"
+                    strokeWidth={0.8}
+                  />
+                  {/* Right facet (rich bronze gold) */}
+                  <Path
+                    d="M19 46 L33 17 C34.5 11 28 3 19 3 Z"
+                    fill="url(#needleDark)"
+                    stroke="#78350F"
+                    strokeWidth={0.8}
+                  />
+                  {/* Center 3D spine ridge highlight */}
+                  <Line
+                    x1={19}
+                    y1={4}
+                    x2={19}
+                    y2={45}
                     stroke="#FFFFFF"
-                    strokeWidth={2}
-                  />
-                  <Circle
-                    cx={18}
-                    cy={14}
-                    r={5}
-                    fill="#EF4444"
-                    stroke="#FFE4E6"
                     strokeWidth={1.5}
+                    opacity={0.9}
                   />
+                  {/* Crown outer gold bezel */}
+                  <Circle
+                    cx={19}
+                    cy={16}
+                    r={8}
+                    fill="url(#needleLight)"
+                    stroke="#78350F"
+                    strokeWidth={1.2}
+                  />
+                  {/* Crown ruby jewel */}
+                  <Circle
+                    cx={19}
+                    cy={16}
+                    r={5.8}
+                    fill="url(#rubyJewel)"
+                    stroke="#FFE4E6"
+                    strokeWidth={0.8}
+                  />
+                  {/* Specular sparkle */}
+                  <Circle cx={17.2} cy={14.2} r={1.6} fill="#FFFFFF" />
                 </Svg>
               </Animated.View>
 
@@ -1160,188 +1882,380 @@ export default function SpinWheelRewardsScreen() {
                 <Animated.View style={[styles.wheelContainer, wheelStyle]}>
                   <Svg width={WHEEL_SIZE} height={WHEEL_SIZE}>
                     <Defs>
-                      {prizes.map(prize => (
+                      {/* Metallic Brushed Gold Outer Rim Gradient */}
+                      <SvgGradient
+                        id="wheelRimGold"
+                        x1="0"
+                        y1="0"
+                        x2="1"
+                        y2="1"
+                      >
+                        <Stop offset="0%" stopColor="#FFF9C4" />
+                        <Stop offset="25%" stopColor="#FFD54F" />
+                        <Stop offset="50%" stopColor="#FF9800" />
+                        <Stop offset="75%" stopColor="#E65100" />
+                        <Stop offset="100%" stopColor="#78350F" />
+                      </SvgGradient>
+
+                      {/* Dark Inner Track Gradient */}
+                      <SvgGradient
+                        id="innerRimDark"
+                        x1="0"
+                        y1="0"
+                        x2="1"
+                        y2="1"
+                      >
+                        <Stop offset="0%" stopColor="#2A1404" />
+                        <Stop offset="50%" stopColor="#180700" />
+                        <Stop offset="100%" stopColor="#0F0300" />
+                      </SvgGradient>
+
+                      {/* Metallic Gold Hub Gradient */}
+                      <SvgGradient id="hubRimGold" x1="0" y1="0" x2="1" y2="1">
+                        <Stop offset="0%" stopColor="#FFF9C4" />
+                        <Stop offset="40%" stopColor="#FFCA28" />
+                        <Stop offset="75%" stopColor="#FF8F00" />
+                        <Stop offset="100%" stopColor="#BF360C" />
+                      </SvgGradient>
+
+                      {/* Radial Wedge Specular Overlay */}
+                      <RadialGradient id="wedgeSheen" cx="50%" cy="50%" r="50%">
+                        <Stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.24" />
+                        <Stop offset="60%" stopColor="#FFFFFF" stopOpacity="0.08" />
+                        <Stop offset="100%" stopColor="#000000" stopOpacity="0.32" />
+                      </RadialGradient>
+
+                      {/* Dynamic Slice Gradient Definitions with rich dual tones */}
+                      {prizes.map((prize, i) => (
                         <SvgGradient
-                          key={`grad-${prize.id}`}
-                          id={`grad-${prize.id}`}
+                          key={`sliceGrad-${prize.id || i}`}
+                          id={`sliceGrad-${prize.id || i}`}
                           x1="0"
                           y1="0"
-                          x2="1"
+                          x2="0"
                           y2="1"
                         >
-                          <Stop offset="0" stopColor={prize.color1} />
-                          <Stop offset="1" stopColor={prize.color2} />
+                          <Stop offset="0%" stopColor={prize.color1} />
+                          <Stop
+                            offset="70%"
+                            stopColor={prize.color2 || prize.color1}
+                          />
+                          <Stop
+                            offset="100%"
+                            stopColor={prize.color2 || prize.color1}
+                          />
                         </SvgGradient>
                       ))}
-
-                      <SvgGradient id="rimGold" x1="0" y1="0" x2="1" y2="1">
-                        <Stop offset="0" stopColor="#FBBF24" />
-                        <Stop offset="0.5" stopColor="#F59E0B" />
-                        <Stop offset="1" stopColor="#D97706" />
-                      </SvgGradient>
-                      <SvgGradient id="rimOrange" x1="0" y1="0" x2="1" y2="1">
-                        <Stop offset="0" stopColor="#FF7A28" />
-                        <Stop offset="0.5" stopColor="#F25000" />
-                        <Stop offset="1" stopColor="#C2410C" />
-                      </SvgGradient>
                     </Defs>
 
-                    {/* Outer Ring Border */}
+                    {/* 1. Outer Dark Shadow Backing */}
                     <Circle
                       cx={RADIUS}
                       cy={RADIUS}
-                      r={RADIUS - 2}
-                      fill="url(#rimGold)"
-                    />
-                    <Circle
-                      cx={RADIUS}
-                      cy={RADIUS}
-                      r={RADIUS - 6}
-                      fill="url(#rimOrange)"
-                    />
-                    <Circle
-                      cx={RADIUS}
-                      cy={RADIUS}
-                      r={RADIUS - 12}
-                      fill="#FFFFFF"
+                      r={RADIUS}
+                      fill="#140601"
                     />
 
-                    {/* Slices: responsive width and typography */}
+                    {/* 2. Heavy Brushed Gold Outer Rim Bezel (15px thick) */}
+                    <Circle
+                      cx={RADIUS}
+                      cy={RADIUS}
+                      r={RADIUS - 1}
+                      fill="url(#wheelRimGold)"
+                    />
+
+                    {/* 3. Outer Concentric Precision Groove */}
+                    <Circle
+                      cx={RADIUS}
+                      cy={RADIUS}
+                      r={RADIUS - 3.5}
+                      fill="none"
+                      stroke="rgba(255, 255, 255, 0.45)"
+                      strokeWidth={0.9}
+                    />
+
+                    {/* 4. Deep Dark Amber Inset Track for Bulbs */}
+                    <Circle
+                      cx={RADIUS}
+                      cy={RADIUS}
+                      r={RADIUS - 7.5}
+                      fill="none"
+                      stroke="url(#innerRimDark)"
+                      strokeWidth={6.5}
+                    />
+
+                    {/* 5. Inner Gold Border Ring */}
+                    <Circle
+                      cx={RADIUS}
+                      cy={RADIUS}
+                      r={RADIUS - 14}
+                      fill="none"
+                      stroke="#FFE082"
+                      strokeWidth={1.2}
+                    />
+
+                    {/* Slices: symmetric centered wedges with icons, dual typography and handcrafted spokes */}
                     {prizes.map((prize, index) => {
-                      const sliceCenterAngle =
-                        index * sliceAngle + sliceAngle / 2;
+                      const visuals = getSliceVisuals(prize);
+                      const iconY =
+                        RADIUS * (itemCount <= 4 ? 0.255 : itemCount <= 6 ? 0.23 : 0.21);
+                      const iconR =
+                        itemCount <= 4 ? 12 : itemCount <= 6 ? 10.5 : 9;
+                      const heroY =
+                        iconY + iconR + (itemCount <= 4 ? 13 : itemCount <= 6 ? 11 : 9.5);
+                      const heroSize =
+                        itemCount <= 4 ? 13 : itemCount <= 6 ? 11 : 9.5;
+                      const subY =
+                        heroY + (itemCount <= 4 ? 13 : itemCount <= 6 ? 11 : 9.5);
+                      const subSize =
+                        itemCount <= 4 ? 9 : itemCount <= 6 ? 8 : 7;
+                      const badgeY = subY + (itemCount <= 4 ? 6.5 : 5);
+                      const badgeW = Math.min(
+                        Math.round(WHEEL_SIZE * (itemCount <= 4 ? 0.21 : 0.17)),
+                        54,
+                      );
+                      const badgeH = itemCount <= 4 ? 14 : 12;
+                      const badgeFont = itemCount <= 4 ? 7.5 : 6.6;
+
+                      const halfAngleRad = ((sliceAngle / 2) * Math.PI) / 180;
+                      const hubR = RADIUS * 0.27;
+                      const rimR = RADIUS - 14.5;
+                      const hubSpokeX = RADIUS + hubR * Math.sin(halfAngleRad);
+                      const hubSpokeY = RADIUS - hubR * Math.cos(halfAngleRad);
+                      const rimSpokeX = RADIUS + rimR * Math.sin(halfAngleRad);
+                      const rimSpokeY = RADIUS - rimR * Math.cos(halfAngleRad);
+
                       return (
-                        <G key={prize.id}>
+                        <G
+                          key={`slice-${prize.id || index}`}
+                          transform={`rotate(${
+                            index * sliceAngle
+                          }, ${RADIUS}, ${RADIUS})`}
+                        >
+                          {/* 1. Base Wedge Path */}
                           <Path
-                            d={getSlicePath(index, sliceAngle)}
-                            fill={`url(#grad-${prize.id})`}
-                            stroke="#FFFFFF"
-                            strokeWidth={itemCount <= 4 ? 2 : 1.5}
+                            d={singleWedgePath}
+                            fill={`url(#sliceGrad-${prize.id || index})`}
                           />
 
-                          {/* Rotated text and sublabel */}
-                          <G
-                            transform={`rotate(${sliceCenterAngle}, ${RADIUS}, ${RADIUS})`}
+                          {/* 2. Convex Radial Lighting & Inner Depth Sheen */}
+                          <Path
+                            d={singleWedgePath}
+                            fill="url(#wedgeSheen)"
+                            opacity={0.65}
+                          />
+
+                          {/* 3. Wedge Icon Badge */}
+                          {renderSliceIcon(visuals.iconType, RADIUS, iconY, iconR)}
+
+                          {/* 4. Hero Bold Value */}
+                          <SvgText
+                            x={RADIUS}
+                            y={heroY}
+                            fill="#FFFFFF"
+                            fontSize={heroSize}
+                            fontWeight="900"
+                            textAnchor="middle"
+                            letterSpacing="0.4"
                           >
-                            <Rect
-                              x={RADIUS - badgeWidth / 2}
-                              y={badgeY}
-                              width={badgeWidth}
-                              height={badgeHeight}
-                              rx={badgeHeight / 2}
-                              fill="rgba(0, 0, 0, 0.22)"
-                            />
+                            {visuals.hero}
+                          </SvgText>
+
+                          {/* 5. Subtitle Line */}
+                          {visuals.sub ? (
                             <SvgText
                               x={RADIUS}
-                              y={badgeY + badgeHeight * 0.72}
+                              y={subY}
                               fill="#FFE082"
-                              fontSize={sublabelFontSize}
+                              fontSize={subSize}
                               fontWeight="800"
                               textAnchor="middle"
                               letterSpacing="0.3"
                             >
-                              {prize.sublabel}
+                              {visuals.sub}
                             </SvgText>
+                          ) : null}
 
-                            {prize.titleLine2 ? (
-                              <>
-                                <SvgText
-                                  x={RADIUS}
-                                  y={titleY - 4.5}
-                                  fill={prize.textColor}
-                                  fontSize={titleFontSize}
-                                  fontWeight="900"
-                                  textAnchor="middle"
-                                  letterSpacing="0.2"
-                                >
-                                  {prize.titleLine1}
-                                </SvgText>
-                                <SvgText
-                                  x={RADIUS}
-                                  y={titleY + titleFontSize - 1.5}
-                                  fill={prize.textColor}
-                                  fontSize={titleFontSize}
-                                  fontWeight="900"
-                                  textAnchor="middle"
-                                  letterSpacing="0.2"
-                                >
-                                  {prize.titleLine2}
-                                </SvgText>
-                              </>
-                            ) : (
+                          {/* 6. High-Contrast Category Pill (when space allows) */}
+                          {itemCount <= 5 && visuals.badge ? (
+                            <G>
+                              <Rect
+                                x={RADIUS - badgeW / 2}
+                                y={badgeY}
+                                width={badgeW}
+                                height={badgeH}
+                                rx={badgeH / 2}
+                                fill="rgba(0, 0, 0, 0.45)"
+                                stroke="rgba(255, 224, 130, 0.55)"
+                                strokeWidth={0.8}
+                              />
                               <SvgText
                                 x={RADIUS}
-                                y={titleY}
-                                fill={prize.textColor}
-                                fontSize={titleFontSize}
+                                y={badgeY + badgeH * 0.72}
+                                fill="#FFE082"
+                                fontSize={badgeFont}
                                 fontWeight="900"
                                 textAnchor="middle"
-                                letterSpacing="0.2"
+                                letterSpacing="0.4"
                               >
-                                {prize.titleLine1 ||
-                                  prize.wheelLabel ||
-                                  prize.label}
+                                {visuals.badge}
                               </SvgText>
-                            )}
-                          </G>
+                            </G>
+                          ) : null}
+
+                          {/* 7. 3D Metallic Divider Spoke with Shadow, Highlight & Rivet */}
+                          <Line
+                            x1={hubSpokeX}
+                            y1={hubSpokeY}
+                            x2={rimSpokeX}
+                            y2={rimSpokeY}
+                            stroke="rgba(0,0,0,0.5)"
+                            strokeWidth={2.4}
+                          />
+                          <Line
+                            x1={hubSpokeX}
+                            y1={hubSpokeY}
+                            x2={rimSpokeX}
+                            y2={rimSpokeY}
+                            stroke="#FFF9C4"
+                            strokeWidth={1.2}
+                          />
+                          <Circle
+                            cx={rimSpokeX}
+                            cy={rimSpokeY}
+                            r={2.4}
+                            fill="#FFD54F"
+                            stroke="#78350F"
+                            strokeWidth={0.8}
+                          />
                         </G>
                       );
                     })}
 
-                    {/* Perimeter Bulb Pins */}
+                    {/* 28 Glowing Casino Cabochon Bulbs */}
                     {bulbs.map((bulb, idx) => (
-                      <Circle
-                        key={`bulb-${idx}`}
-                        cx={bulb.x}
-                        cy={bulb.y}
-                        r={3}
-                        fill={bulb.isGold ? '#FDE68A' : '#FFD8A8'}
-                        stroke={bulb.isGold ? '#D97706' : '#EA580C'}
-                        strokeWidth={0.8}
-                      />
+                      <G key={`bulb-${idx}`}>
+                        {/* Outer halo glow */}
+                        <Circle
+                          cx={bulb.x}
+                          cy={bulb.y}
+                          r={4.2}
+                          fill={
+                            bulb.isGold
+                              ? 'rgba(255, 224, 130, 0.35)'
+                              : 'rgba(255, 23, 68, 0.35)'
+                          }
+                        />
+                        {/* Bezel */}
+                        <Circle
+                          cx={bulb.x}
+                          cy={bulb.y}
+                          r={2.8}
+                          fill={bulb.isGold ? '#FFE082' : '#FF1744'}
+                          stroke={bulb.isGold ? '#78350F' : '#881337'}
+                          strokeWidth={0.7}
+                        />
+                        {/* Inner lens */}
+                        <Circle
+                          cx={bulb.x}
+                          cy={bulb.y}
+                          r={1.8}
+                          fill={bulb.isGold ? '#FFFDE7' : '#FF80AB'}
+                        />
+                        {/* Specular glint */}
+                        <Circle
+                          cx={bulb.x - 0.7}
+                          cy={bulb.y - 0.7}
+                          r={0.7}
+                          fill="#FFFFFF"
+                        />
+                      </G>
                     ))}
+
+                    {/* 3-Tier Luxury Golden Hub Base in Rotating SVG */}
+                    <Circle
+                      cx={RADIUS}
+                      cy={RADIUS}
+                      r={RADIUS * 0.29}
+                      fill="#0F0401"
+                    />
+                    <Circle
+                      cx={RADIUS}
+                      cy={RADIUS}
+                      r={RADIUS * 0.27}
+                      fill="url(#hubRimGold)"
+                      stroke="#FFE58F"
+                      strokeWidth={1.5}
+                    />
+                    <Circle
+                      cx={RADIUS}
+                      cy={RADIUS}
+                      r={RADIUS * 0.24}
+                      fill="#1A0701"
+                      stroke="#D97706"
+                      strokeWidth={1}
+                    />
+                    <Circle
+                      cx={RADIUS}
+                      cy={RADIUS}
+                      r={RADIUS * 0.22}
+                      fill="#0F0401"
+                    />
                   </Svg>
                 </Animated.View>
 
-                {/* Center Elevated Hub "SPIN" Button (iOS Bulletproof) */}
+                {/* Center Elevated Hub "SPIN" Button (3D Golden Bezel Dome) */}
                 <Animated.View
                   style={[styles.centerHubContainer, hubAnimatedStyle]}
                 >
                   <TouchableOpacity
                     onPress={spin}
                     disabled={isSpinning || spinsCount <= 0}
-                    activeOpacity={0.85}
+                    activeOpacity={0.88}
                     style={styles.hubTouchable}
                     accessibilityRole="button"
                     accessibilityLabel="Spin the wheel"
                   >
                     <View style={styles.hubBezel}>
                       <LinearGradient
-                        colors={['#FFFBEB', '#FDE68A', '#F59E0B']}
+                        colors={['#FFF9C4', '#FFD54F', '#FFA000', '#C2410C']}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 1 }}
                         style={StyleSheet.absoluteFillObject}
                       />
-                      <View style={styles.hubCore}>
-                        <LinearGradient
-                          colors={
-                            spinsCount <= 0
-                              ? ['#94A3B8', '#64748B']
-                              : ['#FF6200', '#F25000']
-                          }
-                          start={{ x: 0, y: 0 }}
-                          end={{ x: 1, y: 1 }}
-                          style={StyleSheet.absoluteFillObject}
-                        />
-                        <View style={styles.hubCoreContent}>
-                          <MaterialCommunityIcons
-                            name={isSpinning ? 'sync' : 'auto-fix'}
-                            size={14}
-                            color="#FFE082"
+                      <View style={styles.hubInnerRim}>
+                        <View style={styles.hubCore}>
+                          <LinearGradient
+                            colors={
+                              spinsCount <= 0
+                                ? ['#475569', '#334155', '#1E293B']
+                                : ['#FF5722', '#F25000', '#D32F2F', '#880E4F']
+                            }
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 0, y: 1 }}
+                            style={StyleSheet.absoluteFillObject}
                           />
-                          <Text style={styles.hubSpinnerText}>
-                            {isSpinning ? '...' : 'SPIN'}
-                          </Text>
+                          {/* Glass Dome Sheen */}
+                          <LinearGradient
+                            colors={[
+                              'rgba(255, 255, 255, 0.45)',
+                              'rgba(255, 255, 255, 0.05)',
+                            ]}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 0, y: 1 }}
+                            style={styles.hubSheen}
+                            pointerEvents="none"
+                          />
+                          <View style={styles.hubCoreContent}>
+                            <MaterialCommunityIcons
+                              name={isSpinning ? 'sync' : 'star-four-points'}
+                              size={16}
+                              color="#FFE082"
+                            />
+                            <Text style={styles.hubSpinnerText}>
+                              {isSpinning ? '...' : 'SPIN'}
+                            </Text>
+                          </View>
                         </View>
                       </View>
                     </View>
@@ -1405,8 +2319,11 @@ export default function SpinWheelRewardsScreen() {
                 <LinearGradient
                   colors={
                     wonPrize.isNoPrize
-                      ? ['#F8FAFC', '#F1F5F9', '#E2E8F0']
-                      : ['#FFF8F5', '#FFF1EB', '#FFE4D6']
+                      ? [
+                          'rgba(255, 255, 255, 0.05)',
+                          'rgba(255, 255, 255, 0.02)',
+                        ]
+                      : ['rgba(255, 122, 40, 0.14)', 'rgba(255, 122, 40, 0.04)']
                   }
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
@@ -1458,6 +2375,23 @@ export default function SpinWheelRewardsScreen() {
                   <Text style={styles.wonCardDesc} numberOfLines={2}>
                     {wonPrize.description}
                   </Text>
+
+                  {!wonPrize.isNoPrize && (
+                    <TouchableOpacity
+                      onPress={handleGoToOrderTracking}
+                      style={styles.wonCardTrackingBtn}
+                      activeOpacity={0.8}
+                    >
+                      <Ionicons
+                        name="location-outline"
+                        size={14}
+                        color="#F25000"
+                      />
+                      <Text style={styles.wonCardTrackingText}>
+                        Track Order
+                      </Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
               </View>
             ) : null}
@@ -1484,17 +2418,17 @@ export default function SpinWheelRewardsScreen() {
                       <View
                         style={[
                           styles.miniCardIconCircle,
-                          { backgroundColor: `${prize.color1}18` },
+                          { backgroundColor: `${prize.color1}22` },
                         ]}
                       >
                         <MaterialCommunityIcons
                           name={prize.iconName}
-                          size={15}
+                          size={18}
                           color={prize.color1}
                         />
                       </View>
                       <View style={styles.miniCardInfo}>
-                        <Text style={styles.miniCardTitle} numberOfLines={1}>
+                        <Text style={styles.miniCardTitle} numberOfLines={2}>
                           {prize.label}
                         </Text>
                         <Text style={styles.miniCardBadge} numberOfLines={1}>
@@ -1560,6 +2494,8 @@ export default function SpinWheelRewardsScreen() {
                     <Text style={styles.modalCongratsTitle}>
                       {isNoPrize
                         ? 'BETTER LUCK NEXT TIME!'
+                        : isOnboarding
+                        ? 'WELCOME GIFT UNLOCKED!'
                         : isOrderReward
                         ? 'ORDER GIFT UNLOCKED!'
                         : 'CONGRATULATIONS!'}
@@ -1583,6 +2519,8 @@ export default function SpinWheelRewardsScreen() {
                       >
                         {isNoPrize
                           ? 'HARD LUCK THIS TURN'
+                          : isOnboarding
+                          ? 'NEW USER WELCOME GIFT'
                           : isOrderReward
                           ? 'LUCKY ORDER REWARD'
                           : 'LUCKY GIFT WON'}
@@ -1675,30 +2613,115 @@ export default function SpinWheelRewardsScreen() {
                     ) : null}
                   </View>
 
-                  {/* Action Buttons: option to go to Home only */}
+                  {/* Action Buttons: options to Track Order (order), or Start Shopping (onboarding), etc. */}
                   <View style={styles.orderActionsCol}>
-                    <TouchableOpacity
-                      onPress={handleBackToHome}
-                      style={styles.claimButton}
-                      activeOpacity={0.85}
-                    >
-                      <LinearGradient
-                        colors={['#FF6200', '#F25000']}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 0 }}
-                        style={StyleSheet.absoluteFillObject}
-                      />
-                      <View style={styles.claimButtonContent}>
-                        <Ionicons
-                          name="home-outline"
-                          size={16}
-                          color="#FFFFFF"
-                        />
-                        <Text style={styles.claimButtonText}>Go to Home</Text>
-                      </View>
-                    </TouchableOpacity>
+                    {isOnboarding ? (
+                      <>
+                        <TouchableOpacity
+                          onPress={handleBackToHome}
+                          style={styles.claimButton}
+                          activeOpacity={0.85}
+                        >
+                          <LinearGradient
+                            colors={['#FF6200', '#F25000']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 0 }}
+                            style={StyleSheet.absoluteFillObject}
+                          />
+                          <View style={styles.claimButtonContent}>
+                            <Ionicons
+                              name="bag-handle-outline"
+                              size={17}
+                              color="#FFFFFF"
+                            />
+                            <Text style={styles.claimButtonText}>
+                              Start Shopping
+                            </Text>
+                          </View>
+                        </TouchableOpacity>
 
-                    {!isOrderReward && spinsCount > 0 ? (
+                        <TouchableOpacity
+                          onPress={handleExploreServices}
+                          style={styles.homeResetBtn}
+                          activeOpacity={0.85}
+                        >
+                          <View style={styles.claimButtonContent}>
+                            <Ionicons
+                              name="grid-outline"
+                              size={16}
+                              color="#F25000"
+                            />
+                            <Text style={styles.homeResetBtnText}>
+                              Explore Services
+                            </Text>
+                          </View>
+                        </TouchableOpacity>
+                      </>
+                    ) : (
+                      <>
+                        {!isNoPrize && (
+                          <TouchableOpacity
+                            onPress={handleGoToOrderTracking}
+                            style={styles.claimButton}
+                            activeOpacity={0.85}
+                          >
+                            <LinearGradient
+                              colors={['#FF6200', '#F25000']}
+                              start={{ x: 0, y: 0 }}
+                              end={{ x: 1, y: 0 }}
+                              style={StyleSheet.absoluteFillObject}
+                            />
+                            <View style={styles.claimButtonContent}>
+                              <Ionicons
+                                name="location-outline"
+                                size={17}
+                                color="#FFFFFF"
+                              />
+                              <Text style={styles.claimButtonText}>
+                                Track Order
+                              </Text>
+                            </View>
+                          </TouchableOpacity>
+                        )}
+
+                        <TouchableOpacity
+                          onPress={handleBackToHome}
+                          style={
+                            !isNoPrize
+                              ? styles.homeResetBtn
+                              : styles.claimButton
+                          }
+                          activeOpacity={0.85}
+                        >
+                          {isNoPrize ? (
+                            <LinearGradient
+                              colors={['#FF6200', '#F25000']}
+                              start={{ x: 0, y: 0 }}
+                              end={{ x: 1, y: 0 }}
+                              style={StyleSheet.absoluteFillObject}
+                            />
+                          ) : null}
+                          <View style={styles.claimButtonContent}>
+                            <Ionicons
+                              name="home-outline"
+                              size={16}
+                              color={!isNoPrize ? '#F25000' : '#FFFFFF'}
+                            />
+                            <Text
+                              style={
+                                !isNoPrize
+                                  ? styles.homeResetBtnText
+                                  : styles.claimButtonText
+                              }
+                            >
+                              Go to Home
+                            </Text>
+                          </View>
+                        </TouchableOpacity>
+                      </>
+                    )}
+
+                    {!isOrderReward && !isOnboarding && spinsCount > 0 ? (
                       <TouchableOpacity
                         onPress={() => {
                           setShowModal(false);
@@ -1739,43 +2762,26 @@ export default function SpinWheelRewardsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#0A0C10',
   },
-  ambientGlowTop: {
-    position: 'absolute',
-    top: -60,
-    right: -40,
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    backgroundColor: 'rgba(12, 162, 1, 0.08)',
-  },
-  ambientGlowCenter: {
-    position: 'absolute',
-    top: SCREEN_WIDTH * 0.65,
-    left: -60,
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    backgroundColor: 'rgba(245, 158, 11, 0.08)',
-  },
+
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingBottom: 10,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#0A0C10',
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0, 0, 0, 0.05)',
+    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
   },
   backBtn: {
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: 'rgba(255, 255, 255, 0.16)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1783,14 +2789,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerTitle: {
-    color: '#0F172A',
+    color: '#FFFFFF',
     fontSize: 16,
     fontFamily: FONTS.gilroy?.bold || 'System',
     fontWeight: '800',
     letterSpacing: 0.2,
   },
   headerSubtitle: {
-    color: '#F25000',
+    color: '#FF7A28',
     fontSize: 11,
     fontFamily: FONTS.gilroy?.medium || 'System',
     marginTop: 1,
@@ -1799,15 +2805,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#FEF3C7',
+    backgroundColor: 'rgba(245, 158, 11, 0.16)',
     borderWidth: 1,
-    borderColor: '#FDE68A',
+    borderColor: 'rgba(245, 158, 11, 0.35)',
     paddingHorizontal: 9,
     paddingVertical: 5,
     borderRadius: 14,
   },
   spinsBadgeText: {
-    color: '#92400E',
+    color: '#FBBF24',
     fontSize: 10.5,
     fontWeight: '800',
   },
@@ -1822,39 +2828,33 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#FED7AA',
-    backgroundColor: '#FFF7ED',
-    shadowColor: '#F25000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 2,
+    borderColor: 'rgba(255, 122, 40, 0.28)',
     marginBottom: 12,
-    position: 'relative',
   },
   guaranteeCard48hr: {
-    borderColor: '#FFD79E',
-    backgroundColor: '#FFF7ED',
-    shadowColor: '#F25000',
+    borderColor: 'rgba(255, 122, 40, 0.4)',
   },
   guaranteeInner: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 11,
-    paddingHorizontal: 13,
-    gap: 11,
-    zIndex: 2,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    gap: 12,
   },
   shieldIconWrapper: {
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: '#FFEDD5',
+    backgroundColor: 'rgba(242, 80, 0, 0.18)',
+    borderWidth: 1,
+    borderColor: 'rgba(242, 80, 0, 0.32)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   shieldIconWrapper48hr: {
-    backgroundColor: '#FFEDD5',
+    backgroundColor: 'rgba(242, 80, 0, 0.22)',
+    borderWidth: 1,
+    borderColor: 'rgba(242, 80, 0, 0.38)',
   },
   guaranteeCopy: {
     flex: 1,
@@ -1868,10 +2868,10 @@ const styles = StyleSheet.create({
   guaranteeHeading: {
     fontSize: 12.5,
     fontWeight: '800',
-    color: '#9A3412',
+    color: '#FFFFFF',
   },
   guaranteeHeading48hr: {
-    color: '#C2410C',
+    color: '#FFFFFF',
   },
   guaranteePill: {
     backgroundColor: '#F25000',
@@ -1880,7 +2880,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   guaranteePill48hr: {
-    backgroundColor: '#FFD79E',
+    backgroundColor: '#FF7A28',
   },
   guaranteePillText: {
     color: '#FFFFFF',
@@ -1889,22 +2889,74 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   guaranteePillText48hr: {
-    color: '#9A3412',
+    color: '#FFFFFF',
   },
   guaranteeSubtitle: {
     fontSize: 10.5,
-    color: '#C2410C',
+    color: '#94A3B8',
     marginTop: 2,
     lineHeight: 14,
   },
   guaranteeSubtitle48hr: {
-    color: '#9A3412',
+    color: '#94A3B8',
   },
   wheelStage: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginVertical: 8,
+    marginVertical: 10,
     position: 'relative',
+  },
+  ambientHaloWrapper: {
+    position: 'absolute',
+    width: 400,
+    height: 400,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1,
+  },
+  sunburstWrapper: {
+    position: 'absolute',
+    width: 400,
+    height: 400,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 0,
+  },
+  ambientCorona: {
+    position: 'absolute',
+    width: 400,
+    height: 400,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1,
+  },
+  sparkleWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sparkleTL: {
+    position: 'absolute',
+    top: 35,
+    left: 45,
+    zIndex: 2,
+  },
+  sparkleTR: {
+    position: 'absolute',
+    top: 35,
+    right: 45,
+    zIndex: 2,
+  },
+  sparkleBL: {
+    position: 'absolute',
+    bottom: 35,
+    left: 45,
+    zIndex: 2,
+  },
+  sparkleBR: {
+    position: 'absolute',
+    bottom: 35,
+    right: 45,
+    zIndex: 2,
   },
   outerWheelHalo: {
     position: 'absolute',
@@ -1919,6 +2971,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
+    shadowColor: '#F25000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.38,
+    shadowRadius: 18,
+    elevation: 12,
   },
   wheelContainer: {
     width: WHEEL_SIZE,
@@ -1926,46 +2983,75 @@ const styles = StyleSheet.create({
   },
   pointerWrapper: {
     position: 'absolute',
-    top: -15,
+    top: -22,
     zIndex: 30,
     alignItems: 'center',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.55,
+    shadowRadius: 5,
+    elevation: 14,
   },
   centerHubContainer: {
     position: 'absolute',
-    width: 58,
-    height: 58,
+    width: 76,
+    height: 76,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 25,
   },
   hubTouchable: {
-    width: 58,
-    height: 58,
+    width: 76,
+    height: 76,
     alignItems: 'center',
     justifyContent: 'center',
   },
   hubBezel: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 74,
+    height: 74,
+    borderRadius: 37,
     overflow: 'hidden',
     position: 'relative',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#F59E0B',
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.25,
-    shadowRadius: 5,
-    elevation: 8,
+    borderWidth: 1.5,
+    borderColor: '#FFF9C4',
+    shadowColor: '#FF6F00',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.55,
+    shadowRadius: 10,
+    elevation: 12,
   },
-  hubCore: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+  hubInnerRim: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    borderWidth: 1.5,
+    borderColor: '#FFE082',
+    backgroundColor: '#1E0A00',
+    alignItems: 'center',
+    justifyContent: 'center',
     overflow: 'hidden',
     position: 'relative',
-    backgroundColor: '#F25000',
+  },
+  hubCore: {
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    overflow: 'hidden',
+    position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  hubSheen: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 29,
+    borderTopLeftRadius: 29,
+    borderTopRightRadius: 29,
+    zIndex: 1,
   },
   hubCoreContent: {
     flex: 1,
@@ -1975,10 +3061,13 @@ const styles = StyleSheet.create({
   },
   hubSpinnerText: {
     color: '#FFFFFF',
-    fontSize: 9.5,
+    fontSize: 10.5,
     fontWeight: '900',
-    letterSpacing: 0.5,
+    letterSpacing: 1.2,
     marginTop: 1,
+    textShadowColor: 'rgba(0, 0, 0, 0.6)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
   ctaWrapper: {
     width: '100%',
@@ -2022,7 +3111,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   turnsNotice: {
-    color: '#64748B',
+    color: '#94A3B8',
     fontSize: 11,
     fontWeight: '600',
     marginTop: 8,
@@ -2030,15 +3119,15 @@ const styles = StyleSheet.create({
   },
   prizesSection: {
     width: '100%',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: 'rgba(255, 255, 255, 0.08)',
     padding: 14,
     marginTop: 16,
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
+    shadowOpacity: 0.2,
     shadowRadius: 5,
     elevation: 2,
   },
@@ -2050,34 +3139,32 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 13.5,
     fontWeight: '800',
-    color: '#0F172A',
+    color: '#FFFFFF',
   },
   sectionSubtitle: {
     fontSize: 10.5,
-    color: '#64748B',
+    color: '#94A3B8',
     marginTop: 2,
     marginBottom: 10,
   },
   prizesGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: 8,
   },
   prizeMiniCard: {
-    width: (SCREEN_WIDTH - 32 - 28 - 8) / 2,
+    width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 7,
-    backgroundColor: '#F8FAFC',
-    borderRadius: 11,
-    padding: 7,
+    gap: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    borderRadius: 14,
+    padding: 10,
     borderWidth: 1,
-    borderColor: '#F1F5F9',
+    borderColor: 'rgba(255, 255, 255, 0.08)',
   },
   miniCardIconCircle: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 34,
+    height: 34,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -2085,15 +3172,16 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   miniCardTitle: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '800',
-    color: '#1E293B',
+    color: '#FFFFFF',
+    lineHeight: 16,
   },
   miniCardBadge: {
-    fontSize: 8.5,
+    fontSize: 9,
     fontWeight: '700',
-    color: '#64748B',
-    marginTop: 1,
+    color: '#94A3B8',
+    marginTop: 2,
   },
   modalOverlay: {
     flex: 1,
@@ -2105,13 +3193,15 @@ const styles = StyleSheet.create({
   modalCard: {
     width: '92%',
     maxWidth: 335,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#12151C',
     borderRadius: 24,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.35,
-    shadowRadius: 18,
+    shadowOpacity: 0.5,
+    shadowRadius: 20,
     elevation: 16,
   },
   modalHeaderWrapper: {
@@ -2185,20 +3275,20 @@ const styles = StyleSheet.create({
   modalBody: {
     padding: 16,
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#12151C',
   },
   voucherCard: {
     width: '100%',
-    backgroundColor: '#FFF7ED',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderWidth: 1.5,
-    borderColor: '#FED7AA',
+    borderColor: 'rgba(242, 80, 0, 0.35)',
     borderRadius: 14,
     padding: 12,
     marginBottom: 14,
   },
   voucherCardNoPrize: {
-    backgroundColor: '#F8FAFC',
-    borderColor: '#CBD5E1',
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    borderColor: 'rgba(255, 255, 255, 0.12)',
   },
   voucherHeaderRow: {
     flexDirection: 'row',
@@ -2223,23 +3313,23 @@ const styles = StyleSheet.create({
   },
   voucherExpiryText: {
     fontSize: 9.5,
-    color: '#C2410C',
+    color: '#FF7A28',
     fontWeight: '700',
   },
   voucherPrizeTitle: {
     fontSize: 19,
     fontWeight: '900',
-    color: '#9A3412',
+    color: '#FFFFFF',
     marginTop: 2,
   },
   voucherPrizeTitleNoPrize: {
-    color: '#1E293B',
+    color: '#FFFFFF',
   },
   noPrizeModalTip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 8,
@@ -2248,14 +3338,14 @@ const styles = StyleSheet.create({
   noPrizeModalTipText: {
     flex: 1,
     fontSize: 11,
-    color: '#475569',
+    color: '#94A3B8',
     lineHeight: 15,
   },
   voucherValueBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#FFEDD5',
+    backgroundColor: 'rgba(242, 80, 0, 0.22)',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
@@ -2265,19 +3355,19 @@ const styles = StyleSheet.create({
   voucherValueText: {
     fontSize: 10.5,
     fontWeight: '800',
-    color: '#C2410C',
+    color: '#FF7A28',
   },
   voucherPrizeDesc: {
     fontSize: 11,
-    color: '#475569',
+    color: '#94A3B8',
     marginTop: 4,
     lineHeight: 15,
   },
   redemptionBox: {
     width: '100%',
-    backgroundColor: '#FEFCE8',
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
     borderWidth: 1,
-    borderColor: '#FEF08A',
+    borderColor: 'rgba(245, 158, 11, 0.2)',
     borderRadius: 8,
     padding: 8,
     marginTop: 8,
@@ -2285,21 +3375,21 @@ const styles = StyleSheet.create({
   redemptionTitle: {
     fontSize: 9.5,
     fontWeight: '800',
-    color: '#854D0E',
+    color: '#FBBF24',
     marginBottom: 2,
   },
   redemptionText: {
     fontSize: 10,
-    color: '#713F12',
+    color: '#CBD5E1',
     lineHeight: 14,
   },
   couponStrip: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(255, 255, 255, 0.07)',
     borderWidth: 1,
-    borderColor: '#FED7AA',
+    borderColor: 'rgba(242, 80, 0, 0.35)',
     borderRadius: 9,
     paddingVertical: 7,
     paddingHorizontal: 10,
@@ -2311,13 +3401,13 @@ const styles = StyleSheet.create({
   couponCodeLabel: {
     fontSize: 8,
     fontWeight: '800',
-    color: '#64748B',
+    color: '#94A3B8',
     letterSpacing: 0.3,
   },
   couponCodeText: {
     fontSize: 13.5,
     fontWeight: '900',
-    color: '#0F172A',
+    color: '#FFFFFF',
     letterSpacing: 0.7,
     marginTop: 1,
   },
@@ -2325,13 +3415,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
-    backgroundColor: '#FFEDD5',
+    backgroundColor: 'rgba(242, 80, 0, 0.22)',
     paddingHorizontal: 9,
     paddingVertical: 4.5,
     borderRadius: 7,
   },
   copyCodeText: {
-    color: '#F25000',
+    color: '#FF7A28',
     fontSize: 10.5,
     fontWeight: '900',
   },
@@ -2367,7 +3457,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   spinAgainText: {
-    color: '#64748B',
+    color: '#94A3B8',
     fontSize: 11.5,
     fontWeight: '700',
   },
@@ -2393,15 +3483,15 @@ const styles = StyleSheet.create({
     height: 42,
     borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: '#F25000',
-    backgroundColor: '#FFF7ED',
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
   },
   homeResetBtnText: {
-    color: '#F25000',
+    color: '#FFFFFF',
     fontSize: 13.5,
     fontWeight: '800',
   },
@@ -2414,22 +3504,22 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 13.5,
     fontWeight: '700',
-    color: '#64748B',
+    color: '#94A3B8',
     fontFamily: FONTS.gilroy?.medium || 'System',
   },
   emptyContainer: {
     width: '100%',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
     borderRadius: 20,
     paddingVertical: 36,
     paddingHorizontal: 20,
     alignItems: 'center',
     marginTop: 20,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: 'rgba(255, 255, 255, 0.08)',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
+    shadowOpacity: 0.1,
     shadowRadius: 12,
     elevation: 3,
   },
@@ -2437,18 +3527,18 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: '#FFF7ED',
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
   },
   emptyIconCircle48hr: {
-    backgroundColor: '#FFF7ED',
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
   },
   emptyTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#1E293B',
+    color: '#FFFFFF',
     marginBottom: 8,
     textAlign: 'center',
     fontFamily: FONTS.gilroy?.bold || 'System',
@@ -2456,7 +3546,7 @@ const styles = StyleSheet.create({
   emptyDescription: {
     fontSize: 13.5,
     fontWeight: '500',
-    color: '#64748B',
+    color: '#94A3B8',
     textAlign: 'center',
     lineHeight: 20,
     marginBottom: 24,
@@ -2508,21 +3598,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: '#F25000',
-    backgroundColor: '#FFF7ED',
+    borderColor: 'rgba(255, 255, 255, 0.18)',
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
   },
   emptyRetryText: {
-    color: '#F25000',
+    color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '800',
     fontFamily: FONTS.gilroy?.bold || 'System',
   },
   spinsBadgeEmpty: {
-    backgroundColor: '#F1F5F9',
-    borderColor: '#CBD5E1',
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    borderColor: 'rgba(255, 255, 255, 0.12)',
   },
   spinsBadgeTextEmpty: {
-    color: '#64748B',
+    color: '#94A3B8',
   },
   wonCardScreenWrapper: {
     width: '100%',
@@ -2534,17 +3624,17 @@ const styles = StyleSheet.create({
     position: 'relative',
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.25,
     shadowRadius: 6,
     elevation: 3,
   },
   wonCardPrize: {
-    borderColor: '#FFD3BE',
-    backgroundColor: '#FFF8F5',
+    borderColor: 'rgba(242, 80, 0, 0.45)',
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
   },
   wonCardNoPrize: {
-    borderColor: '#CBD5E1',
-    backgroundColor: '#F8FAFC',
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
   },
   wonCardInner: {
     padding: 14,
@@ -2586,18 +3676,18 @@ const styles = StyleSheet.create({
   },
   wonCardValidityText: {
     fontSize: 10,
-    color: '#C2410C',
+    color: '#FF7A28',
     fontWeight: '700',
   },
   wonCardPrizeName: {
     fontSize: 15,
     fontWeight: '900',
-    color: '#1E293B',
+    color: '#FFFFFF',
     fontFamily: FONTS.gilroy?.bold || 'System',
   },
   wonCardDesc: {
     fontSize: 11.5,
-    color: '#475569',
+    color: '#94A3B8',
     lineHeight: 16,
     marginBottom: 10,
     fontFamily: FONTS.gilroy?.regular || 'System',
@@ -2606,12 +3696,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderWidth: 1,
-    borderColor: '#FED7AA',
+    borderColor: 'rgba(242, 80, 0, 0.35)',
     borderStyle: 'dashed',
   },
   wonCardCodeBox: {
@@ -2625,7 +3715,7 @@ const styles = StyleSheet.create({
   },
   wonCardCodeVal: {
     fontSize: 14,
-    color: '#F25000',
+    color: '#FF7A28',
     fontWeight: '900',
     fontFamily: FONTS.gilroy?.bold || 'System',
     letterSpacing: 0.8,
@@ -2636,15 +3726,34 @@ const styles = StyleSheet.create({
     gap: 4,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    backgroundColor: '#FFF7ED',
+    backgroundColor: 'rgba(242, 80, 0, 0.2)',
     borderRadius: 7,
     borderWidth: 1,
-    borderColor: '#F25000',
+    borderColor: 'rgba(242, 80, 0, 0.35)',
   },
   wonCardCopyBtnText: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#F25000',
+    color: '#FF7A28',
+    fontFamily: FONTS.gilroy?.bold || 'System',
+  },
+  wonCardTrackingBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 4,
+    marginTop: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: 'rgba(242, 80, 0, 0.18)',
+    borderWidth: 1,
+    borderColor: 'rgba(242, 80, 0, 0.35)',
+  },
+  wonCardTrackingText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#FF7A28',
     fontFamily: FONTS.gilroy?.bold || 'System',
   },
 });

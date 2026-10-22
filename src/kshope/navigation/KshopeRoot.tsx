@@ -35,6 +35,7 @@ import BCoinScreen from '../screens/BCoin/BCoinScreen';
 import ShopWithUsScreen from '../screens/ShopWithUs/ShopWithUsScreen';
 import LegalContentScreen from '../screens/Legal/LegalContentScreen';
 import SpinWheelRewardsScreen from '../../screens/SpinWheelRewardsScreen';
+import MyRewardsScreen from '../../screens/MyRewardsScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -137,6 +138,7 @@ const KshopeRoot: React.FC = () => {
                 <Stack.Screen name="KshopeShopWithUs" component={ShopWithUsScreen} />
                 <Stack.Screen name="KshopeLegalContent" component={LegalContentScreen} />
                 <Stack.Screen name="SpinWheelRewardsScreen" component={SpinWheelRewardsScreen} />
+                <Stack.Screen name="MyRewardsScreen" component={MyRewardsScreen} />
               </Stack.Navigator>
             </CartProvider>
           </WishlistProvider>

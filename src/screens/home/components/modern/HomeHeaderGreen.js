@@ -141,7 +141,10 @@ const HomeHeaderGreen = ({
   };
 
   const handleCoinsPress = () => {
-    navigation.navigate('BCoinScreen');
+    navigation.navigate('SpinWheelRewardsScreen', {
+      source: 'ONBOARDING',
+      theme: 'welcome',
+    });
   };
 
   const handleSearchPress = () => {

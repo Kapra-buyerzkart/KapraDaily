@@ -8,8 +8,7 @@ import Divider from '../../components/atoms/Divider';
 import SectionHeading from '../../components/atoms/SectionHeading';
 import { UI_COLORS } from '../../theme/tokens';
 import { getOrderDetailsApi } from '../../api/services/orderService';
-import OrderRewardCornerPopup from '../../../components/OrderRewardCornerPopup';
-import SpinWheelBanner from '../Profile/redesign/sections/SpinWheelBanner';
+import OrderGiftCartCelebration from '../../../components/OrderGiftCartCelebration';
 import {
   BulletCard,
   CopyChip,
@@ -136,22 +135,6 @@ const OrderSuccessScreen: React.FC = () => {
           </View>
         </Surface>
 
-        <SpinWheelBanner
-          title="Spin & Win a lucky Gift!"
-          subtitle="Win Extra Discounts, UD Coins & Free Delivery"
-          badgeText="ORDER GIFT"
-          badgeIcon="gift"
-          spinsCount={1}
-          style={{ marginHorizontal: 16, marginTop: 12, marginBottom: 4 }}
-          onPress={() => {
-            navigation.navigate('SpinWheelRewardsScreen', {
-              orderId: orderId || orderDetails?._id,
-              orderNumber: displayOrderNumber,
-              source: 'ORDER_SUCCESS',
-            });
-          }}
-        />
-
         <Surface style={styles.section}>
           <View style={styles.card}>
             <SectionHeading title={SUCCESS_COPY.summaryTitle} />
@@ -228,17 +211,17 @@ const OrderSuccessScreen: React.FC = () => {
         onGhost={handleBackToHome}
       />
 
-      <OrderRewardCornerPopup
+      <OrderGiftCartCelebration
         orderId={orderId || orderDetails?._id}
         orderNumber={displayOrderNumber}
-        bottomOffset={88}
-        onPress={() => {
+        onComplete={() => {
           navigation.navigate('SpinWheelRewardsScreen', {
             orderId: orderId || orderDetails?._id,
             orderNumber: displayOrderNumber,
             source: 'ORDER_SUCCESS',
           });
         }}
+        onTrackOrder={handleTrackOrder}
       />
     </View>
   );

@@ -385,21 +385,8 @@ export default function MyRewardsScreen() {
         </View>
         <Text style={styles.emptyTitle}>No Rewards Yet</Text>
         <Text style={styles.emptySubtitle}>
-          You haven’t spun the wheel yet! Place an order or play Spin & Win to
-          unlock lucky coupons & prizes.
+          Coupons, cashbacks, and vouchers won from your orders and rewards will appear here.
         </Text>
-        <TouchableOpacity
-          style={styles.playSpinButton}
-          onPress={() => navigation.navigate('SpinWheelRewardsScreen')}
-          activeOpacity={0.85}
-        >
-          <MaterialCommunityIcons
-            name="ferris-wheel"
-            size={18}
-            color="#FFFFFF"
-          />
-          <Text style={styles.playSpinButtonText}>Play Spin & Win</Text>
-        </TouchableOpacity>
       </View>
     );
   };
@@ -426,17 +413,6 @@ export default function MyRewardsScreen() {
             Your Spin & Win coupons and vouchers
           </Text>
         </View>
-        {/* <TouchableOpacity
-          style={styles.spinShortcutBtn}
-          onPress={() => navigation.navigate('SpinWheelRewardsScreen')}
-          activeOpacity={0.75}
-        >
-          <MaterialCommunityIcons
-            name="ferris-wheel"
-            size={18}
-            color="#059669"
-          />
-        </TouchableOpacity> */}
       </View>
 
       {/* Main Content */}
@@ -512,14 +488,6 @@ const styles = StyleSheet.create({
     fontSize: 11.5,
     color: '#64748B',
     marginTop: 1,
-  },
-  spinShortcutBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#DCFCE7',
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   listContent: {
     padding: 16,
@@ -769,21 +737,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 6,
     lineHeight: 18,
-  },
-  playSpinButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: '#059669',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 10,
-    marginTop: 20,
-  },
-  playSpinButtonText: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: '#FFFFFF',
   },
   retryButton: {
     backgroundColor: '#EF4444',
