@@ -32,7 +32,7 @@ describe('Spin Win Eligibility Wheel Mapping & Slices', () => {
     expect(prize1.sublabel).toBe('MIN ₹499');
     expect(prize1.badge).toBe('EXCLUSIVE');
     expect(prize1.code).toBe('SAVE100');
-    expect(prize1.color1).toBe('#059669');
+    expect(prize1.color1).toBe('#FF5722');
     expect(prize1.iconName).toBe('ticket-percent');
 
     const prize2 = mapBackendRewardToPrize(backendItems[1], 1);
@@ -40,8 +40,8 @@ describe('Spin Win Eligibility Wheel Mapping & Slices', () => {
     expect(prize2.label).toBe('Free Delivery');
     expect(prize2.sublabel).toBe('ZERO FEE');
     expect(prize2.code).toBe('DELIVERY0');
-    expect(prize2.color1).toBe('#7C3AED');
-    expect(prize2.iconName).toBe('gift');
+    expect(prize2.color1).toBe('#10B981');
+    expect(prize2.iconName).toBe('truck-fast');
   });
 
   it('handles empty items without errors', () => {

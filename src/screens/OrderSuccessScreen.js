@@ -8,7 +8,7 @@ import {
   ScrollView,
   BackHandler,
 } from 'react-native';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import logger from '../utils/logger';
 import LinearGradient from 'react-native-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -25,7 +25,12 @@ import {
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { getOrderDetailsApi } from '../api/orderService';
-import OrderGiftCartCelebration from '../components/OrderGiftCartCelebration';
+import HomeWheelBottomSheetModal from '../components/HomeWheelBottomSheetModal';
+import {
+  checkSpinWinEligibility,
+  isOrderSpinClaimed,
+  extractCampaignAndRewards,
+} from '../api/spinWheelService';
 
 const OrderSuccessScreen = () => {
   const navigation = useNavigation();
@@ -42,6 +47,48 @@ const OrderSuccessScreen = () => {
   } = route.params || {};
 
   const [orderDetails, setOrderDetails] = useState(null);
+  const homeWheelModalRef = useRef(null);
+  const [wheelVisibilityData, setWheelVisibilityData] = useState(null);
+  const hasCheckedWheelRef = useRef(false);
+
+  useEffect(() => {
+    const targetId = orderId || orderDetails?._id || orderNumber;
+    if (!targetId || hasCheckedWheelRef.current) return;
+
+    let active = true;
+
+    const verifyAndShowWheel = async () => {
+      try {
+        const claimed = await isOrderSpinClaimed(targetId);
+        if (claimed || !active) return;
+
+        const response = await checkSpinWinEligibility(targetId);
+        if (!active || !response) return;
+
+        const campaignInfo = extractCampaignAndRewards(response);
+        if (
+          Array.isArray(campaignInfo?.rewards) &&
+          campaignInfo.rewards.length >= 3
+        ) {
+          hasCheckedWheelRef.current = true;
+          setWheelVisibilityData(response);
+          setTimeout(() => {
+            if (active) {
+              homeWheelModalRef.current?.present(response);
+            }
+          }, 800);
+        }
+      } catch (err) {
+        logger.log('[OrderSuccessScreen] Spin wheel eligibility error:', err);
+      }
+    };
+
+    verifyAndShowWheel();
+
+    return () => {
+      active = false;
+    };
+  }, [orderId, orderDetails?._id, orderNumber]);
 
   useEffect(() => {
     if (orderId) {
@@ -321,12 +368,18 @@ const OrderSuccessScreen = () => {
         </ScrollView>
       </LinearGradient>
 
-      {/* Dynamic Slide-in Cart & Dummy Spin Wheel Celebration */}
-      <OrderGiftCartCelebration
+      {/* Real Game-Show Lucky Wheel Bottom Sheet Modal */}
+      <HomeWheelBottomSheetModal
+        ref={homeWheelModalRef}
         orderId={orderId || orderDetails?._id}
         orderNumber={displayOrderNumber}
-        onComplete={handleOpenSpinWheel}
-        onTrackOrder={handleTrackOrder}
+        visibilityData={wheelVisibilityData}
+        onDismiss={() => {
+          // Bottom sheet modal dismissed; user stays on OrderSuccessScreen
+        }}
+        onSpinSuccess={wonPrize => {
+          logger.log('[OrderSuccessScreen] Spin success:', wonPrize);
+        }}
       />
     </SafeAreaView>
   );

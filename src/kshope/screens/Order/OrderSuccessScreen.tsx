@@ -8,7 +8,14 @@ import Divider from '../../components/atoms/Divider';
 import SectionHeading from '../../components/atoms/SectionHeading';
 import { UI_COLORS } from '../../theme/tokens';
 import { getOrderDetailsApi } from '../../api/services/orderService';
-import OrderGiftCartCelebration from '../../../components/OrderGiftCartCelebration';
+import HomeWheelBottomSheetModal, {
+  HomeWheelBottomSheetModalRef,
+} from '../../../components/HomeWheelBottomSheetModal';
+import {
+  checkSpinWinEligibility,
+  isOrderSpinClaimed,
+  extractCampaignAndRewards,
+} from '../../../api/spinWheelService';
 import {
   BulletCard,
   CopyChip,
@@ -42,8 +49,50 @@ const OrderSuccessScreen: React.FC = () => {
   } = route.params || {};
 
   const [orderDetails, setOrderDetails] = useState<any>(null);
+  const homeWheelModalRef = React.useRef<HomeWheelBottomSheetModalRef>(null);
+  const [wheelVisibilityData, setWheelVisibilityData] = useState<any>(null);
+  const hasCheckedWheelRef = React.useRef(false);
 
   useLockedBack();
+
+  useEffect(() => {
+    const targetId = orderId || orderDetails?._id || orderNumber;
+    if (!targetId || hasCheckedWheelRef.current) return;
+
+    let active = true;
+
+    const verifyAndShowWheel = async () => {
+      try {
+        const claimed = await isOrderSpinClaimed(targetId);
+        if (claimed || !active) return;
+
+        const response = await checkSpinWinEligibility(targetId);
+        if (!active || !response) return;
+
+        const campaignInfo = extractCampaignAndRewards(response);
+        if (
+          Array.isArray(campaignInfo?.rewards) &&
+          campaignInfo.rewards.length >= 3
+        ) {
+          hasCheckedWheelRef.current = true;
+          setWheelVisibilityData(response);
+          setTimeout(() => {
+            if (active) {
+              homeWheelModalRef.current?.present(response);
+            }
+          }, 800);
+        }
+      } catch (err) {
+        console.log('[kshope OrderSuccessScreen] Spin wheel eligibility error:', err);
+      }
+    };
+
+    verifyAndShowWheel();
+
+    return () => {
+      active = false;
+    };
+  }, [orderId, orderDetails?._id, orderNumber]);
 
   useEffect(() => {
     if (!orderId) {
@@ -211,17 +260,15 @@ const OrderSuccessScreen: React.FC = () => {
         onGhost={handleBackToHome}
       />
 
-      <OrderGiftCartCelebration
+      <HomeWheelBottomSheetModal
+        ref={homeWheelModalRef}
         orderId={orderId || orderDetails?._id}
         orderNumber={displayOrderNumber}
-        onComplete={() => {
-          navigation.navigate('SpinWheelRewardsScreen', {
-            orderId: orderId || orderDetails?._id,
-            orderNumber: displayOrderNumber,
-            source: 'ORDER_SUCCESS',
-          });
+        visibilityData={wheelVisibilityData}
+        onDismiss={() => {}}
+        onSpinSuccess={wonPrize => {
+          console.log('[kshope OrderSuccessScreen] Spin success:', wonPrize);
         }}
-        onTrackOrder={handleTrackOrder}
       />
     </View>
   );

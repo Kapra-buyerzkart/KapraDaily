@@ -60,14 +60,16 @@ import {
   isOnboardingSpinClaimed,
   getOnboardingSpinReward,
   markOnboardingSpinClaimed,
-  DUMMY_ONBOARDING_CAMPAIGN,
   checkSpinWinEligibility,
+  checkHomeWheelVisibilityApi,
   playSpinWin,
+  playHomeWheelApi,
   mapBackendRewardToPrize,
   extractCampaignAndRewards,
   selectWeightedRewardIndex,
   AssuredPrize,
 } from '@/api/spinWheelService';
+import { generateUUID as uuidv4 } from '@/utils/uuid';
 
 export type { AssuredPrize };
 
@@ -570,6 +572,10 @@ export default function SpinWheelRewardsScreen() {
     source,
     theme,
     prizes: customPrizes,
+    campaignId: paramCampaignId,
+    requestId: paramRequestId,
+    anonymousId: paramAnonymousId,
+    visibilityData,
   } = route.params || {};
   const isOrderReward = source === 'ORDER_SUCCESS' && !!orderId;
   const is48hr = theme === '48hr' || source === 'KSHOPE_PROFILE';
@@ -579,9 +585,17 @@ export default function SpinWheelRewardsScreen() {
     if (
       customPrizes &&
       Array.isArray(customPrizes) &&
-      customPrizes.length >= 2
+      customPrizes.length >= 3
     ) {
       return customPrizes;
+    }
+    if (visibilityData) {
+      const extracted = extractCampaignAndRewards(visibilityData);
+      if (Array.isArray(extracted.rewards) && extracted.rewards.length >= 3) {
+        return extracted.rewards.map((item: any, idx: number) =>
+          mapBackendRewardToPrize(item, idx),
+        );
+      }
     }
     return [];
   });
@@ -606,8 +620,23 @@ export default function SpinWheelRewardsScreen() {
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [emptyMessage, setEmptyMessage] = useState<string | null>(null);
-  const [campaignId, setCampaignId] = useState<number | undefined>(undefined);
-  const [campaignName, setCampaignName] = useState<string>('');
+  const [campaignId, setCampaignId] = useState<number | undefined>(() => {
+    if (paramCampaignId !== undefined && paramCampaignId !== null) {
+      return Number(paramCampaignId);
+    }
+    if (visibilityData) {
+      const extracted = extractCampaignAndRewards(visibilityData);
+      if (extracted.campaignId) return Number(extracted.campaignId);
+    }
+    return undefined;
+  });
+  const [campaignName, setCampaignName] = useState<string>(() => {
+    if (visibilityData) {
+      const extracted = extractCampaignAndRewards(visibilityData);
+      if (extracted.campaignName) return extracted.campaignName;
+    }
+    return '';
+  });
 
   const itemCount = prizes.length;
   const sliceAngle = itemCount > 0 ? 360 / itemCount : 45;
@@ -755,11 +784,62 @@ export default function SpinWheelRewardsScreen() {
     setEmptyMessage(null);
 
     if (isOnboarding) {
-      const dummyPrizes = DUMMY_ONBOARDING_CAMPAIGN.rewards.map(
+      let campaignInfo: any = null;
+
+      // 1. Check if visibilityData is provided via route params
+      if (visibilityData) {
+        campaignInfo = extractCampaignAndRewards(visibilityData);
+      }
+
+      // 2. If not provided or rewards empty, fetch directly from backend API
+      if (
+        !campaignInfo ||
+        !Array.isArray(campaignInfo.rewards) ||
+        campaignInfo.rewards.length === 0
+      ) {
+        try {
+          const freshData = await checkHomeWheelVisibilityApi({
+            requestId: paramRequestId || uuidv4(),
+            anonymousId:
+              paramAnonymousId !== undefined ? paramAnonymousId : null,
+          });
+          if (freshData) {
+            campaignInfo = extractCampaignAndRewards(freshData);
+          }
+        } catch (err) {
+          console.log('[SpinWheel] checkHomeWheelVisibilityApi error:', err);
+        }
+      }
+
+      // 3. Map backend rewards to AssuredPrize
+      // STRICT: Fully rely on backend data. If rewards are less than 3, do NOT show the spin wheel or dummy fallback!
+      if (
+        !campaignInfo ||
+        !Array.isArray(campaignInfo.rewards) ||
+        campaignInfo.rewards.length < 3
+      ) {
+        console.log(
+          `[SpinWheel] Rewards count (${campaignInfo?.rewards?.length || 0}) < 3. Bypassing wheel flow.`,
+        );
+        setPrizes([]);
+        setSpinsCount(0);
+        setEmptyMessage('Spin wheel is currently unavailable.');
+        if (isMountedRef.current) {
+          setIsLoading(false);
+        }
+        return;
+      }
+
+      const activePrizes: AssuredPrize[] = campaignInfo.rewards.map(
         (item: any, idx: number) => mapBackendRewardToPrize(item, idx),
       );
-      setPrizes(dummyPrizes);
-      setCampaignName('Welcome Bonus');
+      setPrizes(activePrizes);
+      if (campaignInfo.campaignId) {
+        setCampaignId(Number(campaignInfo.campaignId));
+      }
+      if (campaignInfo.campaignName) {
+        setCampaignName(campaignInfo.campaignName);
+      }
       setEmptyMessage(null);
 
       const claimed = await isOnboardingSpinClaimed();
@@ -771,7 +851,7 @@ export default function SpinWheelRewardsScreen() {
           setShowModal(true);
 
           const pItem = reward.prize;
-          const matchIdx = dummyPrizes.findIndex(
+          const matchIdx = activePrizes.findIndex(
             p =>
               (pItem.campaignItemId &&
                 p.campaignItemId === pItem.campaignItemId) ||
@@ -782,7 +862,7 @@ export default function SpinWheelRewardsScreen() {
                 p.label.toLowerCase() === pItem.label.toLowerCase()),
           );
           if (matchIdx !== -1) {
-            const sAngle = 360 / dummyPrizes.length;
+            const sAngle = 360 / activePrizes.length;
             const sliceCenter = matchIdx * sAngle;
             const targetAngle = (360 - (sliceCenter % 360)) % 360;
             rotation.value = targetAngle;
@@ -821,7 +901,7 @@ export default function SpinWheelRewardsScreen() {
 
       if (
         Array.isArray(campaignInfo.rewards) &&
-        campaignInfo.rewards.length > 0
+        campaignInfo.rewards.length >= 3
       ) {
         const mapped = campaignInfo.rewards.map((item: any, idx: number) =>
           mapBackendRewardToPrize(item, idx),
@@ -950,7 +1030,7 @@ export default function SpinWheelRewardsScreen() {
           : Number(orderId)
         : undefined;
 
-    if (isOnboarding && prize) {
+    if ((isOnboarding || source === 'HOME_WHEEL' || !targetOrderId) && prize) {
       markOnboardingSpinClaimed(prize);
     } else if (targetOrderId && prize) {
       markOrderSpinClaimed(targetOrderId, prize);
@@ -976,79 +1056,6 @@ export default function SpinWheelRewardsScreen() {
     setWonPrize(null);
     setIsSpinning(true);
 
-    if (isOnboarding) {
-      const winningIndex = selectWeightedRewardIndex(prizes);
-      const targetPrize = prizes[winningIndex] || prizes[0];
-
-      const sliceCenter = winningIndex * sliceAngle;
-      const targetAngleInCycle = (360 - (sliceCenter % 360)) % 360;
-
-      const currentRot = accumulatedRotation.current;
-      const currentTurns = Math.floor(currentRot / 360);
-      const fullSpins = 5;
-      let nextTarget = (currentTurns + fullSpins) * 360 + targetAngleInCycle;
-
-      while (nextTarget <= currentRot + 3 * 360) {
-        nextTarget += 360;
-      }
-
-      accumulatedRotation.current = nextTarget;
-
-      const SLOWDOWN_HAPTIC_CLICKS: {
-        delay: number;
-        type: 'light' | 'medium';
-      }[] = [
-        { delay: 3400, type: 'light' },
-        { delay: 3820, type: 'light' },
-        { delay: 4260, type: 'light' },
-        { delay: 4720, type: 'light' },
-        { delay: 5200, type: 'light' },
-        { delay: 5700, type: 'light' },
-        { delay: 6220, type: 'medium' },
-        { delay: 6760, type: 'medium' },
-        { delay: 7280, type: 'medium' },
-      ];
-
-      SLOWDOWN_HAPTIC_CLICKS.forEach(({ delay, type }) => {
-        const timer = setTimeout(() => {
-          if (type === 'medium') {
-            impactTick();
-          } else {
-            selectionTick();
-          }
-        }, delay);
-        hapticTimeouts.current.push(timer);
-      });
-
-      // Pointer animation: lightweight repeating oscillation without overloading Android bridge
-      pointerAngle.value = withRepeat(
-        withSequence(
-          withTiming(-12, { duration: 60, easing: Easing.linear }),
-          withTiming(2, { duration: 60, easing: Easing.linear }),
-        ),
-        Math.floor(SPIN_DURATION_MS / 120),
-        true,
-      );
-
-      rotation.value = withTiming(
-        nextTarget,
-        {
-          duration: SPIN_DURATION_MS,
-          easing: Easing.bezier(0.16, 0.88, 0.26, 1),
-        },
-        () => {
-          'worklet';
-          runOnJS(safeSpinEnd)(targetPrize, winningIndex);
-        },
-      );
-
-      // Bulletproof Android fallback timer
-      spinFallbackTimerRef.current = setTimeout(() => {
-        safeSpinEnd(targetPrize, winningIndex);
-      }, SPIN_DURATION_MS + 250);
-      return;
-    }
-
     const targetOrderId =
       orderId !== undefined && orderId !== null
         ? isNaN(Number(orderId))
@@ -1058,19 +1065,43 @@ export default function SpinWheelRewardsScreen() {
     const targetCampaignId =
       campaignId !== undefined && campaignId !== null
         ? Number(campaignId)
-        : undefined;
+        : paramCampaignId !== undefined && paramCampaignId !== null
+        ? Number(paramCampaignId)
+        : 2;
 
+    const isHomeWheel = isOnboarding || source === 'HOME_WHEEL' || !targetOrderId;
     let playResponse: any = null;
-    try {
-      playResponse = await playSpinWin({
-        orderId: targetOrderId,
-        campaignId: targetCampaignId,
-      });
-      console.log('rewards/spin-win/play response:', playResponse);
-    } catch (err: any) {
-      const errResponse =
-        err?.response?.data || err?.data || err?.message || err;
-      console.log('rewards/spin-win/play response error:', errResponse);
+
+    if (isHomeWheel) {
+      const dynamicCampaignId = targetCampaignId || 2;
+      const dynamicRequestId = paramRequestId || uuidv4();
+      const dynamicAnonymousId =
+        paramAnonymousId !== undefined ? paramAnonymousId : null;
+
+      try {
+        playResponse = await playHomeWheelApi({
+          campaignId: dynamicCampaignId,
+          requestId: dynamicRequestId,
+          anonymousId: dynamicAnonymousId,
+        });
+        console.log('rewards/home-wheel/play response:', playResponse);
+      } catch (err: any) {
+        const errResponse =
+          err?.response?.data || err?.data || err?.message || err;
+        console.log('rewards/home-wheel/play response error:', errResponse);
+      }
+    } else {
+      try {
+        playResponse = await playSpinWin({
+          orderId: targetOrderId,
+          campaignId: targetCampaignId,
+        });
+        console.log('rewards/spin-win/play response:', playResponse);
+      } catch (err: any) {
+        const errResponse =
+          err?.response?.data || err?.data || err?.message || err;
+        console.log('rewards/spin-win/play response error:', errResponse);
+      }
     }
 
     let winningIndex = -1;
@@ -1611,7 +1642,7 @@ export default function SpinWheelRewardsScreen() {
               Checking reward eligibility...
             </Text>
           </View>
-        ) : prizes.length === 0 ? (
+        ) : prizes.length < 3 ? (
           <View style={styles.emptyContainer}>
             <View
               style={[

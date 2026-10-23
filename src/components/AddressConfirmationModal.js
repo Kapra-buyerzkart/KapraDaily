@@ -72,22 +72,24 @@ const AddressConfirmationModal = ({
         ]}
       >
         <Ionicons
-          name={display.isServiceable ? 'location-sharp' : 'alert-circle-outline'}
+          name={
+            display.isServiceable ? 'location-sharp' : 'alert-circle-outline'
+          }
           size={wp('8.5%')}
           color={display.isServiceable ? '#F25000' : '#DC2626'}
         />
       </View>
 
       <Text style={styles.title}>
-        {display.isServiceable ? 'Delivery Confirmation' : 'Delivery Unavailable'}
+        {display.isServiceable
+          ? 'Delivery Confirmation'
+          : 'Delivery Unavailable'}
       </Text>
 
       {display.isServiceable ? (
         <View style={styles.addressCard}>
           <Text style={styles.addressCardLabel}>DELIVERING TO</Text>
-          <Text style={styles.addressCardArea}>
-            {display.areaName}
-          </Text>
+          <Text style={styles.addressCardArea}>{display.areaName}</Text>
           <View style={styles.pincodePill}>
             <Text style={styles.pincodeText}>PIN: {display.pincode}</Text>
           </View>
@@ -103,7 +105,11 @@ const AddressConfirmationModal = ({
 
       {display.isServiceable && (
         <View style={styles.noteBox}>
-          <Ionicons name="information-circle-outline" size={wp('3.8%')} color="#6B7280" />
+          <Ionicons
+            name="information-circle-outline"
+            size={wp('3.8%')}
+            color="#6B7280"
+          />
           <Text style={styles.warningMessage}>
             {display.isPlacingOrder
               ? 'Clicking Confirm will finalize your order.'
@@ -150,6 +156,16 @@ const AddressConfirmationModal = ({
             <Text style={styles.outlineButtonText}>Change Address</Text>
           </TouchableOpacity>
         )}
+      </View>
+
+      <View>
+        <TouchableOpacity
+          hitSlop={20}
+          style={{ paddingTop: 40 }}
+          onPress={onClose}
+        >
+          <Text>Close</Text>
+        </TouchableOpacity>
       </View>
     </CustomModal>
   );
@@ -256,7 +272,7 @@ const styles = StyleSheet.create({
   primaryButton: {
     width: '100%',
     height: 48,
-    borderRadius: 999,
+    borderRadius: 10,
     backgroundColor: '#F25000',
     alignItems: 'center',
     justifyContent: 'center',

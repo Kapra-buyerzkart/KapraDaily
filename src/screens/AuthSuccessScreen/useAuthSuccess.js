@@ -1,20 +1,23 @@
-import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
-
-import { AppContext } from '@/context/appContext';
 import useLandingPages, {
   findLandingImage,
   prefetchLandingPageImages,
 } from '@/hooks/useLandingPages';
+import {
+  checkLandingScreenWheelEntitlement,
+  extractCampaignAndRewards,
+} from '@/api/spinWheelService';
 import { getImageUrl } from '@/utils/imageUrl';
 
 import { LANDING_IMAGE_DIR, SERVICE_TILES } from './constants';
 
-export const useAuthSuccess = () => {
+// Entitlement check and landing tiles hook
+export const useAuthSuccess = ({ onEntitled } = {}) => {
   const navigation = useNavigation();
-  const { generalSettings } = useContext(AppContext);
   const { data: landingPages } = useLandingPages();
   const [isComingSoonVisible, setIsComingSoonVisible] = useState(false);
+  const [isCheckingWheel, setIsCheckingWheel] = useState(false);
 
   const landingPageImages = landingPages?.landingPageImages;
 
@@ -54,11 +57,76 @@ export const useAuthSuccess = () => {
     [isKshopeEnabled, navigation],
   );
 
-  const handleSelect = useCallback(id => actions[id]?.(), [actions]);
+  const handleSelect = useCallback(
+    async id => {
+      const normalFlow = actions[id];
+      if (!normalFlow) return;
+
+      if (isCheckingWheel) return;
+
+      console.log(
+        `[LandingScreen] Button pressed: "${id}" — checking wheel eligibility`,
+      );
+      setIsCheckingWheel(true);
+      try {
+        await checkLandingScreenWheelEntitlement({
+          onEntitled: data => {
+            const campaignInfo = extractCampaignAndRewards(data);
+            if (
+              !Array.isArray(campaignInfo?.rewards) ||
+              campaignInfo.rewards.length < 3
+            ) {
+              console.log(
+                `[LandingScreen] Backend rewards count (${campaignInfo?.rewards?.length || 0}) < 3; bypassing spin wheel flow.`,
+              );
+              setIsCheckingWheel(false);
+              normalFlow();
+              return;
+            }
+
+            console.log(
+              `[LandingScreen] User is entitled to spin! Data:\n`,
+              JSON.stringify(data, null, 2),
+            );
+            setIsCheckingWheel(false);
+            if (typeof onEntitled === 'function') {
+              onEntitled(data, normalFlow);
+            } else {
+              const firstItem = Array.isArray(data?.items) ? data.items[0] : null;
+              navigation.navigate('SpinWheelRewardsScreen', {
+                source: 'ONBOARDING',
+                theme: 'welcome',
+                campaignId: firstItem?.campaignId || data?.campaignId || 2,
+                requestId: data?.requestId,
+                anonymousId: null,
+                visibilityData: data,
+              });
+            }
+          },
+          onNormalFlow: () => {
+            console.log(`[LandingScreen] Proceeding to normal flow for "${id}"`);
+            setIsCheckingWheel(false);
+            normalFlow();
+          },
+        });
+      } catch (err) {
+        console.log(`[LandingScreen] Error checking wheel; falling back to normal flow for "${id}":`, err);
+        setIsCheckingWheel(false);
+        normalFlow();
+      }
+    },
+    [actions, isCheckingWheel, onEntitled, navigation],
+  );
 
   const closeComingSoon = useCallback(() => setIsComingSoonVisible(false), []);
 
-  return { tiles, handleSelect, isComingSoonVisible, closeComingSoon };
+  return {
+    tiles,
+    handleSelect,
+    isComingSoonVisible,
+    closeComingSoon,
+    isCheckingWheel,
+  };
 };
 
 export default useAuthSuccess;

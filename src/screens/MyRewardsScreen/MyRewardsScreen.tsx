@@ -11,7 +11,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useIsFocused, useNavigation } from '@react-navigation/native';
+import { useIsFocused, useNavigation, useRoute } from '@react-navigation/native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Clipboard from '@react-native-clipboard/clipboard';
@@ -22,8 +22,13 @@ import {
 } from 'react-native-responsive-screen';
 
 import { FONTS } from '../../styles/typography';
-import { getSpinWinHistory } from '../../api/spinWheelService';
+import {
+  getSpinWinHistory,
+  getHomeWheelMySpins,
+} from '../../api/spinWheelService';
 import { impactTick } from '../../utils/haptics';
+
+export type RewardTab = 'BUYING' | 'JOINING';
 
 interface RewardItem {
   id?: string | number;
@@ -32,20 +37,28 @@ interface RewardItem {
   rewardTitle?: string;
   title?: string;
   label?: string;
+  name?: string;
   dateWon?: string;
   wonAt?: string;
   createdAt?: string;
+  created_at?: string;
+  spinDate?: string;
   status?: string;
   isClaimed?: boolean;
   isExpired?: boolean;
   expiryDate?: string;
   expiresAt?: string;
   validTill?: string;
+  validUntil?: string;
   code?: string;
   couponCode?: string;
   promoCode?: string;
   giftCardCode?: string;
+  rewardCode?: string;
   value?: string | number;
+  awardedValue?: string | number;
+  amount?: string | number;
+  rewardType?: string;
   description?: string;
   terms?: string;
   [key: string]: any;
@@ -95,9 +108,9 @@ const resolveStatus = (
   if (rawStatus === 'EXPIRED' || item.isExpired) {
     return { label: 'EXPIRED', tone: 'expired' };
   }
-  if (item.expiryDate || item.expiresAt || item.validTill) {
+  if (item.expiryDate || item.expiresAt || item.validTill || item.validUntil) {
     const expTime = new Date(
-      item.expiryDate || item.expiresAt || item.validTill || '',
+      item.expiryDate || item.expiresAt || item.validTill || item.validUntil || '',
     ).getTime();
     if (!isNaN(expTime) && expTime < Date.now()) {
       return { label: 'EXPIRED', tone: 'expired' };
@@ -108,22 +121,44 @@ const resolveStatus = (
 
 export default function MyRewardsScreen() {
   const navigation = useNavigation<any>();
+  const route = useRoute<any>();
   const isFocused = useIsFocused();
 
-  const [rewards, setRewards] = useState<RewardItem[]>([]);
-  const [pageNumber, setPageNumber] = useState<number>(1);
-  const [hasMoreData, setHasMoreData] = useState<boolean>(true);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
-  const [isFetchingMore, setIsFetchingMore] = useState<boolean>(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const initialTab: RewardTab =
+    route?.params?.tab === 'JOINING' ||
+    route?.params?.initialTab === 'joining' ||
+    route?.params?.initialTab === 'JOINING'
+      ? 'JOINING'
+      : 'BUYING';
 
-  const fetchHistory = useCallback(async (page = 1, isRefresh = false) => {
+  const [activeTab, setActiveTab] = useState<RewardTab>(initialTab);
+
+  // Buying rewards state (Order Spin & Win history)
+  const [buyingRewards, setBuyingRewards] = useState<RewardItem[]>([]);
+  const [buyingPage, setBuyingPage] = useState<number>(1);
+  const [hasMoreBuying, setHasMoreBuying] = useState<boolean>(true);
+  const [isLoadingBuying, setIsLoadingBuying] = useState<boolean>(true);
+  const [isRefreshingBuying, setIsRefreshingBuying] = useState<boolean>(false);
+  const [isFetchingMoreBuying, setIsFetchingMoreBuying] = useState<boolean>(false);
+  const [errorBuying, setErrorBuying] = useState<string | null>(null);
+
+  // Joining rewards state (Home / Registration / Onboarding spins)
+  const [joiningRewards, setJoiningRewards] = useState<RewardItem[]>([]);
+  const [joiningPage, setJoiningPage] = useState<number>(1);
+  const [hasMoreJoining, setHasMoreJoining] = useState<boolean>(true);
+  const [isLoadingJoining, setIsLoadingJoining] = useState<boolean>(false);
+  const [isRefreshingJoining, setIsRefreshingJoining] = useState<boolean>(false);
+  const [isFetchingMoreJoining, setIsFetchingMoreJoining] = useState<boolean>(false);
+  const [errorJoining, setErrorJoining] = useState<string | null>(null);
+  const [hasFetchedJoining, setHasFetchedJoining] = useState<boolean>(false);
+
+  // Fetch buying rewards (rewards/spin-win/history)
+  const fetchBuyingHistory = useCallback(async (page = 1, isRefresh = false) => {
     if (page === 1) {
-      if (!isRefresh) setIsLoading(true);
-      setErrorMessage(null);
+      if (!isRefresh) setIsLoadingBuying(true);
+      setErrorBuying(null);
     } else {
-      setIsFetchingMore(true);
+      setIsFetchingMoreBuying(true);
     }
 
     try {
@@ -137,6 +172,7 @@ export default function MyRewardsScreen() {
         data?.items ||
         data?.rewards ||
         data?.history ||
+        data?.spins ||
         response?.items ||
         response?.rewards ||
         (Array.isArray(data) ? data : null) ||
@@ -145,48 +181,143 @@ export default function MyRewardsScreen() {
       const parsedItems: RewardItem[] = Array.isArray(rawItems) ? rawItems : [];
 
       if (page === 1) {
-        setRewards(parsedItems);
+        setBuyingRewards(parsedItems);
       } else {
-        setRewards(prev => [...prev, ...parsedItems]);
+        setBuyingRewards(prev => [...prev, ...parsedItems]);
       }
 
-      setPageNumber(page);
-      if (parsedItems.length < PAGE_SIZE) {
-        setHasMoreData(false);
-      } else {
-        setHasMoreData(true);
-      }
+      setBuyingPage(page);
+      setHasMoreBuying(parsedItems.length >= PAGE_SIZE);
     } catch (err: any) {
       const msg =
         err?.response?.data?.message ||
         err?.response?.data?.error ||
         err?.message ||
-        'Failed to load rewards. Please pull to refresh.';
+        'Failed to load buying rewards. Please pull to refresh.';
       if (page === 1) {
-        setErrorMessage(msg);
+        setErrorBuying(msg);
       }
     } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
-      setIsFetchingMore(false);
+      setIsLoadingBuying(false);
+      setIsRefreshingBuying(false);
+      setIsFetchingMoreBuying(false);
     }
   }, []);
 
-  // Auto-refresh when screen gains focus (e.g. after a spin completion)
-  useEffect(() => {
-    if (isFocused) {
-      fetchHistory(1);
+  // Fetch joining rewards (rewards/home-wheel/my-spins)
+  const fetchJoiningHistory = useCallback(async (page = 1, isRefresh = false) => {
+    if (page === 1) {
+      if (!isRefresh) setIsLoadingJoining(true);
+      setErrorJoining(null);
+    } else {
+      setIsFetchingMoreJoining(true);
     }
-  }, [isFocused, fetchHistory]);
+
+    try {
+      const response: any = await getHomeWheelMySpins({
+        pageNumber: page,
+        pageSize: PAGE_SIZE,
+      });
+
+      const data = response?.data !== undefined ? response.data : response;
+      const rawItems =
+        data?.items ||
+        data?.rewards ||
+        data?.spins ||
+        data?.mySpins ||
+        data?.history ||
+        data?.records ||
+        response?.items ||
+        response?.rewards ||
+        response?.spins ||
+        response?.mySpins ||
+        (Array.isArray(data) ? data : null) ||
+        (Array.isArray(response) ? response : null) ||
+        [];
+
+      const parsedItems: RewardItem[] = Array.isArray(rawItems) ? rawItems : [];
+
+      if (page === 1) {
+        setJoiningRewards(parsedItems);
+      } else {
+        setJoiningRewards(prev => [...prev, ...parsedItems]);
+      }
+
+      setJoiningPage(page);
+      setHasMoreJoining(parsedItems.length >= PAGE_SIZE);
+      setHasFetchedJoining(true);
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        err?.message ||
+        'Failed to load joining rewards. Please pull to refresh.';
+      if (page === 1) {
+        setErrorJoining(msg);
+      }
+    } finally {
+      setIsLoadingJoining(false);
+      setIsRefreshingJoining(false);
+      setIsFetchingMoreJoining(false);
+    }
+  }, []);
+
+  // Initial fetch on mount
+  useEffect(() => {
+    if (initialTab === 'JOINING') {
+      fetchJoiningHistory(1);
+    } else {
+      fetchBuyingHistory(1);
+    }
+  }, [initialTab, fetchBuyingHistory, fetchJoiningHistory]);
+
+  // Screen focus handling (auto-refresh active tab if updated in other screens)
+  useEffect(() => {
+    if (!isFocused) return;
+    if (activeTab === 'BUYING') {
+      fetchBuyingHistory(1);
+    } else if (activeTab === 'JOINING' && hasFetchedJoining) {
+      fetchJoiningHistory(1);
+    }
+  }, [isFocused, activeTab, hasFetchedJoining, fetchBuyingHistory, fetchJoiningHistory]);
+
+  // Tab change handler
+  const handleTabPress = (tab: RewardTab) => {
+    if (tab === activeTab) return;
+    impactTick();
+    setActiveTab(tab);
+    if (tab === 'JOINING' && !hasFetchedJoining) {
+      fetchJoiningHistory(1);
+    }
+  };
 
   const handleRefresh = () => {
-    setIsRefreshing(true);
-    fetchHistory(1, true);
+    if (activeTab === 'BUYING') {
+      setIsRefreshingBuying(true);
+      fetchBuyingHistory(1, true);
+    } else {
+      setIsRefreshingJoining(true);
+      fetchJoiningHistory(1, true);
+    }
   };
 
   const handleLoadMore = () => {
-    if (!isFetchingMore && !isLoading && hasMoreData) {
-      fetchHistory(pageNumber + 1);
+    if (activeTab === 'BUYING') {
+      if (!isFetchingMoreBuying && !isLoadingBuying && hasMoreBuying) {
+        fetchBuyingHistory(buyingPage + 1);
+      }
+    } else {
+      if (!isFetchingMoreJoining && !isLoadingJoining && hasMoreJoining) {
+        fetchJoiningHistory(joiningPage + 1);
+      }
+    }
+  };
+
+  const handleRetry = () => {
+    if (activeTab === 'BUYING') {
+      fetchBuyingHistory(1);
+    } else {
+      fetchJoiningHistory(1);
     }
   };
 
@@ -196,15 +327,27 @@ export default function MyRewardsScreen() {
     Toast.show(`Coupon code "${code}" copied!`, Toast.SHORT);
   };
 
+  // Active dataset references
+  const rewards = activeTab === 'BUYING' ? buyingRewards : joiningRewards;
+  const isLoading = activeTab === 'BUYING' ? isLoadingBuying : isLoadingJoining;
+  const isRefreshing = activeTab === 'BUYING' ? isRefreshingBuying : isRefreshingJoining;
+  const isFetchingMore = activeTab === 'BUYING' ? isFetchingMoreBuying : isFetchingMoreJoining;
+  const errorMessage = activeTab === 'BUYING' ? errorBuying : errorJoining;
+  const hasMoreData = activeTab === 'BUYING' ? hasMoreBuying : hasMoreJoining;
+
   const renderRewardItem = ({ item }: { item: RewardItem }) => {
     const title =
       item.rewardName ||
       item.rewardTitle ||
       item.title ||
       item.label ||
+      item.name ||
+      (item.awardedValue
+        ? `${item.awardedValue} ${item.rewardType || 'Tokens'}`
+        : null) ||
       (typeof item.prize === 'string'
         ? item.prize
-        : item.prize?.rewardName || item.prize?.label) ||
+        : item.prize?.rewardName || item.prize?.label || item.prize?.title) ||
       'Lucky Reward';
 
     const code =
@@ -212,15 +355,41 @@ export default function MyRewardsScreen() {
       item.couponCode ||
       item.promoCode ||
       item.giftCardCode ||
+      item.rewardCode ||
       item.prize?.code ||
       '';
 
-    const dateWon = item.dateWon || item.wonAt || item.createdAt;
-    const expiry = item.expiryDate || item.expiresAt || item.validTill;
-    const value = item.value || item.prize?.value;
-    const statusInfo = resolveStatus(item);
+    const dateWon =
+      item.dateWon ||
+      item.wonAt ||
+      item.createdAt ||
+      item.spinDate ||
+      item.created_at ||
+      item.date;
 
+    const expiry =
+      item.expiryDate ||
+      item.expiresAt ||
+      item.validTill ||
+      item.validUntil ||
+      item.expires_at;
+
+    const value =
+      item.value ||
+      item.awardedValue ||
+      item.amount ||
+      item.prize?.value;
+
+    const statusInfo = resolveStatus(item);
     const isNoPrize = statusInfo.tone === 'noprize';
+
+    const rawType = String(item.rewardType || '').toLowerCase();
+    const rawTitle = title.toLowerCase();
+    const isTokenReward =
+      rawType.includes('token') ||
+      rawType.includes('coin') ||
+      rawTitle.includes('token') ||
+      rawTitle.includes('coin');
 
     return (
       <View
@@ -233,12 +402,21 @@ export default function MyRewardsScreen() {
               style={[
                 styles.giftIconWrap,
                 isNoPrize && styles.giftIconWrapNoPrize,
+                isTokenReward && styles.giftIconWrapToken,
               ]}
             >
               <MaterialCommunityIcons
-                name={isNoPrize ? 'clover' : 'gift-open'}
+                name={
+                  isNoPrize
+                    ? 'clover'
+                    : isTokenReward
+                    ? 'circle-multiple'
+                    : 'gift-open'
+                }
                 size={18}
-                color={isNoPrize ? '#64748B' : '#059669'}
+                color={
+                  isNoPrize ? '#64748B' : isTokenReward ? '#D97706' : '#059669'
+                }
               />
             </View>
             <View style={styles.prizeTitleCol}>
@@ -286,13 +464,32 @@ export default function MyRewardsScreen() {
         {/* Value and Expiry Metadata */}
         <View style={styles.metaRow}>
           {value ? (
-            <View style={styles.valueChip}>
+            <View
+              style={[
+                styles.valueChip,
+                isTokenReward && styles.valueChipToken,
+              ]}
+            >
               <MaterialCommunityIcons
-                name="tag-outline"
+                name={isTokenReward ? 'star-circle-outline' : 'tag-outline'}
                 size={12}
-                color="#047857"
+                color={isTokenReward ? '#D97706' : '#047857'}
               />
-              <Text style={styles.valueChipText}>Value: {String(value)}</Text>
+              <Text
+                style={[
+                  styles.valueChipText,
+                  isTokenReward && styles.valueChipTokenText,
+                ]}
+              >
+                {isTokenReward
+                  ? `${value} ${
+                      !String(value).toLowerCase().includes('token') &&
+                      !String(value).toLowerCase().includes('coin')
+                        ? 'Tokens'
+                        : ''
+                    }`.trim()
+                  : `Value: ${String(value)}`}
+              </Text>
             </View>
           ) : null}
 
@@ -307,7 +504,7 @@ export default function MyRewardsScreen() {
           ) : null}
         </View>
 
-        {/* Coupon Strip with 1-Tap Copy OR NoPrize Encouragement Strip */}
+        {/* Coupon Strip with 1-Tap Copy OR Token Info Badge OR NoPrize Strip */}
         {code ? (
           <View style={styles.codeStrip}>
             <View style={styles.codeInfoCol}>
@@ -325,6 +522,17 @@ export default function MyRewardsScreen() {
               <Text style={styles.copyButtonText}>COPY</Text>
             </TouchableOpacity>
           </View>
+        ) : isTokenReward ? (
+          <View style={styles.tokenStrip}>
+            <MaterialCommunityIcons
+              name="check-decagram"
+              size={15}
+              color="#D97706"
+            />
+            <Text style={styles.tokenStripText}>
+              Added to your UD token balance
+            </Text>
+          </View>
         ) : isNoPrize ? (
           <View style={styles.noPrizeStrip}>
             <MaterialCommunityIcons
@@ -333,7 +541,9 @@ export default function MyRewardsScreen() {
               color="#64748B"
             />
             <Text style={styles.noPrizeStripText}>
-              Better luck next time! Spin again on your next eligible order.
+              {activeTab === 'BUYING'
+                ? 'Better luck next time! Spin again on your next eligible order.'
+                : 'Better luck next time! Keep checking back for exciting rewards.'}
             </Text>
           </View>
         ) : null}
@@ -345,7 +555,7 @@ export default function MyRewardsScreen() {
     if (!isFetchingMore) return null;
     return (
       <View style={styles.footerLoader}>
-        <ActivityIndicator size="small" color="#059669" />
+        <ActivityIndicator size="small" color="#FF6200" />
         <Text style={styles.footerLoaderText}>Loading more rewards...</Text>
       </View>
     );
@@ -365,7 +575,7 @@ export default function MyRewardsScreen() {
           <Text style={styles.emptySubtitle}>{errorMessage}</Text>
           <TouchableOpacity
             style={styles.retryButton}
-            onPress={() => fetchHistory(1)}
+            onPress={handleRetry}
             activeOpacity={0.8}
           >
             <Text style={styles.retryButtonText}>Try Again</Text>
@@ -374,18 +584,24 @@ export default function MyRewardsScreen() {
       );
     }
 
+    const isBuying = activeTab === 'BUYING';
+
     return (
       <View style={styles.emptyContainer}>
         <View style={styles.emptyIconCircle}>
           <MaterialCommunityIcons
-            name="ticket-percent-outline"
+            name={isBuying ? 'ticket-percent-outline' : 'party-popper'}
             size={44}
-            color="#D97706"
+            color="#FF6200"
           />
         </View>
-        <Text style={styles.emptyTitle}>No Rewards Yet</Text>
+        <Text style={styles.emptyTitle}>
+          {isBuying ? 'No Buying Rewards Yet' : 'No Joining Rewards Yet'}
+        </Text>
         <Text style={styles.emptySubtitle}>
-          Coupons, cashbacks, and vouchers won from your orders and rewards will appear here.
+          {isBuying
+            ? 'Coupons, cashbacks, and vouchers won from your orders will appear here.'
+            : 'Rewards, tokens, and welcome gifts won from your onboarding spins will appear here.'}
         </Text>
       </View>
     );
@@ -410,22 +626,115 @@ export default function MyRewardsScreen() {
         <View style={styles.headerTitleWrap}>
           <Text style={styles.headerTitle}>My Rewards</Text>
           <Text style={styles.headerSubtitle}>
-            Your Spin & Win coupons and vouchers
+            {activeTab === 'BUYING'
+              ? 'Your order spin coupons and vouchers'
+              : 'Your welcome and joining spin rewards'}
           </Text>
         </View>
+      </View>
+
+      {/* Tab Switcher */}
+      <View style={styles.tabContainer}>
+        <TouchableOpacity
+          style={[
+            styles.tabButton,
+            activeTab === 'BUYING' && styles.tabButtonActive,
+          ]}
+          onPress={() => handleTabPress('BUYING')}
+          activeOpacity={0.8}
+          accessibilityRole="tab"
+          accessibilityState={{ selected: activeTab === 'BUYING' }}
+        >
+          <MaterialCommunityIcons
+            name="cart-outline"
+            size={18}
+            color={activeTab === 'BUYING' ? '#FF6200' : '#64748B'}
+          />
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === 'BUYING' && styles.tabTextActive,
+            ]}
+          >
+            Buying Rewards
+          </Text>
+          {buyingRewards.length > 0 && (
+            <View
+              style={[
+                styles.tabBadge,
+                activeTab === 'BUYING' && styles.tabBadgeActive,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.tabBadgeText,
+                  activeTab === 'BUYING' && styles.tabBadgeTextActive,
+                ]}
+              >
+                {buyingRewards.length}
+              </Text>
+            </View>
+          )}
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.tabButton,
+            activeTab === 'JOINING' && styles.tabButtonActive,
+          ]}
+          onPress={() => handleTabPress('JOINING')}
+          activeOpacity={0.8}
+          accessibilityRole="tab"
+          accessibilityState={{ selected: activeTab === 'JOINING' }}
+        >
+          <MaterialCommunityIcons
+            name="party-popper"
+            size={17}
+            color={activeTab === 'JOINING' ? '#FF6200' : '#64748B'}
+          />
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === 'JOINING' && styles.tabTextActive,
+            ]}
+          >
+            Joining Rewards
+          </Text>
+          {joiningRewards.length > 0 && (
+            <View
+              style={[
+                styles.tabBadge,
+                activeTab === 'JOINING' && styles.tabBadgeActive,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.tabBadgeText,
+                  activeTab === 'JOINING' && styles.tabBadgeTextActive,
+                ]}
+              >
+                {joiningRewards.length}
+              </Text>
+            </View>
+          )}
+        </TouchableOpacity>
       </View>
 
       {/* Main Content */}
       {isLoading ? (
         <View style={styles.loaderContainer}>
-          <ActivityIndicator size="large" color="#059669" />
-          <Text style={styles.loadingText}>Fetching your rewards...</Text>
+          <ActivityIndicator size="large" color="#FF6200" />
+          <Text style={styles.loadingText}>
+            {activeTab === 'BUYING'
+              ? 'Fetching your order rewards...'
+              : 'Fetching your joining rewards...'}
+          </Text>
         </View>
       ) : (
         <FlatList
           data={rewards}
           keyExtractor={(item, index) =>
-            String(item.id ?? item.code ?? `reward_${index}`)
+            String(item.id ?? item.code ?? item.spinId ?? `${activeTab}_reward_${index}`)
           }
           renderItem={renderRewardItem}
           ListEmptyComponent={renderEmpty}
@@ -440,8 +749,8 @@ export default function MyRewardsScreen() {
             <RefreshControl
               refreshing={isRefreshing}
               onRefresh={handleRefresh}
-              colors={['#059669']}
-              tintColor="#059669"
+              colors={['#FF6200', '#059669']}
+              tintColor="#FF6200"
             />
           }
           showsVerticalScrollIndicator={false}
@@ -491,7 +800,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: 16,
-    paddingBottom: 32,
+    paddingBottom: 100,
   },
   listContentEmpty: {
     flexGrow: 1,
@@ -750,4 +1059,96 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#FFFFFF',
   },
+  tabContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#F1F5F9',
+    borderRadius: 14,
+    padding: 4,
+    marginHorizontal: 16,
+    marginTop: 12,
+    marginBottom: 4,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  tabButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 9,
+    borderRadius: 11,
+    gap: 6,
+  },
+  tabButtonActive: {
+    backgroundColor: '#FFFFFF',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  tabText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#64748B',
+    fontFamily: FONTS.gilroy?.medium || 'System',
+  },
+  tabTextActive: {
+    color: '#FF6200',
+    fontWeight: '800',
+    fontFamily: FONTS.gilroy?.bold || 'System',
+  },
+  tabBadge: {
+    backgroundColor: '#E2E8F0',
+    paddingHorizontal: 6,
+    paddingVertical: 1.5,
+    borderRadius: 10,
+  },
+  tabBadgeActive: {
+    backgroundColor: '#FFF0E6',
+  },
+  tabBadgeText: {
+    fontSize: 10.5,
+    fontWeight: '700',
+    color: '#64748B',
+  },
+  tabBadgeTextActive: {
+    color: '#FF6200',
+  },
+  giftIconWrapToken: {
+    backgroundColor: '#FEF3C7',
+  },
+  valueChipToken: {
+    backgroundColor: '#FFFBEB',
+  },
+  valueChipTokenText: {
+    color: '#D97706',
+    fontWeight: '700',
+  },
+  tokenStrip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#FFFBEB',
+    borderColor: '#FDE68A',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    marginTop: 10,
+  },
+  tokenStripText: {
+    flex: 1,
+    fontSize: 11,
+    color: '#B45309',
+    fontFamily: FONTS.gilroy?.medium || 'System',
+    fontWeight: '600',
+  },
 });
+

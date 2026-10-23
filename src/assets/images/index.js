@@ -104,6 +104,8 @@ const images = {
   oreoBiscuit: require('./oreo_biscuit.png'),
   goodDayBiscuits: require('./good_day_biscuits.png'),
   pantryDealsBanner: require('./pantry_deals_banner.png'),
+  earbudsHero: require('./earbuds_hero.png'),
+  giftBoxHero: require('./gift_box_hero.png'),
 };
 
 export default images;

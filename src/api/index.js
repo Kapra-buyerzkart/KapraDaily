@@ -156,6 +156,8 @@ export {
   isOrderSpinClaimed,
   getOrderSpinReward,
   markOrderSpinClaimed,
+  checkHomeWheelVisibilityApi,
+  playHomeWheelApi,
 } from './spinWheelService';
 
 

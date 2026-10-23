@@ -42,6 +42,10 @@ import {
   isOnboardingSpinClaimed,
   getOnboardingSpinReward,
   resetOnboardingSpinClaim,
+  extractCampaignAndRewards,
+  mapBackendRewardToPrize,
+  REWARD_PALETTES,
+  AssuredPrize,
 } from '../api/spinWheelService';
 import COLORS from '@/styles/colors';
 
@@ -51,34 +55,14 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const DUMMY_WHEEL_SIZE = Math.min(Math.round(SCREEN_WIDTH * 0.68), 240);
 const DUMMY_RADIUS = DUMMY_WHEEL_SIZE / 2;
 
-// Themed teaser prize slices matching official onboarding campaign
-const ONBOARDING_DUMMY_SLICES = [
-  { label: '₹100 OFF', bg1: '#FF5722', bg2: '#D84315' },
-  { label: 'FREE DEL', bg1: '#10B981', bg2: '#059669' },
-  { label: '50 COINS', bg1: '#F59E0B', bg2: '#D97706' },
-  { label: '₹50 OFF', bg1: '#06B6D4', bg2: '#0891B2' },
-  { label: '20% OFF', bg1: '#8B5CF6', bg2: '#6D28D9' },
-  { label: '₹75 OFF', bg1: '#EC4899', bg2: '#DB2777' },
-  { label: '2X COINS', bg1: '#FBBF24', bg2: '#D97706' },
-  { label: 'JACKPOT', bg1: '#EF4444', bg2: '#DC2626' },
-];
-
-const ORDER_DUMMY_SLICES = [
-  { label: '₹100 OFF', bg1: '#FF5722', bg2: '#D84315' },
-  { label: 'FREE DEL', bg1: '#10B981', bg2: '#059669' },
-  { label: '50% OFF', bg1: '#8B5CF6', bg2: '#6D28D9' },
-  { label: '100 COINS', bg1: '#F59E0B', bg2: '#D97706' },
-  { label: '₹50 CASH', bg1: '#06B6D4', bg2: '#0891B2' },
-  { label: 'JACKPOT', bg1: '#EF4444', bg2: '#DC2626' },
-  { label: 'GIFT BOX', bg1: '#EC4899', bg2: '#DB2777' },
-  { label: '2X COINS', bg1: '#FBBF24', bg2: '#D97706' },
-];
-
 interface OrderGiftCartCelebrationProps {
   mode?: 'order' | 'onboarding';
   isNewRegistration?: boolean;
   orderId?: string | number | null;
   orderNumber?: string | number | null;
+  visible?: boolean;
+  visibilityData?: any;
+  prizes?: AssuredPrize[];
   onComplete: () => void;
   onTrackOrder?: () => void;
   onSkip?: () => void;
@@ -89,13 +73,19 @@ const OrderGiftCartCelebration: React.FC<OrderGiftCartCelebrationProps> = ({
   isNewRegistration = false,
   orderId,
   orderNumber,
+  visible: controlledVisible,
+  visibilityData,
+  prizes: propPrizes,
   onComplete,
   onTrackOrder,
   onSkip,
 }) => {
   const insets = useSafeAreaInsets();
   const isOnboarding = mode === 'onboarding';
-  const [visible, setVisible] = useState(false);
+  const isControlled = controlledVisible !== undefined;
+  const [internalVisible, setInternalVisible] = useState(false);
+  const visible = isControlled ? Boolean(controlledVisible) : internalVisible;
+  const setVisible = isControlled ? () => {} : setInternalVisible;
   const [stage, setStage] = useState<'cart' | 'wheel' | 'ready'>('cart');
   const [statusTitle, setStatusTitle] = useState(
     isOnboarding ? '🎁 Welcome Gift Arriving!' : '🎁 Order Gift Arriving!',
@@ -124,8 +114,9 @@ const OrderGiftCartCelebration: React.FC<OrderGiftCartCelebrationProps> = ({
   const pulseGlow = useSharedValue(1);
   const buttonEntrance = useSharedValue(0);
 
-  // Check eligibility on mount, then trigger after ~800ms delay
+  // Check eligibility on mount if not controlled, then trigger after ~800ms delay
   useEffect(() => {
+    if (isControlled) return;
     let active = true;
     const targetId = orderId || orderNumber;
 
@@ -167,7 +158,7 @@ const OrderGiftCartCelebration: React.FC<OrderGiftCartCelebrationProps> = ({
     return () => {
       active = false;
     };
-  }, [orderId, orderNumber, isOnboarding, isNewRegistration]);
+  }, [orderId, orderNumber, isOnboarding, isNewRegistration, isControlled, setVisible]);
 
   // When modal becomes visible, wait for native Android window attachment before driving Reanimated animations
   useEffect(() => {
@@ -396,17 +387,59 @@ const OrderGiftCartCelebration: React.FC<OrderGiftCartCelebrationProps> = ({
     ],
   }));
 
-  if (!visible) {
+  const activeSlices = useMemo(() => {
+    if (propPrizes && Array.isArray(propPrizes) && propPrizes.length >= 3) {
+      return propPrizes.map((p, idx) => {
+        const pal = REWARD_PALETTES[idx % REWARD_PALETTES.length];
+        return {
+          label: p.wheelLabel || p.label || p.rewardName || 'REWARD',
+          bg1: p.color1 || pal.color1,
+          bg2: p.color2 || pal.color2,
+        };
+      });
+    }
+
+    if (visibilityData) {
+      const extracted = extractCampaignAndRewards(visibilityData);
+      if (Array.isArray(extracted.rewards) && extracted.rewards.length >= 3) {
+        return extracted.rewards.map((item: any, idx: number) => {
+          const p = mapBackendRewardToPrize(item, idx);
+          const pal = REWARD_PALETTES[idx % REWARD_PALETTES.length];
+          return {
+            label: p.wheelLabel || p.label || p.rewardName || 'REWARD',
+            bg1: p.color1 || pal.color1,
+            bg2: p.color2 || pal.color2,
+          };
+        });
+      }
+    }
+
+    // Fully rely on backend data; do NOT show any dummy fallback data
+    return [];
+  }, [propPrizes, visibilityData]);
+
+  // If the rewards are less than 3, do not show the celebration spin wheel flow
+  useEffect(() => {
+    if (visible && activeSlices.length < 3) {
+      console.log(
+        `[OrderGiftCartCelebration] Rewards count (${activeSlices.length}) < 3; skipping celebration flow.`,
+      );
+      if (typeof onSkip === 'function') {
+        onSkip();
+      } else if (typeof onComplete === 'function') {
+        onComplete();
+      }
+    }
+  }, [visible, activeSlices.length, onSkip, onComplete]);
+
+  if (!visible || activeSlices.length < 3) {
     return null;
   }
 
-  const activeSlices = isOnboarding
-    ? ONBOARDING_DUMMY_SLICES
-    : ORDER_DUMMY_SLICES;
-
-  // Pre-calculate single 45-degree wedge path at 12 o'clock centered around (DUMMY_RADIUS, DUMMY_RADIUS)
-  const sliceAngleDeg = 360 / activeSlices.length; // 45°
-  const halfAngleRad = ((sliceAngleDeg / 2) * Math.PI) / 180; // 22.5°
+  // Pre-calculate single wedge path at 12 o'clock centered around (DUMMY_RADIUS, DUMMY_RADIUS)
+  const sliceCount = activeSlices.length;
+  const sliceAngleDeg = sliceCount > 0 ? 360 / sliceCount : 45;
+  const halfAngleRad = ((sliceAngleDeg / 2) * Math.PI) / 180;
   const wedgeRadius = DUMMY_RADIUS - 8;
   const wx1 = DUMMY_RADIUS + wedgeRadius * Math.sin(-halfAngleRad);
   const wy1 = DUMMY_RADIUS - wedgeRadius * Math.cos(-halfAngleRad);
@@ -720,43 +753,46 @@ const OrderGiftCartCelebration: React.FC<OrderGiftCartCelebrationProps> = ({
                     fill="url(#innerRimDark)"
                   />
 
-                  {/* 8 Slices - Each slice group is rotated around center */}
-                  {activeSlices.map((slice, i) => (
-                    <G
-                      key={`slice-${i}`}
-                      transform={`rotate(${
-                        i * 45
-                      }, ${DUMMY_RADIUS}, ${DUMMY_RADIUS})`}
-                    >
-                      <Path
-                        d={singleWedgePath}
-                        fill={`url(#sliceGrad-${i})`}
-                        stroke="#FFFFFF"
-                        strokeWidth={1.5}
-                      />
-                      {/* Translucent Dark Badge backing for high-contrast legibility */}
-                      <Rect
-                        x={DUMMY_RADIUS - 28}
-                        y={20}
-                        width={56}
-                        height={17}
-                        rx={8.5}
-                        fill="rgba(0, 0, 0, 0.28)"
-                      />
-                      {/* Crisp Bold Prize Label */}
-                      <SvgText
-                        x={DUMMY_RADIUS}
-                        y={32}
-                        fill="#FFFFFF"
-                        fontSize="9.5"
-                        fontWeight="900"
-                        textAnchor="middle"
-                        letterSpacing="0.3"
+                  {/* Dynamic Slices - Each slice group is rotated around center */}
+                  {activeSlices.map((slice, i) => {
+                    const badgeW = Math.min(Math.max(52, slice.label.length * 6.2), 70);
+                    return (
+                      <G
+                        key={`slice-${i}`}
+                        transform={`rotate(${
+                          i * sliceAngleDeg
+                        }, ${DUMMY_RADIUS}, ${DUMMY_RADIUS})`}
                       >
-                        {slice.label}
-                      </SvgText>
-                    </G>
-                  ))}
+                        <Path
+                          d={singleWedgePath}
+                          fill={`url(#sliceGrad-${i})`}
+                          stroke="#FFFFFF"
+                          strokeWidth={1.5}
+                        />
+                        {/* Translucent Dark Badge backing for high-contrast legibility */}
+                        <Rect
+                          x={DUMMY_RADIUS - badgeW / 2}
+                          y={20}
+                          width={badgeW}
+                          height={17}
+                          rx={8.5}
+                          fill="rgba(0, 0, 0, 0.28)"
+                        />
+                        {/* Crisp Bold Prize Label */}
+                        <SvgText
+                          x={DUMMY_RADIUS}
+                          y={32}
+                          fill="#FFFFFF"
+                          fontSize={sliceCount > 6 ? '8.5' : '9.5'}
+                          fontWeight="900"
+                          textAnchor="middle"
+                          letterSpacing="0.3"
+                        >
+                          {slice.label}
+                        </SvgText>
+                      </G>
+                    );
+                  })}
 
                   {/* 24 Perimeter Glowing Bulb Studs */}
                   {Array.from({ length: 24 }).map((_, i) => {

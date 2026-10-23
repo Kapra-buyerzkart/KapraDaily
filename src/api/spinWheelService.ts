@@ -1,5 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Toast from 'react-native-simple-toast';
 import { get, post } from './networkUtils';
+import { getAccessToken } from './tokenService';
+import { generateUUID as uuidv4 } from '../utils/uuid';
 import logger from '../utils/logger';
 
 const ORDER_SPIN_PREFIX = '@kapra_spin_order_';
@@ -375,7 +378,9 @@ export const mapIconNameToMaterialIcon = (rawIcon?: string, rewardType?: string)
 };
 
 export const formatWheelTitle = (name: string, type: string, value: any) => {
-  const cleanName = (name || '').trim();
+  const cleanName = (name || '')
+    .replace(/^home\s*wheel\s*[-–—:]\s*/i, '')
+    .trim();
   const lowerName = cleanName.toLowerCase();
   const lowerType = (type || '').toLowerCase();
 
@@ -385,7 +390,7 @@ export const formatWheelTitle = (name: string, type: string, value: any) => {
   if (lowerType === 'freedelivery' || lowerName.includes('free delivery')) {
     return { wheelLabel: 'Free Delivery', line1: 'Free', line2: 'Delivery' };
   }
-  if (lowerType === 'coupon' || lowerName.includes('coupon')) {
+  if (lowerType === 'coupon' || lowerName.includes('coupon') || lowerName.includes('off')) {
     const valText = value ? `₹${value}` : '';
     return {
       wheelLabel: valText ? `${valText} Off` : cleanName,
@@ -409,15 +414,23 @@ export const formatWheelTitle = (name: string, type: string, value: any) => {
       line2: valText ? 'Cashback' : '',
     };
   }
-  if (lowerType === 'bcoin' || lowerName.includes('bcoin')) {
-    const valText = value ? `${value}` : '';
+  if (
+    lowerType === 'bcoin' ||
+    lowerName.includes('bcoin') ||
+    lowerName.includes('token') ||
+    lowerName.includes('coin')
+  ) {
+    const numMatch = cleanName.match(/\d+/);
+    const num = value || (numMatch ? numMatch[0] : '');
+    const unit = lowerName.includes('token') ? 'Tokens' : 'BCoins';
+    const label = num ? `${num} ${unit}` : cleanName;
     return {
-      wheelLabel: valText ? `${valText} BCoins` : cleanName,
-      line1: valText || cleanName,
-      line2: valText ? 'BCoins' : '',
+      wheelLabel: label,
+      line1: String(num || cleanName),
+      line2: num ? unit : '',
     };
   }
-  if (lowerType === 'giftcard' || lowerName.includes('gift card')) {
+  if (lowerType === 'giftcard' || lowerName.includes('gift card') || lowerName.includes('gift')) {
     const valText = value ? `₹${value}` : '';
     return {
       wheelLabel: valText ? `${valText} Gift` : cleanName,
@@ -582,21 +595,58 @@ export const extractCampaignAndRewards = (responseOrData: any): ExtractedCampaig
   let campaignObj: any = null;
   let rewardsList: any[] = [];
 
-  if (Array.isArray(data?.items) && data.items.length > 0) {
+  const directCampaign =
+    data?.campaign || data?.wheel || data?.homeWheel || data?.rewardWheel;
+  if (directCampaign && typeof directCampaign === 'object') {
+    campaignObj = directCampaign;
+    if (Array.isArray(directCampaign.rewards)) {
+      rewardsList = directCampaign.rewards;
+    } else if (Array.isArray(directCampaign.slices)) {
+      rewardsList = directCampaign.slices;
+    } else if (Array.isArray(directCampaign.items)) {
+      rewardsList = directCampaign.items;
+    } else if (Array.isArray(directCampaign.prizes)) {
+      rewardsList = directCampaign.prizes;
+    }
+  } else if (Array.isArray(data?.items) && data.items.length > 0) {
     if (Array.isArray(data.items[0]?.rewards)) {
       campaignObj = data.items[0];
       rewardsList = campaignObj.rewards;
+    } else if (Array.isArray(data.items[0]?.slices)) {
+      campaignObj = data.items[0];
+      rewardsList = campaignObj.slices;
+    } else if (Array.isArray(data.items[0]?.items)) {
+      campaignObj = data.items[0];
+      rewardsList = campaignObj.items;
+    } else if (Array.isArray(data.items[0]?.prizes)) {
+      campaignObj = data.items[0];
+      rewardsList = campaignObj.prizes;
     } else {
       rewardsList = data.items;
+    }
+  } else if (Array.isArray(data?.promotions) && data.promotions.length > 0) {
+    if (Array.isArray(data.promotions[0]?.rewards)) {
+      campaignObj = data.promotions[0];
+      rewardsList = campaignObj.rewards;
+    } else if (Array.isArray(data.promotions[0]?.items)) {
+      campaignObj = data.promotions[0];
+      rewardsList = campaignObj.items;
+    } else {
+      rewardsList = data.promotions;
     }
   } else if (Array.isArray(data?.rewards)) {
     rewardsList = data.rewards;
   } else if (Array.isArray(data?.prizes)) {
     rewardsList = data.prizes;
+  } else if (Array.isArray(data?.slices)) {
+    rewardsList = data.slices;
   } else if (Array.isArray(data)) {
     if (data.length > 0 && Array.isArray(data[0]?.rewards)) {
       campaignObj = data[0];
       rewardsList = campaignObj.rewards;
+    } else if (data.length > 0 && Array.isArray(data[0]?.items)) {
+      campaignObj = data[0];
+      rewardsList = campaignObj.items;
     } else {
       rewardsList = data;
     }
@@ -606,6 +656,9 @@ export const extractCampaignAndRewards = (responseOrData: any): ExtractedCampaig
     if (responseOrData.items.length > 0 && Array.isArray(responseOrData.items[0]?.rewards)) {
       campaignObj = responseOrData.items[0];
       rewardsList = campaignObj.rewards;
+    } else if (responseOrData.items.length > 0 && Array.isArray(responseOrData.items[0]?.items)) {
+      campaignObj = responseOrData.items[0];
+      rewardsList = campaignObj.items;
     } else {
       rewardsList = responseOrData.items;
     }
@@ -613,18 +666,24 @@ export const extractCampaignAndRewards = (responseOrData: any): ExtractedCampaig
 
   const campaignId =
     campaignObj?.campaignId ??
+    campaignObj?.id ??
     data?.campaignId ??
+    data?.id ??
     responseOrData?.campaignId ??
-    1;
+    responseOrData?.id ??
+    0;
 
   const campaignName =
     campaignObj?.campaignName ??
     campaignObj?.name ??
+    campaignObj?.title ??
     data?.campaignName ??
     data?.campaignTitle ??
+    data?.name ??
     data?.title ??
     responseOrData?.campaignName ??
-    'October Spin & Win 2026';
+    responseOrData?.title ??
+    '';
 
   const description = campaignObj?.description ?? data?.description;
   const minOrderAmount = campaignObj?.minOrderAmount ?? data?.minOrderAmount;
@@ -633,9 +692,7 @@ export const extractCampaignAndRewards = (responseOrData: any): ExtractedCampaig
   const eligibleOrderAmount = campaignObj?.eligibleOrderAmount ?? data?.eligibleOrderAmount;
 
   const finalRewards =
-    Array.isArray(rewardsList) && rewardsList.length > 0
-      ? rewardsList
-      : DEFAULT_OCTOBER_CAMPAIGN.rewards;
+    Array.isArray(rewardsList) ? rewardsList : [];
 
   return {
     campaignId,
@@ -818,6 +875,40 @@ export const getSpinWinHistory = async ({
   }
 };
 
+export interface HomeWheelMySpinsParams {
+  pageNumber?: number;
+  pageSize?: number;
+}
+
+export interface HomeWheelMySpinsResponse {
+  success?: boolean;
+  status?: string;
+  message?: string;
+  data?: any;
+  items?: any[];
+  [key: string]: any;
+}
+
+/**
+ * Fetches joining / welcome spin rewards history for the authenticated user
+ * Endpoint: api/v1/rewards/home-wheel/my-spins?pageNumber=X&pageSize=Y
+ */
+export const getHomeWheelMySpins = async ({
+  pageNumber = 1,
+  pageSize = 20,
+}: HomeWheelMySpinsParams = {}): Promise<HomeWheelMySpinsResponse> => {
+  try {
+    const data = await get(`rewards/home-wheel/my-spins?pageNumber=${pageNumber}&pageSize=${pageSize}`);
+    console.log('getHomeWheelMySpins response:', data);
+    return data;
+  } catch (error: any) {
+    const errorData = error?.response?.data || error?.data || error?.message || error;
+    console.log('getHomeWheelMySpins response error:', errorData);
+    throw error;
+  }
+};
+
+
 export const getSpinWheelStatusApi = async (
   orderId?: string | number | null,
 ): Promise<SpinWheelStatusResult> => {
@@ -914,3 +1005,339 @@ export const executeSpinWheelApi = async ({
     prize,
   };
 };
+
+export interface HomeWheelVisibilityPayload {
+  requestId: string;
+  anonymousId?: string | null;
+}
+
+export interface HomeWheelVisibilityResponse {
+  success?: boolean;
+  status?: string;
+  message?: string;
+  data?: any;
+  [key: string]: any;
+}
+
+export interface WheelRequestState {
+  requestId: string;
+  failureCount: number;
+  createdAt: number;
+}
+
+export const WHEEL_VISIBILITY_REQUEST_STATE_KEY = '@kapra_home_wheel_request_state';
+
+/**
+ * Checks visibility/eligibility for the home/onboarding spin wheel
+ * Endpoint: api/v1/rewards/home-wheel/visibility
+ * Payload: { requestId: string, anonymousId: null }
+ */
+export const checkHomeWheelVisibilityApi = async (
+  payload: HomeWheelVisibilityPayload,
+): Promise<HomeWheelVisibilityResponse> => {
+  const requestBody = {
+    requestId: payload.requestId,
+    anonymousId: payload.anonymousId ?? null,
+  };
+  console.log(
+    'checkHomeWheelVisibilityApi request payload:\n',
+requestBody,"===================+++++",
+  );
+  try {
+    const data = await post('rewards/home-wheel/visibility', requestBody);
+    console.log(
+      'checkHomeWheelVisibilityApi response data:\n',
+      data,
+      '===================+++++',
+    );
+    return data;
+  } catch (error: any) {
+    const errorData =
+      error?.response?.data || error?.data || error?.message || error;
+    console.log(
+      'checkHomeWheelVisibilityApi error response:\n',
+      JSON.stringify(errorData, null, 2),
+    );
+    throw error;
+  }
+};
+
+export interface PlayHomeWheelPayload {
+  campaignId: number | string;
+  requestId?: string;
+  anonymousId?: string | null;
+}
+
+export interface PlayHomeWheelResponse {
+  success?: boolean;
+  status?: string;
+  message?: string;
+  data?: any;
+  [key: string]: any;
+}
+
+/**
+ * Plays the home/onboarding spin wheel
+ * Endpoint: api/v1/rewards/home-wheel/play
+ * Payload: { campaignId: number | string, requestId: string, anonymousId: null | string }
+ */
+export const playHomeWheelApi = async (
+  payload: PlayHomeWheelPayload,
+): Promise<PlayHomeWheelResponse> => {
+  const requestBody = {
+    campaignId:
+      payload.campaignId !== undefined && payload.campaignId !== null
+        ? !isNaN(Number(payload.campaignId))
+          ? Number(payload.campaignId)
+          : payload.campaignId
+        : 2,
+    requestId: payload.requestId || uuidv4(),
+    anonymousId: payload.anonymousId !== undefined ? payload.anonymousId : null,
+  };
+  console.log(
+    'playHomeWheelApi request payload:\n',
+    requestBody,
+    '===================+++++',
+  );
+  try {
+    const data = await post('rewards/home-wheel/play', requestBody);
+    console.log(
+      'playHomeWheelApi response data:\n',
+      data,
+      '===================+++++',
+    );
+    return data;
+  } catch (error: any) {
+    const errorData =
+      error?.response?.data || error?.data || error?.message || error;
+    console.log(
+      'playHomeWheelApi error response:\n',
+      JSON.stringify(errorData, null, 2),
+    );
+    throw error;
+  }
+};
+
+
+/**
+ * Determines whether the user is entitled to spin the wheel based on backend response
+ */
+export const isUserEntitledToSpin = (responseOrData: any): boolean => {
+  if (!responseOrData) return false;
+  if (typeof responseOrData === 'boolean') return responseOrData;
+  if (responseOrData.success === false) return false;
+
+  const data =
+    responseOrData?.data !== undefined ? responseOrData.data : responseOrData;
+
+  if (typeof data === 'boolean') return data;
+
+  // Explicit negative eligibility indicators from backend
+  if (data?.isEligible === false) return false;
+  if (data?.canSpin === false) return false;
+  if (data?.isVisible === false) return false;
+  if (data?.isEntitled === false) return false;
+  if (data?.hasAvailableSpin === false) return false;
+  if (data?.spinsAvailable === 0) return false;
+  if (data?.spinsLeft === 0) return false;
+  if (data?.availableSpins === 0) return false;
+
+  if (typeof responseOrData.isEligible === 'boolean' && !responseOrData.isEligible) return false;
+  if (typeof responseOrData.canSpin === 'boolean' && !responseOrData.canSpin) return false;
+  if (typeof responseOrData.isVisible === 'boolean' && !responseOrData.isVisible) return false;
+  if (typeof responseOrData.isEntitled === 'boolean' && !responseOrData.isEntitled) return false;
+
+  if (
+    typeof responseOrData.message === 'string' &&
+    (responseOrData.message.toLowerCase().includes('no home wheel') ||
+      responseOrData.message.toLowerCase().includes('not eligible') ||
+      responseOrData.message.toLowerCase().includes('no promotions'))
+  ) {
+    return false;
+  }
+
+  // Extract rewards strictly from backend data (no dummy fallback)
+  const { rewards } = extractCampaignAndRewards(responseOrData);
+
+  // STRICT REQUIREMENT: If the rewards are less than 3, do NOT show the spin wheel or its flow!
+  if (!Array.isArray(rewards) || rewards.length < 3) {
+    return false;
+  }
+
+  // Positive eligibility checks
+  if (
+    data?.isEligible === true ||
+    data?.canSpin === true ||
+    data?.isVisible === true ||
+    data?.isEntitled === true ||
+    data?.hasAvailableSpin === true ||
+    (typeof data?.spinsAvailable === 'number' && data.spinsAvailable > 0) ||
+    (typeof data?.spinsLeft === 'number' && data.spinsLeft > 0) ||
+    (typeof data?.availableSpins === 'number' && data.availableSpins > 0) ||
+    data?.campaignId !== undefined ||
+    data?.wheelId !== undefined ||
+    rewards.length >= 3
+  ) {
+    return true;
+  }
+
+  return false;
+};
+
+export const getStoredWheelRequestState = async (): Promise<WheelRequestState | null> => {
+  try {
+    const raw = await AsyncStorage.getItem(WHEEL_VISIBILITY_REQUEST_STATE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (error) {
+    logger.error('Error getting stored wheel request state:', error);
+    return null;
+  }
+};
+
+export const saveWheelRequestState = async (state: WheelRequestState): Promise<void> => {
+  try {
+    await AsyncStorage.setItem(
+      WHEEL_VISIBILITY_REQUEST_STATE_KEY,
+      JSON.stringify(state),
+    );
+  } catch (error) {
+    logger.error('Error saving wheel request state:', error);
+  }
+};
+
+export const clearWheelRequestState = async (): Promise<void> => {
+  try {
+    await AsyncStorage.removeItem(WHEEL_VISIBILITY_REQUEST_STATE_KEY);
+  } catch (error) {
+    logger.error('Error clearing wheel request state:', error);
+  }
+};
+
+export const getOrCreateWheelRequestId = async (): Promise<string> => {
+  try {
+    const state = await getStoredWheelRequestState();
+    // Re-use same UUID if failureCount < 3 (initial attempt + up to 2 repetitions)
+    if (
+      state &&
+      state.requestId &&
+      typeof state.failureCount === 'number' &&
+      state.failureCount < 3
+    ) {
+      return state.requestId;
+    }
+    const newId = uuidv4();
+    await saveWheelRequestState({
+      requestId: newId,
+      failureCount: 0,
+      createdAt: Date.now(),
+    });
+    return newId;
+  } catch {
+    return uuidv4();
+  }
+};
+
+export interface CheckLandingWheelParams {
+  onEntitled: (visibilityData?: any) => void;
+  onNormalFlow: () => void;
+}
+
+/**
+ * Handles landing screen button press wheel entitlement check:
+ * 1. Checks if the registered user is logged in (has valid token)
+ * 2. Generates random UUID or reuses existing stored UUID if user previously quit or backend failed (< 3 total attempts)
+ * 3. Calls api/v1/rewards/home-wheel/visibility
+ * 4. If entitled: executes onEntitled(data)
+ * 5. If not entitled: executes onNormalFlow()
+ * 6. If API fails: reuses same UUID for up to 2 more repetitions (3 attempts total).
+ *    On 3rd failure: shows failure toast and sends user to normal flow.
+ */
+export const checkLandingScreenWheelEntitlement = async ({
+  onEntitled,
+  onNormalFlow,
+}: CheckLandingWheelParams): Promise<void> => {
+  try {
+    // 1. Check if user is registered: registered user has valid access token
+    const token = await getAccessToken();
+    if (!token) {
+      logger.log('[WheelVisibility] User is not registered; sending to normal flow.');
+      onNormalFlow();
+      return;
+    }
+
+    // 2. Retrieve existing state or create a fresh UUID
+    let state = await getStoredWheelRequestState();
+    if (
+      !state ||
+      !state.requestId ||
+      (typeof state.failureCount === 'number' && state.failureCount >= 3)
+    ) {
+      state = {
+        requestId: uuidv4(),
+        failureCount: 0,
+        createdAt: Date.now(),
+      };
+      await saveWheelRequestState(state);
+    }
+
+    const currentRequestId = state.requestId;
+    let failureCount = state.failureCount || 0;
+    let callSuccess = false;
+    let lastError: any = null;
+    let response: any = null;
+
+    // 3. Attempt API call with up to 2 repetitions (3 attempts total)
+    while (failureCount < 3 && !callSuccess) {
+      try {
+        response = await checkHomeWheelVisibilityApi({
+          requestId: currentRequestId,
+          anonymousId: null,
+        });
+        callSuccess = true;
+      } catch (err: any) {
+        lastError = err;
+        failureCount += 1;
+        // Persist failure count immediately in AsyncStorage so if user quits in between, it is preserved
+        await saveWheelRequestState({
+          requestId: currentRequestId,
+          failureCount,
+          createdAt: state.createdAt || Date.now(),
+        });
+
+        if (failureCount < 3) {
+          // Short pause before repetition
+          await new Promise<void>(res => setTimeout(() => res(), 500));
+        }
+      }
+    }
+
+    if (callSuccess) {
+      // Clear stored UUID on success
+      await clearWheelRequestState();
+
+      const entitled = isUserEntitledToSpin(response);
+      console.log(
+        '[WheelVisibility] Entitlement check result:',
+        entitled ? 'ENTITLED (Spin Allowed)' : 'NOT ENTITLED (Normal Flow)',
+        '\nData:',
+        JSON.stringify(response?.data !== undefined ? response.data : response, null, 2),
+      );
+
+      if (entitled) {
+        onEntitled(response?.data !== undefined ? response.data : response);
+      } else {
+        onNormalFlow();
+      }
+    } else {
+      // All 3 attempts failed (initial + 2 repetitions)
+      logger.warn('[WheelVisibility] Failed after 2 repetitions:', lastError);
+      await clearWheelRequestState();
+      Toast.show('Something went wrong. Continuing to app...', Toast.SHORT);
+      onNormalFlow();
+    }
+  } catch (error) {
+    logger.error('[WheelVisibility] Unexpected error in checkLandingScreenWheelEntitlement:', error);
+    onNormalFlow();
+  }
+};
+
