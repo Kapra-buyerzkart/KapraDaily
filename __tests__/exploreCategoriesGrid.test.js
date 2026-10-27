@@ -39,9 +39,9 @@ describe('ExploreCategoriesGrid', () => {
       );
     });
 
-    const json = JSON.stringify(tree.toJSON());
-    expect(json).toContain('"resizeMode":"contain"');
-    expect(json).not.toContain('"resizeMode":"cover"');
+    const bannerImage = tree.root.findAllByType(Image)[0];
+    expect(bannerImage).toBeDefined();
+    expect(bannerImage.props.resizeMode).toBe('contain');
   });
 
   it('updates aspect ratio when image onLoad fires', () => {

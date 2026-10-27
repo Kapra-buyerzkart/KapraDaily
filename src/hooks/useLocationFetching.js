@@ -59,16 +59,22 @@ export const useLocationFetching = ({ navigation }) => {
     return id;
   };
 
-  const navigateAfterLocation = () => {
-    if (hasNavigatedRef.current || !isMountedRef.current) return;
+  const navigateAfterLocation = (force = false) => {
+    if (!force && hasNavigatedRef.current) return;
+    if (!isMountedRef.current) return;
     hasNavigatedRef.current = true;
-    if (profile?.custId) {
-      navigation.reset({ index: 0, routes: [{ name: 'AuthSuccessScreen' }] });
-    } else {
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'LoginScreen', params: { type: 'login' } }],
-      });
+    const targetRoute = profile?.custId
+      ? { name: 'AuthSuccessScreen' }
+      : { name: 'LoginScreen', params: { type: 'login' } };
+
+    try {
+      navigation.reset({ index: 0, routes: [targetRoute] });
+    } catch (err) {
+      try {
+        navigation.navigate(targetRoute.name, targetRoute.params);
+      } catch (navErr) {
+        // fallback ignored
+      }
     }
   };
 
@@ -101,6 +107,8 @@ export const useLocationFetching = ({ navigation }) => {
   const stopAutoNavigateTimer = () => {
     userInteractedRef.current = true;
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    pendingTimeoutsRef.current.forEach(clearTimeout);
+    pendingTimeoutsRef.current = [];
   };
 
   const funSetAddComponent = value => {
@@ -408,8 +416,10 @@ export const useLocationFetching = ({ navigation }) => {
   const onSkip = () => {
     stopAutoNavigateTimer();
     setShowConfirm(false);
+    setLocationSelectionModal(false);
+    setLocationSearchModal(false);
     setLocationNotFetched(true);
-    navigateAfterLocation();
+    navigateAfterLocation(true);
   };
 
   const onSearchIconPress = () => {
@@ -462,17 +472,21 @@ export const useLocationFetching = ({ navigation }) => {
 
   const onSkipAreaSelection = async () => {
     stopAutoNavigateTimer();
-    let areaToPass = null;
-    if (listOfLocations) {
-      areaToPass = listOfLocations[0];
-    }
-    if (areaToPass) {
-      await editPincode(areaToPass);
-    }
-
     setLocationSelectionModal(false);
     setLocationNotFetched(false);
-    navigateAfterLocation();
+    try {
+      let areaToPass = null;
+      if (Array.isArray(listOfLocations) && listOfLocations.length > 0) {
+        areaToPass = listOfLocations[0];
+      }
+      if (areaToPass) {
+        await editPincode(areaToPass);
+      }
+    } catch (error) {
+      // non-fatal: user chose to skip
+    } finally {
+      navigateAfterLocation(true);
+    }
   };
 
   const onApplyArea = async () => {

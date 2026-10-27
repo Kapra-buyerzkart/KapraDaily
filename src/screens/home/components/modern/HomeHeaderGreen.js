@@ -76,13 +76,21 @@ const HomeHeaderGreen = ({
   const searchIconColor =
     colorScheme?.searchIcon || colorScheme?.primary || effectiveBgColor;
 
-  // Parse area name (before first comma) and secondary location details (city/pincode)
+  // Parse area name (before first comma) and remove any pincodes
   const pinAddress =
-    profile?.pinAddress || profile?.address || 'Select Location';
-  const pincode = profile?.pincode;
+    profile?.areaName ||
+    profile?.area ||
+    profile?.pinAddress ||
+    profile?.address ||
+    'Select Location';
 
   const { title, subtitle } = React.useMemo(() => {
-    if (!profile?.pinAddress && !profile?.address) {
+    if (
+      !profile?.areaName &&
+      !profile?.area &&
+      !profile?.pinAddress &&
+      !profile?.address
+    ) {
       return { title: 'Select Location', subtitle: '' };
     }
     const parts = pinAddress
@@ -90,44 +98,28 @@ const HomeHeaderGreen = ({
       .map(p => p.trim())
       .filter(Boolean);
 
-    // Resolve genuine 6-digit postal pincode:
-    // Check 6-digit match in address strings, or postalPincode, or profile.pincode if 6 digits
-    let detectedPincode = '';
-    const pinMatch = (pinAddress + ' ' + (profile?.address || '')).match(
-      /\b\d{6}\b/,
-    );
-    if (pinMatch) {
-      detectedPincode = pinMatch[0];
-    } else if (
-      profile?.postalPincode &&
-      String(profile.postalPincode).length === 6
-    ) {
-      detectedPincode = String(profile.postalPincode);
-    } else if (pincode && String(pincode).length === 6) {
-      detectedPincode = String(pincode);
-    }
-
     // Clean primary title: remove pincode, parentheses/brackets, and trailing delimiters
     let primaryTitle = parts[0] || pinAddress;
     primaryTitle = primaryTitle
       .replace(/[[({\])}]+/g, '')
       .replace(/\b\d{6}\b/g, '')
-      .replace(/[-–—,]\s*$/, '')
+      .replace(/[-–—,•·|]\s*$/, '')
+      .replace(/\s+/g, ' ')
       .trim();
 
     // Clean city part: strip pincode and brackets
     let city = (parts[1] || 'Kochi')
       .replace(/[[({\])}]+/g, '')
       .replace(/\b\d{6}\b/g, '')
+      .replace(/[-–—,•·|]\s*$/, '')
+      .replace(/\s+/g, ' ')
       .trim();
     if (!city) city = 'Kochi';
 
-    const finalTitle = detectedPincode
-      ? `${primaryTitle || 'Select Location'} • ${detectedPincode}`
-      : primaryTitle || 'Select Location';
+    const finalTitle = primaryTitle || 'Select Location';
 
     return { title: finalTitle, subtitle: city };
-  }, [pinAddress, pincode, profile]);
+  }, [pinAddress, profile]);
 
   const coins = dashboardData?.wallet?.bCoins ?? 0;
 

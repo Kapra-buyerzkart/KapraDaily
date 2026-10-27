@@ -172,4 +172,48 @@ describe('HomeHeaderGreen Search Side Redesign', () => {
     const linearGradient = tree.root.findByType('LinearGradient');
     expect(linearGradient.props.colors).toEqual(['#0A803D', '#0A803D', '#0A803D']);
   });
+
+  it('displays only the area name without pincode when profile has pincode', () => {
+    let tree;
+    act(() => {
+      tree = renderer.create(
+        <HomeHeaderGreen
+          navigation={mockNavigation}
+          profile={{
+            pinAddress: 'Chakkaraparambu - 682028',
+            pincode: 682028,
+            postalPincode: '682028',
+          }}
+        />
+      );
+    });
+
+    const titleText = tree.root.findByProps({ accessibilityLabel: 'Delivering to Chakkaraparambu. Tap to change location' });
+    expect(titleText).toBeDefined();
+
+    const json = JSON.stringify(tree.toJSON());
+    expect(json).toContain('Chakkaraparambu');
+    expect(json).not.toContain('682028');
+  });
+
+  it('extracts area name from comma-separated address without appending pincode', () => {
+    let tree;
+    act(() => {
+      tree = renderer.create(
+        <HomeHeaderGreen
+          navigation={mockNavigation}
+          profile={{
+            pinAddress: 'Kaloor, Kochi, Kerala 682017',
+            pincode: 682017,
+          }}
+        />
+      );
+    });
+
+    const json = JSON.stringify(tree.toJSON());
+    expect(json).toContain('Kaloor');
+    expect(json).not.toContain('682017');
+    expect(json).not.toContain('• 682017');
+  });
 });
+

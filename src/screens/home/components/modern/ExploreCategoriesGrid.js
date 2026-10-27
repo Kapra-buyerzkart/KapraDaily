@@ -256,7 +256,7 @@ const ExploreCategoriesGrid = ({
               styles.bannerImage,
               gifAspectRatio ? { aspectRatio: gifAspectRatio } : null,
             ]}
-            resizeMode="contain"
+            resizeMode="cover"
             onLoad={handleGifLoad}
           />
         </View>
@@ -269,7 +269,8 @@ const ExploreCategoriesGrid = ({
               disabled={!resolvedBottomGifBannerItem}
               onPress={() => {
                 if (onBannerPress) onBannerPress(resolvedBottomGifBannerItem);
-                else if (onPressBanner) onPressBanner(resolvedBottomGifBannerItem);
+                else if (onPressBanner)
+                  onPressBanner(resolvedBottomGifBannerItem);
               }}
               activeOpacity={0.92}
               style={styles.bannerPressable}
@@ -282,7 +283,7 @@ const ExploreCategoriesGrid = ({
                     ? { aspectRatio: bottomBannerAspectRatio }
                     : null,
                 ]}
-                resizeMode="contain"
+                resizeMode="stretch"
                 onLoad={handleBottomBannerLoad}
               />
             </AnimatedPressable>
@@ -375,7 +376,8 @@ const styles = StyleSheet.create({
   },
   bannerWrap: {
     marginTop: -hp('2%'),
-    width: '100%',
+    width: '101.5%',
+
     marginBottom: hp('1.4%'),
     alignItems: 'center',
     overflow: 'hidden',
@@ -386,8 +388,9 @@ const styles = StyleSheet.create({
   },
   bannerImage: {
     width: '100%',
-    aspectRatio: 440 / 100,
-    resizeMode: 'contain',
+
+    aspectRatio: 440 / 120,
+    resizeMode: 'cover',
   },
   contentWrap: {
     paddingHorizontal: wp('4%'),

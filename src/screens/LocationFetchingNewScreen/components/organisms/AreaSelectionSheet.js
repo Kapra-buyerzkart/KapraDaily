@@ -128,6 +128,7 @@ const AreaSelectionSheet = ({
                 style={[styles.button, styles.skipButton]}
                 onPress={onSkip}
                 activeOpacity={0.85}
+                hitSlop={hitSlopTo(12)}
               >
                 <LocText variant="cta" tone="brand">
                   Skip
@@ -138,6 +139,7 @@ const AreaSelectionSheet = ({
                 style={[styles.button, styles.applyButton]}
                 onPress={onApply}
                 activeOpacity={0.85}
+                hitSlop={hitSlopTo(12)}
                 disabled={applyLoading}
               >
                 {applyLoading ? (

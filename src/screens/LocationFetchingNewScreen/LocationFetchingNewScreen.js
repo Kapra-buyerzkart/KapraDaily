@@ -40,6 +40,12 @@ const LocationFetchingNewScreen = ({ navigation }) => {
     return (
       <SafeAreaView style={styles.locatingContainer}>
         <LocatingView />
+        <LocationTopBar onSkip={onSkip} onSearchPress={onSearchIconPress} />
+        <LocationSearchSheet
+          visible={locationSearchModal}
+          onClose={onCloseSearchModal}
+          onPlaceSelected={onPlaceSelected}
+        />
       </SafeAreaView>
     );
   }
@@ -51,8 +57,6 @@ const LocationFetchingNewScreen = ({ navigation }) => {
         resizeMode="cover"
         source={BACKGROUND_IMAGE}
       >
-        <LocationTopBar onSkip={onSkip} onSearchPress={onSearchIconPress} />
-
         <AddressSummary geocodeResult={addressComponent} />
 
         {showConfirm && (
@@ -66,6 +70,8 @@ const LocationFetchingNewScreen = ({ navigation }) => {
             loading={confirmLoading}
           />
         )}
+
+        <LocationTopBar onSkip={onSkip} onSearchPress={onSearchIconPress} />
 
         <LocationSearchSheet
           visible={locationSearchModal}

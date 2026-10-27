@@ -8,23 +8,17 @@ import {
   SPACING,
   WINDOW_HEIGHT,
   WINDOW_WIDTH,
+  hitSlopTo,
 } from '../../theme';
 import { IconButton, LocText } from '../atoms';
 
 const LocationTopBar = ({ onSkip, onSearchPress }) => (
-  <View
-    style={[
-      styles.bar,
-      {
-        top:
-          Platform.OS === 'ios' ? WINDOW_HEIGHT * 0.01 : WINDOW_HEIGHT * 0.03,
-      },
-    ]}
-  >
+  <View style={styles.bar} pointerEvents="box-none">
     <TouchableOpacity
       style={styles.skipButton}
       onPress={onSkip}
       activeOpacity={0.85}
+      hitSlop={hitSlopTo(12)}
     >
       <LocText variant="cta" tone="brand">
         Skip
@@ -45,13 +39,16 @@ export default React.memo(LocationTopBar);
 const styles = StyleSheet.create({
   bar: {
     position: 'absolute',
-    width: WINDOW_WIDTH,
-    height: WINDOW_HEIGHT * 0.07,
+    left: 0,
+    right: 0,
+    top: Platform.OS === 'ios' ? WINDOW_HEIGHT * 0.01 : WINDOW_HEIGHT * 0.03,
+    height: ICON_BUTTON_SIZE + SPACING.md,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-end',
     paddingHorizontal: WINDOW_WIDTH * 0.05,
-    top: Platform.OS === 'ios' ? WINDOW_HEIGHT * 0.65 : WINDOW_HEIGHT * 0.69,
+    zIndex: 100,
+    elevation: 10,
   },
   skipButton: {
     height: ICON_BUTTON_SIZE,

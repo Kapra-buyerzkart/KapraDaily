@@ -38,6 +38,8 @@ jest.mock('react-native-reanimated', () => {
     },
     Extrapolation: { CLAMP: 'clamp' },
     clamp: (val, min, max) => Math.min(Math.max(val, min), max),
+    createAnimatedComponent: Comp => Comp,
+    View: 'View',
   };
 });
 
